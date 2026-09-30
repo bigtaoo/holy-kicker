@@ -1,25 +1,33 @@
-# Holy Kicker（光头球王）
+# Holy Kicker
 
-竖屏 Q 版割草肉鸽：搞笑武僧踢蹴鞠、用念珠木鱼禅杖，对抗僵尸狐妖。PixiJS，发布到 CrazyGames / Poki 和微信小游戏。
+A portrait horde-survivor roguelite: a goofy bald monk kicks a cuju ball and swings prayer
+beads, wooden fish and a staff at hordes of jiangshi and fox spirits. Built with PixiJS for
+CrazyGames / Poki and the WeChat mini-game.
 
-## 目录
+## Running
 
-- `art/` 美术产出与探索稿
-  - `hero/` 早期弓箭手流程测试（已搁置）
-  - `monk/style_r1..r3/` 武僧风格探索，第 3 轮为当前定稿方向
-- `tools/` 美术辅助脚本
-  - `generate_image.sh <out> <prompt文件>`：Mistral 文生图
-  - `edit_image.sh <in> <out.png> <prompt文件>`：Mistral 以图改图
-  - `scene_test.py` / `portrait_test.py`：同屏可读性测试（竖屏三视口：手机、桌面小窗、桌面全屏）
-  - `scale_test.py`：多尺寸缩放测试
+```bash
+npm install
+npm run dev            # web, http://localhost:5174 (WASD / arrows or drag to move)
+npm run build:wechat   # then open client/wechat in WeChat DevTools
+npm run check          # typecheck, file length, tests, WeChat build + 4 MB gate
+```
 
-## 美术规范（已锁定）
+## Layout
 
-- 粗描边贴纸风、平涂、单层硬阴影、无渐变
-- 主角暖色（橙/金）大光头；杂兵冷色（青绿/紫/灰）+ 红眼；精英冰蓝鬼火
-- 敌人身上不出现高饱和暖色
-- 逻辑分辨率 1080×1920；主角 120、杂兵 80、精英 130，UI 字号 ≥ 48
+- `client/` — the game. See `CLAUDE.md` for structure and rules.
+- `art/` — source art and exploration
+  - `hero/` early archer pipeline test (shelved)
+  - `monk/style_r1..r3/` monk style rounds; round 3 is the locked direction
+- `tools/` — art scripts
+  - `generate_image.sh <out> <prompt file>` — Mistral text-to-image
+  - `edit_image.sh <in> <out.png> <prompt file>` — Mistral image edit
+  - `cutout.py <in> <out.png> <height>` — cut out the white background, export at game size
+  - `scene_test.py` / `portrait_test.py` — crowd readability tests (phone, small desktop
+    iframe, desktop fullscreen)
+  - `scale_test.py` — multi-size scale test
 
-## 凭证
+## Credentials
 
-出图脚本从 `~/.vibe/mistral_curl_key{A,B}.conf` 读取 key，`MISTRAL_KEY=A|B` 切换（默认 B）。key 本身不进仓库。
+The image scripts read keys from `~/.vibe/mistral_curl_key{A,B}.conf`; `MISTRAL_KEY=A|B`
+picks one (default B). Keys never go in this repository.

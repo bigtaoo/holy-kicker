@@ -1,0 +1,28 @@
+{
+  "name": "holy-kicker",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Holy Kicker — portrait horde-survivor roguelite (PixiJS). See README.md",
+  "workspaces": [
+    "client"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w client",
+    "build": "npm run build -w client",
+    "build:wechat": "npm run build:wechat -w client",
+    "test": "npm run test -w client",
+    "typecheck": "npm run typecheck -w client",
+    "check:filelength": "node build/checkFileLength.mjs",
+    "check:wechatpackage": "node build/checkWeChatPackage.mjs",
+    "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build:wechat && npm run check:wechatpackage"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.7",
+    "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "esbuild@0.25.12": true
+  }
+}

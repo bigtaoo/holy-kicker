@@ -1,0 +1,13 @@
+{
+  "appid": "touristappid",
+  "projectname": "holy-kicker",
+  "compileType": "game",
+  "setting": {
+    "es6": false,
+    "minified": false,
+    "postcss": false,
+    "uploadWithSourceMap": true
+  },
+  "miniprogramRoot": "./",
+  "description": "Holy Kicker WeChat mini-game — Pixi v8 with our own DOMAdapter"
+}

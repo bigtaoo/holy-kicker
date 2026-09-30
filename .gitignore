@@ -17,3 +17,9 @@ __pycache__/
 Thumbs.db
 .vscode/
 .idea/
+
+# WeChat build output (npm run build:wechat); client/wechat itself is the DevTools project
+client/wechat/js/
+client/wechat/art/
+# Account-specific DevTools settings
+client/wechat/project.private.config.json

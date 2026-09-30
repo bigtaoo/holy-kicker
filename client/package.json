@@ -1,0 +1,18 @@
+{
+  "name": "holy-kicker-client",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "build:wechat": "tsc --noEmit && vite build --config vite.wechat.config.js",
+    "build:wechat:debug": "tsc --noEmit && vite build --config vite.wechat.config.js --mode development",
+    "preview": "vite preview --port 4173"
+  },
+  "dependencies": {
+    "pixi.js": "^8.6.6"
+  }
+}
