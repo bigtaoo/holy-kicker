@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 # usage: edit_image.sh <input image> <output png> <prompt file>
 set -euo pipefail
+source "$(dirname "$0")/mistral_failover.sh"
 IN="$1"; OUT="$2"; PROMPT_FILE="$3"
-# MISTRAL_KEY=A（旧 workspace）或 B（新 workspace，默认），两边的 agent 各自独立
+# MISTRAL_KEY=A|B|C picks the workspace; each workspace has its own agent
 case "${MISTRAL_KEY:-B}" in
+  C) CONF="$HOME/.vibe/mistral_curl_keyC.conf"; AGENT="ag_01a0f2bc01d4739880edc0be391ad765" ;;
   A) CONF="$HOME/.vibe/mistral_curl_keyA.conf"; AGENT="ag_01a0f2153a017375ae140eab15522710" ;;
   B) CONF="$HOME/.vibe/mistral_curl_keyB.conf"; AGENT="ag_01a0f2702e31768a9bde515228083588" ;;
-  *) echo "MISTRAL_KEY must be A or B" >&2; exit 2 ;;
+  *) echo "MISTRAL_KEY must be A, B or C" >&2; exit 2 ;;
 esac
-TMP="${TMPDIR:-/tmp}/mistral_edit"; mkdir -p "$TMP"
+TMP="${TMPDIR:-/tmp}/mistral_edit_$$"; mkdir -p "$TMP"
 
 curl -s --config "$CONF" https://api.mistral.ai/v1/files \
   -F purpose=image_generation -F "file=@$IN" > "$TMP/upload.json"

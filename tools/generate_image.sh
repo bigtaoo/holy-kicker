@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
-# usage: generate_image.sh <输出文件> <prompt文件>
-# 文生图：对 image-gen agent 发会话，取 tool.execution 里的签名 URL 下载
+# usage: generate_image.sh <output file> <prompt file>
+# Text-to-image: start a conversation with the image agent and download the signed URL from tool.execution
 set -euo pipefail
+source "$(dirname "$0")/mistral_failover.sh"
 OUT="$1"; PROMPT_FILE="$2"
-# MISTRAL_KEY=A（旧 workspace）或 B（新 workspace，默认），两边的 agent 各自独立
+# MISTRAL_KEY=A|B|C picks the workspace; each workspace has its own agent
 case "${MISTRAL_KEY:-B}" in
+  C) CONF="$HOME/.vibe/mistral_curl_keyC.conf"; AGENT="ag_01a0f2bc01d4739880edc0be391ad765" ;;
   A) CONF="$HOME/.vibe/mistral_curl_keyA.conf"; AGENT="ag_01a0f2153a017375ae140eab15522710" ;;
   B) CONF="$HOME/.vibe/mistral_curl_keyB.conf"; AGENT="ag_01a0f2702e31768a9bde515228083588" ;;
-  *) echo "MISTRAL_KEY must be A or B" >&2; exit 2 ;;
+  *) echo "MISTRAL_KEY must be A, B or C" >&2; exit 2 ;;
 esac
 TMP="${TMPDIR:-/tmp}/mistral_gen_$$"; mkdir -p "$TMP"
 
