@@ -4,9 +4,15 @@ usage: python split_parts.py <spec.json> <out dir>
 spec.json:
   {
     "source": "hero_apose.png",           # relative to the spec file
+    "background": [[[x, y], ...], ...],   # optional: enclosed paper to treat as background
     "parts": [                            # listed back to front
       {"name": "arm_r",
        "poly": [[x, y], ...],             # region of the source that belongs to this part
+       "stroke": {"line": [[x, y], ...], "width": w},  # optional: thick polyline, added
+       "hsv": [[h, s, v], [h, s, v]],     # optional: keep only pixels in this OpenCV HSV
+       "grow": 6,                         #   range, grown into dark outline pixels by this many px
+       "exclude": [[[x, y], ...], ...],   # optional: areas removed from the part
+       "exclude_parts": ["skirt"],        # optional: pixels owned by other parts, removed
        "hidden": [[[x, y], ...], ...],    # optional: areas covered by other parts, filled in
        "pivot": [x, y]}                   # joint position in source pixels
     ]
@@ -29,6 +35,9 @@ sys.path.insert(0, os.path.dirname(__file__))
 from cutout import background_mask  # noqa: E402
 
 PAD = 4  # transparent margin around each exported part
+DARK = 80  # HSV value below this counts as outline, not paint
+OUTLINE = 7  # px of outline redrawn along filled edges (matches the source art)
+OUTLINE_RGB = (28, 20, 16)
 
 
 def poly_mask(size, polys):
@@ -39,28 +48,64 @@ def poly_mask(size, polys):
     return m
 
 
+def region_mask(src, hsv, part):
+    """Pixels a part claims before other parts are subtracted (uint8 array, 0 or 255)."""
+    m = poly_mask(src.size, [part["poly"]] if "poly" in part else [])
+    if "stroke" in part:
+        d = ImageDraw.Draw(m)
+        pts = [tuple(v) for v in part["stroke"]["line"]]
+        w = part["stroke"]["width"]
+        d.line(pts, fill=255, width=w)
+        for x, y in pts:  # round joints
+            d.ellipse([x - w / 2, y - w / 2, x + w / 2, y + w / 2], fill=255)
+    m = np.array(m)
+    if "hsv" in part:
+        lo, hi = (np.array(v, np.uint8) for v in part["hsv"])
+        keep = cv2.inRange(hsv, lo, hi)
+        g = part.get("grow", 0)
+        if g:
+            # grow only into dark pixels, i.e. take the part's own outline but no neighbour paint
+            grown = cv2.dilate(keep, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * g + 1,) * 2))
+            keep = np.maximum(keep, np.minimum(grown, (hsv[..., 2] < DARK).astype(np.uint8) * 255))
+        m = np.minimum(m, keep)
+    m = np.minimum(m, np.array(poly_mask(src.size, part.get("exclude", []))) ^ 255)
+    return m
+
+
 def split(spec_path, out_dir):
     spec = json.load(open(spec_path, encoding="utf-8"))
     src = Image.open(os.path.join(os.path.dirname(spec_path), spec["source"])).convert("RGB")
-    fg = ImageChops.invert(background_mask(src))
+    fg = np.array(ImageChops.invert(background_mask(src)))
     rgb = np.array(src)
+    hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
+    # paper enclosed by the figure (e.g. between an arm and the body) is not border-connected,
+    # so the spec marks those spots; light grey pixels inside them become background
+    paper = (hsv[..., 1] < 30) & (hsv[..., 2] > 200)
+    fg[(np.array(poly_mask(src.size, spec.get("background", []))) > 0) & paper] = 0
+    owned = {p["name"]: np.minimum(region_mask(src, hsv, p), fg) for p in spec["parts"]}
     os.makedirs(out_dir, exist_ok=True)
     meta, layers = [], []
     for part in spec["parts"]:
-        own = ImageChops.multiply(poly_mask(src.size, [part["poly"]]), fg)
-        hidden = poly_mask(src.size, part.get("hidden", []))
-        # fill the hidden area from the part's own pixels only: everything outside the part
-        # is marked unknown, so no white paper or neighbouring part bleeds in
+        own = owned[part["name"]]
+        for other in part.get("exclude_parts", []):
+            own = np.minimum(own, owned[other] ^ 255)
+        # hidden areas are covered by other parts at rest, so they never reach past the
+        # silhouette
+        hidden = np.minimum(np.array(poly_mask(src.size, part.get("hidden", []))), fg)
         rgba = rgb.copy()
-        if hidden.getbbox():
-            known = np.array(own) > 200
-            fill = (np.array(hidden) > 0) & ~known
-            unknown = (~known).astype(np.uint8) * 255
-            painted = cv2.inpaint(rgba, unknown, 5, cv2.INPAINT_TELEA)
+        alpha = np.maximum(own, hidden)
+        fill = (hidden > 0) & (own <= 200)
+        if fill.any():
+            # paint from the part's own colours only (not its outline), so neither paper,
+            # neighbouring parts nor smeared black lines bleed in
+            known = (own > 200) & (hsv[..., 2] >= DARK)
+            painted = cv2.inpaint(rgba, (~known).astype(np.uint8) * 255, 5, cv2.INPAINT_TELEA)
             rgba[fill] = painted[fill]
-            alpha = np.maximum(np.array(own), np.array(hidden))
-        else:
-            alpha = np.array(own)
+            # where the filled area becomes the part's edge, draw the sticker outline again
+            solid = (alpha > 127).astype(np.uint8)
+            k = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * OUTLINE + 1,) * 2)
+            ring = (solid > 0) & (cv2.erode(solid, k) == 0) & fill
+            rgba[ring] = OUTLINE_RGB
         im = Image.fromarray(np.dstack([rgba, alpha]).astype(np.uint8), "RGBA")
         x0, y0, x1, y1 = im.getbbox()
         x0, y0 = max(0, x0 - PAD), max(0, y0 - PAD)
