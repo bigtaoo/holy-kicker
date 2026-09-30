@@ -1,0 +1,5 @@
+Keep exactly the same character, face, hairstyle, ponytail, colors, clothing and art style. Make only these changes:
+- Lower both arms to about 45 degrees below horizontal (A-pose), still clearly separated from the torso with white background visible between arms and body
+- Cut the teal and white robe panels much shorter: the hem must end at mid-thigh, so the knees and the white trousers below are fully visible
+- Delete the grey ground shadow under the feet completely; the feet stand on pure white
+Everything else unchanged. Pure white background, no text.

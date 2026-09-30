@@ -1,0 +1,19 @@
+# Dependencies / build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Real credentials never go in the repo (dev keys live in D:\cloud, see README)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,7 @@
+Keep exactly the same character, face, hairstyle, ponytail, colors, clothing design, 3/4 view and art style. Make only these changes:
+- Shorten the robe and skirt panels so they end clearly above the knees; both legs (white trousers and boots) fully visible from thigh to foot
+- Move both arms slightly outward from the body in an A-pose, with a clear visible gap of white background between each arm and the torso
+- Hands stay as simple relaxed fists
+- Remove the ground shadow under the feet
+- Flat colors only with a single hard cel-shading tone, no gradients, no soft shading
+Plain pure white background, no text.
