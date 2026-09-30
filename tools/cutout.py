@@ -1,24 +1,33 @@
 """Cut a character out of its white background and export it at in-game size.
 usage: python cutout.py <in> <out.png> <height>
-Flood-fills the background from the four corners, so white inside the character is kept."""
+Background = light, low-saturation pixels (white paper, grey ground or sticker shadows)
+connected to the image border. White inside the black outline is kept."""
 import sys
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
+
+
+def background_mask(rgb, min_light=130, max_chroma=30):
+    """L-mode mask, 255 where the pixel is border-connected background."""
+    r, g, b = rgb.split()
+    hi = ImageChops.lighter(ImageChops.lighter(r, g), b)
+    lo = ImageChops.darker(ImageChops.darker(r, g), b)
+    light = lo.point(lambda v: 255 if v >= min_light else 0)
+    grey = ImageChops.subtract(hi, lo).point(lambda v: 255 if v <= max_chroma else 0)
+    cand = ImageChops.multiply(light, grey)  # 255 = could be background
+    # pad with a background frame so one flood from the corner reaches every border pixel
+    pad = Image.new("L", (cand.width + 2, cand.height + 2), 255)
+    pad.paste(cand, (1, 1))
+    ImageDraw.floodfill(pad, (0, 0), 128)
+    return pad.crop((1, 1, cand.width + 1, cand.height + 1)).point(lambda v: 255 if v == 128 else 0)
 
 
 def cutout(src):
-    rgb = Image.open(src).convert("RGB")
-    mark = (255, 0, 255)
-    for xy in [(0, 0), (rgb.width - 1, 0), (0, rgb.height - 1), (rgb.width - 1, rgb.height - 1)]:
-        ImageDraw.floodfill(rgb, xy, mark, thresh=40)
     im = Image.open(src).convert("RGBA")
-    mask = Image.new("L", rgb.size, 255)
-    mp, rp = mask.load(), rgb.load()
-    for y in range(rgb.height):
-        for x in range(rgb.width):
-            if rp[x, y] == mark:
-                mp[x, y] = 0
-    im.putalpha(mask)
-    return im.crop(im.getbbox())
+    bg = background_mask(im.convert("RGB"))
+    # 1px feather so the resized edge is not jagged
+    alpha = ImageChops.invert(bg).filter(ImageFilter.GaussianBlur(0.6))
+    im.putalpha(alpha)
+    return im.crop(ImageChops.invert(bg).getbbox())
 
 
 if __name__ == "__main__":
