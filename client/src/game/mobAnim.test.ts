@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta } from './mobAnim';
+import { CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta, holdsStill, SETTLE, stepPace } from './mobAnim';
 
 const meta: SheetMeta = { frames: 10, flash: 10, cols: 4, frameW: 1, frameH: 1, fps: 20, anchor: [0, 0], height: 1, lift: [] };
 
@@ -30,5 +30,24 @@ describe('corpse', () => {
     expect(c.x).toBeGreaterThan(50);
     expect(c.tilt).toBeCloseTo(Math.PI / 2);
     expect(corpseAlpha(c)).toBe(0);
+  });
+});
+
+describe('jammed mobs', () => {
+  const hop: SheetMeta = { ...meta, frames: 4, lift: [0, 20, 30, 0.5] };
+
+  it('eases the pace toward the real speed', () => {
+    let pace = 1;
+    for (let i = 0; i < 60; i++) pace = stepPace(pace, 0.2, 110, 1 / 60);
+    expect(pace).toBeLessThan(SETTLE);
+    for (let i = 0; i < 60; i++) pace = stepPace(pace, 110 / 60, 110, 1 / 60);
+    expect(pace).toBeGreaterThan(0.95);
+  });
+
+  it('stands only on a ground frame and only when slow', () => {
+    expect(holdsStill(hop, 0, 0.1)).toBe(true);
+    expect(holdsStill(hop, 3, 0.1)).toBe(true);
+    expect(holdsStill(hop, 2, 0.1)).toBe(false);
+    expect(holdsStill(hop, 0, 0.9)).toBe(false);
   });
 });

@@ -67,3 +67,19 @@ export function stepCorpse(c: Corpse, dt: number): boolean {
 export function corpseAlpha(c: Corpse): number {
   return Math.max(0, Math.min(1, (CORPSE_LIFE - c.age) / 0.2));
 }
+
+/** A mob going slower than this share of its walking speed stops hopping once it lands. */
+export const SETTLE = 0.35;
+/** Seconds for the measured pace to follow the real one. */
+const PACE_EASE = 0.15;
+
+/** Eases the mob's pace (0..1, a share of `walk`) toward how far it really moved this frame. */
+export function stepPace(pace: number, moved: number, walk: number, dt: number): number {
+  const target = Math.min(1, moved / Math.max(1e-6, walk * dt));
+  return pace + (target - pace) * (1 - Math.exp(-dt / PACE_EASE));
+}
+
+/** True when a jammed mob should stand still on this frame instead of hopping in place. */
+export function holdsStill(meta: SheetMeta, frame: number, pace: number): boolean {
+  return pace < SETTLE && (meta.lift[frame] ?? 0) <= 1;
+}

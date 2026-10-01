@@ -35,3 +35,21 @@ describe('stepHorde', () => {
     expect(closest).toBeGreaterThan(params.sepRadius * 0.5);
   });
 });
+
+describe('queueing', () => {
+  const Q = { speed: 100, stopDist: 10, sepRadius: 50, queue: true };
+
+  it('waits behind a neighbour ahead, but walks when the way is clear', () => {
+    const mobs = [{ x: 100, y: 0 }, { x: 135, y: 0 }, { x: 0, y: 400 }];
+    stepHorde(mobs, 0, 0, 0.1, Q);
+    expect(mobs[0].x).toBeLessThanOrEqual(90);
+    expect(mobs[1].x).toBeGreaterThanOrEqual(135);
+    expect(mobs[2].y).toBeCloseTo(390);
+  });
+
+  it('presses on without queueing', () => {
+    const mobs = [{ x: 100, y: 0 }, { x: 135, y: 0 }];
+    stepHorde(mobs, 0, 0, 0.1, { ...Q, queue: false });
+    expect(mobs[1].x).toBeLessThan(135);
+  });
+});

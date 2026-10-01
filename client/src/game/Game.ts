@@ -20,6 +20,7 @@ import type { EliteColor, SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { stepHorde, type HordeParams, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
+import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 
 // Prototype scene: the hero walks around a field while a jiangshi horde and one fox elite
 // chase him. He auto-kicks the cuju at the nearest enemy and flinches when they touch him.
@@ -38,7 +39,7 @@ export interface Art {
 
 const HERO_SPEED = 420;
 const HERO_HEIGHT = 120;
-const HORDE: HordeParams = { speed: 110, stopDist: 70, sepRadius: 60 };
+const HORDE: HordeParams = { speed: 110, stopDist: 70, sepRadius: 60, queue: true };
 const RESPAWN_DIST = 2200;
 const STICK_RADIUS = 70;
 const GROUND = 0x3a4a3c;
@@ -48,6 +49,8 @@ const KICK_RANGE = 650;
 const KICK_COOLDOWN = 0.9;
 const HURT_DIST = 85;
 const HURT_COOLDOWN = 1;
+/** Seconds the hero's red hurt flash takes to fade. */
+const HURT_FLASH = 0.35;
 const BALL: BallParams = { speed: 1300, hitRadius: 55, seekRange: 600, maxHits: 3, maxTravel: 900 };
 const FOX_KNOCKBACK = 160;
 const FOX_STOP = 220;
@@ -77,6 +80,9 @@ export class Game {
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
   private readonly hero: Hero;
   private readonly heroPos = { x: 0, y: 0 };
+  private readonly heroVel = { x: 0, y: 0 };
+  /** World point the camera centres on; trails the hero under the smooth camera. */
+  private readonly camPos = { x: 0, y: 0 };
   private readonly fox: Enemy;
   private readonly foxPos: Mob[];
   private readonly mobs: Enemy[] = [];
@@ -202,19 +208,22 @@ export class Game {
       mx /= len;
       my /= len;
     }
-    this.heroPos.x += mx * HERO_SPEED * dt;
-    this.heroPos.y += my * HERO_SPEED * dt;
+    const cam = this.scene.cam === 'lock' ? LOCKED_CAMERA : SMOOTH_CAMERA;
+    ease(this.heroVel, mx * HERO_SPEED, my * HERO_SPEED, dt, cam.heroEase);
+    this.heroPos.x += this.heroVel.x * dt;
+    this.heroPos.y += this.heroVel.y * dt;
     if (this.hero.update(dt, mx, len > 0.1)) this.strike();
     place(this.hero.view, this.heroPos);
     if (this.scene.heroOnTop) this.hero.view.zIndex = this.scene.heroOverFx ? HERO_OVER_FX_Z : HERO_TOP_Z;
-    this.hero.view.alpha = this.hurtTimer > HURT_COOLDOWN - 0.4 && Math.floor(this.hurtTimer * 20) % 2 ? 0.5 : 1;
+    // a red flash that fades, not a see-through blink: a 10 Hz strobe over the crowd is tiring
+    this.hero.view.tint = hurtTint(Math.max(0, this.hurtTimer - (HURT_COOLDOWN - HURT_FLASH)) / HURT_FLASH);
 
     const hx = this.heroPos.x;
     const hy = this.heroPos.y;
-    stepHorde(this.mobPos, hx, hy, dt, HORDE, this.grid);
+    stepHorde(this.mobPos, hx, hy, dt, this.scene.queue ? HORDE : { ...HORDE, queue: false }, this.grid);
     for (const m of this.mobs) {
       if (Math.hypot(m.pos.x - hx, m.pos.y - hy) > RESPAWN_DIST) ringPoint(hx, hy, m.pos);
-      m.view.update(dt, m.pos.x, m.pos.y, hx - m.pos.x);
+      m.view.update(dt, m.pos.x, m.pos.y, hx - m.pos.x, 1, this.scene.settle ? HORDE.speed : 0);
     }
     const fp = this.fox.pos;
     stepHorde(this.foxPos, hx, hy, dt, FOX_MOVE);
@@ -236,8 +245,13 @@ export class Game {
 
     this.combat(dt);
 
-    // Camera: keep the hero at the centre of the play area.
-    this.world.position.set(vp.playW / 2 - hx * vp.scale, vp.playH / 2 - hy * vp.scale);
+    // Camera: ease after the hero towards the centre of the play area, on whole pixels.
+    ease(this.camPos, hx, hy, dt, cam.camEase);
+    const res = this.app.renderer.resolution;
+    this.world.position.set(
+      snapToPixel(vp.playW / 2 - this.camPos.x * vp.scale, res),
+      snapToPixel(vp.playH / 2 - this.camPos.y * vp.scale, res),
+    );
 
     this.drawStick();
     this.fpsTimer -= dt;
@@ -317,6 +331,12 @@ function place(s: Container, p: Mob): void {
 }
 
 /** Moves `out` to a random point on a ring around (cx, cy), just outside the phone view. */
+/** White at 0, a soft red at 1. */
+function hurtTint(k: number): number {
+  const gb = Math.round(255 - 130 * k);
+  return 0xff0000 | (gb << 8) | gb;
+}
+
 function ringPoint(cx: number, cy: number, out: Mob): Mob {
   const a = Math.random() * Math.PI * 2;
   const r = 900 + Math.random() * 500;

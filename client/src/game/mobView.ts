@@ -1,10 +1,16 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
+import { faceSide } from './camera';
 import { makeShadow, sizeShadow } from './shadow';
-import { corpseAlpha, frameAt, knockDown, stepCorpse, type Corpse, type SheetMeta } from './mobAnim';
+import { corpseAlpha, frameAt, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
 
 // Draws mobs from their baked sheets: a looping animated sprite over a ground shadow that
 // stays on the ground while the sprite hops. Corpses are separate sprites, so a knocked-down
 // mob can respawn at once while its body tumbles away; spent corpse sprites are reused.
+
+/** A mob turns only once the hero is this far to its other side, so it does not flicker. */
+const FACE_DEAD = 30;
+/** Draw order follows y only once it moves this far, so jostling neighbours do not swap. */
+const Z_DEAD = 6;
 
 export interface MobSheet {
   meta: SheetMeta;
@@ -41,9 +47,14 @@ export class MobView {
   private readonly scale: number;
   private readonly phase = Math.random();
   private time = 0;
+  /** Share of the walking speed the mob really moves at, eased. */
+  private pace = 1;
+  private lastX = NaN;
+  private lastY = 0;
   private squash = 0;
   private flash = 0;
-  private flip = 1;
+  /** 1 while looking right, -1 left. */
+  private side = 1;
   private frame = 0;
 
   constructor(
@@ -70,14 +81,24 @@ export class MobView {
     return textures[this.frame + (white ? meta.flash : 0)];
   }
 
-  /** `speed` scales the cycle, e.g. slower while standing. `faceX` is the side to look at. */
-  update(dt: number, x: number, y: number, faceX: number, speed = 1): void {
+  /**
+   * `speed` scales the cycle, e.g. slower while standing. `faceX` is the side to look at. With
+   * a `walk` speed, a mob jammed in the crowd lands and stands instead of hopping in place.
+   */
+  update(dt: number, x: number, y: number, faceX: number, speed = 1, walk = 0): void {
     const { meta, textures } = this.look.sheet;
-    this.time += dt * speed;
+    if (walk > 0 && dt > 0) {
+      const moved = Number.isNaN(this.lastX) ? walk * dt : Math.hypot(x - this.lastX, y - this.lastY);
+      this.pace = stepPace(this.pace, moved, walk, dt);
+      this.lastX = x;
+      this.lastY = y;
+    }
+    if (!(walk > 0 && holdsStill(meta, this.frame, this.pace))) this.time += dt * speed;
     const f = (this.frame = frameAt(meta, this.time, this.phase));
     this.flash = Math.max(0, this.flash - dt);
     this.sprite.texture = textures[f + (this.flash > 0 ? meta.flash : 0)];
-    if (faceX !== 0) this.flip = (faceX < 0) === this.look.facesLeft ? 1 : -1;
+    this.side = faceSide(this.side, faceX, FACE_DEAD);
+    const flip = (this.side < 0) === this.look.facesLeft ? 1 : -1;
     let sx = this.scale;
     let sy = this.scale;
     if (this.squash > 0) {
@@ -86,9 +107,9 @@ export class MobView {
       sx *= 1 + k;
       sy *= 1 - k;
     }
-    this.sprite.scale.set(sx * this.flip, sy);
+    this.sprite.scale.set(sx * flip, sy);
     this.sprite.position.set(x, y);
-    this.sprite.zIndex = y;
+    if (Math.abs(y - this.sprite.zIndex) > Z_DEAD) this.sprite.zIndex = y;
     // the shadow shrinks while the mob is in the air
     const air = (meta.lift[f] ?? 0) / meta.height;
     this.shadow.position.set(x, y);

@@ -13,7 +13,15 @@ export interface HordeParams {
   stopDist: number;
   /** Neighbours closer than this push each other apart. */
   sepRadius: number;
+  /**
+   * A mob with a neighbour right ahead of it waits instead of pressing on, so a jammed crowd
+   * stands still rather than churning (the churn reads as a swimming, dizzying pile).
+   */
+  queue?: boolean;
 }
+
+/** A neighbour counts as ahead within this angle of the way to the target (cos 50 deg). */
+const AHEAD_COS = 0.64;
 
 /** Most neighbours one mob looks at; a pile denser than this ignores the rest. */
 const MAX_NEAR = 64;
@@ -32,7 +40,7 @@ export function stepHorde(
     const dx = tx - m.x;
     const dy = ty - m.y;
     const d = Math.hypot(dx, dy);
-    if (d > p.stopDist) {
+    if (d > p.stopDist && !(p.queue && separate && blocked(mobs, i, dx / d, dy / d, p.sepRadius, grid!))) {
       m.x += (dx / d) * p.speed * dt;
       m.y += (dy / d) * p.speed * dt;
     }
@@ -51,4 +59,19 @@ export function stepHorde(
       }
     }
   }
+}
+
+/** True if a neighbour within the separation radius lies ahead of mob i along (ux, uy). */
+function blocked(mobs: Mob[], i: number, ux: number, uy: number, r: number, grid: SpatialGrid): boolean {
+  const m = mobs[i];
+  const n = grid.near(m.x, m.y, near);
+  for (let k = 0; k < n; k++) {
+    const j = near[k];
+    if (j === i) continue;
+    const ox = mobs[j].x - m.x;
+    const oy = mobs[j].y - m.y;
+    const od = Math.hypot(ox, oy);
+    if (od > 0 && od < r && (ox * ux + oy * uy) / od > AHEAD_COS) return true;
+  }
+  return false;
 }
