@@ -41,8 +41,9 @@ export function nearest(mobs: readonly Mob[], x: number, y: number, maxDist: num
   return best;
 }
 
-export function launch(x: number, y: number, tx: number, ty: number, p: BallParams): Ball {
-  const ball: Ball = { x, y, vx: 0, vy: 0, hits: 0, last: -1, travel: p.maxTravel, alive: true };
+/** Kicks a ball from (x, y) at (tx, ty), reusing `out` if given. */
+export function launch(x: number, y: number, tx: number, ty: number, p: BallParams, out = {} as Ball): Ball {
+  const ball = Object.assign(out, { x, y, vx: 0, vy: 0, hits: 0, last: -1, travel: p.maxTravel, alive: true });
   aim(ball, tx, ty, p.speed);
   return ball;
 }

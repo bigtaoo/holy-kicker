@@ -1,5 +1,5 @@
 // Floating damage numbers: pure motion and digit layout in a flat pool (swap-remove),
-// drawn by damageView.ts as one particle per digit.
+// drawn by damageView.ts as one particle per digit. Expired numbers are recycled.
 
 export interface DamageNumber {
   x: number;
@@ -21,6 +21,7 @@ const CRIT_SCALE = 1.5;
 
 export class DamagePool {
   readonly live: DamageNumber[] = [];
+  private readonly free: DamageNumber[] = [];
 
   constructor(
     readonly max: number,
@@ -30,10 +31,15 @@ export class DamagePool {
   spawn(x: number, y: number, value: number, crit: boolean): void {
     if (this.live.length >= this.max) return;
     const r = this.rand;
-    this.live.push({
-      x: x + (r() - 0.5) * 30, y, vx: (r() - 0.5) * 160, vy: -RISE * (crit ? 1.2 : 1),
-      age: 0, digits: digitsOf(value), crit,
-    });
+    const d = this.free.pop() ?? { x: 0, y: 0, vx: 0, vy: 0, age: 0, digits: [], crit: false };
+    d.x = x + (r() - 0.5) * 30;
+    d.y = y;
+    d.vx = (r() - 0.5) * 160;
+    d.vy = -RISE * (crit ? 1.2 : 1);
+    d.age = 0;
+    d.crit = crit;
+    digitsOf(value, d.digits);
+    this.live.push(d);
   }
 
   step(dt: number): void {
@@ -45,6 +51,7 @@ export class DamagePool {
       if (d.age >= DAMAGE_LIFE) {
         live[i] = live[live.length - 1];
         live.pop();
+        this.free.push(d);
         continue;
       }
       d.vx *= k;
@@ -55,8 +62,15 @@ export class DamagePool {
   }
 }
 
-export function digitsOf(value: number): number[] {
-  return Array.from(String(Math.max(0, Math.round(value))), (c) => c.charCodeAt(0) - 48);
+/** Decimal digits of the rounded value, most significant first, written into `out`. */
+export function digitsOf(value: number, out: number[] = []): number[] {
+  let v = Math.max(0, Math.round(value));
+  out.length = 0;
+  do {
+    out.push(v % 10);
+    v = Math.floor(v / 10);
+  } while (v > 0);
+  return out.reverse();
 }
 
 /** Size multiplier: pops in large, settles; crits stay bigger. */

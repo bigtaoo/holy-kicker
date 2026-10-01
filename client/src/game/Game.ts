@@ -1,13 +1,15 @@
-import { Application, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
+import { Application, Container, Graphics, Text, type Texture } from 'pixi.js';
 import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
-import { launch, nearest, stepBall, type Ball, type BallParams } from './cuju';
+import { BALL_LIFT, Balls } from './ballView';
+import { nearest, type BallParams } from './cuju';
 import { Hero } from './hero';
 import { DamageLayer } from './damageView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
+import { makeShadow, shadowTexture } from './shadow';
 import { stepHorde, type HordeParams, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
 
@@ -35,11 +37,10 @@ const KICK_RANGE = 650;
 const KICK_COOLDOWN = 0.9;
 const HURT_DIST = 85;
 const HURT_COOLDOWN = 1;
-const BALL_SIZE = 48;
-const BALL_LIFT = 45; // drawn this far above its ground point
 const BALL: BallParams = { speed: 1300, hitRadius: 55, seekRange: 600, maxHits: 3, maxTravel: 900 };
 const FOX_KNOCKBACK = 160;
 const FOX_STOP = 220;
+const FOX_MOVE: HordeParams = { speed: 160, stopDist: FOX_STOP, sepRadius: 0 };
 const MOB_HEIGHT = 80;
 const FOX_HEIGHT = 130;
 const CRIT_CHANCE = 0.2;
@@ -47,12 +48,6 @@ const CRIT_CHANCE = 0.2;
 interface Enemy {
   pos: Mob;
   view: MobView;
-}
-
-interface BallView {
-  ball: Ball;
-  sprite: Sprite;
-  shadow: Graphics;
 }
 
 export class Game {
@@ -64,8 +59,8 @@ export class Game {
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
   private readonly hero: Hero;
   private readonly heroPos = { x: 0, y: 0 };
-  private readonly heroShadow = new Graphics().ellipse(0, 0, 34, 11).fill({ color: 0x000000, alpha: 0.3 });
   private readonly fox: Enemy;
+  private readonly foxPos: Mob[];
   private readonly mobs: Enemy[] = [];
   private readonly mobPos: Mob[] = [];
   private readonly grid = new SpatialGrid(HORDE.sepRadius);
@@ -74,8 +69,11 @@ export class Game {
   private readonly damage: DamageLayer;
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
-  private readonly balls: BallView[] = [];
-  private readonly cujuTex: Texture;
+  private readonly balls: Balls;
+  private readonly onHit = (target: number, x: number, y: number) => {
+    this.fx.hit(x, y - BALL_LIFT);
+    this.knock(target);
+  };
   private kickTimer = 0;
   private hurtTimer = 0;
   private vp: Viewport = computeViewport(1, 1);
@@ -89,19 +87,20 @@ export class Game {
   ) {
     this.world.sortableChildren = true;
     this.world.addChild(makeGround());
+    const shadowTex = shadowTexture(app.renderer);
     this.hero = new Hero(art.hero, HERO_HEIGHT);
-    this.heroShadow.zIndex = -1e6;
-    this.world.addChild(this.heroShadow, this.hero.view);
-    this.cujuTex = art.cuju;
+    this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view);
+    this.balls = new Balls(this.world, art.cuju, shadowTex, BALL);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
     this.damage = new DamageLayer(app.renderer);
     this.world.addChild(this.fx.view, this.damage.view);
-    const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number] };
+    const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number], shadowTex };
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
-    const jiangshi = { sheet: art.jiangshi, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number] };
+    this.foxPos = [this.fox.pos];
+    const jiangshi = { sheet: art.jiangshi, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number], shadowTex };
     for (let i = 0; i < MOB_COUNT; i++) {
-      this.mobs.push({ pos: ringPoint(0, 0), view: new MobView(jiangshi, this.world) });
+      this.mobs.push({ pos: ringPoint(0, 0, { x: 0, y: 0 }), view: new MobView(jiangshi, this.world) });
     }
     this.mobPos.push(...this.mobs.map((m) => m.pos));
     this.targets.push(...this.mobPos, this.fox.pos);
@@ -146,18 +145,17 @@ export class Game {
     this.heroPos.y += my * HERO_SPEED * dt;
     if (this.hero.update(dt, mx, len > 0.1)) this.strike();
     place(this.hero.view, this.heroPos);
-    this.heroShadow.position.set(this.heroPos.x, this.heroPos.y);
     this.hero.view.alpha = this.hurtTimer > HURT_COOLDOWN - 0.4 && Math.floor(this.hurtTimer * 20) % 2 ? 0.5 : 1;
 
     const hx = this.heroPos.x;
     const hy = this.heroPos.y;
     stepHorde(this.mobPos, hx, hy, dt, HORDE, this.grid);
     for (const m of this.mobs) {
-      if (Math.hypot(m.pos.x - hx, m.pos.y - hy) > RESPAWN_DIST) Object.assign(m.pos, ringPoint(hx, hy));
+      if (Math.hypot(m.pos.x - hx, m.pos.y - hy) > RESPAWN_DIST) ringPoint(hx, hy, m.pos);
       m.view.update(dt, m.pos.x, m.pos.y, hx - m.pos.x);
     }
     const fp = this.fox.pos;
-    stepHorde([fp], hx, hy, dt, { speed: 160, stopDist: FOX_STOP, sepRadius: 0 });
+    stepHorde(this.foxPos, hx, hy, dt, FOX_MOVE);
     const foxRunning = Math.hypot(fp.x - hx, fp.y - hy) > FOX_STOP + 5;
     this.fox.view.update(dt, fp.x, fp.y, hx - fp.x, foxRunning ? 1 : 0.35);
     this.corpses.update(dt);
@@ -186,24 +184,7 @@ export class Game {
       if (t >= 0 && this.hero.kick(this.targets[t].x - hx)) this.kickTimer = KICK_COOLDOWN;
     }
 
-    for (let i = this.balls.length - 1; i >= 0; i--) {
-      const b = this.balls[i];
-      const hit = stepBall(b.ball, this.targets, dt, BALL);
-      if (hit >= 0) {
-        this.fx.hit(b.ball.x, b.ball.y - BALL_LIFT);
-        this.knock(hit);
-      }
-      if (!b.ball.alive) {
-        b.sprite.destroy();
-        b.shadow.destroy();
-        this.balls.splice(i, 1);
-        continue;
-      }
-      b.sprite.position.set(b.ball.x, b.ball.y - BALL_LIFT);
-      b.sprite.rotation += dt * 14 * Math.sign(b.ball.vx || 1);
-      b.sprite.zIndex = b.ball.y + 1;
-      b.shadow.position.set(b.ball.x, b.ball.y);
-    }
+    this.balls.update(dt, this.targets, this.onHit);
 
     this.hurtTimer -= dt;
     if (this.hurtTimer <= 0 && nearest(this.targets, hx, hy, HURT_DIST) >= 0) {
@@ -219,14 +200,7 @@ export class Game {
     const fx = hx + this.hero.facing * 40;
     const tx = t >= 0 ? this.targets[t].x : fx + this.hero.facing * 100;
     const ty = t >= 0 ? this.targets[t].y : hy;
-    const sprite = new Sprite(this.cujuTex);
-    sprite.anchor.set(0.5);
-    sprite.scale.set(BALL_SIZE / this.cujuTex.height);
-    const shadow = new Graphics().ellipse(0, 0, BALL_SIZE * 0.4, BALL_SIZE * 0.15).fill({ color: 0x000000, alpha: 0.3 });
-    shadow.zIndex = -1e6; // ground decal, under every standing figure
-    this.world.addChild(shadow, sprite);
-    const ball = launch(fx, hy, tx, ty, BALL);
-    this.balls.push({ ball, sprite, shadow });
+    this.balls.spawn(fx, hy, tx, ty);
   }
 
   /** A ball hit: jiangshi go down (respawn off-screen), the elite fox is knocked back. */
@@ -245,7 +219,7 @@ export class Game {
     } else {
       this.corpses.spawn(this.mobs[i].view, p.x - hx, p.y - hy);
       this.fx.puff(p.x, p.y);
-      Object.assign(p, ringPoint(hx, hy));
+      ringPoint(hx, hy, p);
     }
   }
 
@@ -264,11 +238,13 @@ function place(s: Container, p: Mob): void {
   s.zIndex = p.y;
 }
 
-/** A random point on a ring around (cx, cy), just outside the phone view. */
-function ringPoint(cx: number, cy: number): Mob {
+/** Moves `out` to a random point on a ring around (cx, cy), just outside the phone view. */
+function ringPoint(cx: number, cy: number, out: Mob): Mob {
   const a = Math.random() * Math.PI * 2;
   const r = 900 + Math.random() * 500;
-  return { x: cx + Math.cos(a) * r, y: cy + Math.sin(a) * r };
+  out.x = cx + Math.cos(a) * r;
+  out.y = cy + Math.sin(a) * r;
+  return out;
 }
 
 /** Flat field with scattered grass tufts, so movement is visible. */

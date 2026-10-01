@@ -40,9 +40,10 @@ export interface Corpse {
 export const CORPSE_LIFE = 0.5;
 const GRAVITY = 2600;
 
-export function knockDown(x: number, y: number, dirX: number, dirY: number, speed: number): Corpse {
+/** Starts a corpse, reusing `out` if given. */
+export function knockDown(x: number, y: number, dirX: number, dirY: number, speed: number, out = {} as Corpse): Corpse {
   const d = Math.hypot(dirX, dirY) || 1;
-  return { x, y, vx: (dirX / d) * speed, vy: (dirY / d) * speed, z: 0, vz: 520, tilt: 0, age: 0 };
+  return Object.assign(out, { x, y, vx: (dirX / d) * speed, vy: (dirY / d) * speed, z: 0, vz: 520, tilt: 0, age: 0 });
 }
 
 /** Advances a corpse; false once it has faded out. */

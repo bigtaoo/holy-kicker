@@ -6,6 +6,9 @@ describe('digitsOf', () => {
     expect(digitsOf(1207)).toEqual([1, 2, 0, 7]);
     expect(digitsOf(9.6)).toEqual([1, 0]);
     expect(digitsOf(-3)).toEqual([0]);
+    const out = [7, 7, 7, 7, 7];
+    expect(digitsOf(30, out)).toBe(out);
+    expect(out).toEqual([3, 0]);
   });
 });
 
@@ -23,6 +26,18 @@ describe('DamagePool', () => {
     expect(damageAlpha(d)).toBeLessThan(0.3);
     pool.step(0.1);
     expect(pool.live.length).toBe(0);
+  });
+
+  it('reuses expired numbers', () => {
+    const pool = new DamagePool(10, () => 0.5);
+    pool.spawn(0, 0, 123, false);
+    const d = pool.live[0];
+    pool.step(DAMAGE_LIFE);
+    pool.spawn(5, 0, 9, true);
+    expect(pool.live[0]).toBe(d);
+    expect(d.digits).toEqual([9]);
+    expect(d.age).toBe(0);
+    expect(d.crit).toBe(true);
   });
 
   it('draws crits bigger and respects its cap', () => {

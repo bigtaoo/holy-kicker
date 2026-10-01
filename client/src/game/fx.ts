@@ -1,5 +1,5 @@
 // Short-lived effect particles: hit sparks and death puffs. Pure simulation in a flat
-// pool (swap-remove, no per-frame allocation), drawn by fxView.ts.
+// pool (swap-remove, spent particles recycled), drawn by fxView.ts.
 
 export type FxShape = 'spark' | 'puff' | 'ring';
 
@@ -26,6 +26,7 @@ export interface FxParticle {
 
 export class FxPool {
   readonly live: FxParticle[] = [];
+  private readonly free: FxParticle[] = [];
 
   constructor(
     readonly max: number,
@@ -34,7 +35,9 @@ export class FxPool {
 
   emit(p: Omit<FxParticle, 'age'>): void {
     if (this.live.length >= this.max) return;
-    this.live.push({ ...p, age: 0 });
+    const q = this.free.pop() ?? ({} as FxParticle);
+    Object.assign(q, p).age = 0;
+    this.live.push(q);
   }
 
   /** Impact: a flash ring and sparks flying out from (x, y). */
@@ -74,6 +77,7 @@ export class FxPool {
       if (p.age >= p.life) {
         live[i] = live[live.length - 1];
         live.pop();
+        this.free.push(p);
         continue;
       }
       const k = Math.pow(p.drag, dt);

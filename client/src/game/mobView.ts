@@ -1,9 +1,10 @@
-import { Container, Graphics, GraphicsContext, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
+import { makeShadow, sizeShadow } from './shadow';
 import { corpseAlpha, frameAt, knockDown, stepCorpse, type Corpse, type SheetMeta } from './mobAnim';
 
 // Draws mobs from their baked sheets: a looping animated sprite over a ground shadow that
 // stays on the ground while the sprite hops. Corpses are separate sprites, so a knocked-down
-// mob can respawn at once while its body tumbles away.
+// mob can respawn at once while its body tumbles away; spent corpse sprites are reused.
 
 export interface MobSheet {
   meta: SheetMeta;
@@ -18,6 +19,7 @@ export interface MobLook {
   facesLeft: boolean;
   /** Ground shadow half-width and half-height. */
   shadow: [number, number];
+  shadowTex: Texture;
 }
 
 export function sliceSheet(meta: SheetMeta, sheet: Texture): MobSheet {
@@ -30,26 +32,11 @@ export function sliceSheet(meta: SheetMeta, sheet: Texture): MobSheet {
   return { meta, textures };
 }
 
-const SHADOW_ALPHA = 0.3;
 const SQUASH_TIME = 0.15;
 const FLASH_TIME = 0.09;
-/** Shadow drawn under every standing figure; zIndex keeps them below all sprites. */
-const SHADOW_Z = -1e6;
-
-const shadowContexts = new Map<string, GraphicsContext>();
-function shadowContext(rx: number, ry: number): GraphicsContext {
-  const key = `${rx}x${ry}`;
-  let ctx = shadowContexts.get(key);
-  if (!ctx) {
-    ctx = new GraphicsContext().ellipse(0, 0, rx, ry).fill({ color: 0x000000, alpha: SHADOW_ALPHA });
-    shadowContexts.set(key, ctx);
-  }
-  return ctx;
-}
-
 export class MobView {
   readonly sprite: Sprite;
-  private readonly shadow: Graphics;
+  private readonly shadow: Sprite;
   private readonly scale: number;
   private readonly phase = Math.random();
   private time = 0;
@@ -66,8 +53,7 @@ export class MobView {
     this.scale = look.height / meta.height;
     this.sprite = new Sprite(textures[0]);
     this.sprite.anchor.set(meta.anchor[0] / meta.frameW, meta.anchor[1] / meta.frameH);
-    this.shadow = new Graphics(shadowContext(...look.shadow));
-    this.shadow.zIndex = SHADOW_Z;
+    this.shadow = makeShadow(look.shadowTex, ...look.shadow);
     layer.addChild(this.shadow, this.sprite);
   }
 
@@ -105,31 +91,49 @@ export class MobView {
     // the shadow shrinks while the mob is in the air
     const air = (meta.lift[f] ?? 0) / meta.height;
     this.shadow.position.set(x, y);
-    this.shadow.scale.set(1 - air * 1.5);
+    sizeShadow(this.shadow, ...this.look.shadow, 1 - air * 1.5);
   }
+}
+
+interface Body {
+  c: Corpse;
+  sprite: Sprite;
+  plain: Texture;
 }
 
 /** Knocked-down bodies, each a copy of the mob's current frame. */
 export class Corpses {
-  private readonly live: { c: Corpse; sprite: Sprite; plain: Texture }[] = [];
+  private readonly live: Body[] = [];
+  private readonly free: Body[] = [];
 
   constructor(private readonly layer: Container) {}
 
   spawn(from: MobView, dirX: number, dirY: number): void {
-    const sprite = new Sprite(from.frameTexture(true));
+    let b = this.free.pop();
+    if (!b) {
+      b = { c: {} as Corpse, sprite: new Sprite(), plain: Texture.EMPTY };
+      this.layer.addChild(b.sprite);
+    }
+    const { sprite } = b;
+    sprite.visible = true;
+    sprite.texture = from.frameTexture(true);
     sprite.anchor.copyFrom(from.sprite.anchor);
     sprite.scale.copyFrom(from.sprite.scale);
-    this.layer.addChild(sprite);
     const { x, y } = from.sprite.position;
-    this.live.push({ c: knockDown(x, y, dirX, dirY, 380), sprite, plain: from.frameTexture(false) });
+    knockDown(x, y, dirX, dirY, 380, b.c);
+    b.plain = from.frameTexture(false);
+    this.live.push(b);
   }
 
   update(dt: number): void {
-    for (let i = this.live.length - 1; i >= 0; i--) {
-      const { c, sprite, plain } = this.live[i];
+    const live = this.live;
+    for (let i = live.length - 1; i >= 0; i--) {
+      const { c, sprite, plain } = live[i];
       if (!stepCorpse(c, dt)) {
-        sprite.destroy();
-        this.live.splice(i, 1);
+        sprite.visible = false;
+        this.free.push(live[i]);
+        live[i] = live[live.length - 1];
+        live.pop();
         continue;
       }
       sprite.position.set(c.x, c.y - c.z);

@@ -13,6 +13,15 @@ describe('FxPool', () => {
     expect(pool.live.length).toBe(0);
   });
 
+  it('reuses spent particles', () => {
+    const pool = new FxPool(100, () => 0.5);
+    pool.puff(0, 0);
+    const first = new Set(pool.live);
+    pool.step(5);
+    pool.puff(0, 0);
+    expect(pool.live.every((p) => first.has(p) && p.age === 0)).toBe(true);
+  });
+
   it('never grows past its cap', () => {
     const pool = new FxPool(12);
     pool.hit(0, 0);
