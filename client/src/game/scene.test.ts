@@ -12,12 +12,13 @@ describe('parseScene', () => {
       mobs: 300, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: false, eliteRing: true,
       types: 1, page: 0, mobRes: 1, spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
       gem: 'pink', drops: 0, threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
-      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true, deco: 'props', cam: 'smooth', settle: true, queue: true, calm: true, sep: 75, softFace: true, sway: true, boss: true, bossSize: 300,
+      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true, deco: 'props', cam: 'smooth', settle: true, queue: true, calm: true, sep: 75, softFace: true, sway: true, boss: true, bossSize: 300, seed: 0,
     });
     expect(parseScene('?spells=nova,lava,chain&rate=3&stack=6&ringfx=quad&blur=1&fxbudget=2')).toMatchObject({
       spells: ['nova', 'chain'], rate: 3, stack: 6, ringFx: 'quad', blur: true, fxBudget: 2,
     });
     expect(parseScene('?types=24&page=2048&mobres=0.6')).toMatchObject({ types: 24, page: 2048, mobRes: 0.6 });
+    expect(parseScene('?seed=77').seed).toBe(77);
     expect(parseScene('?types=0&page=3000&mobres=2')).toMatchObject({ types: 1, page: 0, mobRes: 1 });
     expect(parseScene('?types=500').types).toBe(64);
     expect(parseScene('?hero=top')).toMatchObject({ heroOnTop: true, heroOverFx: false });

@@ -1,74 +1,65 @@
 import { Container, Sprite, type Texture } from 'pixi.js';
-import { launch, stepBall, type Ball, type BallParams } from './cuju';
-import type { Mob } from './horde';
+import type { Ball } from '@hk/engine';
+import { lerpX, lerpY } from './fixedStep';
 import { makeShadow } from './shadow';
 
-// Kicked cuju balls in flight: a spinning sprite over a ground shadow. Spent balls are hidden
-// and kept for the next kick instead of being destroyed.
+// Kicked cuju balls in flight, drawn from the sim's ball list: a spinning sprite over a ground
+// shadow per ball id. Spent sprites are hidden and kept for the next kick.
 
 const SIZE = 48;
 /** Drawn this far above its ground point. */
 export const BALL_LIFT = 45;
 
 interface Flight {
-  ball: Ball;
   sprite: Sprite;
   shadow: Sprite;
+  seen: boolean;
 }
 
 export class Balls {
-  private readonly live: Flight[] = [];
+  private readonly live = new Map<number, Flight>();
   private readonly free: Flight[] = [];
 
   constructor(
     private readonly layer: Container,
     private readonly tex: Texture,
     private readonly shadowTex: Texture,
-    private readonly params: BallParams,
   ) {}
 
-  get count(): number {
-    return this.live.length;
+  sync(balls: readonly Ball[], alpha: number, dt: number): void {
+    for (const f of this.live.values()) f.seen = false;
+    for (const b of balls) {
+      let f = this.live.get(b.id);
+      if (!f) {
+        f = this.take();
+        this.live.set(b.id, f);
+      }
+      f.seen = true;
+      const x = lerpX(b, alpha);
+      const y = lerpY(b, alpha);
+      f.sprite.position.set(x, y - BALL_LIFT);
+      f.sprite.rotation += dt * 14 * Math.sign(b.vx || 1);
+      f.sprite.zIndex = y + 1;
+      f.shadow.position.set(x, y);
+    }
+    for (const [id, f] of this.live) {
+      if (f.seen) continue;
+      f.sprite.visible = f.shadow.visible = false;
+      this.free.push(f);
+      this.live.delete(id);
+    }
   }
 
-  spawn(x: number, y: number, tx: number, ty: number): void {
+  private take(): Flight {
     let f = this.free.pop();
     if (!f) {
       const sprite = new Sprite(this.tex);
       sprite.anchor.set(0.5);
       sprite.scale.set(SIZE / this.tex.height);
-      f = { ball: {} as Ball, sprite, shadow: makeShadow(this.shadowTex, SIZE * 0.4, SIZE * 0.15) };
+      f = { sprite, shadow: makeShadow(this.shadowTex, SIZE * 0.4, SIZE * 0.15), seen: false };
       this.layer.addChild(f.shadow, f.sprite);
     }
     f.sprite.visible = f.shadow.visible = true;
-    launch(x, y, tx, ty, this.params, f.ball);
-    this.place(f, 0);
-    this.live.push(f);
-  }
-
-  /** Flies every ball; `onHit` gets the index of each target hit and the ball's position. */
-  update(dt: number, targets: readonly Mob[], onHit: (target: number, x: number, y: number) => void): void {
-    const live = this.live;
-    for (let i = live.length - 1; i >= 0; i--) {
-      const f = live[i];
-      const hit = stepBall(f.ball, targets, dt, this.params);
-      if (hit >= 0) onHit(hit, f.ball.x, f.ball.y);
-      if (!f.ball.alive) {
-        f.sprite.visible = f.shadow.visible = false;
-        this.free.push(f);
-        live[i] = live[live.length - 1];
-        live.pop();
-        continue;
-      }
-      this.place(f, dt);
-    }
-  }
-
-  private place(f: Flight, dt: number): void {
-    const { ball, sprite, shadow } = f;
-    sprite.position.set(ball.x, ball.y - BALL_LIFT);
-    sprite.rotation += dt * 14 * Math.sign(ball.vx || 1);
-    sprite.zIndex = ball.y + 1;
-    shadow.position.set(ball.x, ball.y);
+    return f;
   }
 }

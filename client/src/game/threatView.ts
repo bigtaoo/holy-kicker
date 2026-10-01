@@ -1,12 +1,18 @@
 import { Container, Graphics, Particle, ParticleContainer, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { FP, THREATS, TICK_RATE, type Bullet, type Zone } from '@hk/engine';
 import type { FxPool } from './fx';
-import type { Mob } from './horde';
+import { lerpX, lerpY } from './fixedStep';
 import { SHADOW_Z } from './shadow';
-import { ThreatField, type BulletLook, type ZoneLayer, type ZoneLook, type Zone } from './threats';
 
-// Draws the ThreatField in one of the looks compared for readability: bullets are baked into
-// one texture and drawn by a ParticleContainer; zones are a few sprites each (a warning disc
-// with a hard edge, and an inner disc that grows to the edge as the blast nears).
+// Draws the sim's enemy attacks in one of the looks compared for readability: bullets are
+// baked into one texture and drawn by a ParticleContainer; zones are a few sprites each (a
+// warning disc with a hard edge, and an inner disc that grows to the edge as the blast nears).
+
+/** Looks compared for readability, chosen in the scene options. */
+export type BulletLook = 'red' | 'violet' | 'ink';
+export const BULLET_LOOKS: readonly BulletLook[] = ['red', 'violet', 'ink'];
+export type ZoneLook = 'fill' | 'edge';
+export type ZoneLayer = 'under' | 'over' | 'top';
 
 /** Body, rim and core per bullet look; zones take the rim colour. */
 const BULLET: Record<BulletLook, { body: number; rim: number; core: number }> = {
@@ -58,7 +64,6 @@ export function zoneTextures(renderer: Renderer, color: number, look: ZoneLook):
 }
 
 export class ThreatLayer {
-  readonly field = new ThreatField();
   private readonly bullets = new ParticleContainer({ dynamicProperties: { position: true } });
   private readonly bulletParts: Particle[] = [];
   private readonly bulletTex: Texture;
@@ -78,18 +83,12 @@ export class ThreatLayer {
     world.addChild(this.zones, this.bullets);
   }
 
-  /** Returns how many hits the hero took this step. */
-  update(dt: number, hx: number, hy: number, mobs: readonly Mob[]): number {
-    const f = this.field;
-    f.step(dt, hx, hy, mobs);
-    this.drawBullets();
-    this.drawZones();
-    for (const z of f.blasts) this.blast(z);
-    return f.hits;
+  draw(bullets: readonly Bullet[], zones: readonly Zone[], alpha: number): void {
+    this.drawBullets(bullets, alpha);
+    this.drawZones(zones, alpha);
   }
 
-  private drawBullets(): void {
-    const bs = this.field.bullets;
+  private drawBullets(bs: readonly Bullet[], alpha: number): void {
     while (this.bulletParts.length < bs.length) {
       this.bulletParts.push(new Particle({ texture: this.bulletTex, anchorX: 0.5, anchorY: 0.5 }));
     }
@@ -101,14 +100,13 @@ export class ThreatLayer {
     }
     for (let i = 0; i < bs.length; i++) {
       // bullets fly at chest height over their ground position
-      this.bulletParts[i].x = bs[i].x;
-      this.bulletParts[i].y = bs[i].y - 50;
+      this.bulletParts[i].x = lerpX(bs[i], alpha);
+      this.bulletParts[i].y = lerpY(bs[i], alpha) - 50;
     }
   }
 
-  private drawZones(): void {
-    const zs = this.field.zones;
-    const warn = this.field.params.warn;
+  private drawZones(zs: readonly Zone[], alpha: number): void {
+    const warn = THREATS.warn;
     while (this.zoneSprites.length < zs.length) {
       const pair = this.zoneTex.map((t) => {
         const s = new Sprite(t);
@@ -122,18 +120,20 @@ export class ThreatLayer {
       const z = zs[i];
       outer.visible = inner.visible = !!z;
       if (!z) return;
-      const k = (z.radius * 2) / (ZONE_TEX - 8);
-      const t = Math.min(1, z.age / warn);
-      outer.position.set(z.x, z.y);
-      inner.position.set(z.x, z.y);
+      const k = (z.radius * 2) / FP / (ZONE_TEX - 8);
+      const age = z.age + alpha;
+      const t = Math.min(1, age / warn);
+      outer.position.set(z.x / FP, z.y / FP);
+      inner.position.set(z.x / FP, z.y / FP);
       // pops in, then the inner disc fills out to the edge
-      outer.scale.set(k * Math.min(1, 0.6 + z.age * 4));
+      outer.scale.set(k * Math.min(1, 0.6 + (age / TICK_RATE) * 4));
       inner.scale.set(k * t);
     });
   }
 
-  private blast(z: Zone): void {
-    this.fx.emit({ shape: 'ring', x: z.x, y: z.y, vx: 0, vy: 0, life: 0.25, size0: z.radius, size1: z.radius * 2.4, rotation: 0, spin: 0, drag: 1, color: this.color, alpha: 0.9 });
-    this.fx.emit({ shape: 'glow', x: z.x, y: z.y, vx: 0, vy: 0, life: 0.2, size0: z.radius * 2, size1: z.radius * 2.2, rotation: 0, spin: 0, drag: 1, color: this.color, alpha: 0.5 });
+  /** A zone went off at (x, y), world units. */
+  blast(x: number, y: number, r: number): void {
+    this.fx.emit({ shape: 'ring', x, y, vx: 0, vy: 0, life: 0.25, size0: r, size1: r * 2.4, rotation: 0, spin: 0, drag: 1, color: this.color, alpha: 0.9 });
+    this.fx.emit({ shape: 'glow', x, y, vx: 0, vy: 0, life: 0.2, size0: r * 2, size1: r * 2.2, rotation: 0, spin: 0, drag: 1, color: this.color, alpha: 0.5 });
   }
 }

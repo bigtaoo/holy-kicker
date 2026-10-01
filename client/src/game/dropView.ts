@@ -1,9 +1,14 @@
 import { Container, Graphics, Particle, ParticleContainer, Rectangle, Texture, type Renderer } from 'pixi.js';
-import { DropField, OVERFLOW_TIER, type Gem, type GemPalette } from './drops';
+import { OVERFLOW_TIER, TICK_RATE, type Gem } from '@hk/engine';
 import type { FxPool } from './fx';
+import { lerpX, lerpY } from './fixedStep';
 import { SHADOW_Z } from './shadow';
 
-// Draws the DropField. Gem looks are baked once into textures (thick dark outline, flat fill,
+/** Gem colour sets compared for readability (2026-10-01): pink stands out best. */
+export type GemPalette = 'ice' | 'pink' | 'lime';
+export const GEM_PALETTES: readonly GemPalette[] = ['ice', 'pink', 'lime'];
+
+// Draws the sim's gems. Gem looks are baked once into textures (thick dark outline, flat fill,
 // one light facet, as the sticker art). Resting gems lie on the ground under every figure in
 // one ParticleContainer; flying gems pass over the horde in a second one.
 
@@ -95,7 +100,6 @@ class GemBatch {
 }
 
 export class DropLayer {
-  readonly field = new DropField();
   private readonly resting: GemBatch;
   private readonly flying: GemBatch;
   private readonly colors: number[];
@@ -111,33 +115,33 @@ export class DropLayer {
     world.addChild(this.resting.view, this.flying.view);
   }
 
-  update(dt: number, hx: number, hy: number): void {
-    const f = this.field;
-    f.step(dt, hx, hy);
+  draw(gems: readonly Gem[], alpha: number): void {
     this.resting.begin();
     this.flying.begin();
     // baked textures already measure in world units
     const k = 1;
-    for (const g of f.gems) {
+    for (const g of gems) {
+      const x = lerpX(g, alpha);
+      const y = lerpY(g, alpha);
+      const age = (g.age + alpha) / TICK_RATE;
       if (g.flying) {
-        this.flying.add(g, g.x, g.y, k);
-      } else if (g.age < POP_TIME) {
-        const t = g.age / POP_TIME;
-        this.resting.add(g, g.x, g.y - Math.sin(t * Math.PI) * POP_HOP, k * (0.4 + 0.6 * t));
+        this.flying.add(g, x, y, k);
+      } else if (age < POP_TIME) {
+        const t = age / POP_TIME;
+        this.resting.add(g, x, y - Math.sin(t * Math.PI) * POP_HOP, k * (0.4 + 0.6 * t));
       } else {
-        this.resting.add(g, g.x, g.y, k);
+        this.resting.add(g, x, y, k);
       }
     }
     this.resting.end();
     this.flying.end();
-    // one pickup flash a frame is enough, however many gems arrived together
-    if (f.picked.length > 0) {
-      let tier = 0;
-      for (const g of f.picked) tier = Math.max(tier, g.tier);
-      this.fx.emit({
-        shape: 'ring', x: hx, y: hy - 60, vx: 0, vy: 0, life: 0.2, size0: 30, size1: 90 + tier * 30,
-        rotation: 0, spin: 0, drag: 1, color: this.colors[tier], alpha: 0.8,
-      }, true);
-    }
+  }
+
+  /** Gems reached the hero this tick; one flash however many arrived together. */
+  pickup(hx: number, hy: number, tier: number): void {
+    this.fx.emit({
+      shape: 'ring', x: hx, y: hy - 60, vx: 0, vy: 0, life: 0.2, size0: 30, size1: 90 + tier * 30,
+      rotation: 0, spin: 0, drag: 1, color: this.colors[tier], alpha: 0.8,
+    }, true);
   }
 }

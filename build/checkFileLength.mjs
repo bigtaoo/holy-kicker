@@ -5,11 +5,12 @@ import { fileURLToPath } from 'node:url';
 
 const MAX_LINES = 500;
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const DIRS = ['client/src', 'build', 'tools'];
+const DIRS = ['client/src', 'engine', 'build', 'tools'];
 const EXTS = ['.ts', '.mjs', '.js', '.py', '.sh'];
 
 function* walk(dir) {
   for (const name of readdirSync(dir)) {
+    if (name === 'node_modules') continue;
     const p = join(dir, name);
     if (statSync(p).isDirectory()) yield* walk(p);
     else if (EXTS.some((e) => name.endsWith(e))) yield p;

@@ -1,0 +1,149 @@
+import type { RunConfig } from './config';
+import { Prng } from './math/prng';
+
+// The whole simulation state: plain data, integers only (FP positions, tick timers), in
+// ordered arrays whose order is the iteration order. Every moving thing keeps the position it
+// had at the start of the last tick (px, py), so the view can interpolate between the two.
+
+export interface Body {
+  x: number;
+  y: number;
+  px: number;
+  py: number;
+}
+
+export type HeroAction = 'none' | 'kick' | 'hurt';
+
+export interface Player extends Body {
+  owner: number;
+  vx: number;
+  vy: number;
+  /** -1 facing left, 1 right. */
+  facing: number;
+  moving: boolean;
+  /** Last command, held while no new one arrives. */
+  moveBrad: number;
+  moveMag: number;
+  action: HeroAction;
+  /** Ticks into the current action. */
+  actionT: number;
+  struck: boolean;
+  kickCd: number;
+  hurtCd: number;
+  xp: number;
+}
+
+export type Mob = Body;
+
+export type BossPhase = 'walk' | 'windup' | 'recover' | 'down';
+
+export interface Boss extends Body {
+  phase: BossPhase;
+  /** Ticks into the phase. */
+  t: number;
+  cooldown: number;
+  zoneX: number;
+  zoneY: number;
+  hp: number;
+}
+
+export interface Ball extends Body {
+  id: number;
+  owner: number;
+  vx: number;
+  vy: number;
+  hits: number;
+  /** The target hit last, so the ball does not hit it again on the way out. */
+  last: number;
+  travel: number;
+}
+
+export interface Bullet extends Body {
+  vx: number;
+  vy: number;
+  age: number;
+}
+
+export interface Zone {
+  x: number;
+  y: number;
+  radius: number;
+  age: number;
+}
+
+export interface Gem extends Body {
+  vx: number;
+  vy: number;
+  value: number;
+  /** 0.. by value, OVERFLOW_TIER for the overflow gem. */
+  tier: number;
+  /** Ticks since dropped, or since it started flying. */
+  age: number;
+  flying: boolean;
+  /** Merge cell it rests in; -1 for the overflow gem. */
+  cell: number;
+}
+
+export interface Field {
+  id: number;
+  x: number;
+  y: number;
+  age: number;
+  next: number;
+}
+
+export interface SimState {
+  readonly config: RunConfig;
+  tick: number;
+  nextId: number;
+  players: Player[];
+  mobs: Mob[];
+  /** The elite fox; null when the run has none. */
+  elite: Body | null;
+  boss: Boss | null;
+  balls: Ball[];
+  bullets: Bullet[];
+  zones: Zone[];
+  gems: Gem[];
+  /** Resting gems by merge cell; derived from `gems`, so not hashed. */
+  gemCells: Map<number, Gem>;
+  resting: number;
+  /** The overflow gem (also in `gems`); derived, not hashed. */
+  overflow: Gem | null;
+  fields: Field[];
+  volleyT: number;
+  zoneT: number;
+  spellT: number;
+  spellNext: number;
+  readonly ai: Prng;
+  readonly combat: Prng;
+  readonly drop: Prng;
+  readonly spell: Prng;
+}
+
+export function body(x: number, y: number): Body {
+  return { x, y, px: x, py: y };
+}
+
+/** Moves a body without interpolating (a respawn or teleport). */
+export function teleport(b: Body, x: number, y: number): void {
+  b.x = b.px = x;
+  b.y = b.py = y;
+}
+
+export function createState(config: RunConfig): SimState {
+  const s = config.seed;
+  return {
+    config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
+    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [],
+    volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0,
+    ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
+  };
+}
+
+export function newPlayer(owner: number, x: number, y: number): Player {
+  return {
+    ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
+    action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, xp: 0,
+  };
+}

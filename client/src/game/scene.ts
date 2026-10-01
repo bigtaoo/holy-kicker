@@ -2,12 +2,12 @@
 // &hero=top|overfx|sort&ring=1&elite=1, plus types/page/mobres for the mob-type stress test) so readability variants can be compared side by side. WeChat and a
 // bare URL get the defaults.
 
-import { SPELL_KINDS, type SpellKind } from './spellCaster';
+import { SPELL_KINDS, type SpellKind } from '@hk/engine';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
-import { GEM_PALETTES, type GemPalette } from './drops';
+import { GEM_PALETTES, type GemPalette } from './dropView';
 import { CRIT_LOOKS, type CritLook } from './damage';
-import { BULLET_LOOKS, type BulletLook, type ZoneLayer, type ZoneLook } from './threats';
+import { BULLET_LOOKS, type BulletLook, type ZoneLayer, type ZoneLook } from './threatView';
 
 export type GroundKind = 'earth' | 'earth_soft' | 'grass' | 'flat';
 export const GROUNDS: readonly GroundKind[] = ['earth', 'earth_soft', 'grass', 'flat'];
@@ -76,6 +76,8 @@ export interface SceneOptions {
   /** The fallen-abbot boss (cutout rig, telegraphed slam, health bar), and its height in world units. */
   boss: boolean;
   bossSize: number;
+  /** Simulation seed, for reproducing a run; 0 picks a random one. */
+  seed: number;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -103,6 +105,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   sway: true,
   boss: true,
   bossSize: 300,
+  seed: 0,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -147,6 +150,7 @@ export function parseScene(query: string): SceneOptions {
     sway: q.has('sway') ? q.get('sway') === '1' : DEFAULT_SCENE.sway,
     boss: q.has('boss') ? q.get('boss') === '1' : DEFAULT_SCENE.boss,
     bossSize: num(q.get('bosssize'), 130, 600, DEFAULT_SCENE.bossSize),
+    seed: intAtLeast(q.get('seed'), 1, DEFAULT_SCENE.seed),
   };
 }
 

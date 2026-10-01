@@ -1,7 +1,8 @@
 // Spatial hash for neighbour queries over a flat list of points. Rebuilt every frame with a
 // counting sort into reused typed arrays, so it allocates nothing once warmed up. Cells are
 // hashed into a power-of-two table: no world bounds needed, and a hash collision only adds
-// a few extra candidates that the caller's distance test rejects.
+// a few extra candidates that the caller's distance test rejects. Integer cells and a fixed
+// visiting order, so the sim gets the same neighbours in the same order on every engine.
 
 export interface Point {
   x: number;
@@ -35,9 +36,9 @@ export class SpatialGrid {
     }
     this.mask = size - 1;
     const { start, cursor, items, cellOf } = this;
-    const inv = 1 / this.cell;
+    const c = this.cell;
     for (let i = 0; i < n; i++) {
-      const b = this.bucket(Math.floor(points[i].x * inv), Math.floor(points[i].y * inv));
+      const b = this.bucket(Math.floor(points[i].x / c), Math.floor(points[i].y / c));
       cellOf[i] = b;
       start[b + 1]++;
     }
@@ -52,9 +53,8 @@ export class SpatialGrid {
    * neighbour within radius.
    */
   near(x: number, y: number, out: Int32Array): number {
-    const inv = 1 / this.cell;
-    const cx = Math.floor(x * inv);
-    const cy = Math.floor(y * inv);
+    const cx = Math.floor(x / this.cell);
+    const cy = Math.floor(y / this.cell);
     const { start, items, scan } = this;
     let k = 0;
     let c = 0;

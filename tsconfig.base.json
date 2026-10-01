@@ -10,6 +10,11 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "lib": ["ES2020"],
-    "types": []
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@hk/engine": ["engine/index.ts"],
+      "@hk/engine/*": ["engine/*"]
+    }
   }
 }

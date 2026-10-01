@@ -12,7 +12,12 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   responsibility instead of raising the limit.
 - **`npm run check` must pass before every commit**: typecheck, file length, tests, WeChat
   build and the 4 MB main-package gate.
-- Keep game logic that can be pure (viewport math, movement, horde steps, buff stacks) free
+- **Game logic lives in `engine/` (`@hk/engine`)**: a deterministic simulation at a fixed
+  30 Hz on integer state, fed only by player commands, so it can run in lockstep online later.
+  Follow `engine/README.md` (integers only, no `Math.sin/sqrt/random`, no clocks, no imports
+  from outside the engine). The client only draws the sim state (interpolated between ticks)
+  and reacts to its events.
+- Keep view-side logic that can be pure (viewport math, animation timing, effect pools) free
   of Pixi and browser APIs, and test it next to the source as `*.test.ts`.
 - Committing directly to `main` is fine for now; no daily-branch flow.
 
@@ -29,7 +34,8 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 
 ## Layout
 
-- `client/` — the game (Vite). `src/main.ts` web entry, `src/main.wechat.ts` WeChat entry,
+- `engine/` — the simulation (`@hk/engine`, consumed as source; see `engine/README.md`).
+- `client/` — the game's view and hosts (Vite). `src/main.ts` web entry, `src/main.wechat.ts` WeChat entry,
   `src/platform/{web,wechat}` host adapters, `src/game` game code.
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
