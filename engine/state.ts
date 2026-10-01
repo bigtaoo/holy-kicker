@@ -1,4 +1,4 @@
-import type { RunConfig } from './config';
+import { ELITE, HERO, type RunConfig } from './config';
 import { Prng } from './math/prng';
 
 // The whole simulation state: plain data, integers only (FP positions, tick timers), in
@@ -31,9 +31,22 @@ export interface Player extends Body {
   kickCd: number;
   hurtCd: number;
   xp: number;
+  hp: number;
+  maxHp: number;
+  /** Down at 0 health: no moving, kicking or picking up until revived. */
+  dead: boolean;
+  revives: number;
 }
 
 export type Mob = Body;
+
+export interface Elite extends Body {
+  hp: number;
+  maxHp: number;
+}
+
+/** Still going, the chapter boss fell (won) or every hero is down (lost, until a revive). */
+export type Outcome = 'playing' | 'won' | 'lost';
 
 export type BossPhase = 'walk' | 'windup' | 'recover' | 'down';
 
@@ -45,6 +58,7 @@ export interface Boss extends Body {
   zoneX: number;
   zoneY: number;
   hp: number;
+  maxHp: number;
 }
 
 export interface Ball extends Body {
@@ -98,8 +112,8 @@ export interface SimState {
   nextId: number;
   players: Player[];
   mobs: Mob[];
-  /** The elite fox; null when the run has none. */
-  elite: Body | null;
+  /** The elite fox; null when the run has none, or it fell. */
+  elite: Elite | null;
   boss: Boss | null;
   balls: Ball[];
   bullets: Bullet[];
@@ -115,6 +129,11 @@ export interface SimState {
   zoneT: number;
   spellT: number;
   spellNext: number;
+  /** 1-based; 0 in the sandbox. */
+  wave: number;
+  /** Ticks into the wave. */
+  waveT: number;
+  outcome: Outcome;
   readonly ai: Prng;
   readonly combat: Prng;
   readonly drop: Prng;
@@ -136,14 +155,19 @@ export function createState(config: RunConfig): SimState {
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
     gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [],
-    volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0,
+    volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
   };
 }
 
-export function newPlayer(owner: number, x: number, y: number): Player {
+export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0): Player {
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, xp: 0,
+    hp, maxHp: hp, dead: false, revives,
   };
+}
+
+export function newElite(x: number, y: number): Elite {
+  return { ...body(x, y), hp: ELITE.hp, maxHp: ELITE.hp };
 }

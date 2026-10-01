@@ -1,6 +1,7 @@
 // Player input, the only thing that enters the simulation from outside once it is running.
 //
-// One command per player per tick: a move direction as a brad and a 0..255 magnitude.
+// One command per player per tick: a move direction as a brad and a 0..255 magnitude, and
+// the rare one-shot request (a revive).
 // quantizeMove is the input edge: the one place a float controller sample is allowed, turned
 // into integers here so every client, replay and broadcast agrees on the same values. The
 // sim never calls it.
@@ -16,6 +17,8 @@ export interface PlayerCommand {
   moveBrad: number;
   /** Stick deflection, 0 (still) to 255 (full). */
   moveMag: number;
+  /** Spends one of the player's revives if they are down (the death screen's rewarded ad). */
+  revive?: boolean;
 }
 
 export const MAG_FULL = 255;

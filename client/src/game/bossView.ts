@@ -1,5 +1,6 @@
 import { Container, Sprite, Text, Texture, type Renderer } from 'pixi.js';
 import { BOSS, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
+import { t } from '../i18n';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { makeShadow } from './shadow';
@@ -78,7 +79,13 @@ export class Boss {
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
     this.actor.view.tint = flash(this.tint / HURT_TINT_TIME);
     this.drawZone(b, alpha);
-    this.barFill.scale.x = (BAR_W * b.hp) / BOSS.hp;
+    this.barFill.width = (BAR_W * b.hp) / b.maxHp;
+  }
+
+  /** Shows or hides the boss and its bar (in a chapter it is only there on its waves). */
+  show(on: boolean): void {
+    this.view.visible = this.shadow.visible = this.hud.visible = on;
+    if (!on) this.zone[0].visible = this.zone[1].visible = false;
   }
 
   /** The sim started a slam: raise the fists, facing the circle. */
@@ -147,7 +154,7 @@ export class Boss {
     this.barFill.width = BAR_W;
     this.barFill.x = -BAR_W / 2;
     const name = new Text({
-      text: 'Fallen Abbot',
+      text: t('boss.abbot'),
       style: { fill: 0xffffff, fontFamily: 'Arial', fontWeight: 'bold', fontSize: 48, stroke: { color: 0x140c18, width: 6 } },
     });
     name.anchor.set(0.5, 1);

@@ -1,22 +1,38 @@
-import { HERO } from '../config';
+import { HERO, HURT } from '../config';
 import type { SimEvent } from '../events';
 import { MAG_FULL, type PlayerCommand } from '../input';
-import { FP } from '../math/fixed';
+import { dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Player, SimState } from '../state';
-import { kickTarget, launchBall, nearestTarget, targetAt } from './combat';
+import { eliteIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
+import { ringPoint } from './horde';
 
 // The hero: moves with the stick (easing into and out of a run), auto-kicks the cuju at the
-// nearest enemy (the boss first), and flinches when something reaches him. Kick and hurt are
-// one-shot actions; hurt interrupts a kick before its foot meets the ball.
+// nearest enemy (the boss first), and loses health when something reaches him (at most one
+// blow per hurt cooldown). Kick and hurt are one-shot actions; hurt interrupts a kick before
+// its foot meets the ball. At 0 health he is down until a revive; the sandbox (waves 0) only
+// flinches.
 
-export function applyInput(s: SimState, cmds: readonly PlayerCommand[]): void {
+export function applyInput(s: SimState, events: SimEvent[], cmds: readonly PlayerCommand[]): void {
   for (const c of cmds) {
     const p = s.players.find((q) => q.owner === c.owner);
     if (!p) continue;
     p.moveBrad = c.moveBrad & 65535;
     p.moveMag = Math.max(0, Math.min(MAG_FULL, c.moveMag | 0));
+    if (c.revive && p.dead && p.revives > 0) revive(s, events, p);
   }
+}
+
+/** Back on his feet at full health, briefly untouchable, with the nearby horde sent away. */
+function revive(s: SimState, events: SimEvent[], p: Player): void {
+  p.revives--;
+  p.dead = false;
+  p.hp = p.maxHp;
+  p.hurtCd = HERO.reviveGuard;
+  const r2 = HERO.reviveClear * HERO.reviveClear;
+  for (const m of s.mobs) if (dist2(m.x - p.x, m.y - p.y) < r2) ringPoint(s.ai, p.x, p.y, m);
+  if (s.outcome === 'lost') s.outcome = 'playing';
+  events.push({ type: 'revive', owner: p.owner });
 }
 
 export function movePlayers(s: SimState): void {
@@ -24,6 +40,11 @@ export function movePlayers(s: SimState): void {
   for (const p of s.players) {
     p.px = p.x;
     p.py = p.y;
+    if (p.dead) {
+      p.vx = p.vy = 0;
+      p.moving = false;
+      continue;
+    }
     const speed = Math.trunc((p.moveMag * HERO.speed) / MAG_FULL);
     const cos = cosB(p.moveBrad);
     const tx = Math.trunc((cos * speed) / TRIG_ONE);
@@ -37,18 +58,25 @@ export function movePlayers(s: SimState): void {
   }
 }
 
-export function hurtPlayer(s: SimState, events: SimEvent[], owner: number): void {
+export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value: number): void {
   const p = s.players.find((q) => q.owner === owner);
-  if (!p || p.hurtCd > 0) return;
+  if (!p || p.dead || p.hurtCd > 0) return;
   p.hurtCd = HERO.hurtCooldown;
   p.action = 'hurt';
   p.actionT = 0;
-  events.push({ type: 'hurt', owner });
+  const dealt = s.config.waves > 0 ? Math.min(p.hp, value) : 0;
+  p.hp -= dealt;
+  events.push({ type: 'hurt', owner, value: dealt });
+  if (p.hp > 0) return;
+  p.dead = true;
+  p.action = 'none';
+  events.push({ type: 'heroDown', owner });
 }
 
 /** Kick timing: start a kick at a target in range, launch the ball when the foot connects. */
 export function kickSystem(s: SimState, events: SimEvent[]): void {
   for (const p of s.players) {
+    if (p.dead) continue;
     if (p.kickCd > 0) p.kickCd--;
     if (p.hurtCd > 0) p.hurtCd--;
     if (p.action !== 'none') {
@@ -80,9 +108,15 @@ function strike(s: SimState, p: Player): void {
   launchBall(s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y);
 }
 
-/** Anything touching a player hurts them (once a second at most). */
+/** Anything touching a player hurts them, by what it is; the horde hits harder in later waves. */
 export function contactSystem(s: SimState, events: SimEvent[]): void {
   for (const p of s.players) {
-    if (nearestTarget(s, p.x, p.y, HERO.hurtDist) >= 0) hurtPlayer(s, events, p.owner);
+    if (p.dead) continue;
+    const t = nearestTarget(s, p.x, p.y, HERO.hurtDist);
+    if (t < 0) continue;
+    const value = t < s.mobs.length
+      ? HURT.mob + Math.trunc(s.wave / 10) * HURT.mobPerTenWaves
+      : t === eliteIndex(s) ? HURT.elite : HURT.boss;
+    hurtPlayer(s, events, p.owner, value);
   }
 }

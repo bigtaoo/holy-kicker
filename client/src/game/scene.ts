@@ -78,6 +78,11 @@ export interface SceneOptions {
   bossSize: number;
   /** Simulation seed, for reproducing a run; 0 picks a random one. */
   seed: number;
+  /**
+   * Play the chapter's waves (growing horde, elites, bosses, death). Off is the sandbox for
+   * stress tests (a fixed horde of `mobs`, no death): ?waves=0, and the default once ?mobs= is set.
+   */
+  waves: boolean;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -106,14 +111,16 @@ export const DEFAULT_SCENE: SceneOptions = {
   boss: true,
   bossSize: 300,
   seed: 0,
+  waves: true,
 };
 
 export function parseScene(query: string): SceneOptions {
   const q = new URLSearchParams(query);
   const mobs = Number(q.get('mobs'));
   const ground = q.get('ground') as GroundKind;
+  const mobsSet = Number.isInteger(mobs) && mobs > 0;
   return {
-    mobs: Number.isInteger(mobs) && mobs > 0 ? Math.min(mobs, 2000) : DEFAULT_SCENE.mobs,
+    mobs: mobsSet ? Math.min(mobs, 2000) : DEFAULT_SCENE.mobs,
     ground: GROUNDS.includes(ground) ? ground : DEFAULT_SCENE.ground,
     heroOnTop: q.has('hero') ? q.get('hero') !== 'sort' : DEFAULT_SCENE.heroOnTop,
     heroOverFx: q.has('hero') ? q.get('hero') === 'overfx' : DEFAULT_SCENE.heroOverFx,
@@ -151,6 +158,7 @@ export function parseScene(query: string): SceneOptions {
     boss: q.has('boss') ? q.get('boss') === '1' : DEFAULT_SCENE.boss,
     bossSize: num(q.get('bosssize'), 130, 600, DEFAULT_SCENE.bossSize),
     seed: intAtLeast(q.get('seed'), 1, DEFAULT_SCENE.seed),
+    waves: q.has('waves') ? q.get('waves') === '1' : !mobsSet && DEFAULT_SCENE.waves,
   };
 }
 

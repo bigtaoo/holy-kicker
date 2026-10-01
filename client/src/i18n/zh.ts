@@ -42,6 +42,14 @@ export const zh: Table<typeof en> = {
     paused: '暂停',
     resume: '继续',
     giveUp: '放弃',
+    waveStart: '第 {wave} 波',
+    elite: '精英来袭！',
+    boss: '首领战！',
+    down: '你倒下了',
+    revive: '复活（看广告）',
+  },
+  boss: {
+    abbot: '堕落方丈',
   },
   results: {
     cleared: '通关！',

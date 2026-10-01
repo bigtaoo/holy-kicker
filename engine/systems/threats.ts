@@ -1,4 +1,4 @@
-import { THREATS } from '../config';
+import { HURT, THREATS } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2, FP } from '../math/fixed';
 import { atan2B, cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -8,7 +8,7 @@ import { nearestPlayer } from './horde';
 // Enemy attacks for the readability test: fans of bullets fired from random mobs near a
 // player, and ground zones that warn first and then blast.
 
-export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: number) => void): void {
+export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
   const p = THREATS;
   if (--s.volleyT <= 0) {
     s.volleyT += p.volleyEvery;
@@ -30,7 +30,7 @@ export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: numb
     let hit = false;
     for (const pl of s.players) {
       if (dist2(b.x - pl.x, b.y - pl.y) < hit2) {
-        hurt(pl.owner);
+        hurt(pl.owner, HURT.bullet);
         hit = true;
       }
     }
@@ -46,7 +46,7 @@ export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: numb
       continue;
     }
     events.push({ type: 'blast', x: z.x, y: z.y, radius: z.radius });
-    for (const pl of s.players) if (dist2(z.x - pl.x, z.y - pl.y) < z.radius * z.radius) hurt(pl.owner);
+    for (const pl of s.players) if (dist2(z.x - pl.x, z.y - pl.y) < z.radius * z.radius) hurt(pl.owner, HURT.zone);
   }
   s.zones.length = w;
 }

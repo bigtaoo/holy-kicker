@@ -16,14 +16,19 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 ## Shape
 
 - `Engine` steps the systems in `STEP_ORDER`: input, player movement, horde, boss, kicks,
-  balls, spells, threats, contact, drops. The order is part of the contract.
+  balls, spells, threats, contact, drops, waves. The order is part of the contract.
+- `RunConfig.waves` > 0 runs a chapter (`systems/waves.ts`): the horde grows each wave, elites
+  and bosses arrive on their waves, the hero has health and can go down, and `state.outcome`
+  turns `won` (the last boss fell) or `lost` (every hero down). A `revive` command brings a
+  downed hero back. `waves: 0` is the sandbox for stress tests: fixed horde, no death.
 - `SimState` is plain data in ordered arrays. Every moving body keeps the position it had at
   the start of the last tick (`px`, `py`), so the view interpolates between ticks.
-- `PlayerCommand` is `{ owner, tick, moveBrad, moveMag }`: the stick as an integer angle
+- `PlayerCommand` is `{ owner, tick, moveBrad, moveMag, revive? }`: the stick as an integer angle
   (65536 per turn) and a 0..255 magnitude. A player who sends nothing holds the last command.
 - `InputSource.take(tick)` hands the engine a tick's commands; returning `null` means "not
   known yet" (a network stall), and the engine waits.
-- `SimEvent`s are the only channel to the view: kicks, hits, deaths, slams, pickups, casts.
+- `SimEvent`s are the only channel to the view: kicks, hits, deaths, slams, pickups, casts,
+  waves, the hero going down and coming back, the chapter cleared.
 
 ## Rules (enforced by `determinismLint.test.ts` and `Engine.test.ts`)
 

@@ -40,6 +40,14 @@ export const en = {
     paused: 'Paused',
     resume: 'Resume',
     giveUp: 'Give up',
+    waveStart: 'Wave {wave}',
+    elite: 'An elite is coming!',
+    boss: 'Boss fight!',
+    down: 'You fell',
+    revive: 'Revive (ad)',
+  },
+  boss: {
+    abbot: 'Fallen Abbot',
   },
   results: {
     cleared: 'Chapter cleared!',

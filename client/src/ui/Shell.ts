@@ -1,6 +1,6 @@
 import { Container, type Application } from 'pixi.js';
-import { TICK_RATE } from '@hk/engine';
-import { setLocale, type Locale } from '../i18n';
+import { isBossWave, isEliteWave } from '@hk/engine';
+import { setLocale, t, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings } from '../game/quality';
@@ -21,10 +21,9 @@ import { uiFrame, type Screen } from './uiLayout';
 // afterwards lobby -> run -> results -> lobby. Owns the save, the current screen and the
 // current run, and tells the portal when gameplay starts and stops.
 //
-// Waves are counted here from the sim tick (one every BALANCE.waveSeconds) until the engine
-// runs real waves; a run ends at the last wave or when the player gives up.
-
-const WAVE_TICKS = BALANCE.waveSeconds * TICK_RATE;
+// The engine runs the chapter's waves; the shell watches its state for a new wave (a
+// banner), the hero going down (the death panel, revive with an ad) and the outcome. A run
+// ends won, lost, or when the player gives up.
 
 export class Shell {
   private save: SaveData;
@@ -37,6 +36,9 @@ export class Shell {
   private chapter = 1;
   private screenKey = '';
   private quality: LevelSettings | null = null;
+  /** The wave the HUD last showed, and whether the death panel is up. */
+  private shownWave = -1;
+  private downShown = false;
 
   constructor(
     private readonly app: Application,
@@ -108,7 +110,12 @@ export class Shell {
   private startRun(chapter: number): void {
     this.chapter = chapter;
     this.setScreen(null);
-    this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick);
+    this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, {
+      waves: this.scene.waves ? BALANCE.waves : 0,
+      revives: BALANCE.revives,
+    });
+    this.shownWave = -1;
+    this.downShown = false;
     if (this.quality) this.game.applyQuality(this.quality);
     // the run adds itself to the stage; keep the UI above it
     this.app.stage.addChild(this.ui);
@@ -116,6 +123,7 @@ export class Shell {
       pause: () => this.setPaused(true),
       resume: () => this.setPaused(false),
       giveUp: () => this.endRun(),
+      revive: () => this.revive(),
     });
     this.setScreen(this.hud);
     this.platform.portal.gameplayStart();
@@ -128,8 +136,19 @@ export class Shell {
     else this.platform.portal.gameplayStart();
   }
 
+  private async revive(): Promise<boolean> {
+    const paid = await this.platform.ads.rewarded();
+    if (!paid || !this.game) return false;
+    // the engine stands the hero up on its next tick; watchRun then resumes the portal
+    this.game.revive();
+    return true;
+  }
+
+  /** Waves fully cleared: all of them for a won run, else the ones before the current wave. */
   private wavesCleared(): number {
-    return this.game ? Math.min(BALANCE.waves, Math.floor(this.game.engine.state.tick / WAVE_TICKS)) : 0;
+    if (!this.game) return 0;
+    const s = this.game.engine.state;
+    return s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
   }
 
   private endRun(): void {
@@ -138,7 +157,8 @@ export class Shell {
     this.game.destroy();
     this.game = null;
     this.hud = null;
-    this.platform.portal.gameplayStop();
+    // the death panel already told the portal
+    if (!this.downShown) this.platform.portal.gameplayStop();
     const { save, reward } = settleRun(this.save, { chapter: this.chapter, waves });
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);
@@ -170,10 +190,34 @@ export class Shell {
       this.screenKey = key;
       this.screen.layout(uiFrame(computeViewport(width, height)));
     }
-    if (this.game && this.hud && !this.game.paused) {
-      const waves = this.wavesCleared();
-      if (waves >= BALANCE.waves) this.endRun();
-      else this.hud.setWave(waves + 1);
+    if (this.game && this.hud) this.watchRun(this.game, this.hud);
+  }
+
+  private watchRun(game: Game, hud: RunHud): void {
+    const s = game.engine.state;
+    hud.update(this.app.ticker.deltaMS / 1000);
+    if (s.wave !== this.shownWave) {
+      this.shownWave = s.wave;
+      hud.setWave(s.wave);
+      const last = s.config.waves;
+      const warning = isBossWave(s.wave, last) ? t('run.boss') : isEliteWave(s.wave, last) ? t('run.elite') : null;
+      if (s.wave > 0) hud.announce(s.wave, warning);
+    }
+    if (s.outcome === 'playing' && this.downShown) {
+      this.downShown = false;
+      this.platform.portal.gameplayStart();
+    }
+    if (s.outcome === 'won') this.endRun();
+    else if (s.outcome === 'lost' && !this.downShown) {
+      this.downShown = true;
+      this.platform.portal.gameplayStop();
+      // the offer appears once the host says an ad can play
+      hud.showDown(false);
+      if (s.players[0].revives > 0) {
+        void this.platform.ads.rewardedAvailable().then((ok) => {
+          if (ok && this.hud === hud && this.downShown) hud.showDown(true);
+        });
+      }
     }
   }
 }

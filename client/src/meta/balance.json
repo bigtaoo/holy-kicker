@@ -1,7 +1,7 @@
 {
   "chapters": 5,
   "waves": 50,
-  "waveSeconds": 15,
+  "revives": 1,
   "copperPerWave": 10,
   "copperChapterStep": 0.5,
   "chests": [

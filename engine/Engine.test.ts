@@ -12,6 +12,9 @@ import { LocalInputSource, ReplayInputSource, quantizeMove, type PlayerCommand }
 /** A busy run: horde, elite, boss, enemy attacks and every spell. */
 const BUSY: RunConfig = { ...DEFAULT_RUN, seed: 1234, mobs: 120, threats: true, spells: ['nova', 'meteor', 'field', 'chain'], spellRate: 2, drops: 50 };
 
+/** The first waves of a chapter, with enemy attacks, so the hero takes real damage. */
+const CHAPTER: RunConfig = { ...DEFAULT_RUN, seed: 77, waves: 50, threats: true };
+
 /** A scripted stick: circles, stops and dashes, the same for every run. */
 function stick(tick: number, owner = 0): PlayerCommand {
   const phase = Math.floor(tick / 45) % 4;
@@ -78,15 +81,23 @@ describe('Engine', () => {
     expect(() => hashState(engine.state)).toThrow(/non-integer/);
   });
 
-  it('matches the golden hash for this engine version', () => {
-    // Recorded 2026-10-01 for ENGINE_VERSION 2 (FP = 1000). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(2);
+  it('matches the golden hashes for this engine version', () => {
+    // Recorded 2026-10-01 for ENGINE_VERSION 3 (health, waves). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(3);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
+    expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
+  });
+
+  it('plays a chapter the same way twice', () => {
+    const a = run(CHAPTER, 1200);
+    expect(run(CHAPTER, 1200).hashes).toEqual(a.hashes);
+    expect(a.engine.state.wave).toBeGreaterThan(1);
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'waves']);
   });
 });
 
-const GOLDEN = 1088296701;
+const GOLDEN = 3701674752;
+const GOLDEN_CHAPTER = 3155703943;

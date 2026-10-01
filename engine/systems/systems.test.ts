@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { BALL, BOSS, DEFAULT_RUN, DROPS, OVERFLOW_TIER, THREATS, type RunConfig } from '../config';
 import type { SimEvent } from '../events';
 import { toFp } from '../math/fixed';
-import { body, createState, newPlayer, type SimState } from '../state';
+import { body, createState, newElite, newPlayer, type SimState } from '../state';
 import { bossSystem, newBoss } from './boss';
 import { ballSystem, launchBall, nearestTarget } from './combat';
 import { attractAll, dropGem, dropSystem, tierOf } from './drops';
@@ -74,7 +74,7 @@ describe('balls', () => {
   it('numbers targets mobs, then the elite, then the boss', () => {
     const s = bare();
     s.mobs.push(body(u(500), 0));
-    s.elite = body(u(50), 0);
+    s.elite = newElite(u(50), 0);
     s.boss = newBoss(u(20), 0);
     expect(nearestTarget(s, 0, 0, u(1000))).toBe(2);
     s.boss.phase = 'down';

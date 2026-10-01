@@ -88,6 +88,11 @@ export class MobView {
     layer.addChild(this.shadow, this.sprite);
   }
 
+  /** Hides a mob that is not in the sim right now (an elite that has not come yet, or fell). */
+  setVisible(v: boolean): void {
+    this.sprite.visible = this.shadow.visible = v;
+  }
+
   /** Brightness from the mob's place in the crowd (see depthShade), times its own tone. */
   shade(k: number): void {
     this.sprite.tint = greyTint(k * this.tone);

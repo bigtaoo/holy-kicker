@@ -12,7 +12,8 @@ export interface Chest {
 export interface Balance {
   chapters: number;
   waves: number;
-  waveSeconds: number;
+  /** Rewarded-ad revives per run; wave length and the wave plan are engine rules (engine/config.ts). */
+  revives: number;
   copperPerWave: number;
   copperChapterStep: number;
   chests: Chest[];

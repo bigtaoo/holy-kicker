@@ -11,7 +11,8 @@ import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
-import { Corpses, MobView, type MobSheet } from './mobView';
+import { Corpses, MobView, type MobLook, type MobSheet } from './mobView';
+import { HealthBar } from './healthBar';
 import { depthShade } from './mobAnim';
 import { fakeMobTypes } from './mobTypes';
 import { AuraStack } from './aura';
@@ -64,15 +65,23 @@ const HERO_OVER_FX_Z = 1e7 + 0.5;
 const SCREEN_AREA = 1080 * 1920;
 const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff, violet: 0xb04cff };
 const FOX_TINT = 0xc8a8ff;
+const DOWN_TINT = 0x8a8a8a;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
 
+/** What the shell sets a run up with: the chapter's length (0 for the sandbox) and revives. */
+export interface RunSetup {
+  waves: number;
+  revives: number;
+}
+
 /** The run a scene sets up: what the engine simulates. */
-export function runConfig(scene: SceneOptions, seed: number): RunConfig {
+export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): RunConfig {
   return {
     seed, players: 1, mobs: scene.mobs, sep: scene.sep, queue: scene.queue,
     heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
+    waves: setup.waves, revives: setup.revives,
   };
 }
 
@@ -89,6 +98,10 @@ export class Game {
   private readonly fox: MobView | null;
   private readonly foxRing: Sprite;
   private readonly mobs: MobView[] = [];
+  private readonly mobLooks: MobLook[];
+  private readonly healthBar = new HealthBar();
+  /** A revive to send with the next command (the death screen's ad paid). */
+  private reviving = false;
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
   private readonly damage: DamageLayer;
@@ -116,9 +129,11 @@ export class Game {
     private readonly scene: SceneOptions,
     /** Bound to the host's input once, by the shell, and shared by every run. */
     private readonly stick: DragStick,
+    setup: RunSetup,
   ) {
     const seed = scene.seed || 1 + Math.floor(Math.random() * 0x7ffffffe);
-    this.engine = new Engine(runConfig(scene, seed));
+    this.engine = new Engine(runConfig(scene, seed, setup));
+    const chapter = setup.waves > 0;
     const s = this.engine.state;
 
     this.world.sortableChildren = true;
@@ -130,7 +145,8 @@ export class Game {
     }
     const shadowTex = shadowTexture(app.renderer);
     this.hero = new Hero(art.hero, HERO_HEIGHT);
-    this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view);
+    this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view, this.healthBar.view);
+    this.healthBar.view.visible = chapter;
     if (scene.ring) this.hero.view.addChildAt(makeRing(app.renderer, 0xffb030), 0);
     if (scene.heroBack) this.hero.view.addChildAt(heroBacking(app.renderer, HERO_HEIGHT), 0);
     this.foxRing = makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
@@ -144,7 +160,8 @@ export class Game {
       ? new ThreatLayer(app.renderer, this.world, scene.bullet, scene.zone, scene.zoneLayer, this.fx.pool)
       : null;
     this.fox = null;
-    if (s.elite) {
+    // in a chapter the elite and boss arrive later, so their views wait hidden
+    if (s.elite || chapter) {
       const look = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number], shadowTex };
       this.fox = new MobView(look, this.world);
       // a multiply tint is free: it turns the pale fox lavender, away from the teal horde
@@ -156,11 +173,10 @@ export class Game {
         this.foxRing.zIndex = HERO_TOP_Z - 2;
       }
     }
-    const looks = fakeMobTypes(app.renderer, art.jiangshi, scene.types, scene.page, scene.mobRes).map((sheet) => (
+    this.mobLooks = fakeMobTypes(app.renderer, art.jiangshi, scene.types, scene.page, scene.mobRes).map((sheet) => (
       { sheet, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number], shadowTex }
     ));
-    for (let i = 0; i < s.mobs.length; i++) this.mobs.push(new MobView(looks[i % looks.length], this.world, scene.calm));
-    this.boss = art.boss && s.boss ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;
+    this.boss = art.boss && (s.boss || chapter) ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.view.zIndex = HERO_TOP_Z - 1;
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
@@ -209,9 +225,16 @@ export class Game {
     this.boss?.layout(vp.playW, vp.scale);
   }
 
+  /** Brings the downed hero back on the next tick (the engine checks he has a revive left). */
+  revive(): void {
+    this.reviving = true;
+  }
+
   private frame(frameMs: number): void {
     this.layout();
-    if (this.paused) {
+    // a finished run (won, or lost until a revive) is drawn but not stepped
+    const over = this.engine.state.outcome !== 'playing' && !this.reviving;
+    if (this.paused || over) {
       this.draw(this.loop.alpha, 0);
       return;
     }
@@ -230,7 +253,9 @@ export class Game {
   private command() {
     const s = this.stick.read();
     const k = this.platform.readKeys();
-    return { owner: LOCAL, tick: this.engine.nextTick, ...quantizeMove(s.x + k.x, s.y + k.y) };
+    const revive = this.reviving;
+    this.reviving = false;
+    return { owner: LOCAL, tick: this.engine.nextTick, ...quantizeMove(s.x + k.x, s.y + k.y), revive };
   }
 
   /** One tick's events: animations, effects and numbers. Positions arrive in FP. */
@@ -261,6 +286,10 @@ export class Game {
           }
           break;
         }
+        case 'eliteDown':
+          if (this.fox) this.corpses.spawn(this.fox, 0, -1);
+          this.fx.puff(e.x / FP, e.y / FP);
+          break;
         case 'mobDown':
           this.corpses.spawn(this.mobs[e.index], e.dx, e.dy);
           this.fx.puff(e.x / FP, e.y / FP);
@@ -306,7 +335,12 @@ export class Game {
     this.hero.view.zIndex = this.scene.heroOnTop ? (this.scene.heroOverFx ? HERO_OVER_FX_Z : HERO_TOP_Z) : hy;
     // a red flash that fades, not a see-through blink: a 10 Hz strobe over the crowd is tiring
     this.hurtFlash = Math.max(0, this.hurtFlash - dt);
-    this.hero.view.tint = hurtTint(this.hurtFlash / HURT_FLASH);
+    // a downed hero lies greyed out until revived
+    this.hero.view.tint = p.dead ? DOWN_TINT : hurtTint(this.hurtFlash / HURT_FLASH);
+    this.hero.view.alpha = p.dead ? 0.6 : 1;
+    this.healthBar.update(dt, p.hp, p.maxHp);
+    this.healthBar.view.position.set(hx, hy + 22);
+    this.healthBar.view.zIndex = this.hero.view.zIndex + 0.25;
 
     this.drawHorde(s, alpha, dt, hx, hy);
     this.corpses.update(dt);
@@ -317,6 +351,7 @@ export class Game {
     this.damage.update(dt, hx, hy);
     this.drops.draw(s.gems, alpha);
     this.threats?.draw(s.bullets, s.zones, alpha);
+    if (this.boss) this.boss.show(!!s.boss);
     if (this.boss && s.boss) this.boss.draw(s.boss, alpha, dt, hx);
 
     // Camera: ease after the hero towards the centre of the play area, on whole pixels.
@@ -338,6 +373,10 @@ xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
   }
 
   private drawHorde(s: SimState, alpha: number, dt: number, hx: number, hy: number): void {
+    // the horde grows at the start of every wave
+    while (this.mobs.length < s.mobs.length) {
+      this.mobs.push(new MobView(this.mobLooks[this.mobs.length % this.mobLooks.length], this.world, this.scene.calm));
+    }
     for (let i = 0; i < this.mobs.length; i++) {
       const m = s.mobs[i];
       const x = lerpX(m, alpha);
@@ -345,6 +384,10 @@ xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
       const v = this.mobs[i];
       v.update(dt, x, y, hx - x, 1, this.scene.settle ? MOB_WALK : 0, this.scene.sway);
       if (this.scene.calm) v.shade(depthShade(Math.hypot(x - hx, y - hy)));
+    }
+    if (this.fox) {
+      this.fox.setVisible(!!s.elite);
+      this.foxRing.visible = !!s.elite;
     }
     if (this.fox && s.elite) {
       const x = lerpX(s.elite, alpha);

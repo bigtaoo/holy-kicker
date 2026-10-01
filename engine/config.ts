@@ -24,11 +24,19 @@ export interface RunConfig {
   spellRate: number;
   /** Gems scattered around the start (stress test). */
   drops: number;
+  /**
+   * Waves in the chapter (systems/waves.ts): the horde grows wave by wave, elites and bosses
+   * come on their waves, the hero can die and the run ends won or lost. 0 is the sandbox for
+   * stress and readability tests: a fixed horde of `mobs`, the boss coming back, no death.
+   */
+  waves: number;
+  /** Revives the hero has for the run (a rewarded ad on the death screen). */
+  revives: number;
 }
 
 export const DEFAULT_RUN: RunConfig = {
   seed: 1, players: 1, mobs: 40, sep: 75, queue: true, heroEase: 379, elite: true, boss: true,
-  threats: false, spells: [], spellRate: 1, drops: 0,
+  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1,
 };
 
 /** The smooth hero ease, 1 - exp(-tick / 0.07 s), as a constant so no exp runs in the sim. */
@@ -50,6 +58,22 @@ export const HERO = {
   footOffset: toFp(40),
   /** Above this stick magnitude (of 255) the hero counts as moving. */
   moveMag: 26,
+  hp: 100,
+  /** After a revive: untouchable this long, and the horde this close is sent back to the ring. */
+  reviveGuard: ticks(2),
+  reviveClear: toFp(600),
+};
+
+/** Health the hero loses per blow, by source (at most one blow per HERO.hurtCooldown). */
+export const HURT = {
+  mob: 6,
+  /** Mob contact hurts this much more every 10 waves. */
+  mobPerTenWaves: 2,
+  elite: 12,
+  boss: 15,
+  slam: 25,
+  bullet: 8,
+  zone: 15,
 };
 
 export const HORDE = {
@@ -64,6 +88,22 @@ export const ELITE = {
   speed: perTick(160),
   stopDist: toFp(220),
   knockback: toFp(160),
+  hp: 400,
+  /** Experience in the gem it leaves. */
+  gem: 20,
+};
+
+export const WAVES = {
+  ticks: ticks(15),
+  /** Horde size on wave w: min(max, base + step * (w - 1)). */
+  hordeBase: 12,
+  hordeStep: 3,
+  hordeMax: 160,
+  /** Every this many waves an elite comes (not on boss waves). */
+  eliteEvery: 10,
+  /** The mid-boss wave; the last wave always has the chapter boss. Boss waves last until it falls. */
+  midBoss: 25,
+  midBossHpPercent: 60,
 };
 
 export const BALL = {

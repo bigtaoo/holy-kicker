@@ -9,3 +9,4 @@ export { Engine, ENGINE_VERSION, STEP_ORDER } from './Engine';
 export { hashState } from './hash';
 export { FP, TICK_RATE, fromFp } from './math/fixed';
 export { tierOf } from './systems/drops';
+export { hordeSize, isBossWave, isEliteWave } from './systems/waves';

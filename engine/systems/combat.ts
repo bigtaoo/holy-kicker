@@ -51,7 +51,7 @@ export function kickTarget(s: SimState, p: Player, range: number): number {
 
 /**
  * Damages target i on behalf of player `by`. Mobs go down (a gem drops, they respawn on the
- * ring), the elite is knocked back, the boss loses health.
+ * ring), the elite loses health and is knocked back, the boss loses health.
  */
 export function damage(s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null): void {
   const t = targetAt(s, i);
@@ -67,6 +67,15 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
       events.push({ type: 'bossDown' });
     }
   } else if (kind === 'elite') {
+    // the sandbox keeps its elite for the readability tests; in a chapter it can fall
+    const e = s.elite!;
+    if (s.config.waves > 0) e.hp = Math.max(0, e.hp - value);
+    if (e.hp === 0) {
+      events.push({ type: 'eliteDown', x: e.x, y: e.y });
+      dropGem(s, e.x, e.y, ELITE.gem);
+      s.elite = null;
+      return;
+    }
     const d = dist(t.x - by.x, t.y - by.y) || 1;
     t.x += Math.trunc(((t.x - by.x) * ELITE.knockback) / d);
     t.y += Math.trunc(((t.y - by.y) * ELITE.knockback) / d);

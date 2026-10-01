@@ -1,10 +1,10 @@
-import type { RunConfig } from './config';
+import { HERO, type RunConfig } from './config';
 import type { SimEvent } from './events';
 import { SpatialGrid } from './grid';
 import { LocalInputSource, type InputSource, type PlayerCommand } from './input';
 import { toFp } from './math/fixed';
 import { cosB, sinB, TRIG_ONE } from './math/trig';
-import { body, createState, newPlayer, type SimState } from './state';
+import { body, createState, newElite, newPlayer, type SimState } from './state';
 import { bossSystem, newBoss } from './systems/boss';
 import { ballSystem } from './systems/combat';
 import { dropGem, dropSystem } from './systems/drops';
@@ -12,15 +12,16 @@ import { hordeSystem, ringPoint } from './systems/horde';
 import { applyInput, contactSystem, hurtPlayer, kickSystem, movePlayers } from './systems/players';
 import { spellSystem } from './systems/spells';
 import { threatSystem } from './systems/threats';
+import { beginWave, waveSystem } from './systems/waves';
 
 // The simulation: fixed 30 Hz steps over plain integer state, fed only by player commands.
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 2;
+export const ENGINE_VERSION = 3;
 
 export const STEP_ORDER = [
-  'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops',
+  'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'waves',
 ] as const;
 
 export class Engine {
@@ -53,10 +54,12 @@ export class Engine {
   step(cmds: readonly PlayerCommand[]): SimEvent[] {
     const s = this.state;
     const events: SimEvent[] = (this.events = []);
-    const hurt = (owner: number) => hurtPlayer(s, events, owner);
+    const hurt = (owner: number, value: number) => hurtPlayer(s, events, owner, value);
     s.tick++;
     // network order is not the sim's business: commands apply by owner
-    applyInput(s, [...cmds].sort((a, b) => a.owner - b.owner));
+    applyInput(s, events, [...cmds].sort((a, b) => a.owner - b.owner));
+    // a finished run stands still; a revive (in the input) puts a lost one back in play
+    if (s.outcome !== 'playing') return events;
     movePlayers(s);
     hordeSystem(s, this.grid);
     bossSystem(s, events, hurt);
@@ -66,6 +69,7 @@ export class Engine {
     if (s.config.threats) threatSystem(s, events, hurt);
     contactSystem(s, events);
     dropSystem(s, events);
+    waveSystem(s, events);
     return events;
   }
 
@@ -75,17 +79,21 @@ export class Engine {
   }
 }
 
-/** Players at the origin, the horde on its ring, the elite and boss ahead, optional gems. */
+/**
+ * Players at the origin, then a chapter's first wave, or for the sandbox the horde on its
+ * ring, the elite and boss ahead and optional gems.
+ */
 function setup(s: SimState): void {
   const c = s.config;
-  for (let i = 0; i < c.players; i++) s.players.push(newPlayer(i, i * toFp(120), 0));
+  for (let i = 0; i < c.players; i++) s.players.push(newPlayer(i, i * toFp(120), 0, HERO.hp, c.revives));
+  if (c.waves > 0) return beginWave(s, 1);
   const p = s.players[0];
   for (let i = 0; i < c.mobs; i++) {
     const m = body(0, 0);
     ringPoint(s.ai, p.x, p.y, m);
     s.mobs.push(m);
   }
-  if (c.elite) s.elite = body(toFp(300), toFp(-900));
+  if (c.elite) s.elite = newElite(toFp(300), toFp(-900));
   if (c.boss) s.boss = newBoss(toFp(-200), toFp(-1100));
   for (let i = 0; i < c.drops; i++) {
     const a = s.drop.int(65536);

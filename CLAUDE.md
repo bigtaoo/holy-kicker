@@ -43,7 +43,8 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   upload) and `src/main.wechat.ts`, all through `src/boot.ts`; `src/platform/{web,crazygames,wechat}`
   host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,
   results and HUD; `src/meta` save, progress and balance; `src/i18n` string tables.
-  Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host.
+  Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host, `?waves=0` (or any
+  `?mobs=`) runs the engine sandbox: a fixed horde and a hero who cannot die, for stress tests.
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).
