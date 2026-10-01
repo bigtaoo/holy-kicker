@@ -7,7 +7,8 @@ import { DamageLayer } from './damageView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import type { TaoAsset } from './tao/TaoActor';
-import { stepHorde, type Mob } from './horde';
+import { SpatialGrid } from './grid';
+import { stepHorde, type HordeParams, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
 
 // Prototype scene: the hero walks around a field while a jiangshi horde and one fox elite
@@ -24,6 +25,7 @@ export interface Art {
 const HERO_SPEED = 420;
 const HERO_HEIGHT = 120;
 const MOB_COUNT = 40;
+const HORDE: HordeParams = { speed: 110, stopDist: 70, sepRadius: 60 };
 const RESPAWN_DIST = 2200;
 const STICK_RADIUS = 70;
 const GROUND = 0x3a4a3c;
@@ -65,6 +67,8 @@ export class Game {
   private readonly heroShadow = new Graphics().ellipse(0, 0, 34, 11).fill({ color: 0x000000, alpha: 0.3 });
   private readonly fox: Enemy;
   private readonly mobs: Enemy[] = [];
+  private readonly mobPos: Mob[] = [];
+  private readonly grid = new SpatialGrid(HORDE.sepRadius);
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
   private readonly damage: DamageLayer;
@@ -99,7 +103,8 @@ export class Game {
     for (let i = 0; i < MOB_COUNT; i++) {
       this.mobs.push({ pos: ringPoint(0, 0), view: new MobView(jiangshi, this.world) });
     }
-    this.targets.push(...this.mobs.map((m) => m.pos), this.fox.pos);
+    this.mobPos.push(...this.mobs.map((m) => m.pos));
+    this.targets.push(...this.mobPos, this.fox.pos);
 
     this.root.addChild(this.world, this.label);
     this.root.mask = this.playMask;
@@ -146,8 +151,7 @@ export class Game {
 
     const hx = this.heroPos.x;
     const hy = this.heroPos.y;
-    const positions = this.mobs.map((m) => m.pos);
-    stepHorde(positions, hx, hy, dt, { speed: 110, stopDist: 70, sepRadius: 60 });
+    stepHorde(this.mobPos, hx, hy, dt, HORDE, this.grid);
     for (const m of this.mobs) {
       if (Math.hypot(m.pos.x - hx, m.pos.y - hy) > RESPAWN_DIST) Object.assign(m.pos, ringPoint(hx, hy));
       m.view.update(dt, m.pos.x, m.pos.y, hx - m.pos.x);
