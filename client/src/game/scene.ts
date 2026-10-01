@@ -5,6 +5,7 @@
 import { SPELL_KINDS, type SpellKind } from './spellCaster';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
+import { GEM_PALETTES, type GemPalette } from './drops';
 
 export type GroundKind = 'earth' | 'earth_soft' | 'grass' | 'flat';
 export const GROUNDS: readonly GroundKind[] = ['earth', 'earth_soft', 'grass', 'flat'];
@@ -38,6 +39,10 @@ export interface SceneOptions {
   fxBudget: number;
   /** Render quality; until a settings screen exists, ?quality=auto|high|saver. */
   quality: QualityMode;
+  /** Experience gem colours, for the readability comparison. */
+  gem: GemPalette;
+  /** Gems scattered around the start (stress test). */
+  drops: number;
 }
 
 // Defaults picked from the 300-mob readability comparison (2026-10-01).
@@ -45,6 +50,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   mobs: 40, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: true, eliteRing: true,
   types: 1, page: 0, mobRes: 1,
   spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
+  gem: 'pink', drops: 0,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -68,6 +74,8 @@ export function parseScene(query: string): SceneOptions {
     fxBudget: num(q.get('fxbudget'), 0, 50, DEFAULT_SCENE.fxBudget),
     quality: QUALITY_MODES.includes(q.get('quality') as QualityMode) ? (q.get('quality') as QualityMode) : DEFAULT_SCENE.quality,
     mobRes: num(q.get('mobres'), 0.25, 1, DEFAULT_SCENE.mobRes),
+    gem: GEM_PALETTES.includes(q.get('gem') as GemPalette) ? (q.get('gem') as GemPalette) : DEFAULT_SCENE.gem,
+    drops: Math.round(num(q.get('drops'), 0, 20000, DEFAULT_SCENE.drops)),
   };
 }
 

@@ -5,6 +5,7 @@ import { BALL_LIFT, Balls } from './ballView';
 import { nearest, type BallParams } from './cuju';
 import { Hero } from './hero';
 import { DamageLayer } from './damageView';
+import { DropLayer } from './dropView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import { fakeMobTypes } from './mobTypes';
@@ -78,6 +79,7 @@ export class Game {
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
   private readonly damage: DamageLayer;
+  private readonly drops: DropLayer;
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
   private readonly balls: Balls;
@@ -115,6 +117,12 @@ export class Game {
     this.fx = new FxLayer(app.renderer);
     this.damage = new DamageLayer(app.renderer);
     this.world.addChild(this.fx.view, this.damage.view);
+    this.drops = new DropLayer(app.renderer, this.world, scene.gem, this.fx.pool);
+    for (let i = 0; i < scene.drops; i++) {
+      const a = Math.random() * Math.PI * 2;
+      const r = 300 + Math.sqrt(Math.random()) * 2700;
+      this.drops.field.drop(Math.cos(a) * r, Math.sin(a) * r, 1);
+    }
     const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number], shadowTex };
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
     this.foxPos = [this.fox.pos];
@@ -205,6 +213,7 @@ export class Game {
     this.aura.update(dt, hx, hy, this.fx.pool);
     this.fx.update(dt, this.aura.parts);
     this.damage.update(dt);
+    this.drops.update(dt, hx, hy);
 
     this.combat(dt);
 
@@ -215,7 +224,9 @@ export class Game {
     this.fpsTimer -= dt;
     if (this.fpsTimer <= 0) {
       this.fpsTimer = 0.5;
-      this.label.text = `Holy Kicker  ${Math.round(this.app.ticker.FPS)} fps  ${this.levelName}`;
+      const f = this.drops.field;
+      this.label.text = `Holy Kicker  ${Math.round(this.app.ticker.FPS)} fps  ${this.levelName}
+xp ${f.collected}  gems ${f.gems.length}`;
     }
   }
 
@@ -263,6 +274,7 @@ export class Game {
     } else {
       this.corpses.spawn(this.mobs[i].view, p.x - hx, p.y - hy);
       this.fx.puff(p.x, p.y);
+      this.drops.field.drop(p.x, p.y, 1);
       ringPoint(hx, hy, p);
     }
   }
