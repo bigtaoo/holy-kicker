@@ -1,6 +1,6 @@
-import { HERO } from '../config';
+import { HERO, SHRINE } from '../config';
 import {
-  MAX_LEVEL, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
+  MAX_LEVEL, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
   xpToNext, type Card, type PassiveId, type SpellId, type Stat,
 } from '../content';
 import type { SimEvent } from '../events';
@@ -78,7 +78,8 @@ export function pickCard(s: SimState, events: SimEvent[], p: Player, index: numb
   const card = p.offer[index];
   if (!card) return;
   p.offer = [];
-  if (card.kind === 'relic') p.relic++;
+  if (card.kind === 'shrine') shrineCard(s, p, card.id);
+  else if (card.kind === 'relic') p.relic++;
   else if (card.kind === 'spell') {
     const slot = p.spells.find((sp) => sp.id === card.id);
     if (slot) slot.level++;
@@ -94,6 +95,31 @@ export function pickCard(s: SimState, events: SimEvent[], p: Player, index: numb
   }
   events.push({ type: 'pick', owner: p.owner, kind: card.kind, id: card.id });
   levelUp(s, events, p);
+}
+
+/**
+ * A shrine: each hero who is up gets its paid offering counted and the three shrine cards;
+ * the sim stands still until they pick, like a level-up.
+ */
+export function openShrine(s: SimState): void {
+  for (const p of s.players) {
+    if (p.dead) continue;
+    payBet(p);
+    p.offer = SHRINE_IDS.map((id): Card => ({ kind: 'shrine', id }));
+  }
+}
+
+/** An offering that stands is won by a hero who is up at the next shrine or the win. */
+export function payBet(p: Player): void {
+  if (!p.bet || p.dead) return;
+  p.bet = false;
+  p.offerings++;
+}
+
+function shrineCard(s: SimState, p: Player, id: string): void {
+  if (id === 'heal') p.hp = Math.min(p.maxHp, p.hp + Math.trunc((p.maxHp * SHRINE.healPercent) / 100));
+  else if (id === 'insight') p.offer = deal(s, p);
+  else p.bet = true;
 }
 
 /** Regeneration and level-ups, after the tick's pickups. */

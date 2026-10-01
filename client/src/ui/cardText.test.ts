@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { MAX_LEVEL, PASSIVE_IDS, SPELL_IDS, newPlayer, type Card } from '@hk/engine';
+import { MAX_LEVEL, PASSIVE_IDS, SHRINE_IDS, SPELL_IDS, newPlayer, type Card } from '@hk/engine';
 import { setLocale } from '../i18n';
 import { cardText } from './cardText';
 
@@ -30,12 +30,19 @@ describe('card text', () => {
     expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ name: '罗汉腿', tag: '新！', lines: ['移动速度 +8%'] });
   });
 
+  it('describes the shrine cards', () => {
+    const p = newPlayer(0, 0, 0);
+    expect(cardText({ kind: 'shrine', id: 'heal' }, p)).toMatchObject({ name: 'Heal', lines: ['Restore 50% health'] });
+    expect(cardText({ kind: 'shrine', id: 'offering' }, p).lines).toEqual(['Live to the next shrine or the end:', 'copper this run +30%']);
+  });
+
   it('has a name and at least one line for every card at every level', () => {
     const p = newPlayer(0, 0, 0);
     const cards: Card[] = [
       { kind: 'relic', id: 'ball' },
       ...SPELL_IDS.map((id): Card => ({ kind: 'spell', id })),
       ...PASSIVE_IDS.map((id): Card => ({ kind: 'passive', id })),
+      ...SHRINE_IDS.map((id): Card => ({ kind: 'shrine', id })),
     ];
     for (let level = 1; level < MAX_LEVEL; level++) {
       p.relic = level;

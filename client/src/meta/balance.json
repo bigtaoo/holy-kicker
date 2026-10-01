@@ -11,6 +11,7 @@
     { "wave": 40, "copper": 250, "jade": 10 },
     { "wave": 50, "copper": 400, "jade": 20 }
   ],
+  "offeringPercent": 30,
   "xpPerWave": 2,
   "levelXpBase": 40,
   "levelXpStep": 20,

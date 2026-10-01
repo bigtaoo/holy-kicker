@@ -5,7 +5,7 @@ import type { CardText } from './cardText';
 import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, fit, label, panel } from './widgets';
 
-// The level-up choice: three large cards stacked down the middle of the portrait screen, one
+// The level-up or shrine choice: three large cards stacked down the middle of the portrait screen, one
 // thumb tap each. Each card shows an icon by kind (placeholder shapes until the item art),
 // the name, "New!" or the level step, and its effect lines.
 
@@ -14,7 +14,7 @@ const CARD_H = 330;
 const GAP = 44;
 const ICON_R = 92;
 
-const KIND_COLOR: Record<CardKind, number> = { relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade };
+const KIND_COLOR: Record<CardKind, number> = { relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade, shrine: 0xe0607a };
 
 function icon(kind: CardKind): Graphics {
   const g = new Graphics().circle(0, 0, ICON_R).fill(KIND_COLOR[kind]).stroke({ color: COLORS.outline, width: 8 });
@@ -25,6 +25,10 @@ function icon(kind: CardKind): Graphics {
       .stroke({ color: COLORS.outline, width: 5 });
   } else if (kind === 'spell') {
     g.star(0, 0, 5, ICON_R * 0.62, ICON_R * 0.28).fill(0xffffff).stroke({ color: COLORS.outline, width: 6 });
+  } else if (kind === 'shrine') {
+    // an incense flame
+    const r = ICON_R * 0.6;
+    g.poly([0, -r, r * 0.55, r * 0.15, 0, r * 0.7, -r * 0.55, r * 0.15]).fill(0xfff2d8).stroke({ color: COLORS.outline, width: 6 });
   } else {
     const r = ICON_R * 0.55;
     g.poly([0, -r, r, 0, 0, r, -r, 0]).fill(0xffffff).stroke({ color: COLORS.outline, width: 6 });
@@ -74,17 +78,17 @@ function card(text: CardText, onTap: () => void): Container {
   return c;
 }
 
-/** The modal choice over the run; `onPick` gets the card's index. */
-export function cardPanel(f: UiFrame, texts: readonly CardText[], onPick: (index: number) => void): Container {
+/** The modal choice over the run under `title`; `onPick` gets the card's index. */
+export function cardPanel(f: UiFrame, title: string, texts: readonly CardText[], onPick: (index: number) => void): Container {
   const view = new Container();
   view.addChild(backdrop(f.w, f.h, 0.7));
   const total = texts.length * CARD_H + (texts.length - 1) * GAP;
   const top = f.h / 2 - total / 2 + 60;
-  const title = label(t('card.levelUp'), 96, COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } });
-  title.position.set(f.w / 2, top - 200);
+  const heading = label(title, 96, COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } });
+  heading.position.set(f.w / 2, top - 200);
   const hint = label(t('card.pickOne'), 52, COLORS.text);
   hint.position.set(f.w / 2, top - 90);
-  view.addChild(title, hint);
+  view.addChild(heading, hint);
   texts.forEach((text, i) => {
     const c = card(text, () => onPick(i));
     c.position.set(f.w / 2, top + CARD_H / 2 + i * (CARD_H + GAP));

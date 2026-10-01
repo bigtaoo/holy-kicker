@@ -17,6 +17,8 @@ export interface Balance {
   copperPerWave: number;
   copperChapterStep: number;
   chests: Chest[];
+  /** Extra copper per shrine offering the run won, percent of the wave copper. */
+  offeringPercent: number;
   xpPerWave: number;
   levelXpBase: number;
   levelXpStep: number;

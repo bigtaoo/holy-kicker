@@ -45,6 +45,7 @@ export class RunHud implements Screen {
   private xp = { level: 1, share: 0 };
   /** The open level-up cards, and whether one was tapped (waiting for the engine). */
   private offer: CardText[] | null = null;
+  private offerTitle = '';
   private picked = false;
 
   constructor(
@@ -73,7 +74,7 @@ export class RunHud implements Screen {
     this.bannerView = null;
     // a panel covers the middle, so a banner then waits out its time unseen
     if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
-    if (this.offer) this.view.addChild(cardPanel(f, this.offer, (i) => this.pickCard(i)));
+    if (this.offer) this.view.addChild(cardPanel(f, this.offerTitle, this.offer, (i) => this.pickCard(i)));
     if (this.paused) this.pausePanel(f);
     if (this.down) this.downPanel(f, this.down);
   }
@@ -94,9 +95,10 @@ export class RunHud implements Screen {
     if (this.levelText && this.levelText.text !== t('run.level', { level })) this.levelText.text = t('run.level', { level });
   }
 
-  /** The level-up cards; they stay until hideOffer. */
-  showOffer(cards: CardText[]): void {
+  /** The level-up or shrine cards under `title`; they stay until hideOffer. */
+  showOffer(title: string, cards: CardText[]): void {
     this.offer = cards;
+    this.offerTitle = title;
     this.picked = false;
     this.paused = false;
     this.relayout();

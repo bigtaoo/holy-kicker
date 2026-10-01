@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
-  Engine, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, quantizeMove,
+  Engine, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, WAVES, quantizeMove,
   type RunConfig, type SimEvent, type SimState,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
@@ -137,6 +137,11 @@ export class Game {
     this.engine = new Engine(runConfig(scene, seed, setup));
     const chapter = setup.waves > 0;
     const s = this.engine.state;
+    // dev: skip ahead, so the next tick begins the asked-for wave
+    if (chapter && scene.wave > 1) {
+      s.wave = Math.min(scene.wave, setup.waves) - 1;
+      s.waveT = WAVES.ticks - 1;
+    }
 
     this.world.sortableChildren = true;
     this.world.addChild(art.ground ? makeTiledGround(art.ground) : makeGround());

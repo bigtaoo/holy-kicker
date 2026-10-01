@@ -1,13 +1,15 @@
-import { BOSS, HORDE, WAVES } from '../config';
+import { BOSS, HORDE, SHRINE, WAVES } from '../config';
 import type { SimEvent } from '../events';
 import { body, newElite, newMob, type SimState } from '../state';
 import { newBoss } from './boss';
+import { openShrine, payBet } from './build';
 import { ringPoint } from './horde';
 
 // The chapter's waves (docs/design.md "Chapters"): each lasts WAVES.ticks; the horde grows
 // at the start of every wave, an elite comes every tenth wave, and the boss waves (the
 // mid-boss and the last) last until their boss falls. The chapter boss falling wins the run;
-// every hero down loses it until a revive. The sandbox (config.waves 0) skips all of this.
+// every hero down loses it until a revive. Shrine waves open with the shrine cards. The
+// sandbox (config.waves 0) skips all of this.
 
 export function hordeSize(wave: number): number {
   return Math.min(WAVES.hordeMax, WAVES.hordeBase + WAVES.hordeStep * (wave - 1));
@@ -21,6 +23,11 @@ export function mobHp(wave: number): number {
 
 export function isBossWave(wave: number, last: number): boolean {
   return wave === last || (wave === WAVES.midBoss && wave < last);
+}
+
+/** Shrine waves open with the shrine cards (never the last wave). */
+export function isShrineWave(wave: number, last: number): boolean {
+  return wave >= SHRINE.first && (wave - SHRINE.first) % SHRINE.every === 0 && wave < last;
 }
 
 export function isEliteWave(wave: number, last: number): boolean {
@@ -64,6 +71,7 @@ export function waveSystem(s: SimState, events: SimEvent[]): void {
     if (s.boss && s.boss.phase !== 'down') return;
     if (s.wave === last) {
       s.outcome = 'won';
+      for (const p of s.players) payBet(p);
       events.push({ type: 'cleared' });
       return;
     }
@@ -71,4 +79,5 @@ export function waveSystem(s: SimState, events: SimEvent[]): void {
   if (s.waveT < WAVES.ticks) return;
   beginWave(s, s.wave + 1);
   events.push({ type: 'wave', wave: s.wave });
+  if (isShrineWave(s.wave, last)) openShrine(s);
 }

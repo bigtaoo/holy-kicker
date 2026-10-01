@@ -112,6 +112,17 @@ export const WAVES = {
   midBossHpPercent: 40,
 };
 
+/**
+ * Shrines (docs/content.md "Shrines"): on waves first, first + every, ... before the last, the
+ * horde pauses and each hero picks one of heal, insight (a free level-up pick) or offering
+ * (a bet on more copper, won by reaching the next shrine or the end alive).
+ */
+export const SHRINE = {
+  first: 5,
+  every: 10,
+  healPercent: 50,
+};
+
 export const BALL = {
   speed: perTick(1300),
   hitRadius: toFp(55),

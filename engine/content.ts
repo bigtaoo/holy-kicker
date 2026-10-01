@@ -106,9 +106,13 @@ export const PASSIVES: Readonly<Record<PassiveId, { stat: Stat; perLevel: number
   wrath: { stat: 'crit', perLevel: 5 },
 };
 
-export type CardKind = 'relic' | 'spell' | 'passive';
+export type CardKind = 'relic' | 'spell' | 'passive' | 'shrine';
 
-/** A level-up card: the relic ('ball'), a spell or a passive, new or one level up. */
+export type ShrineId = 'heal' | 'insight' | 'offering';
+/** A shrine offers all three, always in this order. */
+export const SHRINE_IDS: readonly ShrineId[] = ['heal', 'insight', 'offering'];
+
+/** A level-up card (the relic 'ball', a spell or a passive, new or one level up) or a shrine card. */
 export interface Card {
   kind: CardKind;
   id: string;

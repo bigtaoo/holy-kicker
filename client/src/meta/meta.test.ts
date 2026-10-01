@@ -41,6 +41,12 @@ describe('progress', () => {
     expect(save.best[0]).toBe(3);
   });
 
+  it('adds the won offerings to the copper', () => {
+    const { reward } = settleRun(newSave(), { chapter: 1, waves: 20, offerings: 2 });
+    expect(reward.offering).toBe(Math.round((200 * BALANCE.offeringPercent * 2) / 100));
+    expect(reward.copper).toBe(200 + reward.offering);
+  });
+
   it('opens each progress chest once', () => {
     const first = settleRun(newSave(), { chapter: 1, waves: 25 });
     expect(first.reward.chests.map((c) => c.wave)).toEqual([10, 20]);

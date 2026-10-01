@@ -1,7 +1,8 @@
 import {
-  PASSIVES, RELIC_LEVELS, SPELL_LEVELS, TICK_RATE, type Card, type CardKind, type PassiveId, type Player, type SpellId,
+  PASSIVES, RELIC_LEVELS, SHRINE, SPELL_LEVELS, TICK_RATE, type Card, type CardKind, type PassiveId, type Player, type SpellId,
 } from '@hk/engine';
 import { t } from '../i18n';
+import { BALANCE } from '../meta/balance';
 
 // What a level-up card says (docs/content.md "International players"): the name, "New!" or
 // the level step, and one short line per change with numbers, read from the engine's tables
@@ -64,6 +65,7 @@ function passiveDesc(id: PassiveId): string {
 
 /** The text of `card` for player `p` (whose build says whether it is new or a level step). */
 export function cardText(card: Card, p: Player): CardText {
+  if (card.kind === 'shrine') return shrineText(card.id);
   const levelTag = (level: number) => t('card.level', { a: level, b: level + 1 });
   if (card.kind === 'relic') {
     return { kind: 'relic', name: t('relic.ball.name'), tag: levelTag(p.relic), fresh: false, lines: relicLines(p.relic) };
@@ -80,4 +82,13 @@ export function cardText(card: Card, p: Player): CardText {
   return {
     kind: 'passive', name: t(`passive.${id}.name`), tag: slot ? levelTag(slot.level) : t('card.new'), fresh: !slot, lines: [passiveDesc(id)],
   };
+}
+
+function shrineText(id: string): CardText {
+  const name = t(`shrine.${id as 'heal' | 'insight' | 'offering'}.name`);
+  const lines =
+    id === 'heal' ? [t('shrine.heal.desc', { n: SHRINE.healPercent })]
+    : id === 'insight' ? [t('shrine.insight.desc')]
+    : [t('shrine.offering.desc'), t('shrine.offering.more', { n: BALANCE.offeringPercent })];
+  return { kind: 'shrine', name, tag: '', fresh: false, lines };
 }

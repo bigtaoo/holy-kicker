@@ -59,6 +59,12 @@ export const zh: Table<typeof en> = {
     cooldown: '冷却 {a} 秒 → {b} 秒',
     area: '范围 +{n}%',
     duration: '持续 {a} 秒 → {b} 秒',
+    shrine: '神龛',
+  },
+  shrine: {
+    heal: { name: '疗伤', desc: '恢复 {n}% 生命' },
+    insight: { name: '顿悟', desc: '免费获得一次升级选择' },
+    offering: { name: '供奉', desc: '活到下一座神龛或通关时', more: '本局铜钱 +{n}%' },
   },
   relic: {
     ball: { name: '蹴鞠' },
@@ -86,6 +92,7 @@ export const zh: Table<typeof en> = {
     fallen: '本局结束',
     reached: '完成波数：{wave}',
     copper: '铜钱 +{n}',
+    offering: 'Offerings: copper +{n}',
     chest: '宝箱（第 {wave} 波）：铜钱 +{copper}，玉 +{jade}',
     newBest: '新纪录！',
     double: '铜钱翻倍（看广告）',

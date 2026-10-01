@@ -7,6 +7,8 @@ export interface RunResult {
   chapter: number;
   /** Waves fully cleared, 0..BALANCE.waves. */
   waves: number;
+  /** Shrine offerings won in the run. */
+  offerings?: number;
 }
 
 export interface ChestReward extends Chest {
@@ -14,8 +16,10 @@ export interface ChestReward extends Chest {
 }
 
 export interface Reward {
-  /** Copper for the waves cleared; the part a rewarded ad doubles. */
+  /** Copper for the waves cleared and the offerings; the part a rewarded ad doubles. */
   copper: number;
+  /** The offerings' share of `copper`. */
+  offering: number;
   /** Progress chests opened for the first time by this run. */
   chests: ChestReward[];
   xp: number;
@@ -52,7 +56,9 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
       chests.push({ index, wave: c.wave, copper: Math.round(c.copper * mul), jade: c.jade });
     }
   });
-  const copper = waves * copperPerWave(run.chapter);
+  const base = waves * copperPerWave(run.chapter);
+  const offering = Math.round((base * BALANCE.offeringPercent * (run.offerings ?? 0)) / 100);
+  const copper = base + offering;
 
   let level = save.level;
   let xp = save.xp + waves * BALANCE.xpPerWave;
@@ -79,7 +85,7 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
     runs: save.runs + 1,
   };
   const reward = {
-    copper, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
+    copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
     firstClear, newBest: waves > save.best[i],
   };
   return { save: next, reward };

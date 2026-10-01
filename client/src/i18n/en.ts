@@ -57,6 +57,12 @@ export const en = {
     cooldown: 'Cooldown {a}s → {b}s',
     area: 'Area +{n}%',
     duration: 'Duration {a}s → {b}s',
+    shrine: 'Shrine',
+  },
+  shrine: {
+    heal: { name: 'Heal', desc: 'Restore {n}% health' },
+    insight: { name: 'Insight', desc: 'A free level-up pick' },
+    offering: { name: 'Offering', desc: 'Live to the next shrine or the end:', more: 'copper this run +{n}%' },
   },
   relic: {
     ball: { name: 'Cuju Ball' },
@@ -84,6 +90,7 @@ export const en = {
     fallen: 'Run over',
     reached: 'Waves cleared: {wave}',
     copper: 'Copper +{n}',
+    offering: 'Offerings: copper +{n}',
     chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
     newBest: 'New best!',
     double: 'Double copper (ad)',

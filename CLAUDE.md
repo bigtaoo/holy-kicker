@@ -45,6 +45,7 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   results and HUD; `src/meta` save, progress and balance; `src/i18n` string tables.
   Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host, `?waves=0` (or any
   `?mobs=`) runs the engine sandbox: a fixed horde and a hero who cannot die, for stress tests.
+  `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; mid-boss 25).
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).

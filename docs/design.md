@@ -63,18 +63,22 @@ wave reached is recorded.
 
 Measured with the balance bots (`npm run balance`, engine/README.md), without revives and
 without meta upgrades. Chapter 1 targets and the result of the first tuning pass (20 seeds,
-2026-10-01):
+2026-10-01; "with shrines" is after the shrines came in, the bot healing below 60 % health and
+otherwise taking Insight):
 
-| Player | Target | Measured |
-|---|---|---|
-| Skilled (dodges at once) | wins almost always, real danger only at the boss | 18/20 won |
-| Casual (reacts in 0.4 s) | about half win; deaths spread over waves 25–50 | 10/20 won, deaths at 25–50 |
-| Standing still | falls at the mid-boss | median wave 25, never wins |
-| Elites / mid-boss / boss | 15–40 s / 30–60 s / 40–80 s | about the same |
-| Level at the end | about 30 | 30 |
+| Player | Target | Measured | With shrines |
+|---|---|---|---|
+| Skilled (dodges at once) | wins almost always, real danger only at the boss | 18/20 won | 19/20 |
+| Casual (reacts in 0.4 s) | about half win; deaths spread over waves 25–50 | 10/20 won, deaths at 25–50 | 14/20; deaths at 25, 28, 38, 50 ×3 |
+| Standing still | falls at the mid-boss | median wave 25, never wins | the same |
+| Elites / mid-boss / boss | 15–40 s / 30–60 s / 40–80 s | about the same | the same |
+| Level at the end | about 30 | 30 | 30 |
 
 - Mob health grows with the wave, faster late (10 on wave 1, 34 on wave 25, 96 on wave 50), so a
   finished build still meets a threat; contact damage grows 1 per 10 waves.
+- Shrines lift casual players over the target; left as it is until real players have tried
+  it, since meta upgrades will make it easier still. Mob health (`HORDE.hpSquare`) barely
+  moves the result; the Insight picks are what help.
 - The relic aims at the boss, then the elite, before any mob: the elite is the relic's job.
 - The first ~10 waves rarely hurt: they are the tutorial. Later chapters scale from here, and
   meta upgrades and revives make the target easier, so a first clear of chapter 1 is a few

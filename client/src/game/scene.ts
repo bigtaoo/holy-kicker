@@ -83,6 +83,8 @@ export interface SceneOptions {
    * stress tests (a fixed horde of `mobs`, no death): ?waves=0, and the default once ?mobs= is set.
    */
   waves: boolean;
+  /** Dev: a chapter run starts at the end of the wave before this one (?wave=25 for the mid-boss). */
+  wave: number;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -112,6 +114,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   bossSize: 300,
   seed: 0,
   waves: true,
+  wave: 1,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -159,6 +162,7 @@ export function parseScene(query: string): SceneOptions {
     bossSize: num(q.get('bosssize'), 130, 600, DEFAULT_SCENE.bossSize),
     seed: intAtLeast(q.get('seed'), 1, DEFAULT_SCENE.seed),
     waves: q.has('waves') ? q.get('waves') === '1' : !mobsSet && DEFAULT_SCENE.waves,
+    wave: Math.min(50, intAtLeast(q.get('wave'), 1, DEFAULT_SCENE.wave)),
   };
 }
 

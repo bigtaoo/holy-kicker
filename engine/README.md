@@ -26,6 +26,8 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 - The build (`content.ts`, `systems/build.ts`): experience fills levels; each level-up deals
   three cards (relic level, a spell, a passive) into `player.offer` and the sim stands still
   until a `pick` command takes one. Passives are a modifier stack read through `stat()`.
+  Shrine waves (`SHRINE`) put the three shrine cards (heal, insight, offering) into the same
+  offer; `player.offerings` counts the offerings won.
 - `SimState` is plain data in ordered arrays. Every moving body keeps the position it had at
   the start of the last tick (`px`, `py`), so the view interpolates between ticks.
 - `PlayerCommand` is `{ owner, tick, moveBrad, moveMag, revive?, pick? }`: the stick as an integer angle

@@ -1,5 +1,5 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, isEliteWave, xpToNext } from '@hk/engine';
+import { isBossWave, isEliteWave, xpToNext, type Card } from '@hk/engine';
 import { setLocale, t, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
@@ -40,8 +40,8 @@ export class Shell {
   /** The wave the HUD last showed, and whether the death panel is up. */
   private shownWave = -1;
   private downShown = false;
-  /** The level whose cards the HUD shows; 0 when none are up. */
-  private shownOffer = 0;
+  /** The offer whose cards the HUD shows; null when none are up. */
+  private shownOffer: readonly Card[] | null = null;
 
   constructor(
     private readonly app: Application,
@@ -119,7 +119,7 @@ export class Shell {
     });
     this.shownWave = -1;
     this.downShown = false;
-    this.shownOffer = 0;
+    this.shownOffer = null;
     if (this.quality) this.game.applyQuality(this.quality);
     // the run adds itself to the stage; keep the UI above it
     this.app.stage.addChild(this.ui);
@@ -159,12 +159,13 @@ export class Shell {
   private endRun(): void {
     if (!this.game) return;
     const waves = this.wavesCleared();
+    const offerings = this.game.engine.state.players[0].offerings;
     this.game.destroy();
     this.game = null;
     this.hud = null;
     // the death panel already told the portal
     if (!this.downShown) this.platform.portal.gameplayStop();
-    const { save, reward } = settleRun(this.save, { chapter: this.chapter, waves });
+    const { save, reward } = settleRun(this.save, { chapter: this.chapter, waves, offerings });
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);
     if (reward.firstClear) this.platform.portal.celebrate();
@@ -210,12 +211,13 @@ export class Shell {
     }
     const p = s.players[0];
     hud.setXp(p.level, p.xp / xpToNext(p.level));
-    // several levels at once come one offer after another, each a level higher
-    if (p.offer.length > 0 && this.shownOffer !== p.level) {
-      this.shownOffer = p.level;
-      hud.showOffer(p.offer.map((c) => cardText(c, p)));
-    } else if (p.offer.length === 0 && this.shownOffer !== 0) {
-      this.shownOffer = 0;
+    // offers come one after another (several levels at once, a shrine's insight), each a new list
+    if (p.offer.length > 0 && this.shownOffer !== p.offer) {
+      this.shownOffer = p.offer;
+      const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
+      hud.showOffer(title, p.offer.map((c) => cardText(c, p)));
+    } else if (p.offer.length === 0 && this.shownOffer) {
+      this.shownOffer = null;
       hud.hideOffer();
     }
     if (s.outcome === 'playing' && this.downShown) {

@@ -90,6 +90,11 @@ Between waves the horde pauses; three cards, pick one:
 | **Insight** | A free level-up pick (1 of 3) |
 | **Offering** | +30 % copper at the results of this run *(tune)*, paid only if the player reaches the next shrine alive |
 
+- **Implemented** (`engine/systems/build.ts` `openShrine`, `SHRINE` in `engine/config.ts`):
+  the run stands still on the three cards like a level-up; Insight deals a level-up offer
+  without a level; an Offering taken on wave 45 is won by clearing the chapter. The won
+  offerings are paid in `settleRun` (`offeringPercent` in balance.json).
+
 The Offering is a bet against your own survival: it fits "copper is scarce" and gives
 skilled players a way to farm faster.
 

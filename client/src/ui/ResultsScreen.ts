@@ -49,6 +49,7 @@ export class ResultsScreen implements Screen {
     ];
     if (r.newBest) lines.push([t('results.newBest'), 48, COLORS.saffron]);
     lines.push([t('results.copper', { n: r.copper }), 56, COLORS.copper]);
+    if (r.offering > 0) lines.push([t('results.offering', { n: r.offering }), 44, COLORS.copper]);
     for (const c of r.chests) lines.push([t('results.chest', { wave: c.wave, copper: c.copper, jade: c.jade }), 44, COLORS.jade]);
     if (this.offer === 'paid') lines.push([t('results.doubled'), 48, COLORS.saffron]);
     // the card grows with its lines; the buttons sit a fixed distance below it

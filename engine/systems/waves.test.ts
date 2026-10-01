@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, WAVES, type RunConfig } from '../config';
+import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, SHRINE, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
-import { hordeSize, isBossWave, isEliteWave, mobHp } from './waves';
+import { hordeSize, isBossWave, isEliteWave, isShrineWave, mobHp } from './waves';
 
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, waves: 50 };
 
@@ -139,5 +139,61 @@ describe('chapter run', () => {
     expect(s.players[0].hp).toBe(HERO.hp);
     expect(s.wave).toBe(0);
     expect(s.elite?.hp).toBe(ELITE.hp);
+  });
+});
+
+describe('shrines', () => {
+  /** A chapter about to start wave `wave`, the hero untouchable. */
+  function before(wave: number): Engine {
+    const e = new Engine(CHAPTER);
+    e.state.players[0].hurtCd = 1e6;
+    e.state.wave = wave - 1;
+    e.state.waveT = WAVES.ticks - 1;
+    return e;
+  }
+
+  const kinds = (e: Engine) => e.state.players[0].offer.map((c) => `${c.kind}:${c.id}`);
+
+  it('come on waves 5, 15, ... 45', () => {
+    expect(Array.from({ length: 50 }, (_, i) => i + 1).filter((w) => isShrineWave(w, 50))).toEqual([5, 15, 25, 35, 45]);
+  });
+
+  it('pause the run on three cards; heal restores half the health', () => {
+    const e = before(SHRINE.first);
+    const s = e.state;
+    const p = s.players[0];
+    p.hp = 10;
+    e.step([still(e)]);
+    expect(s.wave).toBe(SHRINE.first);
+    expect(kinds(e)).toEqual(['shrine:heal', 'shrine:insight', 'shrine:offering']);
+    const tick = s.waveT;
+    e.step([still(e)]);
+    expect(s.waveT).toBe(tick);
+    e.step([still(e, { pick: 0 })]);
+    expect(p.hp).toBe(10 + Math.trunc((p.maxHp * SHRINE.healPercent) / 100));
+    expect(p.offer).toEqual([]);
+  });
+
+  it('insight deals a level-up offer without a level', () => {
+    const e = before(SHRINE.first);
+    const p = e.state.players[0];
+    e.step([still(e)]);
+    e.step([still(e, { pick: 1 })]);
+    expect(p.level).toBe(1);
+    expect(p.offer.length).toBe(3);
+    expect(p.offer.every((c) => c.kind !== 'shrine')).toBe(true);
+  });
+
+  it('an offering is paid when the hero reaches the next shrine up', () => {
+    const e = before(SHRINE.first);
+    const s = e.state;
+    const p = s.players[0];
+    e.step([still(e)]);
+    e.step([still(e, { pick: 2 })]);
+    expect(p).toMatchObject({ bet: true, offerings: 0 });
+    s.wave = SHRINE.first + SHRINE.every - 1;
+    s.waveT = WAVES.ticks - 1;
+    e.step([still(e)]);
+    expect(p).toMatchObject({ bet: false, offerings: 1 });
   });
 });

@@ -47,8 +47,12 @@ export interface Player extends Body {
   passives: PassiveSlot[];
   /** The Golden Bell is up and takes the next blow. */
   bell: boolean;
-  /** The level-up cards on offer; the sim stands still while any player has some. */
+  /** The level-up or shrine cards on offer; the sim stands still while any player has some. */
   offer: Card[];
+  /** An offering stands, paid at the next shrine or the win if the hero is up then. */
+  bet: boolean;
+  /** Offerings paid so far (extra copper at the results). */
+  offerings: number;
 }
 
 export interface SpellSlot {
@@ -221,6 +225,7 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0,
     hp, maxHp: hp, dead: false, revives, regen: 0, relic: 1, spells: [], passives: [], bell: false, offer: [],
+    bet: false, offerings: 0,
   };
 }
 
