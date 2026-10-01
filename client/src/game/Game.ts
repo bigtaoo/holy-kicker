@@ -7,6 +7,7 @@ import { Hero } from './hero';
 import { DamageLayer } from './damageView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
+import { fakeMobTypes } from './mobTypes';
 import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
@@ -109,9 +110,11 @@ export class Game {
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
     this.foxPos = [this.fox.pos];
     if (scene.eliteRing) this.world.addChild(this.foxRing);
-    const jiangshi = { sheet: art.jiangshi, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number], shadowTex };
+    const looks = fakeMobTypes(app.renderer, art.jiangshi, scene.types, scene.page, scene.mobRes).map((sheet) => (
+      { sheet, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number], shadowTex }
+    ));
     for (let i = 0; i < scene.mobs; i++) {
-      this.mobs.push({ pos: ringPoint(0, 0, { x: 0, y: 0 }), view: new MobView(jiangshi, this.world) });
+      this.mobs.push({ pos: ringPoint(0, 0, { x: 0, y: 0 }), view: new MobView(looks[i % looks.length], this.world) });
     }
     this.mobPos.push(...this.mobs.map((m) => m.pos));
     this.targets.push(...this.mobPos, this.fox.pos);

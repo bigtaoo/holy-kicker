@@ -22,11 +22,12 @@ export interface MobLook {
   shadowTex: Texture;
 }
 
-export function sliceSheet(meta: SheetMeta, sheet: Texture): MobSheet {
+/** Cuts the frames out of a sheet, which may sit at (x0, y0) inside a larger atlas page. */
+export function sliceSheet(meta: SheetMeta, sheet: Texture, x0 = 0, y0 = 0): MobSheet {
   const textures: Texture[] = [];
   for (let i = 0; i < meta.flash + meta.frames; i++) {
-    const x = (i % meta.cols) * meta.frameW;
-    const y = Math.floor(i / meta.cols) * meta.frameH;
+    const x = x0 + (i % meta.cols) * meta.frameW;
+    const y = y0 + Math.floor(i / meta.cols) * meta.frameH;
     textures.push(new Texture({ source: sheet.source, frame: new Rectangle(x, y, meta.frameW, meta.frameH) }));
   }
   return { meta, textures };
