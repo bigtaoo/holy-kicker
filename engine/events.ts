@@ -28,6 +28,9 @@ export type SimEvent =
   /** Gems reached a player this tick; `tier` is the biggest of them. */
   | { type: 'pickup'; owner: number; tier: number }
   | { type: 'cast'; kind: SpellKind; x: number; y: number; radius: number }
+  /** A player's Golden Bell came up, or broke on a blow it took for them. */
+  | { type: 'bellUp'; owner: number }
+  | { type: 'bellBreak'; owner: number }
   | { type: 'bolt'; x0: number; y0: number; x1: number; y1: number }
   /** A player reached `level` and has cards to pick (the sim waits for the pick). */
   | { type: 'levelUp'; owner: number; level: number }

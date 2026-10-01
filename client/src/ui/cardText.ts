@@ -38,7 +38,8 @@ function relicLines(level: number): string[] {
 function spellDesc(id: SpellId): string {
   const l = SPELL_LEVELS[id][0];
   if (id === 'palm') return t('spell.palm.desc');
-  if (id === 'bolt') return t('spell.bolt.desc', { n: l.count });
+  if (id === 'bolt' || id === 'cymbal') return t(`spell.${id}.desc`, { n: l.count });
+  if (id === 'bell') return t('spell.bell.desc', { s: seconds(l.cooldown) });
   return t('spell.incense.desc', { s: seconds(l.life) });
 }
 
@@ -46,9 +47,8 @@ function spellLines(id: SpellId, level: number): string[] {
   const a = SPELL_LEVELS[id][level - 1];
   const b = SPELL_LEVELS[id][level];
   const lines: string[] = [];
-  if (b.count !== a.count) {
-    lines.push(id === 'palm' ? t('spell.palm.count', { a: a.count, b: b.count }) : t('spell.bolt.count', { a: a.count, b: b.count }));
-  }
+  // only the palm, bolt and cymbals have a count
+  if (b.count !== a.count) lines.push(t(`spell.${id as 'palm' | 'bolt' | 'cymbal'}.count`, { a: a.count, b: b.count }));
   if (b.radius !== a.radius) lines.push(t('card.area', { n: gain(a.radius, b.radius) }));
   if (b.life !== a.life) lines.push(t('card.duration', { a: seconds(a.life), b: seconds(b.life) }));
   if (b.damage !== a.damage) lines.push(t('card.damage', { n: gain(a.damage, b.damage) }));

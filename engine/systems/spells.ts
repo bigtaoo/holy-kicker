@@ -5,11 +5,14 @@ import { dist2, TICK_RATE, toFp } from '../math/fixed';
 import type { Player, SimState } from '../state';
 import { spellLevel, stat } from './build';
 import { bossIndex, damage, eliteIndex, targetAt } from './combat';
+import { cymbalSystem, throwCymbals } from './cymbals';
 
 // Area spells. Each player casts the spells of their build on their own cooldowns (shrunk by
 // the cooldown stat, grown by the area stat); the sandbox can also cast the stress-test spells
 // round-robin around the first player at the run's rate. Spells kill the mobs they reach and
-// deal SPELL_CAST.bigPercent of their damage to the elite and the boss.
+// deal SPELL_CAST.bigPercent of their damage to the elite and the boss. The Golden Bell is a
+// shield rather than a cast: its cooldown raises it, and it only recharges once a blow breaks
+// it (breakBell, from hurtPlayer).
 
 /** Bolts leave the caster's chest and land on the target's body. */
 const CHEST = toFp(60);
@@ -103,10 +106,32 @@ function crowd(s: SimState, p: Player, r: number): [number, number] | null {
   return null;
 }
 
+/** A spell radius grown by the area stat. */
+function scaled(p: Player, radius: number): number {
+  return Math.trunc((radius * (100 + stat(p, 'area'))) / 100);
+}
+
+/**
+ * The bell takes the blow instead of p: it breaks in a blast around the hero, who stays
+ * untouchable for a moment. False when p has no bell up.
+ */
+export function breakBell(s: SimState, events: SimEvent[], p: Player): boolean {
+  const slot = p.spells.find((sp) => sp.id === 'bell');
+  if (!p.bell || !slot) return false;
+  p.bell = false;
+  p.hurtCd = SPELL_CAST.bellGuard;
+  const l = spellLevel('bell', slot.level);
+  const r = scaled(p, l.radius);
+  events.push({ type: 'bellBreak', owner: p.owner });
+  events.push({ type: 'cast', kind: 'nova', x: p.x, y: p.y, radius: r });
+  area(s, events, p, p.x, p.y, r, l.damage);
+  return true;
+}
+
 /** Casts spell `id` at `level` for p; false when it found nothing to hit. */
 function cast(s: SimState, events: SimEvent[], p: Player, id: SpellId, level: number): boolean {
   const l = spellLevel(id, level);
-  const r = Math.trunc((l.radius * (100 + stat(p, 'area'))) / 100);
+  const r = scaled(p, l.radius);
   if (id === 'palm') {
     let any = false;
     for (let i = 0; i < l.count; i++) {
@@ -118,6 +143,12 @@ function cast(s: SimState, events: SimEvent[], p: Player, id: SpellId, level: nu
     return any;
   }
   if (id === 'bolt') return chain(s, events, p, l.count, r, l.damage);
+  if (id === 'cymbal') return throwCymbals(s, p, l.count, r, l.life, l.damage);
+  if (id === 'bell') {
+    p.bell = true;
+    events.push({ type: 'bellUp', owner: p.owner });
+    return true;
+  }
   placeField(s, events, p, p.x, p.y, r, l.life, l.damage);
   return true;
 }
@@ -128,7 +159,8 @@ function buildSpells(s: SimState, events: SimEvent[]): void {
     if (p.dead) continue;
     const faster = 100 - stat(p, 'cooldown');
     for (const sp of p.spells) {
-      if (--sp.cd > 0) continue;
+      // a bell that is up waits for its blow
+      if ((sp.id === 'bell' && p.bell) || --sp.cd > 0) continue;
       sp.cd = cast(s, events, p, sp.id, sp.level)
         ? Math.max(1, Math.trunc((spellLevel(sp.id, sp.level).cooldown * faster) / 100))
         : SPELL_CAST.retry;
@@ -173,4 +205,5 @@ export function spellSystem(s: SimState, events: SimEvent[]): void {
     if (f.age < f.life) s.fields[w++] = f;
   }
   s.fields.length = w;
+  cymbalSystem(s, events);
 }

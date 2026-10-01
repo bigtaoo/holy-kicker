@@ -1,4 +1,4 @@
-import { ticks, toFp } from './math/fixed';
+import { perTick, ticks, toFp } from './math/fixed';
 
 // The in-run build (docs/content.md "Build in a run"): the relic's levels, the spells and the
 // passives a level-up card can offer, and the experience curve. Table rows are levels
@@ -36,12 +36,14 @@ export const RELIC_LEVELS: readonly RelicLevel[] = [
   { hits: 5, damage: 180, cooldown: ticks(0.7) },
 ];
 
-export type SpellId = 'palm' | 'bolt' | 'incense';
-export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense'];
+export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal';
+export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense', 'bell', 'cymbal'];
 
 /**
- * One spell level. `count` is palms (palm) or jumps (bolt); `radius` the blast, jump range or
- * ring; `life` how long the incense ring burns (0 for the others).
+ * One spell level. `count` is palms (palm), jumps (bolt) or cymbals (cymbal); `radius` the
+ * blast, jump range, ring, bell blast or cymbal hit radius; `life` how long the incense ring
+ * burns or a cymbal flies (0 for the others). The bell's cooldown is its recharge after it
+ * breaks.
  */
 export interface SpellLevel {
   cooldown: number;
@@ -62,6 +64,10 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
   bolt: [lv(2.4, 5, 350, 0, 100), lv(2.4, 6, 350, 0, 100), lv(2, 7, 350, 0, 100), lv(2, 8, 350, 0, 130), lv(1.6, 10, 350, 0, 130)],
   // a burning ring left at the hero's feet (cast shape 'field')
   incense: [lv(4, 0, 300, 3, 100), lv(4, 0, 340, 3, 100), lv(3.4, 0, 340, 3.5, 100), lv(3.4, 0, 380, 3.5, 100), lv(2.8, 0, 380, 4, 150)],
+  // a golden dome that takes one blow for the hero, then breaks in a blast (cast shape 'nova')
+  bell: [lv(8, 0, 300, 0, 150), lv(7, 0, 320, 0, 150), lv(7, 0, 360, 0, 200), lv(6, 0, 360, 0, 200), lv(5, 0, 420, 0, 250)],
+  // cymbals thrown out in a star, the first at the nearest enemy, piercing all they pass
+  cymbal: [lv(2.4, 2, 70, 1.2, 100), lv(2.4, 3, 70, 1.2, 100), lv(2, 3, 85, 1.2, 100), lv(2, 4, 85, 1.2, 130), lv(1.6, 4, 100, 1.2, 130)],
 };
 
 export const SPELL_CAST = {
@@ -76,6 +82,11 @@ export const SPELL_CAST = {
   first: ticks(0.5),
   /** Spells deal this share of their damage to the elite and the boss (content.md roles). */
   bigPercent: 50,
+  /** After the bell breaks the hero is untouchable this long (the blow it took). */
+  bellGuard: ticks(0.5),
+  /** Cymbals are only thrown with an enemy this close to aim at. */
+  cymbalReach: toFp(1100),
+  cymbalSpeed: perTick(1500),
 };
 
 export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit';

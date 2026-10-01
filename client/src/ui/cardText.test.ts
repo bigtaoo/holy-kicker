@@ -11,6 +11,9 @@ describe('card text', () => {
     expect(cardText({ kind: 'spell', id: 'bolt' }, p)).toMatchObject({
       name: 'Vajra Bolt', tag: 'New!', fresh: true, lines: ['Lightning jumps through 5 enemies'],
     });
+    expect(cardText({ kind: 'spell', id: 'bell' }, p).lines).toEqual(['Blocks a hit every 8s, then blasts']);
+    p.spells.push({ id: 'cymbal', level: 1, cd: 0 });
+    expect(cardText({ kind: 'spell', id: 'cymbal' }, p).lines).toEqual(['Cymbals 2 → 3']);
     p.spells.push({ id: 'palm', level: 2, cd: 0 });
     expect(cardText({ kind: 'spell', id: 'palm' }, p)).toMatchObject({
       tag: 'Lv 2 → 3', fresh: false, lines: ['Area +17%', 'Cooldown 3s → 2.5s'],

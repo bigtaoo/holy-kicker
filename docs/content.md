@@ -28,8 +28,9 @@ Names are working names; every name ships through the string table (en / zh-CN s
 - First evolution of each pair is recorded in the Codex.
 - Portrait readability: few, large slots. The HUD shows 9 icons at most.
 - **Implemented** (`engine/content.ts`, `engine/systems/build.ts`): the experience curve and
-  pick 1 of 3, cuju levels 1–5, Buddha Palm, Vajra Bolt, Incense Ring and the six starting
-  passives. Not yet: Golden Bell, Flying Cymbals, evolutions, awakening, the build icons on the HUD.
+  pick 1 of 3, cuju levels 1–5, the five starting spells and the six starting passives. The
+  Golden Bell recharges only after it breaks; Flying Cymbals fly out in an even star, the
+  first at the nearest enemy. Not yet: evolutions, awakening, the build icons on the HUD.
 
 ## Relics (5)
 

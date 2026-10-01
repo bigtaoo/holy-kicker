@@ -65,6 +65,8 @@ export const en = {
     palm: { name: 'Buddha Palm', desc: 'A giant palm slams the biggest crowd', count: 'Palms {a} → {b}' },
     bolt: { name: 'Vajra Bolt', desc: 'Lightning jumps through {n} enemies', count: 'Jumps {a} → {b}' },
     incense: { name: 'Incense Ring', desc: 'A ring burns at your feet for {s}s' },
+    bell: { name: 'Golden Bell', desc: 'Blocks a hit every {s}s, then blasts' },
+    cymbal: { name: 'Flying Cymbals', desc: '{n} cymbals fly out and pierce', count: 'Cymbals {a} → {b}' },
   },
   passive: {
     calm: { name: 'Calm Mind', desc: 'Spell cooldown −{n}%' },

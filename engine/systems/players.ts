@@ -7,10 +7,11 @@ import type { Player, SimState } from '../state';
 import { pickCard, relicLevel, stat } from './build';
 import { eliteIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
+import { breakBell } from './spells';
 
 // The hero: moves with the stick (easing into and out of a run), auto-kicks the cuju at the
 // nearest enemy (the boss first), and loses health when something reaches him (at most one
-// blow per hurt cooldown). Kick and hurt are one-shot actions; hurt interrupts a kick before
+// blow per hurt cooldown; a Golden Bell takes the blow instead). Kick and hurt are one-shot actions; hurt interrupts a kick before
 // its foot meets the ball. At 0 health he is down until a revive; the sandbox (waves 0) only
 // flinches.
 
@@ -64,6 +65,7 @@ export function movePlayers(s: SimState): void {
 export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value: number): void {
   const p = s.players.find((q) => q.owner === owner);
   if (!p || p.dead || p.hurtCd > 0) return;
+  if (breakBell(s, events, p)) return;
   p.hurtCd = HERO.hurtCooldown;
   p.action = 'hurt';
   p.actionT = 0;

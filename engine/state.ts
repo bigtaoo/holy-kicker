@@ -45,6 +45,8 @@ export interface Player extends Body {
   relic: number;
   spells: SpellSlot[];
   passives: PassiveSlot[];
+  /** The Golden Bell is up and takes the next blow. */
+  bell: boolean;
   /** The level-up cards on offer; the sim stands still while any player has some. */
   offer: Card[];
 }
@@ -136,6 +138,20 @@ export interface Field {
   next: number;
 }
 
+/** A thrown cymbal: flies straight and hits everything it passes, the elite and boss once. */
+export interface Cymbal extends Body {
+  id: number;
+  owner: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  damage: number;
+  age: number;
+  life: number;
+  /** Bit 1: hit the elite, bit 2: hit the boss. */
+  struck: number;
+}
+
 export interface SimState {
   readonly config: RunConfig;
   tick: number;
@@ -155,6 +171,7 @@ export interface SimState {
   /** The overflow gem (also in `gems`); derived, not hashed. */
   overflow: Gem | null;
   fields: Field[];
+  cymbals: Cymbal[];
   volleyT: number;
   zoneT: number;
   spellT: number;
@@ -186,7 +203,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
-    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [],
+    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),
@@ -197,7 +214,7 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0,
-    hp, maxHp: hp, dead: false, revives, regen: 0, relic: 1, spells: [], passives: [], offer: [],
+    hp, maxHp: hp, dead: false, revives, regen: 0, relic: 1, spells: [], passives: [], bell: false, offer: [],
   };
 }
 

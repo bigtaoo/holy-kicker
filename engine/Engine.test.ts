@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-01 for ENGINE_VERSION 4 (levelling, build spells, passives). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(4);
+    // Recorded 2026-10-01 for ENGINE_VERSION 5 (Golden Bell and Flying Cymbals). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(5);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -100,5 +100,5 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 300302860;
-const GOLDEN_CHAPTER = 2376247447;
+const GOLDEN = 4064247934;
+const GOLDEN_CHAPTER = 3168697012;

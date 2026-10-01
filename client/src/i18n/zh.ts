@@ -67,6 +67,8 @@ export const zh: Table<typeof en> = {
     palm: { name: '如来掌', desc: '巨掌拍向最密集的敌群', count: '掌数 {a} → {b}' },
     bolt: { name: '金刚雷', desc: '闪电在 {n} 个敌人之间跳跃', count: '跳跃 {a} → {b} 次' },
     incense: { name: '香火阵', desc: '脚下燃起香火阵，持续 {s} 秒' },
+    bell: { name: '金钟罩', desc: '每 {s} 秒挡一次伤害，破碎时爆开' },
+    cymbal: { name: '飞钹', desc: '飞出 {n} 片铜钹，穿透敌人', count: '铜钹 {a} → {b} 片' },
   },
   passive: {
     calm: { name: '禅心', desc: '法术冷却 −{n}%' },

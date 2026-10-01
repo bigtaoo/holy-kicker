@@ -332,6 +332,9 @@ export class Game {
         case 'bolt':
           this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP);
           break;
+        case 'bellUp':
+          if (e.owner === LOCAL) this.spells.bellUp();
+          break;
       }
     }
   }
@@ -358,6 +361,8 @@ export class Game {
     this.corpses.update(dt);
     this.balls.sync(s.balls, alpha, dt);
     this.spells.drawFields(s.fields, alpha, dt);
+    this.spells.drawCymbals(s.cymbals, alpha, dt);
+    this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
     this.aura.update(dt, hx, hy, this.fx.pool);
     this.fx.update(dt, this.aura.parts);
     this.damage.update(dt, hx, hy);

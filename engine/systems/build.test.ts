@@ -5,7 +5,7 @@ import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
 import { TICK_RATE } from '../math/fixed';
-import { body } from '../state';
+import { body, newElite } from '../state';
 import { cardPool, stat } from './build';
 
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, waves: 50 };
@@ -77,13 +77,14 @@ describe('card pool', () => {
   it('drops maxed items and new ones once the slots are full', () => {
     const e = quiet();
     const p = e.state.players[0];
-    expect(cardPool(p).length).toBe(1 + 3 + 6);
+    expect(cardPool(p).length).toBe(1 + 5 + 6);
     p.relic = MAX_LEVEL;
     p.passives = (['calm', 'iron', 'legs', 'eye'] as const).slice(0, MAX_PASSIVES).map((id) => ({ id, level: MAX_LEVEL }));
     p.passives[0].level = 2;
     p.spells = [{ id: 'palm', level: MAX_LEVEL, cd: 1 }];
     expect(cardPool(p)).toEqual([
-      { kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }, { kind: 'passive', id: 'calm' },
+      { kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }, { kind: 'spell', id: 'bell' }, { kind: 'spell', id: 'cymbal' },
+      { kind: 'passive', id: 'calm' },
     ]);
   });
 });
@@ -153,5 +154,51 @@ describe('build effects', () => {
     e.step([cmd(e)]);
     expect(p.spells[0].cd).toBe(Math.trunc((SPELL_LEVELS.incense[0].cooldown * 60) / 100));
     expect(p.spells[1].cd).toBeLessThan(SPELL_LEVELS.bolt[0].cooldown / 2);
+  });
+
+  it('raises the Golden Bell, which takes a blow and breaks in a blast', () => {
+    const e = quiet();
+    const s = e.state;
+    const p = s.players[0];
+    p.kickCd = 1e6;
+    p.spells = [{ id: 'bell', level: 1, cd: 1 }];
+    expect(e.step([cmd(e)]).map((v) => v.type)).toContain('bellUp');
+    expect(p.bell).toBe(true);
+    // the bell holds its charge, its cooldown frozen, until something reaches the hero
+    for (let i = 0; i < 30; i++) e.step([cmd(e)]);
+    expect(p.spells[0].cd).toBe(SPELL_LEVELS.bell[0].cooldown);
+    p.hurtCd = 0;
+    s.mobs.push(body(p.x, p.y), body(p.x + 200_000, p.y));
+    const types = e.step([cmd(e)]).map((v) => v.type);
+    expect(types).toContain('bellBreak');
+    expect(types).not.toContain('hurt');
+    expect(types.filter((t) => t === 'mobDown').length).toBe(2);
+    expect(p).toMatchObject({ bell: false, hp: p.maxHp });
+    expect(p.hurtCd).toBeGreaterThan(0);
+  });
+
+  it('throws cymbals that pierce the horde and hit the elite once', () => {
+    const e = quiet();
+    const s = e.state;
+    const p = s.players[0];
+    p.kickCd = 1e6;
+    for (let i = 0; i < 5; i++) s.mobs.push(body(p.x + 300_000 + i * 150_000, p.y));
+    s.elite = newElite(p.x + 1_200_000, p.y);
+    s.elite.hp = s.elite.maxHp = 1e6;
+    p.spells = [{ id: 'cymbal', level: 1, cd: 1 }];
+    e.step([cmd(e)]);
+    expect(s.cymbals.length).toBe(SPELL_LEVELS.cymbal[0].count);
+    p.spells[0].cd = 1e6;
+    let down = 0;
+    let eliteHits = 0;
+    for (let i = 0; i < SPELL_LEVELS.cymbal[0].life + 2; i++) {
+      for (const v of e.step([cmd(e)])) {
+        if (v.type === 'mobDown') down++;
+        if (v.type === 'hit' && v.kind === 'elite') eliteHits++;
+      }
+    }
+    expect(down).toBeGreaterThanOrEqual(5);
+    expect(eliteHits).toBe(1);
+    expect(s.cymbals.length).toBe(0);
   });
 });
