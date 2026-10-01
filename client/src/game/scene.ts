@@ -57,7 +57,12 @@ export interface SceneOptions {
   heroBack: boolean;
   eliteColor: EliteColor;
   foxTint: boolean;
+  /** Ground decorations against the tile repeat: none, faint patches only, or patches and props. */
+  deco: DecoMode;
 }
+
+export type DecoMode = 'none' | 'patches' | 'props';
+export const DECO_MODES: readonly DecoMode[] = ['none', 'patches', 'props'];
 
 export type EliteColor = 'red' | 'white' | 'violet';
 export const ELITE_COLORS: readonly EliteColor[] = ['red', 'white', 'violet'];
@@ -71,6 +76,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   gem: 'pink', drops: 0,
   threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
   crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true,
+  deco: 'props',
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -105,6 +111,7 @@ export function parseScene(query: string): SceneOptions {
     heroBack: q.has('heroback') ? q.get('heroback') === '1' : DEFAULT_SCENE.heroBack,
     eliteColor: ELITE_COLORS.find((c) => c === q.get('elitecolor')) ?? DEFAULT_SCENE.eliteColor,
     foxTint: q.has('foxtint') ? q.get('foxtint') === '1' : DEFAULT_SCENE.foxTint,
+    deco: DECO_MODES.find((d) => d === q.get('deco')) ?? DEFAULT_SCENE.deco,
   };
 }
 

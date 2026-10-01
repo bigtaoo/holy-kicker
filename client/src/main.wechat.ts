@@ -19,7 +19,7 @@ async function boot() {
   // document, so detection is skipped. Init explicitly before the first load, otherwise
   // Assets.load self-initialises with detection on and throws.
   await Assets.init({ skipDetections: true });
-  const game = new Game(app, platform, await loadArt(platform, DEFAULT_SCENE.ground), DEFAULT_SCENE);
+  const game = new Game(app, platform, await loadArt(platform, DEFAULT_SCENE.ground, DEFAULT_SCENE.deco), DEFAULT_SCENE);
   new QualityRuntime(app, levelRange(DEFAULT_SCENE.quality, device), (s) => game.applyQuality(s));
 }
 

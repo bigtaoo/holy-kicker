@@ -15,6 +15,7 @@ import { SpellCaster } from './spellCaster';
 import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
+import { makeDeco, type DecoSheet } from './decoView';
 import type { EliteColor, SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { stepHorde, type HordeParams, type Mob } from './horde';
@@ -31,6 +32,8 @@ export interface Art {
   cuju: Texture;
   /** Repeating ground tile; null draws the flat placeholder field. */
   ground: Texture | null;
+  /** Scattered ground decorations; null when the scene turns them off. */
+  deco: DecoSheet | null;
 }
 
 const HERO_SPEED = 420;
@@ -111,6 +114,11 @@ export class Game {
   ) {
     this.world.sortableChildren = true;
     this.world.addChild(art.ground ? makeTiledGround(art.ground) : makeGround());
+    if (art.deco && scene.deco !== 'none') {
+      const deco = makeDeco(art.deco, scene.deco === 'props');
+      deco.zIndex = SHADOW_Z - 1;
+      this.world.addChild(deco);
+    }
     const shadowTex = shadowTexture(app.renderer);
     this.hero = new Hero(art.hero, HERO_HEIGHT);
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view);

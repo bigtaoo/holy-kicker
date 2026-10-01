@@ -12,7 +12,7 @@ describe('parseScene', () => {
       mobs: 300, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: false, eliteRing: true,
       types: 1, page: 0, mobRes: 1, spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
       gem: 'pink', drops: 0, threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
-      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true,
+      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true, deco: 'props',
     });
     expect(parseScene('?spells=nova,lava,chain&rate=3&stack=6&ringfx=quad&blur=1&fxbudget=2')).toMatchObject({
       spells: ['nova', 'chain'], rate: 3, stack: 6, ringFx: 'quad', blur: true, fxBudget: 2,
@@ -30,6 +30,8 @@ describe('parseScene', () => {
     expect(parseScene('?crit=red&numfade=0&heroback=0&elitecolor=violet&foxtint=0')).toMatchObject({
       crit: 'red', numFade: false, heroBack: false, eliteColor: 'violet', foxTint: false,
     });
+    expect(parseScene('?deco=patches').deco).toBe('patches');
+    expect(parseScene('?deco=trees').deco).toBe('props');
     expect(parseScene('?crit=blue&elitecolor=gold')).toMatchObject({ crit: 'orange', eliteColor: 'white' });
     expect(parseScene('?gem=gold&drops=-1')).toMatchObject({ gem: 'pink', drops: 0 });
   });
