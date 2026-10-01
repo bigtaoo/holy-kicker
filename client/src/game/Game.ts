@@ -9,6 +9,7 @@ import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
+import { depthShade } from './mobAnim';
 import { fakeMobTypes } from './mobTypes';
 import { AuraStack } from './aura';
 import { SpellCaster } from './spellCaster';
@@ -39,7 +40,7 @@ export interface Art {
 
 const HERO_SPEED = 420;
 const HERO_HEIGHT = 120;
-const HORDE: HordeParams = { speed: 110, stopDist: 70, sepRadius: 60, queue: true };
+const HORDE: HordeParams = { speed: 110, stopDist: 70, sepRadius: 75, queue: true };
 const RESPAWN_DIST = 2200;
 const STICK_RADIUS = 70;
 const GROUND = 0x3a4a3c;
@@ -87,7 +88,8 @@ export class Game {
   private readonly foxPos: Mob[];
   private readonly mobs: Enemy[] = [];
   private readonly mobPos: Mob[] = [];
-  private readonly grid = new SpatialGrid(HORDE.sepRadius);
+  private readonly horde: HordeParams;
+  private readonly grid: SpatialGrid;
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
   private readonly damage: DamageLayer;
@@ -118,6 +120,8 @@ export class Game {
     art: Art,
     private readonly scene: SceneOptions,
   ) {
+    this.horde = { ...HORDE, sepRadius: scene.sep, queue: scene.queue };
+    this.grid = new SpatialGrid(this.horde.sepRadius);
     this.world.sortableChildren = true;
     this.world.addChild(art.ground ? makeTiledGround(art.ground) : makeGround());
     if (art.deco && scene.deco !== 'none') {
@@ -155,7 +159,7 @@ export class Game {
       { sheet, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number], shadowTex }
     ));
     for (let i = 0; i < scene.mobs; i++) {
-      this.mobs.push({ pos: ringPoint(0, 0, { x: 0, y: 0 }), view: new MobView(looks[i % looks.length], this.world) });
+      this.mobs.push({ pos: ringPoint(0, 0, { x: 0, y: 0 }), view: new MobView(looks[i % looks.length], this.world, scene.calm) });
     }
     this.mobPos.push(...this.mobs.map((m) => m.pos));
     this.targets.push(...this.mobPos, this.fox.pos);
@@ -220,10 +224,11 @@ export class Game {
 
     const hx = this.heroPos.x;
     const hy = this.heroPos.y;
-    stepHorde(this.mobPos, hx, hy, dt, this.scene.queue ? HORDE : { ...HORDE, queue: false }, this.grid);
+    stepHorde(this.mobPos, hx, hy, dt, this.horde, this.grid);
     for (const m of this.mobs) {
       if (Math.hypot(m.pos.x - hx, m.pos.y - hy) > RESPAWN_DIST) ringPoint(hx, hy, m.pos);
-      m.view.update(dt, m.pos.x, m.pos.y, hx - m.pos.x, 1, this.scene.settle ? HORDE.speed : 0);
+      m.view.update(dt, m.pos.x, m.pos.y, hx - m.pos.x, 1, this.scene.settle ? HORDE.speed : 0, this.scene.sway);
+      if (this.scene.calm) m.view.shade(depthShade(Math.hypot(m.pos.x - hx, m.pos.y - hy)));
     }
     const fp = this.fox.pos;
     stepHorde(this.foxPos, hx, hy, dt, FOX_MOVE);

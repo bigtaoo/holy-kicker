@@ -1,7 +1,7 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { faceSide } from './camera';
 import { makeShadow, sizeShadow } from './shadow';
-import { corpseAlpha, frameAt, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
+import { SETTLE, corpseAlpha, frameAt, greyTint, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
 
 // Draws mobs from their baked sheets: a looping animated sprite over a ground shadow that
 // stays on the ground while the sprite hops. Corpses are separate sprites, so a knocked-down
@@ -11,6 +11,13 @@ import { corpseAlpha, frameAt, holdsStill, knockDown, stepCorpse, stepPace, type
 const FACE_DEAD = 30;
 /** Draw order follows y only once it moves this far, so jostling neighbours do not swap. */
 const Z_DEAD = 6;
+/** Seconds the drawn position takes to follow the simulated one, filtering crowd jostle. */
+const DRAW_EASE = 0.08;
+/** Farther than this and the drawn position jumps (a respawn). */
+const DRAW_SNAP = 120;
+/** A mob standing in a jam breathes: this much stretch, this many breaths per second. */
+const BREATH = 0.025;
+const BREATH_RATE = 0.45;
 
 export interface MobSheet {
   meta: SheetMeta;
@@ -56,17 +63,34 @@ export class MobView {
   /** 1 while looking right, -1 left. */
   private side = 1;
   private frame = 0;
+  private drawX = NaN;
+  private idle = 0;
+  private drawY = 0;
+  /** Own brightness, so a crowd of one type is not a uniform stamp. */
+  private readonly tone: number;
 
+  /**
+   * `calm` gives each mob a slightly different size and brightness, and draws it easing after
+   * its simulated position so crowd jostle does not show.
+   */
   constructor(
     private readonly look: MobLook,
     layer: Container,
+    private readonly calm = false,
   ) {
+    const vary = calm;
     const { meta, textures } = look.sheet;
-    this.scale = look.height / meta.height;
+    this.scale = (look.height / meta.height) * (vary ? 0.94 + Math.random() * 0.12 : 1);
+    this.tone = vary ? 0.9 + Math.random() * 0.1 : 1;
     this.sprite = new Sprite(textures[0]);
     this.sprite.anchor.set(meta.anchor[0] / meta.frameW, meta.anchor[1] / meta.frameH);
     this.shadow = makeShadow(look.shadowTex, ...look.shadow);
     layer.addChild(this.shadow, this.sprite);
+  }
+
+  /** Brightness from the mob's place in the crowd (see depthShade), times its own tone. */
+  shade(k: number): void {
+    this.sprite.tint = greyTint(k * this.tone);
   }
 
   /** A hit that does not kill: a white flash and a short squash. */
@@ -83,9 +107,10 @@ export class MobView {
 
   /**
    * `speed` scales the cycle, e.g. slower while standing. `faceX` is the side to look at. With
-   * a `walk` speed, a mob jammed in the crowd lands and stands instead of hopping in place.
+   * a `walk` speed, a mob jammed in the crowd lands and stands instead of hopping in place,
+   * and with `sway` it breathes gently while it stands.
    */
-  update(dt: number, x: number, y: number, faceX: number, speed = 1, walk = 0): void {
+  update(dt: number, x: number, y: number, faceX: number, speed = 1, walk = 0, sway = false): void {
     const { meta, textures } = this.look.sheet;
     if (walk > 0 && dt > 0) {
       const moved = Number.isNaN(this.lastX) ? walk * dt : Math.hypot(x - this.lastX, y - this.lastY);
@@ -107,7 +132,22 @@ export class MobView {
       sx *= 1 + k;
       sy *= 1 - k;
     }
+    if (sway && walk > 0) {
+      this.idle += dt;
+      const still = Math.max(0, 1 - this.pace / SETTLE);
+      const b = Math.sin((this.idle * BREATH_RATE + this.phase) * Math.PI * 2) * BREATH * still;
+      sx *= 1 - b * 0.5;
+      sy *= 1 + b;
+    }
     this.sprite.scale.set(sx * flip, sy);
+    if (this.calm && !Number.isNaN(this.drawX) && Math.hypot(x - this.drawX, y - this.drawY) < DRAW_SNAP) {
+      const k = 1 - Math.exp(-dt / DRAW_EASE);
+      x = this.drawX += (x - this.drawX) * k;
+      y = this.drawY += (y - this.drawY) * k;
+    } else {
+      this.drawX = x;
+      this.drawY = y;
+    }
     this.sprite.position.set(x, y);
     if (Math.abs(y - this.sprite.zIndex) > Z_DEAD) this.sprite.zIndex = y;
     // the shadow shrinks while the mob is in the air

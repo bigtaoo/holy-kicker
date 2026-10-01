@@ -14,7 +14,7 @@ async function boot() {
   const app = await platform.createApp(useMsaa(scene.quality, device));
   device.gpu = gpuName(app.renderer);
   await Assets.init();
-  const game = new Game(app, platform, await loadArt(platform, scene.ground, scene.deco), scene);
+  const game = new Game(app, platform, await loadArt(platform, scene), scene);
   const quality = new QualityRuntime(app, levelRange(scene.quality, device), (s) => game.applyQuality(s));
   // dev hook for soak tests and screenshots driven from the console
   if (import.meta.env.DEV) Object.assign(window, { __app: app, __game: game, __quality: quality, __device: device });

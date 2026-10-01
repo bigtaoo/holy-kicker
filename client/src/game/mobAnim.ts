@@ -83,3 +83,21 @@ export function stepPace(pace: number, moved: number, walk: number, dt: number):
 export function holdsStill(meta: SheetMeta, frame: number, pace: number): boolean {
   return pace < SETTLE && (meta.lift[frame] ?? 0) <= 1;
 }
+
+/** Mobs fade toward this brightness with distance from the hero, between NEAR and FAR. */
+export const DEPTH_SHADE = { near: 300, far: 850, min: 0.72 };
+
+/**
+ * Brightness (0..1) for a mob `d` away from the hero: the front ring stays bright and the
+ * crowd behind it sinks back, so the pile reads as one mass instead of a busy lattice.
+ */
+export function depthShade(d: number, s = DEPTH_SHADE): number {
+  const t = Math.min(1, Math.max(0, (d - s.near) / (s.far - s.near)));
+  return 1 - t * (1 - s.min);
+}
+
+/** A grey multiply tint of brightness k (0..1). */
+export function greyTint(k: number): number {
+  const c = Math.round(255 * Math.min(1, Math.max(0, k)));
+  return (c << 16) | (c << 8) | c;
+}

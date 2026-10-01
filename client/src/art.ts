@@ -5,15 +5,16 @@ import { sliceSheet, type MobSheet } from './game/mobView';
 import { sliceAtlas, type TaoAsset } from './game/tao/TaoActor';
 import type { TaoSkeleton } from './game/tao/types';
 import type { Platform } from './platform/types';
-import type { DecoMode, GroundKind } from './game/scene';
+import type { SceneOptions } from './game/scene';
 import { sliceDeco, type DecoFrame, type DecoSheet } from './game/decoView';
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
-export async function loadArt(platform: Platform, ground: GroundKind, deco: DecoMode): Promise<Art> {
+export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace'>): Promise<Art> {
+  const { ground, deco } = scene;
   const [hero, jiangshi, fox, cuju, groundTex, decoSheet] = await Promise.all([
     loadTao(platform, 'art/hero'),
-    loadSheet(platform, 'art/mobs/jiangshi'),
+    loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
     ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
@@ -29,8 +30,9 @@ async function loadDeco(platform: Platform, path: string): Promise<DecoSheet> {
 }
 
 /** A baked mob loop: <name>.json + <name>.png (tools/bake_mob.py). */
-async function loadSheet(platform: Platform, path: string): Promise<MobSheet> {
-  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), Assets.load<Texture>(`${path}.png`)]);
+/** A baked mob: <path>.json + <path>.png, or another png with the same layout. */
+async function loadSheet(platform: Platform, path: string, png = `${path}.png`): Promise<MobSheet> {
+  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), Assets.load<Texture>(png)]);
   return sliceSheet(JSON.parse(text) as SheetMeta, sheet);
 }
 

@@ -65,6 +65,14 @@ export interface SceneOptions {
   settle: boolean;
   /** Mobs blocked by a neighbour ahead wait instead of pressing on, so a jam stands still. */
   queue: boolean;
+  /** The crowd behind the front ring dims with distance, and mobs vary a little in size and tone. */
+  calm: boolean;
+  /** Mobs closer than this push apart (world units; a mob is 80 tall). */
+  sep: number;
+  /** Near-white faces and talismans toned down (tools/soften_mob.py), or the plain sheet. */
+  softFace: boolean;
+  /** Mobs standing in a jam breathe a little instead of freezing. */
+  sway: boolean;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -86,6 +94,10 @@ export const DEFAULT_SCENE: SceneOptions = {
   cam: 'smooth',
   settle: true,
   queue: true,
+  calm: true,
+  sep: 75,
+  softFace: true,
+  sway: true,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -124,6 +136,10 @@ export function parseScene(query: string): SceneOptions {
     cam: q.get('cam') === 'lock' ? 'lock' : DEFAULT_SCENE.cam,
     settle: q.has('settle') ? q.get('settle') === '1' : DEFAULT_SCENE.settle,
     queue: q.has('queue') ? q.get('queue') === '1' : DEFAULT_SCENE.queue,
+    calm: q.has('calm') ? q.get('calm') === '1' : DEFAULT_SCENE.calm,
+    sep: num(q.get('sep'), 30, 120, DEFAULT_SCENE.sep),
+    softFace: q.has('face') ? q.get('face') !== 'white' : DEFAULT_SCENE.softFace,
+    sway: q.has('sway') ? q.get('sway') === '1' : DEFAULT_SCENE.sway,
   };
 }
 

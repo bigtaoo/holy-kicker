@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta, holdsStill, SETTLE, stepPace } from './mobAnim';
+import { CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta, holdsStill, SETTLE, stepPace, depthShade, greyTint, DEPTH_SHADE } from './mobAnim';
 
 const meta: SheetMeta = { frames: 10, flash: 10, cols: 4, frameW: 1, frameH: 1, fps: 20, anchor: [0, 0], height: 1, lift: [] };
 
@@ -49,5 +49,21 @@ describe('jammed mobs', () => {
     expect(holdsStill(hop, 3, 0.1)).toBe(true);
     expect(holdsStill(hop, 2, 0.1)).toBe(false);
     expect(holdsStill(hop, 0, 0.9)).toBe(false);
+  });
+});
+
+describe('depth shade', () => {
+  it('keeps the front ring bright and dims the crowd behind it', () => {
+    expect(depthShade(100)).toBe(1);
+    expect(depthShade(DEPTH_SHADE.near)).toBe(1);
+    expect(depthShade(2000)).toBeCloseTo(DEPTH_SHADE.min);
+    expect(depthShade(500)).toBeLessThan(1);
+    expect(depthShade(500)).toBeGreaterThan(depthShade(700));
+  });
+
+  it('makes a grey tint', () => {
+    expect(greyTint(1)).toBe(0xffffff);
+    expect(greyTint(0)).toBe(0);
+    expect(greyTint(0.5)).toBe(0x808080);
   });
 });
