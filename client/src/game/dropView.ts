@@ -7,11 +7,14 @@ import { SHADOW_Z } from './shadow';
 // one light facet, as the sticker art). Resting gems lie on the ground under every figure in
 // one ParticleContainer; flying gems pass over the horde in a second one.
 
-/** Fill colours per tier; the last is the overflow gem. */
+/**
+ * Fill colours per tier; the last is the overflow gem, a big white one. Violet belongs to enemy
+ * attacks and red does not read on grass for red-blind players, so gems use neither.
+ */
 const COLORS: Record<GemPalette, number[]> = {
-  ice: [0x8fe6ff, 0x5fa8ff, 0xb48cff, 0xff4d5e],
-  pink: [0xff8ad8, 0xff4fa3, 0xc45cff, 0xff4d5e],
-  lime: [0xc6ff5a, 0x6cf07a, 0x2fd6b0, 0xff4d5e],
+  ice: [0x8fe6ff, 0x5fa8ff, 0x3f6bff, 0xfff4fb],
+  pink: [0xff8ad8, 0xff4fa3, 0xff2fd0, 0xfff4fb],
+  lime: [0xc6ff5a, 0x6cf07a, 0x2fd6b0, 0xfff4fb],
 };
 /** Gem height in world units per tier. */
 const SIZES = [34, 44, 58, 72];

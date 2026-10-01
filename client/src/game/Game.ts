@@ -6,6 +6,7 @@ import { nearest, type BallParams } from './cuju';
 import { Hero } from './hero';
 import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
+import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import { fakeMobTypes } from './mobTypes';
@@ -80,6 +81,7 @@ export class Game {
   private readonly fx: FxLayer;
   private readonly damage: DamageLayer;
   private readonly drops: DropLayer;
+  private readonly threats: ThreatLayer | null;
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
   private readonly balls: Balls;
@@ -123,6 +125,9 @@ export class Game {
       const r = 300 + Math.sqrt(Math.random()) * 2700;
       this.drops.field.drop(Math.cos(a) * r, Math.sin(a) * r, 1);
     }
+    this.threats = scene.threats
+      ? new ThreatLayer(app.renderer, this.world, scene.bullet, scene.zone, scene.zoneLayer, this.fx.pool)
+      : null;
     const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number], shadowTex };
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
     this.foxPos = [this.fox.pos];
@@ -214,6 +219,7 @@ export class Game {
     this.fx.update(dt, this.aura.parts);
     this.damage.update(dt);
     this.drops.update(dt, hx, hy);
+    if (this.threats?.update(dt, hx, hy, this.mobPos)) this.hurt();
 
     this.combat(dt);
 
@@ -242,10 +248,13 @@ xp ${f.collected}  gems ${f.gems.length}`;
     this.balls.update(dt, this.targets, this.onHit);
 
     this.hurtTimer -= dt;
-    if (this.hurtTimer <= 0 && nearest(this.targets, hx, hy, HURT_DIST) >= 0) {
-      this.hurtTimer = HURT_COOLDOWN;
-      this.hero.hurt();
-    }
+    if (nearest(this.targets, hx, hy, HURT_DIST) >= 0) this.hurt();
+  }
+
+  private hurt(): void {
+    if (this.hurtTimer > 0) return;
+    this.hurtTimer = HURT_COOLDOWN;
+    this.hero.hurt();
   }
 
   /** The kick connects: launch a ball from the hero's foot at the nearest enemy. */

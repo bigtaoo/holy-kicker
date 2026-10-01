@@ -6,6 +6,7 @@ import { SPELL_KINDS, type SpellKind } from './spellCaster';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
 import { GEM_PALETTES, type GemPalette } from './drops';
+import { BULLET_LOOKS, type BulletLook, type ZoneLayer, type ZoneLook } from './threats';
 
 export type GroundKind = 'earth' | 'earth_soft' | 'grass' | 'flat';
 export const GROUNDS: readonly GroundKind[] = ['earth', 'earth_soft', 'grass', 'flat'];
@@ -43,6 +44,11 @@ export interface SceneOptions {
   gem: GemPalette;
   /** Gems scattered around the start (stress test). */
   drops: number;
+  /** Enemy attacks for the readability test: bullets and blast zones, and their looks. */
+  threats: boolean;
+  bullet: BulletLook;
+  zone: ZoneLook;
+  zoneLayer: ZoneLayer;
 }
 
 // Defaults picked from the 300-mob readability comparison (2026-10-01).
@@ -51,6 +57,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   types: 1, page: 0, mobRes: 1,
   spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
   gem: 'pink', drops: 0,
+  threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -76,6 +83,10 @@ export function parseScene(query: string): SceneOptions {
     mobRes: num(q.get('mobres'), 0.25, 1, DEFAULT_SCENE.mobRes),
     gem: GEM_PALETTES.includes(q.get('gem') as GemPalette) ? (q.get('gem') as GemPalette) : DEFAULT_SCENE.gem,
     drops: Math.round(num(q.get('drops'), 0, 20000, DEFAULT_SCENE.drops)),
+    threats: q.has('threats') ? q.get('threats') === '1' : DEFAULT_SCENE.threats,
+    bullet: BULLET_LOOKS.includes(q.get('bullet') as BulletLook) ? (q.get('bullet') as BulletLook) : DEFAULT_SCENE.bullet,
+    zone: q.get('zone') === 'edge' ? 'edge' : DEFAULT_SCENE.zone,
+    zoneLayer: (['under', 'over', 'top'] as const).find((z) => z === q.get('zonez')) ?? DEFAULT_SCENE.zoneLayer,
   };
 }
 
