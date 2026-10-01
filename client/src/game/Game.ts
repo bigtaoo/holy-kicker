@@ -15,7 +15,7 @@ import { SpellCaster } from './spellCaster';
 import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
-import type { SceneOptions } from './scene';
+import type { EliteColor, SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { stepHorde, type HordeParams, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
@@ -58,6 +58,8 @@ const GROUND_SCALE = 1.5;
 const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
 const SCREEN_AREA = 1080 * 1920;
+const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff, violet: 0xb04cff };
+const FOX_TINT = 0xc8a8ff;
 
 interface Enemy {
   pos: Mob;
@@ -113,11 +115,12 @@ export class Game {
     this.hero = new Hero(art.hero, HERO_HEIGHT);
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view);
     if (scene.ring) this.hero.view.addChildAt(makeRing(app.renderer, 0xffb030), 0);
-    this.foxRing = makeRing(app.renderer, 0xe0303a, 1.8);
+    if (scene.heroBack) this.hero.view.addChildAt(heroBacking(app.renderer), 0);
+    this.foxRing = makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
     this.balls = new Balls(this.world, art.cuju, shadowTex, BALL);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
-    this.damage = new DamageLayer(app.renderer);
+    this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
     this.world.addChild(this.fx.view, this.damage.view);
     this.drops = new DropLayer(app.renderer, this.world, scene.gem, this.fx.pool);
     for (let i = 0; i < scene.drops; i++) {
@@ -131,6 +134,8 @@ export class Game {
     const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number], shadowTex };
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
     this.foxPos = [this.fox.pos];
+    // a multiply tint is free: it turns the pale fox lavender, away from the teal horde
+    if (scene.foxTint) this.fox.view.sprite.tint = FOX_TINT;
     if (scene.eliteRing) this.world.addChild(this.foxRing);
     const looks = fakeMobTypes(app.renderer, art.jiangshi, scene.types, scene.page, scene.mobRes).map((sheet) => (
       { sheet, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number], shadowTex }
@@ -217,7 +222,7 @@ export class Game {
     this.caster.update(dt, hx, hy);
     this.aura.update(dt, hx, hy, this.fx.pool);
     this.fx.update(dt, this.aura.parts);
-    this.damage.update(dt);
+    this.damage.update(dt, hx, hy);
     this.drops.update(dt, hx, hy);
     if (this.threats?.update(dt, hx, hy, this.mobPos)) this.hurt();
 
@@ -336,13 +341,29 @@ function makeTiledGround(tex: Texture): TilingSprite {
 // Rings and the stick are baked into textures with MSAA on the render target: phones run
 // without MSAA on the screen, where Graphics edges would come out jagged.
 
-/** A flat ring on the ground around a figure's feet. */
-function makeRing(renderer: Renderer, color: number, size = 1): Sprite {
+/** A flat ring on the ground around a figure's feet, optionally over a dark outline. */
+function makeRing(renderer: Renderer, color: number, size = 1, outline = false): Sprite {
   const rx = 62 * size;
   const ry = 22 * size;
-  const s = new Sprite(bake(renderer, new Graphics().ellipse(rx + 6, ry + 6, rx, ry).stroke({ color, width: 6, alpha: 0.8 }), rx * 2 + 12, ry * 2 + 12, 1));
+  const g = new Graphics();
+  if (outline) g.ellipse(rx + 6, ry + 6, rx, ry).stroke({ color: 0x140c18, width: 11, alpha: 0.6 });
+  g.ellipse(rx + 6, ry + 6, rx, ry).stroke({ color, width: 6, alpha: outline ? 1 : 0.8 });
+  const s = new Sprite(bake(renderer, g, rx * 2 + 12, ry * 2 + 12, 1));
   s.anchor.set(0.5);
   s.zIndex = SHADOW_Z;
+  return s;
+}
+
+/** A soft dark glow behind the hero's figure, so he stands out on bright spells. */
+function heroBacking(renderer: Renderer): Sprite {
+  const w = 90;
+  const h = 110;
+  const g = new Graphics();
+  for (let i = 8; i >= 1; i--) g.ellipse(w, h, (w * i) / 8, (h * i) / 8).fill({ color: 0x140c18, alpha: 0.11 });
+  const s = new Sprite(bake(renderer, g, w * 2, h * 2, 1));
+  s.anchor.set(0.5);
+  // centred on his chest; he is drawn from his feet
+  s.y = -HERO_HEIGHT / 2;
   return s;
 }
 

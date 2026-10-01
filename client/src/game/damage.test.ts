@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DAMAGE_LIFE, DamagePool, KEY_MERGE_GAP, MERGE_AGE, MERGE_CELL, damageAlpha, damageScale, digitsOf } from './damage';
+import { DAMAGE_LIFE, DamagePool, KEY_MERGE_GAP, MERGE_AGE, MERGE_CELL, damageAlpha, damageScale, digitsOf, heroClear } from './damage';
 
 describe('digitsOf', () => {
   it('splits a rounded value into digits', () => {
@@ -81,5 +81,17 @@ describe('DamagePool', () => {
     pool.step(KEY_MERGE_GAP);
     pool.spawn(500, 0, 1, false, 7);
     expect(pool.live.length).toBe(4);
+  });
+});
+
+describe('heroClear', () => {
+  it('fades numbers over the hero and leaves the rest solid', () => {
+    expect(heroClear(0, -60, 0, 0)).toBeCloseTo(0.3);
+    expect(heroClear(200, -60, 0, 0)).toBe(1);
+    expect(heroClear(0, -300, 0, 0)).toBe(1);
+    expect(heroClear(0, 50, 0, 0)).toBe(1);
+    const edge = heroClear(90, -60, 0, 0);
+    expect(edge).toBeGreaterThan(0.3);
+    expect(edge).toBeLessThan(1);
   });
 });

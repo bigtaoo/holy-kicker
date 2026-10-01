@@ -1,5 +1,5 @@
 import { Container, Particle, ParticleContainer, Rectangle, Text, Texture, type Renderer } from 'pixi.js';
-import { DamagePool, damageAlpha, damageScale } from './damage';
+import { DamagePool, damageAlpha, damageScale, heroClear, type CritLook } from './damage';
 
 // Draws the DamagePool through one ParticleContainer, one particle per digit. The ten digit
 // glyphs are rendered once at start-up with the canvas font into a small atlas (white fill,
@@ -13,7 +13,7 @@ const PREWARM = 300;
 /** Height of a normal number in world units. */
 const HEIGHT = 52;
 const NORMAL = 0xffffff;
-const CRIT = 0xffc83a;
+const CRIT: Record<CritLook, number> = { gold: 0xffc83a, red: 0xff3b3b, orange: 0xff7a1a };
 
 interface Glyphs {
   textures: Texture[];
@@ -50,8 +50,11 @@ export class DamageLayer {
   });
   private readonly glyphs: Glyphs;
   private readonly particles: Particle[] = [];
+  private readonly crit: number;
 
-  constructor(renderer: Renderer) {
+  /** `clearHero` fades numbers that float over the hero's figure. */
+  constructor(renderer: Renderer, crit: CritLook = 'gold', private readonly clearHero = false) {
+    this.crit = CRIT[crit];
     this.glyphs = drawGlyphs(renderer);
     this.view.texture = this.glyphs.textures[0];
     // above the effects
@@ -62,7 +65,7 @@ export class DamageLayer {
     }
   }
 
-  update(dt: number): void {
+  update(dt: number, hx: number, hy: number): void {
     this.pool.step(dt);
     const live = this.pool.live;
     let count = 0;
@@ -82,8 +85,8 @@ export class DamageLayer {
       const step = advance * s;
       const n = d.digits.length;
       const x0 = d.x - ((n - 1) * step) / 2;
-      const tint = d.crit ? CRIT : NORMAL;
-      const alpha = damageAlpha(d);
+      const tint = d.crit ? this.crit : NORMAL;
+      const alpha = damageAlpha(d) * (this.clearHero ? heroClear(d.x, d.y, hx, hy) : 1);
       for (let j = 0; j < n; j++) {
         const p = this.particles[k++];
         p.texture = textures[d.digits[j]];

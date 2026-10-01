@@ -6,6 +6,7 @@ import { SPELL_KINDS, type SpellKind } from './spellCaster';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
 import { GEM_PALETTES, type GemPalette } from './drops';
+import { CRIT_LOOKS, type CritLook } from './damage';
 import { BULLET_LOOKS, type BulletLook, type ZoneLayer, type ZoneLook } from './threats';
 
 export type GroundKind = 'earth' | 'earth_soft' | 'grass' | 'flat';
@@ -20,7 +21,7 @@ export interface SceneOptions {
   ring: boolean;
   /** Draw the hero above the hit sparks and death puffs too (numbers stay on top). */
   heroOverFx: boolean;
-  /** A red ring under elites, and elites drawn over the horde. */
+  /** A ring under elites, and elites drawn over the horde. */
   eliteRing: boolean;
   /** Fake mob types: the horde cycles through this many hue-shifted copies of the jiangshi. */
   types: number;
@@ -49,15 +50,27 @@ export interface SceneOptions {
   bullet: BulletLook;
   zone: ZoneLook;
   zoneLayer: ZoneLayer;
+  /** Readability of the hero among numbers, spells and elites: crit colour, numbers fading
+   * over the hero, a dark backing behind him, the elite ring colour and the fox tint. */
+  crit: CritLook;
+  numFade: boolean;
+  heroBack: boolean;
+  eliteColor: EliteColor;
+  foxTint: boolean;
 }
 
-// Defaults picked from the 300-mob readability comparison (2026-10-01).
+export type EliteColor = 'red' | 'white' | 'violet';
+export const ELITE_COLORS: readonly EliteColor[] = ['red', 'white', 'violet'];
+
+// Defaults picked from the 300-mob readability comparisons (2026-10-01), checked under a
+// simulated red-blind view too: a red elite ring vanished on grass, gold crits matched the hero.
 export const DEFAULT_SCENE: SceneOptions = {
   mobs: 40, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: true, eliteRing: true,
   types: 1, page: 0, mobRes: 1,
   spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
   gem: 'pink', drops: 0,
   threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
+  crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -87,6 +100,11 @@ export function parseScene(query: string): SceneOptions {
     bullet: BULLET_LOOKS.includes(q.get('bullet') as BulletLook) ? (q.get('bullet') as BulletLook) : DEFAULT_SCENE.bullet,
     zone: q.get('zone') === 'edge' ? 'edge' : DEFAULT_SCENE.zone,
     zoneLayer: (['under', 'over', 'top'] as const).find((z) => z === q.get('zonez')) ?? DEFAULT_SCENE.zoneLayer,
+    crit: CRIT_LOOKS.find((c) => c === q.get('crit')) ?? DEFAULT_SCENE.crit,
+    numFade: q.has('numfade') ? q.get('numfade') === '1' : DEFAULT_SCENE.numFade,
+    heroBack: q.has('heroback') ? q.get('heroback') === '1' : DEFAULT_SCENE.heroBack,
+    eliteColor: ELITE_COLORS.find((c) => c === q.get('elitecolor')) ?? DEFAULT_SCENE.eliteColor,
+    foxTint: q.has('foxtint') ? q.get('foxtint') === '1' : DEFAULT_SCENE.foxTint,
   };
 }
 

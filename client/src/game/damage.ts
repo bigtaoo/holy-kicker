@@ -20,6 +20,10 @@ export interface DamageNumber {
   crit: boolean;
 }
 
+/** Crit looks compared for readability: gold is the hero's own colour. */
+export type CritLook = 'gold' | 'red' | 'orange';
+export const CRIT_LOOKS: readonly CritLook[] = ['gold', 'red', 'orange'];
+
 export const DAMAGE_LIFE = 0.75;
 const POP_TIME = 0.12;
 const RISE = 520;
@@ -146,4 +150,23 @@ export function damageScale(d: DamageNumber): number {
 export function damageAlpha(d: DamageNumber): number {
   const t = d.age / DAMAGE_LIFE;
   return t < 0.6 ? 1 : Math.max(0, (1 - t) / 0.4);
+}
+
+/** Half-width and height of the box over the hero that numbers fade inside, world units. */
+export const HERO_CLEAR_W = 75;
+export const HERO_CLEAR_H = 150;
+const HERO_CLEAR_ALPHA = 0.3;
+
+/**
+ * Alpha factor for a number at (x, y) against the hero standing at (hx, hy): numbers over
+ * his figure fade so they never hide him, easing back to solid within a margin around it.
+ */
+export function heroClear(x: number, y: number, hx: number, hy: number): number {
+  const margin = 30;
+  const ox = Math.abs(x - hx) - HERO_CLEAR_W;
+  const oy = Math.max(y - hy, hy - HERO_CLEAR_H - y);
+  const out = Math.max(ox, oy);
+  if (out >= margin) return 1;
+  if (out <= 0) return HERO_CLEAR_ALPHA;
+  return HERO_CLEAR_ALPHA + ((1 - HERO_CLEAR_ALPHA) * out) / margin;
 }
