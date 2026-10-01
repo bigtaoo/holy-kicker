@@ -61,6 +61,17 @@ export class TaoActor {
     return this.clip;
   }
 
+  /** Seconds since the current clip started. */
+  get elapsed(): number {
+    return this.time;
+  }
+
+  /** True once a one-shot clip has reached its end; loops never finish. */
+  get finished(): boolean {
+    const anim = this.sk.animations[this.clip];
+    return !!anim && !anim.loop && this.time >= anim.duration;
+  }
+
   /** Switches clip (cross-fading from the current one); a no-op if it is already playing. */
   play(name: string, restart = false): void {
     if (!this.sk.animations[name]) throw new Error(`${this.sk.name} has no animation ${name}`);

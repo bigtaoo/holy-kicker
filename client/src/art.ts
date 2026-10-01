@@ -7,10 +7,10 @@ import type { Platform } from './platform/types';
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform): Promise<Art> {
-  const [jiangshi, fox] = await Promise.all(
-    ['art/jiangshi.png', 'art/fox.png'].map((p) => Assets.load<Texture>(p)),
+  const [jiangshi, fox, cuju] = await Promise.all(
+    ['art/jiangshi.png', 'art/fox.png', 'art/cuju.png'].map((p) => Assets.load<Texture>(p)),
   );
-  return { hero: await loadTao(platform, 'art/hero'), jiangshi, fox };
+  return { hero: await loadTao(platform, 'art/hero'), jiangshi, fox, cuju };
 }
 
 /** A .tao bundle unpacked into a folder: skeleton.json + atlas.png (tools/pack_tao.py). */
