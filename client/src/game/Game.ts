@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text, type Texture } from 'pixi.js';
+import { Application, Container, Graphics, Text, TilingSprite, type Texture } from 'pixi.js';
 import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
@@ -9,7 +9,8 @@ import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
-import { makeShadow, shadowTexture } from './shadow';
+import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
+import type { SceneOptions } from './scene';
 import { stepHorde, type HordeParams, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
 
@@ -22,11 +23,12 @@ export interface Art {
   jiangshi: MobSheet;
   fox: MobSheet;
   cuju: Texture;
+  /** Repeating ground tile; null draws the flat placeholder field. */
+  ground: Texture | null;
 }
 
 const HERO_SPEED = 420;
 const HERO_HEIGHT = 120;
-const MOB_COUNT = 40;
 const HORDE: HordeParams = { speed: 110, stopDist: 70, sepRadius: 60 };
 const RESPAWN_DIST = 2200;
 const STICK_RADIUS = 70;
@@ -44,6 +46,11 @@ const FOX_MOVE: HordeParams = { speed: 160, stopDist: FOX_STOP, sepRadius: 0 };
 const MOB_HEIGHT = 80;
 const FOX_HEIGHT = 130;
 const CRIT_CHANCE = 0.2;
+/** World units per ground tile pixel. */
+const GROUND_SCALE = 1.5;
+/** Above every mob, below the effects (1e7) and numbers (1e7 + 1). */
+const HERO_TOP_Z = 5e6;
+const HERO_OVER_FX_Z = 1e7 + 0.5;
 
 interface Enemy {
   pos: Mob;
@@ -70,6 +77,7 @@ export class Game {
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
   private readonly balls: Balls;
+  private readonly foxRing = makeRing(0xe0303a, 1.8);
   private readonly onHit = (target: number, x: number, y: number) => {
     this.fx.hit(x, y - BALL_LIFT);
     this.knock(target);
@@ -84,12 +92,14 @@ export class Game {
     private readonly app: Application,
     private readonly platform: Platform,
     art: Art,
+    private readonly scene: SceneOptions,
   ) {
     this.world.sortableChildren = true;
-    this.world.addChild(makeGround());
+    this.world.addChild(art.ground ? makeTiledGround(art.ground) : makeGround());
     const shadowTex = shadowTexture(app.renderer);
     this.hero = new Hero(art.hero, HERO_HEIGHT);
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view);
+    if (scene.ring) this.hero.view.addChildAt(makeRing(0xffb030), 0);
     this.balls = new Balls(this.world, art.cuju, shadowTex, BALL);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
@@ -98,8 +108,9 @@ export class Game {
     const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number], shadowTex };
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
     this.foxPos = [this.fox.pos];
+    if (scene.eliteRing) this.world.addChild(this.foxRing);
     const jiangshi = { sheet: art.jiangshi, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number], shadowTex };
-    for (let i = 0; i < MOB_COUNT; i++) {
+    for (let i = 0; i < scene.mobs; i++) {
       this.mobs.push({ pos: ringPoint(0, 0, { x: 0, y: 0 }), view: new MobView(jiangshi, this.world) });
     }
     this.mobPos.push(...this.mobs.map((m) => m.pos));
@@ -145,6 +156,7 @@ export class Game {
     this.heroPos.y += my * HERO_SPEED * dt;
     if (this.hero.update(dt, mx, len > 0.1)) this.strike();
     place(this.hero.view, this.heroPos);
+    if (this.scene.heroOnTop) this.hero.view.zIndex = this.scene.heroOverFx ? HERO_OVER_FX_Z : HERO_TOP_Z;
     this.hero.view.alpha = this.hurtTimer > HURT_COOLDOWN - 0.4 && Math.floor(this.hurtTimer * 20) % 2 ? 0.5 : 1;
 
     const hx = this.heroPos.x;
@@ -158,6 +170,12 @@ export class Game {
     stepHorde(this.foxPos, hx, hy, dt, FOX_MOVE);
     const foxRunning = Math.hypot(fp.x - hx, fp.y - hy) > FOX_STOP + 5;
     this.fox.view.update(dt, fp.x, fp.y, hx - fp.x, foxRunning ? 1 : 0.35);
+    this.foxRing.position.set(fp.x, fp.y);
+    if (this.scene.eliteRing) {
+      // the elite and its ring draw over the horde, just under the hero
+      this.fox.view.sprite.zIndex = HERO_TOP_Z - 1;
+      this.foxRing.zIndex = HERO_TOP_Z - 2;
+    }
     this.corpses.update(dt);
     this.fx.update(dt);
     this.damage.update(dt);
@@ -257,5 +275,20 @@ function makeGround(): Graphics {
     g.rect(-FIELD + rand() * FIELD * 2, -FIELD + rand() * FIELD * 2, 14 + rand() * 10, 8).fill(TUFT);
   }
   g.zIndex = -Infinity;
+  return g;
+}
+
+function makeTiledGround(tex: Texture): TilingSprite {
+  const g = new TilingSprite({ texture: tex, width: FIELD * 2, height: FIELD * 2 });
+  g.position.set(-FIELD, -FIELD);
+  g.tileScale.set(GROUND_SCALE);
+  g.zIndex = -Infinity;
+  return g;
+}
+
+/** A flat ring on the ground around a figure's feet. */
+function makeRing(color: number, size = 1): Graphics {
+  const g = new Graphics().ellipse(0, 0, 62 * size, 22 * size).stroke({ color, width: 6, alpha: 0.8 });
+  g.zIndex = SHADOW_Z;
   return g;
 }

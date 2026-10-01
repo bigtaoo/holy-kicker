@@ -5,17 +5,19 @@ import { sliceSheet, type MobSheet } from './game/mobView';
 import { sliceAtlas, type TaoAsset } from './game/tao/TaoActor';
 import type { TaoSkeleton } from './game/tao/types';
 import type { Platform } from './platform/types';
+import type { GroundKind } from './game/scene';
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
-export async function loadArt(platform: Platform): Promise<Art> {
-  const [hero, jiangshi, fox, cuju] = await Promise.all([
+export async function loadArt(platform: Platform, ground: GroundKind): Promise<Art> {
+  const [hero, jiangshi, fox, cuju, groundTex] = await Promise.all([
     loadTao(platform, 'art/hero'),
     loadSheet(platform, 'art/mobs/jiangshi'),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
+    ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
   ]);
-  return { hero, jiangshi, fox, cuju };
+  return { hero, jiangshi, fox, cuju, ground: groundTex };
 }
 
 /** A baked mob loop: <name>.json + <name>.png (tools/bake_mob.py). */
