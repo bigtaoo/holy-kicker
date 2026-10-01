@@ -3,6 +3,7 @@ import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
 import { launch, nearest, stepBall, type Ball, type BallParams } from './cuju';
 import { Hero } from './hero';
+import { DamageLayer } from './damageView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import type { TaoAsset } from './tao/TaoActor';
@@ -39,6 +40,7 @@ const FOX_KNOCKBACK = 160;
 const FOX_STOP = 220;
 const MOB_HEIGHT = 80;
 const FOX_HEIGHT = 130;
+const CRIT_CHANCE = 0.2;
 
 interface Enemy {
   pos: Mob;
@@ -65,6 +67,7 @@ export class Game {
   private readonly mobs: Enemy[] = [];
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
+  private readonly damage: DamageLayer;
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
   private readonly balls: BallView[] = [];
@@ -88,7 +91,8 @@ export class Game {
     this.cujuTex = art.cuju;
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
-    this.world.addChild(this.fx.view);
+    this.damage = new DamageLayer(app.renderer);
+    this.world.addChild(this.fx.view, this.damage.view);
     const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number] };
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
     const jiangshi = { sheet: art.jiangshi, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number] };
@@ -154,6 +158,7 @@ export class Game {
     this.fox.view.update(dt, fp.x, fp.y, hx - fp.x, foxRunning ? 1 : 0.35);
     this.corpses.update(dt);
     this.fx.update(dt);
+    this.damage.update(dt);
 
     this.combat(dt);
 
@@ -224,7 +229,11 @@ export class Game {
   private knock(i: number): void {
     const { x: hx, y: hy } = this.heroPos;
     const p = this.targets[i];
-    if (p === this.fox.pos) {
+    const crit = Math.random() < CRIT_CHANCE;
+    const value = (8 + Math.floor(Math.random() * 8)) * (crit ? 3 : 1);
+    const fox = p === this.fox.pos;
+    this.damage.spawn(p.x, p.y - (fox ? FOX_HEIGHT : MOB_HEIGHT) - 10, value, crit);
+    if (fox) {
       this.fox.view.flinch();
       const d = Math.hypot(p.x - hx, p.y - hy) || 1;
       p.x += ((p.x - hx) / d) * FOX_KNOCKBACK;
