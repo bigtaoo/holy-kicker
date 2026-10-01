@@ -57,6 +57,16 @@ export class FxPool {
     public budget = Infinity,
   ) {}
 
+  /** Allocates spent particles up front so the first big spell does not stall on allocation. */
+  prewarm(n: number): void {
+    while (this.free.length + this.live.length < Math.min(n, this.max)) {
+      this.free.push({
+        shape: 'spark', x: 0, y: 0, vx: 0, vy: 0, age: 0, life: 0, size0: 0, size1: 0,
+        rotation: 0, spin: 0, drag: 1, color: 0, alpha: 0, aspect: 1, cost: 0,
+      });
+    }
+  }
+
   /** False if the particle was not emitted: the pool is full, or it is optional and over budget. */
   emit(p: FxSpec, optional = false): boolean {
     if (this.live.length >= this.max) return false;

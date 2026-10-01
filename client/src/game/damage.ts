@@ -24,9 +24,14 @@ export class DamagePool {
   private readonly free: DamageNumber[] = [];
 
   constructor(
-    readonly max: number,
+    /** Numbers on screen at once; the quality level lowers it. */
+    public max: number,
     private readonly rand: () => number = Math.random,
   ) {}
+
+  prewarm(n: number): void {
+    while (this.free.length + this.live.length < n) this.free.push({ x: 0, y: 0, vx: 0, vy: 0, age: 0, digits: [], crit: false });
+  }
 
   spawn(x: number, y: number, value: number, crit: boolean): void {
     if (this.live.length >= this.max) return;

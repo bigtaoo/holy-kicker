@@ -8,8 +8,8 @@ const R = 64;
 export const SHADOW_Z = -1e6;
 
 export function shadowTexture(renderer: Renderer): Texture {
-  const g = new Graphics().circle(R, R, R).fill({ color: 0x000000, alpha: 0.3 });
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, R * 2, R * 2), resolution: 1 });
+  const g = new Graphics().circle(R, R, R - 1).fill({ color: 0x000000, alpha: 0.3 });
+  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, R * 2, R * 2), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }

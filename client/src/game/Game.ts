@@ -1,4 +1,4 @@
-import { Application, BlurFilter, Container, Graphics, Text, TilingSprite, type Texture } from 'pixi.js';
+import { Application, BlurFilter, Container, Graphics, Rectangle, Sprite, Text, TilingSprite, type Renderer, type Texture } from 'pixi.js';
 import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
@@ -14,6 +14,7 @@ import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
 import type { SceneOptions } from './scene';
+import type { LevelSettings } from './quality';
 import { stepHorde, type HordeParams, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
 
@@ -54,6 +55,7 @@ const GROUND_SCALE = 1.5;
 /** Above every mob, below the effects (1e7) and numbers (1e7 + 1). */
 const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
+const SCREEN_AREA = 1080 * 1920;
 
 interface Enemy {
   pos: Mob;
@@ -65,7 +67,6 @@ export class Game {
   private readonly root = new Container();
   private readonly world = new Container();
   private readonly playMask = new Graphics();
-  private readonly stickGfx = new Graphics();
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
   private readonly hero: Hero;
   private readonly heroPos = { x: 0, y: 0 };
@@ -80,7 +81,9 @@ export class Game {
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
   private readonly balls: Balls;
-  private readonly foxRing = makeRing(0xe0303a, 1.8);
+  private readonly foxRing: Sprite;
+  private readonly stickBase: Sprite;
+  private readonly stickKnob: Sprite;
   private readonly onHit = (target: number, x: number, y: number) => {
     this.fx.hit(x, y - BALL_LIFT);
     this.knock(target);
@@ -92,6 +95,7 @@ export class Game {
   private vp: Viewport = computeViewport(1, 1);
   private screenKey = '';
   private fpsTimer = 0;
+  private levelName = '';
 
   constructor(
     private readonly app: Application,
@@ -104,7 +108,8 @@ export class Game {
     const shadowTex = shadowTexture(app.renderer);
     this.hero = new Hero(art.hero, HERO_HEIGHT);
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view);
-    if (scene.ring) this.hero.view.addChildAt(makeRing(0xffb030), 0);
+    if (scene.ring) this.hero.view.addChildAt(makeRing(app.renderer, 0xffb030), 0);
+    this.foxRing = makeRing(app.renderer, 0xe0303a, 1.8);
     this.balls = new Balls(this.world, art.cuju, shadowTex, BALL);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
@@ -122,17 +127,25 @@ export class Game {
     }
     this.mobPos.push(...this.mobs.map((m) => m.pos));
     this.targets.push(...this.mobPos, this.fox.pos);
-    if (scene.fxBudget > 0) this.fx.pool.budget = scene.fxBudget * 1080 * 1920;
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
     this.caster = new SpellCaster(app.renderer, this.world, this.fx.pool, scene.spells, scene.rate, scene.ringFx, this.targets, (i) => this.knock(i));
     this.aura = new AuraStack(scene.stack);
 
     this.root.addChild(this.world, this.label);
     this.root.mask = this.playMask;
-    app.stage.addChild(this.playMask, this.root, this.stickGfx);
+    [this.stickBase, this.stickKnob] = stickSprites(app.renderer);
+    app.stage.addChild(this.playMask, this.root, this.stickBase, this.stickKnob);
 
     platform.bindStick(app, this.stick);
     app.ticker.add((t) => this.tick(Math.min(t.deltaMS / 1000, 0.05)));
+  }
+
+  /** Quality level parts that live in the scene; the runtime handles resolution and fps. */
+  applyQuality(s: LevelSettings): void {
+    // an explicit ?fxbudget= in the URL wins, for stress tests
+    this.fx.pool.budget = (this.scene.fxBudget || s.fxBudget) * SCREEN_AREA;
+    this.damage.pool.max = s.numbers;
+    this.levelName = s.name;
   }
 
   /** Re-fit to the screen whenever its size changes (resize, rotation, portal iframe). */
@@ -202,7 +215,7 @@ export class Game {
     this.fpsTimer -= dt;
     if (this.fpsTimer <= 0) {
       this.fpsTimer = 0.5;
-      this.label.text = `Holy Kicker  ${Math.round(this.app.ticker.FPS)} fps`;
+      this.label.text = `Holy Kicker  ${Math.round(this.app.ticker.FPS)} fps  ${this.levelName}`;
     }
   }
 
@@ -255,12 +268,12 @@ export class Game {
   }
 
   private drawStick(): void {
-    const g = this.stickGfx.clear();
     const o = this.stick.origin();
+    this.stickBase.visible = this.stickKnob.visible = !!o;
     if (!o) return;
     const v = this.stick.read();
-    g.circle(o.x, o.y, STICK_RADIUS).fill({ color: 0xffffff, alpha: 0.12 }).stroke({ color: 0xffffff, alpha: 0.35, width: 3 });
-    g.circle(o.x + v.x * STICK_RADIUS, o.y + v.y * STICK_RADIUS, STICK_RADIUS * 0.45).fill({ color: 0xffffff, alpha: 0.4 });
+    this.stickBase.position.set(o.x, o.y);
+    this.stickKnob.position.set(o.x + v.x * STICK_RADIUS, o.y + v.y * STICK_RADIUS);
   }
 }
 
@@ -299,9 +312,35 @@ function makeTiledGround(tex: Texture): TilingSprite {
   return g;
 }
 
+// Rings and the stick are baked into textures with MSAA on the render target: phones run
+// without MSAA on the screen, where Graphics edges would come out jagged.
+
 /** A flat ring on the ground around a figure's feet. */
-function makeRing(color: number, size = 1): Graphics {
-  const g = new Graphics().ellipse(0, 0, 62 * size, 22 * size).stroke({ color, width: 6, alpha: 0.8 });
-  g.zIndex = SHADOW_Z;
-  return g;
+function makeRing(renderer: Renderer, color: number, size = 1): Sprite {
+  const rx = 62 * size;
+  const ry = 22 * size;
+  const s = new Sprite(bake(renderer, new Graphics().ellipse(rx + 6, ry + 6, rx, ry).stroke({ color, width: 6, alpha: 0.8 }), rx * 2 + 12, ry * 2 + 12, 1));
+  s.anchor.set(0.5);
+  s.zIndex = SHADOW_Z;
+  return s;
+}
+
+function stickSprites(renderer: Renderer): [Sprite, Sprite] {
+  const r = STICK_RADIUS;
+  const k = r * 0.45;
+  const res = renderer.resolution;
+  const base = new Graphics().circle(r + 3, r + 3, r).fill({ color: 0xffffff, alpha: 0.12 }).stroke({ color: 0xffffff, alpha: 0.35, width: 3 });
+  const knob = new Graphics().circle(k + 2, k + 2, k).fill({ color: 0xffffff, alpha: 0.4 });
+  return [bake(renderer, base, r * 2 + 6, r * 2 + 6, res), bake(renderer, knob, k * 2 + 4, k * 2 + 4, res)].map((t) => {
+    const s = new Sprite(t);
+    s.anchor.set(0.5);
+    s.visible = false;
+    return s;
+  }) as [Sprite, Sprite];
+}
+
+function bake(renderer: Renderer, g: Graphics, w: number, h: number, resolution: number): Texture {
+  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, w, h), resolution, antialias: true });
+  g.destroy();
+  return tex;
 }

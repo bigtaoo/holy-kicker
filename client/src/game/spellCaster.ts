@@ -34,7 +34,7 @@ function fieldTexture(renderer: Renderer): Texture {
     .circle(r, r, r * 0.97).fill({ color: 0xffd860, alpha: 0.22 })
     .circle(r, r, r * 0.92).stroke({ color: 0xffe9a0, width: r * 0.07, alpha: 0.9 })
     .circle(r, r, r * 0.6).stroke({ color: 0xffe9a0, width: r * 0.03, alpha: 0.5 });
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, r * 2, r * 2), resolution: 1 });
+  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, r * 2, r * 2), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }

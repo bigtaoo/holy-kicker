@@ -1,5 +1,6 @@
 import { Application } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
+import type { DeviceInfo } from '../../game/quality';
 import type { Platform } from '../types';
 
 const KEY_DIRS: Record<string, Vec2> = {
@@ -17,12 +18,20 @@ const KEY_DIRS: Record<string, Vec2> = {
 export class WebPlatform implements Platform {
   private held = new Set<string>();
 
-  async createApp(): Promise<Application> {
+  async probe(): Promise<DeviceInfo> {
+    const nav = navigator as Navigator & { userAgentData?: { mobile: boolean }; deviceMemory?: number };
+    const ua = nav.userAgent;
+    // iPadOS reports a desktop Mac user agent; touch points give it away
+    const mobile = nav.userAgentData?.mobile ?? (/Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (/Macintosh/.test(ua) && nav.maxTouchPoints > 1));
+    return { mobile, cores: nav.hardwareConcurrency || 0, memoryGB: nav.deviceMemory || 0, gpu: '', modelLevel: 0 };
+  }
+
+  async createApp(msaa: boolean): Promise<Application> {
     const app = new Application();
     await app.init({
       background: '#141816',
       resizeTo: window,
-      antialias: true,
+      antialias: msaa,
       resolution: Math.min(window.devicePixelRatio || 1, 2),
       autoDensity: true,
       // WeChat has no WebGPU; use WebGL everywhere so both hosts behave the same.

@@ -10,7 +10,7 @@ describe('parseScene', () => {
   it('reads every switch', () => {
     expect(parseScene('?mobs=300&ground=grass&hero=top&ring=1&elite=1')).toEqual({
       mobs: 300, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: false, eliteRing: true,
-      types: 1, page: 0, mobRes: 1, spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0,
+      types: 1, page: 0, mobRes: 1, spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
     });
     expect(parseScene('?spells=nova,lava,chain&rate=3&stack=6&ringfx=quad&blur=1&fxbudget=2')).toMatchObject({
       spells: ['nova', 'chain'], rate: 3, stack: 6, ringFx: 'quad', blur: true, fxBudget: 2,
@@ -21,5 +21,7 @@ describe('parseScene', () => {
     expect(parseScene('?hero=top')).toMatchObject({ heroOnTop: true, heroOverFx: false });
     expect(parseScene('?hero=sort&ring=0&elite=0')).toMatchObject({ heroOnTop: false, ring: false, eliteRing: false });
     expect(parseScene('?mobs=99999').mobs).toBe(2000);
+    expect(parseScene('?quality=saver').quality).toBe('saver');
+    expect(parseScene('?quality=ultra').quality).toBe('auto');
   });
 });

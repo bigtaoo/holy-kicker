@@ -8,6 +8,8 @@ import { DamagePool, damageAlpha, damageScale } from './damage';
 const FONT_SIZE = 72;
 const STROKE = 12;
 const MAX_NUMBERS = 1500;
+/** Numbers (of about three digits) allocated at start-up. */
+const PREWARM = 300;
 /** Height of a normal number in world units. */
 const HEIGHT = 52;
 const NORMAL = 0xffffff;
@@ -54,6 +56,10 @@ export class DamageLayer {
     this.view.texture = this.glyphs.textures[0];
     // above the effects
     this.view.zIndex = 1e7 + 1;
+    this.pool.prewarm(PREWARM);
+    while (this.particles.length < PREWARM * 3) {
+      this.particles.push(new Particle({ texture: this.glyphs.textures[0], anchorX: 0.5, anchorY: 1 }));
+    }
   }
 
   update(dt: number): void {

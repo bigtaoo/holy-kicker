@@ -22,6 +22,19 @@ interface WxWindowInfo {
   pixelRatio: number;
 }
 
+interface WxDeviceInfo {
+  /** 'ios' | 'android' | 'windows' | 'mac' | 'ohos' | 'devtools' ... */
+  platform: string;
+  /** Device memory in MB (newer base libraries only). */
+  memorySize?: number;
+}
+
+interface WxBenchmarkInfo {
+  /** 1 high, 2 mid, 3 low, 0 unknown. */
+  modelLevel: number;
+  benchmarkLevel: number;
+}
+
 interface WxCanvas {
   width: number;
   height: number;
@@ -190,6 +203,9 @@ interface Wx {
    */
   onHide?: (cb: () => void) => void;
   getWindowInfo(): WxWindowInfo;
+  getDeviceInfo?: () => WxDeviceInfo;
+  /** Base library 2.15+; feature-detect. */
+  getDeviceBenchmarkInfo?: (opts: { success: (r: WxBenchmarkInfo) => void; fail?: () => void }) => void;
   onTouchStart(cb: (e: WxTouchEvent) => void): void;
   onTouchMove(cb: (e: WxTouchEvent) => void): void;
   onTouchEnd(cb: (e: WxTouchEvent) => void): void;

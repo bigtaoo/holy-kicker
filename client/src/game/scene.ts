@@ -4,6 +4,7 @@
 
 import { SPELL_KINDS, type SpellKind } from './spellCaster';
 import type { RingMode } from './spells';
+import { QUALITY_MODES, type QualityMode } from './quality';
 
 export type GroundKind = 'earth' | 'earth_soft' | 'grass' | 'flat';
 export const GROUNDS: readonly GroundKind[] = ['earth', 'earth_soft', 'grass', 'flat'];
@@ -33,15 +34,17 @@ export interface SceneOptions {
   ringFx: RingMode;
   /** A blur filter on the effect layer, to measure what a filter costs. */
   blur: boolean;
-  /** Effect fill budget in screens (1080x1920 world units); 0 is unlimited. */
+  /** Effect fill budget in screens (1080x1920 world units); 0 follows the quality level. */
   fxBudget: number;
+  /** Render quality; until a settings screen exists, ?quality=auto|high|saver. */
+  quality: QualityMode;
 }
 
 // Defaults picked from the 300-mob readability comparison (2026-10-01).
 export const DEFAULT_SCENE: SceneOptions = {
   mobs: 40, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: true, eliteRing: true,
   types: 1, page: 0, mobRes: 1,
-  spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0,
+  spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -63,6 +66,7 @@ export function parseScene(query: string): SceneOptions {
     ringFx: q.get('ringfx') === 'quad' ? 'quad' : DEFAULT_SCENE.ringFx,
     blur: q.has('blur') ? q.get('blur') === '1' : DEFAULT_SCENE.blur,
     fxBudget: num(q.get('fxbudget'), 0, 50, DEFAULT_SCENE.fxBudget),
+    quality: QUALITY_MODES.includes(q.get('quality') as QualityMode) ? (q.get('quality') as QualityMode) : DEFAULT_SCENE.quality,
     mobRes: num(q.get('mobres'), 0.25, 1, DEFAULT_SCENE.mobRes),
   };
 }

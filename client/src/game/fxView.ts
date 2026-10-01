@@ -8,6 +8,8 @@ import { FxPool, fxAlpha, fxSize, type FxParticle, type FxShape } from './fx';
 const CELL = 64;
 const SHAPES: FxShape[] = ['spark', 'puff', 'ring', 'glow', 'band'];
 const MAX_PARTICLES = 3000;
+/** Particles allocated at start-up: a nova killing ~190 mobs peaks around 1600. */
+const PREWARM = 2000;
 
 /** White shapes side by side, tinted per particle. */
 function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
@@ -28,9 +30,11 @@ function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
   // glow: a disc with a solid core and a stepped falloff
   for (let i = 4; i >= 1; i--) g.circle(CELL * 3 + h, h, (h * 0.97 * i) / 4).fill({ color: 0xffffff, alpha: i === 1 ? 1 : 0.3 });
   // band: a bar across the whole cell, solid in the middle, so segments join into rings and bolts
-  g.rect(CELL * 4, 0, CELL, CELL).fill({ color: 0xffffff, alpha: 0.35 });
+  // with 2 px clear above and below: without MSAA a quad's edge only looks smooth when the
+  // texture fades to transparent before it
+  g.rect(CELL * 4, 2, CELL, CELL - 4).fill({ color: 0xffffff, alpha: 0.35 });
   g.rect(CELL * 4, CELL * 0.22, CELL, CELL * 0.56).fill({ color: 0xffffff, alpha: 1 });
-  const atlas = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, CELL * SHAPES.length, CELL), resolution: 1 });
+  const atlas = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, CELL * SHAPES.length, CELL), resolution: 1, antialias: true });
   g.destroy();
   const out = new Map<FxShape, Texture>();
   SHAPES.forEach((s, i) => out.set(s, new Texture({ source: atlas.source, frame: new Rectangle(i * CELL, 0, CELL, CELL) })));
@@ -52,6 +56,14 @@ export class FxLayer {
     this.view.texture = this.textures.get('spark')!;
     // in front of every standing figure
     this.view.zIndex = 1e7;
+    this.pool.prewarm(PREWARM);
+    this.grow(PREWARM);
+  }
+
+  private grow(count: number): void {
+    while (this.particles.length < count) {
+      this.particles.push(new Particle({ texture: this.textures.get('spark')!, anchorX: 0.5, anchorY: 0.5 }));
+    }
   }
 
   /** `extra` are long-lived particles owned elsewhere (auras), drawn after the pool's. */
@@ -59,10 +71,7 @@ export class FxLayer {
     this.pool.step(dt);
     const live = this.pool.live;
     const count = live.length + extra.length;
-    while (this.particles.length < count) {
-      const p = new Particle({ texture: this.textures.get('spark')!, anchorX: 0.5, anchorY: 0.5 });
-      this.particles.push(p);
-    }
+    this.grow(count);
     if (this.view.particleChildren.length !== count) {
       this.view.particleChildren.length = 0;
       for (let i = 0; i < count; i++) this.view.particleChildren.push(this.particles[i]);

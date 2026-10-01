@@ -1,5 +1,6 @@
 import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
+import type { DeviceInfo } from '../../game/quality';
 import type { Platform } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
@@ -11,7 +12,19 @@ import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEve
 export class WeChatPlatform implements Platform {
   private bridge: WeChatEventBridge | null = null;
 
-  async createApp(): Promise<Application> {
+  async probe(): Promise<DeviceInfo> {
+    const info = wx.getDeviceInfo?.();
+    const mobile = !info || !['windows', 'mac'].includes(info.platform);
+    const bench = await new Promise<WxBenchmarkInfo | null>((resolve) => {
+      if (!wx.getDeviceBenchmarkInfo) return resolve(null);
+      // never hold up boot on a callback that does not come
+      setTimeout(() => resolve(null), 500);
+      wx.getDeviceBenchmarkInfo({ success: resolve, fail: () => resolve(null) });
+    });
+    return { mobile, cores: 0, memoryGB: (info?.memorySize ?? 0) / 1024, gpu: '', modelLevel: bench?.modelLevel ?? 0 };
+  }
+
+  async createApp(msaa: boolean): Promise<Application> {
     const wxCanvas = wx.createCanvas();
     const info = wx.getWindowInfo();
 
@@ -36,7 +49,7 @@ export class WeChatPlatform implements Platform {
       width: info.windowWidth,
       height: info.windowHeight,
       background: '#141816',
-      antialias: true,
+      antialias: msaa,
       resolution: Math.min(info.pixelRatio || 1, 2),
       autoDensity: false,
       preference: 'webgl',
