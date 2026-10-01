@@ -8,6 +8,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "build": "tsc --noEmit && vite build",
+    "build:crazygames": "tsc --noEmit && vite build --config vite.crazygames.config.js",
+    "dev:crazygames": "vite --config vite.crazygames.config.js",
     "build:wechat": "tsc --noEmit && vite build --config vite.wechat.config.js",
     "build:wechat:debug": "tsc --noEmit && vite build --config vite.wechat.config.js --mode development",
     "preview": "vite preview --port 4173"

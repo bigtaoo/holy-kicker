@@ -12,11 +12,13 @@
     "dev": "npm run dev -w client",
     "build": "npm run build -w client",
     "build:wechat": "npm run build:wechat -w client",
+    "build:crazygames": "npm run build:crazygames -w client",
+    "dev:crazygames": "npm run dev:crazygames -w client",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "check:filelength": "node build/checkFileLength.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
-    "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build:wechat && npm run check:wechatpackage"
+    "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build:wechat && npm run build:crazygames && npm run check:wechatpackage"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

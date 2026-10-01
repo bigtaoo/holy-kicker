@@ -1,7 +1,8 @@
 import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
-import type { Platform } from '../types';
+import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
+import { NO_ADS, NO_PORTAL, type Ads, type Platform, type Portal } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
 
@@ -11,6 +12,22 @@ import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEve
 //  - No WebGPU, no resizeTo/autoDensity: size explicitly and set the resolution.
 export class WeChatPlatform implements Platform {
   private bridge: WeChatEventBridge | null = null;
+  // Ads and the wx.login cloud save come with the WeChat release (docs/design.md).
+  readonly storage: KeyValueStore = new SafeStore({
+    // getStorageSync answers '' for a key that was never written
+    getItem: (key) => {
+      const v = wx.getStorageSync(key);
+      return typeof v === 'string' && v !== '' ? v : null;
+    },
+    setItem: (key, value) => wx.setStorageSync(key, value),
+  });
+  readonly portal: Portal = NO_PORTAL;
+  readonly ads: Ads = NO_ADS;
+
+  languages(): string[] {
+    const lang = wx.getAppBaseInfo?.().language;
+    return lang ? [lang] : [];
+  }
 
   async probe(): Promise<DeviceInfo> {
     const info = wx.getDeviceInfo?.();

@@ -1,0 +1,22 @@
+{
+  "chapters": 5,
+  "waves": 50,
+  "waveSeconds": 15,
+  "copperPerWave": 10,
+  "copperChapterStep": 0.5,
+  "chests": [
+    { "wave": 10, "copper": 100, "jade": 5 },
+    { "wave": 20, "copper": 150, "jade": 5 },
+    { "wave": 30, "copper": 200, "jade": 10 },
+    { "wave": 40, "copper": 250, "jade": 10 },
+    { "wave": 50, "copper": 400, "jade": 20 }
+  ],
+  "xpPerWave": 2,
+  "levelXpBase": 40,
+  "levelXpStep": 20,
+  "unlocks": {
+    "trainLevel": 2,
+    "shopChapter": 1,
+    "codexChapter": 2
+  }
+}

@@ -1,0 +1,270 @@
+# Holy Kicker — game design
+
+Status: agreed outline (2026-10-01). Numbers marked *(tune)* are starting values for balancing,
+not commitments.
+
+## Pillars
+
+- **Every session pays, however short.** A 3-minute death still yields copper and a chance at
+  gear; a long session yields visibly more. Merge costs stay as below until feedback says
+  progress feels too slow, then they come down.
+- One run is one chapter: 50 waves, about 12–13 minutes, portrait, one thumb.
+- Meta progression is a **mix**: a shallow stat line decides *how far* you get, a content line
+  decides *how you play*. A skilled player can beat a chapter or two above their gear.
+- **CrazyGames first**, then WeChat. Poki is exclusive, so it is the fallback only if
+  CrazyGames does not work out. Ads only on every platform: **no IAP** in the
+  first version. **No stamina** anywhere. No gacha.
+- **Localized from day one** (see Localization).
+- First version is single-player only.
+
+## Flow
+
+```
+launch → load → silent sign-in → [first launch] straight into chapter 1 → results → lobby
+                                  [afterwards]  lobby → play → run → results → lobby
+```
+
+- **Sign-in has no screen.** CrazyGames: SDK account and data module (guests save locally and
+  carry over on sign-in). WeChat: `wx.login` openid, cloud save.
+- **First launch skips the lobby.** The tutorial lives in chapter 1's first waves (only the
+  move joystick is prompted; everything else is automatic). The lobby appears after the first
+  run ends.
+- **Lobby features unlock gradually:**
+
+| Unlocks at | Feature |
+|---|---|
+| End of first run | Play, Gear (first run always drops one item) |
+| Player level 2 | Training (talents) |
+| Chapter 1 cleared | Shop, Patrol (idle income), second relic |
+| Chapter 2 cleared | Codex |
+
+## Chapters (the run)
+
+A chapter is one map with 50 waves of about 15 s each. Dying restarts the chapter; the best
+wave reached is recorded.
+
+| Wave | Content |
+|---|---|
+| 1–9 | Regular hordes, ramping up |
+| Every 5th (5, 15, 25, …) | **Shrine**: pick one — heal, or an extra skill |
+| 10 / 20 / 30 / 40 | **Elite wave**: 1–3 elites that force movement |
+| 25 | Mid-boss (may reuse the previous chapter's boss, empowered) |
+| 50 | **Chapter boss** (chapter 1: the fallen abbot) |
+
+- In-run levelling: XP orbs, pick 1 of 3 on level-up (relic upgrade / spell / passive).
+  Specific spell + passive pairs **evolve**.
+- Death: one rewarded-ad revive per run; otherwise results are paid by the wave reached.
+- **Progress chests** at waves 10/20/30/40/50 of each chapter, claimable once each, so a
+  failed push still pays.
+- Clearing a chapter unlocks the next. Hard mode comes later.
+- **Launch with 5 chapters.** Each needs a ground, 3–4 mob types, 1–2 elites and a boss.
+- Relics, spells, passives, shrines, enemies and chapter themes: see [content.md](content.md).
+
+## Meta progression
+
+### A. Stat line (kept shallow)
+
+**Gear — 6 slots:**
+
+| Slot | Role |
+|---|---|
+| **Relic** (main hand) | Decides the starting weapon and its evolution path — the key slot |
+| Beads | Attack |
+| Bracers | Attack / crit |
+| Robe | Health |
+| Sash | Health / regen |
+| Sandals | Move speed / pickup radius |
+
+**Tiers:** Common, Fine, Refined, Treasured, Sacred. Each tier raises the item's stats and
+adds a passive affix. Gear has no levels.
+
+**One upgrade operation — gear and copper only, no other materials:**
+
+**Merge:** 5 items of the same name and tier + copper → 1 item of the next tier.
+
+| Merge | Copper *(tune)* | Commons per item |
+|---|---|---|
+| Common → Fine | 200 | 5 |
+| Fine → Refined | 1 000 | 25 |
+| Refined → Treasured | 4 000 | 125 |
+| Treasured → Sacred | 15 000 | 625 |
+
+Drops are the supply, copper is the brake. Higher chapters drop higher tiers directly, so
+nobody actually merges 625 commons; the column only shows how steep the curve is.
+
+*Risk:* with only 4 steps per slot, each step is a big jump and the gaps between them are long.
+If playtests feel flat, add star sub-steps inside a tier rather than going back to levels.
+
+**Merge screen and effect:**
+
+1. The merge panel shows 5 sockets around a centre; "Auto fill" picks matching items, players
+   can also tap them in. The merge button shows the copper cost and greys out when short.
+2. On merge the 5 items fly into the centre in turn, each landing with a small pop and a short
+   camera shake.
+3. The centre charges: a glow ring in the **target tier's colour** spins up, then a white flash.
+4. Burst of tier-coloured sparks and rays; the new item drops in with a squash-and-stretch
+   bounce inside a new tier frame.
+5. A stat card slides up with old → new values counting up, and the new affix shown.
+6. Tap skips to the result. "Merge all" runs every possible merge with a short version of the
+   effect (steps 2–3 sped up), then shows one summary card.
+
+Tier colours (UI only): Common grey, Fine green, Refined blue, Treasured purple, Sacred gold.
+Sacred gets an extra lingering shine on its icon everywhere in the UI. The effect reuses the
+in-game particle pool (`fx.ts`) and shares no drawing with the world.
+
+**Training (talents):** each player level unlocks one node on a single fixed line, bought with
+copper. Plain stats only: health, attack, XP gain, copper gain, pickup radius, extra revive.
+No random rolls.
+
+### B. Content line (the replay motivation)
+
+- **Relics**, each a different way to play, unlocked by clearing chapters:
+
+| Relic | Play style |
+|---|---|
+| Cuju ball | Bounces between enemies (implemented) |
+| Staff | Close sweep with knockback |
+| Wooden fish | Sound pulse around the hero |
+| Prayer beads | Beads orbiting the hero |
+| Alms bowl | Thrown, returns, drags small mobs along |
+
+- **Sutras:** achievements grant sutras; each adds a spell or passive to the in-run pick pool.
+  New players see a small, readable pool; veterans get more combinations.
+- **Codex** records discovered evolutions.
+- **Monks (characters)**, later: e.g. the fat monk (tanky, slow), the novice (fast, fragile),
+  each with a play-changing passive.
+
+### Engine boundary
+
+All meta effects are packed once at run start into the engine's initial state:
+`{ stats, startingRelic, skillPool, seed }`. The run never reads meta data, so determinism is
+untouched.
+
+## Economy
+
+Two currencies only:
+
+| Currency | Sources | Sinks |
+|---|---|---|
+| **Copper** | Run results (main), progress chests, daily tasks, patrol (small) | Gear merges, training |
+| **Jade** (premium) | Achievements, progress chests, daily tasks, ads | Chests, patrol speed-up |
+
+**Copper is deliberately scarce, so players replay cleared chapters.**
+
+- Copper per run scales with chapter and wave reached (*tune*: 10 × (1 + 0.5 × (chapter − 1))
+  per wave, i.e. a full clear pays 500 in chapter 1, 1000 in chapter 3, 1500 in chapter 5).
+- Pushing an uncleared chapter usually ends early and pays little; a clean run of the highest
+  cleared chapter pays the most per minute. **Farming the latest cleared map is the intended
+  loop** until gear catches up.
+- Replays pay full copper and drop gear (the merge supply). Higher chapters drop higher tiers.
+- No sweep/auto-clear: copper is earned by playing.
+- Patrol gives mostly gear and only a little copper (*tune*: 5 % of a full clear of the highest
+  cleared chapter per hour, 12 h cap).
+- Rewarded ad on results doubles copper; this is the main ad placement.
+
+## Retention
+
+- **Patrol:** idle income, 12 h cap, scaled by the highest cleared chapter. Ad doubles it or
+  grants 2 h instantly.
+- 3–5 daily tasks (e.g. "kill 1000 mobs").
+- One free chest per day.
+- Achievements (also the sutra source).
+
+## Ads and monetization
+
+| Placement | Where | Note |
+|---|---|---|
+| Revive | Run | Once per run |
+| Double results | Results | Main revenue |
+| Patrol double / instant | Lobby | Brings players back |
+| Ad chest | Shop | 3 per day |
+| Interstitial | Results → lobby | Per platform rules (CrazyGames `requestAd('midgame')`) |
+
+- No reroll ad on the in-run pick: it breaks the pace.
+- Ads only on all platforms. IAP (ad-free card, battle pass, jade packs) is a later option for
+  WeChat and needs a licence check first.
+
+## Platforms, saves and server
+
+First release targets **CrazyGames** (SDK v3). The plumbing exists in `D:\daydayup`
+(`client/src/platform/crazygames/`, `design/20-game-portals.md`, which lists the platform
+rules and four live SDK findings); adapt it rather than rewrite it.
+
+**CrazyGames rules that shape the design:**
+
+| Rule | Consequence here |
+|---|---|
+| New users land in gameplay within 1 click; ≤20 s to gameplay | First launch goes straight into chapter 1; afterwards PLAY is the default lobby tab |
+| ≤50 MB initial download (≤20 MB for the mobile homepage) | Boot loads lobby + chapter 1 only; other chapters load in the background |
+| Ads only through the SDK, never interrupting gameplay | Interstitials only on results → lobby; game muted and frozen during any ad |
+| Adblocked players play normally | Rewarded offers are hidden, not shown disabled |
+| Banners only on menus open 5 s or more | At most one banner, on the lobby |
+| English mandatory, detect the user's language | See Localization |
+| Signed-in users are signed in automatically and see their username; guest progress carries over on sign-in | Use the SDK account + data module; no login screen |
+| IAP only for invited games, through the platform | No IAP anyway |
+
+Open: whether a rewarded revive on the death screen counts as interrupting gameplay. Gameplay
+is stopped at death and the player opts in, so it should be fine; confirm during review.
+
+**No own server in the first version:**
+
+- **Saves** sit behind one `SaveStore` interface. On CrazyGames it is the SDK data module
+  (cloud for signed-in players, local for guests, carried over on sign-in), which also covers
+  browsers that block third-party `localStorage`. The SDK initialises asynchronously, so boot
+  waits for it (bounded at 3 s, as in daydayup) **before** reading the save. The save carries a
+  format version for migrations; settings (quality, volume, language) are local only.
+- **Clock:** patrol and daily resets use the device clock. Cheating only affects the player
+  themselves; a clock that moved backwards simply pays nothing.
+- **Balance data** (merge costs, copper rates, drop tables, ad caps) lives in data files, never
+  in code, so it can move to remote config later without a rewrite.
+- **Analytics:** the CrazyGames developer dashboard first. Our own events (death wave per
+  chapter, runs per day, time between merges, ad view rate) need a server and a one-line data
+  notice in the lobby.
+
+A small server on the existing VPS comes with WeChat: `code2session` login (the app secret
+must not ship), cloud save, server time, remote config, analytics. Leaderboards later can
+re-simulate submitted runs with the deterministic engine to verify them.
+
+**Poki later:** Poki wants exclusivity, so moving there would mean taking the game off
+CrazyGames; the `SaveStore` and ad interfaces must not assume CrazyGames.
+
+**Save contents** (well under 50 KB): player level and XP, copper, jade, gear list and
+equipped items, per-chapter best wave and claimed chests, unlocked relics / sutras / codex
+entries, daily tasks and ad counts, patrol start time, save version.
+
+## Localization
+
+- Every player-facing string comes from a string table keyed by id; no literal text in game
+  code. Numbers and plurals go through one formatter.
+- Launch languages: **English** (default) and **Simplified Chinese**. Add more from
+  CrazyGames traffic data (daydayup already ships de, es, fr, it, pl, ru); the tables and
+  layouts must not assume a language count.
+- Language order: saved setting → platform / browser language → English.
+- Layouts leave room for about 30 % longer text (German, Russian). Damage numbers are digits
+  only and need no localization.
+- Glyphs: system fonts on web; check CJK coverage and size on the WeChat build.
+
+## Lobby layout (portrait, 5 bottom tabs)
+
+```
+┌──────────────────────────────────┐
+│ avatar Lv.12   copper 12.3k  jade 340  ⚙ │
+│                                  │
+│      [Chapter 3: XX Mountain]    │
+│      best: wave 37               │
+│      ▢ ▢ ▢ ▢ ▢  progress chests   │
+│                                  │
+│           [ PLAY ]               │
+│      patrol chest (6 h stored)   │
+├──────┬──────┬──────┬──────┬──────┤
+│ Shop │ Gear │ Play │ Train│ Codex│
+└──────┴──────┴──────┴──────┴──────┘
+```
+
+## Pacing targets
+
+- Chapter 1: cleared in 1–2 tries, inside the first session.
+- Chapter 2: 3–5 tries.
+- Chapter 3 on: requires farming the previous chapter for gear and copper, about 1–2 days per
+  chapter.
+- All 5 chapters: about 2 weeks; then hard mode and new chapters.

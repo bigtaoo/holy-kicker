@@ -1,6 +1,7 @@
 # Dependencies / build output
 node_modules/
 dist/
+dist-crazygames/
 *.tsbuildinfo
 
 # Real credentials never go in the repo (dev keys live in D:\cloud, see README)

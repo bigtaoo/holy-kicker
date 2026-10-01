@@ -1,0 +1,85 @@
+import { Container, Graphics, Text, type TextStyleOptions } from 'pixi.js';
+
+// Small UI building blocks in logical units (the 1080-wide design). Placeholder look: flat
+// rounded panels with a thick dark outline, matching the sticker style until real UI art.
+
+/** System fonts with CJK fallbacks (docs/design.md "Localization": system fonts on web). */
+export const FONT = 'Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
+
+export const COLORS = {
+  bg: 0x1d2420,
+  panel: 0x2c3631,
+  panelLocked: 0x232a26,
+  outline: 0x0b0e0c,
+  text: 0xffffff,
+  dim: 0x8f9a94,
+  saffron: 0xf0a020,
+  copper: 0xd88a4a,
+  jade: 0x4fd1a0,
+  danger: 0xe0303a,
+};
+
+export function label(text: string, size = 48, fill = COLORS.text, extra: TextStyleOptions = {}): Text {
+  const t = new Text({
+    text,
+    style: { fontFamily: FONT, fontSize: size, fill, fontWeight: 'bold', align: 'center', ...extra },
+  });
+  t.anchor.set(0.5);
+  return t;
+}
+
+export function panel(w: number, h: number, fill = COLORS.panel, radius = 28): Graphics {
+  return new Graphics().roundRect(-w / 2, -h / 2, w, h, radius).fill(fill).stroke({ color: COLORS.outline, width: 8 });
+}
+
+export interface ButtonOptions {
+  fill?: number;
+  size?: number;
+  textFill?: number;
+}
+
+/**
+ * A tappable panel with a centred label. It sinks a little while pressed and fires on
+ * release over it, so a drag that starts on a button and leaves it does nothing.
+ */
+export function button(text: string, w: number, h: number, onTap: () => void, o: ButtonOptions = {}): Container {
+  const c = new Container();
+  const t = label(text, o.size ?? 56, o.textFill ?? COLORS.text);
+  // long translations shrink to fit instead of overflowing (design: leave ~30 % room)
+  const room = w - 48;
+  if (t.width > room) t.scale.set(room / t.width);
+  c.addChild(panel(w, h, o.fill ?? COLORS.saffron), t);
+  c.eventMode = 'static';
+  c.cursor = 'pointer';
+  let down = false;
+  c.on('pointerdown', () => {
+    down = true;
+    c.scale.set(0.96);
+  });
+  const reset = () => {
+    down = false;
+    c.scale.set(1);
+  };
+  c.on('pointerupoutside', reset);
+  c.on('pointerleave', reset);
+  c.on('pointerup', () => {
+    const fire = down;
+    reset();
+    if (fire) onTap();
+  });
+  return c;
+}
+
+/** Scales a text down so it fits `maxW`, keeping it centred. */
+export function fit(t: Text, maxW: number): Text {
+  t.scale.set(1);
+  if (t.width > maxW) t.scale.set(maxW / t.width);
+  return t;
+}
+
+/** A dark full-screen layer that swallows taps, for modal panels. */
+export function backdrop(w: number, h: number, alpha = 0.6): Graphics {
+  const g = new Graphics().rect(0, 0, w, h).fill({ color: 0x000000, alpha });
+  g.eventMode = 'static';
+  return g;
+}

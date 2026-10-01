@@ -1,7 +1,8 @@
 import { Application } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
-import type { Platform } from '../types';
+import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
+import { FAKE_ADS, NO_ADS, NO_PORTAL, type Ads, type Platform, type Portal } from '../types';
 
 const KEY_DIRS: Record<string, Vec2> = {
   KeyW: { x: 0, y: -1 },
@@ -14,9 +15,26 @@ const KEY_DIRS: Record<string, Vec2> = {
   ArrowRight: { x: 1, y: 0 },
 };
 
+/** localStorage, or null where touching it throws (some sandboxed iframes). */
+export function browserStorage(): KeyValueStore | null {
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 // Browser host: a window-sized canvas, pointer drags for the stick, WASD/arrows as well.
+// No portal and no ads; ?ads=fake stands in for an ad host during development.
 export class WebPlatform implements Platform {
   private held = new Set<string>();
+  readonly storage: KeyValueStore = new SafeStore(browserStorage());
+  readonly portal: Portal = NO_PORTAL;
+  readonly ads: Ads = new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
+
+  languages(): string[] {
+    return [...(navigator.languages ?? [navigator.language])];
+  }
 
   async probe(): Promise<DeviceInfo> {
     const nav = navigator as Navigator & { userAgentData?: { mobile: boolean }; deviceMemory?: number };

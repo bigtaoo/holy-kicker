@@ -1,0 +1,62 @@
+// English, the source locale: every other table must have exactly these keys (index.ts).
+// Placeholders are {name}; numbers arrive already formatted.
+export const en = {
+  lang: { name: 'English' },
+  common: {
+    continue: 'Continue',
+    back: 'Back',
+    locked: 'Locked',
+    comingSoon: 'Coming soon',
+  },
+  lobby: {
+    level: 'Lv.{level}',
+    guest: 'Monk',
+    play: 'PLAY',
+    best: 'Best: wave {wave}',
+    notPlayed: 'Not played yet',
+    cleared: 'Cleared',
+    chapterTitle: 'Chapter {n}: {name}',
+    unlockAtChapter: 'Clear chapter {n} to unlock',
+  },
+  tab: {
+    shop: 'Shop',
+    gear: 'Gear',
+    play: 'Play',
+    train: 'Train',
+    codex: 'Codex',
+    unlockLevel: 'Unlocks at Lv.{level}',
+    unlockChapter: 'Unlocks after chapter {n}',
+    unlockFirstRun: 'Unlocks after your first run',
+  },
+  chapter: {
+    1: 'Ruined Temple',
+    2: 'Misty Marsh',
+    3: 'Snow Pass',
+    4: 'Ghost Market',
+    5: 'Demon Peak',
+  },
+  run: {
+    wave: 'Wave {wave}/{total}',
+    paused: 'Paused',
+    resume: 'Resume',
+    giveUp: 'Give up',
+  },
+  results: {
+    cleared: 'Chapter cleared!',
+    fallen: 'Run over',
+    reached: 'Waves cleared: {wave}',
+    copper: 'Copper +{n}',
+    chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
+    newBest: 'New best!',
+    double: 'Double copper (ad)',
+    doubled: 'Copper doubled!',
+  },
+  settings: {
+    title: 'Settings',
+    language: 'Language',
+  },
+  currency: {
+    copper: 'Copper',
+    jade: 'Jade',
+  },
+};

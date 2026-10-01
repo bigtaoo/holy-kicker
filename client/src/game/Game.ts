@@ -4,7 +4,7 @@ import {
   type RunConfig, type SimEvent, type SimState,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
-import { DragStick } from './dragStick';
+import type { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
 import { Hero } from './hero';
 import { DamageLayer } from './damageView';
@@ -50,7 +50,7 @@ export interface Art {
 }
 
 const HERO_HEIGHT = 120;
-const STICK_RADIUS = 70;
+export const STICK_RADIUS = 70;
 /** Seconds the hero's red hurt flash takes to fade. */
 const HURT_FLASH = 0.35;
 const MOB_HEIGHT = 80;
@@ -79,7 +79,6 @@ export function runConfig(scene: SceneOptions, seed: number): RunConfig {
 export class Game {
   readonly engine: Engine;
   private readonly loop = new FixedStep();
-  private readonly stick = new DragStick(STICK_RADIUS);
   private readonly root = new Container();
   private readonly world = new Container();
   private readonly playMask = new Graphics();
@@ -106,12 +105,17 @@ export class Game {
   private screenKey = '';
   private fpsTimer = 0;
   private levelName = '';
+  /** A paused run neither simulates nor animates; it is still drawn. */
+  paused = false;
+  private readonly onTick = (t: { deltaMS: number }) => this.frame(t.deltaMS);
 
   constructor(
     private readonly app: Application,
     private readonly platform: Platform,
     art: Art,
     private readonly scene: SceneOptions,
+    /** Bound to the host's input once, by the shell, and shared by every run. */
+    private readonly stick: DragStick,
   ) {
     const seed = scene.seed || 1 + Math.floor(Math.random() * 0x7ffffffe);
     this.engine = new Engine(runConfig(scene, seed));
@@ -169,8 +173,16 @@ export class Game {
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer, STICK_RADIUS);
     app.stage.addChild(this.playMask, this.root, this.stickBase, this.stickKnob);
 
-    platform.bindStick(app, this.stick);
-    app.ticker.add((t) => this.frame(t.deltaMS));
+    // the fps / tick readout is for development only
+    this.label.visible = import.meta.env.DEV;
+    app.ticker.add(this.onTick);
+  }
+
+  /** Removes the run from the stage. Shared art textures stay loaded for the next run. */
+  destroy(): void {
+    this.app.ticker.remove(this.onTick);
+    this.app.stage.removeChild(this.playMask, this.root, this.stickBase, this.stickKnob);
+    for (const c of [this.playMask, this.root, this.stickBase, this.stickKnob]) c.destroy({ children: true });
   }
 
   /** Quality level parts that live in the scene; the runtime handles resolution and fps. */
@@ -199,6 +211,10 @@ export class Game {
 
   private frame(frameMs: number): void {
     this.layout();
+    if (this.paused) {
+      this.draw(this.loop.alpha, 0);
+      return;
+    }
     const steps = this.loop.advance(frameMs);
     for (let i = 0; i < steps; i++) {
       this.engine.submit(this.command());

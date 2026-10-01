@@ -203,6 +203,8 @@ interface Wx {
    */
   onHide?: (cb: () => void) => void;
   getWindowInfo(): WxWindowInfo;
+  /** Base library 2.25+; `language` is WeChat's UI language, e.g. 'zh_CN' or 'en'. */
+  getAppBaseInfo?: () => { language?: string };
   getDeviceInfo?: () => WxDeviceInfo;
   /** Base library 2.15+; feature-detect. */
   getDeviceBenchmarkInfo?: (opts: { success: (r: WxBenchmarkInfo) => void; fail?: () => void }) => void;

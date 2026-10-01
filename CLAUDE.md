@@ -11,7 +11,10 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 - **Source files stay at or under 500 lines** (`npm run check:filelength`). Split by
   responsibility instead of raising the limit.
 - **`npm run check` must pass before every commit**: typecheck, file length, tests, WeChat
-  build and the 4 MB main-package gate.
+  and CrazyGames builds and the 4 MB main-package gate.
+- **No literal player-facing text in code**: every string goes through `t()` and the tables
+  in `client/src/i18n/` (en is the source, zh must match key for key). Balance numbers live
+  in `client/src/meta/balance.json`, never in code.
 - **Game logic lives in `engine/` (`@hk/engine`)**: a deterministic simulation at a fixed
   30 Hz on integer state, fed only by player commands, so it can run in lockstep online later.
   Follow `engine/README.md` (integers only, no `Math.sin/sqrt/random`, no clocks, no imports
@@ -35,8 +38,12 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 ## Layout
 
 - `engine/` — the simulation (`@hk/engine`, consumed as source; see `engine/README.md`).
-- `client/` — the game's view and hosts (Vite). `src/main.ts` web entry, `src/main.wechat.ts` WeChat entry,
-  `src/platform/{web,wechat}` host adapters, `src/game` game code.
+- `client/` — the game's view and hosts (Vite). Entries `src/main.ts` (web dev),
+  `src/main.crazygames.ts` (`npm run build:crazygames` → `client/dist-crazygames/`, the zip to
+  upload) and `src/main.wechat.ts`, all through `src/boot.ts`; `src/platform/{web,crazygames,wechat}`
+  host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,
+  results and HUD; `src/meta` save, progress and balance; `src/i18n` string tables.
+  Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host.
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).
