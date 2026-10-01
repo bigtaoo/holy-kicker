@@ -10,17 +10,18 @@ import { sliceDeco, type DecoFrame, type DecoSheet } from './game/decoView';
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
-export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace'>): Promise<Art> {
+export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, jiangshi, fox, cuju, groundTex, decoSheet] = await Promise.all([
+  const [hero, jiangshi, fox, cuju, groundTex, decoSheet, boss] = await Promise.all([
     loadTao(platform, 'art/hero'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
     ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
     deco === 'none' ? null : loadDeco(platform, 'art/ground/deco'),
+    scene.boss ? loadTao(platform, 'art/boss_monk') : null,
   ]);
-  return { hero, jiangshi, fox, cuju, ground: groundTex, deco: decoSheet };
+  return { hero, jiangshi, fox, cuju, ground: groundTex, deco: decoSheet, boss };
 }
 
 /** Ground decorations: <name>.json + <name>.png (tools/pack_deco.py). */

@@ -1,0 +1,459 @@
+{
+ "name": "boss_monk",
+ "parts": "parts_v1",
+ "rig": "rig_v1.json",
+ "origin": [
+  590,
+  838
+ ],
+ "scale": 0.55,
+ "animations": {
+  "idle": {
+   "duration": 1.8,
+   "loop": true,
+   "ease": "ease-in-out",
+   "keys": [
+    {
+     "t": 0,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_b": 2,
+      "arm_f": -2,
+      "beads": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "t": 0.9,
+     "rotate": {
+      "torso": 1,
+      "head": -3,
+      "arm_b": 5,
+      "arm_f": -5,
+      "beads": 2
+     },
+     "translate": {
+      "root": [
+       0,
+       4
+      ]
+     },
+     "scale": {
+      "torso": [
+       1.02,
+       0.975
+      ]
+     }
+    },
+    {
+     "t": 1.8,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_b": 2,
+      "arm_f": -2,
+      "beads": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    }
+   ]
+  },
+  "walk": {
+   "duration": 0.9,
+   "loop": true,
+   "ease": "ease-in-out",
+   "keys": [
+    {
+     "t": 0,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "skirt": 0,
+      "arm_b": 0,
+      "arm_f": 0,
+      "leg_b": 0,
+      "leg_f": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ],
+      "leg_b": [
+       0,
+       0
+      ],
+      "leg_f": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1.03,
+       0.97
+      ]
+     }
+    },
+    {
+     "t": 0.225,
+     "rotate": {
+      "torso": -5,
+      "head": 3.0,
+      "skirt": -2.5,
+      "beads": 5,
+      "arm_b": -8,
+      "arm_f": -12,
+      "leg_b": 6
+     },
+     "translate": {
+      "root": [
+       10,
+       -14
+      ],
+      "leg_b": [
+       0,
+       -34
+      ],
+      "leg_f": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "t": 0.45,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "skirt": 0,
+      "arm_b": 0,
+      "arm_f": 0,
+      "leg_f": 0,
+      "leg_b": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ],
+      "leg_f": [
+       0,
+       0
+      ],
+      "leg_b": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1.03,
+       0.97
+      ]
+     }
+    },
+    {
+     "t": 0.675,
+     "rotate": {
+      "torso": 5,
+      "head": -3.0,
+      "skirt": 2.5,
+      "beads": -5,
+      "arm_b": 12,
+      "arm_f": 8,
+      "leg_f": -6
+     },
+     "translate": {
+      "root": [
+       -10,
+       -14
+      ],
+      "leg_f": [
+       0,
+       -34
+      ],
+      "leg_b": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "t": 0.9,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "skirt": 0,
+      "beads": 0,
+      "arm_b": 0,
+      "arm_f": 0,
+      "leg_b": 0,
+      "leg_f": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ],
+      "leg_b": [
+       0,
+       0
+      ],
+      "leg_f": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1.03,
+       0.97
+      ]
+     }
+    }
+   ]
+  },
+  "slam": {
+   "duration": 1.5,
+   "ease": "ease-in-out",
+   "keys": [
+    {
+     "t": 0,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_b": 0,
+      "arm_f": 0,
+      "hand_b": 0,
+      "hand_f": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "t": 0.2,
+     "rotate": {
+      "torso": 0,
+      "arm_b": -15,
+      "arm_f": 15
+     },
+     "translate": {
+      "root": [
+       0,
+       14
+      ]
+     },
+     "scale": {
+      "torso": [
+       1.05,
+       0.94
+      ]
+     }
+    },
+    {
+     "t": 0.75,
+     "rotate": {
+      "torso": 0,
+      "head": -8,
+      "arm_b": 160,
+      "arm_f": -160,
+      "hand_b": 20,
+      "hand_f": -20
+     },
+     "translate": {
+      "root": [
+       0,
+       -22
+      ]
+     },
+     "scale": {
+      "torso": [
+       0.97,
+       1.05
+      ]
+     }
+    },
+    {
+     "t": 0.9,
+     "rotate": {
+      "torso": 0,
+      "head": -8,
+      "arm_b": 168,
+      "arm_f": -168,
+      "hand_b": 20,
+      "hand_f": -20
+     },
+     "translate": {
+      "root": [
+       0,
+       -26
+      ]
+     },
+     "scale": {
+      "torso": [
+       0.97,
+       1.05
+      ]
+     },
+     "ease": "ease-in"
+    },
+    {
+     "t": 1.0,
+     "rotate": {
+      "torso": 0,
+      "head": 10,
+      "arm_b": -35,
+      "arm_f": 35,
+      "hand_b": -10,
+      "hand_f": 10
+     },
+     "translate": {
+      "root": [
+       0,
+       20
+      ]
+     },
+     "scale": {
+      "torso": [
+       1.1,
+       0.88
+      ]
+     },
+     "ease": "ease-out"
+    },
+    {
+     "t": 1.5,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_b": 0,
+      "arm_f": 0,
+      "hand_b": 0,
+      "hand_f": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    }
+   ]
+  },
+  "hurt": {
+   "duration": 0.3,
+   "ease": "ease-out",
+   "keys": [
+    {
+     "t": 0,
+     "rotate": {
+      "torso": 0,
+      "head": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    },
+    {
+     "t": 0.08,
+     "rotate": {
+      "torso": 4,
+      "head": 8
+     },
+     "translate": {
+      "root": [
+       6,
+       4
+      ]
+     },
+     "scale": {
+      "torso": [
+       1.04,
+       0.96
+      ]
+     }
+    },
+    {
+     "t": 0.3,
+     "rotate": {
+      "torso": 0,
+      "head": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     },
+     "scale": {
+      "torso": [
+       1,
+       1
+      ]
+     }
+    }
+   ]
+  }
+ }
+}

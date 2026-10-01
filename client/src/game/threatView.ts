@@ -23,7 +23,7 @@ const BULLET_Z = 1e7 + 0.25;
 /** Over the horde and flying gems, under the elite (HERO_TOP_Z - 1). */
 const ZONE_OVER_Z = 5e6 - 2.5;
 /** Over the spells too, under the bullets. */
-const ZONE_TOP_Z = 1e7 + 0.2;
+export const ZONE_TOP_Z = 1e7 + 0.2;
 const ZONE_TEX = 128;
 
 function bake(renderer: Renderer, g: Graphics, size: number, resolution: number): Texture {
@@ -46,7 +46,7 @@ function bulletTexture(renderer: Renderer, look: BulletLook): Texture {
 }
 
 /** Warning disc of radius ZONE_TEX / 2 - 4; `fill` adds a translucent floor to the edge. */
-function zoneTextures(renderer: Renderer, color: number, look: ZoneLook): [Texture, Texture] {
+export function zoneTextures(renderer: Renderer, color: number, look: ZoneLook): [Texture, Texture] {
   const h = ZONE_TEX / 2;
   const r = h - 4;
   const outer = new Graphics();

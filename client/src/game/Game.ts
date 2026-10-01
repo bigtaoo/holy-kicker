@@ -12,6 +12,7 @@ import { Corpses, MobView, type MobSheet } from './mobView';
 import { depthShade } from './mobAnim';
 import { fakeMobTypes } from './mobTypes';
 import { AuraStack } from './aura';
+import { Boss } from './bossView';
 import { SpellCaster } from './spellCaster';
 import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
@@ -36,6 +37,8 @@ export interface Art {
   ground: Texture | null;
   /** Scattered ground decorations; null when the scene turns them off. */
   deco: DecoSheet | null;
+  /** The boss rig; null when the scene leaves the boss out. */
+  boss: TaoAsset | null;
 }
 
 const HERO_SPEED = 420;
@@ -99,6 +102,7 @@ export class Game {
   private readonly targets: Mob[] = [];
   private readonly balls: Balls;
   private readonly foxRing: Sprite;
+  private readonly boss: Boss | null;
   private readonly stickBase: Sprite;
   private readonly stickKnob: Sprite;
   private readonly onHit = (target: number, x: number, y: number) => {
@@ -163,11 +167,18 @@ export class Game {
     }
     this.mobPos.push(...this.mobs.map((m) => m.pos));
     this.targets.push(...this.mobPos, this.fox.pos);
+    this.boss = art.boss ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool, -200, -1100) : null;
+    if (this.boss) {
+      this.targets.push(this.boss.pos);
+      // like the elite, the boss draws over the horde
+      if (scene.eliteRing) this.boss.view.zIndex = HERO_TOP_Z - 1;
+    }
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
     this.caster = new SpellCaster(app.renderer, this.world, this.fx.pool, scene.spells, scene.rate, scene.ringFx, this.targets, (i) => this.knock(i));
     this.aura = new AuraStack(scene.stack);
 
     this.root.addChild(this.world, this.label);
+    if (this.boss) this.root.addChild(this.boss.hud);
     this.root.mask = this.playMask;
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer);
     app.stage.addChild(this.playMask, this.root, this.stickBase, this.stickKnob);
@@ -197,6 +208,7 @@ export class Game {
     this.label.style.fontSize = Math.max(10, 48 * vp.scale);
     this.label.style.stroke = { color: 0x000000, width: Math.max(1, 4 * vp.scale) };
     this.label.position.set(24 * vp.scale, 24 * vp.scale);
+    this.boss?.layout(vp.playW, vp.scale);
   }
 
   private tick(dt: number): void {
@@ -247,6 +259,7 @@ export class Game {
     this.damage.update(dt, hx, hy);
     this.drops.update(dt, hx, hy);
     if (this.threats?.update(dt, hx, hy, this.mobPos)) this.hurt();
+    if (this.boss?.update(dt, hx, hy)) this.hurt();
 
     this.combat(dt);
 
@@ -273,7 +286,7 @@ xp ${f.collected}  gems ${f.gems.length}`;
     const { x: hx, y: hy } = this.heroPos;
     this.kickTimer -= dt;
     if (this.kickTimer <= 0) {
-      const t = nearest(this.targets, hx, hy, KICK_RANGE);
+      const t = this.kickTarget(KICK_RANGE);
       if (t >= 0 && this.hero.kick(this.targets[t].x - hx)) this.kickTimer = KICK_COOLDOWN;
     }
 
@@ -281,6 +294,14 @@ xp ${f.collected}  gems ${f.gems.length}`;
 
     this.hurtTimer -= dt;
     if (nearest(this.targets, hx, hy, HURT_DIST) >= 0) this.hurt();
+  }
+
+  /** The boss when in range (the weapon locks onto it first), else the nearest enemy. */
+  private kickTarget(range: number): number {
+    const { x: hx, y: hy } = this.heroPos;
+    const b = this.boss?.alive ? this.boss.pos : null;
+    if (b && Math.hypot(b.x - hx, b.y - hy) <= range) return this.targets.indexOf(b);
+    return nearest(this.targets, hx, hy, range);
   }
 
   private hurt(): void {
@@ -292,7 +313,7 @@ xp ${f.collected}  gems ${f.gems.length}`;
   /** The kick connects: launch a ball from the hero's foot at the nearest enemy. */
   private strike(): void {
     const { x: hx, y: hy } = this.heroPos;
-    const t = nearest(this.targets, hx, hy, KICK_RANGE * 1.3);
+    const t = this.kickTarget(KICK_RANGE * 1.3);
     const fx = hx + this.hero.facing * 40;
     const tx = t >= 0 ? this.targets[t].x : fx + this.hero.facing * 100;
     const ty = t >= 0 ? this.targets[t].y : hy;
@@ -306,6 +327,10 @@ xp ${f.collected}  gems ${f.gems.length}`;
     const crit = Math.random() < CRIT_CHANCE;
     const value = (8 + Math.floor(Math.random() * 8)) * (crit ? 3 : 1);
     const fox = p === this.fox.pos;
+    if (this.boss && p === this.boss.pos) {
+      this.damage.spawn(p.x, p.y - this.boss.hit(value) - 10, value, crit, i);
+      return;
+    }
     this.damage.spawn(p.x, p.y - (fox ? FOX_HEIGHT : MOB_HEIGHT) - 10, value, crit, fox ? i : -1);
     if (fox) {
       this.fox.view.flinch();

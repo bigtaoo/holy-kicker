@@ -73,6 +73,9 @@ export interface SceneOptions {
   softFace: boolean;
   /** Mobs standing in a jam breathe a little instead of freezing. */
   sway: boolean;
+  /** The fallen-abbot boss (cutout rig, telegraphed slam, health bar), and its height in world units. */
+  boss: boolean;
+  bossSize: number;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -98,6 +101,8 @@ export const DEFAULT_SCENE: SceneOptions = {
   sep: 75,
   softFace: true,
   sway: true,
+  boss: true,
+  bossSize: 300,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -140,6 +145,8 @@ export function parseScene(query: string): SceneOptions {
     sep: num(q.get('sep'), 30, 120, DEFAULT_SCENE.sep),
     softFace: q.has('face') ? q.get('face') !== 'white' : DEFAULT_SCENE.softFace,
     sway: q.has('sway') ? q.get('sway') === '1' : DEFAULT_SCENE.sway,
+    boss: q.has('boss') ? q.get('boss') === '1' : DEFAULT_SCENE.boss,
+    bossSize: num(q.get('bosssize'), 130, 600, DEFAULT_SCENE.bossSize),
   };
 }
 

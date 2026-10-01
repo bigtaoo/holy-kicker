@@ -1,0 +1,7 @@
+{
+ "parent": {
+  "leg_b": null, "leg_f": null, "skirt": null, "flap": "skirt", "torso": null,
+  "beads": "torso", "head": "torso",
+  "arm_b": "torso", "hand_b": "arm_b", "arm_f": "torso", "hand_f": "arm_f"
+ }
+}
