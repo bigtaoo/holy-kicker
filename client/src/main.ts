@@ -8,7 +8,7 @@ async function boot() {
   const platform = new WebPlatform();
   const app = await platform.createApp();
   await Assets.init();
-  new Game(app, platform, await loadArt());
+  new Game(app, platform, await loadArt(platform));
 }
 
 boot().catch((err) => {

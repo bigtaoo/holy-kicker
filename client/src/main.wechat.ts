@@ -14,7 +14,7 @@ async function boot() {
   // document, so detection is skipped. Init explicitly before the first load, otherwise
   // Assets.load self-initialises with detection on and throws.
   await Assets.init({ skipDetections: true });
-  new Game(app, platform, await loadArt());
+  new Game(app, platform, await loadArt(platform));
 }
 
 boot().catch((err) => {

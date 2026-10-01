@@ -9,4 +9,6 @@ export interface Platform {
   bindStick(app: Application, stick: DragStick): void;
   /** Extra movement source such as the keyboard; a zero vector when idle. */
   readKeys(): Vec2;
+  /** Reads a text file shipped with the game (relative path, as for textures). */
+  readText(path: string): Promise<string>;
 }

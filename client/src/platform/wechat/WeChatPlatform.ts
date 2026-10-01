@@ -79,4 +79,9 @@ export class WeChatPlatform implements Platform {
   readKeys(): Vec2 {
     return { x: 0, y: 0 };
   }
+
+  async readText(path: string): Promise<string> {
+    // there is no fetch; package files are read straight from the file system
+    return wx.getFileSystemManager().readFileSync(path, 'utf8');
+  }
 }

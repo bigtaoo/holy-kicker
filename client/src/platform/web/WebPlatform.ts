@@ -60,4 +60,10 @@ export class WebPlatform implements Platform {
     const len = Math.hypot(x, y);
     return len > 0 ? { x: x / len, y: y / len } : { x: 0, y: 0 };
   }
+
+  async readText(path: string): Promise<string> {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+    return res.text();
+  }
 }

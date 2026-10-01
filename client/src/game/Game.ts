@@ -1,6 +1,7 @@
 import { Application, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
+import { TaoActor, type TaoAsset } from './tao/TaoActor';
 import { stepHorde, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
 
@@ -8,12 +9,13 @@ import { computeViewport, type Viewport } from './viewport';
 // chase him. Exists to prove the portrait viewport, input and art scale on every host.
 
 export interface Art {
-  hero: Texture;
+  hero: TaoAsset;
   jiangshi: Texture;
   fox: Texture;
 }
 
 const HERO_SPEED = 420;
+const HERO_HEIGHT = 120;
 const MOB_COUNT = 40;
 const RESPAWN_DIST = 2200;
 const STICK_RADIUS = 70;
@@ -33,7 +35,8 @@ export class Game {
   private readonly playMask = new Graphics();
   private readonly stickGfx = new Graphics();
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
-  private readonly hero: Sprite;
+  private readonly hero: TaoActor;
+  private readonly heroView = new Container();
   private readonly heroPos = { x: 0, y: 0 };
   private readonly fox: MobView;
   private readonly mobs: MobView[] = [];
@@ -48,7 +51,11 @@ export class Game {
   ) {
     this.world.sortableChildren = true;
     this.world.addChild(makeGround());
-    this.hero = this.addSprite(art.hero);
+    this.hero = new TaoActor(art.hero);
+    this.hero.view.scale.set(HERO_HEIGHT / this.hero.height);
+    this.hero.play('idle');
+    this.heroView.addChild(this.hero.view);
+    this.world.addChild(this.heroView);
     this.fox = { pos: { x: 300, y: -900 }, sprite: this.addSprite(art.fox) };
     for (let i = 0; i < MOB_COUNT; i++) {
       this.mobs.push({ pos: ringPoint(0, 0), sprite: this.addSprite(art.jiangshi) });
@@ -99,8 +106,11 @@ export class Game {
     }
     this.heroPos.x += mx * HERO_SPEED * dt;
     this.heroPos.y += my * HERO_SPEED * dt;
-    if (mx !== 0) this.hero.scale.x = mx < 0 ? -1 : 1;
-    place(this.hero, this.heroPos);
+    // The hero art faces left.
+    if (mx !== 0) this.heroView.scale.x = mx < 0 ? 1 : -1;
+    this.hero.play(len > 0.1 ? 'run' : 'idle');
+    this.hero.update(dt);
+    place(this.heroView, this.heroPos);
 
     const hx = this.heroPos.x;
     const hy = this.heroPos.y;
@@ -136,7 +146,7 @@ export class Game {
   }
 }
 
-function place(s: Sprite, p: Mob): void {
+function place(s: Container, p: Mob): void {
   s.position.set(p.x, p.y);
   s.zIndex = p.y;
 }
