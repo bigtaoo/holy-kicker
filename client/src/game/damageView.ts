@@ -44,7 +44,7 @@ function drawGlyphs(renderer: Renderer): Glyphs {
 
 export class DamageLayer {
   readonly pool = new DamagePool(MAX_NUMBERS);
-  readonly spawn = (x: number, y: number, value: number, crit: boolean) => this.pool.spawn(x, y, value, crit);
+  readonly spawn = (x: number, y: number, value: number, crit: boolean, key = -1) => this.pool.spawn(x, y, value, crit, key);
   readonly view = new ParticleContainer({
     dynamicProperties: { position: true, vertex: true, color: true, uvs: true },
   });

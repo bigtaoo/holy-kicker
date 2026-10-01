@@ -254,7 +254,7 @@ export class Game {
     const crit = Math.random() < CRIT_CHANCE;
     const value = (8 + Math.floor(Math.random() * 8)) * (crit ? 3 : 1);
     const fox = p === this.fox.pos;
-    this.damage.spawn(p.x, p.y - (fox ? FOX_HEIGHT : MOB_HEIGHT) - 10, value, crit);
+    this.damage.spawn(p.x, p.y - (fox ? FOX_HEIGHT : MOB_HEIGHT) - 10, value, crit, fox ? i : -1);
     if (fox) {
       this.fox.view.flinch();
       const d = Math.hypot(p.x - hx, p.y - hy) || 1;

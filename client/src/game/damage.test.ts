@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DAMAGE_LIFE, DamagePool, damageAlpha, damageScale, digitsOf } from './damage';
+import { DAMAGE_LIFE, DamagePool, KEY_MERGE_GAP, MERGE_AGE, MERGE_CELL, damageAlpha, damageScale, digitsOf } from './damage';
 
 describe('digitsOf', () => {
   it('splits a rounded value into digits', () => {
@@ -43,10 +43,43 @@ describe('DamagePool', () => {
   it('draws crits bigger and respects its cap', () => {
     const pool = new DamagePool(2, () => 0.5);
     pool.spawn(0, 0, 1, true);
-    pool.spawn(0, 0, 1, false);
-    pool.spawn(0, 0, 1, false);
+    pool.spawn(MERGE_CELL * 2, 0, 1, false);
+    pool.spawn(MERGE_CELL * 4, 0, 1, false);
     expect(pool.live.length).toBe(2);
     pool.step(0.5);
     expect(damageScale(pool.live[0])).toBeGreaterThan(damageScale(pool.live[1]));
+  });
+
+  it('adds up hits that land together into one number', () => {
+    const pool = new DamagePool(10, () => 0.5);
+    pool.spawn(10, 10, 12, false);
+    pool.spawn(30, 40, 30, true);
+    expect(pool.live.length).toBe(1);
+    expect(pool.live[0].digits).toEqual([4, 2]);
+    expect(pool.live[0].crit).toBe(true);
+    pool.spawn(10 + MERGE_CELL, 10, 5, false);
+    expect(pool.live.length).toBe(2);
+    pool.step(MERGE_AGE);
+    pool.spawn(10, 10, 5, false);
+    expect(pool.live.length).toBe(3);
+  });
+
+  it('gathers repeated hits on a surviving target', () => {
+    const pool = new DamagePool(10, () => 0.5);
+    pool.spawn(0, 0, 10, false, 7);
+    pool.step(KEY_MERGE_GAP * 0.8);
+    pool.spawn(500, 0, 15, false, 7);
+    expect(pool.live.length).toBe(1);
+    const d = pool.live[0];
+    expect(d.digits).toEqual([2, 5]);
+    expect(d.age).toBe(0);
+    expect(d.x).toBeCloseTo(500);
+    // a mob hit beside it does not join the target's number, nor does another target
+    pool.spawn(500, 0, 1, false);
+    pool.spawn(500, 0, 1, false, 8);
+    expect(pool.live.length).toBe(3);
+    pool.step(KEY_MERGE_GAP);
+    pool.spawn(500, 0, 1, false, 7);
+    expect(pool.live.length).toBe(4);
   });
 });

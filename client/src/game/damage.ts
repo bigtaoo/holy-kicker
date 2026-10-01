@@ -1,5 +1,9 @@
 // Floating damage numbers: pure motion and digit layout in a flat pool (swap-remove),
 // drawn by damageView.ts as one particle per digit. Expired numbers are recycled.
+//
+// Numbers merge so a big spell does not print a wall of digits: hits that land close
+// together within a few frames add up into one number, and repeated hits on a target that
+// survives (an elite, a boss) keep adding to that target's number while they keep coming.
 
 export interface DamageNumber {
   x: number;
@@ -7,6 +11,10 @@ export interface DamageNumber {
   vx: number;
   vy: number;
   age: number;
+  value: number;
+  /** Merge cell this number was spawned in, and its target key (-1 for none). */
+  cell: number;
+  key: number;
   /** Decimal digits, most significant first. */
   digits: number[];
   crit: boolean;
@@ -18,10 +26,28 @@ const RISE = 520;
 /** Velocity kept per second. */
 const DRAG = 0.03;
 const CRIT_SCALE = 1.5;
+/** Hits within this many world units and seconds of a fresh number join it. */
+export const MERGE_CELL = 140;
+export const MERGE_AGE = 0.1;
+/** A surviving target's number keeps collecting hits that come at most this far apart. */
+export const KEY_MERGE_GAP = 0.35;
+const MAX_CELLS = 4096;
+
+function blank(): DamageNumber {
+  return { x: 0, y: 0, vx: 0, vy: 0, age: 0, value: 0, cell: 0, key: -1, digits: [], crit: false };
+}
+
+function cellOf(x: number, y: number): number {
+  // world coordinates stay well inside +-2^15 cells
+  return (Math.floor(x / MERGE_CELL) + 32768) * 65536 + Math.floor(y / MERGE_CELL) + 32768;
+}
 
 export class DamagePool {
   readonly live: DamageNumber[] = [];
   private readonly free: DamageNumber[] = [];
+  /** Freshest number per merge cell and per target key; entries are checked on use. */
+  private readonly cells = new Map<number, DamageNumber>();
+  private readonly keyed = new Map<number, DamageNumber>();
 
   constructor(
     /** Numbers on screen at once; the quality level lowers it. */
@@ -30,21 +56,53 @@ export class DamagePool {
   ) {}
 
   prewarm(n: number): void {
-    while (this.free.length + this.live.length < n) this.free.push({ x: 0, y: 0, vx: 0, vy: 0, age: 0, digits: [], crit: false });
+    while (this.free.length + this.live.length < n) this.free.push(blank());
   }
 
-  spawn(x: number, y: number, value: number, crit: boolean): void {
+  /**
+   * Shows `value` at (x, y). `key` names a target that survives the hit (an elite or boss),
+   * so its hits gather into one number; targets that die from the hit pass -1.
+   */
+  spawn(x: number, y: number, value: number, crit: boolean, key = -1): void {
+    if (key >= 0) {
+      const d = this.keyed.get(key);
+      if (d && d.key === key && d.age < KEY_MERGE_GAP) {
+        // the number follows its target and pops again with each hit
+        this.launch(d, x, y, d.value + value, d.crit || crit);
+        return;
+      }
+    }
+    const cell = cellOf(x, y);
+    const near = key < 0 ? this.cells.get(cell) : undefined;
+    if (near && near.cell === cell && near.key < 0 && near.age < MERGE_AGE) {
+      near.value += value;
+      near.crit ||= crit;
+      digitsOf(near.value, near.digits);
+      return;
+    }
     if (this.live.length >= this.max) return;
+    const d = this.free.pop() ?? blank();
+    this.launch(d, x, y, value, crit);
+    d.cell = cell;
+    d.key = key;
+    this.live.push(d);
+    if (key >= 0) this.keyed.set(key, d);
+    else {
+      if (this.cells.size >= MAX_CELLS) this.cells.clear();
+      this.cells.set(cell, d);
+    }
+  }
+
+  private launch(d: DamageNumber, x: number, y: number, value: number, crit: boolean): void {
     const r = this.rand;
-    const d = this.free.pop() ?? { x: 0, y: 0, vx: 0, vy: 0, age: 0, digits: [], crit: false };
     d.x = x + (r() - 0.5) * 30;
     d.y = y;
     d.vx = (r() - 0.5) * 160;
     d.vy = -RISE * (crit ? 1.2 : 1);
     d.age = 0;
+    d.value = value;
     d.crit = crit;
     digitsOf(value, d.digits);
-    this.live.push(d);
   }
 
   step(dt: number): void {
