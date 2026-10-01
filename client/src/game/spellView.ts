@@ -1,12 +1,12 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
-import { FP, SPELLS, TICK_RATE, type Field } from '@hk/engine';
+import { FP, TICK_RATE, type Field } from '@hk/engine';
 import type { FxPool } from './fx';
 import { bolt, explosion, fieldMotes, nova, type RingMode } from './spells';
 import { SHADOW_Z } from './shadow';
 
-// Effects of the area-spell stress test. The engine casts the spells and kills what they
-// reach (systems/spells.ts); this draws the casts from its events and the lingering fields
-// from its field list.
+// Spell effects: the build's spells and the area-spell stress test. The engine casts the
+// spells and kills what they reach (systems/spells.ts); this draws the casts from its events
+// and the lingering fields from its field list.
 
 const NOVA_LIFE = 0.45;
 
@@ -53,9 +53,9 @@ export class SpellView {
   /** The sim's lingering fields: a ground disc each, fading in and out, with rising motes. */
   drawFields(fields: readonly Field[], alpha: number, dt: number): void {
     for (const f of this.sprites.values()) f.seen = false;
-    const r = SPELLS.fieldRadius / FP;
-    const life = SPELLS.fieldLife / TICK_RATE;
     for (const f of fields) {
+      const r = f.radius / FP;
+      const life = f.life / TICK_RATE;
       let s = this.sprites.get(f.id);
       if (!s) {
         const sprite = new Sprite({ texture: this.fieldTex, anchor: 0.5 });

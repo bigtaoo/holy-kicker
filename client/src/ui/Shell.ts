@@ -1,5 +1,5 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, isEliteWave } from '@hk/engine';
+import { isBossWave, isEliteWave, xpToNext } from '@hk/engine';
 import { setLocale, t, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
@@ -12,6 +12,7 @@ import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, saveSettings } from '../meta/settings';
 import type { Platform } from '../platform/types';
+import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
@@ -22,8 +23,8 @@ import { uiFrame, type Screen } from './uiLayout';
 // current run, and tells the portal when gameplay starts and stops.
 //
 // The engine runs the chapter's waves; the shell watches its state for a new wave (a
-// banner), the hero going down (the death panel, revive with an ad) and the outcome. A run
-// ends won, lost, or when the player gives up.
+// banner), experience and level-up offers (the card panel), the hero going down (the death
+// panel, revive with an ad) and the outcome. A run ends won, lost, or when the player gives up.
 
 export class Shell {
   private save: SaveData;
@@ -39,6 +40,8 @@ export class Shell {
   /** The wave the HUD last showed, and whether the death panel is up. */
   private shownWave = -1;
   private downShown = false;
+  /** The level whose cards the HUD shows; 0 when none are up. */
+  private shownOffer = 0;
 
   constructor(
     private readonly app: Application,
@@ -116,6 +119,7 @@ export class Shell {
     });
     this.shownWave = -1;
     this.downShown = false;
+    this.shownOffer = 0;
     if (this.quality) this.game.applyQuality(this.quality);
     // the run adds itself to the stage; keep the UI above it
     this.app.stage.addChild(this.ui);
@@ -124,6 +128,7 @@ export class Shell {
       resume: () => this.setPaused(false),
       giveUp: () => this.endRun(),
       revive: () => this.revive(),
+      pick: (index) => this.game?.pick(index),
     });
     this.setScreen(this.hud);
     this.platform.portal.gameplayStart();
@@ -202,6 +207,16 @@ export class Shell {
       const last = s.config.waves;
       const warning = isBossWave(s.wave, last) ? t('run.boss') : isEliteWave(s.wave, last) ? t('run.elite') : null;
       if (s.wave > 0) hud.announce(s.wave, warning);
+    }
+    const p = s.players[0];
+    hud.setXp(p.level, p.xp / xpToNext(p.level));
+    // several levels at once come one offer after another, each a level higher
+    if (p.offer.length > 0 && this.shownOffer !== p.level) {
+      this.shownOffer = p.level;
+      hud.showOffer(p.offer.map((c) => cardText(c, p)));
+    } else if (p.offer.length === 0 && this.shownOffer !== 0) {
+      this.shownOffer = 0;
+      hud.hideOffer();
     }
     if (s.outcome === 'playing' && this.downShown) {
       this.downShown = false;

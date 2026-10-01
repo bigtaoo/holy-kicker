@@ -48,7 +48,6 @@ export const HERO = {
   kickRange: toFp(650),
   /** A kick that connects looks a little further, so a target stepping back is still hit. */
   strikeRange: toFp(845),
-  kickCooldown: ticks(0.9),
   /** Ticks from the start of the kick to the foot meeting the ball (hero_tao.json "kick"). */
   strikeAt: ticks(0.18),
   kickTicks: ticks(0.4),
@@ -110,7 +109,6 @@ export const BALL = {
   speed: perTick(1300),
   hitRadius: toFp(55),
   seekRange: toFp(600),
-  maxHits: 3,
   maxTravel: toFp(900),
 };
 
@@ -177,7 +175,6 @@ export const SPELLS = {
   fieldRadius: toFp(380),
   fieldSpread: toFp(300),
   fieldLife: ticks(3),
-  fieldTick: ticks(0.5),
   chainJumps: 8,
   chainRange: toFp(350),
 };

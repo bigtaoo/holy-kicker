@@ -4,6 +4,7 @@ import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Player, SimState } from '../state';
+import { pickCard, relicLevel, stat } from './build';
 import { eliteIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
 
@@ -20,6 +21,7 @@ export function applyInput(s: SimState, events: SimEvent[], cmds: readonly Playe
     p.moveBrad = c.moveBrad & 65535;
     p.moveMag = Math.max(0, Math.min(MAG_FULL, c.moveMag | 0));
     if (c.revive && p.dead && p.revives > 0) revive(s, events, p);
+    if (c.pick !== undefined) pickCard(s, events, p, c.pick | 0);
   }
 }
 
@@ -45,7 +47,8 @@ export function movePlayers(s: SimState): void {
       p.moving = false;
       continue;
     }
-    const speed = Math.trunc((p.moveMag * HERO.speed) / MAG_FULL);
+    const top = Math.trunc((HERO.speed * (100 + stat(p, 'speed'))) / 100);
+    const speed = Math.trunc((p.moveMag * top) / MAG_FULL);
     const cos = cosB(p.moveBrad);
     const tx = Math.trunc((cos * speed) / TRIG_ONE);
     const ty = Math.trunc((sinB(p.moveBrad) * speed) / TRIG_ONE);
@@ -95,7 +98,7 @@ export function kickSystem(s: SimState, events: SimEvent[]): void {
     p.action = 'kick';
     p.actionT = 0;
     p.struck = false;
-    p.kickCd = HERO.kickCooldown;
+    p.kickCd = relicLevel(p).cooldown;
     events.push({ type: 'kick', owner: p.owner, dir: p.facing });
   }
 }
@@ -105,7 +108,8 @@ function strike(s: SimState, p: Player): void {
   const t = kickTarget(s, p, HERO.strikeRange);
   const fx = p.x + p.facing * HERO.footOffset;
   const target = t >= 0 ? targetAt(s, t)! : null;
-  launchBall(s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y);
+  const r = relicLevel(p);
+  launchBall(s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y, r.hits, r.damage);
 }
 
 /** Anything touching a player hurts them, by what it is; the horde hits harder in later waves. */

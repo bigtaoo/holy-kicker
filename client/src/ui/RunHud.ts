@@ -1,10 +1,13 @@
-import { Container, type Text } from 'pixi.js';
+import { Container, Sprite, Texture, type Text } from 'pixi.js';
 import { t } from '../i18n';
+import { cardPanel } from './cardPanel';
+import type { CardText } from './cardText';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
-// The in-run overlay: the wave counter, a pause button and the pause panel, a banner when a
-// wave starts, and the death panel (revive with an ad, or give up).
+// The in-run overlay: the experience bar and level, the wave counter, a pause button and the
+// pause panel, a banner when a wave starts, the level-up cards, and the death panel (revive
+// with an ad, or give up).
 
 export interface RunActions {
   pause(): void;
@@ -12,6 +15,8 @@ export interface RunActions {
   giveUp(): void;
   /** Plays the rewarded ad and revives; resolves whether it paid. */
   revive(): Promise<boolean>;
+  /** Takes card `index` of the level-up offer. */
+  pick(index: number): void;
 }
 
 /** Death panel: no revive to offer, offered, or the ad is playing. */
@@ -20,6 +25,8 @@ type Down = 'none' | 'offered' | 'playing';
 /** Seconds a wave banner stays, the last of them fading. */
 const BANNER_TIME = 2;
 const BANNER_FADE = 0.5;
+const XP_H = 30;
+const XP_Y = 52;
 
 export class RunHud implements Screen {
   readonly view = new Container();
@@ -30,6 +37,15 @@ export class RunHud implements Screen {
   private paused = false;
   private down: Down | null = null;
   private banner: { lines: [string, number][]; t: number } | null = null;
+  /** Rebuilt with every layout, like the rest of the HUD. */
+  private xpView: Container | null = null;
+  private xpFill: Sprite | null = null;
+  private xpWidth = 0;
+  private levelText: Text | null = null;
+  private xp = { level: 1, share: 0 };
+  /** The open level-up cards, and whether one was tapped (waiting for the engine). */
+  private offer: CardText[] | null = null;
+  private picked = false;
 
   constructor(
     private readonly total: number,
@@ -46,26 +62,49 @@ export class RunHud implements Screen {
     wave.anchor.set(0, 0.5);
     wave.position.set(40, 300);
     this.waveText = wave;
-    this.setWave(this.wave);
     this.view.addChild(wave);
-    if (!this.down) {
+    this.xpBar(f);
+    this.setWave(this.wave);
+    if (!this.down && !this.offer) {
       const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52 });
       pause.position.set(f.w - 90, 300);
       this.view.addChild(pause);
     }
     this.bannerView = null;
     // a panel covers the middle, so a banner then waits out its time unseen
-    if (this.banner && !this.paused && !this.down) this.drawBanner(f);
+    if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
+    if (this.offer) this.view.addChild(cardPanel(f, this.offer, (i) => this.pickCard(i)));
     if (this.paused) this.pausePanel(f);
     if (this.down) this.downPanel(f, this.down);
   }
 
-  /** Wave 0 is the sandbox, which has no counter. */
+  /** Wave 0 is the sandbox, which has no counter and no levels. */
   setWave(wave: number): void {
     this.wave = wave;
     if (!this.waveText) return;
     this.waveText.visible = wave > 0;
     this.waveText.text = t('run.wave', { wave, total: this.total });
+    if (this.xpView) this.xpView.visible = wave > 0;
+  }
+
+  /** The level and how far the experience is toward the next one, 0..1. */
+  setXp(level: number, share: number): void {
+    this.xp = { level, share: Math.max(0, Math.min(1, share)) };
+    if (this.xpFill) this.xpFill.width = this.xpWidth * this.xp.share;
+    if (this.levelText && this.levelText.text !== t('run.level', { level })) this.levelText.text = t('run.level', { level });
+  }
+
+  /** The level-up cards; they stay until hideOffer. */
+  showOffer(cards: CardText[]): void {
+    this.offer = cards;
+    this.picked = false;
+    this.paused = false;
+    this.relayout();
+  }
+
+  hideOffer(): void {
+    this.offer = null;
+    this.relayout();
   }
 
   /** A banner across the middle: the wave number and, for elite and boss waves, a warning. */
@@ -89,7 +128,8 @@ export class RunHud implements Screen {
   }
 
   update(dt: number): void {
-    if (!this.banner) return;
+    // a banner waits out the card choice
+    if (!this.banner || this.offer) return;
     this.banner.t -= dt;
     if (this.banner.t <= 0) {
       this.banner = null;
@@ -113,6 +153,34 @@ export class RunHud implements Screen {
     if (paused) this.actions.pause();
     else this.actions.resume();
     this.relayout();
+  }
+
+  private xpBar(f: UiFrame): void {
+    const bar = (this.xpView = new Container());
+    const fill = (this.xpFill = new Sprite(Texture.WHITE));
+    const x = 40;
+    const w = (this.xpWidth = f.w - 260);
+    const back = new Sprite(Texture.WHITE);
+    back.tint = COLORS.outline;
+    back.width = w + 12;
+    back.height = XP_H + 12;
+    back.position.set(x - 6, XP_Y - XP_H / 2 - 6);
+    fill.tint = 0x7fd8ff;
+    fill.height = XP_H;
+    fill.position.set(x, XP_Y - XP_H / 2);
+    const level = label('', 52, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
+    level.anchor.set(1, 0.5);
+    level.position.set(f.w - 40, XP_Y);
+    this.levelText = level;
+    bar.addChild(back, fill, level);
+    this.view.addChild(bar);
+    this.setXp(this.xp.level, this.xp.share);
+  }
+
+  private pickCard(index: number): void {
+    if (this.picked) return;
+    this.picked = true;
+    this.actions.pick(index);
   }
 
   private drawBanner(f: UiFrame): void {

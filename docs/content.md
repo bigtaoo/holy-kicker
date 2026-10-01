@@ -27,6 +27,9 @@ Names are working names; every name ships through the string table (en / zh-CN s
   the evolved form as a gold card. **Awakening** works the same way for the relic.
 - First evolution of each pair is recorded in the Codex.
 - Portrait readability: few, large slots. The HUD shows 9 icons at most.
+- **Implemented** (`engine/content.ts`, `engine/systems/build.ts`): the experience curve and
+  pick 1 of 3, cuju levels 1–5, Buddha Palm, Vajra Bolt, Incense Ring and the six starting
+  passives. Not yet: Golden Bell, Flying Cymbals, evolutions, awakening, the build icons on the HUD.
 
 ## Relics (5)
 

@@ -15,12 +15,12 @@ const BUSY: RunConfig = { ...DEFAULT_RUN, seed: 1234, mobs: 120, threats: true, 
 /** The first waves of a chapter, with enemy attacks, so the hero takes real damage. */
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, seed: 77, waves: 50, threats: true };
 
-/** A scripted stick: circles, stops and dashes, the same for every run. */
+/** A scripted stick: circles, stops and dashes, the same for every run; takes any level-up card. */
 function stick(tick: number, owner = 0): PlayerCommand {
   const phase = Math.floor(tick / 45) % 4;
   const a = tick * 0.05;
   const [x, y] = phase === 0 ? [Math.cos(a), Math.sin(a)] : phase === 1 ? [0, 0] : phase === 2 ? [1, 0.2] : [-0.5, -0.8];
-  return { owner, tick, ...quantizeMove(x, y) };
+  return { owner, tick, ...quantizeMove(x, y), pick: tick % 3 };
 }
 
 function run(config: RunConfig, ticks: number, every = 30): { engine: Engine; hashes: number[] } {
@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-01 for ENGINE_VERSION 3 (health, waves). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(3);
+    // Recorded 2026-10-01 for ENGINE_VERSION 4 (levelling, build spells, passives). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(4);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -92,12 +92,13 @@ describe('Engine', () => {
     const a = run(CHAPTER, 1200);
     expect(run(CHAPTER, 1200).hashes).toEqual(a.hashes);
     expect(a.engine.state.wave).toBeGreaterThan(1);
+    expect(a.engine.state.players[0].level).toBeGreaterThan(1);
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'waves']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
   });
 });
 
-const GOLDEN = 3701674752;
-const GOLDEN_CHAPTER = 3155703943;
+const GOLDEN = 300302860;
+const GOLDEN_CHAPTER = 2376247447;

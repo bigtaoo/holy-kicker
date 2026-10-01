@@ -1,4 +1,5 @@
 import { ELITE, HERO, type RunConfig } from './config';
+import type { Card, PassiveId, SpellId } from './content';
 import { Prng } from './math/prng';
 
 // The whole simulation state: plain data, integers only (FP positions, tick timers), in
@@ -30,12 +31,34 @@ export interface Player extends Body {
   struck: boolean;
   kickCd: number;
   hurtCd: number;
+  /** 1-based; `xp` counts toward the next level. */
+  level: number;
   xp: number;
   hp: number;
   maxHp: number;
   /** Down at 0 health: no moving, kicking or picking up until revived. */
   dead: boolean;
   revives: number;
+  /** Health regenerated so far toward the next point, in units of 1 / REGEN_UNIT. */
+  regen: number;
+  /** Relic level, 1..MAX_LEVEL. */
+  relic: number;
+  spells: SpellSlot[];
+  passives: PassiveSlot[];
+  /** The level-up cards on offer; the sim stands still while any player has some. */
+  offer: Card[];
+}
+
+export interface SpellSlot {
+  id: SpellId;
+  level: number;
+  /** Ticks to the next cast. */
+  cd: number;
+}
+
+export interface PassiveSlot {
+  id: PassiveId;
+  level: number;
 }
 
 export type Mob = Body;
@@ -67,6 +90,9 @@ export interface Ball extends Body {
   vx: number;
   vy: number;
   hits: number;
+  /** Bounces and damage percent, from the relic level it was kicked at. */
+  maxHits: number;
+  damage: number;
   /** The target hit last, so the ball does not hit it again on the way out. */
   last: number;
   travel: number;
@@ -100,8 +126,12 @@ export interface Gem extends Body {
 
 export interface Field {
   id: number;
+  owner: number;
   x: number;
   y: number;
+  radius: number;
+  life: number;
+  damage: number;
   age: number;
   next: number;
 }
@@ -138,6 +168,8 @@ export interface SimState {
   readonly combat: Prng;
   readonly drop: Prng;
   readonly spell: Prng;
+  /** Level-up cards. */
+  readonly cards: Prng;
 }
 
 export function body(x: number, y: number): Body {
@@ -157,14 +189,15 @@ export function createState(config: RunConfig): SimState {
     gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
+    cards: new Prng(s ^ 0x3c5a7e91),
   };
 }
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0): Player {
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
-    action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, xp: 0,
-    hp, maxHp: hp, dead: false, revives,
+    action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0,
+    hp, maxHp: hp, dead: false, revives, regen: 0, relic: 1, spells: [], passives: [], offer: [],
   };
 }
 

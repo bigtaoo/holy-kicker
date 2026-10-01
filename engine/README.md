@@ -16,14 +16,18 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 ## Shape
 
 - `Engine` steps the systems in `STEP_ORDER`: input, player movement, horde, boss, kicks,
-  balls, spells, threats, contact, drops, waves. The order is part of the contract.
+  balls, spells, threats, contact, drops, build, waves. The order is part of the contract.
 - `RunConfig.waves` > 0 runs a chapter (`systems/waves.ts`): the horde grows each wave, elites
   and bosses arrive on their waves, the hero has health and can go down, and `state.outcome`
   turns `won` (the last boss fell) or `lost` (every hero down). A `revive` command brings a
-  downed hero back. `waves: 0` is the sandbox for stress tests: fixed horde, no death.
+  downed hero back. `waves: 0` is the sandbox for stress tests: fixed horde, no death, no
+  levelling.
+- The build (`content.ts`, `systems/build.ts`): experience fills levels; each level-up deals
+  three cards (relic level, a spell, a passive) into `player.offer` and the sim stands still
+  until a `pick` command takes one. Passives are a modifier stack read through `stat()`.
 - `SimState` is plain data in ordered arrays. Every moving body keeps the position it had at
   the start of the last tick (`px`, `py`), so the view interpolates between ticks.
-- `PlayerCommand` is `{ owner, tick, moveBrad, moveMag, revive? }`: the stick as an integer angle
+- `PlayerCommand` is `{ owner, tick, moveBrad, moveMag, revive?, pick? }`: the stick as an integer angle
   (65536 per turn) and a 0..255 magnitude. A player who sends nothing holds the last command.
 - `InputSource.take(tick)` hands the engine a tick's commands; returning `null` means "not
   known yet" (a network stall), and the engine waits.
@@ -37,7 +41,7 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 - **No transcendental maths**: no `Math.sin/cos/atan2/hypot/sqrt/exp/pow`, no `**`. Use
   `sinB/cosB/atan2B` (table-based, `math/trig.ts`) and `isqrt`/`dist` (`math/fixed.ts`).
 - **No `Math.random`, no clocks.** Randomness comes from the seeded `Prng` streams in the state
-  (one per concern: `ai`, `combat`, `drop`, `spell`).
+  (one per concern: `ai`, `combat`, `drop`, `spell`, `cards`).
 - **No imports from outside the engine** (no Pixi, no DOM, no client code). The engine's
   tsconfig has no DOM lib.
 - **Iterate arrays, not Maps or Sets**, wherever the order could affect the state.
@@ -45,7 +49,7 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 - **A rules change changes the golden hash** in `Engine.test.ts`: bump `ENGINE_VERSION` and
   record the new value on purpose.
 
-Tuning numbers sit in `config.ts`, converted once at load into FP per tick and whole ticks.
+Tuning numbers sit in `config.ts` (the build's in `content.ts`), converted once at load into FP per tick and whole ticks.
 
 ## Not done yet
 

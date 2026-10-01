@@ -38,6 +38,7 @@ export const zh: Table<typeof en> = {
     5: '魔窟',
   },
   run: {
+    level: '{level} 级',
     wave: '第 {wave}/{total} 波',
     paused: '暂停',
     resume: '继续',
@@ -47,6 +48,33 @@ export const zh: Table<typeof en> = {
     boss: '首领战！',
     down: '你倒下了',
     revive: '复活（看广告）',
+  },
+  card: {
+    levelUp: '升级！',
+    pickOne: '选择一项',
+    new: '新！',
+    level: '等级 {a} → {b}',
+    bounces: '弹射 {a} → {b} 次',
+    damage: '伤害 +{n}%',
+    cooldown: '冷却 {a} 秒 → {b} 秒',
+    area: '范围 +{n}%',
+    duration: '持续 {a} 秒 → {b} 秒',
+  },
+  relic: {
+    ball: { name: '蹴鞠' },
+  },
+  spell: {
+    palm: { name: '如来掌', desc: '巨掌拍向最密集的敌群', count: '掌数 {a} → {b}' },
+    bolt: { name: '金刚雷', desc: '闪电在 {n} 个敌人之间跳跃', count: '跳跃 {a} → {b} 次' },
+    incense: { name: '香火阵', desc: '脚下燃起香火阵，持续 {s} 秒' },
+  },
+  passive: {
+    calm: { name: '禅心', desc: '法术冷却 −{n}%' },
+    iron: { name: '铁头功', desc: '生命上限 +{n}%' },
+    legs: { name: '罗汉腿', desc: '移动速度 +{n}%' },
+    eye: { name: '慧眼', desc: '法术范围 +{n}%' },
+    rice: { name: '斋饭', desc: '每秒回复 {n}% 生命' },
+    wrath: { name: '怒目', desc: '暴击率 +{n}%' },
   },
   boss: {
     abbot: '堕落方丈',

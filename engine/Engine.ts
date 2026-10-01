@@ -6,6 +6,7 @@ import { toFp } from './math/fixed';
 import { cosB, sinB, TRIG_ONE } from './math/trig';
 import { body, createState, newElite, newPlayer, type SimState } from './state';
 import { bossSystem, newBoss } from './systems/boss';
+import { buildSystem, choosing } from './systems/build';
 import { ballSystem } from './systems/combat';
 import { dropGem, dropSystem } from './systems/drops';
 import { hordeSystem, ringPoint } from './systems/horde';
@@ -18,10 +19,10 @@ import { beginWave, waveSystem } from './systems/waves';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 3;
+export const ENGINE_VERSION = 4;
 
 export const STEP_ORDER = [
-  'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'waves',
+  'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
 ] as const;
 
 export class Engine {
@@ -58,8 +59,9 @@ export class Engine {
     s.tick++;
     // network order is not the sim's business: commands apply by owner
     applyInput(s, events, [...cmds].sort((a, b) => a.owner - b.owner));
-    // a finished run stands still; a revive (in the input) puts a lost one back in play
-    if (s.outcome !== 'playing') return events;
+    // a finished run stands still, and so does a level-up until its card is picked; a revive
+    // or a pick (in the input) sets it going again
+    if (s.outcome !== 'playing' || choosing(s)) return events;
     movePlayers(s);
     hordeSystem(s, this.grid);
     bossSystem(s, events, hurt);
@@ -69,6 +71,7 @@ export class Engine {
     if (s.config.threats) threatSystem(s, events, hurt);
     contactSystem(s, events);
     dropSystem(s, events);
+    buildSystem(s, events);
     waveSystem(s, events);
     return events;
   }

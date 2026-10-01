@@ -36,6 +36,7 @@ export const en = {
     5: 'Demon Peak',
   },
   run: {
+    level: 'Lv {level}',
     wave: 'Wave {wave}/{total}',
     paused: 'Paused',
     resume: 'Resume',
@@ -45,6 +46,33 @@ export const en = {
     boss: 'Boss fight!',
     down: 'You fell',
     revive: 'Revive (ad)',
+  },
+  card: {
+    levelUp: 'Level up!',
+    pickOne: 'Pick one',
+    new: 'New!',
+    level: 'Lv {a} → {b}',
+    bounces: 'Bounces {a} → {b}',
+    damage: 'Damage +{n}%',
+    cooldown: 'Cooldown {a}s → {b}s',
+    area: 'Area +{n}%',
+    duration: 'Duration {a}s → {b}s',
+  },
+  relic: {
+    ball: { name: 'Cuju Ball' },
+  },
+  spell: {
+    palm: { name: 'Buddha Palm', desc: 'A giant palm slams the biggest crowd', count: 'Palms {a} → {b}' },
+    bolt: { name: 'Vajra Bolt', desc: 'Lightning jumps through {n} enemies', count: 'Jumps {a} → {b}' },
+    incense: { name: 'Incense Ring', desc: 'A ring burns at your feet for {s}s' },
+  },
+  passive: {
+    calm: { name: 'Calm Mind', desc: 'Spell cooldown −{n}%' },
+    iron: { name: 'Iron Head', desc: 'Max health +{n}%' },
+    legs: { name: 'Arhat Legs', desc: 'Move speed +{n}%' },
+    eye: { name: 'Wisdom Eye', desc: 'Spell area +{n}%' },
+    rice: { name: 'Alms Rice', desc: 'Heal {n}% health per second' },
+    wrath: { name: 'Wrath', desc: 'Crit chance +{n}%' },
   },
   boss: {
     abbot: 'Fallen Abbot',

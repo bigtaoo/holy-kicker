@@ -102,6 +102,8 @@ export class Game {
   private readonly healthBar = new HealthBar();
   /** A revive to send with the next command (the death screen's ad paid). */
   private reviving = false;
+  /** A level-up card to send with the next command. */
+  private picking: number | undefined;
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
   private readonly damage: DamageLayer;
@@ -221,7 +223,8 @@ export class Game {
     this.world.scale.set(vp.scale);
     this.label.style.fontSize = Math.max(10, 48 * vp.scale);
     this.label.style.stroke = { color: 0x000000, width: Math.max(1, 4 * vp.scale) };
-    this.label.position.set(24 * vp.scale, 24 * vp.scale);
+    // under the HUD's experience bar
+    this.label.position.set(24 * vp.scale, 90 * vp.scale);
     this.boss?.layout(vp.playW, vp.scale);
   }
 
@@ -230,10 +233,17 @@ export class Game {
     this.reviving = true;
   }
 
+  /** Takes card `index` of the open level-up offer on the next tick. */
+  pick(index: number): void {
+    this.picking = index;
+  }
+
   private frame(frameMs: number): void {
     this.layout();
-    // a finished run (won, or lost until a revive) is drawn but not stepped
-    const over = this.engine.state.outcome !== 'playing' && !this.reviving;
+    // a finished run (won, or lost until a revive) and an open level-up are drawn but not
+    // stepped, until the command that resumes them is ready
+    const s = this.engine.state;
+    const over = (s.outcome !== 'playing' && !this.reviving) || (s.players[0].offer.length > 0 && this.picking === undefined);
     if (this.paused || over) {
       this.draw(this.loop.alpha, 0);
       return;
@@ -254,8 +264,10 @@ export class Game {
     const s = this.stick.read();
     const k = this.platform.readKeys();
     const revive = this.reviving;
+    const pick = this.picking;
     this.reviving = false;
-    return { owner: LOCAL, tick: this.engine.nextTick, ...quantizeMove(s.x + k.x, s.y + k.y), revive };
+    this.picking = undefined;
+    return { owner: LOCAL, tick: this.engine.nextTick, ...quantizeMove(s.x + k.x, s.y + k.y), revive, pick };
   }
 
   /** One tick's events: animations, effects and numbers. Positions arrive in FP. */
@@ -368,7 +380,7 @@ export class Game {
     if (this.fpsTimer <= 0) {
       this.fpsTimer = 0.5;
       this.label.text = `Holy Kicker  ${Math.round(this.app.ticker.FPS)} fps  ${this.levelName}
-xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
+Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
     }
   }
 

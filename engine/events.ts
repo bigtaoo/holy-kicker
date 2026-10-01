@@ -1,4 +1,5 @@
 import type { SpellKind } from './config';
+import type { CardKind } from './content';
 
 // One-shot things that happened during a tick, the only channel from the sim to the view
 // (animations, effects, numbers, sounds). Rebuilt every tick; positions are FP. When several
@@ -28,6 +29,9 @@ export type SimEvent =
   | { type: 'pickup'; owner: number; tier: number }
   | { type: 'cast'; kind: SpellKind; x: number; y: number; radius: number }
   | { type: 'bolt'; x0: number; y0: number; x1: number; y1: number }
+  /** A player reached `level` and has cards to pick (the sim waits for the pick). */
+  | { type: 'levelUp'; owner: number; level: number }
+  | { type: 'pick'; owner: number; kind: CardKind; id: string }
   /** A wave began (not sent for wave 1, which the run starts on). */
   | { type: 'wave'; wave: number }
   /** The chapter boss fell on the last wave: the run is won. */

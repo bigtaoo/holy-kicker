@@ -3,6 +3,7 @@ import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Ball, Body, Player, SimState } from '../state';
 import { hurtBoss } from './boss';
+import { stat } from './build';
 import { dropGem } from './drops';
 import { ringPoint } from './horde';
 
@@ -50,14 +51,16 @@ export function kickTarget(s: SimState, p: Player, range: number): number {
 }
 
 /**
- * Damages target i on behalf of player `by`. Mobs go down (a gem drops, they respawn on the
- * ring), the elite loses health and is knocked back, the boss loses health.
+ * Damages target i on behalf of player `by`, at `pct` percent of a base roll (the crit stat
+ * raises the crit chance). Mobs go down (a gem drops, they respawn on the ring), the elite
+ * loses health and is knocked back, the boss loses health.
  */
-export function damage(s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null): void {
+export function damage(s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null, pct = 100): void {
   const t = targetAt(s, i);
   if (!t) return;
-  const crit = s.combat.chance(DAMAGE.critPercent, 100);
-  const value = s.combat.range(DAMAGE.min, DAMAGE.max) * (crit ? DAMAGE.critMul : 1);
+  const crit = s.combat.chance(DAMAGE.critPercent + stat(by, 'crit'), 100);
+  const roll = s.combat.range(DAMAGE.min, DAMAGE.max) * (crit ? DAMAGE.critMul : 1);
+  const value = Math.max(1, Math.trunc((roll * pct) / 100));
   const kind = i < s.mobs.length ? 'mob' : i === eliteIndex(s) ? 'elite' : 'boss';
   events.push({ type: 'hit', kind, index: i, x: t.x, y: t.y, value, crit, ball: !!ball, bx: ball?.x ?? 0, by: ball?.y ?? 0 });
   if (kind === 'boss') {
@@ -92,8 +95,11 @@ function aim(b: Ball, tx: number, ty: number): void {
   b.vy = Math.trunc(((ty - b.y) * BALL.speed) / d);
 }
 
-export function launchBall(s: SimState, owner: number, x: number, y: number, tx: number, ty: number): void {
-  const b: Ball = { id: s.nextId++, owner, x, y, px: x, py: y, vx: 0, vy: 0, hits: 0, last: -1, travel: BALL.maxTravel };
+/** A ball from (x, y) at (tx, ty) that bounces `maxHits` times at `damagePct` percent. */
+export function launchBall(s: SimState, owner: number, x: number, y: number, tx: number, ty: number, maxHits: number, damagePct: number): void {
+  const b: Ball = {
+    id: s.nextId++, owner, x, y, px: x, py: y, vx: 0, vy: 0, hits: 0, maxHits, damage: damagePct, last: -1, travel: BALL.maxTravel,
+  };
   aim(b, tx, ty);
   s.balls.push(b);
 }
@@ -114,14 +120,14 @@ export function ballSystem(s: SimState, events: SimEvent[]): void {
       b.hits++;
       b.last = hit;
       b.travel = BALL.maxTravel;
-      const next = b.hits < BALL.maxHits ? nearestTarget(s, b.x, b.y, BALL.seekRange, hit) : -1;
+      const next = b.hits < b.maxHits ? nearestTarget(s, b.x, b.y, BALL.seekRange, hit) : -1;
       alive = next >= 0;
       if (alive) {
         const t = targetAt(s, next)!;
         aim(b, t.x, t.y);
       }
       const by = s.players.find((p) => p.owner === b.owner) ?? s.players[0];
-      damage(s, events, hit, by, b);
+      damage(s, events, hit, by, b, b.damage);
     }
     if (!alive) {
       // order kept (not swap-removed), so the hash and the view see a stable sequence

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BALL, BOSS, DEFAULT_RUN, DROPS, OVERFLOW_TIER, THREATS, type RunConfig } from '../config';
+import { BOSS, DEFAULT_RUN, DROPS, OVERFLOW_TIER, THREATS, type RunConfig } from '../config';
 import type { SimEvent } from '../events';
 import { toFp } from '../math/fixed';
 import { body, createState, newElite, newPlayer, type SimState } from '../state';
@@ -56,17 +56,17 @@ describe('balls', () => {
     const s = bare();
     s.mobs.push(body(u(300), 0), body(u(300), u(400)), body(u(300), u(800)), body(u(300), u(1200)));
     const events: SimEvent[] = [];
-    launchBall(s, 0, 0, 0, u(300), 0);
+    launchBall(s, 0, 0, 0, u(300), 0, 3, 100);
     for (let t = 0; t < 120 && s.balls.length > 0; t++) ballSystem(s, events);
     const hits = events.filter((e) => e.type === 'hit');
-    expect(hits.length).toBe(BALL.maxHits);
-    expect(events.filter((e) => e.type === 'mobDown').length).toBe(BALL.maxHits);
-    expect(s.gems.length).toBe(BALL.maxHits);
+    expect(hits.length).toBe(3);
+    expect(events.filter((e) => e.type === 'mobDown').length).toBe(3);
+    expect(s.gems.length).toBe(3);
   });
 
   it('drops dead after its travel without a hit', () => {
     const s = bare();
-    launchBall(s, 0, 0, 0, u(100), 0);
+    launchBall(s, 0, 0, 0, u(100), 0, 3, 100);
     for (let t = 0; t < 30; t++) ballSystem(s, []);
     expect(s.balls.length).toBe(0);
   });
