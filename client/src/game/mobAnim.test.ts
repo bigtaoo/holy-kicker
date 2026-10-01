@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta } from './mobAnim';
 
-const meta: SheetMeta = { frames: 10, cols: 4, frameW: 1, frameH: 1, fps: 20, anchor: [0, 0], height: 1, lift: [] };
+const meta: SheetMeta = { frames: 10, flash: 10, cols: 4, frameW: 1, frameH: 1, fps: 20, anchor: [0, 0], height: 1, lift: [] };
 
 describe('frameAt', () => {
   it('loops at the sheet fps and offsets by phase', () => {

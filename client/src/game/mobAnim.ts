@@ -3,6 +3,8 @@
 
 export interface SheetMeta {
   frames: number;
+  /** Index of the first white hit-flash copy of the frames. */
+  flash: number;
   cols: number;
   frameW: number;
   frameH: number;

@@ -3,7 +3,7 @@ usage: python bake_mob.py <spec.json> [--debug <out.png>]
 
 Mobs are many and small, so instead of a runtime skeleton they get a few baked frames
 (CLAUDE.md). Each frame warps the source with soft-edged deformers, then the frames are
-shrunk to game size and packed into one sheet.
+shrunk to game size and packed into one sheet, followed by white copies for hit flashes.
 
 spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..1):
   {
@@ -143,6 +143,14 @@ def bake(spec, base):
                            borderMode=cv2.BORDER_CONSTANT, borderValue=0)
         frames.append(cv2.resize(warped, (fw, fh), interpolation=cv2.INTER_AREA))
 
+    n = len(frames)
+    # hit-flash copies: the same frames as flat white silhouettes, in the same sheet so
+    # flashing mobs still batch with the rest
+    for f in frames[:n]:
+        white = np.ones_like(f)
+        white[:, :, :3] = f[:, :, 3:]
+        white[:, :, 3] = f[:, :, 3]
+        frames.append(white)
     cols = math.ceil(math.sqrt(len(frames) * fh / fw))
     rows = math.ceil(len(frames) / cols)
     sheet = np.zeros((rows * fh, cols * fw, 4), np.float32)
@@ -153,7 +161,7 @@ def bake(spec, base):
     sheet[:, :, :3] = np.where(alpha > 1e-4, sheet[:, :, :3] / np.maximum(alpha, 1e-4), 0)
     out = Image.fromarray((np.clip(sheet, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
     meta = {
-        "frames": len(frames), "cols": cols, "frameW": fw, "frameH": fh, "fps": spec["fps"],
+        "frames": n, "flash": n, "cols": cols, "frameW": fw, "frameH": fh, "fps": spec["fps"],
         "anchor": [round(gx * scale, 1), round(gy * scale, 1)],
         # the cut-out's height in sheet px, and how high off the ground each frame floats
         "height": spec["height"], "lift": lift,

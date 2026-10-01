@@ -3,6 +3,7 @@ import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
 import { launch, nearest, stepBall, type Ball, type BallParams } from './cuju';
 import { Hero } from './hero';
+import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import type { TaoAsset } from './tao/TaoActor';
 import { stepHorde, type Mob } from './horde';
@@ -63,6 +64,7 @@ export class Game {
   private readonly fox: Enemy;
   private readonly mobs: Enemy[] = [];
   private readonly corpses: Corpses;
+  private readonly fx: FxLayer;
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
   private readonly balls: BallView[] = [];
@@ -85,6 +87,8 @@ export class Game {
     this.world.addChild(this.heroShadow, this.hero.view);
     this.cujuTex = art.cuju;
     this.corpses = new Corpses(this.world);
+    this.fx = new FxLayer(app.renderer);
+    this.world.addChild(this.fx.view);
     const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number] };
     this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
     const jiangshi = { sheet: art.jiangshi, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number] };
@@ -149,6 +153,7 @@ export class Game {
     const foxRunning = Math.hypot(fp.x - hx, fp.y - hy) > FOX_STOP + 5;
     this.fox.view.update(dt, fp.x, fp.y, hx - fp.x, foxRunning ? 1 : 0.35);
     this.corpses.update(dt);
+    this.fx.update(dt);
 
     this.combat(dt);
 
@@ -175,7 +180,10 @@ export class Game {
     for (let i = this.balls.length - 1; i >= 0; i--) {
       const b = this.balls[i];
       const hit = stepBall(b.ball, this.targets, dt, BALL);
-      if (hit >= 0) this.knock(hit);
+      if (hit >= 0) {
+        this.fx.hit(b.ball.x, b.ball.y - BALL_LIFT);
+        this.knock(hit);
+      }
       if (!b.ball.alive) {
         b.sprite.destroy();
         b.shadow.destroy();
@@ -223,6 +231,7 @@ export class Game {
       p.y += ((p.y - hy) / d) * FOX_KNOCKBACK;
     } else {
       this.corpses.spawn(this.mobs[i].view, p.x - hx, p.y - hy);
+      this.fx.puff(p.x, p.y);
       Object.assign(p, ringPoint(hx, hy));
     }
   }

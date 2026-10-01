@@ -22,7 +22,7 @@ export interface MobLook {
 
 export function sliceSheet(meta: SheetMeta, sheet: Texture): MobSheet {
   const textures: Texture[] = [];
-  for (let i = 0; i < meta.frames; i++) {
+  for (let i = 0; i < meta.flash + meta.frames; i++) {
     const x = (i % meta.cols) * meta.frameW;
     const y = Math.floor(i / meta.cols) * meta.frameH;
     textures.push(new Texture({ source: sheet.source, frame: new Rectangle(x, y, meta.frameW, meta.frameH) }));
@@ -32,6 +32,7 @@ export function sliceSheet(meta: SheetMeta, sheet: Texture): MobSheet {
 
 const SHADOW_ALPHA = 0.3;
 const SQUASH_TIME = 0.15;
+const FLASH_TIME = 0.09;
 /** Shadow drawn under every standing figure; zIndex keeps them below all sprites. */
 const SHADOW_Z = -1e6;
 
@@ -53,7 +54,9 @@ export class MobView {
   private readonly phase = Math.random();
   private time = 0;
   private squash = 0;
+  private flash = 0;
   private flip = 1;
+  private frame = 0;
 
   constructor(
     private readonly look: MobLook,
@@ -68,17 +71,25 @@ export class MobView {
     layer.addChild(this.shadow, this.sprite);
   }
 
-  /** A hit that does not kill: a short squash. */
+  /** A hit that does not kill: a white flash and a short squash. */
   flinch(): void {
     this.squash = SQUASH_TIME;
+    this.flash = FLASH_TIME;
+  }
+
+  /** The current frame, plain or as its white flash copy. */
+  frameTexture(white: boolean): Texture {
+    const { meta, textures } = this.look.sheet;
+    return textures[this.frame + (white ? meta.flash : 0)];
   }
 
   /** `speed` scales the cycle, e.g. slower while standing. `faceX` is the side to look at. */
   update(dt: number, x: number, y: number, faceX: number, speed = 1): void {
     const { meta, textures } = this.look.sheet;
     this.time += dt * speed;
-    const f = frameAt(meta, this.time, this.phase);
-    this.sprite.texture = textures[f];
+    const f = (this.frame = frameAt(meta, this.time, this.phase));
+    this.flash = Math.max(0, this.flash - dt);
+    this.sprite.texture = textures[f + (this.flash > 0 ? meta.flash : 0)];
     if (faceX !== 0) this.flip = (faceX < 0) === this.look.facesLeft ? 1 : -1;
     let sx = this.scale;
     let sy = this.scale;
@@ -100,22 +111,22 @@ export class MobView {
 
 /** Knocked-down bodies, each a copy of the mob's current frame. */
 export class Corpses {
-  private readonly live: { c: Corpse; sprite: Sprite }[] = [];
+  private readonly live: { c: Corpse; sprite: Sprite; plain: Texture }[] = [];
 
   constructor(private readonly layer: Container) {}
 
   spawn(from: MobView, dirX: number, dirY: number): void {
-    const sprite = new Sprite(from.sprite.texture);
+    const sprite = new Sprite(from.frameTexture(true));
     sprite.anchor.copyFrom(from.sprite.anchor);
     sprite.scale.copyFrom(from.sprite.scale);
     this.layer.addChild(sprite);
     const { x, y } = from.sprite.position;
-    this.live.push({ c: knockDown(x, y, dirX, dirY, 380), sprite });
+    this.live.push({ c: knockDown(x, y, dirX, dirY, 380), sprite, plain: from.frameTexture(false) });
   }
 
   update(dt: number): void {
     for (let i = this.live.length - 1; i >= 0; i--) {
-      const { c, sprite } = this.live[i];
+      const { c, sprite, plain } = this.live[i];
       if (!stepCorpse(c, dt)) {
         sprite.destroy();
         this.live.splice(i, 1);
@@ -123,6 +134,7 @@ export class Corpses {
       }
       sprite.position.set(c.x, c.y - c.z);
       sprite.rotation = c.tilt;
+      if (c.age > FLASH_TIME) sprite.texture = plain;
       sprite.alpha = corpseAlpha(c);
       sprite.zIndex = c.y;
     }
