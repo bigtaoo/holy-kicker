@@ -1,4 +1,4 @@
-import { Application, Container, Graphics, Text, TilingSprite, type Texture } from 'pixi.js';
+import { Application, BlurFilter, Container, Graphics, Text, TilingSprite, type Texture } from 'pixi.js';
 import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
@@ -8,6 +8,8 @@ import { DamageLayer } from './damageView';
 import { FxLayer } from './fxView';
 import { Corpses, MobView, type MobSheet } from './mobView';
 import { fakeMobTypes } from './mobTypes';
+import { AuraStack } from './aura';
+import { SpellCaster } from './spellCaster';
 import type { TaoAsset } from './tao/TaoActor';
 import { SpatialGrid } from './grid';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
@@ -83,6 +85,8 @@ export class Game {
     this.fx.hit(x, y - BALL_LIFT);
     this.knock(target);
   };
+  private readonly caster: SpellCaster;
+  private readonly aura: AuraStack;
   private kickTimer = 0;
   private hurtTimer = 0;
   private vp: Viewport = computeViewport(1, 1);
@@ -118,6 +122,10 @@ export class Game {
     }
     this.mobPos.push(...this.mobs.map((m) => m.pos));
     this.targets.push(...this.mobPos, this.fox.pos);
+    if (scene.fxBudget > 0) this.fx.pool.budget = scene.fxBudget * 1080 * 1920;
+    if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
+    this.caster = new SpellCaster(app.renderer, this.world, this.fx.pool, scene.spells, scene.rate, scene.ringFx, this.targets, (i) => this.knock(i));
+    this.aura = new AuraStack(scene.stack);
 
     this.root.addChild(this.world, this.label);
     this.root.mask = this.playMask;
@@ -180,7 +188,9 @@ export class Game {
       this.foxRing.zIndex = HERO_TOP_Z - 2;
     }
     this.corpses.update(dt);
-    this.fx.update(dt);
+    this.caster.update(dt, hx, hy);
+    this.aura.update(dt, hx, hy, this.fx.pool);
+    this.fx.update(dt, this.aura.parts);
     this.damage.update(dt);
 
     this.combat(dt);

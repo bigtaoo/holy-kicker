@@ -40,3 +40,16 @@ describe('FxPool', () => {
     expect(fxAlpha(p)).toBeLessThan(p.alpha * 0.3);
   });
 });
+
+describe('fill budget', () => {
+  it('tracks fill and drops optional particles over budget', () => {
+    const pool = new FxPool(1000, () => 0.5, 20000);
+    pool.hit(0, 0);
+    expect(pool.fill).toBeGreaterThan(0);
+    for (let i = 0; i < 20; i++) pool.puff(0, 0);
+    expect(pool.fill).toBeLessThan(20000 + 110 * 110);
+    expect(pool.dropped).toBeGreaterThan(0);
+    pool.step(5);
+    expect(pool.fill).toBe(0);
+  });
+});

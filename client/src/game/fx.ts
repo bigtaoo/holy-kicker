@@ -1,7 +1,13 @@
-// Short-lived effect particles: hit sparks and death puffs. Pure simulation in a flat
-// pool (swap-remove, spent particles recycled), drawn by fxView.ts.
+// Short-lived effect particles: hit sparks, death puffs and spell shapes. Pure simulation in
+// a flat pool (swap-remove, spent particles recycled), drawn by fxView.ts.
+//
+// The pool also keeps a running fill estimate: the area every live particle's quad covers at
+// its largest, in world units squared. The GPU shades every pixel of a quad, transparent or
+// not, so this is what effects cost in fill rate. Optional particles (smoke, sparks) are
+// dropped once the fill passes the budget, so a big spell that kills a hundred mobs at once
+// cannot flood the screen with overdraw.
 
-export type FxShape = 'spark' | 'puff' | 'ring';
+export type FxShape = 'spark' | 'puff' | 'ring' | 'glow' | 'band';
 
 export interface FxParticle {
   shape: FxShape;
@@ -22,22 +28,51 @@ export interface FxParticle {
   color: number;
   /** Peak opacity. */
   alpha: number;
+  /** Height over width; size is the width. */
+  aspect: number;
+  /** Fill this particle adds to the pool's estimate. */
+  cost: number;
+}
+
+export type FxSpec = Omit<FxParticle, 'age' | 'aspect' | 'cost'> & { aspect?: number };
+
+/** Fill a particle's quad covers at its largest, world units squared. */
+export function fxCost(p: FxSpec): number {
+  const s = Math.max(p.size0, p.size1);
+  return s * s * (p.aspect ?? 1);
 }
 
 export class FxPool {
   readonly live: FxParticle[] = [];
   private readonly free: FxParticle[] = [];
+  /** Sum of the live particles' costs. */
+  fill = 0;
+  /** Optional particles emitted and dropped over the budget, for tuning. */
+  dropped = 0;
 
   constructor(
     readonly max: number,
     private readonly rand: () => number = Math.random,
+    /** Fill above which optional particles are dropped, world units squared. */
+    public budget = Infinity,
   ) {}
 
-  emit(p: Omit<FxParticle, 'age'>): void {
-    if (this.live.length >= this.max) return;
+  /** False if the particle was not emitted: the pool is full, or it is optional and over budget. */
+  emit(p: FxSpec, optional = false): boolean {
+    if (this.live.length >= this.max) return false;
+    const cost = fxCost(p);
+    if (optional && this.fill + cost > this.budget) {
+      this.dropped++;
+      return false;
+    }
     const q = this.free.pop() ?? ({} as FxParticle);
-    Object.assign(q, p).age = 0;
+    Object.assign(q, p);
+    q.aspect = p.aspect ?? 1;
+    q.cost = cost;
+    q.age = 0;
+    this.fill += cost;
     this.live.push(q);
+    return true;
   }
 
   /** Impact: a flash ring and sparks flying out from (x, y). */
@@ -51,7 +86,7 @@ export class FxPool {
         shape: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.22 + r() * 0.12,
         size0: 26 + r() * 14, size1: 4, rotation: r() * Math.PI, spin: (r() - 0.5) * 20, drag: 0.02,
         color: i % 3 ? 0xffe27a : 0xffffff, alpha: 1,
-      });
+      }, true);
     }
   }
 
@@ -65,7 +100,7 @@ export class FxPool {
         vx: Math.cos(a) * (60 + r() * 60), vy: -60 - r() * 90, life: 0.45 + r() * 0.25,
         size0: 30 + r() * 15, size1: 70 + r() * 30, rotation: r() * Math.PI, spin: (r() - 0.5) * 2, drag: 0.15,
         color: i % 2 ? 0x8fa6a3 : 0x6f7f8c, alpha: 0.75,
-      });
+      }, true);
     }
   }
 
@@ -75,6 +110,7 @@ export class FxPool {
       const p = live[i];
       p.age += dt;
       if (p.age >= p.life) {
+        this.fill -= p.cost;
         live[i] = live[live.length - 1];
         live.pop();
         this.free.push(p);
@@ -87,6 +123,8 @@ export class FxPool {
       p.y += p.vy * dt;
       p.rotation += p.spin * dt;
     }
+    // no float drift once everything has expired
+    if (live.length === 0) this.fill = 0;
   }
 }
 

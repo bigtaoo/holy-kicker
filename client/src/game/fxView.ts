@@ -1,12 +1,12 @@
 import { Graphics, Particle, ParticleContainer, Rectangle, Texture, type Renderer } from 'pixi.js';
-import { FxPool, fxAlpha, fxSize, type FxShape } from './fx';
+import { FxPool, fxAlpha, fxSize, type FxParticle, type FxShape } from './fx';
 
 // Draws the FxPool through one ParticleContainer: every effect is a tinted particle on a
 // small atlas drawn with Graphics at start-up, so effects need no art files and the whole
 // layer is one draw call.
 
 const CELL = 64;
-const SHAPES: FxShape[] = ['spark', 'puff', 'ring'];
+const SHAPES: FxShape[] = ['spark', 'puff', 'ring', 'glow', 'band'];
 const MAX_PARTICLES = 3000;
 
 /** White shapes side by side, tinted per particle. */
@@ -25,6 +25,11 @@ function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
   for (let i = 6; i >= 1; i--) g.circle(CELL + h, h, (h * 0.95 * i) / 6).fill({ color: 0xffffff, alpha: 0.22 });
   // ring
   g.circle(CELL * 2 + h, h, h * 0.8).stroke({ color: 0xffffff, width: h * 0.22 });
+  // glow: a disc with a solid core and a stepped falloff
+  for (let i = 4; i >= 1; i--) g.circle(CELL * 3 + h, h, (h * 0.97 * i) / 4).fill({ color: 0xffffff, alpha: i === 1 ? 1 : 0.3 });
+  // band: a bar across the whole cell, solid in the middle, so segments join into rings and bolts
+  g.rect(CELL * 4, 0, CELL, CELL).fill({ color: 0xffffff, alpha: 0.35 });
+  g.rect(CELL * 4, CELL * 0.22, CELL, CELL * 0.56).fill({ color: 0xffffff, alpha: 1 });
   const atlas = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, CELL * SHAPES.length, CELL), resolution: 1 });
   g.destroy();
   const out = new Map<FxShape, Texture>();
@@ -49,26 +54,29 @@ export class FxLayer {
     this.view.zIndex = 1e7;
   }
 
-  update(dt: number): void {
+  /** `extra` are long-lived particles owned elsewhere (auras), drawn after the pool's. */
+  update(dt: number, extra: readonly FxParticle[] = []): void {
     this.pool.step(dt);
     const live = this.pool.live;
-    while (this.particles.length < live.length) {
+    const count = live.length + extra.length;
+    while (this.particles.length < count) {
       const p = new Particle({ texture: this.textures.get('spark')!, anchorX: 0.5, anchorY: 0.5 });
       this.particles.push(p);
     }
-    if (this.view.particleChildren.length !== live.length) {
+    if (this.view.particleChildren.length !== count) {
       this.view.particleChildren.length = 0;
-      for (let i = 0; i < live.length; i++) this.view.particleChildren.push(this.particles[i]);
+      for (let i = 0; i < count; i++) this.view.particleChildren.push(this.particles[i]);
       this.view.update();
     }
-    for (let i = 0; i < live.length; i++) {
-      const f = live[i];
+    for (let i = 0; i < count; i++) {
+      const f = i < live.length ? live[i] : extra[i - live.length];
       const p = this.particles[i];
       p.texture = this.textures.get(f.shape)!;
       p.x = f.x;
       p.y = f.y;
       p.rotation = f.rotation;
-      p.scaleX = p.scaleY = fxSize(f) / CELL;
+      p.scaleX = fxSize(f) / CELL;
+      p.scaleY = p.scaleX * f.aspect;
       p.tint = f.color;
       p.alpha = fxAlpha(f);
     }
