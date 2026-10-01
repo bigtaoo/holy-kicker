@@ -3,6 +3,7 @@ import type { Platform } from '../platform/types';
 import { DragStick } from './dragStick';
 import { launch, nearest, stepBall, type Ball, type BallParams } from './cuju';
 import { Hero } from './hero';
+import { Corpses, MobView, type MobSheet } from './mobView';
 import type { TaoAsset } from './tao/TaoActor';
 import { stepHorde, type Mob } from './horde';
 import { computeViewport, type Viewport } from './viewport';
@@ -13,8 +14,8 @@ import { computeViewport, type Viewport } from './viewport';
 
 export interface Art {
   hero: TaoAsset;
-  jiangshi: Texture;
-  fox: Texture;
+  jiangshi: MobSheet;
+  fox: MobSheet;
   cuju: Texture;
 }
 
@@ -34,10 +35,13 @@ const BALL_SIZE = 48;
 const BALL_LIFT = 45; // drawn this far above its ground point
 const BALL: BallParams = { speed: 1300, hitRadius: 55, seekRange: 600, maxHits: 3, maxTravel: 900 };
 const FOX_KNOCKBACK = 160;
+const FOX_STOP = 220;
+const MOB_HEIGHT = 80;
+const FOX_HEIGHT = 130;
 
-interface MobView {
+interface Enemy {
   pos: Mob;
-  sprite: Sprite;
+  view: MobView;
 }
 
 interface BallView {
@@ -55,8 +59,10 @@ export class Game {
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
   private readonly hero: Hero;
   private readonly heroPos = { x: 0, y: 0 };
-  private readonly fox: MobView;
-  private readonly mobs: MobView[] = [];
+  private readonly heroShadow = new Graphics().ellipse(0, 0, 34, 11).fill({ color: 0x000000, alpha: 0.3 });
+  private readonly fox: Enemy;
+  private readonly mobs: Enemy[] = [];
+  private readonly corpses: Corpses;
   /** Mob positions then the fox, the order ball hits are reported in. */
   private readonly targets: Mob[] = [];
   private readonly balls: BallView[] = [];
@@ -75,11 +81,15 @@ export class Game {
     this.world.sortableChildren = true;
     this.world.addChild(makeGround());
     this.hero = new Hero(art.hero, HERO_HEIGHT);
-    this.world.addChild(this.hero.view);
+    this.heroShadow.zIndex = -1e6;
+    this.world.addChild(this.heroShadow, this.hero.view);
     this.cujuTex = art.cuju;
-    this.fox = { pos: { x: 300, y: -900 }, sprite: this.addSprite(art.fox) };
+    this.corpses = new Corpses(this.world);
+    const fox = { sheet: art.fox, height: FOX_HEIGHT, facesLeft: false, shadow: [62, 15] as [number, number] };
+    this.fox = { pos: { x: 300, y: -900 }, view: new MobView(fox, this.world) };
+    const jiangshi = { sheet: art.jiangshi, height: MOB_HEIGHT, facesLeft: true, shadow: [27, 9] as [number, number] };
     for (let i = 0; i < MOB_COUNT; i++) {
-      this.mobs.push({ pos: ringPoint(0, 0), sprite: this.addSprite(art.jiangshi) });
+      this.mobs.push({ pos: ringPoint(0, 0), view: new MobView(jiangshi, this.world) });
     }
     this.targets.push(...this.mobs.map((m) => m.pos), this.fox.pos);
 
@@ -89,13 +99,6 @@ export class Game {
 
     platform.bindStick(app, this.stick);
     app.ticker.add((t) => this.tick(Math.min(t.deltaMS / 1000, 0.05)));
-  }
-
-  private addSprite(tex: Texture): Sprite {
-    const s = new Sprite(tex);
-    s.anchor.set(0.5, 1);
-    this.world.addChild(s);
-    return s;
   }
 
   /** Re-fit to the screen whenever its size changes (resize, rotation, portal iframe). */
@@ -130,6 +133,7 @@ export class Game {
     this.heroPos.y += my * HERO_SPEED * dt;
     if (this.hero.update(dt, mx, len > 0.1)) this.strike();
     place(this.hero.view, this.heroPos);
+    this.heroShadow.position.set(this.heroPos.x, this.heroPos.y);
     this.hero.view.alpha = this.hurtTimer > HURT_COOLDOWN - 0.4 && Math.floor(this.hurtTimer * 20) % 2 ? 0.5 : 1;
 
     const hx = this.heroPos.x;
@@ -138,12 +142,13 @@ export class Game {
     stepHorde(positions, hx, hy, dt, { speed: 110, stopDist: 70, sepRadius: 60 });
     for (const m of this.mobs) {
       if (Math.hypot(m.pos.x - hx, m.pos.y - hy) > RESPAWN_DIST) Object.assign(m.pos, ringPoint(hx, hy));
-      place(m.sprite, m.pos);
+      m.view.update(dt, m.pos.x, m.pos.y, hx - m.pos.x);
     }
-    stepHorde([this.fox.pos], hx, hy, dt, { speed: 160, stopDist: 220, sepRadius: 0 });
-    // The fox art faces right.
-    this.fox.sprite.scale.x = hx < this.fox.pos.x ? -1 : 1;
-    place(this.fox.sprite, this.fox.pos);
+    const fp = this.fox.pos;
+    stepHorde([fp], hx, hy, dt, { speed: 160, stopDist: FOX_STOP, sepRadius: 0 });
+    const foxRunning = Math.hypot(fp.x - hx, fp.y - hy) > FOX_STOP + 5;
+    this.fox.view.update(dt, fp.x, fp.y, hx - fp.x, foxRunning ? 1 : 0.35);
+    this.corpses.update(dt);
 
     this.combat(dt);
 
@@ -212,10 +217,12 @@ export class Game {
     const { x: hx, y: hy } = this.heroPos;
     const p = this.targets[i];
     if (p === this.fox.pos) {
+      this.fox.view.flinch();
       const d = Math.hypot(p.x - hx, p.y - hy) || 1;
       p.x += ((p.x - hx) / d) * FOX_KNOCKBACK;
       p.y += ((p.y - hy) / d) * FOX_KNOCKBACK;
     } else {
+      this.corpses.spawn(this.mobs[i].view, p.x - hx, p.y - hy);
       Object.assign(p, ringPoint(hx, hy));
     }
   }

@@ -1,0 +1,33 @@
+{
+  "source": "../style_r3/enemy_foxspirit.jpg",
+  "out": "../../../client/public/art/mobs/fox",
+  "frames": 10,
+  "fps": 18,
+  "height": 220,
+  "ground": [430, 580],
+  "pad": [30, 50, 30, 10],
+  "drop": [{"below": 490, "hsv": [[[112, 22, 105], [142, 255, 255]], [[0, 0, 190], [179, 40, 255]]]}],
+  "body": {
+    "dy": {"keys": [[0, 0], [0.25, -30], [0.5, 0], [0.75, -30]]},
+    "sy": {"keys": [[0, 0.96], [0.25, 1.03], [0.5, 0.96], [0.75, 1.03]]},
+    "sx": {"keys": [[0, 1.03], [0.25, 0.98], [0.5, 1.03], [0.75, 0.98]]}
+  },
+  "deform": [
+    {"type": "wave", "region": {"c": [150, 220], "r": [180, 170], "feather": 0.4}, "root": [290, 340],
+     "dir": [-0.7, -0.7], "length": 300, "wavelength": 320, "amp": 22, "cycles": 1},
+    {"type": "wave", "region": {"c": [130, 410], "r": [170, 110], "feather": 0.4}, "root": [290, 400],
+     "dir": [-1, 0.1], "length": 290, "wavelength": 300, "amp": 20, "cycles": 1},
+    {"type": "wave", "region": {"c": [510, 80], "r": [70, 95], "feather": 0.4}, "root": [515, 160],
+     "dir": [0, -1], "length": 160, "wavelength": 170, "amp": 14, "cycles": 2},
+    {"type": "move", "region": {"c": [710, 220], "r": [80, 75], "feather": 0.3},
+     "dx": {"sin": 10, "cycles": 1}, "dy": {"sin": 12, "cycles": 2, "phase": 0.25}},
+    {"type": "rotate", "region": {"c": [520, 280], "r": [190, 160], "feather": 0.3}, "pivot": [440, 430],
+     "angle": {"sin": 2.5, "cycles": 2, "phase": 0.1}},
+    {"type": "rotate", "region": {"c": [430, 525], "r": [55, 75], "feather": 0.35}, "pivot": [440, 450],
+     "angle": {"sin": 14, "cycles": 1}},
+    {"type": "rotate", "region": {"c": [595, 505], "r": [55, 65], "feather": 0.35}, "pivot": [575, 450],
+     "angle": {"sin": 14, "cycles": 1, "phase": 0.5}},
+    {"type": "rotate", "region": {"c": [255, 510], "r": [55, 60], "feather": 0.35}, "pivot": [265, 450],
+     "angle": {"sin": 12, "cycles": 1, "phase": 0.25}}
+  ]
+}
