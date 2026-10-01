@@ -27,7 +27,7 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 
 ## Rules (enforced by `determinismLint.test.ts` and `Engine.test.ts`)
 
-- **Integers only in the state.** Positions in FP (`FP = 100` per world unit), times in
+- **Integers only in the state.** Positions in FP (`FP = 1000` per world unit), times in
   ticks. Divide with `Math.trunc`. `hashState` throws on a non-integer.
 - **No transcendental maths**: no `Math.sin/cos/atan2/hypot/sqrt/exp/pow`, no `**`. Use
   `sinB/cosB/atan2B` (table-based, `math/trig.ts`) and `isqrt`/`dist` (`math/fixed.ts`).

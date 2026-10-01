@@ -121,7 +121,7 @@ describe('boss', () => {
     s.boss.phase = 'down';
     expect(run(s, BOSS.respawnAfter)).toEqual(['bossBack']);
     expect(s.boss.hp).toBe(BOSS.hp);
-    expect(Math.abs(Math.hypot(s.boss.x, s.boss.y) - BOSS.respawnDist)).toBeLessThan(300);
+    expect(Math.abs(Math.hypot(s.boss.x, s.boss.y) - BOSS.respawnDist)).toBeLessThan(u(3));
   });
 });
 

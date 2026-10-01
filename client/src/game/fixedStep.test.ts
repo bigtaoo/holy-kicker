@@ -15,7 +15,7 @@ describe('FixedStep', () => {
     const f = new FixedStep();
     expect(f.advance(TICK_MS * 1.5)).toBe(1);
     expect(f.alpha).toBeCloseTo(0.5);
-    expect(lerpX({ x: 200, y: 0, px: 100, py: 0 }, f.alpha)).toBeCloseTo(1.5);
+    expect(lerpX({ x: 2000, y: 0, px: 1000, py: 0 }, f.alpha)).toBeCloseTo(1.5);
   });
 
   it('drops a long backlog instead of fast-forwarding through it', () => {

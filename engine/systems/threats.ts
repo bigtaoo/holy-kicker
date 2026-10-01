@@ -1,6 +1,6 @@
 import { THREATS } from '../config';
 import type { SimEvent } from '../events';
-import { dist, dist2 } from '../math/fixed';
+import { dist, dist2, FP } from '../math/fixed';
 import { atan2B, cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { SimState } from '../state';
 import { nearestPlayer } from './horde';
@@ -61,7 +61,7 @@ function fire(s: SimState): void {
     const dx = t.x - m.x;
     const dy = t.y - m.y;
     const d = dist(dx, dy);
-    if (d > p.range || d < 100) continue;
+    if (d > p.range || d < FP) continue;
     const aim = atan2B(dy, dx);
     for (let i = 0; i < p.fan; i++) {
       const a = aim + Math.trunc(((2 * i - (p.fan - 1)) * p.fanStep) / 2);

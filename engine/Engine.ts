@@ -17,7 +17,7 @@ import { threatSystem } from './systems/threats';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 1;
+export const ENGINE_VERSION = 2;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops',

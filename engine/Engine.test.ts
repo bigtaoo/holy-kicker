@@ -79,8 +79,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hash for this engine version', () => {
-    // Recorded 2026-10-01 for ENGINE_VERSION 1. A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(1);
+    // Recorded 2026-10-01 for ENGINE_VERSION 2 (FP = 1000). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(2);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
   });
 
@@ -89,4 +89,4 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 2289511574;
+const GOLDEN = 1088296701;

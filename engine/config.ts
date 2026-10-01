@@ -1,4 +1,4 @@
-import { perTick, ticks, toFp } from './math/fixed';
+import { FP, perTick, TICK_RATE, ticks, toFp } from './math/fixed';
 import { degToBrad } from './math/trig';
 
 // Run configuration (what a match is set up with, part of a replay) and the tuning numbers,
@@ -122,7 +122,7 @@ export const DROPS = {
   tiers: [10, 50],
   /** A flying gem first hops away from the hero, then accelerates past his top speed. */
   hop: perTick(380),
-  accel: Math.round((4200 * 100) / (30 * 30)),
+  accel: Math.round((4200 * FP) / (TICK_RATE * TICK_RATE)),
   maxSpeed: perTick(2000),
   /** Share of the velocity turned toward the hero per tick, per mille. */
   turn: 333,

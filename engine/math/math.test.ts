@@ -16,8 +16,8 @@ describe('fixed', () => {
   });
 
   it('converts configuration units', () => {
-    expect(toFp(1.5)).toBe(150);
-    expect(perTick(420)).toBe(1400);
+    expect(toFp(1.5)).toBe(1500);
+    expect(perTick(420)).toBe(14000);
     expect(ticks(0.9)).toBe(27);
     expect(muldiv(-7, 3, 2)).toBe(-10);
   });

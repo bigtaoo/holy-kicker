@@ -10,7 +10,7 @@
 /** Simulation steps per second. */
 export const TICK_RATE = 30;
 /** Integer units per world unit (a hero is 120 world units tall): 0.01 unit precision. */
-export const FP = 100;
+export const FP = 1000;
 
 /** World units to FP, for configuration constants only (rounded once, at load). */
 export function toFp(units: number): number {
