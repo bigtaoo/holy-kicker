@@ -58,6 +58,27 @@ wave reached is recorded.
   failed push still pays.
 - Clearing a chapter unlocks the next. Hard mode comes later.
 - **Launch with 5 chapters.** Each needs a ground, 3–4 mob types, 1–2 elites and a boss.
+
+### Difficulty
+
+Measured with the balance bots (`npm run balance`, engine/README.md), without revives and
+without meta upgrades. Chapter 1 targets and the result of the first tuning pass (20 seeds,
+2026-10-01):
+
+| Player | Target | Measured |
+|---|---|---|
+| Skilled (dodges at once) | wins almost always, real danger only at the boss | 18/20 won |
+| Casual (reacts in 0.4 s) | about half win; deaths spread over waves 25–50 | 10/20 won, deaths at 25–50 |
+| Standing still | falls at the mid-boss | median wave 25, never wins |
+| Elites / mid-boss / boss | 15–40 s / 30–60 s / 40–80 s | about the same |
+| Level at the end | about 30 | 30 |
+
+- Mob health grows with the wave, faster late (10 on wave 1, 34 on wave 25, 96 on wave 50), so a
+  finished build still meets a threat; contact damage grows 1 per 10 waves.
+- The relic aims at the boss, then the elite, before any mob: the elite is the relic's job.
+- The first ~10 waves rarely hurt: they are the tutorial. Later chapters scale from here, and
+  meta upgrades and revives make the target easier, so a first clear of chapter 1 is a few
+  tries for a new player.
 - Relics, spells, passives, shrines, enemies and chapter themes: see [content.md](content.md).
 
 ## Meta progression

@@ -67,7 +67,7 @@ export const HERO = {
 export const HURT = {
   mob: 6,
   /** Mob contact hurts this much more every 10 waves. */
-  mobPerTenWaves: 2,
+  mobPerTenWaves: 1,
   elite: 12,
   boss: 15,
   slam: 25,
@@ -81,6 +81,13 @@ export const HORDE = {
   respawnDist: toFp(2200),
   ringMin: toFp(900),
   ringMax: toFp(1400),
+  /**
+   * Mob health on wave w: hp + (hpStep * n + hpSquare * n^2) / 1000 with n = w - 1, steeper
+   * late so a finished build still meets a threat (the sandbox horde dies in one hit).
+   */
+  hp: 10,
+  hpStep: 300,
+  hpSquare: 30,
 };
 
 export const ELITE = {
@@ -102,7 +109,7 @@ export const WAVES = {
   eliteEvery: 10,
   /** The mid-boss wave; the last wave always has the chapter boss. Boss waves last until it falls. */
   midBoss: 25,
-  midBossHpPercent: 60,
+  midBossHpPercent: 40,
 };
 
 export const BALL = {
@@ -130,7 +137,7 @@ export const BOSS = {
   windup: ticks(1.0),
   recover: ticks(0.6),
   cooldown: ticks(2.5),
-  hp: 1500,
+  hp: 3000,
   respawnAfter: ticks(3),
   respawnDist: toFp(1000),
 };

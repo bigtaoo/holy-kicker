@@ -294,6 +294,7 @@ export class Game {
             this.fox?.flinch();
             this.damage.spawn(x, y - FOX_HEIGHT - 10, e.value, e.crit, e.index);
           } else {
+            this.mobs[e.index]?.flinch();
             this.damage.spawn(x, y - MOB_HEIGHT - 10, e.value, e.crit);
           }
           break;

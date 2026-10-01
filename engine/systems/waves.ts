@@ -1,6 +1,6 @@
-import { BOSS, WAVES } from '../config';
+import { BOSS, HORDE, WAVES } from '../config';
 import type { SimEvent } from '../events';
-import { body, newElite, type SimState } from '../state';
+import { body, newElite, newMob, type SimState } from '../state';
 import { newBoss } from './boss';
 import { ringPoint } from './horde';
 
@@ -11,6 +11,12 @@ import { ringPoint } from './horde';
 
 export function hordeSize(wave: number): number {
   return Math.min(WAVES.hordeMax, WAVES.hordeBase + WAVES.hordeStep * (wave - 1));
+}
+
+/** Health of a mob that joins or comes back on wave `wave`; the sandbox (wave 0) horde has 1. */
+export function mobHp(wave: number): number {
+  const n = wave - 1;
+  return wave > 0 ? HORDE.hp + Math.trunc((HORDE.hpStep * n + HORDE.hpSquare * n * n) / 1000) : 1;
 }
 
 export function isBossWave(wave: number, last: number): boolean {
@@ -29,7 +35,7 @@ export function beginWave(s: SimState, wave: number): void {
   s.waveT = 0;
   // newcomers come from just outside the view, like respawns
   while (s.mobs.length < hordeSize(wave)) {
-    const m = body(0, 0);
+    const m = newMob(0, 0, mobHp(wave));
     ringPoint(s.ai, p.x, p.y, m);
     s.mobs.push(m);
   }

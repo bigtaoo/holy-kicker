@@ -2,12 +2,13 @@ import { describe, expect, it } from 'vitest';
 import { BOSS, DEFAULT_RUN, DROPS, OVERFLOW_TIER, THREATS, type RunConfig } from '../config';
 import type { SimEvent } from '../events';
 import { toFp } from '../math/fixed';
-import { body, createState, newElite, newPlayer, type SimState } from '../state';
+import { body, createState, newMob, newElite, newPlayer, type SimState } from '../state';
 import { bossSystem, newBoss } from './boss';
-import { ballSystem, launchBall, nearestTarget } from './combat';
+import { ballSystem, damage, kickTarget, launchBall, nearestTarget } from './combat';
 import { attractAll, dropGem, dropSystem, tierOf } from './drops';
 import { stepHorde } from './horde';
 import { threatSystem } from './threats';
+import { mobHp } from './waves';
 
 /** A state with one player at the origin and nothing else. */
 function bare(over: Partial<RunConfig> = {}): SimState {
@@ -54,7 +55,7 @@ describe('horde', () => {
 describe('balls', () => {
   it('hits, ricochets to the next target and stops after its bounces', () => {
     const s = bare();
-    s.mobs.push(body(u(300), 0), body(u(300), u(400)), body(u(300), u(800)), body(u(300), u(1200)));
+    s.mobs.push(newMob(u(300), 0), newMob(u(300), u(400)), newMob(u(300), u(800)), newMob(u(300), u(1200)));
     const events: SimEvent[] = [];
     launchBall(s, 0, 0, 0, u(300), 0, 3, 100);
     for (let t = 0; t < 120 && s.balls.length > 0; t++) ballSystem(s, events);
@@ -73,12 +74,38 @@ describe('balls', () => {
 
   it('numbers targets mobs, then the elite, then the boss', () => {
     const s = bare();
-    s.mobs.push(body(u(500), 0));
+    s.mobs.push(newMob(u(500), 0));
     s.elite = newElite(u(50), 0);
     s.boss = newBoss(u(20), 0);
     expect(nearestTarget(s, 0, 0, u(1000))).toBe(2);
     s.boss.phase = 'down';
     expect(nearestTarget(s, 0, 0, u(1000))).toBe(1);
+  });
+
+  it('kicks at the boss, then the elite, before a nearer mob', () => {
+    const s = bare();
+    const p = s.players[0];
+    s.mobs.push(newMob(u(50), 0));
+    s.elite = newElite(u(400), 0);
+    s.boss = newBoss(u(600), 0);
+    expect(kickTarget(s, p, u(650))).toBe(2);
+    expect(kickTarget(s, p, u(500))).toBe(1);
+    s.elite = null;
+    expect(kickTarget(s, p, u(500))).toBe(0);
+  });
+
+  it('wears a mob down, and one that falls comes back with the wave health', () => {
+    const s = bare({ waves: 50 });
+    s.wave = 20;
+    s.mobs.push(newMob(u(100), 0, 100));
+    const events: SimEvent[] = [];
+    damage(s, events, 0, s.players[0], null, 100);
+    expect(s.mobs[0].hp).toBeLessThan(100);
+    expect(s.mobs[0].hp).toBeGreaterThan(0);
+    expect(events.map((e) => e.type)).toEqual(['hit']);
+    while (!events.some((e) => e.type === 'mobDown')) damage(s, events, 0, s.players[0], null, 100);
+    expect(s.mobs[0].hp).toBe(mobHp(20));
+    expect(s.gems.length).toBe(1);
   });
 });
 
@@ -169,7 +196,7 @@ describe('drops', () => {
 describe('threats', () => {
   it('fires a fan from a mob in range; the middle bullet hits a standing player', () => {
     const s = bare({ threats: true });
-    s.mobs.push(body(u(400), 0));
+    s.mobs.push(newMob(u(400), 0));
     s.zoneT = 1e6;
     const hurt: number[] = [];
     threatSystem(s, [], (o) => hurt.push(o));

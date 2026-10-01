@@ -5,7 +5,7 @@ import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
 import { TICK_RATE } from '../math/fixed';
-import { body, newElite } from '../state';
+import { newElite, newMob } from '../state';
 import { cardPool, stat } from './build';
 
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, waves: 50 };
@@ -118,7 +118,7 @@ describe('build effects', () => {
     const s = e.state;
     const p = s.players[0];
     p.relic = MAX_LEVEL;
-    for (let i = 0; i < 6; i++) s.mobs.push(body(p.x + 300_000, p.y + i * 300_000));
+    for (let i = 0; i < 6; i++) s.mobs.push(newMob(p.x + 300_000, p.y + i * 300_000));
     let hits = 0;
     for (let i = 0; i < 90; i++) {
       const ev = e.step([cmd(e)]);
@@ -135,7 +135,7 @@ describe('build effects', () => {
     const s = e.state;
     const p = s.players[0];
     p.kickCd = 1e6;
-    for (let i = 0; i < 8; i++) s.mobs.push(body(p.x + 400_000 + i * 20_000, p.y));
+    for (let i = 0; i < 8; i++) s.mobs.push(newMob(p.x + 400_000 + i * 20_000, p.y));
     p.spells = [{ id: 'bolt', level: 1, cd: 1 }, { id: 'palm', level: 1, cd: 1 }, { id: 'incense', level: 1, cd: 1 }];
     const ev = e.step([cmd(e)]);
     const casts = ev.filter((v) => v.type === 'cast').map((v) => v.type === 'cast' && v.kind);
@@ -168,7 +168,7 @@ describe('build effects', () => {
     for (let i = 0; i < 30; i++) e.step([cmd(e)]);
     expect(p.spells[0].cd).toBe(SPELL_LEVELS.bell[0].cooldown);
     p.hurtCd = 0;
-    s.mobs.push(body(p.x, p.y), body(p.x + 200_000, p.y));
+    s.mobs.push(newMob(p.x, p.y), newMob(p.x + 200_000, p.y));
     const types = e.step([cmd(e)]).map((v) => v.type);
     expect(types).toContain('bellBreak');
     expect(types).not.toContain('hurt');
@@ -182,7 +182,7 @@ describe('build effects', () => {
     const s = e.state;
     const p = s.players[0];
     p.kickCd = 1e6;
-    for (let i = 0; i < 5; i++) s.mobs.push(body(p.x + 300_000 + i * 150_000, p.y));
+    for (let i = 0; i < 5; i++) s.mobs.push(newMob(p.x + 300_000 + i * 150_000, p.y));
     s.elite = newElite(p.x + 1_200_000, p.y);
     s.elite.hp = s.elite.maxHp = 1e6;
     p.spells = [{ id: 'cymbal', level: 1, cd: 1 }];

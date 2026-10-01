@@ -20,8 +20,9 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 - `RunConfig.waves` > 0 runs a chapter (`systems/waves.ts`): the horde grows each wave, elites
   and bosses arrive on their waves, the hero has health and can go down, and `state.outcome`
   turns `won` (the last boss fell) or `lost` (every hero down). A `revive` command brings a
-  downed hero back. `waves: 0` is the sandbox for stress tests: fixed horde, no death, no
-  levelling.
+  downed hero back. Mobs have health that grows with the wave (`mobHp`) and come back with the
+  current wave's health when they fall. `waves: 0` is the sandbox for stress tests: fixed
+  horde dying in one hit, no death, no levelling.
 - The build (`content.ts`, `systems/build.ts`): experience fills levels; each level-up deals
   three cards (relic level, a spell, a passive) into `player.offer` and the sim stands still
   until a `pick` command takes one. Passives are a modifier stack read through `stat()`.
@@ -50,6 +51,15 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
   record the new value on purpose.
 
 Tuning numbers sit in `config.ts` (the build's in `content.ts`), converted once at load into FP per tick and whole ticks.
+
+## Balance bots
+
+`bot/` holds bots that play whole chapters through ordinary commands: `skilled` steps to the
+open side ten times a second, `casual` decides only every 0.4 s, `still` never moves.
+`npm run balance [-- runs [style ...]]` (from the repo root) plays seeds 1..runs per style
+and prints, per run, the wave reached, level, health at every tenth wave, how long each elite
+and boss lived and the final build. Run it after any tuning change; the targets are in
+`docs/design.md` ("Difficulty").
 
 ## Not done yet
 

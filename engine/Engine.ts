@@ -4,7 +4,7 @@ import { SpatialGrid } from './grid';
 import { LocalInputSource, type InputSource, type PlayerCommand } from './input';
 import { toFp } from './math/fixed';
 import { cosB, sinB, TRIG_ONE } from './math/trig';
-import { body, createState, newElite, newPlayer, type SimState } from './state';
+import { createState, newElite, newMob, newPlayer, type SimState } from './state';
 import { bossSystem, newBoss } from './systems/boss';
 import { buildSystem, choosing } from './systems/build';
 import { ballSystem } from './systems/combat';
@@ -19,7 +19,7 @@ import { beginWave, waveSystem } from './systems/waves';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 5;
+export const ENGINE_VERSION = 6;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
@@ -92,7 +92,7 @@ function setup(s: SimState): void {
   if (c.waves > 0) return beginWave(s, 1);
   const p = s.players[0];
   for (let i = 0; i < c.mobs; i++) {
-    const m = body(0, 0);
+    const m = newMob(0, 0);
     ringPoint(s.ai, p.x, p.y, m);
     s.mobs.push(m);
   }

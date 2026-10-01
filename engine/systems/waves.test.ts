@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { BOSS, DEFAULT_RUN, ELITE, HERO, HURT, WAVES, type RunConfig } from '../config';
+import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
-import { hordeSize, isBossWave, isEliteWave } from './waves';
+import { hordeSize, isBossWave, isEliteWave, mobHp } from './waves';
 
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, waves: 50 };
 
@@ -11,10 +11,11 @@ function still(e: Engine, extra: Partial<PlayerCommand> = {}): PlayerCommand {
   return { owner: 0, tick: e.nextTick, moveBrad: 0, moveMag: 0, ...extra };
 }
 
-/** Steps n ticks with the stick at rest; returns the event types. */
+/** Steps n ticks with the stick at rest, taking the first card of any level-up; returns the event types. */
 function idle(e: Engine, n: number): string[] {
   const out: string[] = [];
-  for (let i = 0; i < n; i++) out.push(...e.step([still(e)]).map((ev) => ev.type));
+  const pick = () => (e.state.players[0].offer.length > 0 ? { pick: 0 } : {});
+  for (let i = 0; i < n; i++) out.push(...e.step([still(e, pick())]).map((ev) => ev.type));
   return out;
 }
 
@@ -30,6 +31,14 @@ describe('wave plan', () => {
     expect(hordeSize(1)).toBe(WAVES.hordeBase);
     expect(hordeSize(2)).toBe(WAVES.hordeBase + WAVES.hordeStep);
     expect(hordeSize(1000)).toBe(WAVES.hordeMax);
+  });
+
+  it('toughens the horde faster in later waves; the sandbox horde dies in one hit', () => {
+    expect(mobHp(0)).toBe(1);
+    expect(mobHp(1)).toBe(HORDE.hp);
+    const gain = (w: number) => mobHp(w + 10) - mobHp(w);
+    expect(gain(1)).toBeGreaterThan(0);
+    expect(gain(40)).toBeGreaterThan(gain(1) * 3);
   });
 
   it('puts elites on every tenth wave and bosses on the mid and last waves', () => {

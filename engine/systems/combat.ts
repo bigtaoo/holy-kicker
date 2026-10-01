@@ -6,6 +6,7 @@ import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
 import { ringPoint } from './horde';
+import { mobHp } from './waves';
 
 // Hit targets and damage. Targets are numbered: the horde mobs first (by index), then the
 // elite, then the boss, so a ball can remember "the one I hit last" as a plain integer.
@@ -43,17 +44,20 @@ export function nearestTarget(s: SimState, x: number, y: number, maxDist: number
   return best;
 }
 
-/** The boss when in range (the weapon locks onto it first), else the nearest target. */
+/** The boss, else the elite, when in range (the relic locks onto them first), else the nearest target. */
 export function kickTarget(s: SimState, p: Player, range: number): number {
-  const b = targetAt(s, bossIndex(s));
-  if (b && dist2(b.x - p.x, b.y - p.y) <= range * range) return bossIndex(s);
+  for (const i of [bossIndex(s), eliteIndex(s)]) {
+    const t = targetAt(s, i);
+    if (t && dist2(t.x - p.x, t.y - p.y) <= range * range) return i;
+  }
   return nearestTarget(s, p.x, p.y, range);
 }
 
 /**
  * Damages target i on behalf of player `by`, at `pct` percent of a base roll (the crit stat
- * raises the crit chance). Mobs go down (a gem drops, they respawn on the ring), the elite
- * loses health and is knocked back, the boss loses health.
+ * raises the crit chance). Mobs lose health and at 0 go down (a gem drops, they respawn on the
+ * ring with the wave's health), the elite loses health and is knocked back, the boss loses
+ * health.
  */
 export function damage(s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null, pct = 100): void {
   const t = targetAt(s, i);
@@ -83,6 +87,10 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
     t.x += Math.trunc(((t.x - by.x) * ELITE.knockback) / d);
     t.y += Math.trunc(((t.y - by.y) * ELITE.knockback) / d);
   } else {
+    const m = s.mobs[i];
+    m.hp -= value;
+    if (m.hp > 0) return;
+    m.hp = mobHp(s.wave);
     events.push({ type: 'mobDown', index: i, x: t.x, y: t.y, dx: t.x - by.x, dy: t.y - by.y });
     dropGem(s, t.x, t.y, 1);
     ringPoint(s.ai, by.x, by.y, t);

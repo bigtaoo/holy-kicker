@@ -63,7 +63,9 @@ export interface PassiveSlot {
   level: number;
 }
 
-export type Mob = Body;
+export interface Mob extends Body {
+  hp: number;
+}
 
 export interface Elite extends Body {
   hp: number;
@@ -138,7 +140,7 @@ export interface Field {
   next: number;
 }
 
-/** A thrown cymbal: flies straight and hits everything it passes, the elite and boss once. */
+/** A thrown cymbal: flies straight and hits everything it passes, each target once. */
 export interface Cymbal extends Body {
   id: number;
   owner: number;
@@ -148,8 +150,8 @@ export interface Cymbal extends Body {
   damage: number;
   age: number;
   life: number;
-  /** Bit 1: hit the elite, bit 2: hit the boss. */
-  struck: number;
+  /** Targets it already hit (combat.ts numbering), so each is hit once. */
+  hit: number[];
 }
 
 export interface SimState {
@@ -208,6 +210,10 @@ export function createState(config: RunConfig): SimState {
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),
   };
+}
+
+export function newMob(x: number, y: number, hp = 1): Mob {
+  return { ...body(x, y), hp };
 }
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0): Player {

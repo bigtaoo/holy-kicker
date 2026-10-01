@@ -11,4 +11,4 @@ export { hashState } from './hash';
 export { FP, TICK_RATE, fromFp } from './math/fixed';
 export { cardPool, maxHpOf, stat } from './systems/build';
 export { tierOf } from './systems/drops';
-export { hordeSize, isBossWave, isEliteWave } from './systems/waves';
+export { hordeSize, isBossWave, isEliteWave, mobHp } from './systems/waves';
