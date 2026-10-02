@@ -11,7 +11,9 @@ import type { Player, SimState } from '../state';
 // sim, so a bot run is as reproducible as a replay.
 //
 // Moving: when enemies press close, it steps to the open side (the boss's marked slam circle
-// counts most); with nothing pressing, it walks to the nearest gem or stands.
+// counts most); with nothing pressing, it walks to the nearest gem or stands. With the staff
+// it goes after the elite and the boss and lets them into the staff's reach (it still runs
+// from a slam).
 // `skilled` re-decides every tenth of a second, `casual` every 0.4 s and holds the stick in
 // between; `still` never moves: the floor of what a build alone survives.
 
@@ -25,24 +27,37 @@ const LOOK = toFp(260);
 const NEAR_MOB = toFp(300);
 const NEAR_ELITE = toFp(450);
 const NEAR_BOSS = toFp(500);
+/** With the staff the big ones may come this close, inside its reach. */
+const NEAR_BIG_STAFF = toFp(200);
+/** With the staff, being further than this from a big one counts as danger too (it chases). */
+const CHASE_FROM = toFp(280);
 const GEM_REACH = toFp(900);
 const DIRS = 16;
 /** Danger the hero shrugs off: below it he goes for gems or stands and lets the build work. */
 const CALM = toFp(120);
 
 /** How bad standing at (x, y) is: every enemy in reach counts, the closer the more. */
-function danger(s: SimState, x: number, y: number): number {
+function danger(s: SimState, x: number, y: number, melee: boolean): number {
   let sum = 0;
   const add = (bx: number, by: number, reach: number, weight: number) => {
     const d = dist(bx - x, by - y);
     if (d < reach) sum += (reach - d) * weight;
   };
+  const chase = (bx: number, by: number) => {
+    const d = dist(bx - x, by - y);
+    if (d > CHASE_FROM) sum += d - CHASE_FROM;
+  };
   for (const m of s.mobs) add(m.x, m.y, NEAR_MOB, 1);
-  if (s.elite) add(s.elite.x, s.elite.y, NEAR_ELITE, 4);
   const b = s.boss;
-  if (b && b.phase !== 'down') {
-    add(b.x, b.y, NEAR_BOSS, 6);
-    if (b.phase === 'windup') add(b.zoneX, b.zoneY, toFp(480), 40);
+  const boss = b && b.phase !== 'down' ? b : null;
+  if (s.elite) {
+    add(s.elite.x, s.elite.y, melee ? NEAR_BIG_STAFF : NEAR_ELITE, 4);
+    if (melee && !boss) chase(s.elite.x, s.elite.y);
+  }
+  if (boss) {
+    add(boss.x, boss.y, melee ? NEAR_BIG_STAFF : NEAR_BOSS, 6);
+    if (boss.phase === 'windup') add(boss.zoneX, boss.zoneY, toFp(480), 40);
+    else if (melee) chase(boss.x, boss.y);
   }
   return sum;
 }
@@ -80,7 +95,8 @@ export class Bot {
    * toward the nearest gem, or nowhere.
    */
   private heading(s: SimState, p: Player): [number, number] {
-    const here = danger(s, p.x, p.y);
+    const melee = p.relicId === 'staff';
+    const here = danger(s, p.x, p.y, melee);
     if (here < CALM) return this.toGem(s, p);
     let best = here * 2;
     let bx = 0;
@@ -89,7 +105,7 @@ export class Bot {
       const a = (k * BRAD_FULL) / DIRS;
       const dx = Math.trunc((cosB(a) * LOOK) / TRIG_ONE);
       const dy = Math.trunc((sinB(a) * LOOK) / TRIG_ONE);
-      let d = danger(s, p.x + dx, p.y + dy) + danger(s, p.x + (dx >> 1), p.y + (dy >> 1));
+      let d = danger(s, p.x + dx, p.y + dy, melee) + danger(s, p.x + (dx >> 1), p.y + (dy >> 1), melee);
       if (k === this.lastDir) d -= d >> 3;
       if (d < best) {
         best = d;

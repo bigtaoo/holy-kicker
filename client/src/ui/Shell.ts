@@ -101,8 +101,12 @@ export class Shell {
         this.commit({ ...this.save, chapter });
         this.showLobby();
       },
+      selectRelic: (relic) => {
+        this.commit({ ...this.save, relic });
+        this.showLobby();
+      },
       setLanguage: (locale) => this.setLanguage(locale),
-    }));
+    }, this.art.icons));
   }
 
   private setLanguage(locale: Locale): void {
@@ -117,6 +121,7 @@ export class Shell {
     this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, {
       waves: this.scene.waves ? BALANCE.waves : 0,
       revives: BALANCE.revives,
+      relic: this.scene.relic ?? this.save.relic,
     });
     this.shownWave = -1;
     this.downShown = false;

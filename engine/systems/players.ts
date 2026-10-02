@@ -4,13 +4,14 @@ import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Player, SimState } from '../state';
-import { pickCard, relicLevel, stat } from './build';
+import { pickCard, relicCooldown, relicLevel, stat } from './build';
 import { eliteIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
 import { breakBell } from './spells';
+import { staffStart, sweep } from './staff';
 
 // The hero: moves with the stick (easing into and out of a run), auto-kicks the cuju at the
-// nearest enemy (the boss first), and loses health when something reaches him (at most one
+// nearest enemy (the boss first) or swings the staff when one comes close (systems/staff.ts), and loses health when something reaches him (at most one
 // blow per hurt cooldown; a Golden Bell takes the blow instead). Kick and hurt are one-shot actions; hurt interrupts a kick before
 // its foot meets the ball. At 0 health he is down until a revive; the sandbox (waves 0) only
 // flinches.
@@ -88,19 +89,20 @@ export function kickSystem(s: SimState, events: SimEvent[]): void {
       p.actionT++;
       if (p.action === 'kick' && !p.struck && p.actionT >= HERO.strikeAt) {
         p.struck = true;
-        strike(s, p);
+        if (p.relicId === 'staff') sweep(s, events, p);
+        else strike(s, p);
       }
       if (p.actionT >= (p.action === 'kick' ? HERO.kickTicks : HERO.hurtTicks)) p.action = 'none';
     }
     if (p.kickCd > 0 || p.action !== 'none') continue;
-    const t = kickTarget(s, p, HERO.kickRange);
+    const t = kickTarget(s, p, p.relicId === 'staff' ? staffStart(p) : HERO.kickRange);
     if (t < 0) continue;
     const dx = targetAt(s, t)!.x - p.x;
     if (dx !== 0) p.facing = dx < 0 ? -1 : 1;
     p.action = 'kick';
     p.actionT = 0;
     p.struck = false;
-    p.kickCd = relicLevel(p).cooldown;
+    p.kickCd = relicCooldown(p);
     events.push({ type: 'kick', owner: p.owner, dir: p.facing });
   }
 }

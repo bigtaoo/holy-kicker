@@ -56,14 +56,25 @@ describe('card text', () => {
     expect(cardText({ kind: 'shrine', id: 'heal' }, p).icon).toBeNull();
   });
 
+  it('describes the staff, its level steps and its awakening', () => {
+    const p = newPlayer(0, 0, 0, 100, 0, 'staff');
+    const step = cardText({ kind: 'relic', id: 'staff' }, p);
+    expect(step).toMatchObject({ name: 'Staff', icon: 'staff', pairs: ['iron'] });
+    expect(step.lines[0]).toMatch(/^Reach \+\d+%$/);
+    const awaken = cardText({ kind: 'evolve', id: 'staff' }, p);
+    expect(awaken).toMatchObject({ name: 'Ruyi Staff', tag: 'Awaken!' });
+    expect(awaken.lines).toEqual(['Sweeps all the way round', expect.stringMatching(/^Reach \+\d+%$/)]);
+  });
+
   it('has a name and at least one line for every card at every level', () => {
     const p = newPlayer(0, 0, 0);
     const cards: Card[] = [
       { kind: 'relic', id: 'ball' },
+      { kind: 'relic', id: 'staff' },
       ...SPELL_IDS.map((id): Card => ({ kind: 'spell', id })),
       ...PASSIVE_IDS.map((id): Card => ({ kind: 'passive', id })),
       ...SHRINE_IDS.map((id): Card => ({ kind: 'shrine', id })),
-      ...['ball', ...SPELL_IDS].map((id): Card => ({ kind: 'evolve', id })),
+      ...['ball', 'staff', ...SPELL_IDS].map((id): Card => ({ kind: 'evolve', id })),
     ];
     for (let level = 1; level < MAX_LEVEL; level++) {
       p.relic = level;

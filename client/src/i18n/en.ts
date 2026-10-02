@@ -17,6 +17,7 @@ export const en = {
     cleared: 'Cleared',
     chapterTitle: 'Chapter {n}: {name}',
     unlockAtChapter: 'Clear chapter {n} to unlock',
+    relic: 'Relic',
   },
   tab: {
     shop: 'Shop',
@@ -56,6 +57,7 @@ export const en = {
     damage: 'Damage +{n}%',
     cooldown: 'Cooldown {a}s → {b}s',
     area: 'Area +{n}%',
+    reach: 'Reach +{n}%',
     duration: 'Duration {a}s → {b}s',
     shrine: 'Shrine',
     evolve: 'Evolve!',
@@ -63,6 +65,7 @@ export const en = {
   },
   evolve: {
     ball: { name: 'Meteor Ball', desc: 'Splits into {n} at every bounce' },
+    staff: { name: 'Ruyi Staff', desc: 'Sweeps all the way round' },
     palm: { name: 'Mountain Palm', desc: 'Stays and pins enemies {s}s' },
     bolt: { name: 'Endless Chain', desc: 'Forks at every jump' },
     incense: { name: 'Healing Incense', desc: 'Heals {n}% health/s inside' },
@@ -75,7 +78,8 @@ export const en = {
     offering: { name: 'Offering', desc: 'Live to the next shrine or the end:', more: 'copper this run +{n}%' },
   },
   relic: {
-    ball: { name: 'Cuju Ball' },
+    ball: { name: 'Cuju Ball', desc: 'Kicked, bounces between enemies' },
+    staff: { name: 'Staff', desc: 'Sweeps nearby enemies, knocks them back' },
   },
   spell: {
     palm: { name: 'Buddha Palm', desc: 'A giant palm slams the biggest crowd', count: 'Palms {a} → {b}' },
@@ -103,6 +107,7 @@ export const en = {
     offering: 'Offerings: copper +{n}',
     chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
     newBest: 'New best!',
+    newRelic: 'New relic: {name}!',
     double: 'Double copper (ad)',
     doubled: 'Copper doubled!',
   },

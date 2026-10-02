@@ -12,17 +12,18 @@ import { sliceDeco, type DecoFrame, type DecoSheet } from './game/decoView';
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, jiangshi, fox, cuju, groundTex, decoSheet, boss, icons] = await Promise.all([
+  const [hero, jiangshi, fox, cuju, staff, groundTex, decoSheet, boss, icons] = await Promise.all([
     loadTao(platform, 'art/hero'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
+    Assets.load<Texture>('art/staff.png'),
     ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
     deco === 'none' ? null : loadDeco(platform, 'art/ground/deco'),
     scene.boss ? loadTao(platform, 'art/boss_monk') : null,
     loadDeco(platform, 'art/icons/icons'),
   ]);
-  return { hero, jiangshi, fox, cuju, ground: groundTex, deco: decoSheet, boss, icons: icons.frames };
+  return { hero, jiangshi, fox, cuju, staff, ground: groundTex, deco: decoSheet, boss, icons: icons.frames };
 }
 
 /** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py). */

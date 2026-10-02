@@ -39,7 +39,7 @@ Names are working names; every name ships through the string table (en / zh-CN s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
   it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce. Not yet: the
-  Codex record of a first evolution, the other relics' awakenings.
+  Codex record of a first evolution, the awakenings of the relics after the staff.
 - **Build strip on the HUD** (`client/src/ui/buildSlots.ts`, `buildBar.ts`): under the
   experience bar, the relic, 4 spell and 4 passive slots (empty ones as dim discs), each with its
   level as 5 pips. Evolved items get a gold rim and gold pips; an item whose evolution comes on the
@@ -54,13 +54,26 @@ Unlocked one per chapter clear (the cuju ball is the starter).
 | Relic | en / zh-CN | Attack | Awakens with | Awakened |
 |---|---|---|---|---|
 | Cuju ball | Cuju Ball / 蹴鞠 | Kicked, bounces between 3 targets (implemented) | Arhat Legs | **Meteor Ball** / 流星鞠: splits into 3 on every bounce |
-| Staff | Staff / 禅杖 | Close 180° sweep with knockback | Iron Head | **Ruyi Staff** / 如意禅杖: sweep grows to a full circle and longer reach |
+| Staff | Staff / 禅杖 | Close 180° sweep with knockback (implemented) | Iron Head | **Ruyi Staff** / 如意禅杖: sweep grows to a full circle and longer reach (implemented) |
 | Wooden fish | Wooden Fish / 木鱼 | Each tap sends a sound ring around the hero | Calm Mind | **Stunning Bell** / 晨钟: every 4th ring stuns for 1 s |
 | Prayer beads | Prayer Beads / 念珠 | Beads orbit the hero, hit on contact | Wisdom Eye | **108 Beads** / 百八念珠: two rings, opposite directions |
 | Alms bowl | Alms Bowl / 钵盂 | Thrown, returns, drags small mobs along | Karma | **Bottomless Bowl** / 无底钵: swallows small mobs, drops their XP at once |
 
 Unlock order: ball (start), staff (ch1), wooden fish (ch2), beads (ch3), bowl (ch4), so the
 first clear already changes how the game plays.
+
+- **Staff implemented** (`STAFF_LEVELS`, `STAFF_AWAKENED` in `engine/content.ts`,
+  `engine/systems/staff.ts`): the swing starts when a target is within 115 % of the reach and
+  lands at the kick's strike time over the half circle toward it, hitting everything inside the
+  reach (270 → 340, awakened 440) at 220 → 400 % and knocking the horde back 90 → 150; the elite
+  and the boss are not knocked back, so the staff keeps hitting them. The relic is chosen in the
+  lobby under the chapter card (`save.relic`, one more unlocked per chapter cleared, announced on
+  the results); `RunConfig.relic` sets it for the run, `?relic=staff` forces it in dev.
+- Balance (`npm run balance -- 10 skilled casual staff`): the staff only works when the player
+  goes to the big ones, so the bots chase the elite and the boss with it (and still run from a
+  slam). Then a chapter takes about as long as with the ball (790 s against 800–830 s), elites
+  and bosses fall a little faster, and the hero takes about a third less damage (the knockback).
+  Without the chase the boss took 3–10 times as long.
 
 ## Spells (8) and evolutions
 

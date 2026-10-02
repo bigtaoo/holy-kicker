@@ -19,6 +19,7 @@ export const zh: Table<typeof en> = {
     cleared: '已通关',
     chapterTitle: '第 {n} 章：{name}',
     unlockAtChapter: '通关第 {n} 章解锁',
+    relic: '法器',
   },
   tab: {
     shop: '商店',
@@ -58,6 +59,7 @@ export const zh: Table<typeof en> = {
     damage: '伤害 +{n}%',
     cooldown: '冷却 {a} 秒 → {b} 秒',
     area: '范围 +{n}%',
+    reach: '攻击距离 +{n}%',
     duration: '持续 {a} 秒 → {b} 秒',
     shrine: '神龛',
     evolve: '进化！',
@@ -65,6 +67,7 @@ export const zh: Table<typeof en> = {
   },
   evolve: {
     ball: { name: '流星鞠', desc: '每次弹射分裂成 {n} 个球' },
+    staff: { name: '如意禅杖', desc: '横扫一整圈' },
     palm: { name: '五指山', desc: '巨掌留在原地，定住敌人 {s} 秒' },
     bolt: { name: '雷音', desc: '每次跳跃都分叉击中另一个敌人' },
     incense: { name: '万家香火', desc: '站在阵中每秒回复 {n}% 生命' },
@@ -77,7 +80,8 @@ export const zh: Table<typeof en> = {
     offering: { name: '供奉', desc: '活到下一座神龛或通关时', more: '本局铜钱 +{n}%' },
   },
   relic: {
-    ball: { name: '蹴鞠' },
+    ball: { name: '蹴鞠', desc: '踢出后在敌人间弹射' },
+    staff: { name: '禅杖', desc: '横扫身边敌人并击退' },
   },
   spell: {
     palm: { name: '如来掌', desc: '巨掌拍向最密集的敌群', count: '掌数 {a} → {b}' },
@@ -105,6 +109,7 @@ export const zh: Table<typeof en> = {
     offering: 'Offerings: copper +{n}',
     chest: '宝箱（第 {wave} 波）：铜钱 +{copper}，玉 +{jade}',
     newBest: '新纪录！',
+    newRelic: '新法器：{name}！',
     double: '铜钱翻倍（看广告）',
     doubled: '铜钱已翻倍！',
   },

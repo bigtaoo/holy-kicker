@@ -21,6 +21,10 @@ export function xpToNext(level: number): number {
   return LEVELING.first + LEVELING.step * l + LEVELING.square * l * l;
 }
 
+/** The relic a run is played with (docs/content.md "Relics"), chosen in the lobby. */
+export type RelicId = 'ball' | 'staff';
+export const RELIC_IDS: readonly RelicId[] = ['ball', 'staff'];
+
 /** The cuju ball (the starter relic): bounces per kick, damage percent, kick cooldown. */
 export interface RelicLevel {
   hits: number;
@@ -35,6 +39,33 @@ export const RELIC_LEVELS: readonly RelicLevel[] = [
   { hits: 4, damage: 140, cooldown: ticks(0.7) },
   { hits: 5, damage: 180, cooldown: ticks(0.7) },
 ];
+
+/**
+ * The staff: a close sweep over a half circle toward the target (a full circle awakened),
+ * hitting everything inside `reach` at `damage` percent and knocking mobs back `knockback`.
+ */
+export interface StaffLevel {
+  damage: number;
+  cooldown: number;
+  reach: number;
+  knockback: number;
+}
+
+function st(damage: number, cooldown: number, reach: number, knockback: number): StaffLevel {
+  return { damage, cooldown: ticks(cooldown), reach: toFp(reach), knockback: toFp(knockback) };
+}
+
+export const STAFF_LEVELS: readonly StaffLevel[] = [
+  st(220, 0.8, 270, 90), st(220, 0.8, 300, 90), st(300, 0.8, 300, 110), st(300, 0.65, 320, 110), st(400, 0.65, 340, 130),
+];
+
+/** Ruyi Staff: the sweep goes all the way round and reaches further. */
+export const STAFF_AWAKENED: StaffLevel = st(400, 0.65, 440, 150);
+
+export const STAFF = {
+  /** The swing starts when a target is this much further than the reach (it is still closing in). */
+  startPercent: 115,
+};
 
 export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal';
 export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense', 'bell', 'cymbal'];
@@ -111,8 +142,8 @@ export const PASSIVES: Readonly<Record<PassiveId, { stat: Stat; perLevel: number
  * puts the evolved form on the next level-up as a guaranteed card; the relic awakens the same
  * way. The evolved row replaces the level-5 row.
  */
-export const EVOLVE_PAIR: Readonly<Record<SpellId | 'ball', PassiveId>> = {
-  ball: 'legs', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
+export const EVOLVE_PAIR: Readonly<Record<SpellId | RelicId, PassiveId>> = {
+  ball: 'legs', staff: 'iron', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
 };
 
 /** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */
@@ -155,8 +186,8 @@ export type ShrineId = 'heal' | 'insight' | 'offering';
 export const SHRINE_IDS: readonly ShrineId[] = ['heal', 'insight', 'offering'];
 
 /**
- * A level-up card (the relic 'ball', a spell or a passive, new or one level up), an evolution
- * (id: the spell or 'ball') or a shrine card.
+ * A level-up card (the relic, a spell or a passive, new or one level up), an evolution (id:
+ * the spell or the relic) or a shrine card.
  */
 export interface Card {
   kind: CardKind;

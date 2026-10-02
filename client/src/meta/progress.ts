@@ -1,3 +1,4 @@
+import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { BALANCE, type Chest } from './balance';
 import type { SaveData } from './save';
 
@@ -26,6 +27,8 @@ export interface Reward {
   levelsGained: number;
   /** The chapter was cleared for the first time. */
   firstClear: boolean;
+  /** The relic that first clear unlocked, if any. */
+  newRelic: RelicId | null;
   newBest: boolean;
 }
 
@@ -86,7 +89,8 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
   };
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
-    firstClear, newBest: waves > save.best[i],
+    firstClear, newRelic: firstClear ? (unlockedRelics(next).find((r) => !unlockedRelics(save).includes(r)) ?? null) : null,
+    newBest: waves > save.best[i],
   };
   return { save: next, reward };
 }
@@ -116,6 +120,11 @@ export function tabLock(save: SaveData, tab: Tab): Lock | null {
     case 'codex':
       return save.cleared >= u.codexChapter ? null : { kind: 'chapter', n: u.codexChapter };
   }
+}
+
+/** Relics the player may take into a run: the cuju, then one more per chapter cleared. */
+export function unlockedRelics(save: SaveData): RelicId[] {
+  return RELIC_IDS.slice(0, save.cleared + 1);
 }
 
 /** Chapters the player may start: every cleared one and the first uncleared one. */

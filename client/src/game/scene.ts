@@ -2,7 +2,7 @@
 // &hero=top|overfx|sort&ring=1&elite=1, plus types/page/mobres for the mob-type stress test) so readability variants can be compared side by side. WeChat and a
 // bare URL get the defaults.
 
-import { SPELL_KINDS, type SpellKind } from '@hk/engine';
+import { RELIC_IDS, SPELL_KINDS, type RelicId, type SpellKind } from '@hk/engine';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
 import { GEM_PALETTES, type GemPalette } from './dropView';
@@ -85,6 +85,8 @@ export interface SceneOptions {
   waves: boolean;
   /** Dev: a chapter run starts at the end of the wave before this one (?wave=25 for the mid-boss). */
   wave: number;
+  /** Dev: the relic for every run, whatever the save says (?relic=staff); null keeps the save's. */
+  relic: RelicId | null;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -115,6 +117,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   seed: 0,
   waves: true,
   wave: 1,
+  relic: null,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -163,6 +166,7 @@ export function parseScene(query: string): SceneOptions {
     seed: intAtLeast(q.get('seed'), 1, DEFAULT_SCENE.seed),
     waves: q.has('waves') ? q.get('waves') === '1' : !mobsSet && DEFAULT_SCENE.waves,
     wave: Math.min(50, intAtLeast(q.get('wave'), 1, DEFAULT_SCENE.wave)),
+    relic: RELIC_IDS.find((r) => r === q.get('relic')) ?? DEFAULT_SCENE.relic,
   };
 }
 

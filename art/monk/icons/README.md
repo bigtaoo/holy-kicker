@@ -6,7 +6,12 @@ level-up cards. Text-to-image from the `*.txt` prompts here; `ball.jpg` is the c
 
     python tools/pack_icons.py client/public/art/icons ball.jpg palm.jpg ... wrath.jpg
 
-into `client/public/art/icons/icons.{png,json}` (128 px cells, 256-colour palette, 59 KB).
+into `client/public/art/icons/icons.{png,json}` (128 px cells, 256-colour palette, 62 KB).
+
+The staff (2026-10-02): `staff_world.jpg` is the in-world sprite (`python tools/cutout.py
+art/monk/icons/staff_world.jpg client/public/art/staff.png 400`); `staff.jpg`, the icon, is the
+same image turned 45 degrees, so both look alike (the diagonal render, `r1/staff_spear.jpg`,
+came out like a spear). Packed after `ball.jpg`.
 
 Findings:
 - The first round (`r1/`) said "for a kung-fu monk roguelite" and every icon came back with a

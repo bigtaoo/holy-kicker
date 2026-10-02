@@ -1,7 +1,7 @@
 import { HERO, SHRINE } from '../config';
 import {
-  EVOLVE_PAIR, MAX_LEVEL, RELIC_AWAKENED, SPELL_EVOLVED, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
-  xpToNext, type Card, type PassiveId, type SpellId, type SpellLevel, type Stat,
+  EVOLVE_PAIR, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
+  xpToNext, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat,
 } from '../content';
 import type { SimEvent } from '../events';
 import { TICK_RATE } from '../math/fixed';
@@ -32,8 +32,18 @@ export function maxHpOf(p: Player): number {
   return Math.trunc((HERO.hp * (100 + stat(p, 'maxHp'))) / 100);
 }
 
+/** The cuju's numbers at the player's relic level (also read for a staff's level-ups). */
 export function relicLevel(p: Player) {
   return p.awakened ? RELIC_AWAKENED : RELIC_LEVELS[p.relic - 1];
+}
+
+export function staffLevel(p: Player) {
+  return p.awakened ? STAFF_AWAKENED : STAFF_LEVELS[p.relic - 1];
+}
+
+/** Ticks between two attacks of the player's relic. */
+export function relicCooldown(p: Player): number {
+  return p.relicId === 'staff' ? staffLevel(p).cooldown : relicLevel(p).cooldown;
 }
 
 /** The numbers a spell slot casts with: its level's row, or the evolved one. */
@@ -48,7 +58,7 @@ function hasPassive(p: Player, id: PassiveId): boolean {
 /** Evolutions (and the awakening) that are ready: maxed, paired passive owned, not yet taken. */
 export function evolutions(p: Player): Card[] {
   const ready: Card[] = [];
-  if (p.relic === MAX_LEVEL && !p.awakened && hasPassive(p, EVOLVE_PAIR.ball)) ready.push({ kind: 'evolve', id: 'ball' });
+  if (p.relic === MAX_LEVEL && !p.awakened && hasPassive(p, EVOLVE_PAIR[p.relicId])) ready.push({ kind: 'evolve', id: p.relicId });
   for (const sp of p.spells) {
     if (sp.level === MAX_LEVEL && !sp.evolved && hasPassive(p, EVOLVE_PAIR[sp.id])) ready.push({ kind: 'evolve', id: sp.id });
   }
@@ -58,7 +68,7 @@ export function evolutions(p: Player): Card[] {
 /** The cards that can still be picked, in a fixed order (the deal draws from it). */
 export function cardPool(p: Player): Card[] {
   const pool: Card[] = [];
-  if (p.relic < MAX_LEVEL) pool.push({ kind: 'relic', id: 'ball' });
+  if (p.relic < MAX_LEVEL) pool.push({ kind: 'relic', id: p.relicId });
   for (const sp of p.spells) if (sp.level < MAX_LEVEL) pool.push({ kind: 'spell', id: sp.id });
   if (p.spells.length < MAX_SPELLS) {
     for (const id of SPELL_IDS) if (!p.spells.some((sp) => sp.id === id)) pool.push({ kind: 'spell', id });
@@ -120,7 +130,7 @@ export function pickCard(s: SimState, events: SimEvent[], p: Player, index: numb
 }
 
 function evolve(p: Player, id: string): void {
-  if (id === 'ball') {
+  if (RELIC_IDS.includes(id as RelicId)) {
     p.awakened = true;
     return;
   }

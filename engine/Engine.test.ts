@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-02 for ENGINE_VERSION 8 (evolutions). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(8);
+    // Recorded 2026-10-02 for ENGINE_VERSION 9 (the staff relic). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(9);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -100,5 +100,5 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 34826375;
-const GOLDEN_CHAPTER = 1864821071;
+const GOLDEN = 1119671272;
+const GOLDEN_CHAPTER = 1214180792;

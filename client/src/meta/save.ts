@@ -1,3 +1,4 @@
+import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { BALANCE } from './balance';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
@@ -24,13 +25,15 @@ export interface SaveData {
   /** Claimed progress chests per chapter, one bit per chest in BALANCE.chests order. */
   chests: number[];
   runs: number;
+  /** The relic chosen for the next run (docs/content.md "Relics": one more per chapter cleared). */
+  relic: RelicId;
 }
 
 export function newSave(): SaveData {
   const zeros = () => new Array<number>(BALANCE.chapters).fill(0);
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
-    chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0,
+    chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball',
   };
 }
 
@@ -75,5 +78,7 @@ export function parseSave(text: string | null): SaveData {
     best: ints(raw.best, 0, BALANCE.waves),
     chests: ints(raw.chests, 0, (1 << BALANCE.chests.length) - 1),
     runs: int(raw.runs, 0, max, 0),
+    // only a relic the clears have unlocked
+    relic: RELIC_IDS.indexOf(raw.relic as RelicId) >= 0 && RELIC_IDS.indexOf(raw.relic as RelicId) <= cleared ? (raw.relic as RelicId) : 'ball',
   };
 }

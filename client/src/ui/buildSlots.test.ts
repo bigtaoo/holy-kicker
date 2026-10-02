@@ -34,6 +34,14 @@ describe('build slots', () => {
     expect(buildSlots(p)[0].state).toBe('evolved');
   });
 
+  it('shows the staff in the relic slot, awakening with Iron Head', () => {
+    const p = newPlayer(0, 0, 0, 100, 0, 'staff');
+    p.relic = MAX_LEVEL;
+    expect(buildSlots(p)[0]).toMatchObject({ icon: 'staff', needs: 'iron' });
+    expect(pairsOf(p, 'iron')).toEqual(['staff']);
+    expect(pairsOf(p, 'legs')).toEqual([]);
+  });
+
   it('pairs a spell with its passive and a passive with the owned items it would evolve', () => {
     const p = newPlayer(0, 0, 0);
     expect(pairsOf(p, 'cymbal')).toEqual(['legs']);

@@ -11,6 +11,8 @@ export type TargetKind = 'mob' | 'elite' | 'boss';
 export type SimEvent =
   /** A player started a kick toward `dir` (-1 left, 1 right). */
   | { type: 'kick'; owner: number; dir: number }
+  /** A player's staff landed: centred on (x, y), a half circle around `brad` (all round if `full`). */
+  | { type: 'sweep'; owner: number; x: number; y: number; brad: number; reach: number; full: boolean }
   /** A player took `value` damage (0 in the sandbox, where heroes cannot die). */
   | { type: 'hurt'; owner: number; value: number }
   | { type: 'heroDown'; owner: number }

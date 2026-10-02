@@ -1,24 +1,28 @@
 import { Container, Graphics, type Text } from 'pixi.js';
+import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { LOCALES, formatAmount, getLocale, localeName, t, type Locale } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { playableChapters, TABS, tabLock, type Lock, type Tab } from '../meta/progress';
+import { playableChapters, TABS, tabLock, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
+import { iconSprite, type IconSheet } from './buildBar';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
-// chests, PLAY, and five bottom tabs. Only Play has content so far; the other tabs show their
+// chests and the relic to play with, PLAY, and five bottom tabs. Only Play has content so far; the other tabs show their
 // unlock condition or a placeholder.
 
 export interface LobbyActions {
   play(chapter: number): void;
   /** Shows another chapter on the card (cleared ones and the first uncleared one). */
   selectChapter(chapter: number): void;
+  selectRelic(relic: RelicId): void;
   setLanguage(locale: Locale): void;
 }
 
 const TOP_H = 150;
 const TAB_H = 190;
+const RELIC_R = 60;
 
 function lockText(lock: Lock): string {
   if (lock.kind === 'firstRun') return t('tab.unlockFirstRun');
@@ -38,6 +42,7 @@ export class LobbyScreen implements Screen {
     private readonly save: SaveData,
     private readonly userName: string | null,
     private readonly actions: LobbyActions,
+    private readonly icons: IconSheet,
   ) {}
 
   layout(f: UiFrame): void {
@@ -96,10 +101,10 @@ export class LobbyScreen implements Screen {
     const n = this.save.chapter;
     const open = n <= playableChapters(this.save);
     const card = new Container();
-    card.position.set(w / 2, midY - 130);
-    card.addChild(panel(900, 470));
+    card.position.set(w / 2, midY - 180);
+    card.addChild(panel(900, 620));
     const title = fit(label(t('lobby.chapterTitle', { n, name: t(`chapter.${n}` as never) }), 64), 640);
-    title.y = -160;
+    title.y = -235;
     const best = this.save.best[n - 1];
     const status = label(
       !open ? t('lobby.unlockAtChapter', { n: n - 1 })
@@ -107,17 +112,19 @@ export class LobbyScreen implements Screen {
         : best > 0 ? t('lobby.best', { wave: best }) : t('lobby.notPlayed'),
       48, open ? COLORS.dim : COLORS.danger,
     );
-    status.y = -70;
+    status.y = -145;
     const chests = this.chests(n);
-    chests.y = -20;
-    card.addChild(title, status, chests);
+    chests.y = -95;
+    const relics = this.relics();
+    relics.y = 85;
+    card.addChild(title, status, chests, relics);
 
     // chapter arrows: through the cleared chapters and the first uncleared one
     const arrow = (dir: -1 | 1) => {
       const target = n + dir;
       if (target < 1 || target > playableChapters(this.save)) return;
       const b = button(dir < 0 ? '‹' : '›', 90, 110, () => this.actions.selectChapter(target), { fill: COLORS.panelLocked, size: 80 });
-      b.position.set(dir * 385, -160);
+      b.position.set(dir * 385, -235);
       card.addChild(b);
     };
     arrow(-1);
@@ -126,9 +133,43 @@ export class LobbyScreen implements Screen {
 
     if (open) {
       const play = button(t('lobby.play'), 620, 190, () => this.actions.play(n), { size: 88 });
-      play.position.set(w / 2, Math.min(midY + 260, h - TAB_H - 140));
+      play.position.set(w / 2, Math.min(midY + 300, h - TAB_H - 140));
       this.view.addChild(play);
     }
+  }
+
+  /** The relic for the next run: its name, then one badge per relic (locked ones dimmed). */
+  private relics(): Container {
+    const row = new Container();
+    const chosen = this.save.relic;
+    const head = label(`${t('lobby.relic')}: ${t(`relic.${chosen}.name`)}`, 48);
+    const open = unlockedRelics(this.save);
+    row.addChild(head);
+    RELIC_IDS.forEach((id, i) => {
+      const unlocked = open.includes(id);
+      const c = new Container();
+      c.position.set((i - (RELIC_IDS.length - 1) / 2) * (RELIC_R * 2 + 40), 115);
+      c.addChild(new Graphics().circle(0, 0, RELIC_R).fill(unlocked ? COLORS.panel : COLORS.panelLocked)
+        .stroke({ color: id === chosen ? COLORS.saffron : COLORS.outline, width: id === chosen ? 10 : 6 }));
+      const icon = iconSprite(this.icons, id, RELIC_R * 1.5);
+      if (icon) {
+        if (!unlocked) icon.alpha = 0.35;
+        c.addChild(icon);
+      }
+      if (!unlocked) {
+        const l = label('🔒', 40);
+        l.position.set(RELIC_R * 0.6, RELIC_R * 0.6);
+        c.addChild(l);
+      }
+      c.eventMode = 'static';
+      c.cursor = 'pointer';
+      c.on('pointertap', () => {
+        if (!unlocked) return this.showToast(t('tab.unlockChapter', { n: RELIC_IDS.indexOf(id) }));
+        if (id !== chosen) this.actions.selectRelic(id);
+      });
+      row.addChild(c);
+    });
+    return row;
   }
 
   /** The five progress chests of a chapter: gold once claimed, outlined until then. */

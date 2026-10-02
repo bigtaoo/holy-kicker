@@ -1,11 +1,12 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
   Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, WAVES, quantizeMove,
-  type RunConfig, type SimEvent, type SimState,
+  type RelicId, type RunConfig, type SimEvent, type SimState,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
+import { StaffSwing } from './staffView';
 import { Hero } from './hero';
 import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
@@ -42,6 +43,7 @@ export interface Art {
   jiangshi: MobSheet;
   fox: MobSheet;
   cuju: Texture;
+  staff: Texture;
   /** Repeating ground tile; null draws the flat placeholder field. */
   ground: Texture | null;
   /** Scattered ground decorations; null when the scene turns them off. */
@@ -71,10 +73,11 @@ const DOWN_TINT = 0x8a8a8a;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
 
-/** What the shell sets a run up with: the chapter's length (0 for the sandbox) and revives. */
+/** What the shell sets a run up with: the chapter's length (0 for the sandbox), revives, the relic. */
 export interface RunSetup {
   waves: number;
   revives: number;
+  relic: RelicId;
 }
 
 /** The run a scene sets up: what the engine simulates. */
@@ -83,7 +86,7 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     seed, players: 1, mobs: scene.mobs, sep: scene.sep, queue: scene.queue,
     heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
-    waves: setup.waves, revives: setup.revives,
+    waves: setup.waves, revives: setup.revives, relic: setup.relic,
   };
 }
 
@@ -112,6 +115,7 @@ export class Game {
   private readonly drops: DropLayer;
   private readonly threats: ThreatLayer | null;
   private readonly balls: Balls;
+  private readonly staff: StaffSwing;
   private readonly boss: Boss | null;
   private readonly spells: SpellView;
   private readonly aura: AuraStack;
@@ -160,6 +164,8 @@ export class Game {
     if (scene.heroBack) this.hero.view.addChildAt(heroBacking(app.renderer, HERO_HEIGHT), 0);
     this.foxRing = makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
     this.balls = new Balls(this.world, art.cuju, shadowTex);
+    // the crescent draws over the horde, under the elite
+    this.staff = new StaffSwing(this.world, art.staff, HERO_TOP_Z - 3);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
     this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
@@ -284,8 +290,13 @@ export class Game {
     for (const e of events) {
       switch (e.type) {
         case 'kick':
-          if (e.owner === LOCAL) this.hero.kick();
+          if (e.owner === LOCAL) this.hero.kick(s.players[0].relicId === 'staff');
           break;
+        case 'sweep': {
+          const p = s.players.find((q) => q.owner === e.owner);
+          if (e.owner === LOCAL && p) this.staff.swing(e.brad, e.reach / FP, e.full, p.facing);
+          break;
+        }
         case 'hurt':
           if (e.owner === LOCAL) {
             this.hero.hurt();
@@ -374,6 +385,7 @@ export class Game {
     this.drawHorde(s, alpha, dt, hx, hy);
     this.corpses.update(dt);
     this.balls.sync(s.balls, alpha, dt);
+    this.staff.update(dt, hx, hy, this.hero.view.zIndex);
     this.spells.drawFields(s.fields, alpha, dt);
     this.spells.drawCymbals(s.cymbals, alpha, dt);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);

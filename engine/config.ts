@@ -1,5 +1,6 @@
 import { FP, perTick, TICK_RATE, ticks, toFp } from './math/fixed';
 import { degToBrad } from './math/trig';
+import type { RelicId } from './content';
 
 // Run configuration (what a match is set up with, part of a replay) and the tuning numbers,
 // all converted once at load into FP units per tick and whole ticks.
@@ -32,11 +33,13 @@ export interface RunConfig {
   waves: number;
   /** Revives the hero has for the run (a rewarded ad on the death screen). */
   revives: number;
+  /** The relic every hero plays the run with. */
+  relic: RelicId;
 }
 
 export const DEFAULT_RUN: RunConfig = {
   seed: 1, players: 1, mobs: 40, sep: 75, queue: true, heroEase: 379, elite: true, boss: true,
-  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1,
+  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball',
 };
 
 /** The smooth hero ease, 1 - exp(-tick / 0.07 s), as a constant so no exp runs in the sim. */

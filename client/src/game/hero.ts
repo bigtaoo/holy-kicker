@@ -22,10 +22,12 @@ export class Hero {
     this.view.addChild(this.body);
   }
 
-  kick(): void {
+  /** A kick, or with the staff only the strain on his face (the swing is staffView's). */
+  kick(staff = false): void {
+    this.setFace('face_strain', 0.4);
+    if (staff) return;
     this.action = 'kick';
     this.actor.play('kick', true);
-    this.setFace('face_strain', 0.4);
   }
 
   hurt(): void {

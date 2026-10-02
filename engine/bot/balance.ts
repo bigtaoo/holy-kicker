@@ -1,4 +1,5 @@
 import { DEFAULT_RUN, type RunConfig } from '../config';
+import type { RelicId } from '../content';
 import { Engine } from '../Engine';
 import { TICK_RATE } from '../math/fixed';
 import { Bot, type BotStyle } from './bot';
@@ -27,8 +28,8 @@ export interface RunStats {
 }
 
 /** Plays one chapter with a bot; stops at the first death or after `maxMinutes`. */
-export function playChapter(seed: number, style: BotStyle, waves = 50, maxMinutes = 30): RunStats {
-  const config: RunConfig = { ...DEFAULT_RUN, seed, waves, revives: 0 };
+export function playChapter(seed: number, style: BotStyle, waves = 50, maxMinutes = 30, relic: RelicId = 'ball'): RunStats {
+  const config: RunConfig = { ...DEFAULT_RUN, seed, waves, revives: 0, relic };
   const e = new Engine(config);
   const s = e.state;
   const bot = new Bot(0, style, seed);
@@ -67,7 +68,7 @@ export function playChapter(seed: number, style: BotStyle, waves = 50, maxMinute
   stats.seconds = secs(s.tick);
   stats.level = p.level;
   stats.build = [
-    `ball${p.relic}${p.awakened ? '*' : ''}`,
+    `${p.relicId}${p.relic}${p.awakened ? '*' : ''}`,
     ...p.spells.map((sp) => `${sp.id}${sp.level}${sp.evolved ? '*' : ''}`),
     ...p.passives.map((ps) => `${ps.id}${ps.level}`),
   ].join(' ');
@@ -85,13 +86,15 @@ function median(xs: number[]): number {
 }
 
 /** Runs `runs` seeds per style and returns the report as text lines. */
-export function balanceReport(runs: number, styles: readonly BotStyle[] = ['skilled', 'casual', 'still'], waves = 50): string[] {
+export function balanceReport(
+  runs: number, styles: readonly BotStyle[] = ['skilled', 'casual', 'still'], waves = 50, relic: RelicId = 'ball',
+): string[] {
   const out: string[] = [];
   for (const style of styles) {
     const all: RunStats[] = [];
-    out.push(`== ${style} ==`);
+    out.push(`== ${style} (${relic}) ==`);
     for (let seed = 1; seed <= runs; seed++) {
-      const r = playChapter(seed, style, waves);
+      const r = playChapter(seed, style, waves, 30, relic);
       all.push(r);
       const t = (xs: (number | null)[]) => xs.map((x) => (x === null ? '-' : `${x}s`)).join('/');
       out.push(

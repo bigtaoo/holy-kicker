@@ -1,5 +1,5 @@
 import { ELITE, HERO, type RunConfig } from './config';
-import type { Card, PassiveId, SpellId } from './content';
+import type { Card, PassiveId, RelicId, SpellId } from './content';
 import { Prng } from './math/prng';
 
 // The whole simulation state: plain data, integers only (FP positions, tick timers), in
@@ -41,7 +41,8 @@ export interface Player extends Body {
   revives: number;
   /** Health regenerated so far toward the next point, in units of 1 / REGEN_UNIT. */
   regen: number;
-  /** Relic level, 1..MAX_LEVEL. */
+  /** The relic played with, and its level, 1..MAX_LEVEL. */
+  relicId: RelicId;
   relic: number;
   /** The relic awakened (after MAX_LEVEL with its paired passive). */
   awakened: boolean;
@@ -233,11 +234,11 @@ export function newMob(x: number, y: number, hp = 1): Mob {
   return { ...body(x, y), hp };
 }
 
-export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0): Player {
+export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball'): Player {
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0,
-    hp, maxHp: hp, dead: false, revives, regen: 0, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
+    hp, maxHp: hp, dead: false, revives, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
     bet: false, offerings: 0,
   };
 }

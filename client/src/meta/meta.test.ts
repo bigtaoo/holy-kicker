@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { doubleCopper, settleRun, tabLock, xpToNext } from './progress';
+import { doubleCopper, settleRun, tabLock, unlockedRelics, xpToNext } from './progress';
 import { newSave, parseSave } from './save';
 import { MemoryStore, SafeStore, SaveStore } from './saveStore';
 
@@ -71,6 +71,17 @@ describe('progress', () => {
     const replay = settleRun({ ...save, chapter: 1 }, { chapter: 1, waves: 50 });
     expect(replay.reward.firstClear).toBe(false);
     expect(replay.save.chapter).toBe(1);
+  });
+
+  it('unlocks the staff with the first clear, and the save keeps only an unlocked relic', () => {
+    expect(unlockedRelics(newSave())).toEqual(['ball']);
+    const { save, reward } = settleRun(newSave(), { chapter: 1, waves: 50 });
+    expect(reward.newRelic).toBe('staff');
+    expect(unlockedRelics(save)).toEqual(['ball', 'staff']);
+    expect(settleRun(save, { chapter: 1, waves: 50 }).reward.newRelic).toBeNull();
+    expect(parseSave(JSON.stringify({ ...save, relic: 'staff' })).relic).toBe('staff');
+    expect(parseSave(JSON.stringify({ relic: 'staff' })).relic).toBe('ball');
+    expect(parseSave(JSON.stringify({ cleared: 1, relic: 'sword' })).relic).toBe('ball');
   });
 
   it('levels up from wave xp, carrying the remainder', () => {

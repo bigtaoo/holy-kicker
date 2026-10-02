@@ -1,5 +1,6 @@
 import {
-  EVOLVE, MAX_LEVEL, PASSIVES, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, TICK_RATE, type Card, type CardKind, type PassiveId, type Player, type SpellId,
+  EVOLVE, MAX_LEVEL, PASSIVES, RELIC_IDS, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, STAFF_AWAKENED, STAFF_LEVELS, TICK_RATE,
+  type Card, type CardKind, type PassiveId, type Player, type RelicId, type SpellId,
 } from '@hk/engine';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
@@ -31,7 +32,18 @@ function gain(a: number, b: number): number {
   return Math.round((b / a - 1) * 100);
 }
 
-function relicLines(level: number): string[] {
+function staffLines(level: number): string[] {
+  const a = STAFF_LEVELS[level - 1];
+  const b = STAFF_LEVELS[level];
+  const lines: string[] = [];
+  if (b.reach !== a.reach) lines.push(t('card.reach', { n: gain(a.reach, b.reach) }));
+  if (b.damage !== a.damage) lines.push(t('card.damage', { n: gain(a.damage, b.damage) }));
+  if (b.cooldown !== a.cooldown) lines.push(t('card.cooldown', { a: seconds(a.cooldown), b: seconds(b.cooldown) }));
+  return lines;
+}
+
+function relicLines(id: RelicId, level: number): string[] {
+  if (id === 'staff') return staffLines(level);
   const a = RELIC_LEVELS[level - 1];
   const b = RELIC_LEVELS[level];
   const lines: string[] = [];
@@ -68,8 +80,13 @@ function passiveDesc(id: PassiveId): string {
   return t(`passive.${id}.desc`, { n: id === 'rice' ? n / 10 : n });
 }
 
-function evolveDesc(id: SpellId | 'ball'): string {
+function isRelic(id: string): id is RelicId {
+  return RELIC_IDS.includes(id as RelicId);
+}
+
+function evolveDesc(id: SpellId | RelicId): string {
   if (id === 'ball') return t('evolve.ball.desc', { n: EVOLVE.splinters + 1 });
+  if (id === 'staff') return t('evolve.staff.desc');
   if (id === 'palm') return t('evolve.palm.desc', { s: seconds(SPELL_EVOLVED.palm.life) });
   if (id === 'incense') {
     // per mille of max health per field tick, as percent per second
@@ -81,26 +98,28 @@ function evolveDesc(id: SpellId | 'ball'): string {
 }
 
 /** An evolution card: what changes, then the area or damage gained over level 5. */
-function evolveText(id: SpellId | 'ball'): CardText {
+function evolveText(id: SpellId | RelicId): CardText {
   const lines = [evolveDesc(id)];
-  if (id !== 'ball' && id !== 'cymbal') {
+  if (id === 'staff') lines.push(t('card.reach', { n: gain(STAFF_LEVELS[MAX_LEVEL - 1].reach, STAFF_AWAKENED.reach) }));
+  else if (!isRelic(id) && id !== 'cymbal') {
     const a = SPELL_LEVELS[id][MAX_LEVEL - 1];
     const b = SPELL_EVOLVED[id];
     if (b.radius !== a.radius) lines.push(t('card.area', { n: gain(a.radius, b.radius) }));
     if (b.damage !== a.damage) lines.push(t('card.damage', { n: gain(a.damage, b.damage) }));
   }
-  const tag = id === 'ball' ? t('card.awaken') : t('card.evolve');
+  const tag = isRelic(id) ? t('card.awaken') : t('card.evolve');
   return { kind: 'evolve', name: t(`evolve.${id}.name`), tag, fresh: true, lines, icon: id, pairs: [] };
 }
 
 /** The text of `card` for player `p` (whose build says whether it is new or a level step). */
 export function cardText(card: Card, p: Player): CardText {
   if (card.kind === 'shrine') return shrineText(card.id);
-  if (card.kind === 'evolve') return evolveText(card.id as SpellId | 'ball');
+  if (card.kind === 'evolve') return evolveText(card.id as SpellId | RelicId);
   const levelTag = (level: number) => t('card.level', { a: level, b: level + 1 });
   const item = { icon: card.id as IconId, pairs: pairsOf(p, card.id as IconId) };
   if (card.kind === 'relic') {
-    return { kind: 'relic', name: t('relic.ball.name'), tag: levelTag(p.relic), fresh: false, lines: relicLines(p.relic), ...item };
+    const id = card.id as RelicId;
+    return { kind: 'relic', name: t(`relic.${id}.name`), tag: levelTag(p.relic), fresh: false, lines: relicLines(id, p.relic), ...item };
   }
   if (card.kind === 'spell') {
     const id = card.id as SpellId;
