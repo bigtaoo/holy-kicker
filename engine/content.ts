@@ -22,8 +22,8 @@ export function xpToNext(level: number): number {
 }
 
 /** The relic a run is played with (docs/content.md "Relics"), chosen in the lobby. */
-export type RelicId = 'ball' | 'staff';
-export const RELIC_IDS: readonly RelicId[] = ['ball', 'staff'];
+export type RelicId = 'ball' | 'staff' | 'fish';
+export const RELIC_IDS: readonly RelicId[] = ['ball', 'staff', 'fish'];
 
 /** The cuju ball (the starter relic): bounces per kick, damage percent, kick cooldown. */
 export interface RelicLevel {
@@ -65,6 +65,36 @@ export const STAFF_AWAKENED: StaffLevel = st(400, 0.65, 440, 150);
 export const STAFF = {
   /** The swing starts when a target is this much further than the reach (it is still closing in). */
   startPercent: 115,
+};
+
+/**
+ * The wooden fish: every tap sends a sound ring out from the hero to `reach`, hitting each
+ * enemy it passes once at `damage` percent.
+ */
+export interface FishLevel {
+  damage: number;
+  cooldown: number;
+  reach: number;
+}
+
+function fl(damage: number, cooldown: number, reach: number): FishLevel {
+  return { damage, cooldown: ticks(cooldown), reach: toFp(reach) };
+}
+
+export const FISH_LEVELS: readonly FishLevel[] = [
+  fl(150, 1.1, 360), fl(150, 1.1, 400), fl(200, 1.1, 400), fl(200, 0.9, 430), fl(280, 0.9, 460),
+];
+
+/** Stunning Bell: a wider ring, and every `stunEvery`th one stuns what it passes (FISH). */
+export const FISH_AWAKENED: FishLevel = fl(280, 0.9, 520);
+
+export const FISH = {
+  /** The hero taps when a target is this close (a share of the reach): the ring has to reach it. */
+  startPercent: 90,
+  ringSpeed: perTick(1500),
+  /** Stunning Bell: every this many rings stun mobs and the elite (not the boss) this long. */
+  stunEvery: 4,
+  stun: ticks(1),
 };
 
 export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal';
@@ -143,7 +173,7 @@ export const PASSIVES: Readonly<Record<PassiveId, { stat: Stat; perLevel: number
  * way. The evolved row replaces the level-5 row.
  */
 export const EVOLVE_PAIR: Readonly<Record<SpellId | RelicId, PassiveId>> = {
-  ball: 'legs', staff: 'iron', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
+  ball: 'legs', staff: 'iron', fish: 'calm', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
 };
 
 /** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */

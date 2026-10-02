@@ -13,6 +13,8 @@ export type SimEvent =
   | { type: 'kick'; owner: number; dir: number }
   /** A player's staff landed: centred on (x, y), a half circle around `brad` (all round if `full`). */
   | { type: 'sweep'; owner: number; x: number; y: number; brad: number; reach: number; full: boolean }
+  /** A player tapped the wooden fish: a ring grows from (x, y) to `reach`; `stun` for the Stunning Bell's fourth. */
+  | { type: 'ring'; owner: number; x: number; y: number; reach: number; stun: boolean }
   /** A player took `value` damage (0 in the sandbox, where heroes cannot die). */
   | { type: 'hurt'; owner: number; value: number }
   | { type: 'heroDown'; owner: number }

@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-02 for ENGINE_VERSION 9 (the staff relic). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(9);
+    // Recorded 2026-10-02 for ENGINE_VERSION 10 (the wooden fish relic). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(10);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -96,9 +96,9 @@ describe('Engine', () => {
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'rings', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
   });
 });
 
-const GOLDEN = 1119671272;
-const GOLDEN_CHAPTER = 1214180792;
+const GOLDEN = 1569462063;
+const GOLDEN_CHAPTER = 1457612473;

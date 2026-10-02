@@ -7,6 +7,7 @@ import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
 import { StaffSwing } from './staffView';
+import { FishTaps } from './fishView';
 import { Hero } from './hero';
 import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
@@ -44,6 +45,7 @@ export interface Art {
   fox: MobSheet;
   cuju: Texture;
   staff: Texture;
+  fish: Texture;
   /** Repeating ground tile; null draws the flat placeholder field. */
   ground: Texture | null;
   /** Scattered ground decorations; null when the scene turns them off. */
@@ -116,6 +118,7 @@ export class Game {
   private readonly threats: ThreatLayer | null;
   private readonly balls: Balls;
   private readonly staff: StaffSwing;
+  private readonly fish: FishTaps;
   private readonly boss: Boss | null;
   private readonly spells: SpellView;
   private readonly aura: AuraStack;
@@ -166,6 +169,7 @@ export class Game {
     this.balls = new Balls(this.world, art.cuju, shadowTex);
     // the crescent draws over the horde, under the elite
     this.staff = new StaffSwing(this.world, art.staff, HERO_TOP_Z - 3);
+    this.fish = new FishTaps(this.world, art.fish, HERO_TOP_Z - 3);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
     this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
@@ -290,11 +294,16 @@ export class Game {
     for (const e of events) {
       switch (e.type) {
         case 'kick':
-          if (e.owner === LOCAL) this.hero.kick(s.players[0].relicId === 'staff');
+          if (e.owner === LOCAL) this.hero.kick(s.players[0].relicId !== 'ball');
           break;
         case 'sweep': {
           const p = s.players.find((q) => q.owner === e.owner);
           if (e.owner === LOCAL && p) this.staff.swing(e.brad, e.reach / FP, e.full, p.facing);
+          break;
+        }
+        case 'ring': {
+          const p = s.players.find((q) => q.owner === e.owner);
+          if (e.owner === LOCAL && p) this.fish.tap(e.x / FP, e.y / FP, e.reach / FP, e.stun, p.facing);
           break;
         }
         case 'hurt':
@@ -386,6 +395,7 @@ export class Game {
     this.corpses.update(dt);
     this.balls.sync(s.balls, alpha, dt);
     this.staff.update(dt, hx, hy, this.hero.view.zIndex);
+    this.fish.update(dt, hx, hy, this.hero.view.zIndex);
     this.spells.drawFields(s.fields, alpha, dt);
     this.spells.drawCymbals(s.cymbals, alpha, dt);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
@@ -425,7 +435,8 @@ Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
       const x = lerpX(m, alpha);
       const y = lerpY(m, alpha);
       const v = this.mobs[i];
-      v.update(dt, x, y, hx - x, 1, this.scene.settle ? MOB_WALK : 0, this.scene.sway);
+      // a stunned mob (the Stunning Bell) freezes mid-pose
+      v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : 1, this.scene.settle ? MOB_WALK : 0, this.scene.sway);
       if (this.scene.calm) v.shade(depthShade(Math.hypot(x - hx, y - hy)));
     }
     if (this.fox) {

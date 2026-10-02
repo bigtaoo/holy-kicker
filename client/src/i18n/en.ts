@@ -66,6 +66,7 @@ export const en = {
   evolve: {
     ball: { name: 'Meteor Ball', desc: 'Splits into {n} at every bounce' },
     staff: { name: 'Ruyi Staff', desc: 'Sweeps all the way round' },
+    fish: { name: 'Stunning Bell', desc: 'Every {n}th ring stuns for {s}s' },
     palm: { name: 'Mountain Palm', desc: 'Stays and pins enemies {s}s' },
     bolt: { name: 'Endless Chain', desc: 'Forks at every jump' },
     incense: { name: 'Healing Incense', desc: 'Heals {n}% health/s inside' },
@@ -80,6 +81,7 @@ export const en = {
   relic: {
     ball: { name: 'Cuju Ball', desc: 'Kicked, bounces between enemies' },
     staff: { name: 'Staff', desc: 'Sweeps nearby enemies, knocks them back' },
+    fish: { name: 'Wooden Fish', desc: 'Each tap sends a ring through everything near' },
   },
   spell: {
     palm: { name: 'Buddha Palm', desc: 'A giant palm slams the biggest crowd', count: 'Palms {a} → {b}' },

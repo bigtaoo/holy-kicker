@@ -68,6 +68,7 @@ export const zh: Table<typeof en> = {
   evolve: {
     ball: { name: '流星鞠', desc: '每次弹射分裂成 {n} 个球' },
     staff: { name: '如意禅杖', desc: '横扫一整圈' },
+    fish: { name: '晨钟', desc: '每第 {n} 圈声波眩晕 {s} 秒' },
     palm: { name: '五指山', desc: '巨掌留在原地，定住敌人 {s} 秒' },
     bolt: { name: '雷音', desc: '每次跳跃都分叉击中另一个敌人' },
     incense: { name: '万家香火', desc: '站在阵中每秒回复 {n}% 生命' },
@@ -82,6 +83,7 @@ export const zh: Table<typeof en> = {
   relic: {
     ball: { name: '蹴鞠', desc: '踢出后在敌人间弹射' },
     staff: { name: '禅杖', desc: '横扫身边敌人并击退' },
+    fish: { name: '木鱼', desc: '每敲一下，声波扫过身边所有敌人' },
   },
   spell: {
     palm: { name: '如来掌', desc: '巨掌拍向最密集的敌群', count: '掌数 {a} → {b}' },

@@ -22,10 +22,10 @@ export class Hero {
     this.view.addChild(this.body);
   }
 
-  /** A kick, or with the staff only the strain on his face (the swing is staffView's). */
-  kick(staff = false): void {
+  /** A kick, or with another relic only the strain on his face (staffView, fishView draw it). */
+  kick(faceOnly = false): void {
     this.setFace('face_strain', 0.4);
-    if (staff) return;
+    if (faceOnly) return;
     this.action = 'kick';
     this.actor.play('kick', true);
   }

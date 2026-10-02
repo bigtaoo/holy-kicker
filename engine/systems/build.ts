@@ -1,6 +1,6 @@
 import { HERO, SHRINE } from '../config';
 import {
-  EVOLVE_PAIR, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
+  EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
   xpToNext, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat,
 } from '../content';
 import type { SimEvent } from '../events';
@@ -41,9 +41,15 @@ export function staffLevel(p: Player) {
   return p.awakened ? STAFF_AWAKENED : STAFF_LEVELS[p.relic - 1];
 }
 
+export function fishLevel(p: Player) {
+  return p.awakened ? FISH_AWAKENED : FISH_LEVELS[p.relic - 1];
+}
+
 /** Ticks between two attacks of the player's relic. */
 export function relicCooldown(p: Player): number {
-  return p.relicId === 'staff' ? staffLevel(p).cooldown : relicLevel(p).cooldown;
+  if (p.relicId === 'staff') return staffLevel(p).cooldown;
+  if (p.relicId === 'fish') return fishLevel(p).cooldown;
+  return relicLevel(p).cooldown;
 }
 
 /** The numbers a spell slot casts with: its level's row, or the evolved one. */

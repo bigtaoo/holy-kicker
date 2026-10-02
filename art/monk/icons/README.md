@@ -13,6 +13,11 @@ art/monk/icons/staff_world.jpg client/public/art/staff.png 400`); `staff.jpg`, t
 same image turned 45 degrees, so both look alike (the diagonal render, `r1/staff_spear.jpg`,
 came out like a spear). Packed after `ball.jpg`.
 
+The wooden fish (2026-10-02): `fish_world.jpg` is both the in-world sprite (`python
+tools/cutout.py art/monk/icons/fish_world.jpg client/public/art/fish.png 200`) and the icon
+(`fish.jpg` is a copy, packed after `staff.jpg`). The prompt with a mallet leaning on it
+(`fish.txt`) came out as a sad pumpkin with a stick, so the icon is the fish alone.
+
 Findings:
 - The first round (`r1/`) said "for a kung-fu monk roguelite" and every icon came back with a
   monk holding or standing next to the object. The prompt must say "a single object, no people,

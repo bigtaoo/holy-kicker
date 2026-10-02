@@ -8,6 +8,7 @@ import { createState, newElite, newMob, newPlayer, type SimState } from './state
 import { bossSystem, newBoss } from './systems/boss';
 import { buildSystem, choosing } from './systems/build';
 import { ballSystem } from './systems/combat';
+import { ringSystem } from './systems/fish';
 import { dropGem, dropSystem } from './systems/drops';
 import { hordeSystem, ringPoint } from './systems/horde';
 import { applyInput, contactSystem, hurtPlayer, kickSystem, movePlayers } from './systems/players';
@@ -19,10 +20,10 @@ import { beginWave, waveSystem } from './systems/waves';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 9;
+export const ENGINE_VERSION = 10;
 
 export const STEP_ORDER = [
-  'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
+  'input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'rings', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
 ] as const;
 
 export class Engine {
@@ -67,6 +68,7 @@ export class Engine {
     bossSystem(s, events, hurt);
     kickSystem(s, events);
     ballSystem(s, events);
+    ringSystem(s, events);
     spellSystem(s, events);
     if (s.config.threats) threatSystem(s, events, hurt);
     contactSystem(s, events);

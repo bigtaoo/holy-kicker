@@ -82,6 +82,11 @@ describe('progress', () => {
     expect(parseSave(JSON.stringify({ ...save, relic: 'staff' })).relic).toBe('staff');
     expect(parseSave(JSON.stringify({ relic: 'staff' })).relic).toBe('ball');
     expect(parseSave(JSON.stringify({ cleared: 1, relic: 'sword' })).relic).toBe('ball');
+    // the second clear brings the wooden fish
+    const second = settleRun(save, { chapter: 2, waves: 50 });
+    expect(second.reward.newRelic).toBe('fish');
+    expect(unlockedRelics(second.save)).toEqual(['ball', 'staff', 'fish']);
+    expect(parseSave(JSON.stringify({ ...second.save, relic: 'fish' })).relic).toBe('fish');
   });
 
   it('levels up from wave xp, carrying the remainder', () => {

@@ -56,6 +56,8 @@ export interface Player extends Body {
   bet: boolean;
   /** Offerings paid so far (extra copper at the results). */
   offerings: number;
+  /** Wooden fish taps so far (every FISH.stunEvery-th ring of the Stunning Bell stuns). */
+  taps: number;
 }
 
 export interface SpellSlot {
@@ -73,11 +75,14 @@ export interface PassiveSlot {
 
 export interface Mob extends Body {
   hp: number;
+  /** Ticks left standing stunned (the Stunning Bell). */
+  stun: number;
 }
 
 export interface Elite extends Body {
   hp: number;
   maxHp: number;
+  stun: number;
 }
 
 /** Still going, the chapter boss fell (won) or every hero is down (lost, until a revive). */
@@ -172,6 +177,21 @@ export interface Cymbal extends Body {
   angle: number;
 }
 
+/** A wooden fish's sound ring: grows from where it was tapped and hits each target once. */
+export interface Ring {
+  id: number;
+  owner: number;
+  x: number;
+  y: number;
+  radius: number;
+  reach: number;
+  damage: number;
+  /** Ticks it stuns what it hits (0 for an ordinary ring). */
+  stun: number;
+  /** Targets it already hit (combat.ts numbering). */
+  hit: number[];
+}
+
 export interface SimState {
   readonly config: RunConfig;
   tick: number;
@@ -192,6 +212,7 @@ export interface SimState {
   overflow: Gem | null;
   fields: Field[];
   cymbals: Cymbal[];
+  rings: Ring[];
   volleyT: number;
   zoneT: number;
   spellT: number;
@@ -223,7 +244,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
-    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [],
+    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),
@@ -231,7 +252,7 @@ export function createState(config: RunConfig): SimState {
 }
 
 export function newMob(x: number, y: number, hp = 1): Mob {
-  return { ...body(x, y), hp };
+  return { ...body(x, y), hp, stun: 0 };
 }
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball'): Player {
@@ -239,10 +260,10 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0,
     hp, maxHp: hp, dead: false, revives, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
-    bet: false, offerings: 0,
+    bet: false, offerings: 0, taps: 0,
   };
 }
 
 export function newElite(x: number, y: number): Elite {
-  return { ...body(x, y), hp: ELITE.hp, maxHp: ELITE.hp };
+  return { ...body(x, y), hp: ELITE.hp, maxHp: ELITE.hp, stun: 0 };
 }

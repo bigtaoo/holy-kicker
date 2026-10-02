@@ -1,4 +1,4 @@
-import type { Card } from '../content';
+import type { Card, RelicId } from '../content';
 import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist, dist2, toFp } from '../math/fixed';
 import { atan2B, BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -12,8 +12,8 @@ import type { Player, SimState } from '../state';
 //
 // Moving: when enemies press close, it steps to the open side (the boss's marked slam circle
 // counts most); with nothing pressing, it walks to the nearest gem or stands. With the staff
-// it goes after the elite and the boss and lets them into the staff's reach (it still runs
-// from a slam).
+// or the wooden fish it goes after the elite and the boss and lets them into the relic's reach
+// (it still runs from a slam).
 // `skilled` re-decides every tenth of a second, `casual` every 0.4 s and holds the stick in
 // between; `still` never moves: the floor of what a build alone survives.
 
@@ -27,17 +27,26 @@ const LOOK = toFp(260);
 const NEAR_MOB = toFp(300);
 const NEAR_ELITE = toFp(450);
 const NEAR_BOSS = toFp(500);
-/** With the staff the big ones may come this close, inside its reach. */
-const NEAR_BIG_STAFF = toFp(200);
-/** With the staff, being further than this from a big one counts as danger too (it chases). */
-const CHASE_FROM = toFp(280);
+/**
+ * A close relic lets the big ones come `near`, inside its reach; being further than `chase`
+ * from one counts as danger too (the bot goes after it). null: keep away (the cuju).
+ */
+interface CloseIn {
+  near: number;
+  chase: number;
+}
+const CLOSE_IN: Record<RelicId, CloseIn | null> = {
+  ball: null,
+  staff: { near: toFp(200), chase: toFp(280) },
+  fish: { near: toFp(220), chase: toFp(330) },
+};
 const GEM_REACH = toFp(900);
 const DIRS = 16;
 /** Danger the hero shrugs off: below it he goes for gems or stands and lets the build work. */
 const CALM = toFp(120);
 
 /** How bad standing at (x, y) is: every enemy in reach counts, the closer the more. */
-function danger(s: SimState, x: number, y: number, melee: boolean): number {
+function danger(s: SimState, x: number, y: number, close: CloseIn | null): number {
   let sum = 0;
   const add = (bx: number, by: number, reach: number, weight: number) => {
     const d = dist(bx - x, by - y);
@@ -45,19 +54,19 @@ function danger(s: SimState, x: number, y: number, melee: boolean): number {
   };
   const chase = (bx: number, by: number) => {
     const d = dist(bx - x, by - y);
-    if (d > CHASE_FROM) sum += d - CHASE_FROM;
+    if (close && d > close.chase) sum += d - close.chase;
   };
   for (const m of s.mobs) add(m.x, m.y, NEAR_MOB, 1);
   const b = s.boss;
   const boss = b && b.phase !== 'down' ? b : null;
   if (s.elite) {
-    add(s.elite.x, s.elite.y, melee ? NEAR_BIG_STAFF : NEAR_ELITE, 4);
-    if (melee && !boss) chase(s.elite.x, s.elite.y);
+    add(s.elite.x, s.elite.y, close ? close.near : NEAR_ELITE, 4);
+    if (!boss) chase(s.elite.x, s.elite.y);
   }
   if (boss) {
-    add(boss.x, boss.y, melee ? NEAR_BIG_STAFF : NEAR_BOSS, 6);
+    add(boss.x, boss.y, close ? close.near : NEAR_BOSS, 6);
     if (boss.phase === 'windup') add(boss.zoneX, boss.zoneY, toFp(480), 40);
-    else if (melee) chase(boss.x, boss.y);
+    else chase(boss.x, boss.y);
   }
   return sum;
 }
@@ -95,8 +104,8 @@ export class Bot {
    * toward the nearest gem, or nowhere.
    */
   private heading(s: SimState, p: Player): [number, number] {
-    const melee = p.relicId === 'staff';
-    const here = danger(s, p.x, p.y, melee);
+    const close = CLOSE_IN[p.relicId];
+    const here = danger(s, p.x, p.y, close);
     if (here < CALM) return this.toGem(s, p);
     let best = here * 2;
     let bx = 0;
@@ -105,7 +114,7 @@ export class Bot {
       const a = (k * BRAD_FULL) / DIRS;
       const dx = Math.trunc((cosB(a) * LOOK) / TRIG_ONE);
       const dy = Math.trunc((sinB(a) * LOOK) / TRIG_ONE);
-      let d = danger(s, p.x + dx, p.y + dy, melee) + danger(s, p.x + (dx >> 1), p.y + (dy >> 1), melee);
+      let d = danger(s, p.x + dx, p.y + dy, close) + danger(s, p.x + (dx >> 1), p.y + (dy >> 1), close);
       if (k === this.lastDir) d -= d >> 3;
       if (d < best) {
         best = d;

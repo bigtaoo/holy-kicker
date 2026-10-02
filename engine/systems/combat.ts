@@ -93,6 +93,7 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
     m.hp -= value;
     if (m.hp > 0) return;
     m.hp = mobHp(s.wave);
+    m.stun = 0;
     events.push({ type: 'mobDown', index: i, x: t.x, y: t.y, dx: t.x - by.x, dy: t.y - by.y });
     dropGem(s, t.x, t.y, 1);
     ringPoint(s.ai, by.x, by.y, t);

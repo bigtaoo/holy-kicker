@@ -39,11 +39,11 @@ Names are working names; every name ships through the string table (en / zh-CN s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
   it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce. Not yet: the
-  awakenings of the relics after the staff.
+  awakenings of the relics after the wooden fish.
 - **Codex implemented** (`client/src/meta/codex.ts`, `client/src/ui/codexTab.ts`): the save keeps
   every evolution and awakening done at least once; a run reports what it evolved when it is
   settled (also on giving up), and the results name the new entries. The lobby's Codex tab
-  (open after chapter 2) shows all of them, the found ones by name and the rest as "???";
+  (open after chapter 2) shows all of them (8 with the wooden fish), the found ones by name and the rest as "???";
   tapping one shows what it does and its recipe, which is never hidden.
 - **Build strip on the HUD** (`client/src/ui/buildSlots.ts`, `buildBar.ts`): under the
   experience bar, the relic, 4 spell and 4 passive slots (empty ones as dim discs), each with its
@@ -60,7 +60,7 @@ Unlocked one per chapter clear (the cuju ball is the starter).
 |---|---|---|---|---|
 | Cuju ball | Cuju Ball / 蹴鞠 | Kicked, bounces between 3 targets (implemented) | Arhat Legs | **Meteor Ball** / 流星鞠: splits into 3 on every bounce |
 | Staff | Staff / 禅杖 | Close 180° sweep with knockback (implemented) | Iron Head | **Ruyi Staff** / 如意禅杖: sweep grows to a full circle and longer reach (implemented) |
-| Wooden fish | Wooden Fish / 木鱼 | Each tap sends a sound ring around the hero | Calm Mind | **Stunning Bell** / 晨钟: every 4th ring stuns for 1 s |
+| Wooden fish | Wooden Fish / 木鱼 | Each tap sends a sound ring around the hero (implemented) | Calm Mind | **Stunning Bell** / 晨钟: every 4th ring stuns for 1 s (implemented) |
 | Prayer beads | Prayer Beads / 念珠 | Beads orbit the hero, hit on contact | Wisdom Eye | **108 Beads** / 百八念珠: two rings, opposite directions |
 | Alms bowl | Alms Bowl / 钵盂 | Thrown, returns, drags small mobs along | Karma | **Bottomless Bowl** / 无底钵: swallows small mobs, drops their XP at once |
 
@@ -78,6 +78,17 @@ first clear already changes how the game plays.
   goes to the big ones, so the bots chase the elite and the boss with it (and still run from a
   slam). Then a chapter takes about as long as with the ball (790 s against 800–830 s), elites
   and bosses fall a little faster, and the hero takes about a third less damage (the knockback).
+- **Wooden fish implemented** (`FISH_LEVELS`, `FISH_AWAKENED`, `FISH` in `engine/content.ts`,
+  `engine/systems/fish.ts`): the hero taps when a target is within 90 % of the reach; a ring
+  grows from where he stood at 1500 units/s to its reach (360 → 460, awakened 520) and hits each
+  enemy it passes once at 150 → 280 %, the elite and the boss at full relic damage, with no
+  knockback. The Stunning Bell (with Calm Mind) makes every 4th ring stun the mobs and the elite
+  it passes for 1 s (they stand frozen; the boss is not stunned). A mob it kills respawns
+  unstunned, so the stun matters on the tougher late waves and the elite.
+- Balance (`npm run balance -- 10 skilled casual fish`): like the staff, the fish only reaches the
+  big ones if the bots close in (to 220–330, inside the reach); then a chapter takes 805 s,
+  level with the ball, and the hero takes less damage than with it. Kept away (the ball's
+  distance) the rings never reach the boss and a chapter took 960–1020 s.
   Without the chase the boss took 3–10 times as long.
 
 ## Spells (8) and evolutions

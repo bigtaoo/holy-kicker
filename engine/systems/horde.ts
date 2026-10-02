@@ -117,12 +117,28 @@ function pin(s: SimState): void {
   }
 }
 
+/** Stunned mobs (the Stunning Bell) stay where they were; the timers run down. */
+function stunned(s: SimState): void {
+  for (const m of s.mobs) {
+    if (m.stun <= 0) continue;
+    m.stun--;
+    m.x = m.px;
+    m.y = m.py;
+  }
+}
+
 /** The horde step plus the elite, then mobs left far behind come back around their player. */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
   stepHorde(s.mobs, s.players, { speed: HORDE.speed, stopDist: HORDE.stopDist, sep: grid.cell, queue: c.queue }, grid);
   pin(s);
-  if (s.elite) stepHorde([s.elite], s.players, { speed: ELITE.speed, stopDist: ELITE.stopDist, sep: 0, queue: false });
+  stunned(s);
+  const e = s.elite;
+  if (e && e.stun > 0) {
+    e.stun--;
+    e.px = e.x;
+    e.py = e.y;
+  } else if (e) stepHorde([e], s.players, { speed: ELITE.speed, stopDist: ELITE.stopDist, sep: 0, queue: false });
   const far = HORDE.respawnDist * HORDE.respawnDist;
   for (const m of s.mobs) {
     const t = nearestPlayer(s.players, m.x, m.y);
