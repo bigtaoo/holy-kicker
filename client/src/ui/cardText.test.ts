@@ -48,6 +48,14 @@ describe('card text', () => {
     expect(cardText({ kind: 'evolve', id: 'cymbal' }, p)).toMatchObject({ name: '钹轮', tag: '进化！', lines: ['4 片铜钹永远绕身旋转'] });
   });
 
+  it('carries the item icon and what it evolves with', () => {
+    const p = newPlayer(0, 0, 0);
+    expect(cardText({ kind: 'spell', id: 'bell' }, p)).toMatchObject({ icon: 'bell', pairs: ['iron'] });
+    expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ icon: 'legs', pairs: ['ball'] });
+    expect(cardText({ kind: 'evolve', id: 'palm' }, p)).toMatchObject({ icon: 'palm', pairs: [] });
+    expect(cardText({ kind: 'shrine', id: 'heal' }, p).icon).toBeNull();
+  });
+
   it('has a name and at least one line for every card at every level', () => {
     const p = newPlayer(0, 0, 0);
     const cards: Card[] = [

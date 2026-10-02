@@ -116,7 +116,8 @@ export class Boss {
   /** Keeps the bar centred across the top of the play area (play-area pixels and scale). */
   layout(playW: number, scale: number): void {
     this.hud.scale.set(scale);
-    this.hud.position.set(playW / 2, 210 * scale);
+    // under the build strip and the wave counter (RunHud)
+    this.hud.position.set(playW / 2, 400 * scale);
   }
 
   private drawZone(b: BossState, alpha: number): void {

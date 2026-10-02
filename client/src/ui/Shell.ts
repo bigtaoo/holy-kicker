@@ -16,6 +16,7 @@ import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
+import { buildSlots } from './buildSlots';
 import { uiFrame, type Screen } from './uiLayout';
 
 // The game's flow (docs/design.md "Flow"): the first launch goes straight into chapter 1,
@@ -129,7 +130,7 @@ export class Shell {
       giveUp: () => this.endRun(),
       revive: () => this.revive(),
       pick: (index) => this.game?.pick(index),
-    });
+    }, this.art.icons);
     this.setScreen(this.hud);
     this.platform.portal.gameplayStart();
   }
@@ -211,6 +212,7 @@ export class Shell {
     }
     const p = s.players[0];
     hud.setXp(p.level, p.xp / xpToNext(p.level));
+    hud.setBuild(buildSlots(p));
     // offers come one after another (several levels at once, a shrine's insight), each a new list
     if (p.offer.length > 0 && this.shownOffer !== p.offer) {
       this.shownOffer = p.offer;

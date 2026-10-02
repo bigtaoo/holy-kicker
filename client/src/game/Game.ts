@@ -48,6 +48,8 @@ export interface Art {
   deco: DecoSheet | null;
   /** The boss rig; null when the scene leaves the boss out. */
   boss: TaoAsset | null;
+  /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
+  icons: ReadonlyMap<string, Texture>;
 }
 
 const HERO_HEIGHT = 120;
@@ -229,7 +231,8 @@ export class Game {
     this.label.style.fontSize = Math.max(10, 48 * vp.scale);
     this.label.style.stroke = { color: 0x000000, width: Math.max(1, 4 * vp.scale) };
     // under the HUD's experience bar
-    this.label.position.set(24 * vp.scale, 90 * vp.scale);
+    // dev only, below the HUD strip, the wave counter and the boss bar
+    this.label.position.set(24 * vp.scale, 460 * vp.scale);
     this.boss?.layout(vp.playW, vp.scale);
   }
 

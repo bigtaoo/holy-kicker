@@ -39,7 +39,13 @@ Names are working names; every name ships through the string table (en / zh-CN s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
   it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce. Not yet: the
-  Codex record of a first evolution, the build icons on the HUD, the other relics' awakenings.
+  Codex record of a first evolution, the other relics' awakenings.
+- **Build strip on the HUD** (`client/src/ui/buildSlots.ts`, `buildBar.ts`): under the
+  experience bar, the relic, 4 spell and 4 passive slots (empty ones as dim discs), each with its
+  level as 5 pips. Evolved items get a gold rim and gold pips; an item whose evolution comes on the
+  next level-up pulses gold; a maxed item still missing its passive shows that passive small on
+  its corner. Level-up cards show the item icon, with the passive a spell evolves with (or the
+  owned items a passive would evolve) small on the corner, so the recipe is learned without text.
 
 ## Relics (5)
 

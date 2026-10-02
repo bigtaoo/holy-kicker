@@ -3,6 +3,7 @@ import {
 } from '@hk/engine';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
+import { pairsOf, type IconId } from './buildSlots';
 
 // What a level-up card says (docs/content.md "International players"): the name, "New!" or
 // the level step, and one short line per change with numbers, read from the engine's tables
@@ -15,6 +16,10 @@ export interface CardText {
   tag: string;
   fresh: boolean;
   lines: string[];
+  /** The item's icon; null for shrine blessings. */
+  icon: IconId | null;
+  /** What the item evolves with (shown small on the icon), see pairsOf. */
+  pairs: IconId[];
 }
 
 function seconds(ticks: number): string {
@@ -85,7 +90,7 @@ function evolveText(id: SpellId | 'ball'): CardText {
     if (b.damage !== a.damage) lines.push(t('card.damage', { n: gain(a.damage, b.damage) }));
   }
   const tag = id === 'ball' ? t('card.awaken') : t('card.evolve');
-  return { kind: 'evolve', name: t(`evolve.${id}.name`), tag, fresh: true, lines };
+  return { kind: 'evolve', name: t(`evolve.${id}.name`), tag, fresh: true, lines, icon: id, pairs: [] };
 }
 
 /** The text of `card` for player `p` (whose build says whether it is new or a level step). */
@@ -93,20 +98,21 @@ export function cardText(card: Card, p: Player): CardText {
   if (card.kind === 'shrine') return shrineText(card.id);
   if (card.kind === 'evolve') return evolveText(card.id as SpellId | 'ball');
   const levelTag = (level: number) => t('card.level', { a: level, b: level + 1 });
+  const item = { icon: card.id as IconId, pairs: pairsOf(p, card.id as IconId) };
   if (card.kind === 'relic') {
-    return { kind: 'relic', name: t('relic.ball.name'), tag: levelTag(p.relic), fresh: false, lines: relicLines(p.relic) };
+    return { kind: 'relic', name: t('relic.ball.name'), tag: levelTag(p.relic), fresh: false, lines: relicLines(p.relic), ...item };
   }
   if (card.kind === 'spell') {
     const id = card.id as SpellId;
     const slot = p.spells.find((s) => s.id === id);
     const name = t(`spell.${id}.name`);
-    if (!slot) return { kind: 'spell', name, tag: t('card.new'), fresh: true, lines: [spellDesc(id)] };
-    return { kind: 'spell', name, tag: levelTag(slot.level), fresh: false, lines: spellLines(id, slot.level) };
+    if (!slot) return { kind: 'spell', name, tag: t('card.new'), fresh: true, lines: [spellDesc(id)], ...item };
+    return { kind: 'spell', name, tag: levelTag(slot.level), fresh: false, lines: spellLines(id, slot.level), ...item };
   }
   const id = card.id as PassiveId;
   const slot = p.passives.find((s) => s.id === id);
   return {
-    kind: 'passive', name: t(`passive.${id}.name`), tag: slot ? levelTag(slot.level) : t('card.new'), fresh: !slot, lines: [passiveDesc(id)],
+    kind: 'passive', name: t(`passive.${id}.name`), tag: slot ? levelTag(slot.level) : t('card.new'), fresh: !slot, lines: [passiveDesc(id)], ...item,
   };
 }
 
@@ -116,5 +122,5 @@ function shrineText(id: string): CardText {
     id === 'heal' ? [t('shrine.heal.desc', { n: SHRINE.healPercent })]
     : id === 'insight' ? [t('shrine.insight.desc')]
     : [t('shrine.offering.desc'), t('shrine.offering.more', { n: BALANCE.offeringPercent })];
-  return { kind: 'shrine', name, tag: '', fresh: false, lines };
+  return { kind: 'shrine', name, tag: '', fresh: false, lines, icon: null, pairs: [] };
 }

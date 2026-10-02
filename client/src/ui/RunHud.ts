@@ -1,11 +1,13 @@
 import { Container, Sprite, Texture, type Text } from 'pixi.js';
 import { t } from '../i18n';
+import { BuildBar, type IconSheet } from './buildBar';
+import { buildKey, type BuildSlot } from './buildSlots';
 import { cardPanel } from './cardPanel';
 import type { CardText } from './cardText';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
-// The in-run overlay: the experience bar and level, the wave counter, a pause button and the
+// The in-run overlay: the experience bar and level, the build strip, the wave counter, a pause button and the
 // pause panel, a banner when a wave starts, the level-up cards, and the death panel (revive
 // with an ad, or give up).
 
@@ -27,6 +29,7 @@ const BANNER_TIME = 2;
 const BANNER_FADE = 0.5;
 const XP_H = 30;
 const XP_Y = 52;
+const BUILD_Y = 150;
 
 export class RunHud implements Screen {
   readonly view = new Container();
@@ -47,10 +50,14 @@ export class RunHud implements Screen {
   private offer: CardText[] | null = null;
   private offerTitle = '';
   private picked = false;
+  private build: BuildBar | null = null;
+  private slots: readonly BuildSlot[] = [];
+  private slotsKey = '';
 
   constructor(
     private readonly total: number,
     private readonly actions: RunActions,
+    private readonly icons: IconSheet,
   ) {}
 
   layout(f: UiFrame): void {
@@ -65,6 +72,10 @@ export class RunHud implements Screen {
     this.waveText = wave;
     this.view.addChild(wave);
     this.xpBar(f);
+    const build = (this.build = new BuildBar(this.icons));
+    build.view.position.set(f.w / 2, BUILD_Y);
+    build.draw(this.slots);
+    this.view.addChild(build.view);
     this.setWave(this.wave);
     if (!this.down && !this.offer) {
       const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52 });
@@ -74,7 +85,7 @@ export class RunHud implements Screen {
     this.bannerView = null;
     // a panel covers the middle, so a banner then waits out its time unseen
     if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
-    if (this.offer) this.view.addChild(cardPanel(f, this.offerTitle, this.offer, (i) => this.pickCard(i)));
+    if (this.offer) this.view.addChild(cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i)));
     if (this.paused) this.pausePanel(f);
     if (this.down) this.downPanel(f, this.down);
   }
@@ -86,6 +97,16 @@ export class RunHud implements Screen {
     this.waveText.visible = wave > 0;
     this.waveText.text = t('run.wave', { wave, total: this.total });
     if (this.xpView) this.xpView.visible = wave > 0;
+    if (this.build) this.build.view.visible = wave > 0;
+  }
+
+  /** The hero's build; the strip is redrawn only when it looks different. */
+  setBuild(slots: readonly BuildSlot[]): void {
+    const key = buildKey(slots);
+    if (key === this.slotsKey) return;
+    this.slotsKey = key;
+    this.slots = slots;
+    this.build?.draw(slots);
   }
 
   /** The level and how far the experience is toward the next one, 0..1. */
@@ -130,6 +151,7 @@ export class RunHud implements Screen {
   }
 
   update(dt: number): void {
+    this.build?.update(dt);
     // a banner waits out the card choice
     if (!this.banner || this.offer) return;
     this.banner.t -= dt;
