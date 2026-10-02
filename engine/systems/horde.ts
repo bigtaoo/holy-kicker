@@ -103,10 +103,25 @@ export function ringPoint(rand: Prng, cx: number, cy: number, b: Body): void {
   teleport(b, cx + Math.trunc((cosB(a) * r) / TRIG_ONE), cy + Math.trunc((sinB(a) * r) / TRIG_ONE));
 }
 
+/** Mobs inside a pinning field (the Mountain Palm's print) stay where they were. */
+function pin(s: SimState): void {
+  for (const f of s.fields) {
+    if (!f.pin) continue;
+    const r2 = f.radius * f.radius;
+    for (const m of s.mobs) {
+      if (dist2(m.px - f.x, m.py - f.y) < r2) {
+        m.x = m.px;
+        m.y = m.py;
+      }
+    }
+  }
+}
+
 /** The horde step plus the elite, then mobs left far behind come back around their player. */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
   stepHorde(s.mobs, s.players, { speed: HORDE.speed, stopDist: HORDE.stopDist, sep: grid.cell, queue: c.queue }, grid);
+  pin(s);
   if (s.elite) stepHorde([s.elite], s.players, { speed: ELITE.speed, stopDist: ELITE.stopDist, sep: 0, queue: false });
   const far = HORDE.respawnDist * HORDE.respawnDist;
   for (const m of s.mobs) {

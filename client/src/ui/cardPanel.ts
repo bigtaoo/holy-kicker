@@ -14,7 +14,12 @@ const CARD_H = 330;
 const GAP = 44;
 const ICON_R = 92;
 
-const KIND_COLOR: Record<CardKind, number> = { relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade, shrine: 0xe0607a };
+const KIND_COLOR: Record<CardKind, number> = {
+  relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade, shrine: 0xe0607a, evolve: 0xffc83a,
+};
+/** An evolution is a gold card: a warm panel with a bright rim. */
+const GOLD_PANEL = 0x5a4216;
+const GOLD_RIM = 0xffd860;
 
 function icon(kind: CardKind): Graphics {
   const g = new Graphics().circle(0, 0, ICON_R).fill(KIND_COLOR[kind]).stroke({ color: COLORS.outline, width: 8 });
@@ -25,6 +30,12 @@ function icon(kind: CardKind): Graphics {
       .stroke({ color: COLORS.outline, width: 5 });
   } else if (kind === 'spell') {
     g.star(0, 0, 5, ICON_R * 0.62, ICON_R * 0.28).fill(0xffffff).stroke({ color: COLORS.outline, width: 6 });
+  } else if (kind === 'evolve') {
+    // a rising arrow over a burst
+    const r = ICON_R * 0.62;
+    g.star(0, 0, 8, r, r * 0.62).fill(0xfff2d8).stroke({ color: COLORS.outline, width: 6 });
+    g.poly([0, -r * 0.7, r * 0.42, -r * 0.1, r * 0.16, -r * 0.1, r * 0.16, r * 0.55, -r * 0.16, r * 0.55, -r * 0.16, -r * 0.1, -r * 0.42, -r * 0.1])
+      .fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 5 });
   } else if (kind === 'shrine') {
     // an incense flame
     const r = ICON_R * 0.6;
@@ -39,7 +50,10 @@ function icon(kind: CardKind): Graphics {
 function card(text: CardText, onTap: () => void): Container {
   const c = new Container();
   const left = -CARD_W / 2;
-  c.addChild(panel(CARD_W, CARD_H, COLORS.panel), icon(text.kind));
+  const gold = text.kind === 'evolve';
+  const back = panel(CARD_W, CARD_H, gold ? GOLD_PANEL : COLORS.panel);
+  if (gold) back.roundRect(-CARD_W / 2 + 14, -CARD_H / 2 + 14, CARD_W - 28, CARD_H - 28, 20).stroke({ color: GOLD_RIM, width: 6 });
+  c.addChild(back, icon(text.kind));
   c.children[1].position.set(left + 40 + ICON_R, 0);
   const x = left + 80 + ICON_R * 2;
   const room = CARD_W / 2 - x - 36;

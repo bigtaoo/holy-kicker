@@ -60,6 +60,16 @@ export const zh: Table<typeof en> = {
     area: '范围 +{n}%',
     duration: '持续 {a} 秒 → {b} 秒',
     shrine: '神龛',
+    evolve: '进化！',
+    awaken: '觉醒！',
+  },
+  evolve: {
+    ball: { name: '流星鞠', desc: '每次弹射分裂成 {n} 个球' },
+    palm: { name: '五指山', desc: '巨掌留在原地，定住敌人 {s} 秒' },
+    bolt: { name: '雷音', desc: '每次跳跃都分叉击中另一个敌人' },
+    incense: { name: '万家香火', desc: '站在阵中每秒回复 {n}% 生命' },
+    bell: { name: '金身', desc: '破碎后 {s} 秒内刀枪不入' },
+    cymbal: { name: '钹轮', desc: '{n} 片铜钹永远绕身旋转' },
   },
   shrine: {
     heal: { name: '疗伤', desc: '恢复 {n}% 生命' },

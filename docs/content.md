@@ -30,7 +30,16 @@ Names are working names; every name ships through the string table (en / zh-CN s
 - **Implemented** (`engine/content.ts`, `engine/systems/build.ts`): the experience curve and
   pick 1 of 3, cuju levels 1–5, the five starting spells and the six starting passives. The
   Golden Bell recharges only after it breaks; Flying Cymbals fly out in an even star, the
-  first at the nearest enemy. Not yet: evolutions, awakening, the build icons on the HUD.
+  first at the nearest enemy.
+- **Evolutions implemented** (`SPELL_EVOLVED`, `RELIC_AWAKENED`, `EVOLVE` in `engine/content.ts`):
+  a ready evolution is always dealt first on the next level-up (or Insight) as a gold card; the
+  evolved row keeps the level-5 numbers and adds the mechanic. Mountain Palm leaves a print
+  that pins mobs for 2 s and burns at 30 %; Endless Chain forks to the nearest other enemy at
+  every jump; Healing Incense heals 2.4 % health per second inside; Golden Body guards 2 s
+  after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
+  is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
+  it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce. Not yet: the
+  Codex record of a first evolution, the build icons on the HUD, the other relics' awakenings.
 
 ## Relics (5)
 

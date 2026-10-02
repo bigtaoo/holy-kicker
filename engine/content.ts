@@ -106,13 +106,58 @@ export const PASSIVES: Readonly<Record<PassiveId, { stat: Stat; perLevel: number
   wrath: { stat: 'crit', perLevel: 5 },
 };
 
-export type CardKind = 'relic' | 'spell' | 'passive' | 'shrine';
+/**
+ * Evolutions (docs/content.md): a spell at MAX_LEVEL plus its paired passive at any level
+ * puts the evolved form on the next level-up as a guaranteed card; the relic awakens the same
+ * way. The evolved row replaces the level-5 row.
+ */
+export const EVOLVE_PAIR: Readonly<Record<SpellId | 'ball', PassiveId>> = {
+  ball: 'legs', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
+};
+
+/** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */
+export const RELIC_AWAKENED: RelicLevel = { hits: 5, damage: 180, cooldown: ticks(0.7) };
+
+export const SPELL_EVOLVED: Readonly<Record<SpellId, SpellLevel>> = {
+  // Mountain Palm: radius is the blast and the pinning print left behind
+  palm: lv(2, 3, 320, 2, 150),
+  // Endless Chain: every jump also forks to the nearest other enemy
+  bolt: lv(1.6, 10, 350, 0, 130),
+  // Healing Incense: the hero heals while standing in the ring
+  incense: lv(2.8, 0, 380, 4, 150),
+  // Golden Body: a bigger blast, then EVOLVE.bellGuard of immunity
+  bell: lv(5, 0, 520, 0, 250),
+  // Cymbal Wheel: `count` cymbals circle the hero for good, `radius` each
+  cymbal: lv(0.5, 4, 100, 0, 130),
+};
+
+export const EVOLVE = {
+  /** Mountain Palm: the print pins mobs inside and burns at this share of the blast. */
+  palmBurnPercent: 30,
+  /** Endless Chain: a fork reaches this share of the jump range. */
+  forkRangePercent: 80,
+  /** Healing Incense: per mille of max health healed per field tick while inside. */
+  incenseHeal: 12,
+  bellGuard: ticks(2),
+  /** Cymbal Wheel: orbit radius, one turn per `turn`, a target is hit again after `rehit`. */
+  wheelOrbit: toFp(260),
+  wheelTurn: ticks(1.4),
+  wheelRehit: ticks(0.5),
+  /** Meteor Ball: splinters per bounce and how far they look for a target. */
+  splinters: 2,
+  splinterRange: toFp(450),
+};
+
+export type CardKind = 'relic' | 'spell' | 'passive' | 'shrine' | 'evolve';
 
 export type ShrineId = 'heal' | 'insight' | 'offering';
 /** A shrine offers all three, always in this order. */
 export const SHRINE_IDS: readonly ShrineId[] = ['heal', 'insight', 'offering'];
 
-/** A level-up card (the relic 'ball', a spell or a passive, new or one level up) or a shrine card. */
+/**
+ * A level-up card (the relic 'ball', a spell or a passive, new or one level up), an evolution
+ * (id: the spell or 'ball') or a shrine card.
+ */
 export interface Card {
   kind: CardKind;
   id: string;

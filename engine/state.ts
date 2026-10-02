@@ -43,6 +43,8 @@ export interface Player extends Body {
   regen: number;
   /** Relic level, 1..MAX_LEVEL. */
   relic: number;
+  /** The relic awakened (after MAX_LEVEL with its paired passive). */
+  awakened: boolean;
   spells: SpellSlot[];
   passives: PassiveSlot[];
   /** The Golden Bell is up and takes the next blow. */
@@ -60,6 +62,7 @@ export interface SpellSlot {
   level: number;
   /** Ticks to the next cast. */
   cd: number;
+  evolved: boolean;
 }
 
 export interface PassiveSlot {
@@ -104,6 +107,8 @@ export interface Ball extends Body {
   /** The target hit last, so the ball does not hit it again on the way out. */
   last: number;
   travel: number;
+  /** An awakened ball sends splinters at every bounce; splinters themselves do not. */
+  split: boolean;
 }
 
 export interface Bullet extends Body {
@@ -142,6 +147,10 @@ export interface Field {
   damage: number;
   age: number;
   next: number;
+  /** Mountain Palm: mobs inside cannot move. */
+  pin: boolean;
+  /** Healing Incense: per mille of the owner's max health healed per field tick inside. */
+  heal: number;
 }
 
 /** A thrown cymbal: flies straight and hits everything it passes, each target once. */
@@ -156,6 +165,10 @@ export interface Cymbal extends Body {
   life: number;
   /** Targets it already hit (combat.ts numbering), so each is hit once. */
   hit: number[];
+  /** Cymbal Wheel: circles its owner at this radius forever (0 for a thrown one). */
+  orbit: number;
+  /** Angle around the owner, brads. */
+  angle: number;
 }
 
 export interface SimState {
@@ -224,7 +237,7 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0,
-    hp, maxHp: hp, dead: false, revives, regen: 0, relic: 1, spells: [], passives: [], bell: false, offer: [],
+    hp, maxHp: hp, dead: false, revives, regen: 0, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
     bet: false, offerings: 0,
   };
 }

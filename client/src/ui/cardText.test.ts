@@ -12,9 +12,9 @@ describe('card text', () => {
       name: 'Vajra Bolt', tag: 'New!', fresh: true, lines: ['Lightning jumps through 5 enemies'],
     });
     expect(cardText({ kind: 'spell', id: 'bell' }, p).lines).toEqual(['Blocks a hit every 8s, then blasts']);
-    p.spells.push({ id: 'cymbal', level: 1, cd: 0 });
+    p.spells.push({ id: 'cymbal', level: 1, cd: 0, evolved: false });
     expect(cardText({ kind: 'spell', id: 'cymbal' }, p).lines).toEqual(['Cymbals 2 → 3']);
-    p.spells.push({ id: 'palm', level: 2, cd: 0 });
+    p.spells.push({ id: 'palm', level: 2, cd: 0, evolved: false });
     expect(cardText({ kind: 'spell', id: 'palm' }, p)).toMatchObject({
       tag: 'Lv 2 → 3', fresh: false, lines: ['Area +17%', 'Cooldown 3s → 2.5s'],
     });
@@ -36,6 +36,18 @@ describe('card text', () => {
     expect(cardText({ kind: 'shrine', id: 'offering' }, p).lines).toEqual(['Live to the next shrine or the end:', 'copper this run +30%']);
   });
 
+  it('describes evolutions and the awakening as gold cards', () => {
+    const p = newPlayer(0, 0, 0);
+    expect(cardText({ kind: 'evolve', id: 'palm' }, p)).toMatchObject({
+      kind: 'evolve', name: 'Mountain Palm', tag: 'Evolve!', lines: ['Stays and pins enemies 2s'],
+    });
+    expect(cardText({ kind: 'evolve', id: 'incense' }, p).lines).toEqual(['Heals 2.4% health/s inside']);
+    expect(cardText({ kind: 'evolve', id: 'bell' }, p).lines).toEqual(['2s untouchable on breaking', 'Area +24%']);
+    expect(cardText({ kind: 'evolve', id: 'ball' }, p)).toMatchObject({ name: 'Meteor Ball', tag: 'Awaken!' });
+    setLocale('zh');
+    expect(cardText({ kind: 'evolve', id: 'cymbal' }, p)).toMatchObject({ name: '钹轮', tag: '进化！', lines: ['4 片铜钹永远绕身旋转'] });
+  });
+
   it('has a name and at least one line for every card at every level', () => {
     const p = newPlayer(0, 0, 0);
     const cards: Card[] = [
@@ -43,10 +55,11 @@ describe('card text', () => {
       ...SPELL_IDS.map((id): Card => ({ kind: 'spell', id })),
       ...PASSIVE_IDS.map((id): Card => ({ kind: 'passive', id })),
       ...SHRINE_IDS.map((id): Card => ({ kind: 'shrine', id })),
+      ...['ball', ...SPELL_IDS].map((id): Card => ({ kind: 'evolve', id })),
     ];
     for (let level = 1; level < MAX_LEVEL; level++) {
       p.relic = level;
-      p.spells = SPELL_IDS.map((id) => ({ id, level, cd: 0 }));
+      p.spells = SPELL_IDS.map((id) => ({ id, level, cd: 0, evolved: false }));
       p.passives = PASSIVE_IDS.map((id) => ({ id, level }));
       for (const c of cards) {
         const text = cardText(c, p);

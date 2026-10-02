@@ -135,6 +135,7 @@ export class Bot {
   private score(p: Player, c: Card): number {
     // at a shrine: heal when hurt, else the free pick (the bot never bets)
     if (c.kind === 'shrine') return c.id === 'heal' ? (p.hp * 100 < p.maxHp * 60 ? 100 : 0) : c.id === 'insight' ? 60 : -100;
+    if (c.kind === 'evolve') return 120;
     if (c.kind === 'relic') return 70;
     if (c.kind === 'spell') return p.spells.some((sp) => sp.id === c.id) ? 80 : 90;
     return p.passives.some((ps) => ps.id === c.id) ? 50 : 40;

@@ -67,8 +67,8 @@ export function playChapter(seed: number, style: BotStyle, waves = 50, maxMinute
   stats.seconds = secs(s.tick);
   stats.level = p.level;
   stats.build = [
-    `ball${p.relic}`,
-    ...p.spells.map((sp) => `${sp.id}${sp.level}`),
+    `ball${p.relic}${p.awakened ? '*' : ''}`,
+    ...p.spells.map((sp) => `${sp.id}${sp.level}${sp.evolved ? '*' : ''}`),
     ...p.passives.map((ps) => `${ps.id}${ps.level}`),
   ].join(' ');
   return stats;

@@ -58,6 +58,16 @@ export const en = {
     area: 'Area +{n}%',
     duration: 'Duration {a}s → {b}s',
     shrine: 'Shrine',
+    evolve: 'Evolve!',
+    awaken: 'Awaken!',
+  },
+  evolve: {
+    ball: { name: 'Meteor Ball', desc: 'Splits into {n} at every bounce' },
+    palm: { name: 'Mountain Palm', desc: 'Stays and pins enemies {s}s' },
+    bolt: { name: 'Endless Chain', desc: 'Forks at every jump' },
+    incense: { name: 'Healing Incense', desc: 'Heals {n}% health/s inside' },
+    bell: { name: 'Golden Body', desc: '{s}s untouchable on breaking' },
+    cymbal: { name: 'Cymbal Wheel', desc: '{n} cymbals circle you forever' },
   },
   shrine: {
     heal: { name: 'Heal', desc: 'Restore {n}% health' },

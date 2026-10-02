@@ -1,18 +1,21 @@
 import { SPELLS } from '../config';
-import { SPELL_CAST, type SpellId } from '../content';
+import { EVOLVE, SPELL_CAST } from '../content';
 import type { SimEvent } from '../events';
 import { dist2, TICK_RATE, toFp } from '../math/fixed';
-import type { Player, SimState } from '../state';
-import { spellLevel, stat } from './build';
+import type { Player, SimState, SpellSlot } from '../state';
+import { slotStats, stat } from './build';
 import { bossIndex, damage, eliteIndex, targetAt } from './combat';
-import { cymbalSystem, throwCymbals } from './cymbals';
+import { cymbalSystem, spinWheel, throwCymbals } from './cymbals';
 
 // Area spells. Each player casts the spells of their build on their own cooldowns (shrunk by
 // the cooldown stat, grown by the area stat); the sandbox can also cast the stress-test spells
 // round-robin around the first player at the run's rate. Spells kill the mobs they reach and
 // deal SPELL_CAST.bigPercent of their damage to the elite and the boss. The Golden Bell is a
 // shield rather than a cast: its cooldown raises it, and it only recharges once a blow breaks
-// it (breakBell, from hurtPlayer).
+// it (breakBell, from hurtPlayer). Evolved spells (docs/content.md) cast from their own row:
+// the Mountain Palm leaves a print that pins mobs, the Endless Chain forks at every jump,
+// Healing Incense heals the hero standing in it, the Golden Body guards longer after it breaks
+// and the Cymbal Wheel keeps its cymbals circling the hero.
 
 /** Bolts leave the caster's chest and land on the target's body. */
 const CHEST = toFp(60);
@@ -42,30 +45,48 @@ function blast(s: SimState, events: SimEvent[], p: Player, x: number, y: number,
   area(s, events, p, x, y, r, damagePct);
 }
 
-function placeField(s: SimState, events: SimEvent[], p: Player, x: number, y: number, radius: number, life: number, damagePct: number): void {
-  s.fields.push({ id: s.nextId++, owner: p.owner, x, y, radius, life, damage: damagePct, age: 0, next: 0 });
-  events.push({ type: 'cast', kind: 'field', x, y, radius });
+interface FieldMods {
+  pin?: boolean;
+  heal?: number;
 }
 
-/** Lightning from the player's chest jumping from target to target, never one twice. */
-function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range: number, damagePct: number): boolean {
+function placeField(
+  s: SimState, events: SimEvent[], p: Player, x: number, y: number, radius: number, life: number, damagePct: number, mods: FieldMods = {},
+): void {
+  const pin = mods.pin ?? false;
+  s.fields.push({ id: s.nextId++, owner: p.owner, x, y, radius, life, damage: damagePct, age: 0, next: 0, pin, heal: mods.heal ?? 0 });
+  // the pinning print starts burning on its next field tick, after the palm's own blast
+  if (pin) s.fields[s.fields.length - 1].next = SPELL_CAST.fieldTick;
+  else events.push({ type: 'cast', kind: 'field', x, y, radius });
+}
+
+/** The nearest target within range of (x, y) not in `hit`; -1 if none. */
+function nearestNew(s: SimState, x: number, y: number, range: number, hit: readonly number[]): number {
+  let best = -1;
+  let bestD = range * range;
+  const n = bossIndex(s);
+  for (let i = 0; i <= n; i++) {
+    const t = hit.includes(i) ? null : targetAt(s, i);
+    if (!t) continue;
+    const d = dist2(t.x - x, t.y - y);
+    if (d < bestD) {
+      bestD = d;
+      best = i;
+    }
+  }
+  return best;
+}
+
+/**
+ * Lightning from the player's chest jumping from target to target, never one twice. With
+ * `fork` every jump also strikes the nearest other target from where it landed.
+ */
+function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range: number, damagePct: number, fork = false): boolean {
   let x = p.x;
   let y = p.y - CHEST;
   const hit: number[] = [];
   for (let j = 0; j < jumps; j++) {
-    const reach = j === 0 ? range * 2 : range;
-    let best = -1;
-    let bestD = reach * reach;
-    const n = bossIndex(s);
-    for (let i = 0; i <= n; i++) {
-      const t = hit.includes(i) ? null : targetAt(s, i);
-      if (!t) continue;
-      const d = dist2(t.x - x, t.y - y);
-      if (d < bestD) {
-        bestD = d;
-        best = i;
-      }
-    }
+    const best = nearestNew(s, x, y, j === 0 ? range * 2 : range, hit);
     if (best < 0) break;
     hit.push(best);
     const t = targetAt(s, best)!;
@@ -75,6 +96,13 @@ function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range:
     damage(s, events, best, p, null, pct(s, best, damagePct));
     x = tx;
     y = ty;
+    const side = fork ? nearestNew(s, x, y, Math.trunc((range * EVOLVE.forkRangePercent) / 100), hit) : -1;
+    if (side >= 0) {
+      hit.push(side);
+      const f = targetAt(s, side)!;
+      events.push({ type: 'bolt', x0: x, y0: y, x1: f.x, y1: f.y - BODY });
+      damage(s, events, side, p, null, pct(s, side, damagePct));
+    }
   }
   return hit.length > 0;
 }
@@ -119,8 +147,8 @@ export function breakBell(s: SimState, events: SimEvent[], p: Player): boolean {
   const slot = p.spells.find((sp) => sp.id === 'bell');
   if (!p.bell || !slot) return false;
   p.bell = false;
-  p.hurtCd = SPELL_CAST.bellGuard;
-  const l = spellLevel('bell', slot.level);
+  p.hurtCd = slot.evolved ? EVOLVE.bellGuard : SPELL_CAST.bellGuard;
+  const l = slotStats(slot);
   const r = scaled(p, l.radius);
   events.push({ type: 'bellBreak', owner: p.owner });
   events.push({ type: 'cast', kind: 'nova', x: p.x, y: p.y, radius: r });
@@ -128,9 +156,10 @@ export function breakBell(s: SimState, events: SimEvent[], p: Player): boolean {
   return true;
 }
 
-/** Casts spell `id` at `level` for p; false when it found nothing to hit. */
-function cast(s: SimState, events: SimEvent[], p: Player, id: SpellId, level: number): boolean {
-  const l = spellLevel(id, level);
+/** Casts the spell in `slot` for p; false when it found nothing to hit. */
+function cast(s: SimState, events: SimEvent[], p: Player, slot: SpellSlot): boolean {
+  const id = slot.id;
+  const l = slotStats(slot);
   const r = scaled(p, l.radius);
   if (id === 'palm') {
     let any = false;
@@ -138,18 +167,19 @@ function cast(s: SimState, events: SimEvent[], p: Player, id: SpellId, level: nu
       const at = crowd(s, p, r);
       if (!at) break;
       blast(s, events, p, at[0], at[1], r, l.damage);
+      if (slot.evolved) placeField(s, events, p, at[0], at[1], r, l.life, Math.trunc((l.damage * EVOLVE.palmBurnPercent) / 100), { pin: true });
       any = true;
     }
     return any;
   }
-  if (id === 'bolt') return chain(s, events, p, l.count, r, l.damage);
-  if (id === 'cymbal') return throwCymbals(s, p, l.count, r, l.life, l.damage);
+  if (id === 'bolt') return chain(s, events, p, l.count, r, l.damage, slot.evolved);
+  if (id === 'cymbal') return slot.evolved ? spinWheel(s, p, l.count, r, l.damage) : throwCymbals(s, p, l.count, r, l.life, l.damage);
   if (id === 'bell') {
     p.bell = true;
     events.push({ type: 'bellUp', owner: p.owner });
     return true;
   }
-  placeField(s, events, p, p.x, p.y, r, l.life, l.damage);
+  placeField(s, events, p, p.x, p.y, r, l.life, l.damage, { heal: slot.evolved ? EVOLVE.incenseHeal : 0 });
   return true;
 }
 
@@ -161,8 +191,8 @@ function buildSpells(s: SimState, events: SimEvent[]): void {
     for (const sp of p.spells) {
       // a bell that is up waits for its blow
       if ((sp.id === 'bell' && p.bell) || --sp.cd > 0) continue;
-      sp.cd = cast(s, events, p, sp.id, sp.level)
-        ? Math.max(1, Math.trunc((spellLevel(sp.id, sp.level).cooldown * faster) / 100))
+      sp.cd = cast(s, events, p, sp)
+        ? Math.max(1, Math.trunc((slotStats(sp).cooldown * faster) / 100))
         : SPELL_CAST.retry;
     }
   }
@@ -201,6 +231,9 @@ export function spellSystem(s: SimState, events: SimEvent[]): void {
       f.next = SPELL_CAST.fieldTick;
       const by = s.players.find((q) => q.owner === f.owner) ?? s.players[0];
       area(s, events, by, f.x, f.y, f.radius, f.damage);
+      if (f.heal > 0 && !by.dead && dist2(by.x - f.x, by.y - f.y) < f.radius * f.radius) {
+        by.hp = Math.min(by.maxHp, by.hp + Math.max(1, Math.trunc((by.maxHp * f.heal) / 1000)));
+      }
     }
     if (f.age < f.life) s.fields[w++] = f;
   }

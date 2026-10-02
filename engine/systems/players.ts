@@ -111,7 +111,7 @@ function strike(s: SimState, p: Player): void {
   const fx = p.x + p.facing * HERO.footOffset;
   const target = t >= 0 ? targetAt(s, t)! : null;
   const r = relicLevel(p);
-  launchBall(s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y, r.hits, r.damage);
+  launchBall(s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y, r.hits, r.damage, p.awakened);
 }
 
 /** Anything touching a player hurts them, by what it is; the horde hits harder in later waves. */

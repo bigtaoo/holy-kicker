@@ -1,16 +1,17 @@
 import { HERO, SHRINE } from '../config';
 import {
-  MAX_LEVEL, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
-  xpToNext, type Card, type PassiveId, type SpellId, type Stat,
+  EVOLVE_PAIR, MAX_LEVEL, RELIC_AWAKENED, SPELL_EVOLVED, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
+  xpToNext, type Card, type PassiveId, type SpellId, type SpellLevel, type Stat,
 } from '../content';
 import type { SimEvent } from '../events';
 import { TICK_RATE } from '../math/fixed';
-import type { Player, SimState } from '../state';
+import type { Player, SimState, SpellSlot } from '../state';
 
 // The hero's build in a run (docs/content.md "Build in a run"). Experience fills levels; each
 // level-up deals OFFER_SIZE cards from what can still grow (the relic, owned spells and
 // passives below max level, new ones while a slot is free) and the sim stands still until
-// the player picks one. Passives are a modifier stack: a stat is the sum of its passives'
+// the player picks one. An evolution that is ready (docs/content.md) is always dealt first,
+// so the player sees it on the very next level-up. Passives are a modifier stack: a stat is the sum of its passives'
 // levels times their per-level value, read where it applies. Only chapters level up; the
 // sandbox just counts experience.
 
@@ -32,7 +33,26 @@ export function maxHpOf(p: Player): number {
 }
 
 export function relicLevel(p: Player) {
-  return RELIC_LEVELS[p.relic - 1];
+  return p.awakened ? RELIC_AWAKENED : RELIC_LEVELS[p.relic - 1];
+}
+
+/** The numbers a spell slot casts with: its level's row, or the evolved one. */
+export function slotStats(slot: SpellSlot): SpellLevel {
+  return slot.evolved ? SPELL_EVOLVED[slot.id] : spellLevel(slot.id, slot.level);
+}
+
+function hasPassive(p: Player, id: PassiveId): boolean {
+  return p.passives.some((ps) => ps.id === id);
+}
+
+/** Evolutions (and the awakening) that are ready: maxed, paired passive owned, not yet taken. */
+export function evolutions(p: Player): Card[] {
+  const ready: Card[] = [];
+  if (p.relic === MAX_LEVEL && !p.awakened && hasPassive(p, EVOLVE_PAIR.ball)) ready.push({ kind: 'evolve', id: 'ball' });
+  for (const sp of p.spells) {
+    if (sp.level === MAX_LEVEL && !sp.evolved && hasPassive(p, EVOLVE_PAIR[sp.id])) ready.push({ kind: 'evolve', id: sp.id });
+  }
+  return ready;
 }
 
 /** The cards that can still be picked, in a fixed order (the deal draws from it). */
@@ -50,17 +70,18 @@ export function cardPool(p: Player): Card[] {
   return pool;
 }
 
-/** Up to OFFER_SIZE distinct cards from the pool (a partial shuffle). */
+/** Ready evolutions first, then distinct cards from the pool (a partial shuffle), OFFER_SIZE in all. */
 function deal(s: SimState, p: Player): Card[] {
+  const first = evolutions(p).slice(0, OFFER_SIZE);
   const pool = cardPool(p);
-  const n = Math.min(OFFER_SIZE, pool.length);
+  const n = Math.min(OFFER_SIZE - first.length, pool.length);
   for (let i = 0; i < n; i++) {
     const j = i + s.cards.int(pool.length - i);
     const t = pool[i];
     pool[i] = pool[j];
     pool[j] = t;
   }
-  return pool.slice(0, n);
+  return first.concat(pool.slice(0, n));
 }
 
 /** Levels up while the experience allows and no offer is open; one offer at a time. */
@@ -80,10 +101,11 @@ export function pickCard(s: SimState, events: SimEvent[], p: Player, index: numb
   p.offer = [];
   if (card.kind === 'shrine') shrineCard(s, p, card.id);
   else if (card.kind === 'relic') p.relic++;
+  else if (card.kind === 'evolve') evolve(p, card.id);
   else if (card.kind === 'spell') {
     const slot = p.spells.find((sp) => sp.id === card.id);
     if (slot) slot.level++;
-    else p.spells.push({ id: card.id as SpellId, level: 1, cd: SPELL_CAST.first });
+    else p.spells.push({ id: card.id as SpellId, level: 1, cd: SPELL_CAST.first, evolved: false });
   } else {
     const slot = p.passives.find((ps) => ps.id === card.id);
     if (slot) slot.level++;
@@ -95,6 +117,18 @@ export function pickCard(s: SimState, events: SimEvent[], p: Player, index: numb
   }
   events.push({ type: 'pick', owner: p.owner, kind: card.kind, id: card.id });
   levelUp(s, events, p);
+}
+
+function evolve(p: Player, id: string): void {
+  if (id === 'ball') {
+    p.awakened = true;
+    return;
+  }
+  const slot = p.spells.find((sp) => sp.id === id);
+  if (!slot) return;
+  slot.evolved = true;
+  // the evolved form casts soon, so the pick shows at once
+  slot.cd = Math.min(slot.cd, SPELL_CAST.first);
 }
 
 /**

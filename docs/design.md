@@ -74,6 +74,12 @@ otherwise taking Insight):
 | Elites / mid-boss / boss | 15–40 s / 30–60 s / 40–80 s | about the same | the same |
 | Level at the end | about 30 | 30 | 30 |
 
+- **With evolutions** (2026-10-02, same 20 seeds): skilled 20/20, casual 18/20 (deaths at 29
+  and 43), about two evolutions per run. No single evolution carries it (turning any one off
+  moves at most one win), and keeping the evolved damage at the level-5 numbers did not
+  change the result. Left as it is for now, like the shrines; if it stays too easy once real
+  players have tried it, raise the late mob health or contact damage rather than weaken the
+  evolutions, which are the run's power spike.
 - Mob health grows with the wave, faster late (10 on wave 1, 34 on wave 25, 96 on wave 50), so a
   finished build still meets a threat; contact damage grows 1 per 10 waves.
 - Shrines lift casual players over the target; left as it is until real players have tried

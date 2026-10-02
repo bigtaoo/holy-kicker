@@ -1,4 +1,5 @@
 import { BALL, DAMAGE, ELITE } from '../config';
+import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Ball, Body, Player, SimState } from '../state';
@@ -103,13 +104,41 @@ function aim(b: Ball, tx: number, ty: number): void {
   b.vy = Math.trunc(((ty - b.y) * BALL.speed) / d);
 }
 
-/** A ball from (x, y) at (tx, ty) that bounces `maxHits` times at `damagePct` percent. */
-export function launchBall(s: SimState, owner: number, x: number, y: number, tx: number, ty: number, maxHits: number, damagePct: number): void {
+/**
+ * A ball from (x, y) at (tx, ty) that bounces `maxHits` times at `damagePct` percent; a `split`
+ * ball (the awakened Meteor Ball) sends splinters at every bounce.
+ */
+export function launchBall(
+  s: SimState, owner: number, x: number, y: number, tx: number, ty: number, maxHits: number, damagePct: number, split = false,
+): Ball {
   const b: Ball = {
-    id: s.nextId++, owner, x, y, px: x, py: y, vx: 0, vy: 0, hits: 0, maxHits, damage: damagePct, last: -1, travel: BALL.maxTravel,
+    id: s.nextId++, owner, x, y, px: x, py: y, vx: 0, vy: 0, hits: 0, maxHits, damage: damagePct, last: -1, travel: BALL.maxTravel, split,
   };
   aim(b, tx, ty);
   s.balls.push(b);
+  return b;
+}
+
+/** Meteor Ball: splinters from b's bounce on `hit`, each at another near target (not `next`). */
+function splinter(s: SimState, b: Ball, hit: number, next: number): void {
+  const taken = [hit, next];
+  for (let k = 0; k < EVOLVE.splinters; k++) {
+    let best = -1;
+    let bestD = EVOLVE.splinterRange * EVOLVE.splinterRange;
+    for (let i = 0; i <= bossIndex(s); i++) {
+      const t = taken.includes(i) ? null : targetAt(s, i);
+      if (!t) continue;
+      const d = dist2(t.x - b.x, t.y - b.y);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    if (best < 0) return;
+    taken.push(best);
+    const t = targetAt(s, best)!;
+    launchBall(s, b.owner, b.x, b.y, t.x, t.y, 1, b.damage).last = hit;
+  }
 }
 
 /** Flies every ball; a hit ricochets to the nearest other target until the bounces run out. */
@@ -134,6 +163,7 @@ export function ballSystem(s: SimState, events: SimEvent[]): void {
         const t = targetAt(s, next)!;
         aim(b, t.x, t.y);
       }
+      if (b.split) splinter(s, b, hit, next);
       const by = s.players.find((p) => p.owner === b.owner) ?? s.players[0];
       damage(s, events, hit, by, b, b.damage);
     }

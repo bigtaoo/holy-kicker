@@ -1,5 +1,5 @@
 import {
-  PASSIVES, RELIC_LEVELS, SHRINE, SPELL_LEVELS, TICK_RATE, type Card, type CardKind, type PassiveId, type Player, type SpellId,
+  EVOLVE, MAX_LEVEL, PASSIVES, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, TICK_RATE, type Card, type CardKind, type PassiveId, type Player, type SpellId,
 } from '@hk/engine';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
@@ -11,7 +11,7 @@ import { BALANCE } from '../meta/balance';
 export interface CardText {
   kind: CardKind;
   name: string;
-  /** "New!" or "Lv 2 → 3". */
+  /** "New!", "Lv 2 → 3" or "Evolve!". */
   tag: string;
   fresh: boolean;
   lines: string[];
@@ -63,9 +63,35 @@ function passiveDesc(id: PassiveId): string {
   return t(`passive.${id}.desc`, { n: id === 'rice' ? n / 10 : n });
 }
 
+function evolveDesc(id: SpellId | 'ball'): string {
+  if (id === 'ball') return t('evolve.ball.desc', { n: EVOLVE.splinters + 1 });
+  if (id === 'palm') return t('evolve.palm.desc', { s: seconds(SPELL_EVOLVED.palm.life) });
+  if (id === 'incense') {
+    // per mille of max health per field tick, as percent per second
+    return t('evolve.incense.desc', { n: Math.round((EVOLVE.incenseHeal * TICK_RATE) / SPELL_CAST.fieldTick) / 10 });
+  }
+  if (id === 'bell') return t('evolve.bell.desc', { s: seconds(EVOLVE.bellGuard) });
+  if (id === 'cymbal') return t('evolve.cymbal.desc', { n: SPELL_EVOLVED.cymbal.count });
+  return t('evolve.bolt.desc');
+}
+
+/** An evolution card: what changes, then the area or damage gained over level 5. */
+function evolveText(id: SpellId | 'ball'): CardText {
+  const lines = [evolveDesc(id)];
+  if (id !== 'ball' && id !== 'cymbal') {
+    const a = SPELL_LEVELS[id][MAX_LEVEL - 1];
+    const b = SPELL_EVOLVED[id];
+    if (b.radius !== a.radius) lines.push(t('card.area', { n: gain(a.radius, b.radius) }));
+    if (b.damage !== a.damage) lines.push(t('card.damage', { n: gain(a.damage, b.damage) }));
+  }
+  const tag = id === 'ball' ? t('card.awaken') : t('card.evolve');
+  return { kind: 'evolve', name: t(`evolve.${id}.name`), tag, fresh: true, lines };
+}
+
 /** The text of `card` for player `p` (whose build says whether it is new or a level step). */
 export function cardText(card: Card, p: Player): CardText {
   if (card.kind === 'shrine') return shrineText(card.id);
+  if (card.kind === 'evolve') return evolveText(card.id as SpellId | 'ball');
   const levelTag = (level: number) => t('card.level', { a: level, b: level + 1 });
   if (card.kind === 'relic') {
     return { kind: 'relic', name: t('relic.ball.name'), tag: levelTag(p.relic), fresh: false, lines: relicLines(p.relic) };

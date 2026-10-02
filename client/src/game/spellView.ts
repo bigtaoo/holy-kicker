@@ -8,6 +8,9 @@ import { SHADOW_Z } from './shadow';
 // Spell effects: the build's spells and the area-spell stress test. The engine casts the
 // spells and kills what they reach (systems/spells.ts); this draws the casts from its events,
 // the lingering fields and flying cymbals from its lists, and the Golden Bell over the hero.
+// Evolved forms: the Mountain Palm's print, a jade Healing Incense ring, the Golden Body's
+// guard (the dome flickers while the hero is untouchable) and the Cymbal Wheel's cymbals,
+// which never fade.
 
 const NOVA_LIFE = 0.45;
 /** Cymbals fly at chest height. */
@@ -21,15 +24,37 @@ interface FieldSprite {
   seen: boolean;
 }
 
-function fieldTexture(renderer: Renderer): Texture {
-  const r = 128;
-  const g = new Graphics()
-    .circle(r, r, r * 0.97).fill({ color: 0xffd860, alpha: 0.22 })
-    .circle(r, r, r * 0.92).stroke({ color: 0xffe9a0, width: r * 0.07, alpha: 0.9 })
-    .circle(r, r, r * 0.6).stroke({ color: 0xffe9a0, width: r * 0.03, alpha: 0.5 });
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, r * 2, r * 2), resolution: 1, antialias: true });
+const FIELD_R = 128;
+
+function bake(renderer: Renderer, g: Graphics, size: number): Texture {
+  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
   g.destroy();
   return tex;
+}
+
+function fieldTexture(renderer: Renderer, fill: number, rim: number): Texture {
+  const r = FIELD_R;
+  const g = new Graphics()
+    .circle(r, r, r * 0.97).fill({ color: fill, alpha: 0.22 })
+    .circle(r, r, r * 0.92).stroke({ color: rim, width: r * 0.07, alpha: 0.9 })
+    .circle(r, r, r * 0.6).stroke({ color: rim, width: r * 0.03, alpha: 0.5 });
+  return bake(renderer, g, r * 2);
+}
+
+/** The Mountain Palm's print: a golden hand pressed into the ground, fingers up. */
+function printTexture(renderer: Renderer): Texture {
+  const r = FIELD_R;
+  const g = new Graphics().circle(r, r, r * 0.97).fill({ color: 0xffd860, alpha: 0.16 });
+  const hand = { color: 0xffd860, alpha: 0.55 };
+  const edge = { color: 0x8a5a18, width: r * 0.04, alpha: 0.8 };
+  g.ellipse(r, r * 1.22, r * 0.44, r * 0.4).fill(hand).stroke(edge);
+  // four fingers and a thumb as rounded bars
+  const fingers: [number, number, number][] = [[-0.3, 0.3, 0.5], [-0.1, 0.18, 0.62], [0.1, 0.18, 0.6], [0.3, 0.3, 0.48]];
+  for (const [fx, top, len] of fingers) {
+    g.roundRect(r + fx * r - r * 0.085, top * r + r * 0.12, r * 0.17, len * r, r * 0.085).fill(hand).stroke(edge);
+  }
+  g.roundRect(r * 1.38, r * 0.98, r * 0.42, r * 0.17, r * 0.085).fill(hand).stroke(edge);
+  return bake(renderer, g, r * 2);
 }
 
 function cymbalTexture(renderer: Renderer): Texture {
@@ -39,9 +64,7 @@ function cymbalTexture(renderer: Renderer): Texture {
     .circle(r, r, r * 0.55).stroke({ color: 0xffe9a0, width: r * 0.1 })
     .circle(r, r, r * 0.2).fill(0x8a5a18)
     .moveTo(r * 0.45, r * 0.4).lineTo(r * 0.75, r * 0.55).stroke({ color: 0xffffff, width: r * 0.1, alpha: 0.8 });
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, r * 2, r * 2), resolution: 1, antialias: true });
-  g.destroy();
-  return tex;
+  return bake(renderer, g, r * 2);
 }
 
 /** The Golden Bell: a see-through golden dome with a rim, drawn around the hero. */
@@ -57,10 +80,14 @@ function bellDome(): Graphics {
 export class SpellView {
   private readonly sprites = new Map<number, FieldSprite>();
   private readonly fieldTex: Texture;
+  private readonly healTex: Texture;
+  private readonly printTex: Texture;
   private readonly cymbalTex: Texture;
   private readonly cymbals = new Map<number, FieldSprite>();
   private readonly bell = bellDome();
   private bellT = BELL_POP;
+  /** Golden Body: seconds the hero stays untouchable after the bell broke. */
+  private guardT = 0;
 
   constructor(
     renderer: Renderer,
@@ -69,7 +96,9 @@ export class SpellView {
     private readonly ring: RingMode,
     private readonly rand: () => number = Math.random,
   ) {
-    this.fieldTex = fieldTexture(renderer);
+    this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0);
+    this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8);
+    this.printTex = printTexture(renderer);
     this.cymbalTex = cymbalTexture(renderer);
     this.bell.visible = false;
     layer.addChild(this.bell);
@@ -80,15 +109,26 @@ export class SpellView {
     this.bellT = 0;
   }
 
-  /** The bell over the hero at (x, y) while it is up; zIndex just above the hero. */
+  /** The local hero's evolved bell broke: it guards them for `seconds`. */
+  guard(seconds: number): void {
+    this.guardT = seconds;
+  }
+
+  /**
+   * The bell over the hero at (x, y) while it is up, or flickering while the Golden Body
+   * guards them; zIndex just above the hero.
+   */
   drawBell(up: boolean, x: number, y: number, z: number, dt: number): void {
-    this.bell.visible = up;
-    if (!up) return;
+    this.guardT = up ? 0 : Math.max(0, this.guardT - dt);
+    const guarding = this.guardT > 0;
+    this.bell.visible = up || guarding;
+    if (!this.bell.visible) return;
     this.bellT = Math.min(BELL_POP, this.bellT + dt);
-    const pop = this.bellT / BELL_POP;
+    const pop = up ? this.bellT / BELL_POP : 1;
     const breathe = 1 + 0.03 * Math.sin(performance.now() / 220);
-    this.bell.scale.set((0.6 + 0.4 * pop) * breathe);
-    this.bell.alpha = pop;
+    this.bell.scale.set((0.6 + 0.4 * pop) * breathe * (guarding ? 1.1 : 1));
+    // the guard fades over its last half second, and flickers gently (no hard strobe)
+    this.bell.alpha = guarding ? Math.min(1, this.guardT * 2) * (0.45 + 0.2 * Math.sin(performance.now() / 70)) : pop;
     this.bell.position.set(x, y - 60);
     this.bell.zIndex = z + 0.5;
   }
@@ -110,8 +150,8 @@ export class SpellView {
       v.sprite.position.set(lerpX(c, alpha), y - CYMBAL_LIFT);
       v.sprite.rotation += dt * 18;
       v.sprite.zIndex = y + 1;
-      // fade out over the last few ticks
-      v.sprite.alpha = Math.min(1, (c.life - c.age) / 4);
+      // a thrown cymbal fades out over its last few ticks; the wheel's never do
+      v.sprite.alpha = c.orbit > 0 ? 1 : Math.min(1, (c.life - c.age) / 4);
     }
     for (const [id, v] of this.cymbals) {
       if (v.seen) continue;
@@ -138,7 +178,8 @@ export class SpellView {
       const life = f.life / TICK_RATE;
       let s = this.sprites.get(f.id);
       if (!s) {
-        const sprite = new Sprite({ texture: this.fieldTex, anchor: 0.5 });
+        const texture = f.pin ? this.printTex : f.heal > 0 ? this.healTex : this.fieldTex;
+        const sprite = new Sprite({ texture, anchor: 0.5 });
         sprite.scale.set((r * 2) / this.fieldTex.width, (r * 0.9) / this.fieldTex.height);
         sprite.position.set(f.x / FP, f.y / FP);
         sprite.zIndex = SHADOW_Z + 1;
@@ -149,7 +190,7 @@ export class SpellView {
       s.seen = true;
       const age = (f.age + alpha) / TICK_RATE;
       s.sprite.alpha = Math.max(0, Math.min(1, (life - age) / 0.3, age / 0.15));
-      fieldMotes(this.pool, this.rand, f.x / FP, f.y / FP, r, Math.round(dt * 60));
+      if (!f.pin) fieldMotes(this.pool, this.rand, f.x / FP, f.y / FP, r, Math.round(dt * 60));
     }
     for (const [id, s] of this.sprites) {
       if (s.seen) continue;

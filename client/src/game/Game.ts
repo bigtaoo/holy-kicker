@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
-  Engine, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, WAVES, quantizeMove,
+  Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, WAVES, quantizeMove,
   type RunConfig, type SimEvent, type SimState,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
@@ -340,6 +340,11 @@ export class Game {
           break;
         case 'bellUp':
           if (e.owner === LOCAL) this.spells.bellUp();
+          break;
+        case 'bellBreak':
+          if (e.owner === LOCAL && s.players[0].spells.some((sp) => sp.id === 'bell' && sp.evolved)) {
+            this.spells.guard(EVOLVE.bellGuard / TICK_RATE);
+          }
           break;
       }
     }
