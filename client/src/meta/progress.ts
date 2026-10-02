@@ -1,5 +1,6 @@
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { BALANCE, type Chest } from './balance';
+import { mergeCodex, type EvolveId } from './codex';
 import type { SaveData } from './save';
 
 // What a finished run pays and unlocks. Pure: takes a save, returns a new one.
@@ -10,6 +11,8 @@ export interface RunResult {
   waves: number;
   /** Shrine offerings won in the run. */
   offerings?: number;
+  /** What the run evolved or awakened (codex.ts evolvedIn). */
+  evolved?: EvolveId[];
 }
 
 export interface ChestReward extends Chest {
@@ -29,6 +32,8 @@ export interface Reward {
   firstClear: boolean;
   /** The relic that first clear unlocked, if any. */
   newRelic: RelicId | null;
+  /** Evolutions done for the first time, now in the Codex. */
+  newCodex: EvolveId[];
   newBest: boolean;
 }
 
@@ -86,10 +91,12 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
     best: save.best.map((b, k) => (k === i ? Math.max(b, waves) : b)),
     chests: save.chests.map((c, k) => (k === i ? claimed : c)),
     runs: save.runs + 1,
+    codex: mergeCodex(save.codex, run.evolved),
   };
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
     firstClear, newRelic: firstClear ? (unlockedRelics(next).find((r) => !unlockedRelics(save).includes(r)) ?? null) : null,
+    newCodex: next.codex.filter((id) => !save.codex.includes(id)),
     newBest: waves > save.best[i],
   };
   return { save: next, reward };

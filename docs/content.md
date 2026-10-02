@@ -39,7 +39,12 @@ Names are working names; every name ships through the string table (en / zh-CN s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
   it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce. Not yet: the
-  Codex record of a first evolution, the awakenings of the relics after the staff.
+  awakenings of the relics after the staff.
+- **Codex implemented** (`client/src/meta/codex.ts`, `client/src/ui/codexTab.ts`): the save keeps
+  every evolution and awakening done at least once; a run reports what it evolved when it is
+  settled (also on giving up), and the results name the new entries. The lobby's Codex tab
+  (open after chapter 2) shows all of them, the found ones by name and the rest as "???";
+  tapping one shows what it does and its recipe, which is never hidden.
 - **Build strip on the HUD** (`client/src/ui/buildSlots.ts`, `buildBar.ts`): under the
   experience bar, the relic, 4 spell and 4 passive slots (empty ones as dim discs), each with its
   level as 5 pips. Evolved items get a gold rim and gold pips; an item whose evolution comes on the

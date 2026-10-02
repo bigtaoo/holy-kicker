@@ -84,7 +84,8 @@ function isRelic(id: string): id is RelicId {
   return RELIC_IDS.includes(id as RelicId);
 }
 
-function evolveDesc(id: SpellId | RelicId): string {
+/** What an evolution or awakening adds, in one line (also the Codex detail). */
+export function evolveDesc(id: SpellId | RelicId): string {
   if (id === 'ball') return t('evolve.ball.desc', { n: EVOLVE.splinters + 1 });
   if (id === 'staff') return t('evolve.staff.desc');
   if (id === 'palm') return t('evolve.palm.desc', { s: seconds(SPELL_EVOLVED.palm.life) });

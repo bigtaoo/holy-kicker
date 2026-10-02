@@ -99,6 +99,13 @@ export const en = {
   boss: {
     abbot: 'Fallen Abbot',
   },
+  codex: {
+    title: 'Codex {n}/{total}',
+    unknown: '???',
+    recipe: '{item} Lv 5 + {pair}',
+    hint: 'Evolve it once in a run to record it',
+    pick: 'Tap an entry to read it',
+  },
   results: {
     cleared: 'Chapter cleared!',
     fallen: 'Run over',
@@ -108,6 +115,7 @@ export const en = {
     chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
     newBest: 'New best!',
     newRelic: 'New relic: {name}!',
+    newCodex: 'New in the Codex: {name}!',
     double: 'Double copper (ad)',
     doubled: 'Copper doubled!',
   },

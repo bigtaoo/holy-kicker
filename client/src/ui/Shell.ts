@@ -7,6 +7,7 @@ import type { LevelSettings } from '../game/quality';
 import type { SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
 import { BALANCE } from '../meta/balance';
+import { evolvedIn } from '../meta/codex';
 import { doubleCopper, settleRun, type Reward } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
@@ -165,13 +166,15 @@ export class Shell {
   private endRun(): void {
     if (!this.game) return;
     const waves = this.wavesCleared();
-    const offerings = this.game.engine.state.players[0].offerings;
+    const p = this.game.engine.state.players[0];
+    const { offerings } = p;
+    const evolved = evolvedIn(p);
     this.game.destroy();
     this.game = null;
     this.hud = null;
     // the death panel already told the portal
     if (!this.downShown) this.platform.portal.gameplayStop();
-    const { save, reward } = settleRun(this.save, { chapter: this.chapter, waves, offerings });
+    const { save, reward } = settleRun(this.save, { chapter: this.chapter, waves, offerings, evolved });
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);
     if (reward.firstClear) this.platform.portal.celebrate();

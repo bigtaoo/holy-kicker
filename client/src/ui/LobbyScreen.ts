@@ -4,13 +4,15 @@ import { LOCALES, formatAmount, getLocale, localeName, t, type Locale } from '..
 import { BALANCE } from '../meta/balance';
 import { playableChapters, TABS, tabLock, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
+import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { iconSprite, type IconSheet } from './buildBar';
+import { codexHeight, codexTab } from './codexTab';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
-// chests and the relic to play with, PLAY, and five bottom tabs. Only Play has content so far; the other tabs show their
-// unlock condition or a placeholder.
+// chests and the relic to play with, PLAY, and five bottom tabs. Play and the Codex have
+// content so far; the other tabs show their unlock condition or a placeholder.
 
 export interface LobbyActions {
   play(chapter: number): void;
@@ -34,6 +36,8 @@ export class LobbyScreen implements Screen {
   readonly view = new Container();
   private tab: Tab = 'play';
   private settingsOpen = false;
+  /** The Codex entry shown in detail. */
+  private codexPick: EvolveId | null = null;
   private frame: UiFrame | null = null;
   private toast: Text | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -54,6 +58,7 @@ export class LobbyScreen implements Screen {
     this.topBar(f.w);
     const midY = TOP_H + (f.h - TOP_H - TAB_H) / 2;
     if (this.tab === 'play') this.playTab(f.w, midY, f.h);
+    else if (this.tab === 'codex') this.codexTab(f.w, midY);
     else this.placeholderTab(f.w, midY);
     this.tabBar(f.w, f.h);
     if (this.settingsOpen) this.settings(f.w, f.h);
@@ -186,6 +191,15 @@ export class LobbyScreen implements Screen {
       row.addChild(box, wave);
     });
     return row;
+  }
+
+  private codexTab(w: number, midY: number): void {
+    const tab = codexTab(this.save.codex, this.icons, this.codexPick, (id) => {
+      this.codexPick = id;
+      this.relayout();
+    });
+    tab.position.set(w / 2, midY - codexHeight(EVOLVE_IDS.length) / 2);
+    this.view.addChild(tab);
   }
 
   private placeholderTab(w: number, midY: number): void {

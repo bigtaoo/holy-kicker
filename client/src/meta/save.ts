@@ -1,5 +1,6 @@
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { BALANCE } from './balance';
+import { mergeCodex, type EvolveId } from './codex';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
@@ -27,13 +28,15 @@ export interface SaveData {
   runs: number;
   /** The relic chosen for the next run (docs/content.md "Relics": one more per chapter cleared). */
   relic: RelicId;
+  /** Evolutions and awakenings done at least once, in Codex order (codex.ts). */
+  codex: EvolveId[];
 }
 
 export function newSave(): SaveData {
   const zeros = () => new Array<number>(BALANCE.chapters).fill(0);
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
-    chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball',
+    chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
   };
 }
 
@@ -80,5 +83,6 @@ export function parseSave(text: string | null): SaveData {
     runs: int(raw.runs, 0, max, 0),
     // only a relic the clears have unlocked
     relic: RELIC_IDS.indexOf(raw.relic as RelicId) >= 0 && RELIC_IDS.indexOf(raw.relic as RelicId) <= cleared ? (raw.relic as RelicId) : 'ball',
+    codex: Array.isArray(raw.codex) ? mergeCodex(raw.codex) : [],
   };
 }

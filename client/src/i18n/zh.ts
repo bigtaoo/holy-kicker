@@ -101,6 +101,13 @@ export const zh: Table<typeof en> = {
   boss: {
     abbot: '堕落方丈',
   },
+  codex: {
+    title: '图鉴 {n}/{total}',
+    unknown: '？？？',
+    recipe: '{item} 5 级 + {pair}',
+    hint: '在一局里进化一次即可记录',
+    pick: '点一个条目查看',
+  },
   results: {
     cleared: '通关！',
     fallen: '本局结束',
@@ -110,6 +117,7 @@ export const zh: Table<typeof en> = {
     chest: '宝箱（第 {wave} 波）：铜钱 +{copper}，玉 +{jade}',
     newBest: '新纪录！',
     newRelic: '新法器：{name}！',
+    newCodex: '图鉴新增：{name}！',
     double: '铜钱翻倍（看广告）',
     doubled: '铜钱已翻倍！',
   },
