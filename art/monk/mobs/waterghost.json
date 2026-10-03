@@ -1,0 +1,25 @@
+{
+  "source": "marsh/waterghost_v1.png",
+  "out": "../../../client/public/art/mobs/waterghost",
+  "frames": 10,
+  "fps": 9,
+  "height": 168,
+  "ground": [400, 765],
+  "pad": [20, 30, 20, 10],
+  "body": {
+    "dy": {"sin": 14, "bias": -18},
+    "sy": {"sin": 0.02, "bias": 1, "phase": 0.25}
+  },
+  "deform": [
+    {"type": "rotate", "region": {"c": [90, 485], "r": [130, 95], "feather": 0.4}, "pivot": [200, 470],
+     "angle": {"sin": 7, "phase": 0.1}},
+    {"type": "move", "region": {"c": [545, 560], "r": [85, 85], "feather": 0.4},
+     "dx": {"sin": 6, "phase": 0.6}, "dy": {"sin": 8, "phase": 0.35}},
+    {"type": "wave", "region": {"c": [420, 725], "r": [380, 95], "feather": 0.5}, "root": [420, 640],
+     "dir": [0, 1], "length": 140, "wavelength": 260, "amp": 12, "cycles": 1},
+    {"type": "rotate", "region": {"c": [560, 330], "r": [120, 190], "feather": 0.45}, "pivot": [470, 160],
+     "angle": {"sin": 3, "phase": 0.2}},
+    {"type": "rotate", "region": {"c": [340, 290], "r": [330, 310], "feather": 0.3}, "pivot": [380, 680],
+     "angle": {"sin": 2}}
+  ]
+}

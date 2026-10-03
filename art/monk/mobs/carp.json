@@ -1,0 +1,33 @@
+{
+  "source": "marsh/carp_v2.png",
+  "out": "../../../client/public/art/mobs/carp",
+  "frames": 12,
+  "fps": 10,
+  "height": 380,
+  "ground": [360, 765],
+  "pad": [40, 30, 60, 20],
+  "body": {
+    "sy": {"sin": 0.025, "bias": 1, "cycles": 2},
+    "sx": {"sin": -0.02, "bias": 1, "cycles": 2}
+  },
+  "deform": [
+    {"type": "move", "region": {"c": [240, 720], "r": [90, 60], "feather": 0.4},
+     "dy": {"keys": [[0, 0], [0.25, -14], [0.5, 0]]}},
+    {"type": "move", "region": {"c": [490, 730], "r": [90, 60], "feather": 0.4},
+     "dy": {"keys": [[0.5, 0], [0.75, -14], [1.0, 0]]}},
+    {"type": "wave", "region": {"c": [80, 370], "r": [90, 100], "feather": 0.4}, "root": [70, 320],
+     "dir": [0, 1], "length": 110, "wavelength": 220, "amp": 10, "cycles": 1},
+    {"type": "wave", "region": {"c": [215, 385], "r": [60, 80], "feather": 0.4}, "root": [200, 330],
+     "dir": [0, 1], "length": 110, "wavelength": 220, "amp": 9, "cycles": 1},
+    {"type": "rotate", "region": {"c": [120, 495], "r": [70, 75], "feather": 0.4}, "pivot": [160, 455],
+     "angle": {"sin": 16, "cycles": 2}},
+    {"type": "rotate", "region": {"c": [490, 360], "r": [90, 70], "feather": 0.4}, "pivot": [430, 360],
+     "angle": {"sin": 10, "cycles": 2, "phase": 0.25}},
+    {"type": "rotate", "region": {"c": [490, 110], "r": [150, 110], "feather": 0.4}, "pivot": [420, 170],
+     "angle": {"sin": 5, "phase": 0.1}},
+    {"type": "wave", "region": {"c": [720, 420], "r": [130, 190], "feather": 0.35}, "root": [630, 420],
+     "dir": [1, 0], "length": 180, "wavelength": 260, "amp": 26, "cycles": 1},
+    {"type": "rotate", "region": {"c": [380, 380], "r": [520, 520], "feather": 0.15}, "pivot": [360, 765],
+     "angle": {"sin": 2.5}}
+  ]
+}

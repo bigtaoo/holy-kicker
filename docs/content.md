@@ -233,8 +233,8 @@ or a new single image is cheap; elites and bosses cost a rig each.
   and rises there with a splash, hurting a hero within 80 for 6. The toad walks slower
   (95/s, 80 % health), stops 460 from the hero and every 5–7 s swells for 0.5 s and spits a
   3-bullet fan (6 per hit); it only starts to swell with the hero within 720. The bot now
-  reads a bullet's path a second ahead and keeps clear of marks. Both are drawn in code
-  (`client/src/game/marshSheets.ts`) until their art is baked. Balance (40 runs): chapter 2
+  reads a bullet's path a second ahead and keeps clear of marks. Both are baked frame loops
+  (`tools/bake_mob.py`, specs and drawings in `art/monk/mobs`). Balance (40 runs): chapter 2
   casual 21/40 won (level 31), skilled 24/40; staff 13, beads 12, fish 10, bowl 8 out of 20;
   chapter 1 is unchanged (casual 35/40). The
   first tuning (toads every 6th firing every 3 s, ghosts every 4th rising 140–320 away,
@@ -249,8 +249,8 @@ or a new single image is cheap; elites and bosses cost a rig each.
   damage and age in every run, not only the threats test. Hits push it only 30 (the big
   jiangshi 160): with the full push it was knocked out of the ball's kick range and lived
   60–500 s (the big jiangshi on the marsh: 10–170 s, median about 35 s); now 3–270 s, median
-  about 45 s. The bot keeps 90 clear of a marked zone. It is the toad drawn bigger in
-  slate teal with a jade crown (`toadKingSheet`). Balance (40 runs): chapter 2 casual 22/40
+  about 45 s. The bot keeps 90 clear of a marked zone. It is a bigger slate-teal toad
+  with a jade crown and a purple cape (`art/monk/mobs/toad_king.json`). Balance (40 runs): chapter 2 casual 22/40
   (level 31), skilled 26/40; staff 13, fish 13, beads 12, bowl 8 out of 20; chapter 1
   unchanged (35/40).
 - **The empowered abbot** (`EMPOWERED` in `engine/config.ts`, ENGINE_VERSION 18). From
@@ -269,8 +269,8 @@ or a new single image is cheap; elites and bosses cost a rig each.
   for 25 and sends a ring of 12 bullets out from the rim; it then lies winded for 1.2 s, the
   time to kick it. It comes to the hero, so it is kicked far more than the abbot the bot keeps
   away from (the abbot on wave 50 lived a median 181 s; the carp with 2400 health 52 s, less
-  than the mid-boss), so it has 4000: a median 88 s casual, 78 s skilled. On screen it is drawn
-  in code (`carpSheet`) until it gets a rig: an ink-slate carp standing out of the shallows,
+  than the mid-boss), so it has 4000: a median 88 s casual, 78 s skilled. On screen it is a baked
+  frame loop (`art/monk/mobs/carp.json`): a fat ink-slate carp waddling upright on stubby feet,
   purple fins, barbels, red eyes and a jade crown; under water a dark shape with ripples and a
   fin, its circle in the attack violet, a splash when it dives and surfaces; the bar reads
   "Black Carp King" / 黑鱼精. `BossStage` (client) sends the boss events to the abbot's or the

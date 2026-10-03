@@ -13,7 +13,7 @@ import { MARSH_DECO, sliceDeco, TEMPLE_DECO, type DecoFrame, type DecoSheet } fr
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons] = await Promise.all([
+  const [hero, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
     loadTao(platform, 'art/hero'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
@@ -27,11 +27,16 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     deco === 'none' ? null : loadDeco(platform, 'art/ground/marsh_deco'),
     scene.boss ? loadTao(platform, 'art/boss_monk') : null,
     loadDeco(platform, 'art/icons/icons'),
+    // chapter 2's water ghost, toad, toad king and Black Carp King
+    loadSheet(platform, 'art/mobs/waterghost'),
+    loadSheet(platform, 'art/mobs/toad'),
+    loadSheet(platform, 'art/mobs/toad_king'),
+    loadSheet(platform, 'art/mobs/carp'),
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
-  ], boss, icons: icons.frames };
+  ], boss, icons: icons.frames, marsh: { ghost, toad, toadKing, carp } };
 }
 
 /** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py). */

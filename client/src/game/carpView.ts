@@ -2,15 +2,14 @@ import { Container, Graphics, Sprite, type Renderer, type Texture } from 'pixi.j
 import { CARP, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
-import { carpSheet } from './carpSheet';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import type { MobSheet } from './mobView';
 import { SHADOW_Z, makeShadow } from './shadow';
 import { ZONE_TOP_Z, zoneTextures } from './threatView';
 
-// The Black Carp King on screen, drawn from the sim's boss (systems/carp.ts): the code-drawn
-// carp swaying in the shallows, its wake while it swims under water (a dark shape and a fin
+// The Black Carp King on screen, drawn from the sim's boss (systems/carp.ts): the baked carp
+// waddling on its stubby feet, its wake while it swims under water (a dark shape and a fin
 // cutting the surface, rippling), its locked circle in the enemy attack violet filling as it
 // rises, and the splash when it surfaces. Same surface as the abbot's view (bossView.ts), so
 // the game drives either through BossStage.
@@ -28,7 +27,6 @@ export class CarpView {
   readonly view = new Container();
   private readonly bar = new BossBar(t('boss.carp'));
   readonly hud = this.bar.view;
-  private readonly sheet: MobSheet;
   private readonly sprite: Sprite;
   private readonly shadow: Sprite;
   private readonly wake = new Graphics();
@@ -40,8 +38,7 @@ export class CarpView {
   /** Seconds since it surfaced (it rises out of the water over POP). */
   private popped = POP;
 
-  constructor(renderer: Renderer, world: Container, shadowTex: Texture, readonly height: number, private readonly fx: FxPool) {
-    this.sheet = carpSheet(renderer);
+  constructor(renderer: Renderer, private readonly sheet: MobSheet, world: Container, shadowTex: Texture, readonly height: number, private readonly fx: FxPool) {
     const m = this.sheet.meta;
     this.sprite = new Sprite(this.sheet.textures[0]);
     this.sprite.anchor.set(m.anchor[0] / m.frameW, m.anchor[1] / m.frameH);

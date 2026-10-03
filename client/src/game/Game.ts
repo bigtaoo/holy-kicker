@@ -22,7 +22,6 @@ import { fakeMobTypes } from './mobTypes';
 import { EliteCrowd, EliteView, nearestElite } from './eliteView';
 import { BossBar } from './bossBar';
 import { wispSheet } from './wispSheet';
-import { toadKingSheet, toadSheet, waterGhostSheet } from './marshSheets';
 import { HordeView, MOB_HEIGHT } from './hordeView';
 import { AuraStack } from './aura';
 import { Boss } from './bossView';
@@ -63,6 +62,8 @@ export interface Art {
   boss: TaoAsset | null;
   /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
   icons: ReadonlyMap<string, Texture>;
+  /** Chapter 2's mobs, elite and boss (tools/bake_mob.py, specs in art/monk/mobs). */
+  marsh: { ghost: MobSheet; toad: MobSheet; toadKing: MobSheet; carp: MobSheet };
 }
 
 const HERO_HEIGHT = 120;
@@ -204,19 +205,19 @@ export class Game {
       { sheet, height: MOB_HEIGHT[kind], facesLeft, shadow, shadowTex }
     );
     // chapter 2 on brings water ghosts and toads (CHAPTER_MOBS); the marsh's walkers are water ghosts too
-    const ghost = setup.chapter >= 2 ? waterGhostSheet(app.renderer) : null;
+    const ghost = setup.chapter >= 2 ? art.marsh.ghost : null;
     this.horde = new HordeView(this.world, {
       chaser: ghost && setup.chapter === 2 ? [look(ghost, 'chaser', true, [27, 9])] : jiangshi.map((sheet) => look(sheet, 'chaser', true, [27, 9])),
       runner: [look(art.fox, 'runner', false, [36, 9])],
       swarm: [look(wispSheet(app.renderer), 'swarm', true, [18, 6])],
       emerger: ghost ? [look(ghost, 'emerger', true, [27, 9])] : [],
-      shooter: setup.chapter >= 2 ? [look(toadSheet(app.renderer), 'shooter', true, [34, 10])] : [],
+      shooter: setup.chapter >= 2 ? [look(art.marsh.toad, 'shooter', true, [34, 10])] : [],
     }, scene, this.fx.pool);
     // in a chapter the elite and boss arrive later, so their views wait hidden
     this.elites = null;
     if (s.elites.length > 0 || chapter) {
       const big = { sheet: art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14] as [number, number], shadowTex };
-      const king = setup.chapter >= 2 ? { sheet: toadKingSheet(app.renderer), height: TOAD_KING_HEIGHT, facesLeft: true, shadow: [52, 15] as [number, number], shadowTex } : big;
+      const king = setup.chapter >= 2 ? { sheet: art.marsh.toadKing, height: TOAD_KING_HEIGHT, facesLeft: true, shadow: [52, 15] as [number, number], shadowTex } : big;
       this.elites = new EliteCrowd((k, kind) => new EliteView(
         kind, this.world, kind === 'toadKing' ? king : big, makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red'),
         kind === 'toadKing' ? 0xffffff : ELITE_TINTS[k % ELITE_TINTS.length], scene.eliteRing, HERO_TOP_Z,
@@ -224,7 +225,7 @@ export class Game {
     }
     // chapter 2 on ends with the Black Carp King (CHAPTER_BOSSES); the abbot is still its mid-boss
     const abbot = art.boss && (s.boss || chapter) ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;
-    const carp = chapter && chapterBoss(setup.chapter) === 'carp' ? new CarpView(app.renderer, this.world, shadowTex, scene.bossSize, this.fx.pool) : null;
+    const carp = chapter && chapterBoss(setup.chapter) === 'carp' ? new CarpView(app.renderer, art.marsh.carp, this.world, shadowTex, scene.bossSize, this.fx.pool) : null;
     this.boss = abbot || carp ? new BossStage(abbot, carp) : null;
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
