@@ -257,8 +257,9 @@ or a new single image is cheap; elites and bosses cost a rig each.
   chapter 2 on, wave 25 brings the Fallen Abbot instead of the twins, and the wave lasts
   until it falls: 1500 health (the chapter boss 3000), 1.8 s between slams (2.5 s), and every
   slam also sends a ring of 10 bullets out from the rim of its circle (turned by the tick,
-  so rings differ), to slip through between them. On screen it is tinted dusky violet and
-  its bar reads "Fallen Abbot, Empowered" / 狂化方丈. Balance (40 runs, chapter 2 casual):
+  so rings differ), to slip through between them. On screen it is tinted dusky violet, stands
+  in a dark aura (`client/src/game/darkAura.ts`: a breathing violet haze behind it, a dark
+  pool under its feet, wisps rising off it) and its bar reads "Fallen Abbot, Empowered" / 狂化方丈. Balance (40 runs, chapter 2 casual):
   21/40 (22 before), skilled 25/40 (26); it falls in a median 76 s (the twins 72 s), and
   4 runs end on waves 25–29 against 7 with the twins.
 - **The Black Carp King** (`CARP`, `CHAPTER_BOSSES` in `engine/config.ts`, `stepCarp` in

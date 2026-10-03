@@ -2,6 +2,7 @@ import { Container, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { BOSS, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
+import { DarkAura } from './darkAura';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { makeShadow } from './shadow';
@@ -11,7 +12,8 @@ import { ZONE_TOP_Z, zoneTextures } from './threatView';
 // The boss on screen, drawn from the sim's boss: the cutout rig (walk / slam / hurt), its slam
 // warning in the enemy attack violet, the impact, and a health bar across the top of the play
 // area. Its behaviour lives in the engine (systems/boss.ts); events start the clips. Empowered
-// (the later chapters' mid-boss) it is tinted a dusky violet and its bar says so.
+// (the later chapters' mid-boss) it is tinted a dusky violet, wrapped in a dark aura (darkAura.ts)
+// and its bar says so.
 
 const VIOLET = 0xb04cff;
 const ZONE_TEX = 128;
@@ -30,11 +32,12 @@ export class Boss {
   private readonly body = new Container();
   private readonly shadow: Sprite;
   private readonly zone: [Sprite, Sprite];
+  private aura: DarkAura | null = null;
   private facing = -1;
   private tint = 0;
 
   constructor(
-    renderer: Renderer,
+    private readonly renderer: Renderer,
     world: Container,
     asset: TaoAsset,
     shadowTex: Texture,
@@ -75,6 +78,11 @@ export class Boss {
     // drawn facing left; mirror to face right
     this.body.scale.x = -this.facing;
     this.actor.update(dt);
+    if (b.empowered && !this.aura) {
+      this.aura = new DarkAura(this.renderer, this.height);
+      this.view.addChildAt(this.aura.view, 0);
+    }
+    this.aura?.update(dt);
     this.view.position.set(x, y);
     this.shadow.position.set(x, y);
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
