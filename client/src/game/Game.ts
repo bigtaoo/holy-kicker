@@ -32,13 +32,14 @@ import { SpellView } from './spellView';
 import { SutraView } from './sutraView';
 import type { TaoAsset } from './tao/TaoActor';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
-import { makeDeco, type DecoSheet, type DecoStyle } from './decoView';
+import { makeDeco } from './decoView';
+import { Mist } from './mistView';
 import type { EliteColor, SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
-import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSprites } from './stageArt';
+import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSprites, type StageArt } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -48,14 +49,6 @@ import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSpri
 // and can later run in lockstep online. This class turns the screen's frames into sim ticks
 // (FixedStep), draws every sim body interpolated between its last two tick positions, and
 // turns the sim's events into animations, effects and numbers.
-
-/** A chapter's ground: the repeating tile (null draws the flat placeholder field) and the
- * decorations scattered over it (null when the scene turns them off). */
-export interface StageArt {
-  ground: Texture | null;
-  deco: DecoSheet | null;
-  style: DecoStyle;
-}
 
 export interface Art {
   hero: TaoAsset;
@@ -124,6 +117,7 @@ export class Game {
   private readonly camPos = { x: 0, y: 0 };
   private readonly elites: EliteCrowd | null;
   private readonly horde: HordeView;
+  private readonly mist: Mist | null;
   private readonly healthBar = new HealthBar();
   /** A revive to send with the next command (the death screen's ad paid). */
   private reviving = false;
@@ -181,6 +175,8 @@ export class Game {
       deco.zIndex = SHADOW_Z - 1;
       this.world.addChild(deco);
     }
+    this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist) : null;
+    if (this.mist) this.world.addChild(this.mist.view);
     const shadowTex = shadowTexture(app.renderer);
     this.hero = new Hero(art.hero, HERO_HEIGHT);
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view, this.healthBar.view);
@@ -449,6 +445,7 @@ export class Game {
 
     this.drawHorde(s, alpha, dt, hx, hy);
     this.corpses.update(dt);
+    this.mist?.update(dt);
     this.balls.sync(s.balls, alpha, dt);
     this.bowls.sync(s.bowls, alpha, dt);
     this.staff.update(dt, hx, hy, this.hero.view.zIndex);

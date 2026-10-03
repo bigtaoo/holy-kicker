@@ -1,4 +1,6 @@
 import { Graphics, Rectangle, Sprite, TilingSprite, type Renderer, type Texture } from 'pixi.js';
+import type { DecoSheet, DecoStyle } from './decoView';
+import type { MistLayer } from './mistView';
 import { SHADOW_Z } from './shadow';
 
 // Stage pieces the game scene is built from: the ground, rings under figures, the hero's dark
@@ -9,6 +11,15 @@ const TUFT = 0x2f3e31;
 const FIELD = 4000;
 /** World units per ground tile pixel. */
 const GROUND_SCALE = 1.5;
+
+/** A chapter's ground: the repeating tile (null draws the flat placeholder field), the
+ * decorations scattered over it (null when the scene turns them off) and its low mist, if any. */
+export interface StageArt {
+  ground: Texture | null;
+  deco: DecoSheet | null;
+  style: DecoStyle;
+  mist: readonly MistLayer[] | null;
+}
 
 /** White at 0, a soft red at 1. */
 export function hurtTint(k: number): number {

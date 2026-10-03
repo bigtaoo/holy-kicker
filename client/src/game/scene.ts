@@ -59,6 +59,8 @@ export interface SceneOptions {
   foxTint: boolean;
   /** Ground decorations against the tile repeat: none, faint patches only, or patches and props. */
   deco: DecoMode;
+  /** A stage's low mist (chapter 2's marsh); off to compare the bare ground. */
+  mist: boolean;
   /** Smooth eases the hero's starts and stops and the camera after him; lock is the old hard follow. */
   cam: 'smooth' | 'lock';
   /** Mobs jammed in the crowd land and stand instead of hopping in place. */
@@ -109,6 +111,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
   crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true,
   deco: 'props',
+  mist: true,
   cam: 'smooth',
   settle: true,
   queue: true,
@@ -160,6 +163,7 @@ export function parseScene(query: string): SceneOptions {
     eliteColor: ELITE_COLORS.find((c) => c === q.get('elitecolor')) ?? DEFAULT_SCENE.eliteColor,
     foxTint: q.has('foxtint') ? q.get('foxtint') === '1' : DEFAULT_SCENE.foxTint,
     deco: DECO_MODES.find((d) => d === q.get('deco')) ?? DEFAULT_SCENE.deco,
+    mist: q.has('mist') ? q.get('mist') === '1' : DEFAULT_SCENE.mist,
     cam: q.get('cam') === 'lock' ? 'lock' : DEFAULT_SCENE.cam,
     settle: q.has('settle') ? q.get('settle') === '1' : DEFAULT_SCENE.settle,
     queue: q.has('queue') ? q.get('queue') === '1' : DEFAULT_SCENE.queue,

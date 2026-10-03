@@ -4,6 +4,7 @@ import type { SheetMeta } from './game/mobAnim';
 import { sliceSheet, type MobSheet } from './game/mobView';
 import { sliceAtlas, type TaoAsset } from './game/tao/TaoActor';
 import type { TaoSkeleton } from './game/tao/types';
+import { MARSH_MIST } from './game/mistView';
 import type { Platform } from './platform/types';
 import type { SceneOptions } from './game/scene';
 import { MARSH_DECO, sliceDeco, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
@@ -28,8 +29,8 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     loadDeco(platform, 'art/icons/icons'),
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, stages: [
-    { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO },
-    { ground: marshTex, deco: marshDeco, style: MARSH_DECO },
+    { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
+    { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
   ], boss, icons: icons.frames };
 }
 
