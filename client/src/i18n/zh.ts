@@ -118,6 +118,7 @@ export const zh: Table<typeof en> = {
   boss: {
     abbot: '堕落方丈',
     twins: '双煞僵尸',
+    empowered: '狂化方丈',
   },
   codex: {
     title: '图鉴 {n}/{total}',

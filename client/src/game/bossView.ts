@@ -10,11 +10,14 @@ import { ZONE_TOP_Z, zoneTextures } from './threatView';
 
 // The boss on screen, drawn from the sim's boss: the cutout rig (walk / slam / hurt), its slam
 // warning in the enemy attack violet, the impact, and a health bar across the top of the play
-// area. Its behaviour lives in the engine (systems/boss.ts); events start the clips.
+// area. Its behaviour lives in the engine (systems/boss.ts); events start the clips. Empowered
+// (the later chapters' mid-boss) it is tinted a dusky violet and its bar says so.
 
 const VIOLET = 0xb04cff;
 const ZONE_TEX = 128;
 const HURT_TINT_TIME = 0.15;
+/** The empowered boss's multiply tint. */
+const EMPOWERED_TINT = 0xb8a0e8;
 /** Seconds it takes to fade out once defeated. */
 const FADE = 0.5;
 
@@ -75,8 +78,9 @@ export class Boss {
     this.view.position.set(x, y);
     this.shadow.position.set(x, y);
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
-    this.actor.view.tint = flash(this.tint / HURT_TINT_TIME);
+    this.actor.view.tint = flash(this.tint / HURT_TINT_TIME, b.empowered ? EMPOWERED_TINT : 0xffffff);
     this.drawZone(b, alpha);
+    this.bar.rename(t(b.empowered ? 'boss.empowered' : 'boss.abbot'));
     this.bar.set(b.hp, b.maxHp);
   }
 
@@ -140,8 +144,11 @@ export class Boss {
   }
 }
 
-/** White at 0; a pale cold flash at 1 (no warm tint on enemies). */
-function flash(k: number): number {
-  const r = Math.round(255 - 60 * k);
-  return (r << 16) | (r << 8) | 0xff;
+/** `base` at 0; a pale cold flash at 1 (no warm tint on enemies). */
+function flash(k: number, base: number): number {
+  const ch = (shift: number, to: number) => {
+    const c = (base >> shift) & 0xff;
+    return Math.round(c + (to - c) * k);
+  };
+  return (ch(16, 195) << 16) | (ch(8, 195) << 8) | ch(0, 255);
 }

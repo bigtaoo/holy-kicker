@@ -1,17 +1,20 @@
-import { BOSS, HURT } from '../config';
+import { BOSS, EMPOWERED, HURT } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import { body, teleport, type Boss, type SimState } from '../state';
 import { nearestPlayer } from './horde';
+import { ring } from './threats';
 
 // The boss lumbers after the nearest player and, once close, winds up a two-fisted slam on a
 // marked circle in front of it. The circle shows for the whole wind-up so the player can step
 // out; after the slam it stands winded for a moment. Defeated, it lies down; in a chapter it
 // is then gone (systems/waves.ts), in the sandbox it comes back later from a random side.
+// Empowered (the later chapters' mid-boss), it rests less and every slam also sends a bullet
+// ring out from the rim of its circle, to slip through between the bullets.
 
-export function newBoss(x: number, y: number, hp = BOSS.hp): Boss {
-  return { ...body(x, y), phase: 'walk', t: 0, cooldown: BOSS.cooldown, zoneX: x, zoneY: y, hp, maxHp: hp };
+export function newBoss(x: number, y: number, hp = BOSS.hp, empowered = false): Boss {
+  return { ...body(x, y), phase: 'walk', t: 0, cooldown: BOSS.cooldown, zoneX: x, zoneY: y, hp, maxHp: hp, empowered };
 }
 
 /** Takes damage; true when this blow brings it down. */
@@ -40,6 +43,7 @@ export function bossSystem(s: SimState, events: SimEvent[], hurt: (owner: number
       target.x + Math.trunc((cosB(a) * BOSS.respawnDist) / TRIG_ONE),
       target.y + Math.trunc((sinB(a) * BOSS.respawnDist) / TRIG_ONE),
       b.maxHp,
+      b.empowered,
     );
     Object.assign(b, back);
     teleport(b, back.x, back.y);
@@ -74,11 +78,12 @@ export function bossSystem(s: SimState, events: SimEvent[], hurt: (owner: number
     events.push({ type: 'bossSlam', x: b.zoneX, y: b.zoneY, radius: BOSS.slamRadius });
     const r2 = BOSS.slamRadius * BOSS.slamRadius;
     for (const p of s.players) if (dist2(p.x - b.zoneX, p.y - b.zoneY) <= r2) hurt(p.owner, HURT.slam);
+    if (b.empowered) ring(s, b.zoneX, b.zoneY, BOSS.slamRadius, EMPOWERED.ring, s.tick);
     return;
   }
   if (b.t >= BOSS.recover) {
     b.phase = 'walk';
     b.t = 0;
-    b.cooldown = BOSS.cooldown;
+    b.cooldown = b.empowered ? EMPOWERED.cooldown : BOSS.cooldown;
   }
 }

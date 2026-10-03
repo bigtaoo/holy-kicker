@@ -12,6 +12,7 @@ export class BossBar {
   /** Screen-space, placed by the game in play-area units. */
   readonly view = new Container();
   private readonly fill = new Sprite(Texture.WHITE);
+  private readonly label: Text;
 
   constructor(name: string) {
     const back = new Sprite(Texture.WHITE);
@@ -24,13 +25,17 @@ export class BossBar {
     this.fill.height = BAR_H;
     this.fill.width = BAR_W;
     this.fill.x = -BAR_W / 2;
-    const label = new Text({
+    const label = (this.label = new Text({
       text: name,
       style: { fill: 0xffffff, fontFamily: 'Arial', fontWeight: 'bold', fontSize: 48, stroke: { color: 0x140c18, width: 6 } },
-    });
+    }));
     label.anchor.set(0.5, 1);
     label.y = -10;
     this.view.addChild(back, this.fill, label);
+  }
+
+  rename(name: string): void {
+    if (this.label.text !== name) this.label.text = name;
   }
 
   set(hp: number, maxHp: number): void {

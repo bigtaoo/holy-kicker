@@ -253,6 +253,14 @@ or a new single image is cheap; elites and bosses cost a rig each.
   slate teal with a jade crown (`toadKingSheet`). Balance (40 runs): chapter 2 casual 22/40
   (level 31), skilled 26/40; staff 13, fish 13, beads 12, bowl 8 out of 20; chapter 1
   unchanged (35/40).
+- **The empowered abbot** (`EMPOWERED` in `engine/config.ts`, ENGINE_VERSION 18). From
+  chapter 2 on, wave 25 brings the Fallen Abbot instead of the twins, and the wave lasts
+  until it falls: 1500 health (the chapter boss 3000), 1.8 s between slams (2.5 s), and every
+  slam also sends a ring of 10 bullets out from the rim of its circle (turned by the tick,
+  so rings differ), to slip through between them. On screen it is tinted dusky violet and
+  its bar reads "Fallen Abbot, Empowered" / 狂化方丈. Balance (40 runs, chapter 2 casual):
+  21/40 (22 before), skilled 25/40 (26); it falls in a median 76 s (the twins 72 s), and
+  4 runs end on waves 25–29 against 7 with the twins.
 
 ## Chapters (5)
 
@@ -262,7 +270,7 @@ mobs (lesson from the readability test: grass works best).
 | # | Ground | Mobs | Elites | Mid-boss (25) | Boss (50) |
 |---|---|---|---|---|---|
 | 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger, implemented) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
-| 2 | **Misty Marsh** / 雾沼: reeds, shallow water | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered | **Black Carp King** / 黑鱼精: dives, surfaces with a shockwave |
+| 2 | **Misty Marsh** / 雾沼: reeds, shallow water | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精: dives, surfaces with a shockwave |
 | 3 | **Snow Pass** / 雪岭: snow, pines | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour | Wolf leader (charger + howl buffs) | Black Carp, empowered | **Bone Witch** / 白骨精: summons skeletons (splitters) |
 | 4 | **Ghost Market** / 鬼市: night street, blue lanterns | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) | Door god statue (shielder) | Bone Witch, empowered | **Underworld Judge** / 判官: writes zones in lines, changes them mid-fight |
 | 5 | **Demon Peak** / 魔窟: dark rock, purple fire | Fallen monk (shielder), shadow (runner), every earlier type | Two elites at once | Underworld Judge, empowered | **Inner Demon** / 心魔: a cold-coloured copy of the hero, uses the player's own relic |

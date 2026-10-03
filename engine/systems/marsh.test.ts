@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_RUN, EMERGE, HURT, SHOOTER, THREATS, TOAD_KING, WAVES, type RunConfig } from '../config';
+import { BOSS, DEFAULT_RUN, EMERGE, EMPOWERED, HURT, SHOOTER, THREATS, TOAD_KING, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import type { PlayerCommand } from '../input';
 import { dist } from '../math/fixed';
 import { newElite, newMob, underground, type Mob } from '../state';
 import { downMob, targetAt } from './combat';
 import { laneDistance } from './elite';
+import { newBoss } from './boss';
 import { beginWave, eliteKinds, newcomer } from './waves';
 
 // Chapter 2's mobs (docs/content.md "Chapters"): water ghosts that rise from a mark next to
@@ -168,5 +169,41 @@ describe('toad king (elite)', () => {
     const d = dist(k.x - p.x, k.y - p.y);
     expect(d).toBeLessThan(TOAD_KING.range);
     expect(d).toBeGreaterThan(TOAD_KING.stopDist - 20_000);
+  });
+});
+
+describe('empowered abbot (mid-boss)', () => {
+  it('comes on the marsh mid-boss wave in place of the twins, and the wave waits for it', () => {
+    const e = new Engine(MARSH);
+    const s = e.state;
+    s.elites.length = 0;
+    beginWave(s, WAVES.midBoss);
+    expect(s.elites.length).toBe(0);
+    expect(s.boss).toMatchObject({ empowered: true, hp: EMPOWERED.hp });
+    s.waveT = WAVES.ticks;
+    e.step([still(e)]);
+    expect(s.wave).toBe(WAVES.midBoss);
+    s.boss!.phase = 'down';
+    s.boss!.t = 0;
+    e.step([still(e)]);
+    expect(s.wave).toBe(WAVES.midBoss + 1);
+    for (let i = 0; i < BOSS.respawnAfter + 1; i++) e.step([still(e)]);
+    expect(s.boss).toBeNull();
+  });
+
+  it('sends a bullet ring out of every slam, and rests less', () => {
+    const e = new Engine(MARSH);
+    const s = e.state;
+    s.mobs.length = 0;
+    const p = s.players[0];
+    p.kickCd = 1e6;
+    s.boss = newBoss(p.x + BOSS.stopDist, p.y, EMPOWERED.hp, true);
+    s.boss.cooldown = 0;
+    for (let i = 0; i < BOSS.windup + 2 && s.boss.phase !== 'recover'; i++) e.step([still(e)]);
+    expect(s.boss.phase).toBe('recover');
+    expect(s.bullets.length).toBe(EMPOWERED.ring);
+    for (let i = 0; i < BOSS.recover + 1; i++) e.step([still(e)]);
+    expect(s.boss.cooldown).toBeLessThanOrEqual(EMPOWERED.cooldown);
+    expect(s.boss.cooldown).toBeGreaterThan(EMPOWERED.cooldown - 3);
   });
 });

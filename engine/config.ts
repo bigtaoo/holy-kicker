@@ -276,6 +276,17 @@ export const BOSS = {
   respawnDist: toFp(1000),
 };
 
+/**
+ * The empowered Fallen Abbot, chapter 2's mid-boss on and in place of the twins (docs/content.md):
+ * the boss with its own health and a shorter rest between slams, every slam also sending a
+ * ring of `ring` bullets out from the rim of its circle.
+ */
+export const EMPOWERED = {
+  hp: 1500,
+  cooldown: ticks(1.8),
+  ring: 10,
+};
+
 export const THREATS = {
   volleyEvery: ticks(1 / 1.5),
   fan: 3,

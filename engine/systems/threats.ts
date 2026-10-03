@@ -1,12 +1,12 @@
 import { HURT, THREATS } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2, FP } from '../math/fixed';
-import { atan2B, cosB, sinB, TRIG_ONE } from '../math/trig';
+import { atan2B, BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { SimState } from '../state';
 import { nearestPlayer } from './horde';
 
 // Enemy attacks: bullets (fired by shooters and the toad king, systems/marsh.ts, or for the
-// readability test from random mobs near a player) and ground zones that warn first and then
+// readability test from random mobs near a player, or in a ring by the empowered boss's slam) and ground zones that warn first and then
 // blast (the toad king's poison pools, or the test's random ones).
 
 /** Flies every bullet; one that meets a player hurts him and is gone. */
@@ -70,6 +70,20 @@ export function fan(s: SimState, x: number, y: number, tx: number, ty: number, n
     const vx = Math.trunc((cosB(a) * p.bulletSpeed) / TRIG_ONE);
     const vy = Math.trunc((sinB(a) * p.bulletSpeed) / TRIG_ONE);
     s.bullets.push({ x, y, px: x, py: y, vx, vy, age: 0 });
+  }
+}
+
+/**
+ * A ring of `n` bullets flying out from a circle of radius `r` around (x, y), turned by `turn`
+ * (brads) so rings differ.
+ */
+export function ring(s: SimState, x: number, y: number, r: number, n: number, turn: number): void {
+  const v = THREATS.bulletSpeed;
+  for (let i = 0; i < n; i++) {
+    const a = turn + Math.trunc((i * BRAD_FULL) / n);
+    const bx = x + Math.trunc((cosB(a) * r) / TRIG_ONE);
+    const by = y + Math.trunc((sinB(a) * r) / TRIG_ONE);
+    s.bullets.push({ x: bx, y: by, px: bx, py: by, vx: Math.trunc((cosB(a) * v) / TRIG_ONE), vy: Math.trunc((sinB(a) * v) / TRIG_ONE), age: 0 });
   }
 }
 

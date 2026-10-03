@@ -130,6 +130,8 @@ export interface Boss extends Body {
   zoneY: number;
   hp: number;
   maxHp: number;
+  /** The empowered mid-boss (EMPOWERED): its slams also send out a bullet ring. */
+  empowered: boolean;
 }
 
 export interface Ball extends Body {

@@ -1,4 +1,4 @@
-import { CHAPTER_ELITES, CHAPTER_MOBS, ELITE, HORDE, MIX, MOB_KINDS, SHRINE, TOAD_KING, WAVES, type EliteKind, type MobKind } from '../config';
+import { CHAPTER_ELITES, CHAPTER_MOBS, ELITE, EMPOWERED, HORDE, MIX, MOB_KINDS, SHRINE, TOAD_KING, WAVES, type EliteKind, type MobKind } from '../config';
 import type { SimEvent } from '../events';
 import { body, newElite, newMob, type SimState } from '../state';
 import { newBoss } from './boss';
@@ -10,7 +10,8 @@ import { resetMob } from './marsh';
 // at the start of every wave (the chapter's kinds joining it, CHAPTER_MOBS, and swarm packs
 // on swarm waves), the chapter's elite comes every tenth wave (the last of them brings the
 // previous chapter's elite along), and the boss waves last until their boss falls:
-// the mid-boss is two elites, the twin big jiangshi, and the last wave has the chapter boss. The chapter boss falling wins the run;
+// the mid-boss is two elites, the twin big jiangshi, in chapter 1 and the empowered Fallen
+// Abbot after it, and the last wave has the chapter boss. The chapter boss falling wins the run;
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
 
@@ -53,7 +54,7 @@ export function isBossWave(wave: number, last: number): boolean {
   return wave === last || isMidBoss(wave, last);
 }
 
-/** The mid-boss wave: the twin big jiangshi (a chapter shorter than it has none). */
+/** The mid-boss wave: the twins or the empowered abbot (a chapter shorter than it has none). */
 export function isMidBoss(wave: number, last: number): boolean {
   return wave === WAVES.midBoss && wave < last;
 }
@@ -99,7 +100,10 @@ export function beginWave(s: SimState, wave: number): void {
       s.elites.push(e);
     }
   }
-  if (isMidBoss(wave, last)) {
+  if (isMidBoss(wave, last) && s.config.chapter >= 2) {
+    ringPoint(s.ai, p.x, p.y, at);
+    s.boss = newBoss(at.x, at.y, EMPOWERED.hp, true);
+  } else if (isMidBoss(wave, last)) {
     // the twins come from opposite sides of the hero
     const a = newElite(0, 0, s.nextId++, WAVES.twinHp);
     ringPoint(s.ai, p.x, p.y, a);
@@ -119,7 +123,7 @@ export function waveSystem(s: SimState, events: SimEvent[]): void {
     return;
   }
   s.waveT++;
-  if (isMidBoss(s.wave, last) && s.elites.length > 0) return;
+  if (isMidBoss(s.wave, last) && (s.elites.length > 0 || (s.boss && s.boss.phase !== 'down'))) return;
   if (s.wave === last) {
     if (s.boss && s.boss.phase !== 'down') return;
     s.outcome = 'won';
