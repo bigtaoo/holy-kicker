@@ -250,7 +250,7 @@ or a new single image is cheap; elites and bosses cost a rig each.
   jiangshi 160): with the full push it was knocked out of the ball's kick range and lived
   60–500 s (the big jiangshi on the marsh: 10–170 s, median about 35 s); now 3–270 s, median
   about 45 s. The bot keeps 90 clear of a marked zone. It is a bigger slate-teal toad
-  with a jade crown and a purple cape (`art/monk/mobs/toad_king.json`). Balance (40 runs): chapter 2 casual 22/40
+  with a jade crown and a purple cape (`art/monk/mobs/toad_king.json`), drawn 150 tall (the big jiangshi 140). Balance (40 runs): chapter 2 casual 22/40
   (level 31), skilled 26/40; staff 13, fish 13, beads 12, bowl 8 out of 20; chapter 1
   unchanged (35/40).
 - **The empowered abbot** (`EMPOWERED` in `engine/config.ts`, ENGINE_VERSION 18). From
