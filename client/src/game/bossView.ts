@@ -1,6 +1,7 @@
-import { Container, Sprite, Text, Texture, type Renderer } from 'pixi.js';
+import { Container, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { BOSS, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
 import { t } from '../i18n';
+import { BossBar } from './bossBar';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { makeShadow } from './shadow';
@@ -16,18 +17,16 @@ const ZONE_TEX = 128;
 const HURT_TINT_TIME = 0.15;
 /** Seconds it takes to fade out once defeated. */
 const FADE = 0.5;
-const BAR_W = 760;
-const BAR_H = 26;
 
 export class Boss {
   readonly view = new Container();
+  private readonly bar = new BossBar(t('boss.abbot'));
   /** Screen-space bar, placed by the game in play-area units. */
-  readonly hud = new Container();
+  readonly hud = this.bar.view;
   private readonly actor: TaoActor;
   private readonly body = new Container();
   private readonly shadow: Sprite;
   private readonly zone: [Sprite, Sprite];
-  private readonly barFill = new Sprite(Texture.WHITE);
   private facing = -1;
   private tint = 0;
 
@@ -53,7 +52,6 @@ export class Boss {
       s.visible = false;
     }
     world.addChild(this.shadow, this.view, ...this.zone);
-    this.buildHud();
   }
 
   /** Draws the sim's boss, `alpha` of the way through the last tick; hx is the hero's x. */
@@ -79,7 +77,7 @@ export class Boss {
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
     this.actor.view.tint = flash(this.tint / HURT_TINT_TIME);
     this.drawZone(b, alpha);
-    this.barFill.width = (BAR_W * b.hp) / b.maxHp;
+    this.bar.set(b.hp, b.maxHp);
   }
 
   /** Shows or hides the boss and its bar (in a chapter it is only there on its waves). */
@@ -115,9 +113,7 @@ export class Boss {
 
   /** Keeps the bar centred across the top of the play area (play-area pixels and scale). */
   layout(playW: number, scale: number): void {
-    this.hud.scale.set(scale);
-    // under the build strip and the wave counter (RunHud)
-    this.hud.position.set(playW / 2, 400 * scale);
+    this.bar.layout(playW, scale);
   }
 
   private drawZone(b: BossState, alpha: number): void {
@@ -141,26 +137,6 @@ export class Boss {
       const a = (i / 8) * Math.PI * 2;
       this.fx.puff(x + Math.cos(a) * r * 0.7, y + Math.sin(a) * r * 0.7);
     }
-  }
-
-  private buildHud(): void {
-    const back = new Sprite(Texture.WHITE);
-    back.tint = 0x140c18;
-    back.alpha = 0.75;
-    back.width = BAR_W + 12;
-    back.height = BAR_H + 12;
-    back.position.set(-BAR_W / 2 - 6, -6);
-    this.barFill.tint = VIOLET;
-    this.barFill.height = BAR_H;
-    this.barFill.width = BAR_W;
-    this.barFill.x = -BAR_W / 2;
-    const name = new Text({
-      text: t('boss.abbot'),
-      style: { fill: 0xffffff, fontFamily: 'Arial', fontWeight: 'bold', fontSize: 48, stroke: { color: 0x140c18, width: 6 } },
-    });
-    name.anchor.set(0.5, 1);
-    name.y = -10;
-    this.hud.addChild(back, this.barFill, name);
   }
 }
 

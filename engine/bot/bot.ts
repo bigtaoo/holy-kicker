@@ -3,7 +3,7 @@ import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist, dist2, toFp } from '../math/fixed';
 import { atan2B, BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import { Prng } from '../math/prng';
-import type { Player, SimState } from '../state';
+import type { Elite, Player, SimState } from '../state';
 import { laneDistance } from '../systems/elite';
 
 // A bot that plays a chapter for the balance report (bot/balance.ts), and later perhaps a
@@ -64,13 +64,16 @@ function danger(s: SimState, x: number, y: number, close: CloseIn | null): numbe
   for (const m of s.mobs) add(m.x, m.y, NEAR_MOB, 1);
   const b = s.boss;
   const boss = b && b.phase !== 'down' ? b : null;
-  if (s.elite) {
-    add(s.elite.x, s.elite.y, close ? close.near : NEAR_ELITE, 4);
+  let near: Elite | null = null;
+  for (const e of s.elites) {
+    add(e.x, e.y, close ? close.near : NEAR_ELITE, 4);
     // a marked charge lane counts like the slam circle
-    const lane = laneDistance(s.elite, x, y);
+    const lane = laneDistance(e, x, y);
     if (lane >= 0 && lane < LANE) sum += (LANE - lane) * 40;
-    if (!boss) chase(s.elite.x, s.elite.y);
+    if (!near || dist(e.x - x, e.y - y) < dist(near.x - x, near.y - y)) near = e;
   }
+  // a close-in relic goes after the nearest elite
+  if (near && !boss) chase(near.x, near.y);
   if (boss) {
     add(boss.x, boss.y, close ? close.near : NEAR_BOSS, 6);
     if (boss.phase === 'windup') add(boss.zoneX, boss.zoneY, toFp(480), 40);

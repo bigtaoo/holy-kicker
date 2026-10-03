@@ -22,7 +22,7 @@ function cmd(e: Engine): PlayerCommand {
 function quiet(): Engine {
   const e = new Engine(BOWL_RUN);
   e.state.mobs.length = 0;
-  e.state.elite = null;
+  e.state.elites.length = 0;
   e.state.players[0].hurtCd = 1e6;
   return e;
 }
@@ -67,9 +67,9 @@ describe('alms bowl', () => {
     const e = quiet();
     const s = e.state;
     const p = s.players[0];
-    s.elite = newElite(p.x + 300_000, p.y);
-    s.elite.hp = s.elite.maxHp = 1e9;
-    s.elite.stun = 1e6;
+    s.elites = [newElite(p.x + 300_000, p.y)];
+    s.elites[0].hp = s.elites[0].maxHp = 1e9;
+    s.elites[0].stun = 1e6;
     const events = oneThrow(e);
     expect(events.filter((v) => v.type === 'hit' && v.kind === 'elite').length).toBe(2);
   });

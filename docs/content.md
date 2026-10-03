@@ -215,8 +215,15 @@ or a new single image is cheap; elites and bosses cost a rig each.
   fixed when it aims, so a step aside dodges it. The fox is no longer the elite. The wisp is
   drawn in code (`client/src/game/wispSheet.ts`), the big jiangshi is the jiangshi sheet
   scaled and tinted steel blue. Balance (40 runs, casual): 36/40 won at level 33, against
-  37/40 at level 30 before; skilled 39/40; every relic 17–20/20 out of 20. Still to come for
-  chapter 1: the mid-boss as two big jiangshi (the weakened abbot still stands in).
+  37/40 at level 30 before; skilled 39/40; every relic 17–20/20 out of 20.
+- **The mid-boss twins** (`WAVES.twinHp`, `WAVES.twinDelay`, ENGINE_VERSION 15). The state
+  holds a list of elites (targets number mobs, then the elites, then the boss). Wave 25
+  brings two big jiangshi from opposite sides of the hero, 650 health each (the stand-in
+  abbot had 1200), the second's first charge 1.5 s later; they take turns, one aims only
+  while the other is not charging, so two lanes never cross the hero at once. The wave
+  lasts until both fall; they share a health bar ("Twin Jiangshi" / 双煞僵尸) and the
+  second is tinted slate violet. Balance (40 runs, casual): 35/40 won, level 34; the twins
+  fall in 27–118 s, median about 50 s; skilled 39/40.
 
 ## Chapters (5)
 
@@ -225,7 +232,7 @@ mobs (lesson from the readability test: grass works best).
 
 | # | Ground | Mobs | Elites | Mid-boss (25) | Boss (50) |
 |---|---|---|---|---|---|
-| 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger) | Two big jiangshi | **Fallen Abbot** / 堕落方丈 (implemented): slam |
+| 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
 | 2 | **Misty Marsh** / 雾沼: reeds, shallow water | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone) | Fallen Abbot, empowered | **Black Carp King** / 黑鱼精: dives, surfaces with a shockwave |
 | 3 | **Snow Pass** / 雪岭: snow, pines | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour | Wolf leader (charger + howl buffs) | Black Carp, empowered | **Bone Witch** / 白骨精: summons skeletons (splitters) |
 | 4 | **Ghost Market** / 鬼市: night street, blue lanterns | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) | Door god statue (shielder) | Bone Witch, empowered | **Underworld Judge** / 判官: writes zones in lines, changes them mid-fight |

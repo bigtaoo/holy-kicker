@@ -1,4 +1,4 @@
-import { BOSS, HORDE, MIX, MOB_KINDS, SHRINE, WAVES, type MobKind } from '../config';
+import { ELITE, HORDE, MIX, MOB_KINDS, SHRINE, WAVES, type MobKind } from '../config';
 import type { SimEvent } from '../events';
 import { body, newElite, newMob, type SimState } from '../state';
 import { newBoss } from './boss';
@@ -7,8 +7,8 @@ import { ringPoint } from './horde';
 
 // The chapter's waves (docs/design.md "Chapters"): each lasts WAVES.ticks; the horde grows
 // at the start of every wave (runners joining from MIX.runnerFrom, swarm packs on swarm
-// waves), an elite comes every tenth wave, and the boss waves (the
-// mid-boss and the last) last until their boss falls. The chapter boss falling wins the run;
+// waves), an elite comes every tenth wave, and the boss waves last until their boss falls:
+// the mid-boss is two elites, the twin big jiangshi, and the last wave has the chapter boss. The chapter boss falling wins the run;
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
 
@@ -29,7 +29,12 @@ export function isSwarmWave(wave: number, last: number): boolean {
 }
 
 export function isBossWave(wave: number, last: number): boolean {
-  return wave === last || (wave === WAVES.midBoss && wave < last);
+  return wave === last || isMidBoss(wave, last);
+}
+
+/** The mid-boss wave: the twin big jiangshi (a chapter shorter than it has none). */
+export function isMidBoss(wave: number, last: number): boolean {
+  return wave === WAVES.midBoss && wave < last;
 }
 
 /** Shrine waves open with the shrine cards (never the last wave). */
@@ -64,15 +69,20 @@ export function beginWave(s: SimState, wave: number): void {
     const r = MIX.swarmSpread;
     s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, 'swarm'), 'swarm'));
   }
-  if (isEliteWave(wave, last) && !s.elite) {
-    const e = newElite(0, 0);
+  if (isEliteWave(wave, last) && s.elites.length === 0) {
+    const e = newElite(0, 0, s.nextId++);
     ringPoint(s.ai, p.x, p.y, e);
-    s.elite = e;
+    s.elites.push(e);
   }
-  if (isBossWave(wave, last) && !s.boss) {
+  if (isMidBoss(wave, last)) {
+    // the twins come from opposite sides of the hero
+    const a = newElite(0, 0, s.nextId++, WAVES.twinHp);
+    ringPoint(s.ai, p.x, p.y, a);
+    const b = newElite(2 * p.x - a.x, 2 * p.y - a.y, s.nextId++, WAVES.twinHp, ELITE.cooldown + WAVES.twinDelay);
+    s.elites.push(a, b);
+  } else if (isBossWave(wave, last) && !s.boss) {
     ringPoint(s.ai, p.x, p.y, at);
-    const hp = wave === last ? BOSS.hp : Math.trunc((BOSS.hp * WAVES.midBossHpPercent) / 100);
-    s.boss = newBoss(at.x, at.y, hp);
+    s.boss = newBoss(at.x, at.y);
   }
 }
 
@@ -84,14 +94,13 @@ export function waveSystem(s: SimState, events: SimEvent[]): void {
     return;
   }
   s.waveT++;
-  if (isBossWave(s.wave, last)) {
+  if (isMidBoss(s.wave, last) && s.elites.length > 0) return;
+  if (s.wave === last) {
     if (s.boss && s.boss.phase !== 'down') return;
-    if (s.wave === last) {
-      s.outcome = 'won';
-      for (const p of s.players) payBet(p);
-      events.push({ type: 'cleared' });
-      return;
-    }
+    s.outcome = 'won';
+    for (const p of s.players) payBet(p);
+    events.push({ type: 'cleared' });
+    return;
   }
   if (s.waveT < WAVES.ticks) return;
   beginWave(s, s.wave + 1);

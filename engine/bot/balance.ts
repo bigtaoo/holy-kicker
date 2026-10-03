@@ -2,6 +2,7 @@ import { DEFAULT_RUN, type RunConfig } from '../config';
 import type { RelicId, SutraId } from '../content';
 import { Engine } from '../Engine';
 import { TICK_RATE } from '../math/fixed';
+import { isMidBoss } from '../systems/waves';
 import { Bot, type BotStyle } from './bot';
 
 // The balance report: bots play whole chapters over many seeds and the numbers that tell how
@@ -39,18 +40,23 @@ export function playChapter(
     seed, style, outcome: 'timeout', wave: 1, seconds: 0, level: 1, hpAt: [100], hurt: 0, blocked: 0, kills: 0,
     elites: [], bosses: [], build: '',
   };
+  // the mid-boss twins count as one mid-boss: from the wave's start until the second falls
   let eliteFrom = -1;
+  let mid = false;
   let bossFrom = -1;
   const limit = maxMinutes * 60 * TICK_RATE;
   while (s.outcome === 'playing' && s.tick < limit) {
-    if (s.elite && eliteFrom < 0) eliteFrom = s.tick;
+    if (s.elites.length > 0 && eliteFrom < 0) {
+      eliteFrom = s.tick;
+      mid = isMidBoss(s.wave, waves);
+    }
     if (s.boss && s.boss.phase !== 'down' && bossFrom < 0) bossFrom = s.tick;
     for (const ev of e.step([bot.command(s)])) {
       if (ev.type === 'hurt') stats.hurt += ev.value;
       else if (ev.type === 'bellBreak') stats.blocked++;
       else if (ev.type === 'mobDown') stats.kills++;
-      else if (ev.type === 'eliteDown') {
-        stats.elites.push(secs(s.tick - eliteFrom));
+      else if (ev.type === 'eliteDown' && s.elites.length === 0) {
+        (mid ? stats.bosses : stats.elites).push(secs(s.tick - eliteFrom));
         eliteFrom = -1;
       } else if (ev.type === 'bossDown') {
         stats.bosses.push(secs(s.tick - bossFrom));
@@ -62,7 +68,7 @@ export function playChapter(
     }
   }
   // an elite or boss still standing at the end counts as never felled
-  if (eliteFrom >= 0) stats.elites.push(null);
+  if (eliteFrom >= 0) (mid ? stats.bosses : stats.elites).push(null);
   if (bossFrom >= 0) stats.bosses.push(null);
   const p = s.players[0];
   stats.outcome = s.outcome === 'playing' ? 'timeout' : s.outcome;

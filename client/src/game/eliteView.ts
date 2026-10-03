@@ -1,5 +1,6 @@
 import { Graphics, type Container, type Renderer, type Sprite } from 'pixi.js';
 import { DASH_TICKS, ELITE, FP, type Elite } from '@hk/engine';
+import type { BossBar } from './bossBar';
 import { lerpX, lerpY } from './fixedStep';
 import { MobView, type MobLook } from './mobView';
 import { makeRing } from './stageArt';
@@ -84,4 +85,62 @@ export class EliteView {
     g.moveTo(len - half, -half).lineTo(len + half * 0.6, 0).lineTo(len - half, half)
       .stroke({ color: VIOLET, width: 6, alpha: Math.max(0.3, fill), join: 'round' });
   }
+}
+
+/**
+ * Every elite standing (one, or the mid-boss twins), each drawn by its own EliteView: a view
+ * keeps the elite it took by id while that one stands, so a twin falling does not swap the
+ * other's look or lane. View k uses tints[k]; the twins share one health bar.
+ */
+export class EliteCrowd {
+  private readonly views: EliteView[] = [];
+  private readonly ids: number[] = [];
+
+  constructor(private readonly make: (k: number) => EliteView, readonly bar: BossBar | null) {
+    if (bar) bar.view.visible = false;
+  }
+
+  /** The view drawing elite `id`, if one is. */
+  byId(id: number): EliteView | null {
+    const k = this.ids.indexOf(id);
+    return k >= 0 ? this.views[k] : null;
+  }
+
+  /** `twins` shows the shared bar over the elites' health out of `twinsHp`. */
+  draw(elites: readonly Elite[], alpha: number, dt: number, hx: number, hy: number, twins: boolean, twinsHp: number): void {
+    for (let k = 0; k < this.ids.length; k++) if (!elites.some((e) => e.id === this.ids[k])) this.ids[k] = -1;
+    for (const e of elites) {
+      if (this.ids.includes(e.id)) continue;
+      let k = this.ids.indexOf(-1);
+      if (k < 0) {
+        k = this.views.length;
+        this.views.push(this.make(k));
+        this.ids.push(-1);
+      }
+      this.ids[k] = e.id;
+    }
+    for (let k = 0; k < this.views.length; k++) {
+      const e = elites.find((x) => x.id === this.ids[k]) ?? null;
+      this.views[k].draw(e, alpha, dt, hx, hy);
+    }
+    if (!this.bar) return;
+    this.bar.view.visible = twins && elites.length > 0;
+    let hp = 0;
+    for (const e of elites) hp += e.hp;
+    this.bar.set(hp, twinsHp);
+  }
+}
+
+/** The elite standing nearest (x, y) (FP), or null. */
+export function nearestElite(elites: readonly Elite[], x: number, y: number): Elite | null {
+  let best: Elite | null = null;
+  let bestD = Infinity;
+  for (const e of elites) {
+    const d = Math.hypot(e.x - x, e.y - y);
+    if (d < bestD) {
+      bestD = d;
+      best = e;
+    }
+  }
+  return best;
 }

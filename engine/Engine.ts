@@ -23,7 +23,7 @@ import { beginWave, waveSystem } from './systems/waves';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 14;
+export const ENGINE_VERSION = 15;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'elite', 'boss', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
@@ -104,7 +104,7 @@ function setup(s: SimState): void {
     ringPoint(s.ai, p.x, p.y, m);
     s.mobs.push(m);
   }
-  if (c.elite) s.elite = newElite(toFp(300), toFp(-900));
+  if (c.elite) s.elites.push(newElite(toFp(300), toFp(-900), s.nextId++));
   if (c.boss) s.boss = newBoss(toFp(-200), toFp(-1100));
   for (let i = 0; i < c.drops; i++) {
     const a = s.drop.int(65536);

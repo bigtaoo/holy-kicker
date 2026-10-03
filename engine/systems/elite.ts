@@ -8,6 +8,7 @@ import { nearestPlayer, stepHorde } from './horde';
 // for ELITE.aim (the view draws it), then dashes ELITE.dashLength along that lane, hurting a
 // hero it passes within ELITE.laneHalf, and stands for ELITE.rest before walking again. The
 // lane is fixed when it aims, so stepping aside is the answer. A stun freezes it in any phase.
+// Several elites (the mid-boss twins) take turns: one aims only while no other is charging.
 
 export type HurtFn = (owner: number, value: number) => void;
 
@@ -15,8 +16,14 @@ export type HurtFn = (owner: number, value: number) => void;
 export const DASH_TICKS = Math.ceil(ELITE.dashLength / ELITE.dashSpeed);
 
 export function eliteSystem(s: SimState, hurt: HurtFn): void {
-  const e = s.elite;
-  if (!e) return;
+  for (const e of s.elites) stepElite(s, e, hurt);
+}
+
+function charging(e: Elite): boolean {
+  return e.phase === 'aim' || e.phase === 'dash';
+}
+
+function stepElite(s: SimState, e: Elite, hurt: HurtFn): void {
   e.px = e.x;
   e.py = e.y;
   if (e.stun > 0) {
@@ -41,7 +48,7 @@ export function eliteSystem(s: SimState, hurt: HurtFn): void {
   } else {
     const p = nearestPlayer(s.players, e.x, e.y);
     const d = dist(p.x - e.x, p.y - e.y);
-    if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange) {
+    if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange && !s.elites.some(charging)) {
       enter(e, 'aim');
       e.vx = Math.trunc(((p.x - e.x) * ELITE.dashSpeed) / d);
       e.vy = Math.trunc(((p.y - e.y) * ELITE.dashSpeed) / d);
@@ -61,7 +68,7 @@ function enter(e: Elite, phase: Elite['phase']): void {
  * path from where the elite is; -1 when it is not charging.
  */
 export function laneDistance(e: Elite, x: number, y: number): number {
-  if (e.phase !== 'aim' && e.phase !== 'dash') return -1;
+  if (!charging(e)) return -1;
   const left = e.phase === 'aim' ? ELITE.dashLength : Math.max(0, ELITE.dashLength - e.t * ELITE.dashSpeed);
   const rx = x - e.x;
   const ry = y - e.y;

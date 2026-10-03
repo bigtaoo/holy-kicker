@@ -88,6 +88,8 @@ export interface Mob extends Body {
 export type ElitePhase = 'walk' | 'aim' | 'dash' | 'rest';
 
 export interface Elite extends Body {
+  /** Stable while it stands, so the view can tell the twins apart as others fall. */
+  id: number;
   hp: number;
   maxHp: number;
   stun: number;
@@ -261,8 +263,8 @@ export interface SimState {
   nextId: number;
   players: Player[];
   mobs: Mob[];
-  /** The elite (the big jiangshi, a charger); null when the run has none, or it fell. */
-  elite: Elite | null;
+  /** The elites standing (big jiangshi, chargers): one on elite waves, the twins on the mid-boss wave. */
+  elites: Elite[];
   boss: Boss | null;
   balls: Ball[];
   bullets: Bullet[];
@@ -309,7 +311,7 @@ export function teleport(b: Body, x: number, y: number): void {
 export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
-    config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
+    config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [],
     gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
@@ -330,6 +332,6 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
   };
 }
 
-export function newElite(x: number, y: number): Elite {
-  return { ...body(x, y), hp: ELITE.hp, maxHp: ELITE.hp, stun: 0, phase: 'walk', t: 0, cd: ELITE.cooldown, vx: 0, vy: 0 };
+export function newElite(x: number, y: number, id = 0, hp = ELITE.hp, cd = ELITE.cooldown): Elite {
+  return { ...body(x, y), id, hp, maxHp: hp, stun: 0, phase: 'walk', t: 0, cd, vx: 0, vy: 0 };
 }

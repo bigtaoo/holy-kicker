@@ -6,7 +6,7 @@ import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Player, SimState } from '../state';
 import { bowlLevel, pickCard, relicCooldown, relicLevel, stat } from './build';
 import { bowlInAir, throwBowl } from './bowl';
-import { eliteIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
+import { bossIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
 import { breakBell } from './spells';
 import { fishStart, tap } from './fish';
@@ -140,7 +140,7 @@ export function contactSystem(s: SimState, events: SimEvent[]): void {
     if (t < 0) continue;
     const value = t < s.mobs.length
       ? s.mobs[t].kind === 'swarm' ? HURT.swarm : HURT.mob + Math.trunc(s.wave / 10) * HURT.mobPerTenWaves
-      : t === eliteIndex(s) ? HURT.elite : HURT.boss;
+      : t < bossIndex(s) ? HURT.elite : HURT.boss;
     hurtPlayer(s, events, p.owner, value);
   }
 }

@@ -5,7 +5,7 @@ import type { CardKind } from './content';
 // (animations, effects, numbers, sounds). Rebuilt every tick; positions are FP. When several
 // ticks run in one frame the view gets all of their events.
 
-/** What a hit landed on: a horde mob (by index), the elite or the boss. */
+/** What a hit landed on: a horde mob (by index), an elite or the boss. */
 export type TargetKind = 'mob' | 'elite' | 'boss';
 
 export type SimEvent =
@@ -23,7 +23,7 @@ export type SimEvent =
   | { type: 'hit'; kind: TargetKind; index: number; x: number; y: number; value: number; crit: boolean; ball: boolean; bx: number; by: number }
   /** A mob went down at (x, y), knocked away along (dx, dy), and respawned elsewhere. */
   | { type: 'mobDown'; index: number; x: number; y: number; dx: number; dy: number }
-  | { type: 'eliteDown'; x: number; y: number }
+  | { type: 'eliteDown'; id: number; x: number; y: number }
   | { type: 'bossWindup' }
   | { type: 'bossSlam'; x: number; y: number; radius: number }
   | { type: 'bossDown' }

@@ -1,8 +1,9 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
-  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, TICK_RATE, WAVES, quantizeMove,
+  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, isMidBoss, TICK_RATE, WAVES, quantizeMove,
   type MobKind, type RelicId, type RunConfig, type SimEvent, type SimState, type SutraId,
 } from '@hk/engine';
+import { t } from '../i18n';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
@@ -19,7 +20,8 @@ import { Corpses, MobView, type MobLook, type MobSheet } from './mobView';
 import { HealthBar } from './healthBar';
 import { depthShade } from './mobAnim';
 import { fakeMobTypes } from './mobTypes';
-import { EliteView } from './eliteView';
+import { EliteCrowd, EliteView, nearestElite } from './eliteView';
+import { BossBar } from './bossBar';
 import { wispSheet } from './wispSheet';
 import { AuraStack } from './aura';
 import { Boss } from './bossView';
@@ -76,9 +78,11 @@ const HERO_OVER_FX_Z = 1e7 + 0.5;
 const SCREEN_AREA = 1080 * 1920;
 const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff, violet: 0xb04cff };
 const FOX_TINT = 0xc8a8ff;
-/** The big jiangshi is a darker steel blue than the horde. */
-const ELITE_TINT = 0x9fb2d8;
+/** The big jiangshi is a darker steel blue than the horde; the mid-boss's second twin a slate violet. */
+const ELITE_TINTS = [0x9fb2d8, 0xb4a6d4];
 const DOWN_TINT = 0x8a8a8a;
+/** Damage-number keys for elites, by id, clear of the target indices. */
+const ELITE_KEY = 1e6;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
 
@@ -110,7 +114,7 @@ export class Game {
   private readonly hero: Hero;
   /** World point the camera centres on; trails the hero under the smooth camera. */
   private readonly camPos = { x: 0, y: 0 };
-  private readonly elite: EliteView | null;
+  private readonly elites: EliteCrowd | null;
   private readonly mobs: MobView[] = [];
   private readonly mobLooks: Record<MobKind, MobLook[]>;
   private readonly healthBar = new HealthBar();
@@ -200,11 +204,13 @@ export class Game {
       swarm: [look(wispSheet(app.renderer), 'swarm', true, [18, 6])],
     };
     // in a chapter the elite and boss arrive later, so their views wait hidden
-    this.elite = null;
-    if (s.elite || chapter) {
-      const ring = makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
+    this.elites = null;
+    if (s.elites.length > 0 || chapter) {
       const big = { sheet: art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14] as [number, number], shadowTex };
-      this.elite = new EliteView(this.world, big, ring, ELITE_TINT, scene.eliteRing, HERO_TOP_Z);
+      this.elites = new EliteCrowd((k) => new EliteView(
+        this.world, big, makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red'),
+        ELITE_TINTS[k % ELITE_TINTS.length], scene.eliteRing, HERO_TOP_Z,
+      ), chapter ? new BossBar(t('boss.twins')) : null);
     }
     this.boss = art.boss && (s.boss || chapter) ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;
     // like the elite, the boss draws over the horde
@@ -215,6 +221,7 @@ export class Game {
 
     this.root.addChild(this.world, this.label);
     if (this.boss) this.root.addChild(this.boss.hud);
+    if (this.elites?.bar) this.root.addChild(this.elites.bar.view);
     this.root.mask = this.playMask;
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer, STICK_RADIUS);
     app.stage.addChild(this.playMask, this.root, this.stickBase, this.stickKnob);
@@ -255,6 +262,7 @@ export class Game {
     // dev only, below the HUD strip, the wave counter and the boss bar
     this.label.position.set(24 * vp.scale, 460 * vp.scale);
     this.boss?.layout(vp.playW, vp.scale);
+    this.elites?.bar?.layout(vp.playW, vp.scale);
   }
 
   /** Brings the downed hero back on the next tick (the engine checks he has a revive left). */
@@ -330,8 +338,10 @@ export class Game {
           if (e.kind === 'boss' && this.boss && s.boss) {
             this.damage.spawn(x, y - this.boss.hit(s.boss) - 10, e.value, e.crit, e.index);
           } else if (e.kind === 'elite') {
-            this.elite?.mob.flinch();
-            this.damage.spawn(x, y - ELITE_HEIGHT - 10, e.value, e.crit, e.index);
+            // the elite hit is the one standing nearest the hit (one in front may have fallen since)
+            const hit = nearestElite(s.elites, e.x, e.y);
+            if (hit) this.elites?.byId(hit.id)?.mob.flinch();
+            this.damage.spawn(x, y - ELITE_HEIGHT - 10, e.value, e.crit, ELITE_KEY + (hit?.id ?? 0));
           } else {
             this.mobs[e.index]?.flinch();
             this.damage.spawn(x, y - MOB_HEIGHT[s.mobs[e.index]?.kind ?? 'chaser'] - 10, e.value, e.crit);
@@ -339,7 +349,10 @@ export class Game {
           break;
         }
         case 'eliteDown':
-          if (this.elite) this.corpses.spawn(this.elite.mob, 0, -1);
+          {
+            const v = this.elites?.byId(e.id);
+            if (v) this.corpses.spawn(v.mob, 0, -1);
+          }
           this.fx.puff(e.x / FP, e.y / FP);
           break;
         case 'mobDown':
@@ -464,7 +477,7 @@ Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
       v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : 1, walk, this.scene.sway);
       if (this.scene.calm) v.shade(depthShade(Math.hypot(x - hx, y - hy)));
     }
-    this.elite?.draw(s.elite, alpha, dt, hx, hy);
+    this.elites?.draw(s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), WAVES.twinHp * 2);
   }
 
   private drawStick(): void {

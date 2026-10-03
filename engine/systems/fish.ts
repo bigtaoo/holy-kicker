@@ -3,7 +3,7 @@ import type { SimEvent } from '../events';
 import { dist2 } from '../math/fixed';
 import type { Player, SimState } from '../state';
 import { fishLevel } from './build';
-import { bossIndex, damage, eliteIndex, targetAt } from './combat';
+import { bossIndex, damage, eliteAt, targetAt } from './combat';
 
 // The wooden fish relic (docs/content.md "Relics"): every tap sends a sound ring out from the
 // hero; it grows to its reach and hits each enemy it passes once, the elite and the boss at
@@ -40,10 +40,9 @@ export function ringSystem(s: SimState, events: SimEvent[]): void {
       hits.push(i);
     }
     for (const i of hits) {
-      if (r.stun > 0) {
-        if (i < s.mobs.length) s.mobs[i].stun = r.stun;
-        else if (i === eliteIndex(s) && s.elite) s.elite.stun = r.stun;
-      }
+      const e = eliteAt(s, i);
+      if (r.stun > 0 && i < s.mobs.length) s.mobs[i].stun = r.stun;
+      else if (r.stun > 0 && e) e.stun = r.stun;
       damage(s, events, i, by, null, r.damage, false);
     }
     if (r.radius < r.reach) s.rings[w++] = r;

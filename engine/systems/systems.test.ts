@@ -75,7 +75,7 @@ describe('balls', () => {
   it('numbers targets mobs, then the elite, then the boss', () => {
     const s = bare();
     s.mobs.push(newMob(u(500), 0));
-    s.elite = newElite(u(50), 0);
+    s.elites = [newElite(u(50), 0)];
     s.boss = newBoss(u(20), 0);
     expect(nearestTarget(s, 0, 0, u(1000))).toBe(2);
     s.boss.phase = 'down';
@@ -86,11 +86,11 @@ describe('balls', () => {
     const s = bare();
     const p = s.players[0];
     s.mobs.push(newMob(u(50), 0));
-    s.elite = newElite(u(400), 0);
+    s.elites = [newElite(u(400), 0)];
     s.boss = newBoss(u(600), 0);
     expect(kickTarget(s, p, u(650))).toBe(2);
     expect(kickTarget(s, p, u(500))).toBe(1);
-    s.elite = null;
+    s.elites.length = 0;
     expect(kickTarget(s, p, u(500))).toBe(0);
   });
 

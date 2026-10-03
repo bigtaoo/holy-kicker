@@ -129,7 +129,7 @@ function crowd(s: SimState, p: Player, r: number): [number, number] | null {
     }
   }
   if (best) return best;
-  for (const i of [eliteIndex(s), bossIndex(s)]) {
+  for (let i = eliteIndex(s); i <= bossIndex(s); i++) {
     const t = targetAt(s, i);
     if (t && dist2(t.x - p.x, t.y - p.y) < reach2) return [t.x, t.y];
   }

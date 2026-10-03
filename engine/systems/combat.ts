@@ -2,7 +2,7 @@ import { BALL, DAMAGE, ELITE, MIX } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
-import type { Ball, Body, Player, SimState } from '../state';
+import type { Ball, Body, Elite, Player, SimState } from '../state';
 import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
@@ -10,23 +10,29 @@ import { ringPoint } from './horde';
 import { mobHp } from './waves';
 
 // Hit targets and damage. Targets are numbered: the horde mobs first (by index), then the
-// elite, then the boss, so a ball can remember "the one I hit last" as a plain integer.
+// elites, then the boss, so a ball can remember "the one I hit last" as a plain integer.
 
 /** Experience a mob is worth. */
 export const MOB_GEM = 1;
 
+/** The first elite's index; the elites run up to the boss's. */
 export function eliteIndex(s: SimState): number {
   return s.mobs.length;
 }
 
 export function bossIndex(s: SimState): number {
-  return s.mobs.length + 1;
+  return s.mobs.length + s.elites.length;
 }
 
-/** Target i, or null if it is not there (no elite, or the boss lying defeated). */
+/** Elite at target i, or null when i is a mob or the boss. */
+export function eliteAt(s: SimState, i: number): Elite | null {
+  return i >= s.mobs.length ? (s.elites[i - s.mobs.length] ?? null) : null;
+}
+
+/** Target i, or null if it is not there (the boss lying defeated, or no boss). */
 export function targetAt(s: SimState, i: number): Body | null {
   if (i < s.mobs.length) return s.mobs[i];
-  if (i === eliteIndex(s)) return s.elite;
+  if (i < bossIndex(s)) return s.elites[i - s.mobs.length];
   if (i === bossIndex(s) && s.boss && s.boss.phase !== 'down') return s.boss;
   return null;
 }
@@ -48,13 +54,21 @@ export function nearestTarget(s: SimState, x: number, y: number, maxDist: number
   return best;
 }
 
-/** The boss, else the elite, when in range (the relic locks onto them first), else the nearest target. */
+/** The boss, else the nearest elite, when in range (the relic locks onto them first), else the nearest target. */
 export function kickTarget(s: SimState, p: Player, range: number): number {
-  for (const i of [bossIndex(s), eliteIndex(s)]) {
-    const t = targetAt(s, i);
-    if (t && dist2(t.x - p.x, t.y - p.y) <= range * range) return i;
+  const boss = targetAt(s, bossIndex(s));
+  if (boss && dist2(boss.x - p.x, boss.y - p.y) <= range * range) return bossIndex(s);
+  let best = -1;
+  let bestD = range * range;
+  for (let i = eliteIndex(s); i < bossIndex(s); i++) {
+    const t = targetAt(s, i)!;
+    const d = dist2(t.x - p.x, t.y - p.y);
+    if (d <= bestD) {
+      bestD = d;
+      best = i;
+    }
   }
-  return nearestTarget(s, p.x, p.y, range);
+  return best >= 0 ? best : nearestTarget(s, p.x, p.y, range);
 }
 
 /**
@@ -69,7 +83,8 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
   const crit = s.combat.chance(DAMAGE.critPercent + stat(by, 'crit'), 100);
   const roll = s.combat.range(DAMAGE.min, DAMAGE.max) * (crit ? DAMAGE.critMul : 1);
   const value = Math.max(1, Math.trunc((roll * pct) / 100));
-  const kind = i < s.mobs.length ? 'mob' : i === eliteIndex(s) ? 'elite' : 'boss';
+  const elite = eliteAt(s, i);
+  const kind = i < s.mobs.length ? 'mob' : elite ? 'elite' : 'boss';
   events.push({ type: 'hit', kind, index: i, x: t.x, y: t.y, value, crit, ball: !!ball, bx: ball?.x ?? 0, by: ball?.y ?? 0 });
   if (kind === 'boss') {
     if (hurtBoss(s.boss!, value)) {
@@ -77,14 +92,14 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
       s.boss!.t = 0;
       events.push({ type: 'bossDown' });
     }
-  } else if (kind === 'elite') {
+  } else if (elite) {
     // the sandbox keeps its elite for the readability tests; in a chapter it can fall
-    const e = s.elite!;
+    const e = elite;
     if (s.config.waves > 0) e.hp = Math.max(0, e.hp - value);
     if (e.hp === 0) {
-      events.push({ type: 'eliteDown', x: e.x, y: e.y });
+      events.push({ type: 'eliteDown', id: e.id, x: e.x, y: e.y });
       dropGem(s, e.x, e.y, ELITE.gem);
-      s.elite = null;
+      s.elites.splice(i - s.mobs.length, 1);
       return;
     }
     if (!knock) return;

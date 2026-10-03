@@ -183,8 +183,8 @@ describe('build effects', () => {
     const p = s.players[0];
     p.kickCd = 1e6;
     for (let i = 0; i < 5; i++) s.mobs.push(newMob(p.x + 300_000 + i * 150_000, p.y));
-    s.elite = newElite(p.x + 1_200_000, p.y);
-    s.elite.hp = s.elite.maxHp = 1e6;
+    s.elites = [newElite(p.x + 1_200_000, p.y)];
+    s.elites[0].hp = s.elites[0].maxHp = 1e6;
     p.spells = [{ id: 'cymbal', level: 1, cd: 1, evolved: false }];
     e.step([cmd(e)]);
     expect(s.cymbals.length).toBe(SPELL_LEVELS.cymbal[0].count);

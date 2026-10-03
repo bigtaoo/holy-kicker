@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-03 for ENGINE_VERSION 14 (horde kinds: runners and swarm packs; the charging elite). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(14);
+    // Recorded 2026-10-03 for ENGINE_VERSION 15 (several elites; the mid-boss is the twin big jiangshi). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(15);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -100,5 +100,5 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 1474124150;
-const GOLDEN_CHAPTER = 3305844809;
+const GOLDEN = 4144012809;
+const GOLDEN_CHAPTER = 2984746956;

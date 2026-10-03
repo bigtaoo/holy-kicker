@@ -26,7 +26,7 @@ function cmd(e: Engine, walk = false): PlayerCommand {
 function quiet(): Engine {
   const e = new Engine(CHAPTER);
   e.state.mobs.length = 0;
-  e.state.elite = null;
+  e.state.elites.length = 0;
   const p = e.state.players[0];
   p.hurtCd = 1e6;
   p.kickCd = 1e6;

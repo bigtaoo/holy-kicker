@@ -20,7 +20,7 @@ function cmd(e: Engine): PlayerCommand {
 function quiet(): Engine {
   const e = new Engine(FISH_RUN);
   e.state.mobs.length = 0;
-  e.state.elite = null;
+  e.state.elites.length = 0;
   e.state.players[0].hurtCd = 1e6;
   return e;
 }

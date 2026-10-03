@@ -115,6 +115,7 @@ export const en = {
   },
   boss: {
     abbot: 'Fallen Abbot',
+    twins: 'Twin Jiangshi',
   },
   codex: {
     title: 'Codex {n}/{total}',

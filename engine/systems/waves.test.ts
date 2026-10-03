@@ -56,7 +56,7 @@ describe('chapter run', () => {
   it('starts on wave 1 with a small horde and moves on after a wave length', () => {
     const e = new Engine(CHAPTER);
     const s = e.state;
-    expect(s).toMatchObject({ wave: 1, elite: null, boss: null, outcome: 'playing' });
+    expect(s).toMatchObject({ wave: 1, elites: [], boss: null, outcome: 'playing' });
     expect(s.mobs.length).toBe(hordeSize(1));
     expect(s.players[0]).toMatchObject({ hp: HERO.hp, revives: 1 });
     const types = idle(e, WAVES.ticks);
@@ -82,19 +82,42 @@ describe('chapter run', () => {
     expect(hashState({ ...s, tick: 0 })).toBe(h);
   });
 
-  it('brings a weaker mid-boss and an elite that can fall', () => {
+  it('brings the twin big jiangshi as the mid-boss, holding the wave until both fall', () => {
     const e = new Engine(CHAPTER);
     const s = e.state;
-    s.players[0].hurtCd = 1e6;
+    const p = s.players[0];
+    p.hurtCd = 1e6;
     s.wave = WAVES.midBoss - 1;
     s.waveT = WAVES.ticks - 1;
     expect(idle(e, 1)).toContain('wave');
-    expect(s.boss!.maxHp).toBe(Math.trunc((BOSS.hp * WAVES.midBossHpPercent) / 100));
+    expect(s.boss).toBeNull();
+    expect(s.elites).toHaveLength(2);
+    const [a, b] = s.elites;
+    expect(a).toMatchObject({ hp: WAVES.twinHp });
+    expect(b.cd - a.cd).toBe(WAVES.twinDelay);
+    expect(a.id).not.toBe(b.id);
+    // from opposite sides of the hero
+    expect(Math.sign(a.x - p.x) * Math.sign(b.x - p.x) + Math.sign(a.y - p.y) * Math.sign(b.y - p.y)).toBeLessThan(0);
+    s.waveT = WAVES.ticks * 3;
+    idle(e, 1);
+    expect(s.wave).toBe(WAVES.midBoss);
+    s.elites.splice(0, 1);
+    idle(e, 1);
+    expect(s.wave).toBe(WAVES.midBoss);
+    s.elites.length = 0;
+    expect(idle(e, 1)).toContain('wave');
+    expect(s.wave).toBe(WAVES.midBoss + 1);
+  });
+
+  it('brings an elite that can fall on every tenth wave', () => {
+    const e = new Engine(CHAPTER);
+    const s = e.state;
+    s.players[0].hurtCd = 1e6;
     s.wave = 9;
     s.waveT = WAVES.ticks - 1;
-    s.boss = null;
     idle(e, 1);
-    expect(s.elite).toMatchObject({ hp: ELITE.hp });
+    expect(s.elites).toHaveLength(1);
+    expect(s.elites[0]).toMatchObject({ hp: ELITE.hp });
   });
 
   it('loses health on contact, goes down at 0 and comes back once with a revive', () => {
@@ -138,7 +161,7 @@ describe('chapter run', () => {
     expect(ev).toContainEqual({ type: 'hurt', owner: 0, value: 0 });
     expect(s.players[0].hp).toBe(HERO.hp);
     expect(s.wave).toBe(0);
-    expect(s.elite?.hp).toBe(ELITE.hp);
+    expect(s.elites[0].hp).toBe(ELITE.hp);
   });
 });
 

@@ -21,7 +21,7 @@ function cmd(e: Engine): PlayerCommand {
 function quiet(): Engine {
   const e = new Engine(BEADS_RUN);
   e.state.mobs.length = 0;
-  e.state.elite = null;
+  e.state.elites.length = 0;
   e.state.players[0].hurtCd = 1e6;
   return e;
 }
@@ -78,11 +78,11 @@ describe('prayer beads', () => {
     const e = quiet();
     const s = e.state;
     const p = s.players[0];
-    s.elite = newElite(p.x + 220_000, p.y);
-    s.elite.hp = s.elite.maxHp = 1e9;
+    s.elites = [newElite(p.x + 220_000, p.y)];
+    s.elites[0].hp = s.elites[0].maxHp = 1e9;
     const events = steps(e, 60);
     expect(events.some((v) => v.type === 'hit' && v.kind === 'elite')).toBe(true);
-    expect(dist(s.elite.x - p.x, s.elite.y - p.y)).toBeLessThanOrEqual(225_000);
+    expect(dist(s.elites[0].x - p.x, s.elites[0].y - p.y)).toBeLessThanOrEqual(225_000);
   });
 
   it('awaken with Wisdom Eye into two rings turning opposite ways', () => {

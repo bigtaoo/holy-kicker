@@ -157,7 +157,12 @@ export const WAVES = {
   eliteEvery: 10,
   /** The mid-boss wave; the last wave always has the chapter boss. Boss waves last until it falls. */
   midBoss: 25,
-  midBossHpPercent: 40,
+  /**
+   * The mid-boss is the elite's twins (docs/content.md): two big jiangshi from opposite sides,
+   * each with twinHp; the second's first charge waits twinDelay longer, and they take turns.
+   */
+  twinHp: 650,
+  twinDelay: ticks(1.5),
 };
 
 /**
