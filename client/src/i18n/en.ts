@@ -77,6 +77,9 @@ export const en = {
     incense: { name: 'Healing Incense', desc: 'Heals {n}% health/s inside' },
     bell: { name: 'Golden Body', desc: '{s}s untouchable on breaking' },
     cymbal: { name: 'Cymbal Wheel', desc: '{n} cymbals circle you forever' },
+    lotus: { name: 'Lotus Path', desc: 'A lotus at every step, blooms pull gems' },
+    halo: { name: 'Boundless Light', desc: '{n} beams turn around you' },
+    roar: { name: 'Thunder Roar', desc: 'Roars all round, shatters bullets' },
   },
   shrine: {
     heal: { name: 'Heal', desc: 'Restore {n}% health' },
@@ -96,6 +99,9 @@ export const en = {
     incense: { name: 'Incense Ring', desc: 'A ring burns at your feet for {s}s' },
     bell: { name: 'Golden Bell', desc: 'Blocks a hit every {s}s, then blasts' },
     cymbal: { name: 'Flying Cymbals', desc: '{n} cymbals fly out and pierce', count: 'Cymbals {a} → {b}' },
+    lotus: { name: 'Lotus Steps', desc: 'Walking sows lotus seeds that bloom under enemies' },
+    halo: { name: 'Halo Beam', desc: 'A beam turns around you, longer standing still', count: 'Beams {a} → {b}' },
+    roar: { name: "Lion's Roar", desc: 'A shout the way you walk pushes enemies back' },
   },
   passive: {
     calm: { name: 'Calm Mind', desc: 'Spell cooldown −{n}%' },
@@ -105,6 +111,7 @@ export const en = {
     rice: { name: 'Alms Rice', desc: 'Heal {n}% health per second' },
     wrath: { name: 'Wrath', desc: 'Crit chance +{n}%' },
     karma: { name: 'Karma', desc: 'XP +{n}%, pickup range +{m}%' },
+    focus: { name: 'Focus', desc: 'Spell duration +{n}%, guard after a hit +{m}%' },
   },
   boss: {
     abbot: 'Fallen Abbot',
@@ -115,6 +122,13 @@ export const en = {
     recipe: '{item} Lv 5 + {pair}',
     hint: 'Evolve it once in a run to record it',
     pick: 'Tap an entry to read it',
+    sutra: 'Sutra: {goal}',
+  },
+  sutra: {
+    wave: 'Reach wave {n} in a chapter',
+    codex: 'Record {n} in the Codex',
+    runs: 'Finish {n} runs',
+    clear: 'Clear chapter {n}',
   },
   results: {
     cleared: 'Chapter cleared!',
@@ -126,6 +140,7 @@ export const en = {
     newBest: 'New best!',
     newRelic: 'New relic: {name}!',
     newCodex: 'New in the Codex: {name}!',
+    newSutra: 'New sutra: {name}!',
     double: 'Double copper (ad)',
     doubled: 'Copper doubled!',
   },

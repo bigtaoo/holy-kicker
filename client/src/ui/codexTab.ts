@@ -1,8 +1,9 @@
 import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
+import type { SutraId } from '@hk/engine';
 import { codexEntries, type CodexEntry, type EvolveId } from '../meta/codex';
 import { iconSprite, type IconSheet } from './buildBar';
-import { evolveDesc } from './cardText';
+import { evolveDesc, sutraGoalText } from './cardText';
 import { COLORS, fit, label, panel } from './widgets';
 
 // The lobby's Codex tab: one cell per evolution and awakening, the item's icon with its paired
@@ -11,9 +12,9 @@ import { COLORS, fit, label, panel } from './widgets';
 // so the Codex also teaches the pairs.
 
 const GOLD = 0xffd860;
-const COLS = 2;
-const CELL_W = 470;
-// short cells: ten entries (five rows) and the detail fit between the header and the tab bar
+const COLS = 3;
+const CELL_W = 310;
+// short cells: thirteen entries (five rows) and the detail fit between the header and the tab bar
 const CELL_H = 184;
 const GAP = 16;
 const ICON_R = 52;
@@ -30,10 +31,15 @@ export function codexHeight(count: number): number {
   return HEAD_H + rows * CELL_H + (rows - 1) * GAP + GAP * 2 + DETAIL_H;
 }
 
-/** The tab centred on x = 0 from y = 0 down; `selected` is the entry shown in detail. */
-export function codexTab(found: readonly EvolveId[], icons: IconSheet, selected: EvolveId | null, select: (id: EvolveId) => void): Container {
+/**
+ * The tab centred on x = 0 from y = 0 down; `selected` is the entry shown in detail, `sutras`
+ * the earned ones (a spell still behind its sutra shows how to earn it).
+ */
+export function codexTab(
+  found: readonly EvolveId[], sutras: readonly SutraId[], icons: IconSheet, selected: EvolveId | null, select: (id: EvolveId) => void,
+): Container {
   const c = new Container();
-  const entries = codexEntries(found);
+  const entries = codexEntries(found, sutras);
   const head = label(t('codex.title', { n: found.length, total: entries.length }), 64);
   head.y = HEAD_H / 2 - 10;
   c.addChild(head);
@@ -92,7 +98,8 @@ function detailPanel(e: CodexEntry | null): Container {
   }
   const name = fit(label(e.found ? t(`evolve.${e.id}.name`) : t('codex.unknown'), 56, e.found ? GOLD : COLORS.dim), max);
   name.y = -82;
-  const what = fit(label(e.found ? evolveDesc(e.id) : t('codex.hint'), 48), max);
+  const hint = e.sutra ? t('codex.sutra', { goal: sutraGoalText(e.sutra) }) : t('codex.hint');
+  const what = fit(label(e.found ? evolveDesc(e.id) : hint, 48, e.sutra ? COLORS.saffron : undefined), max);
   what.y = 0;
   const recipe = fit(label(t('codex.recipe', { item: itemName(e), pair: t(`passive.${e.pair}.name`) }), 48, COLORS.dim), max);
   recipe.y = 82;

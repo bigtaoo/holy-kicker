@@ -87,6 +87,8 @@ export interface SceneOptions {
   wave: number;
   /** Dev: the relic for every run, whatever the save says (?relic=staff); null keeps the save's. */
   relic: RelicId | null;
+  /** Dev: every sutra for every run, whatever the save has earned (?sutras). */
+  sutras: boolean;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -118,6 +120,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   waves: true,
   wave: 1,
   relic: null,
+  sutras: false,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -167,6 +170,7 @@ export function parseScene(query: string): SceneOptions {
     waves: q.has('waves') ? q.get('waves') === '1' : !mobsSet && DEFAULT_SCENE.waves,
     wave: Math.min(50, intAtLeast(q.get('wave'), 1, DEFAULT_SCENE.wave)),
     relic: RELIC_IDS.find((r) => r === q.get('relic')) ?? DEFAULT_SCENE.relic,
+    sutras: q.has('sutras'),
   };
 }
 

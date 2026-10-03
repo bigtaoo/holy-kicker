@@ -36,6 +36,10 @@ export type SimEvent =
   | { type: 'bellUp'; owner: number }
   | { type: 'bellBreak'; owner: number }
   | { type: 'bolt'; x0: number; y0: number; x1: number; y1: number }
+  /** A lotus seed bloomed at (x, y). */
+  | { type: 'bloom'; x: number; y: number; radius: number }
+  /** A player's Lion's Roar: a cone around `brad` from (x, y) to `radius`, all round if `full`. */
+  | { type: 'roar'; owner: number; x: number; y: number; brad: number; radius: number; full: boolean }
   /** A player reached `level` and has cards to pick (the sim waits for the pick). */
   | { type: 'levelUp'; owner: number; level: number }
   | { type: 'pick'; owner: number; kind: CardKind; id: string }

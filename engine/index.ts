@@ -11,4 +11,5 @@ export { hashState } from './hash';
 export { FP, TICK_RATE, fromFp } from './math/fixed';
 export { beadsRings, bowlLevel, cardPool, evolutions, magnetOf, maxHpOf, slotStats, stat } from './systems/build';
 export { tierOf } from './systems/drops';
+export { haloLength, haloSpin } from './systems/sutras';
 export { hordeSize, isBossWave, isEliteWave, isShrineWave, mobHp } from './systems/waves';

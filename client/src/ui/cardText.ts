@@ -1,9 +1,10 @@
 import {
   BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE, FISH, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, PASSIVES, RELIC_IDS, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, STAFF_AWAKENED, STAFF_LEVELS, TICK_RATE,
-  type Card, type CardKind, type PassiveId, type Player, type RelicId, type SpellId,
+  type Card, type CardKind, type PassiveId, type Player, type RelicId, type SpellId, type SutraId,
 } from '@hk/engine';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
+import { sutraGoal } from '../meta/progress';
 import { pairsOf, type IconId } from './buildSlots';
 
 // What a level-up card says (docs/content.md "International players"): the name, "New!" or
@@ -77,6 +78,7 @@ function spellDesc(id: SpellId): string {
   if (id === 'palm') return t('spell.palm.desc');
   if (id === 'bolt' || id === 'cymbal') return t(`spell.${id}.desc`, { n: l.count });
   if (id === 'bell') return t('spell.bell.desc', { s: seconds(l.cooldown) });
+  if (id === 'lotus' || id === 'halo' || id === 'roar') return t(`spell.${id}.desc`);
   return t('spell.incense.desc', { s: seconds(l.life) });
 }
 
@@ -84,10 +86,12 @@ function spellLines(id: SpellId, level: number): string[] {
   const a = SPELL_LEVELS[id][level - 1];
   const b = SPELL_LEVELS[id][level];
   const lines: string[] = [];
-  // only the palm, bolt and cymbals have a count
-  if (b.count !== a.count) lines.push(t(`spell.${id as 'palm' | 'bolt' | 'cymbal'}.count`, { a: a.count, b: b.count }));
+  // the bell, the incense, the lotus and the roar have no count
+  if (b.count !== a.count) lines.push(t(`spell.${id as 'palm' | 'bolt' | 'cymbal' | 'halo'}.count`, { a: a.count, b: b.count }));
   if (b.radius !== a.radius) lines.push(t('card.area', { n: gain(a.radius, b.radius) }));
-  if (b.life !== a.life) lines.push(t('card.duration', { a: seconds(a.life), b: seconds(b.life) }));
+  // the halo's life is its time for a turn: shorter spins faster
+  if (b.life !== a.life && id === 'halo') lines.push(t('card.spin', { n: gain(b.life, a.life) }));
+  else if (b.life !== a.life) lines.push(t('card.duration', { a: seconds(a.life), b: seconds(b.life) }));
   if (b.damage !== a.damage) lines.push(t('card.damage', { n: gain(a.damage, b.damage) }));
   if (b.cooldown !== a.cooldown) lines.push(t('card.cooldown', { a: seconds(a.cooldown), b: seconds(b.cooldown) }));
   return lines;
@@ -95,7 +99,7 @@ function spellLines(id: SpellId, level: number): string[] {
 
 function passiveDesc(id: PassiveId): string {
   const def = PASSIVES[id];
-  if (id === 'karma') return t('passive.karma.desc', { n: def.perLevel, m: def.also!.perLevel });
+  if (id === 'karma' || id === 'focus') return t(`passive.${id}.desc`, { n: def.perLevel, m: def.also!.perLevel });
   // regen is per mille of max health per second
   return t(`passive.${id}.desc`, { n: id === 'rice' ? def.perLevel / 10 : def.perLevel });
 }
@@ -118,7 +122,20 @@ export function evolveDesc(id: SpellId | RelicId): string {
   }
   if (id === 'bell') return t('evolve.bell.desc', { s: seconds(EVOLVE.bellGuard) });
   if (id === 'cymbal') return t('evolve.cymbal.desc', { n: SPELL_EVOLVED.cymbal.count });
+  if (id === 'halo') return t('evolve.halo.desc', { n: SPELL_EVOLVED.halo.count });
+  if (id === 'lotus' || id === 'roar') return t(`evolve.${id}.desc`);
   return t('evolve.bolt.desc');
+}
+
+/** A sutra's name: the spell or the passive it adds. */
+export function sutraName(id: SutraId): string {
+  return id === 'focus' ? t('passive.focus.name') : t(`spell.${id}.name`);
+}
+
+/** What earns a sutra, e.g. "Reach wave 25 in a chapter". */
+export function sutraGoalText(id: SutraId): string {
+  const g = sutraGoal(id);
+  return t(`sutra.${g.kind}`, { n: g.n });
 }
 
 /** An evolution card: what changes, then the area or damage gained over level 5. */

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { doubleCopper, settleRun, tabLock, unlockedRelics, xpToNext } from './progress';
+import { doubleCopper, earnedSutras, settleRun, tabLock, unlockedRelics, xpToNext } from './progress';
 import { newSave, parseSave } from './save';
 import { MemoryStore, SafeStore, SaveStore } from './saveStore';
 
@@ -110,6 +110,21 @@ describe('progress', () => {
   it('the ad doubles only the wave copper', () => {
     const { save, reward } = settleRun(newSave(), { chapter: 1, waves: 10 });
     expect(doubleCopper(save, reward).copper).toBe(save.copper + 100);
+  });
+
+  it('grants each sutra at its achievement, from the progress the save keeps', () => {
+    let save = newSave();
+    expect(earnedSutras(save)).toEqual([]);
+    let run = settleRun(save, { chapter: 1, waves: 25 });
+    expect(run.reward.newSutras).toEqual(['lotus']);
+    run = settleRun(run.save, { chapter: 1, waves: 12, evolved: ['palm'] });
+    expect(run.reward.newSutras).toEqual(['halo']);
+    save = { ...run.save, runs: 9, cleared: 1 };
+    run = settleRun(save, { chapter: 2, waves: 50 });
+    // the tenth run and the chapter 2 clear at once
+    expect(run.reward.newSutras).toEqual(['roar', 'focus']);
+    expect(earnedSutras(run.save)).toEqual(['lotus', 'halo', 'roar', 'focus']);
+    expect(settleRun(run.save, { chapter: 1, waves: 30 }).reward.newSutras).toEqual([]);
   });
 
   it('gates tabs as the design says', () => {

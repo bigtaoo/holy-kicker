@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-03 for ENGINE_VERSION 12 (Karma and the alms bowl relic). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(12);
+    // Recorded 2026-10-03 for ENGINE_VERSION 13 (the sutra spells Lotus Steps, Halo Beam, Lion's Roar and Focus). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(13);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -100,5 +100,5 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 3139503888;
-const GOLDEN_CHAPTER = 3684893018;
+const GOLDEN = 432500925;
+const GOLDEN_CHAPTER = 3501964383;

@@ -57,7 +57,7 @@ Tuning numbers sit in `config.ts` (the build's in `content.ts`), converted once 
 ## Balance bots
 
 `bot/` holds bots that play whole chapters through ordinary commands: `skilled` steps to the
-open side ten times a second, `casual` decides only every 0.4 s, `still` never moves.
+`npm run balance [-- runs [style ...] [relic] [sutras | sutras=roar,focus]]` (from the repo root) plays seeds 1..runs per style
 `npm run balance [-- runs [style ...]]` (from the repo root) plays seeds 1..runs per style
 and prints, per run, the wave reached, level, health at every tenth wave, how long each elite
 and boss lived and the final build. Run it after any tuning change; the targets are in

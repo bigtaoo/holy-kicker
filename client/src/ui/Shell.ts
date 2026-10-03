@@ -1,5 +1,5 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, isEliteWave, xpToNext, type Card } from '@hk/engine';
+import { isBossWave, isEliteWave, SUTRA_IDS, xpToNext, type Card } from '@hk/engine';
 import { setLocale, t, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
@@ -8,7 +8,7 @@ import type { SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
 import { BALANCE } from '../meta/balance';
 import { evolvedIn } from '../meta/codex';
-import { doubleCopper, settleRun, type Reward } from '../meta/progress';
+import { doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, saveSettings } from '../meta/settings';
@@ -123,6 +123,7 @@ export class Shell {
       waves: this.scene.waves ? BALANCE.waves : 0,
       revives: BALANCE.revives,
       relic: this.scene.relic ?? this.save.relic,
+      sutras: this.scene.sutras ? SUTRA_IDS : earnedSutras(this.save),
     });
     this.shownWave = -1;
     this.downShown = false;

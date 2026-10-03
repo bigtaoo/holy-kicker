@@ -79,6 +79,9 @@ export const zh: Table<typeof en> = {
     incense: { name: '万家香火', desc: '站在阵中每秒回复 {n}% 生命' },
     bell: { name: '金身', desc: '破碎后 {s} 秒内刀枪不入' },
     cymbal: { name: '钹轮', desc: '{n} 片铜钹永远绕身旋转' },
+    lotus: { name: '步步生莲', desc: '每步一朵莲花，绽放时吸来宝石' },
+    halo: { name: '普照', desc: '{n} 道光束绕身旋转' },
+    roar: { name: '狮王吼', desc: '四面怒吼，震碎子弹' },
   },
   shrine: {
     heal: { name: '疗伤', desc: '恢复 {n}% 生命' },
@@ -98,6 +101,9 @@ export const zh: Table<typeof en> = {
     incense: { name: '香火阵', desc: '脚下燃起香火阵，持续 {s} 秒' },
     bell: { name: '金钟罩', desc: '每 {s} 秒挡一次伤害，破碎时爆开' },
     cymbal: { name: '飞钹', desc: '飞出 {n} 片铜钹，穿透敌人', count: '铜钹 {a} → {b} 片' },
+    lotus: { name: '莲步', desc: '行走时播下莲子，敌人踩中即绽放' },
+    halo: { name: '佛光', desc: '一道光束绕身旋转，站定时更长', count: '光束 {a} → {b} 道' },
+    roar: { name: '狮子吼', desc: '朝行进方向怒吼，击退敌人' },
   },
   passive: {
     calm: { name: '禅心', desc: '法术冷却 −{n}%' },
@@ -107,6 +113,7 @@ export const zh: Table<typeof en> = {
     rice: { name: '斋饭', desc: '每秒回复 {n}% 生命' },
     wrath: { name: '怒目', desc: '暴击率 +{n}%' },
     karma: { name: '善缘', desc: '经验 +{n}%，拾取范围 +{m}%' },
+    focus: { name: '定力', desc: '法术持续 +{n}%，受击后无敌 +{m}%' },
   },
   boss: {
     abbot: '堕落方丈',
@@ -117,6 +124,13 @@ export const zh: Table<typeof en> = {
     recipe: '{item} 5 级 + {pair}',
     hint: '在一局里进化一次即可记录',
     pick: '点一个条目查看',
+    sutra: '经文：{goal}',
+  },
+  sutra: {
+    wave: '任一章节到达第 {n} 波',
+    codex: '图鉴收录 {n} 项',
+    runs: '完成 {n} 局',
+    clear: '通关第 {n} 章',
   },
   results: {
     cleared: '通关！',
@@ -128,6 +142,7 @@ export const zh: Table<typeof en> = {
     newBest: '新纪录！',
     newRelic: '新法器：{name}！',
     newCodex: '图鉴新增：{name}！',
+    newSutra: '获得经文：{name}！',
     double: '铜钱翻倍（看广告）',
     doubled: '铜钱已翻倍！',
   },

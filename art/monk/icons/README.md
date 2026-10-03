@@ -34,3 +34,10 @@ The alms bowl and Karma (2026-10-03): `bowl.jpg` and `karma.jpg`, packed after `
 thrown bowl in the world is drawn in code (`client/src/game/bowlView.ts`). Karma first came out
 as a lotus (`r1/karma_lotus.jpg`), too close to Calm Mind's lotus on the HUD, so it is a red
 Chinese knot (a bond of fate) instead.
+
+The sutra spells and Focus (2026-10-03): `lotus.jpg` (Lotus Steps), `halo.jpg` (Halo Beam),
+`roar.jpg` (Lion's Roar) and `focus.jpg`, packed after `karma.jpg`. Lotus Steps is a lotus seed
+pod, since Calm Mind is already a lotus flower; the first pod seen from the side
+(`r1/lotus_melon.jpg`) read as a melon, so the prompt asks for its flat top. The first halo
+(`r1/halo_thin.jpg`) was a thin ring with faint rays. The seeds, beams and roar in the world
+are drawn in code (`client/src/game/sutraView.ts`).

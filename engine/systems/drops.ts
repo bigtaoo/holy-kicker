@@ -65,6 +65,12 @@ function launch(s: SimState, g: Gem, p: Player): void {
   g.vy = Math.trunc(((g.y - p.y) * DROPS.hop) / d);
 }
 
+/** Resting gems within r of (x, y) fly to the player (Lotus Path). */
+export function pullGems(s: SimState, p: Player, x: number, y: number, r: number): void {
+  const r2 = r * r;
+  for (const g of s.gems) if (!g.flying && dist2(g.x - x, g.y - y) <= r2) launch(s, g, p);
+}
+
 /** Every gem on the map flies to the player (a vacuum pickup). */
 export function attractAll(s: SimState, p: Player): void {
   for (const g of s.gems) if (!g.flying) launch(s, g, p);

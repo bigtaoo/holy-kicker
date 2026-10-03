@@ -1,6 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
 import type { Reward } from '../meta/progress';
+import { sutraName } from './cardText';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, fit, label, panel } from './widgets';
 
@@ -50,6 +51,7 @@ export class ResultsScreen implements Screen {
     if (r.newBest) lines.push([t('results.newBest'), 48, COLORS.saffron]);
     if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 52, COLORS.saffron]);
     for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 48, COLORS.saffron]);
+    for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 48, COLORS.saffron]);
     lines.push([t('results.copper', { n: r.copper }), 56, COLORS.copper]);
     if (r.offering > 0) lines.push([t('results.offering', { n: r.offering }), 44, COLORS.copper]);
     for (const c of r.chests) lines.push([t('results.chest', { wave: c.wave, copper: c.copper, jade: c.jade }), 44, COLORS.jade]);

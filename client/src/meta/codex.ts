@@ -1,4 +1,4 @@
-import { EVOLVE_PAIR, RELIC_IDS, type PassiveId, type Player, type RelicId, type SpellId } from '@hk/engine';
+import { EVOLVE_PAIR, RELIC_IDS, SUTRA_IDS, type PassiveId, type Player, type RelicId, type SpellId, type SutraId } from '@hk/engine';
 
 // The Codex (docs/content.md "Evolution"): every evolution and awakening the player has
 // pulled off at least once. The save keeps their ids; a run reports what it evolved and the
@@ -15,6 +15,8 @@ export interface CodexEntry {
   /** The passive it evolves with. */
   pair: PassiveId;
   relic: boolean;
+  /** The sutra the spell still waits for (it is not in the run's pool yet), or null. */
+  sutra: SutraId | null;
 }
 
 /** What this player has evolved or awakened so far in the run. */
@@ -29,8 +31,10 @@ export function mergeCodex(known: readonly unknown[], more: readonly unknown[] =
   return EVOLVE_IDS.filter((id) => known.includes(id) || more.includes(id));
 }
 
-export function codexEntries(found: readonly EvolveId[]): CodexEntry[] {
+/** Every entry; `sutras` are the ones the player has earned. */
+export function codexEntries(found: readonly EvolveId[], sutras: readonly SutraId[] = SUTRA_IDS): CodexEntry[] {
   return EVOLVE_IDS.map((id) => ({
     id, found: found.includes(id), pair: EVOLVE_PAIR[id], relic: RELIC_IDS.includes(id as RelicId),
+    sutra: SUTRA_IDS.includes(id as SutraId) && !sutras.includes(id as SutraId) ? (id as SutraId) : null,
   }));
 }

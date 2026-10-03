@@ -1,5 +1,5 @@
-import { RELIC_IDS, type RelicId } from '@hk/engine';
-import { BALANCE, type Chest } from './balance';
+import { RELIC_IDS, SUTRA_IDS, type RelicId, type SutraId } from '@hk/engine';
+import { BALANCE, type Chest, type SutraGoal } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import type { SaveData } from './save';
 
@@ -34,6 +34,8 @@ export interface Reward {
   newRelic: RelicId | null;
   /** Evolutions done for the first time, now in the Codex. */
   newCodex: EvolveId[];
+  /** Sutras this run earned. */
+  newSutras: SutraId[];
   newBest: boolean;
 }
 
@@ -97,6 +99,7 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
     firstClear, newRelic: firstClear ? (unlockedRelics(next).find((r) => !unlockedRelics(save).includes(r)) ?? null) : null,
     newCodex: next.codex.filter((id) => !save.codex.includes(id)),
+    newSutras: earnedSutras(next).filter((id) => !earnedSutras(save).includes(id)),
     newBest: waves > save.best[i],
   };
   return { save: next, reward };
@@ -132,6 +135,28 @@ export function tabLock(save: SaveData, tab: Tab): Lock | null {
 /** Relics the player may take into a run: the cuju, then one more per chapter cleared. */
 export function unlockedRelics(save: SaveData): RelicId[] {
   return RELIC_IDS.slice(0, save.cleared + 1);
+}
+
+/** The achievement that grants a sutra. */
+export function sutraGoal(id: SutraId): SutraGoal {
+  return BALANCE.sutras[SUTRA_IDS.indexOf(id)];
+}
+
+/** Whether the save has reached a sutra's goal. */
+function reached(save: SaveData, goal: SutraGoal): boolean {
+  if (goal.kind === 'wave') return save.best.some((b) => b >= goal.n);
+  if (goal.kind === 'codex') return save.codex.length >= goal.n;
+  if (goal.kind === 'runs') return save.runs >= goal.n;
+  return save.cleared >= goal.n;
+}
+
+/**
+ * Sutras the player has earned (docs/design.md "Content line"): each adds a spell or a passive
+ * to the run's level-up pool. Read from the progress the save already keeps, so nothing new is
+ * stored and an earned sutra is never lost.
+ */
+export function earnedSutras(save: SaveData): SutraId[] {
+  return SUTRA_IDS.filter((id) => reached(save, sutraGoal(id)));
 }
 
 /** Chapters the player may start: every cleared one and the first uncleared one. */

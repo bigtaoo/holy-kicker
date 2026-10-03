@@ -19,5 +19,11 @@
     "trainLevel": 2,
     "shopChapter": 1,
     "codexChapter": 2
-  }
+  },
+  "sutras": [
+    { "kind": "wave", "n": 25 },
+    { "kind": "codex", "n": 1 },
+    { "kind": "clear", "n": 2 },
+    { "kind": "runs", "n": 10 }
+  ]
 }

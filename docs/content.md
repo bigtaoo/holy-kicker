@@ -125,9 +125,31 @@ The engine already has four of these shapes (`nova`, `meteor`, `field`, `chain`)
 | Flying Cymbals | Flying Cymbals / 飞钹 | Two cymbals fly straight across the screen, pierce | Arhat Legs | **Cymbal Wheel** / 钹轮: cymbals circle the hero permanently |
 | Lotus Steps *(sutra)* | Lotus Steps / 莲步 | Walking drops lotus seeds that burst when stepped on | Karma | **Lotus Path** / 步步生莲: every step blooms, and blooms pull XP |
 | Halo Beam *(sutra)* | Halo Beam / 佛光 | A beam rotates around the hero | Calm Mind | **Boundless Light** / 普照: three beams |
-| Lion's Roar *(sutra)* | Lion's Roar / 狮子吼 | Cone shout in the move direction, pushes back | Focus | **Thunder Roar** / 狮王吼: full circle, shatters bullets |
+| Lion's Roar *(sutra)* | Lion's Roar / 狮子吼 | Cone shout at the nearest enemy, pushes back | Focus | **Thunder Roar** / 狮王吼: full circle, shatters bullets |
 
 Lotus Steps rewards moving and Halo Beam rewards standing still, so both fit Stillness.
+
+- **Sutras implemented** (`engine/systems/sutras.ts`, ENGINE_VERSION 13). A sutra is earned by an
+  achievement read from the save (`client/src/meta/progress.ts` `earnedSutras`, goals in
+  `balance.json` `sutras`): Lotus Steps for reaching wave 25, Halo Beam for one Codex entry,
+  Lion's Roar for clearing chapter 2, Focus for 10 finished runs. A run's `RunConfig.sutras`
+  adds their cards to the pool; a locked sutra spell shows its goal in the Codex.
+- **Lotus Steps**: every cooldown while the hero walks he drops a seed (life 2.5–3 s). It arms
+  after 0.4 s and blooms when an enemy comes within 130 of it; at the end of its life it
+  blooms anyway if an enemy is inside its bloom radius, else it withers. Seeds that bloomed only
+  when stepped on were too rare (the horde follows, it rarely walks over a seed). Lotus Path
+  drops one every 0.2 s and each bloom sends the gems within 450 to the hero.
+- **Halo Beam**: always turning (one turn per 1.6 s down to 1.1 s, faster with Calm Mind), hits
+  each target once per sweep; on the move the beam is 70 % as long, so it rewards standing.
+- **Lion's Roar** aims at the nearest enemy rather than the move direction: the player mostly
+  walks away from the horde, so a roar ahead hit nothing. The 120° cone pushes the mobs it does
+  not fell back by 220.
+- **Focus**: there is no knockback on the hero, so its second half is guard: the untouchable
+  time after a hit +20 % per level, next to spell duration +10 % (prints, cymbal flights,
+  incense rings, lotus seeds).
+- Balance (40 casual runs per row): 37/40 won without sutras, 37 with only Lion's Roar, 35 with
+  Halo Beam, 30-31 with Lotus Steps or Focus alone (Focus alone shows that most of that is a
+  thinner pool for the bot, not a weak spell), 34 with all four; skilled 20/20 with all four.
 
 ## Passives (8)
 
@@ -139,7 +161,7 @@ Lotus Steps rewards moving and Halo Beam rewards standing still, so both fit Sti
 | Wisdom Eye | Wisdom Eye / 慧眼 | Area +10 % |
 | Alms Rice | Alms Rice / 斋饭 | Regenerate 0.4 % health per second |
 | Wrath | Wrath / 怒目 | Crit chance +5 % |
-| Focus | Focus / 定力 | Duration +10 %, knockback resist |
+| Focus | Focus / 定力 | Duration +10 %, guard after a hit +20 % (implemented) |
 | Karma | Karma / 善缘 | XP +8 %, pickup radius +15 % (implemented) |
 
 Seven are in the pool from the start; Focus comes from a sutra. Karma was planned as a sutra

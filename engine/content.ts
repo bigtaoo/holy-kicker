@@ -157,14 +157,15 @@ export const BOWL = {
   catch: toFp(60),
 };
 
-export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal';
-export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense', 'bell', 'cymbal'];
+export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal' | 'lotus' | 'halo' | 'roar';
+export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense', 'bell', 'cymbal', 'lotus', 'halo', 'roar'];
 
 /**
- * One spell level. `count` is palms (palm), jumps (bolt) or cymbals (cymbal); `radius` the
- * blast, jump range, ring, bell blast or cymbal hit radius; `life` how long the incense ring
- * burns or a cymbal flies (0 for the others). The bell's cooldown is its recharge after it
- * breaks.
+ * One spell level. `count` is palms (palm), jumps (bolt), cymbals (cymbal) or beams (halo); `radius` the blast, jump range, ring, bell blast,
+ * cymbal hit radius, lotus bloom, beam length or roar reach; `life` how long the incense ring
+ * burns, a cymbal flies or a lotus seed waits, or the halo's time for one turn (0 for the
+ * others). The bell's cooldown is its recharge after it breaks; the lotus' is the time
+ * between two seeds while walking; the halo has none (it always turns).
  */
 export interface SpellLevel {
   cooldown: number;
@@ -189,6 +190,41 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
   bell: [lv(8, 0, 300, 0, 150), lv(7, 0, 320, 0, 150), lv(7, 0, 360, 0, 200), lv(6, 0, 360, 0, 200), lv(5, 0, 420, 0, 250)],
   // cymbals thrown out in a star, the first at the nearest enemy, piercing all they pass
   cymbal: [lv(2.4, 2, 70, 1.2, 100), lv(2.4, 3, 70, 1.2, 100), lv(2, 3, 85, 1.2, 100), lv(2, 4, 85, 1.2, 130), lv(1.6, 4, 100, 1.2, 130)],
+  // walking drops lotus seeds that bloom when an enemy steps on one, or at their time with one near (sutra)
+  lotus: [lv(0.6, 0, 180, 2.5, 220), lv(0.5, 0, 180, 2.5, 220), lv(0.5, 0, 210, 2.5, 270), lv(0.4, 0, 210, 3, 270), lv(0.35, 0, 240, 3, 330)],
+  // a beam turning around the hero, longer while he stands still (sutra)
+  halo: [lv(0, 1, 360, 1.6, 200), lv(0, 1, 400, 1.6, 200), lv(0, 1, 400, 1.4, 240), lv(0, 1, 450, 1.4, 240), lv(0, 1, 500, 1.1, 300)],
+  // a cone shout at the nearest enemy, pushing the horde back (sutra)
+  roar: [lv(2, 0, 380, 0, 150), lv(2, 0, 420, 0, 150), lv(1.8, 0, 420, 0, 200), lv(1.8, 0, 470, 0, 200), lv(1.5, 0, 520, 0, 250)],
+};
+
+/**
+ * Spells and passives that start out of the level-up pool: each comes with a sutra
+ * (docs/design.md "Content line"), granted by an achievement and handed to the run in
+ * RunConfig.sutras.
+ */
+export type SutraId = 'lotus' | 'halo' | 'roar' | 'focus';
+export const SUTRA_IDS: readonly SutraId[] = ['lotus', 'halo', 'roar', 'focus'];
+
+export const LOTUS = {
+  /** A seed is armed this long after it was dropped (the mobs at the hero's heels pass first). */
+  arm: ticks(0.4),
+  /** An armed seed blooms when an enemy comes this close to it. */
+  trigger: toFp(130),
+  /** Lotus Path: a bloom sends the gems this close to it flying to the hero. */
+  pull: toFp(450),
+};
+
+export const HALO = {
+  /** While the hero moves the beam is this share of its length. */
+  movingPercent: 70,
+};
+
+export const ROAR = {
+  /** Half the cone's opening, brads (60 degrees). */
+  half: 10923,
+  /** Mobs that survive are pushed this far away from the hero. */
+  knockback: toFp(220),
 };
 
 export const SPELL_CAST = {
@@ -210,9 +246,9 @@ export const SPELL_CAST = {
   cymbalSpeed: perTick(1500),
 };
 
-export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit' | 'xp' | 'magnet';
-export type PassiveId = 'calm' | 'iron' | 'legs' | 'eye' | 'rice' | 'wrath' | 'karma';
-export const PASSIVE_IDS: readonly PassiveId[] = ['calm', 'iron', 'legs', 'eye', 'rice', 'wrath', 'karma'];
+export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit' | 'xp' | 'magnet' | 'duration' | 'guard';
+export type PassiveId = 'calm' | 'iron' | 'legs' | 'eye' | 'rice' | 'wrath' | 'karma' | 'focus';
+export const PASSIVE_IDS: readonly PassiveId[] = ['calm', 'iron', 'legs', 'eye', 'rice', 'wrath', 'karma', 'focus'];
 
 export interface PassiveDef {
   stat: Stat;
@@ -222,7 +258,7 @@ export interface PassiveDef {
 }
 
 /**
- * Each passive adds `perLevel` to one stat per level (Karma to two). Units: percent, except
+ * Each passive adds `perLevel` to one stat per level (Karma and Focus to two). Units: percent, except
  * `regen` (per mille of max health per second).
  */
 export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
@@ -234,6 +270,8 @@ export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
   wrath: { stat: 'crit', perLevel: 5 },
   // experience and the gem magnet's radius
   karma: { stat: 'xp', perLevel: 8, also: { stat: 'magnet', perLevel: 15 } },
+  // how long spells last (seeds, rings, prints, cymbal flights) and the untouchable time after a blow
+  focus: { stat: 'duration', perLevel: 10, also: { stat: 'guard', perLevel: 20 } },
 };
 
 /**
@@ -243,6 +281,7 @@ export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
  */
 export const EVOLVE_PAIR: Readonly<Record<SpellId | RelicId, PassiveId>> = {
   ball: 'legs', staff: 'iron', fish: 'calm', beads: 'eye', bowl: 'karma', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
+  lotus: 'karma', halo: 'calm', roar: 'focus',
 };
 
 /** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */
@@ -259,6 +298,12 @@ export const SPELL_EVOLVED: Readonly<Record<SpellId, SpellLevel>> = {
   bell: lv(5, 0, 520, 0, 250),
   // Cymbal Wheel: `count` cymbals circle the hero for good, `radius` each
   cymbal: lv(0.5, 4, 100, 0, 130),
+  // Lotus Path: a seed at almost every step, and every bloom pulls the gems near it
+  lotus: lv(0.2, 0, 240, 3, 330),
+  // Boundless Light: three beams
+  halo: lv(0, 3, 540, 1.1, 300),
+  // Thunder Roar: all the way round, and it shatters the bullets it reaches
+  roar: lv(1.5, 0, 560, 0, 280),
 };
 
 export const EVOLVE = {

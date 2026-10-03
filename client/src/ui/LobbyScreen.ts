@@ -2,7 +2,7 @@ import { Container, Graphics, type Text } from 'pixi.js';
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { LOCALES, formatAmount, getLocale, localeName, t, type Locale } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { playableChapters, TABS, tabLock, unlockedRelics, type Lock, type Tab } from '../meta/progress';
+import { earnedSutras, playableChapters, TABS, tabLock, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { iconSprite, type IconSheet } from './buildBar';
@@ -194,7 +194,7 @@ export class LobbyScreen implements Screen {
   }
 
   private codexTab(w: number, midY: number): void {
-    const tab = codexTab(this.save.codex, this.icons, this.codexPick, (id) => {
+    const tab = codexTab(this.save.codex, earnedSutras(this.save), this.icons, this.codexPick, (id) => {
       this.codexPick = id;
       this.relayout();
     });

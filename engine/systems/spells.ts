@@ -3,9 +3,10 @@ import { EVOLVE, SPELL_CAST } from '../content';
 import type { SimEvent } from '../events';
 import { dist2, TICK_RATE, toFp } from '../math/fixed';
 import type { Player, SimState, SpellSlot } from '../state';
-import { slotStats, stat } from './build';
+import { lasting, slotStats, stat } from './build';
 import { bossIndex, damage, eliteIndex, targetAt } from './combat';
 import { cymbalSystem, spinWheel, throwCymbals } from './cymbals';
+import { dropLotus, haloSystem, lotusSystem, roar } from './sutras';
 
 // Area spells. Each player casts the spells of their build on their own cooldowns (shrunk by
 // the cooldown stat, grown by the area stat); the sandbox can also cast the stress-test spells
@@ -15,7 +16,8 @@ import { cymbalSystem, spinWheel, throwCymbals } from './cymbals';
 // it (breakBell, from hurtPlayer). Evolved spells (docs/content.md) cast from their own row:
 // the Mountain Palm leaves a print that pins mobs, the Endless Chain forks at every jump,
 // Healing Incense heals the hero standing in it, the Golden Body guards longer after it breaks
-// and the Cymbal Wheel keeps its cymbals circling the hero.
+// and the Cymbal Wheel keeps its cymbals circling the hero. The sutra spells (Lotus Steps,
+// Halo Beam, Lion's Roar) are in systems/sutras.ts.
 
 /** Bolts leave the caster's chest and land on the target's body. */
 const CHEST = toFp(60);
@@ -161,25 +163,29 @@ function cast(s: SimState, events: SimEvent[], p: Player, slot: SpellSlot): bool
   const id = slot.id;
   const l = slotStats(slot);
   const r = scaled(p, l.radius);
+  // the duration stat (Focus) grows what stays: prints, cymbal flights, rings, seeds
+  const life = lasting(p, l.life);
+  if (id === 'lotus') return dropLotus(s, p, l.radius, l.life, l.damage, slot.evolved);
+  if (id === 'roar') return roar(s, events, p, l.radius, l.damage, slot.evolved);
   if (id === 'palm') {
     let any = false;
     for (let i = 0; i < l.count; i++) {
       const at = crowd(s, p, r);
       if (!at) break;
       blast(s, events, p, at[0], at[1], r, l.damage);
-      if (slot.evolved) placeField(s, events, p, at[0], at[1], r, l.life, Math.trunc((l.damage * EVOLVE.palmBurnPercent) / 100), { pin: true });
+      if (slot.evolved) placeField(s, events, p, at[0], at[1], r, life, Math.trunc((l.damage * EVOLVE.palmBurnPercent) / 100), { pin: true });
       any = true;
     }
     return any;
   }
   if (id === 'bolt') return chain(s, events, p, l.count, r, l.damage, slot.evolved);
-  if (id === 'cymbal') return slot.evolved ? spinWheel(s, p, l.count, r, l.damage) : throwCymbals(s, p, l.count, r, l.life, l.damage);
+  if (id === 'cymbal') return slot.evolved ? spinWheel(s, p, l.count, r, l.damage) : throwCymbals(s, p, l.count, r, life, l.damage);
   if (id === 'bell') {
     p.bell = true;
     events.push({ type: 'bellUp', owner: p.owner });
     return true;
   }
-  placeField(s, events, p, p.x, p.y, r, l.life, l.damage, { heal: slot.evolved ? EVOLVE.incenseHeal : 0 });
+  placeField(s, events, p, p.x, p.y, r, life, l.damage, { heal: slot.evolved ? EVOLVE.incenseHeal : 0 });
   return true;
 }
 
@@ -189,8 +195,8 @@ function buildSpells(s: SimState, events: SimEvent[]): void {
     if (p.dead) continue;
     const faster = 100 - stat(p, 'cooldown');
     for (const sp of p.spells) {
-      // a bell that is up waits for its blow
-      if ((sp.id === 'bell' && p.bell) || --sp.cd > 0) continue;
+      // a bell that is up waits for its blow; the halo always turns (haloSystem)
+      if ((sp.id === 'bell' && p.bell) || sp.id === 'halo' || --sp.cd > 0) continue;
       sp.cd = cast(s, events, p, sp)
         ? Math.max(1, Math.trunc((slotStats(sp).cooldown * faster) / 100))
         : SPELL_CAST.retry;
@@ -239,4 +245,6 @@ export function spellSystem(s: SimState, events: SimEvent[]): void {
   }
   s.fields.length = w;
   cymbalSystem(s, events);
+  lotusSystem(s, events);
+  haloSystem(s, events);
 }

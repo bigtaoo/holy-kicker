@@ -69,7 +69,8 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   const p = s.players.find((q) => q.owner === owner);
   if (!p || p.dead || p.hurtCd > 0) return;
   if (breakBell(s, events, p)) return;
-  p.hurtCd = HERO.hurtCooldown;
+  // Focus keeps the hero untouchable a little longer
+  p.hurtCd = Math.trunc((HERO.hurtCooldown * (100 + stat(p, 'guard'))) / 100);
   p.action = 'hurt';
   p.actionT = 0;
   const dealt = s.config.waves > 0 ? Math.min(p.hp, value) : 0;

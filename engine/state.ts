@@ -60,6 +60,8 @@ export interface Player extends Body {
   offerings: number;
   /** Wooden fish taps so far (every FISH.stunEvery-th ring of the Stunning Bell stuns). */
   taps: number;
+  /** Halo Beam: the first beam's angle, brads. */
+  halo: number;
 }
 
 export interface SpellSlot {
@@ -205,6 +207,20 @@ export interface Bead extends Body {
   touching: number[];
 }
 
+/** A Lotus Steps seed: waits on the ground and blooms when an enemy steps on it. */
+export interface Lotus {
+  id: number;
+  owner: number;
+  x: number;
+  y: number;
+  radius: number;
+  damage: number;
+  age: number;
+  life: number;
+  /** Lotus Path: the bloom sends the gems near it to the hero. */
+  pull: boolean;
+}
+
 /** A thrown alms bowl: flies out, turns at its reach and comes back to its owner. */
 export interface Bowl extends Body {
   id: number;
@@ -250,6 +266,7 @@ export interface SimState {
   rings: Ring[];
   beads: Bead[];
   bowls: Bowl[];
+  lotuses: Lotus[];
   volleyT: number;
   zoneT: number;
   spellT: number;
@@ -281,7 +298,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
-    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [], bowls: [],
+    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),
@@ -297,7 +314,7 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0, xpPart: 0,
     hp, maxHp: hp, dead: false, revives, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
-    bet: false, offerings: 0, taps: 0,
+    bet: false, offerings: 0, taps: 0, halo: 0,
   };
 }
 

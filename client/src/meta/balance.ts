@@ -23,6 +23,17 @@ export interface Balance {
   levelXpBase: number;
   levelXpStep: number;
   unlocks: { trainLevel: number; shopChapter: number; codexChapter: number };
+  /** What earns each sutra (progress.ts sutraGoal), in SUTRA_IDS order. */
+  sutras: SutraGoal[];
 }
 
-export const BALANCE: Balance = data;
+/**
+ * An achievement that grants a sutra: reach wave `n` in any chapter, record `n` Codex entries,
+ * finish `n` runs, or clear chapter `n`.
+ */
+export interface SutraGoal {
+  kind: 'wave' | 'codex' | 'runs' | 'clear';
+  n: number;
+}
+
+export const BALANCE: Balance = data as Balance;

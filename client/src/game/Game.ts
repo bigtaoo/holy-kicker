@@ -1,7 +1,7 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
   beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, WAVES, quantizeMove,
-  type RelicId, type RunConfig, type SimEvent, type SimState,
+  type RelicId, type RunConfig, type SimEvent, type SimState, type SutraId,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
@@ -22,6 +22,7 @@ import { fakeMobTypes } from './mobTypes';
 import { AuraStack } from './aura';
 import { Boss } from './bossView';
 import { SpellView } from './spellView';
+import { SutraView } from './sutraView';
 import type { TaoAsset } from './tao/TaoActor';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
 import { makeDeco, type DecoSheet } from './decoView';
@@ -77,11 +78,12 @@ const DOWN_TINT = 0x8a8a8a;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
 
-/** What the shell sets a run up with: the chapter's length (0 for the sandbox), revives, the relic. */
+/** What the shell sets a run up with: the chapter's length (0 for the sandbox), revives, the relic, the sutras. */
 export interface RunSetup {
   waves: number;
   revives: number;
   relic: RelicId;
+  sutras: readonly SutraId[];
 }
 
 /** The run a scene sets up: what the engine simulates. */
@@ -90,7 +92,7 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     seed, players: 1, mobs: scene.mobs, sep: scene.sep, queue: scene.queue,
     heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
-    waves: setup.waves, revives: setup.revives, relic: setup.relic,
+    waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras,
   };
 }
 
@@ -125,6 +127,7 @@ export class Game {
   private readonly bowls: BowlView;
   private readonly boss: Boss | null;
   private readonly spells: SpellView;
+  private readonly sutras: SutraView;
   private readonly aura: AuraStack;
   private readonly stickBase: Sprite;
   private readonly stickKnob: Sprite;
@@ -176,6 +179,7 @@ export class Game {
     this.fish = new FishTaps(this.world, art.fish, HERO_TOP_Z - 3);
     this.beads = new BeadsView(app.renderer, this.world);
     this.bowls = new BowlView(app.renderer, this.world, shadowTex);
+    this.sutras = new SutraView(app.renderer, this.world, HERO_TOP_Z - 3);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
     this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
@@ -367,6 +371,12 @@ export class Game {
         case 'bolt':
           this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP);
           break;
+        case 'bloom':
+          this.sutras.bloom(e.x / FP, e.y / FP, e.radius / FP);
+          break;
+        case 'roar':
+          this.sutras.roar(e.x / FP, e.y / FP, e.brad, e.radius / FP, e.full);
+          break;
         case 'bellUp':
           if (e.owner === LOCAL) this.spells.bellUp();
           break;
@@ -406,6 +416,7 @@ export class Game {
     this.beads.draw(s.beads, p.relicId === 'beads' && !p.dead ? beadsRings(p) : [], alpha, hx, hy, this.hero.view.zIndex);
     this.spells.drawFields(s.fields, alpha, dt);
     this.spells.drawCymbals(s.cymbals, alpha, dt);
+    this.sutras.draw(s.lotuses, p, alpha, dt, hx, hy);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
     this.aura.update(dt, hx, hy, this.fx.pool);
     this.fx.update(dt, this.aura.parts);

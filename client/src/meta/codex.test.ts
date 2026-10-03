@@ -8,8 +8,11 @@ describe('codex', () => {
   it('lists every evolution and awakening with its pair', () => {
     const entries = codexEntries(['palm']);
     expect(entries.map((e) => e.id)).toEqual(EVOLVE_IDS);
-    expect(entries.find((e) => e.id === 'palm')).toEqual({ id: 'palm', found: true, pair: 'eye', relic: false });
+    expect(entries.find((e) => e.id === 'palm')).toEqual({ id: 'palm', found: true, pair: 'eye', relic: false, sutra: null });
     expect(entries.find((e) => e.id === 'staff')).toMatchObject({ found: false, pair: 'iron', relic: true });
+    // a sutra spell names its sutra until it is earned
+    expect(codexEntries([], []).find((e) => e.id === 'halo')).toMatchObject({ pair: 'calm', sutra: 'halo' });
+    expect(codexEntries([], ['halo']).find((e) => e.id === 'halo')).toMatchObject({ sutra: null });
   });
 
   it('reads what a run evolved', () => {

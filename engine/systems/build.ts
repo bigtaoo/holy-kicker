@@ -1,7 +1,7 @@
 import { DROPS, HERO, SHRINE } from '../config';
 import {
-  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
-  xpToNext, type BeadsRing, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat,
+  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS, SUTRA_IDS,
+  xpToNext, type BeadsRing, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat, type SutraId,
 } from '../content';
 import type { SimEvent } from '../events';
 import { TICK_RATE } from '../math/fixed';
@@ -39,6 +39,11 @@ export function gainXp(p: Player, value: number): void {
 /** The radius in which resting gems fly to the player. */
 export function magnetOf(p: Player): number {
   return Math.trunc((DROPS.magnet * (100 + stat(p, 'magnet'))) / 100);
+}
+
+/** A spell's lifetime grown by the duration stat. */
+export function lasting(p: Player, life: number): number {
+  return Math.trunc((life * (100 + stat(p, 'duration'))) / 100);
 }
 
 /** Max health with the stat stack applied. */
@@ -95,17 +100,22 @@ export function evolutions(p: Player): Card[] {
   return ready;
 }
 
+/** Spells and passives behind a sutra stay out of the pool until the run has it. */
+function offered(id: string, sutras: readonly SutraId[]): boolean {
+  return !SUTRA_IDS.includes(id as SutraId) || sutras.includes(id as SutraId);
+}
+
 /** The cards that can still be picked, in a fixed order (the deal draws from it). */
-export function cardPool(p: Player): Card[] {
+export function cardPool(p: Player, sutras: readonly SutraId[] = []): Card[] {
   const pool: Card[] = [];
   if (p.relic < MAX_LEVEL) pool.push({ kind: 'relic', id: p.relicId });
   for (const sp of p.spells) if (sp.level < MAX_LEVEL) pool.push({ kind: 'spell', id: sp.id });
   if (p.spells.length < MAX_SPELLS) {
-    for (const id of SPELL_IDS) if (!p.spells.some((sp) => sp.id === id)) pool.push({ kind: 'spell', id });
+    for (const id of SPELL_IDS) if (offered(id, sutras) && !p.spells.some((sp) => sp.id === id)) pool.push({ kind: 'spell', id });
   }
   for (const ps of p.passives) if (ps.level < MAX_LEVEL) pool.push({ kind: 'passive', id: ps.id });
   if (p.passives.length < MAX_PASSIVES) {
-    for (const id of PASSIVE_IDS) if (!p.passives.some((ps) => ps.id === id)) pool.push({ kind: 'passive', id });
+    for (const id of PASSIVE_IDS) if (offered(id, sutras) && !p.passives.some((ps) => ps.id === id)) pool.push({ kind: 'passive', id });
   }
   return pool;
 }
@@ -113,7 +123,7 @@ export function cardPool(p: Player): Card[] {
 /** Ready evolutions first, then distinct cards from the pool (a partial shuffle), OFFER_SIZE in all. */
 function deal(s: SimState, p: Player): Card[] {
   const first = evolutions(p).slice(0, OFFER_SIZE);
-  const pool = cardPool(p);
+  const pool = cardPool(p, s.config.sutras);
   const n = Math.min(OFFER_SIZE - first.length, pool.length);
   for (let i = 0; i < n; i++) {
     const j = i + s.cards.int(pool.length - i);
