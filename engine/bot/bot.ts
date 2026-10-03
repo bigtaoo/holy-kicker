@@ -3,7 +3,8 @@ import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist, dist2, toFp } from '../math/fixed';
 import { atan2B, BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import { Prng } from '../math/prng';
-import type { Elite, Player, SimState } from '../state';
+import { EMERGE } from '../config';
+import { underground, type Elite, type Player, type SimState } from '../state';
 import { laneDistance } from '../systems/elite';
 
 // A bot that plays a chapter for the balance report (bot/balance.ts), and later perhaps a
@@ -43,6 +44,9 @@ const CLOSE_IN: Record<RelicId, CloseIn | null> = {
   beads: { near: toFp(200), chase: toFp(260) },
   bowl: null,
 };
+/** A bullet's path counts this many ticks ahead, and this far either side of it. */
+const BULLET_AHEAD = 30;
+const NEAR_BULLET = toFp(130);
 /** Keep this far from a marked charge lane. */
 const LANE = toFp(200);
 const GEM_REACH = toFp(900);
@@ -61,7 +65,17 @@ function danger(s: SimState, x: number, y: number, close: CloseIn | null): numbe
     const d = dist(bx - x, by - y);
     if (close && d > close.chase) sum += d - close.chase;
   };
-  for (const m of s.mobs) add(m.x, m.y, NEAR_MOB, 1);
+  for (const m of s.mobs) {
+    // a water ghost's mark counts like a slam circle; one deeper under the ground not at all
+    if (!underground(m)) add(m.x, m.y, NEAR_MOB, 1);
+    else if (m.t <= EMERGE.warn) add(m.x, m.y, EMERGE.grab * 3, 20);
+  }
+  for (const b of s.bullets) {
+    // the nearest point of its path ahead
+    const vv = b.vx * b.vx + b.vy * b.vy || 1;
+    const k = Math.max(0, Math.min(BULLET_AHEAD, Math.trunc(((x - b.x) * b.vx + (y - b.y) * b.vy) / vv)));
+    add(b.x + b.vx * k, b.y + b.vy * k, NEAR_BULLET, 8);
+  }
   const b = s.boss;
   const boss = b && b.phase !== 'down' ? b : null;
   let near: Elite | null = null;

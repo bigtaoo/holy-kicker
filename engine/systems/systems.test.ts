@@ -7,7 +7,7 @@ import { bossSystem, newBoss } from './boss';
 import { ballSystem, damage, kickTarget, launchBall, nearestTarget } from './combat';
 import { attractAll, dropGem, dropSystem, tierOf } from './drops';
 import { stepHorde } from './horde';
-import { threatSystem } from './threats';
+import { bulletSystem, threatSystem } from './threats';
 import { mobHp } from './waves';
 
 /** A state with one player at the origin and nothing else. */
@@ -202,7 +202,10 @@ describe('threats', () => {
     threatSystem(s, [], (o) => hurt.push(o));
     expect(s.bullets.length).toBe(THREATS.fan);
     s.volleyT = 1e6;
-    for (let t = 0; t < 40; t++) threatSystem(s, [], (o) => hurt.push(o));
+    for (let t = 0; t < 40; t++) {
+      threatSystem(s, [], (o) => hurt.push(o));
+      bulletSystem(s, (o) => hurt.push(o));
+    }
     expect(hurt).toEqual([0]);
     expect(s.bullets.length).toBe(THREATS.fan - 1);
   });

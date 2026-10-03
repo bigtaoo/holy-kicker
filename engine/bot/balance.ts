@@ -30,9 +30,9 @@ export interface RunStats {
 
 /** Plays one chapter with a bot; stops at the first death or after `maxMinutes`. */
 export function playChapter(
-  seed: number, style: BotStyle, waves = 50, maxMinutes = 30, relic: RelicId = 'ball', sutras: readonly SutraId[] = [],
+  seed: number, style: BotStyle, waves = 50, maxMinutes = 30, relic: RelicId = 'ball', sutras: readonly SutraId[] = [], chapter = 1,
 ): RunStats {
-  const config: RunConfig = { ...DEFAULT_RUN, seed, waves, revives: 0, relic, sutras };
+  const config: RunConfig = { ...DEFAULT_RUN, seed, waves, revives: 0, relic, sutras, chapter };
   const e = new Engine(config);
   const s = e.state;
   const bot = new Bot(0, style, seed);
@@ -95,14 +95,14 @@ function median(xs: number[]): number {
 
 /** Runs `runs` seeds per style and returns the report as text lines. */
 export function balanceReport(
-  runs: number, styles: readonly BotStyle[] = ['skilled', 'casual', 'still'], waves = 50, relic: RelicId = 'ball', sutras: readonly SutraId[] = [],
+  runs: number, styles: readonly BotStyle[] = ['skilled', 'casual', 'still'], waves = 50, relic: RelicId = 'ball', sutras: readonly SutraId[] = [], chapter = 1,
 ): string[] {
   const out: string[] = [];
   for (const style of styles) {
     const all: RunStats[] = [];
-    out.push(`== ${style} (${relic}${sutras.length ? ', sutras' : ''}) ==`);
+    out.push(`== ${style} (chapter ${chapter}, ${relic}${sutras.length ? ', sutras' : ''}) ==`);
     for (let seed = 1; seed <= runs; seed++) {
-      const r = playChapter(seed, style, waves, 30, relic, sutras);
+      const r = playChapter(seed, style, waves, 30, relic, sutras, chapter);
       all.push(r);
       const t = (xs: (number | null)[]) => xs.map((x) => (x === null ? '-' : `${x}s`)).join('/');
       out.push(

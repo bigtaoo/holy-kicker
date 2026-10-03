@@ -5,20 +5,12 @@ import { atan2B, cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { SimState } from '../state';
 import { nearestPlayer } from './horde';
 
-// Enemy attacks for the readability test: fans of bullets fired from random mobs near a
-// player, and ground zones that warn first and then blast.
+// Enemy attacks: bullets (fired by shooters, systems/marsh.ts, or for the readability test
+// from random mobs near a player) and ground zones that warn first and then blast.
 
-export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+/** Flies every bullet; one that meets a player hurts him and is gone. */
+export function bulletSystem(s: SimState, hurt: (owner: number, value: number) => void): void {
   const p = THREATS;
-  if (--s.volleyT <= 0) {
-    s.volleyT += p.volleyEvery;
-    fire(s);
-  }
-  if (--s.zoneT <= 0) {
-    s.zoneT += p.zoneEvery;
-    place(s);
-  }
-
   const hit2 = p.hitRadius * p.hitRadius;
   let w = 0;
   for (const b of s.bullets) {
@@ -37,8 +29,20 @@ export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: numb
     if (!hit && b.age < p.bulletLife) s.bullets[w++] = b;
   }
   s.bullets.length = w;
+}
 
-  w = 0;
+export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+  const p = THREATS;
+  if (--s.volleyT <= 0) {
+    s.volleyT += p.volleyEvery;
+    fire(s);
+  }
+  if (--s.zoneT <= 0) {
+    s.zoneT += p.zoneEvery;
+    place(s);
+  }
+
+  let w = 0;
   for (const z of s.zones) {
     z.age++;
     if (z.age < p.warn) {
@@ -51,24 +55,28 @@ export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: numb
   s.zones.length = w;
 }
 
-/** A fan of bullets from a random mob in range of its nearest player, aimed at that player. */
+/** A fan of THREATS.fan bullets from (x, y) aimed at (tx, ty). */
+export function fan(s: SimState, x: number, y: number, tx: number, ty: number): void {
+  const p = THREATS;
+  const aim = atan2B(ty - y, tx - x);
+  for (let i = 0; i < p.fan; i++) {
+    const a = aim + Math.trunc(((2 * i - (p.fan - 1)) * p.fanStep) / 2);
+    const vx = Math.trunc((cosB(a) * p.bulletSpeed) / TRIG_ONE);
+    const vy = Math.trunc((sinB(a) * p.bulletSpeed) / TRIG_ONE);
+    s.bullets.push({ x, y, px: x, py: y, vx, vy, age: 0 });
+  }
+}
+
+/** A fan from a random mob in range of its nearest player, aimed at that player. */
 function fire(s: SimState): void {
   const p = THREATS;
   if (s.mobs.length === 0) return;
   for (let k = 0; k < p.picks; k++) {
     const m = s.mobs[s.ai.int(s.mobs.length)];
     const t = nearestPlayer(s.players, m.x, m.y);
-    const dx = t.x - m.x;
-    const dy = t.y - m.y;
-    const d = dist(dx, dy);
+    const d = dist(t.x - m.x, t.y - m.y);
     if (d > p.range || d < FP) continue;
-    const aim = atan2B(dy, dx);
-    for (let i = 0; i < p.fan; i++) {
-      const a = aim + Math.trunc(((2 * i - (p.fan - 1)) * p.fanStep) / 2);
-      const vx = Math.trunc((cosB(a) * p.bulletSpeed) / TRIG_ONE);
-      const vy = Math.trunc((sinB(a) * p.bulletSpeed) / TRIG_ONE);
-      s.bullets.push({ x: m.x, y: m.y, px: m.x, py: m.y, vx, vy, age: 0 });
-    }
+    fan(s, m.x, m.y, t.x, t.y);
     return;
   }
 }

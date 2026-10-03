@@ -37,11 +37,13 @@ export interface RunConfig {
   relic: RelicId;
   /** Sutras the player has: their spells and passives join the level-up pool. */
   sutras: readonly SutraId[];
+  /** The chapter played (1-based): which kinds of mob join the horde (CHAPTER_MOBS). */
+  chapter: number;
 }
 
 export const DEFAULT_RUN: RunConfig = {
   seed: 1, players: 1, mobs: 40, sep: 75, queue: true, heroEase: 379, elite: true, boss: true,
-  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', sutras: [],
+  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', sutras: [], chapter: 1,
 };
 
 /** The smooth hero ease, 1 - exp(-tick / 0.07 s), as a constant so no exp runs in the sim. */
@@ -78,8 +80,10 @@ export const HURT = {
   charge: 22,
   boss: 15,
   slam: 25,
-  bullet: 8,
+  bullet: 6,
   zone: 15,
+  /** A water ghost rising under the hero. */
+  emerge: 6,
 };
 
 export const HORDE = {
@@ -97,7 +101,7 @@ export const HORDE = {
   hpSquare: 30,
 };
 
-export type MobKind = 'chaser' | 'runner' | 'swarm';
+export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter';
 
 /**
  * Kinds of horde mob (docs/content.md "Enemies"): how fast each walks and its share of the
@@ -107,16 +111,52 @@ export const MOB_KINDS: Record<MobKind, { speed: number; hpPercent: number }> = 
   chaser: { speed: HORDE.speed, hpPercent: 100 },
   runner: { speed: perTick(185), hpPercent: 60 },
   swarm: { speed: perTick(150), hpPercent: 0 },
+  emerger: { speed: HORDE.speed, hpPercent: 100 },
+  shooter: { speed: perTick(95), hpPercent: 80 },
 };
 
 /**
- * Who joins the horde: from wave runnerFrom every runnerEvery-th newcomer is a runner; on
- * swarm waves (swarmFrom, then every swarmEvery) a bunched pack of swarm mobs joins on top of
+ * Who joins each chapter's horde (docs/content.md "Chapters"): from wave `from`, newcomer n
+ * with n % every === every - 1 is of `kind` (the first rule that matches wins), the rest are
+ * chasers. Chapter 1 has fox runners; chapter 2 water ghosts that rise next to the hero and
+ * toads that shoot. Later chapters play the last list until they get their own.
+ */
+export const CHAPTER_MOBS: readonly (readonly { kind: MobKind; from: number; every: number }[])[] = [
+  [{ kind: 'runner', from: 3, every: 4 }],
+  [{ kind: 'shooter', from: 3, every: 8 }, { kind: 'emerger', from: 2, every: 5 }],
+];
+
+/**
+ * The emerger (systems/marsh.ts): a fallen one waits under the ground for under..under+underSpread,
+ * then marks a spot between near and far from the hero for `warn` and rises there, hurting a
+ * hero within grab of it; then it walks like a chaser.
+ */
+export const EMERGE = {
+  under: ticks(2),
+  underSpread: ticks(3),
+  warn: ticks(1),
+  near: toFp(180),
+  far: toFp(340),
+  grab: toFp(80),
+};
+
+/**
+ * The shooter (systems/marsh.ts): it stops stopDist from the hero; every cooldown..cooldown+spread
+ * it swells for `windup`, then fires a fan of THREATS.fan bullets at him, if he is within range.
+ */
+export const SHOOTER = {
+  stopDist: toFp(460),
+  range: toFp(720),
+  cooldown: ticks(5),
+  spread: ticks(2),
+  windup: ticks(0.5),
+};
+
+/**
+ * Swarm waves (swarmFrom, then every swarmEvery) bring a bunched pack of swarm mobs on top of
  * the horde, up to swarmMax of them in all.
  */
 export const MIX = {
-  runnerFrom: 3,
-  runnerEvery: 4,
   swarmFrom: 6,
   swarmEvery: 4,
   swarmPack: 10,

@@ -1,9 +1,9 @@
-import { HORDE, MOB_KINDS } from '../config';
+import { HORDE, MOB_KINDS, SHOOTER } from '../config';
 import { SpatialGrid } from '../grid';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Prng } from '../math/prng';
-import { teleport, type Body, type Player, type SimState } from '../state';
+import { teleport, underground, type Body, type Player, type SimState } from '../state';
 
 // Horde movement: every mob walks toward its nearest player, then soft collision moves it out
 // of any neighbour closer than the separation radius (resolving overlap in position holds up
@@ -25,6 +25,10 @@ export interface MoveParams {
   /** Mob i's own speed, when the crowd is mixed (else `speed` for all). */
   speedOf?: (i: number) => number;
   stopDist: number;
+  /** Mob i's own stop distance (else `stopDist`). */
+  stopOf?: (i: number) => number;
+  /** Mob i neither walks nor is pushed this tick (an emerger under the ground). */
+  still?: (i: number) => boolean;
   /** 0 turns separation off. */
   sep: number;
   queue: boolean;
@@ -52,11 +56,12 @@ export function stepHorde(mobs: Body[], players: readonly Player[], p: MoveParam
     const m = mobs[i];
     m.px = m.x;
     m.py = m.y;
+    if (p.still?.(i)) continue;
     const t = nearestPlayer(players, m.x, m.y);
     const dx = t.x - m.x;
     const dy = t.y - m.y;
     const d = dist(dx, dy);
-    if (d > p.stopDist && !(p.queue && separate && blocked(mobs, i, dx, dy, d, p.sep, grid!))) {
+    if (d > (p.stopOf ? p.stopOf(i) : p.stopDist) && !(p.queue && separate && blocked(mobs, i, dx, dy, d, p.sep, grid!))) {
       const v = p.speedOf ? p.speedOf(i) : p.speed;
       m.x += Math.trunc((dx * v) / d);
       m.y += Math.trunc((dy * v) / d);
@@ -130,15 +135,21 @@ function stunned(s: SimState): void {
   }
 }
 
-/** The horde step (each kind at its own speed), then mobs left far behind come back around their player. */
+/**
+ * The horde step (each kind at its own speed, shooters stopping at their range, emergers under
+ * the ground staying put), then mobs left far behind come back around their player.
+ */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
   const speedOf = (i: number) => MOB_KINDS[s.mobs[i].kind].speed;
-  stepHorde(s.mobs, s.players, { speed: HORDE.speed, speedOf, stopDist: HORDE.stopDist, sep: grid.cell, queue: c.queue }, grid);
+  const stopOf = (i: number) => (s.mobs[i].kind === 'shooter' ? SHOOTER.stopDist : HORDE.stopDist);
+  const still = (i: number) => underground(s.mobs[i]);
+  stepHorde(s.mobs, s.players, { speed: HORDE.speed, speedOf, stopDist: HORDE.stopDist, stopOf, still, sep: grid.cell, queue: c.queue }, grid);
   pin(s);
   stunned(s);
   const far = HORDE.respawnDist * HORDE.respawnDist;
   for (const m of s.mobs) {
+    if (underground(m)) continue;
     const t = nearestPlayer(s.players, m.x, m.y);
     if (dist2(m.x - t.x, m.y - t.y) > far) ringPoint(s.ai, t.x, t.y, m);
   }

@@ -1,0 +1,114 @@
+import { describe, expect, it } from 'vitest';
+import { DEFAULT_RUN, EMERGE, HURT, SHOOTER, THREATS, type RunConfig } from '../config';
+import { Engine } from '../Engine';
+import type { PlayerCommand } from '../input';
+import { dist } from '../math/fixed';
+import { newMob, underground, type Mob } from '../state';
+import { downMob, targetAt } from './combat';
+import { beginWave, newcomer } from './waves';
+
+// Chapter 2's mobs (docs/content.md "Chapters"): water ghosts that rise from a mark next to
+// the hero, and toads that stop at range and spit bullet fans.
+
+const MARSH: RunConfig = { ...DEFAULT_RUN, waves: 50, chapter: 2 };
+
+function still(e: Engine): PlayerCommand {
+  return { owner: 0, tick: e.nextTick, moveBrad: 0, moveMag: 0 };
+}
+
+/** A marsh run with only the hero (not kicking) and mob `m`. */
+function alone(m: Mob): Engine {
+  const e = new Engine(MARSH);
+  e.state.mobs = [m];
+  e.state.players[0].kickCd = 1e6;
+  return e;
+}
+
+describe('chapter mix', () => {
+  it('brings toads and water ghosts into the marsh horde, foxes only into chapter 1', () => {
+    const kinds = (chapter: number) => {
+      const e = new Engine({ ...MARSH, chapter });
+      for (let w = 2; w <= 20; w++) beginWave(e.state, w);
+      return new Set(e.state.mobs.map((m) => m.kind));
+    };
+    expect([...kinds(1)].sort()).toEqual(['chaser', 'runner', 'swarm']);
+    expect([...kinds(2)].sort()).toEqual(['chaser', 'emerger', 'shooter', 'swarm']);
+    // chapters without their own list play the last one
+    expect(newcomer(5, 30, 5)).toBe(newcomer(2, 30, 5));
+    expect(newcomer(2, 1, 5)).toBe('chaser');
+  });
+});
+
+describe('water ghost (emerger)', () => {
+  it('waits under the ground, marks a spot next to the hero, then rises there and walks', () => {
+    const m = newMob(3_000_000, 0, 50, 'emerger', EMERGE.warn + 5);
+    const e = alone(m);
+    const s = e.state;
+    const p = s.players[0];
+    expect(underground(m)).toBe(true);
+    expect(targetAt(s, 0)).toBeNull();
+    for (let i = 0; i < 5; i++) e.step([still(e)]);
+    // on its mark: near the hero, still not there to hit
+    const d = dist(m.x - p.x, m.y - p.y);
+    expect(d).toBeGreaterThanOrEqual(EMERGE.near);
+    expect(d).toBeLessThanOrEqual(EMERGE.far);
+    const at = [m.x, m.y];
+    const types: string[] = [];
+    for (let i = 0; i < EMERGE.warn - 1; i++) types.push(...e.step([still(e)]).map((ev) => ev.type));
+    expect([m.x, m.y]).toEqual(at);
+    expect(types).not.toContain('emerge');
+    expect(e.step([still(e)]).map((ev) => ev.type)).toContain('emerge');
+    expect(targetAt(s, 0)).toBe(m);
+    e.step([still(e)]);
+    expect(dist(m.x - p.x, m.y - p.y)).toBeLessThan(d);
+  });
+
+  it('hurts a hero standing on its mark as it rises, and goes back under when it falls', () => {
+    const m = newMob(0, 0, 50, 'emerger', EMERGE.warn + 1);
+    const e = alone(m);
+    const s = e.state;
+    const p = s.players[0];
+    e.step([still(e)]);
+    p.x = m.x;
+    p.y = m.y;
+    let hurt = 0;
+    for (let i = 0; i < EMERGE.warn; i++) for (const ev of e.step([still(e)])) if (ev.type === 'hurt') hurt += ev.value;
+    expect(hurt).toBe(HURT.emerge);
+    downMob(s, [], 0, p, true);
+    expect(underground(m)).toBe(true);
+    expect(m.t).toBeGreaterThan(EMERGE.under + EMERGE.warn - 1);
+  });
+});
+
+describe('toad (shooter)', () => {
+  it('stops at its range and spits a fan at the hero when its count runs out', () => {
+    const m = newMob(700_000, 0, 50, 'shooter', SHOOTER.windup + 30);
+    const e = alone(m);
+    const s = e.state;
+    const p = s.players[0];
+    for (let i = 0; i < 29 + SHOOTER.windup; i++) e.step([still(e)]);
+    expect(s.bullets.length).toBe(0);
+    e.step([still(e)]);
+    expect(s.bullets.length).toBe(THREATS.fan);
+    expect(m.t).toBeGreaterThanOrEqual(SHOOTER.cooldown);
+    for (let i = 0; i < 60; i++) e.step([still(e)]);
+    expect(dist(m.x - p.x, m.y - p.y)).toBeGreaterThanOrEqual(SHOOTER.stopDist - 10_000);
+    expect(dist(m.x - p.x, m.y - p.y)).toBeLessThan(SHOOTER.stopDist + 10_000);
+  });
+
+  it('does not start to swell while the hero is out of range, nor while stunned', () => {
+    const m = newMob(3_000_000, 0, 50, 'shooter', SHOOTER.windup + 1);
+    const e = alone(m);
+    const s = e.state;
+    // too far to walk into range this tick
+    e.step([still(e)]);
+    expect(m.t).toBe(SHOOTER.windup + 1);
+    m.x = m.px = 600_000;
+    m.stun = 10;
+    e.step([still(e)]);
+    expect(m.t).toBe(SHOOTER.windup + 1);
+    m.stun = 0;
+    for (let i = 0; i < SHOOTER.windup + 1; i++) e.step([still(e)]);
+    expect(s.bullets.length).toBe(THREATS.fan);
+  });
+});

@@ -15,6 +15,9 @@ const BUSY: RunConfig = { ...DEFAULT_RUN, seed: 1234, mobs: 120, threats: true, 
 /** The first waves of a chapter, with enemy attacks, so the hero takes real damage. */
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, seed: 77, waves: 50, threats: true };
 
+/** Chapter 2: water ghosts rising next to the hero, toads spitting bullet fans. */
+const MARSH: RunConfig = { ...DEFAULT_RUN, seed: 78, waves: 50, chapter: 2 };
+
 /** A scripted stick: circles, stops and dashes, the same for every run; takes any level-up card. */
 function stick(tick: number, owner = 0): PlayerCommand {
   const phase = Math.floor(tick / 45) % 4;
@@ -82,10 +85,11 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-03 for ENGINE_VERSION 15 (several elites; the mid-boss is the twin big jiangshi). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(15);
+    // Recorded 2026-10-03 for ENGINE_VERSION 16 (chapter 2's water ghosts and toads). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(16);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
+    expect(run(MARSH, 3600, 3600).hashes[0]).toBe(GOLDEN_MARSH);
   });
 
   it('plays a chapter the same way twice', () => {
@@ -96,9 +100,10 @@ describe('Engine', () => {
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'elite', 'boss', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
   });
 });
 
-const GOLDEN = 4144012809;
-const GOLDEN_CHAPTER = 2984746956;
+const GOLDEN = 4114987753;
+const GOLDEN_CHAPTER = 4016560337;
+const GOLDEN_MARSH = 4003707309;

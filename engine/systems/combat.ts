@@ -2,11 +2,12 @@ import { BALL, DAMAGE, ELITE, MIX } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
-import type { Ball, Body, Elite, Player, SimState } from '../state';
+import { underground, type Ball, type Body, type Elite, type Player, type SimState } from '../state';
 import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
 import { ringPoint } from './horde';
+import { resetMob } from './marsh';
 import { mobHp } from './waves';
 
 // Hit targets and damage. Targets are numbered: the horde mobs first (by index), then the
@@ -29,9 +30,9 @@ export function eliteAt(s: SimState, i: number): Elite | null {
   return i >= s.mobs.length ? (s.elites[i - s.mobs.length] ?? null) : null;
 }
 
-/** Target i, or null if it is not there (the boss lying defeated, or no boss). */
+/** Target i, or null if it is not there (an emerger under the ground, the boss lying defeated, or no boss). */
 export function targetAt(s: SimState, i: number): Body | null {
-  if (i < s.mobs.length) return s.mobs[i];
+  if (i < s.mobs.length) return underground(s.mobs[i]) ? null : s.mobs[i];
   if (i < bossIndex(s)) return s.elites[i - s.mobs.length];
   if (i === bossIndex(s) && s.boss && s.boss.phase !== 'down') return s.boss;
   return null;
@@ -113,11 +114,15 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
   }
 }
 
-/** Mob i goes down (dropping its gem, unless swallowed; only some swarm mobs leave one) and respawns on the ring with the wave's health. */
+/**
+ * Mob i goes down (dropping its gem, unless swallowed; only some swarm mobs leave one) and
+ * respawns on the ring with the wave's health (an emerger goes under the ground to rise again).
+ */
 export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
   const m = s.mobs[i];
   m.hp = mobHp(s.wave, m.kind);
   m.stun = 0;
+  resetMob(s, m);
   events.push({ type: 'mobDown', index: i, x: m.x, y: m.y, dx: m.x - by.x, dy: m.y - by.y });
   if (gem && (m.kind !== 'swarm' || s.drop.chance(MIX.swarmGemPercent, 100))) dropGem(s, m.x, m.y, MOB_GEM);
   ringPoint(s.ai, by.x, by.y, m);

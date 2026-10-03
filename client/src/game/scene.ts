@@ -85,6 +85,8 @@ export interface SceneOptions {
   waves: boolean;
   /** Dev: a chapter run starts at the end of the wave before this one (?wave=25 for the mid-boss). */
   wave: number;
+  /** Dev: a run started with ?direct plays this chapter (?chapter=2); 0 keeps the save's. */
+  chapter: number;
   /** Dev: the relic for every run, whatever the save says (?relic=staff); null keeps the save's. */
   relic: RelicId | null;
   /** Dev: every sutra for every run, whatever the save has earned (?sutras). */
@@ -119,6 +121,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   seed: 0,
   waves: true,
   wave: 1,
+  chapter: 0,
   relic: null,
   sutras: false,
 };
@@ -169,6 +172,7 @@ export function parseScene(query: string): SceneOptions {
     seed: intAtLeast(q.get('seed'), 1, DEFAULT_SCENE.seed),
     waves: q.has('waves') ? q.get('waves') === '1' : !mobsSet && DEFAULT_SCENE.waves,
     wave: Math.min(50, intAtLeast(q.get('wave'), 1, DEFAULT_SCENE.wave)),
+    chapter: Math.min(5, intAtLeast(q.get('chapter'), 1, DEFAULT_SCENE.chapter)),
     relic: RELIC_IDS.find((r) => r === q.get('relic')) ?? DEFAULT_SCENE.relic,
     sutras: q.has('sutras'),
   };

@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
-  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, isMidBoss, TICK_RATE, WAVES, quantizeMove,
+  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
   type MobKind, type RelicId, type RunConfig, type SimEvent, type SimState, type SutraId,
 } from '@hk/engine';
 import { t } from '../i18n';
@@ -16,13 +16,14 @@ import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
-import { Corpses, MobView, type MobLook, type MobSheet } from './mobView';
+import { Corpses, type MobLook, type MobSheet } from './mobView';
 import { HealthBar } from './healthBar';
-import { depthShade } from './mobAnim';
 import { fakeMobTypes } from './mobTypes';
 import { EliteCrowd, EliteView, nearestElite } from './eliteView';
 import { BossBar } from './bossBar';
 import { wispSheet } from './wispSheet';
+import { toadSheet, waterGhostSheet } from './marshSheets';
+import { HordeView, MOB_HEIGHT } from './hordeView';
 import { AuraStack } from './aura';
 import { Boss } from './bossView';
 import { SpellView } from './spellView';
@@ -67,17 +68,13 @@ const HERO_HEIGHT = 120;
 export const STICK_RADIUS = 70;
 /** Seconds the hero's red hurt flash takes to fade. */
 const HURT_FLASH = 0.35;
-/** In-world height by mob kind; the elite is a big jiangshi. */
-const MOB_HEIGHT: Record<MobKind, number> = { chaser: 80, runner: 76, swarm: 62 };
+/** The elite is a big jiangshi. */
 const ELITE_HEIGHT = 140;
-/** World units per second, for the jiangshi's hop pacing. */
-const MOB_WALK = (HORDE.speed * TICK_RATE) / FP;
 /** Above every mob, below the effects (1e7) and numbers (1e7 + 1). */
 const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
 const SCREEN_AREA = 1080 * 1920;
 const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff, violet: 0xb04cff };
-const FOX_TINT = 0xc8a8ff;
 /** The big jiangshi is a darker steel blue than the horde; the mid-boss's second twin a slate violet. */
 const ELITE_TINTS = [0x9fb2d8, 0xb4a6d4];
 const DOWN_TINT = 0x8a8a8a;
@@ -86,8 +83,9 @@ const ELITE_KEY = 1e6;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
 
-/** What the shell sets a run up with: the chapter's length (0 for the sandbox), revives, the relic, the sutras. */
+/** What the shell sets a run up with: the chapter and its length (0 for the sandbox), revives, the relic, the sutras. */
 export interface RunSetup {
+  chapter: number;
   waves: number;
   revives: number;
   relic: RelicId;
@@ -100,7 +98,7 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     seed, players: 1, mobs: scene.mobs, sep: scene.sep, queue: scene.queue,
     heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
-    waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras,
+    waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras, chapter: setup.chapter,
   };
 }
 
@@ -115,8 +113,7 @@ export class Game {
   /** World point the camera centres on; trails the hero under the smooth camera. */
   private readonly camPos = { x: 0, y: 0 };
   private readonly elites: EliteCrowd | null;
-  private readonly mobs: MobView[] = [];
-  private readonly mobLooks: Record<MobKind, MobLook[]>;
+  private readonly horde: HordeView;
   private readonly healthBar = new HealthBar();
   /** A revive to send with the next command (the death screen's ad paid). */
   private reviving = false;
@@ -191,18 +188,23 @@ export class Game {
     this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
     this.world.addChild(this.fx.view, this.damage.view);
     this.drops = new DropLayer(app.renderer, this.world, scene.gem, this.fx.pool);
-    this.threats = scene.threats
+    // a chapter's shooters fire bullets
+    this.threats = scene.threats || chapter
       ? new ThreatLayer(app.renderer, this.world, scene.bullet, scene.zone, scene.zoneLayer, this.fx.pool)
       : null;
     const jiangshi = fakeMobTypes(app.renderer, art.jiangshi, scene.types, scene.page, scene.mobRes);
     const look = (sheet: MobSheet, kind: MobKind, facesLeft: boolean, shadow: [number, number]): MobLook => (
       { sheet, height: MOB_HEIGHT[kind], facesLeft, shadow, shadowTex }
     );
-    this.mobLooks = {
-      chaser: jiangshi.map((sheet) => look(sheet, 'chaser', true, [27, 9])),
+    // chapter 2 on brings water ghosts and toads (CHAPTER_MOBS); the marsh's walkers are water ghosts too
+    const ghost = setup.chapter >= 2 ? waterGhostSheet(app.renderer) : null;
+    this.horde = new HordeView(this.world, {
+      chaser: ghost && setup.chapter === 2 ? [look(ghost, 'chaser', true, [27, 9])] : jiangshi.map((sheet) => look(sheet, 'chaser', true, [27, 9])),
       runner: [look(art.fox, 'runner', false, [36, 9])],
       swarm: [look(wispSheet(app.renderer), 'swarm', true, [18, 6])],
-    };
+      emerger: ghost ? [look(ghost, 'emerger', true, [27, 9])] : [],
+      shooter: setup.chapter >= 2 ? [look(toadSheet(app.renderer), 'shooter', true, [34, 10])] : [],
+    }, scene, this.fx.pool);
     // in a chapter the elite and boss arrive later, so their views wait hidden
     this.elites = null;
     if (s.elites.length > 0 || chapter) {
@@ -343,7 +345,7 @@ export class Game {
             if (hit) this.elites?.byId(hit.id)?.mob.flinch();
             this.damage.spawn(x, y - ELITE_HEIGHT - 10, e.value, e.crit, ELITE_KEY + (hit?.id ?? 0));
           } else {
-            this.mobs[e.index]?.flinch();
+            this.horde.at(e.index)?.flinch();
             this.damage.spawn(x, y - MOB_HEIGHT[s.mobs[e.index]?.kind ?? 'chaser'] - 10, e.value, e.crit);
           }
           break;
@@ -356,8 +358,14 @@ export class Game {
           this.fx.puff(e.x / FP, e.y / FP);
           break;
         case 'mobDown':
-          this.corpses.spawn(this.mobs[e.index], e.dx, e.dy);
+          {
+            const v = this.horde.at(e.index);
+            if (v) this.corpses.spawn(v, e.dx, e.dy);
+          }
           this.fx.puff(e.x / FP, e.y / FP);
+          break;
+        case 'emerge':
+          this.horde.emerge(e.x / FP, e.y / FP);
           break;
         case 'bossWindup':
           if (s.boss) this.boss?.windup(s.boss);
@@ -459,24 +467,7 @@ Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
   }
 
   private drawHorde(s: SimState, alpha: number, dt: number, hx: number, hy: number): void {
-    // the horde grows at the start of every wave; a mob keeps its kind for the run
-    while (this.mobs.length < s.mobs.length) {
-      const looks = this.mobLooks[s.mobs[this.mobs.length].kind];
-      const v = new MobView(looks[this.mobs.length % looks.length], this.world, this.scene.calm);
-      // a multiply tint is free: it turns the pale fox lavender, away from the teal jiangshi
-      if (this.scene.foxTint && s.mobs[this.mobs.length].kind === 'runner') v.tint(FOX_TINT);
-      this.mobs.push(v);
-    }
-    for (let i = 0; i < this.mobs.length; i++) {
-      const m = s.mobs[i];
-      const x = lerpX(m, alpha);
-      const y = lerpY(m, alpha);
-      const v = this.mobs[i];
-      // a stunned mob (the Stunning Bell) freezes mid-pose
-      const walk = this.scene.settle && m.kind === 'chaser' ? MOB_WALK : 0;
-      v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : 1, walk, this.scene.sway);
-      if (this.scene.calm) v.shade(depthShade(Math.hypot(x - hx, y - hy)));
-    }
+    this.horde.draw(s.mobs, alpha, dt, hx, hy);
     this.elites?.draw(s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), WAVES.twinHp * 2);
   }
 

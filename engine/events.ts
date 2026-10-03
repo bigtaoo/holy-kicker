@@ -24,6 +24,8 @@ export type SimEvent =
   /** A mob went down at (x, y), knocked away along (dx, dy), and respawned elsewhere. */
   | { type: 'mobDown'; index: number; x: number; y: number; dx: number; dy: number }
   | { type: 'eliteDown'; id: number; x: number; y: number }
+  /** Mob `index`, an emerger, rose from its mark at (x, y). */
+  | { type: 'emerge'; index: number; x: number; y: number }
   | { type: 'bossWindup' }
   | { type: 'bossSlam'; x: number; y: number; radius: number }
   | { type: 'bossDown' }

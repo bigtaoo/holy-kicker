@@ -197,10 +197,10 @@ or a new single image is cheap; elites and bosses cost a rig each.
 | Chaser | Walks at the hero | Done (horde; the jiangshi) |
 | Runner | Fast, low health | Done (the fox: 185/s, 60 % health) |
 | Swarm | Many tiny, die in one hit | Done (the ghost wisp: packs of 10) |
-| Shooter | Stops at range, fires a 3-bullet fan | Done (threats, test only) |
+| Shooter | Stops at range, fires a 3-bullet fan | Done (the toad, chapter 2) |
 | Zone caster | Marks a ground circle, blasts after a warning | Done (threats, test only) |
 | Charger | Telegraphs a line, then dashes along it | Done (the big jiangshi elite) |
-| Emerger | Appears from a ground mark next to the hero | New |
+| Emerger | Appears from a ground mark next to the hero | Done (the water ghost, chapter 2) |
 | Splitter | Splits into 2 small ones on death | New |
 | Shielder | Blocks the relic from the front, spells still hit | New |
 
@@ -224,6 +224,21 @@ or a new single image is cheap; elites and bosses cost a rig each.
   lasts until both fall; they share a health bar ("Twin Jiangshi" / 双煞僵尸) and the
   second is tinted slate violet. Balance (40 runs, casual): 35/40 won, level 34; the twins
   fall in 27–118 s, median about 50 s; skilled 39/40.
+- **Chapter 2's kinds implemented** (`RunConfig.chapter`, `CHAPTER_MOBS`, `EMERGE`, `SHOOTER`
+  in `engine/config.ts`, `engine/systems/marsh.ts`, ENGINE_VERSION 16). Each chapter has its
+  own newcomer rules; chapter 2 drops the fox for the water ghost (emerger: every 5th
+  newcomer from wave 2) and the toad (shooter: every 8th from wave 3), and its plain walkers
+  are drawn as water ghosts too. A water ghost waits under the ground (2–5 s after it falls
+  or joins, untouchable), then marks a spot 180–340 from the hero for 1 s (violet ripples)
+  and rises there with a splash, hurting a hero within 80 for 6. The toad walks slower
+  (95/s, 80 % health), stops 460 from the hero and every 5–7 s swells for 0.5 s and spits a
+  3-bullet fan (6 per hit); it only starts to swell with the hero within 720. The bot now
+  reads a bullet's path a second ahead and keeps clear of marks. Both are drawn in code
+  (`client/src/game/marshSheets.ts`) until their art is baked. Balance (40 runs): chapter 2
+  casual 21/40 won (level 31), skilled 24/40; staff 13, beads 12, fish 10, bowl 8 out of 20;
+  chapter 1 is unchanged (casual 35/40). The
+  first tuning (toads every 6th firing every 3 s, ghosts every 4th rising 140–320 away,
+  bullets and rising 8–10) had the casual bot win 7/40 and die around wave 21.
 
 ## Chapters (5)
 

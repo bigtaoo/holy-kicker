@@ -60,7 +60,7 @@ export class Shell {
 
   /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
   start(direct = false): void {
-    if (direct || !this.save.firstRunDone) this.startRun(this.save.chapter);
+    if (direct || !this.save.firstRunDone) this.startRun(this.scene.chapter || this.save.chapter);
     else this.showLobby();
     this.platform.portal.loaded();
   }
@@ -120,6 +120,7 @@ export class Shell {
     this.chapter = chapter;
     this.setScreen(null);
     this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, {
+      chapter,
       waves: this.scene.waves ? BALANCE.waves : 0,
       revives: BALANCE.revives,
       relic: this.scene.relic ?? this.save.relic,

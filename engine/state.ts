@@ -82,6 +82,13 @@ export interface Mob extends Body {
   hp: number;
   /** Ticks left standing stunned (the Stunning Bell). */
   stun: number;
+  /** An emerger: ticks until it rises (0 once up). A shooter: ticks to its next volley. */
+  t: number;
+}
+
+/** An emerger still under the ground (or rising from its mark) cannot be hit, hurt or moved. */
+export function underground(m: Mob): boolean {
+  return m.kind === 'emerger' && m.t > 0;
 }
 
 /** The elite walks in, then aims a charge, dashes along it and catches its breath. */
@@ -319,8 +326,8 @@ export function createState(config: RunConfig): SimState {
   };
 }
 
-export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser'): Mob {
-  return { ...body(x, y), kind, hp, stun: 0 };
+export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser', t = 0): Mob {
+  return { ...body(x, y), kind, hp, stun: 0, t };
 }
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball'): Player {

@@ -71,6 +71,8 @@ export class MobView {
   private base = 0xffffff;
   /** A fixed draw order (over the horde), instead of following y. */
   private z = NaN;
+  /** Extra size, e.g. a toad swelling before it spits (0 for none). */
+  swell = 0;
 
   /**
    * `calm` gives each mob a slightly different size and brightness, and draws it easing after
@@ -142,8 +144,8 @@ export class MobView {
     this.sprite.texture = textures[f + (this.flash > 0 ? meta.flash : 0)];
     this.side = faceSide(this.side, faceX, FACE_DEAD);
     const flip = (this.side < 0) === this.look.facesLeft ? 1 : -1;
-    let sx = this.scale;
-    let sy = this.scale;
+    let sx = this.scale * (1 + this.swell);
+    let sy = this.scale * (1 + this.swell);
     if (this.squash > 0) {
       this.squash = Math.max(0, this.squash - dt);
       const k = Math.sin((this.squash / SQUASH_TIME) * Math.PI) * 0.25;

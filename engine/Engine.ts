@@ -16,17 +16,18 @@ import { eliteSystem } from './systems/elite';
 import { hordeSystem, ringPoint } from './systems/horde';
 import { applyInput, contactSystem, hurtPlayer, kickSystem, movePlayers } from './systems/players';
 import { spellSystem } from './systems/spells';
-import { threatSystem } from './systems/threats';
+import { bulletSystem, threatSystem } from './systems/threats';
+import { emergeSystem, shooterSystem } from './systems/marsh';
 import { beginWave, waveSystem } from './systems/waves';
 
 // The simulation: fixed 30 Hz steps over plain integer state, fed only by player commands.
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 15;
+export const ENGINE_VERSION = 16;
 
 export const STEP_ORDER = [
-  'input', 'movePlayers', 'horde', 'elite', 'boss', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
+  'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
 ] as const;
 
 export class Engine {
@@ -68,8 +69,11 @@ export class Engine {
     if (s.outcome !== 'playing' || choosing(s)) return events;
     movePlayers(s);
     hordeSystem(s, this.grid);
+    emergeSystem(s, events, hurt);
     eliteSystem(s, hurt);
     bossSystem(s, events, hurt);
+    shooterSystem(s);
+    bulletSystem(s, hurt);
     kickSystem(s, events);
     ballSystem(s, events);
     ringSystem(s, events);
