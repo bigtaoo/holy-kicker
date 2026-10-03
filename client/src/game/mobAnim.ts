@@ -97,7 +97,8 @@ export function depthShade(d: number, s = DEPTH_SHADE): number {
 }
 
 /** A grey multiply tint of brightness k (0..1). */
-export function greyTint(k: number): number {
-  const c = Math.round(255 * Math.min(1, Math.max(0, k)));
-  return (c << 16) | (c << 8) | c;
+export function greyTint(k: number, base = 0xffffff): number {
+  const f = Math.min(1, Math.max(0, k));
+  const ch = (shift: number) => Math.round(((base >> shift) & 255) * f);
+  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
 }

@@ -1,4 +1,4 @@
-import { ELITE, HORDE } from '../config';
+import { HORDE, MOB_KINDS } from '../config';
 import { SpatialGrid } from '../grid';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -22,6 +22,8 @@ const STIFF_DEN = 5;
 
 export interface MoveParams {
   speed: number;
+  /** Mob i's own speed, when the crowd is mixed (else `speed` for all). */
+  speedOf?: (i: number) => number;
   stopDist: number;
   /** 0 turns separation off. */
   sep: number;
@@ -55,8 +57,9 @@ export function stepHorde(mobs: Body[], players: readonly Player[], p: MoveParam
     const dy = t.y - m.y;
     const d = dist(dx, dy);
     if (d > p.stopDist && !(p.queue && separate && blocked(mobs, i, dx, dy, d, p.sep, grid!))) {
-      m.x += Math.trunc((dx * p.speed) / d);
-      m.y += Math.trunc((dy * p.speed) / d);
+      const v = p.speedOf ? p.speedOf(i) : p.speed;
+      m.x += Math.trunc((dx * v) / d);
+      m.y += Math.trunc((dy * v) / d);
     }
     const n = separate ? grid!.near(m.x, m.y, near) : 0;
     for (let k = 0; k < n; k++) {
@@ -127,18 +130,13 @@ function stunned(s: SimState): void {
   }
 }
 
-/** The horde step plus the elite, then mobs left far behind come back around their player. */
+/** The horde step (each kind at its own speed), then mobs left far behind come back around their player. */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
-  stepHorde(s.mobs, s.players, { speed: HORDE.speed, stopDist: HORDE.stopDist, sep: grid.cell, queue: c.queue }, grid);
+  const speedOf = (i: number) => MOB_KINDS[s.mobs[i].kind].speed;
+  stepHorde(s.mobs, s.players, { speed: HORDE.speed, speedOf, stopDist: HORDE.stopDist, sep: grid.cell, queue: c.queue }, grid);
   pin(s);
   stunned(s);
-  const e = s.elite;
-  if (e && e.stun > 0) {
-    e.stun--;
-    e.px = e.x;
-    e.py = e.y;
-  } else if (e) stepHorde([e], s.players, { speed: ELITE.speed, stopDist: ELITE.stopDist, sep: 0, queue: false });
   const far = HORDE.respawnDist * HORDE.respawnDist;
   for (const m of s.mobs) {
     const t = nearestPlayer(s.players, m.x, m.y);

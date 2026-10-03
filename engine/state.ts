@@ -1,4 +1,4 @@
-import { ELITE, HERO, type RunConfig } from './config';
+import { ELITE, HERO, type MobKind, type RunConfig } from './config';
 import type { Card, PassiveId, RelicId, SpellId } from './content';
 import { Prng } from './math/prng';
 
@@ -78,15 +78,27 @@ export interface PassiveSlot {
 }
 
 export interface Mob extends Body {
+  kind: MobKind;
   hp: number;
   /** Ticks left standing stunned (the Stunning Bell). */
   stun: number;
 }
 
+/** The elite walks in, then aims a charge, dashes along it and catches its breath. */
+export type ElitePhase = 'walk' | 'aim' | 'dash' | 'rest';
+
 export interface Elite extends Body {
   hp: number;
   maxHp: number;
   stun: number;
+  phase: ElitePhase;
+  /** Ticks into the phase. */
+  t: number;
+  /** Ticks until it may charge again. */
+  cd: number;
+  /** The charge's velocity per tick, set when it aims. */
+  vx: number;
+  vy: number;
 }
 
 /** Still going, the chapter boss fell (won) or every hero is down (lost, until a revive). */
@@ -249,7 +261,7 @@ export interface SimState {
   nextId: number;
   players: Player[];
   mobs: Mob[];
-  /** The elite fox; null when the run has none, or it fell. */
+  /** The elite (the big jiangshi, a charger); null when the run has none, or it fell. */
   elite: Elite | null;
   boss: Boss | null;
   balls: Ball[];
@@ -305,8 +317,8 @@ export function createState(config: RunConfig): SimState {
   };
 }
 
-export function newMob(x: number, y: number, hp = 1): Mob {
-  return { ...body(x, y), hp, stun: 0 };
+export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser'): Mob {
+  return { ...body(x, y), kind, hp, stun: 0 };
 }
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball'): Player {
@@ -319,5 +331,5 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
 }
 
 export function newElite(x: number, y: number): Elite {
-  return { ...body(x, y), hp: ELITE.hp, maxHp: ELITE.hp, stun: 0 };
+  return { ...body(x, y), hp: ELITE.hp, maxHp: ELITE.hp, stun: 0, phase: 'walk', t: 0, cd: ELITE.cooldown, vx: 0, vy: 0 };
 }

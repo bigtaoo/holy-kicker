@@ -139,7 +139,7 @@ export function contactSystem(s: SimState, events: SimEvent[]): void {
     const t = nearestTarget(s, p.x, p.y, HERO.hurtDist);
     if (t < 0) continue;
     const value = t < s.mobs.length
-      ? HURT.mob + Math.trunc(s.wave / 10) * HURT.mobPerTenWaves
+      ? s.mobs[t].kind === 'swarm' ? HURT.swarm : HURT.mob + Math.trunc(s.wave / 10) * HURT.mobPerTenWaves
       : t === eliteIndex(s) ? HURT.elite : HURT.boss;
     hurtPlayer(s, events, p.owner, value);
   }

@@ -1,4 +1,4 @@
-import { BALL, DAMAGE, ELITE } from '../config';
+import { BALL, DAMAGE, ELITE, MIX } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
@@ -98,13 +98,13 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
   }
 }
 
-/** Mob i goes down (dropping its gem, unless swallowed) and respawns on the ring with the wave's health. */
+/** Mob i goes down (dropping its gem, unless swallowed; only some swarm mobs leave one) and respawns on the ring with the wave's health. */
 export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
   const m = s.mobs[i];
-  m.hp = mobHp(s.wave);
+  m.hp = mobHp(s.wave, m.kind);
   m.stun = 0;
   events.push({ type: 'mobDown', index: i, x: m.x, y: m.y, dx: m.x - by.x, dy: m.y - by.y });
-  if (gem) dropGem(s, m.x, m.y, MOB_GEM);
+  if (gem && (m.kind !== 'swarm' || s.drop.chance(MIX.swarmGemPercent, 100))) dropGem(s, m.x, m.y, MOB_GEM);
   ringPoint(s.ai, by.x, by.y, m);
 }
 

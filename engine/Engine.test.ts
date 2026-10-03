@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-03 for ENGINE_VERSION 13 (the sutra spells Lotus Steps, Halo Beam, Lion's Roar and Focus). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(13);
+    // Recorded 2026-10-03 for ENGINE_VERSION 14 (horde kinds: runners and swarm packs; the charging elite). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(14);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -96,9 +96,9 @@ describe('Engine', () => {
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'elite', 'boss', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
   });
 });
 
-const GOLDEN = 432500925;
-const GOLDEN_CHAPTER = 3501964383;
+const GOLDEN = 1474124150;
+const GOLDEN_CHAPTER = 3305844809;

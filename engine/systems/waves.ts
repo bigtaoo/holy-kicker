@@ -1,4 +1,4 @@
-import { BOSS, HORDE, SHRINE, WAVES } from '../config';
+import { BOSS, HORDE, MIX, MOB_KINDS, SHRINE, WAVES, type MobKind } from '../config';
 import type { SimEvent } from '../events';
 import { body, newElite, newMob, type SimState } from '../state';
 import { newBoss } from './boss';
@@ -6,7 +6,8 @@ import { openShrine, payBet } from './build';
 import { ringPoint } from './horde';
 
 // The chapter's waves (docs/design.md "Chapters"): each lasts WAVES.ticks; the horde grows
-// at the start of every wave, an elite comes every tenth wave, and the boss waves (the
+// at the start of every wave (runners joining from MIX.runnerFrom, swarm packs on swarm
+// waves), an elite comes every tenth wave, and the boss waves (the
 // mid-boss and the last) last until their boss falls. The chapter boss falling wins the run;
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
@@ -15,10 +16,16 @@ export function hordeSize(wave: number): number {
   return Math.min(WAVES.hordeMax, WAVES.hordeBase + WAVES.hordeStep * (wave - 1));
 }
 
-/** Health of a mob that joins or comes back on wave `wave`; the sandbox (wave 0) horde has 1. */
-export function mobHp(wave: number): number {
+/** Health of a mob of `kind` that joins or comes back on wave `wave`; the sandbox (wave 0) horde has 1. */
+export function mobHp(wave: number, kind: MobKind = 'chaser'): number {
   const n = wave - 1;
-  return wave > 0 ? HORDE.hp + Math.trunc((HORDE.hpStep * n + HORDE.hpSquare * n * n) / 1000) : 1;
+  const hp = wave > 0 ? HORDE.hp + Math.trunc((HORDE.hpStep * n + HORDE.hpSquare * n * n) / 1000) : 1;
+  return Math.max(1, Math.trunc((hp * MOB_KINDS[kind].hpPercent) / 100));
+}
+
+/** Swarm waves bring a pack of swarm mobs (never a boss wave). */
+export function isSwarmWave(wave: number, last: number): boolean {
+  return wave >= MIX.swarmFrom && (wave - MIX.swarmFrom) % MIX.swarmEvery === 0 && !isBossWave(wave, last);
 }
 
 export function isBossWave(wave: number, last: number): boolean {
@@ -40,11 +47,22 @@ export function beginWave(s: SimState, wave: number): void {
   const p = s.players[0];
   s.wave = wave;
   s.waveT = 0;
-  // newcomers come from just outside the view, like respawns
-  while (s.mobs.length < hordeSize(wave)) {
-    const m = newMob(0, 0, mobHp(wave));
+  // newcomers come from just outside the view, like respawns; every runnerEvery-th is a runner
+  let swarm = 0;
+  for (const m of s.mobs) if (m.kind === 'swarm') swarm++;
+  for (let n = s.mobs.length - swarm; n < hordeSize(wave); n++) {
+    const kind = wave >= MIX.runnerFrom && n % MIX.runnerEvery === MIX.runnerEvery - 1 ? 'runner' : 'chaser';
+    const m = newMob(0, 0, mobHp(wave, kind), kind);
     ringPoint(s.ai, p.x, p.y, m);
     s.mobs.push(m);
+  }
+  // a swarm pack comes bunched from one side
+  const pack = isSwarmWave(wave, last) ? Math.min(MIX.swarmPack, MIX.swarmMax - swarm) : 0;
+  const at = body(0, 0);
+  if (pack > 0) ringPoint(s.ai, p.x, p.y, at);
+  for (let k = 0; k < pack; k++) {
+    const r = MIX.swarmSpread;
+    s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, 'swarm'), 'swarm'));
   }
   if (isEliteWave(wave, last) && !s.elite) {
     const e = newElite(0, 0);
@@ -52,7 +70,6 @@ export function beginWave(s: SimState, wave: number): void {
     s.elite = e;
   }
   if (isBossWave(wave, last) && !s.boss) {
-    const at = body(0, 0);
     ringPoint(s.ai, p.x, p.y, at);
     const hp = wave === last ? BOSS.hp : Math.trunc((BOSS.hp * WAVES.midBossHpPercent) / 100);
     s.boss = newBoss(at.x, at.y, hp);

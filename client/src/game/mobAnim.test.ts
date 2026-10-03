@@ -64,6 +64,7 @@ describe('depth shade', () => {
   it('makes a grey tint', () => {
     expect(greyTint(1)).toBe(0xffffff);
     expect(greyTint(0)).toBe(0);
+    expect(greyTint(0.5, 0xff0080)).toBe(0x800040);
     expect(greyTint(0.5)).toBe(0x808080);
   });
 });

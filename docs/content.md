@@ -194,15 +194,29 @@ or a new single image is cheap; elites and bosses cost a rig each.
 
 | Mechanic | Behaviour | Engine status |
 |---|---|---|
-| Chaser | Walks at the hero | Done (horde) |
-| Runner | Fast, low health | Speed variant |
-| Swarm | Many tiny, die in one hit | Count variant |
+| Chaser | Walks at the hero | Done (horde; the jiangshi) |
+| Runner | Fast, low health | Done (the fox: 185/s, 60 % health) |
+| Swarm | Many tiny, die in one hit | Done (the ghost wisp: packs of 10) |
 | Shooter | Stops at range, fires a 3-bullet fan | Done (threats, test only) |
 | Zone caster | Marks a ground circle, blasts after a warning | Done (threats, test only) |
-| Charger | Telegraphs a line, then dashes along it | New |
+| Charger | Telegraphs a line, then dashes along it | Done (the big jiangshi elite) |
 | Emerger | Appears from a ground mark next to the hero | New |
 | Splitter | Splits into 2 small ones on death | New |
 | Shielder | Blocks the relic from the front, spells still hit | New |
+
+- **Chapter 1's kinds implemented** (`MOB_KINDS`, `MIX`, `ELITE` in `engine/config.ts`,
+  `engine/systems/elite.ts`, ENGINE_VERSION 14). Every mob has a kind it keeps for the run
+  (respawns included). From wave 3 every 4th newcomer is a fox runner; from wave 6, every 4th
+  wave (not a boss wave) brings a bunched pack of 10 ghost wisps on top of the horde, up to 40.
+  Wisps have 1 health, hurt for 3 and only a quarter of them leave a gem: without that cut the
+  packs lifted the casual bot from level 30 to 38 at the end. The elite is now the big
+  jiangshi charger: within 750 of the hero it stops and marks a lane at him (violet, 0.8 s),
+  dashes 1050 along it hurting for 22, rests 0.7 s and charges again after 2.5 s; the lane is
+  fixed when it aims, so a step aside dodges it. The fox is no longer the elite. The wisp is
+  drawn in code (`client/src/game/wispSheet.ts`), the big jiangshi is the jiangshi sheet
+  scaled and tinted steel blue. Balance (40 runs, casual): 36/40 won at level 33, against
+  37/40 at level 30 before; skilled 39/40; every relic 17–20/20 out of 20. Still to come for
+  chapter 1: the mid-boss as two big jiangshi (the weakened abbot still stands in).
 
 ## Chapters (5)
 

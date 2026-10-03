@@ -73,7 +73,9 @@ export const HURT = {
   mob: 6,
   /** Mob contact hurts this much more every 10 waves. */
   mobPerTenWaves: 1,
+  swarm: 3,
   elite: 12,
+  charge: 22,
   boss: 15,
   slam: 25,
   bullet: 8,
@@ -95,6 +97,35 @@ export const HORDE = {
   hpSquare: 30,
 };
 
+export type MobKind = 'chaser' | 'runner' | 'swarm';
+
+/**
+ * Kinds of horde mob (docs/content.md "Enemies"): how fast each walks and its share of the
+ * wave's mob health. A swarm mob falls to any hit whatever the wave.
+ */
+export const MOB_KINDS: Record<MobKind, { speed: number; hpPercent: number }> = {
+  chaser: { speed: HORDE.speed, hpPercent: 100 },
+  runner: { speed: perTick(185), hpPercent: 60 },
+  swarm: { speed: perTick(150), hpPercent: 0 },
+};
+
+/**
+ * Who joins the horde: from wave runnerFrom every runnerEvery-th newcomer is a runner; on
+ * swarm waves (swarmFrom, then every swarmEvery) a bunched pack of swarm mobs joins on top of
+ * the horde, up to swarmMax of them in all.
+ */
+export const MIX = {
+  runnerFrom: 3,
+  runnerEvery: 4,
+  swarmFrom: 6,
+  swarmEvery: 4,
+  swarmPack: 10,
+  swarmMax: 40,
+  swarmSpread: toFp(110),
+  /** Share of fallen swarm mobs that leave a gem, so the packs do not flood the run with levels. */
+  swarmGemPercent: 25,
+};
+
 export const ELITE = {
   speed: perTick(160),
   stopDist: toFp(220),
@@ -102,6 +133,18 @@ export const ELITE = {
   hp: 400,
   /** Experience in the gem it leaves. */
   gem: 20,
+  /**
+   * The charge (systems/elite.ts): with a hero within chargeRange and its cooldown done, the
+   * elite stops and marks a lane at him for `aim`, dashes dashLength along it, hurting a hero
+   * within laneHalf of its path, then stands for `rest`.
+   */
+  chargeRange: toFp(750),
+  aim: ticks(0.8),
+  dashSpeed: perTick(1400),
+  dashLength: toFp(1050),
+  laneHalf: toFp(80),
+  rest: ticks(0.7),
+  cooldown: ticks(2.5),
 };
 
 export const WAVES = {

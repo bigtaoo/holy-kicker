@@ -68,6 +68,9 @@ export class MobView {
   private drawY = 0;
   /** Own brightness, so a crowd of one type is not a uniform stamp. */
   private readonly tone: number;
+  private base = 0xffffff;
+  /** A fixed draw order (over the horde), instead of following y. */
+  private z = NaN;
 
   /**
    * `calm` gives each mob a slightly different size and brightness, and draws it easing after
@@ -93,9 +96,19 @@ export class MobView {
     this.sprite.visible = this.shadow.visible = v;
   }
 
+  /** Draws the mob at a fixed order instead of by its y (the elite, over the horde). */
+  pinZ(z: number): void {
+    this.z = this.sprite.zIndex = z;
+  }
+
+  /** A colour the mob is multiplied by, under any shading. */
+  tint(color: number): void {
+    this.base = this.sprite.tint = color;
+  }
+
   /** Brightness from the mob's place in the crowd (see depthShade), times its own tone. */
   shade(k: number): void {
-    this.sprite.tint = greyTint(k * this.tone);
+    this.sprite.tint = greyTint(k * this.tone, this.base);
   }
 
   /** A hit that does not kill: a white flash and a short squash. */
@@ -154,7 +167,7 @@ export class MobView {
       this.drawY = y;
     }
     this.sprite.position.set(x, y);
-    if (Math.abs(y - this.sprite.zIndex) > Z_DEAD) this.sprite.zIndex = y;
+    if (Number.isNaN(this.z) && Math.abs(y - this.sprite.zIndex) > Z_DEAD) this.sprite.zIndex = y;
     // the shadow shrinks while the mob is in the air
     const air = (meta.lift[f] ?? 0) / meta.height;
     this.shadow.position.set(x, y);

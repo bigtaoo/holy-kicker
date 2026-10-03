@@ -4,6 +4,7 @@ import { dist, dist2, toFp } from '../math/fixed';
 import { atan2B, BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import { Prng } from '../math/prng';
 import type { Player, SimState } from '../state';
+import { laneDistance } from '../systems/elite';
 
 // A bot that plays a chapter for the balance report (bot/balance.ts), and later perhaps a
 // demo or a stand-in teammate. It reads the sim state like a player reads the screen and
@@ -11,7 +12,7 @@ import type { Player, SimState } from '../state';
 // sim, so a bot run is as reproducible as a replay.
 //
 // Moving: when enemies press close, it steps to the open side (the boss's marked slam circle
-// counts most); with nothing pressing, it walks to the nearest gem or stands. With the staff
+// and the elite's marked charge lane count most); with nothing pressing, it walks to the nearest gem or stands. With the staff
 // the wooden fish or the prayer beads it goes after the elite and the boss and lets them into the relic's reach
 // (it still runs from a slam).
 // `skilled` re-decides every tenth of a second, `casual` every 0.4 s and holds the stick in
@@ -42,6 +43,8 @@ const CLOSE_IN: Record<RelicId, CloseIn | null> = {
   beads: { near: toFp(200), chase: toFp(260) },
   bowl: null,
 };
+/** Keep this far from a marked charge lane. */
+const LANE = toFp(200);
 const GEM_REACH = toFp(900);
 const DIRS = 16;
 /** Danger the hero shrugs off: below it he goes for gems or stands and lets the build work. */
@@ -63,6 +66,9 @@ function danger(s: SimState, x: number, y: number, close: CloseIn | null): numbe
   const boss = b && b.phase !== 'down' ? b : null;
   if (s.elite) {
     add(s.elite.x, s.elite.y, close ? close.near : NEAR_ELITE, 4);
+    // a marked charge lane counts like the slam circle
+    const lane = laneDistance(s.elite, x, y);
+    if (lane >= 0 && lane < LANE) sum += (LANE - lane) * 40;
     if (!boss) chase(s.elite.x, s.elite.y);
   }
   if (boss) {
