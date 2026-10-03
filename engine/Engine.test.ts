@@ -15,7 +15,7 @@ const BUSY: RunConfig = { ...DEFAULT_RUN, seed: 1234, mobs: 120, threats: true, 
 /** The first waves of a chapter, with enemy attacks, so the hero takes real damage. */
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, seed: 77, waves: 50, threats: true };
 
-/** Chapter 2: water ghosts rising next to the hero, toads spitting bullet fans. */
+/** Chapter 2: water ghosts rising next to the hero, toads spitting bullet fans, the toad king on wave 10. */
 const MARSH: RunConfig = { ...DEFAULT_RUN, seed: 78, waves: 50, chapter: 2 };
 
 /** A scripted stick: circles, stops and dashes, the same for every run; takes any level-up card. */
@@ -85,11 +85,11 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-03 for ENGINE_VERSION 16 (chapter 2's water ghosts and toads). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(16);
+    // Recorded 2026-10-03 for ENGINE_VERSION 17 (chapter 2's toad king elite). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(17);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
-    expect(run(MARSH, 3600, 3600).hashes[0]).toBe(GOLDEN_MARSH);
+    expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
   });
 
   it('plays a chapter the same way twice', () => {
@@ -104,6 +104,6 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 4114987753;
+const GOLDEN = 4117960602;
 const GOLDEN_CHAPTER = 4016560337;
-const GOLDEN_MARSH = 4003707309;
+const GOLDEN_MARSH = 3906147382;

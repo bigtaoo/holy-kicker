@@ -2,6 +2,7 @@ import { ELITE, HURT } from '../config';
 import { dist, dist2 } from '../math/fixed';
 import type { Elite, SimState } from '../state';
 import { nearestPlayer, stepHorde } from './horde';
+import { stepToadKing } from './marsh';
 
 // The elite, a charger (docs/content.md "Enemies"): it walks at the nearest hero, and once
 // one is within ELITE.chargeRange and its cooldown is done it stops and marks a lane at him
@@ -9,6 +10,7 @@ import { nearestPlayer, stepHorde } from './horde';
 // hero it passes within ELITE.laneHalf, and stands for ELITE.rest before walking again. The
 // lane is fixed when it aims, so stepping aside is the answer. A stun freezes it in any phase.
 // Several elites (the mid-boss twins) take turns: one aims only while no other is charging.
+// Chapter 2's toad king (systems/marsh.ts) shoots instead.
 
 export type HurtFn = (owner: number, value: number) => void;
 
@@ -20,7 +22,7 @@ export function eliteSystem(s: SimState, hurt: HurtFn): void {
 }
 
 function charging(e: Elite): boolean {
-  return e.phase === 'aim' || e.phase === 'dash';
+  return e.kind === 'charger' && (e.phase === 'aim' || e.phase === 'dash');
 }
 
 function stepElite(s: SimState, e: Elite, hurt: HurtFn): void {
@@ -30,6 +32,7 @@ function stepElite(s: SimState, e: Elite, hurt: HurtFn): void {
     e.stun--;
     return;
   }
+  if (e.kind === 'toadKing') return stepToadKing(s, e);
   if (e.cd > 0) e.cd--;
   e.t++;
   if (e.phase === 'aim') {

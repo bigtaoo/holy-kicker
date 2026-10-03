@@ -1,4 +1,4 @@
-import { BALL, DAMAGE, ELITE, MIX } from '../config';
+import { BALL, DAMAGE, ELITE, MIX, TOAD_KING } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
@@ -75,8 +75,8 @@ export function kickTarget(s: SimState, p: Player, range: number): number {
 /**
  * Damages target i on behalf of player `by`, at `pct` percent of a base roll (the crit stat
  * raises the crit chance). Mobs lose health and at 0 go down (a gem drops, they respawn on the
- * ring with the wave's health), the elite loses health and is knocked back (unless `knock` is
- * off: the staff keeps it in reach), the boss loses health.
+ * ring with the wave's health), the elite loses health and is knocked back (the toad king
+ * barely; none when `knock` is off: the staff keeps it in reach), the boss loses health.
  */
 export function damage(s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null, pct = 100, knock = true): void {
   const t = targetAt(s, i);
@@ -105,8 +105,9 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
     }
     if (!knock) return;
     const d = dist(t.x - by.x, t.y - by.y) || 1;
-    t.x += Math.trunc(((t.x - by.x) * ELITE.knockback) / d);
-    t.y += Math.trunc(((t.y - by.y) * ELITE.knockback) / d);
+    const push = e.kind === 'toadKing' ? TOAD_KING.knockback : ELITE.knockback;
+    t.x += Math.trunc(((t.x - by.x) * push) / d);
+    t.y += Math.trunc(((t.y - by.y) * push) / d);
   } else {
     const m = s.mobs[i];
     m.hp -= value;

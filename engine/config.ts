@@ -82,6 +82,8 @@ export const HURT = {
   slam: 25,
   bullet: 6,
   zone: 15,
+  /** A toad king's poison pool going off. */
+  pool: 12,
   /** A water ghost rising under the hero. */
   emerge: 6,
 };
@@ -164,6 +166,34 @@ export const MIX = {
   swarmSpread: toFp(110),
   /** Share of fallen swarm mobs that leave a gem, so the packs do not flood the run with levels. */
   swarmGemPercent: 25,
+};
+
+/** The elite kinds: the big jiangshi charges, the toad king spits fans and poison pools. */
+export type EliteKind = 'charger' | 'toadKing';
+
+/** Each chapter's elite; later chapters play the last one until they get their own. */
+export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing'];
+
+/**
+ * The toad king (systems/marsh.ts): it stops stopDist from the hero; with him within range and
+ * its cooldown done it swells for `windup`, then in turn spits a fan of `fan` bullets at him or
+ * marks `pools` poison pools (THREATS zones of poolRadius: one on him, the rest within
+ * poolSpread of him) that go off after THREATS.warn, and sits for `rest`. Hits barely push it
+ * (knockback), so it stays within the hero's kick range.
+ */
+export const TOAD_KING = {
+  speed: perTick(120),
+  stopDist: toFp(380),
+  knockback: toFp(30),
+  range: toFp(800),
+  hp: 400,
+  windup: ticks(0.8),
+  rest: ticks(0.6),
+  cooldown: ticks(2),
+  fan: 5,
+  pools: 3,
+  poolRadius: toFp(140),
+  poolSpread: toFp(300),
 };
 
 export const ELITE = {

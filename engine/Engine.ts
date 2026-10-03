@@ -16,7 +16,7 @@ import { eliteSystem } from './systems/elite';
 import { hordeSystem, ringPoint } from './systems/horde';
 import { applyInput, contactSystem, hurtPlayer, kickSystem, movePlayers } from './systems/players';
 import { spellSystem } from './systems/spells';
-import { bulletSystem, threatSystem } from './systems/threats';
+import { bulletSystem, threatSystem, zoneSystem } from './systems/threats';
 import { emergeSystem, shooterSystem } from './systems/marsh';
 import { beginWave, waveSystem } from './systems/waves';
 
@@ -24,7 +24,7 @@ import { beginWave, waveSystem } from './systems/waves';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 16;
+export const ENGINE_VERSION = 17;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
@@ -80,7 +80,8 @@ export class Engine {
     beadSystem(s, events);
     bowlSystem(s, events);
     spellSystem(s, events);
-    if (s.config.threats) threatSystem(s, events, hurt);
+    if (s.config.threats) threatSystem(s);
+    zoneSystem(s, events, hurt);
     contactSystem(s, events);
     dropSystem(s, events);
     buildSystem(s, events);

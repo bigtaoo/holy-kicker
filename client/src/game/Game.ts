@@ -22,7 +22,7 @@ import { fakeMobTypes } from './mobTypes';
 import { EliteCrowd, EliteView, nearestElite } from './eliteView';
 import { BossBar } from './bossBar';
 import { wispSheet } from './wispSheet';
-import { toadSheet, waterGhostSheet } from './marshSheets';
+import { toadKingSheet, toadSheet, waterGhostSheet } from './marshSheets';
 import { HordeView, MOB_HEIGHT } from './hordeView';
 import { AuraStack } from './aura';
 import { Boss } from './bossView';
@@ -70,6 +70,8 @@ export const STICK_RADIUS = 70;
 const HURT_FLASH = 0.35;
 /** The elite is a big jiangshi. */
 const ELITE_HEIGHT = 140;
+/** The toad king, chapter 2's elite, squat and wide. */
+const TOAD_KING_HEIGHT = 112;
 /** Above every mob, below the effects (1e7) and numbers (1e7 + 1). */
 const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
@@ -209,9 +211,10 @@ export class Game {
     this.elites = null;
     if (s.elites.length > 0 || chapter) {
       const big = { sheet: art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14] as [number, number], shadowTex };
-      this.elites = new EliteCrowd((k) => new EliteView(
-        this.world, big, makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red'),
-        ELITE_TINTS[k % ELITE_TINTS.length], scene.eliteRing, HERO_TOP_Z,
+      const king = setup.chapter >= 2 ? { sheet: toadKingSheet(app.renderer), height: TOAD_KING_HEIGHT, facesLeft: true, shadow: [52, 15] as [number, number], shadowTex } : big;
+      this.elites = new EliteCrowd((k, kind) => new EliteView(
+        kind, this.world, kind === 'toadKing' ? king : big, makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red'),
+        kind === 'toadKing' ? 0xffffff : ELITE_TINTS[k % ELITE_TINTS.length], scene.eliteRing, HERO_TOP_Z,
       ), chapter ? new BossBar(t('boss.twins')) : null);
     }
     this.boss = art.boss && (s.boss || chapter) ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;

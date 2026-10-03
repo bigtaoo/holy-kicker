@@ -13,4 +13,4 @@ export { beadsRings, bowlLevel, cardPool, evolutions, magnetOf, maxHpOf, slotSta
 export { tierOf } from './systems/drops';
 export { DASH_TICKS } from './systems/elite';
 export { haloLength, haloSpin } from './systems/sutras';
-export { hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, isSwarmWave, mobHp } from './systems/waves';
+export { chapterElite, eliteKinds, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, isSwarmWave, mobHp } from './systems/waves';

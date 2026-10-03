@@ -1,4 +1,4 @@
-import { CHAPTER_MOBS, ELITE, HORDE, MIX, MOB_KINDS, SHRINE, WAVES, type MobKind } from '../config';
+import { CHAPTER_ELITES, CHAPTER_MOBS, ELITE, HORDE, MIX, MOB_KINDS, SHRINE, TOAD_KING, WAVES, type EliteKind, type MobKind } from '../config';
 import type { SimEvent } from '../events';
 import { body, newElite, newMob, type SimState } from '../state';
 import { newBoss } from './boss';
@@ -8,7 +8,8 @@ import { resetMob } from './marsh';
 
 // The chapter's waves (docs/design.md "Chapters"): each lasts WAVES.ticks; the horde grows
 // at the start of every wave (the chapter's kinds joining it, CHAPTER_MOBS, and swarm packs
-// on swarm waves), an elite comes every tenth wave, and the boss waves last until their boss falls:
+// on swarm waves), the chapter's elite comes every tenth wave (the last of them brings the
+// previous chapter's elite along), and the boss waves last until their boss falls:
 // the mid-boss is two elites, the twin big jiangshi, and the last wave has the chapter boss. The chapter boss falling wins the run;
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
@@ -29,6 +30,18 @@ export function newcomer(chapter: number, wave: number, n: number): MobKind {
   const rules = CHAPTER_MOBS[Math.min(Math.max(chapter, 1), CHAPTER_MOBS.length) - 1];
   for (const r of rules) if (wave >= r.from && n % r.every === r.every - 1) return r.kind;
   return 'chaser';
+}
+
+/** The elite of chapter `chapter` (CHAPTER_ELITES; before the first, none). */
+export function chapterElite(chapter: number): EliteKind {
+  return CHAPTER_ELITES[Math.min(Math.max(chapter, 1), CHAPTER_ELITES.length) - 1];
+}
+
+/** The elites coming on elite wave `wave`: the chapter's, and on the last one the previous chapter's too. */
+export function eliteKinds(chapter: number, wave: number, last: number): EliteKind[] {
+  const kinds = [chapterElite(chapter)];
+  if (chapter > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
+  return kinds;
 }
 
 /** Swarm waves bring a pack of swarm mobs (never a boss wave). */
@@ -80,9 +93,11 @@ export function beginWave(s: SimState, wave: number): void {
     s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, 'swarm'), 'swarm'));
   }
   if (isEliteWave(wave, last) && s.elites.length === 0) {
-    const e = newElite(0, 0, s.nextId++);
-    ringPoint(s.ai, p.x, p.y, e);
-    s.elites.push(e);
+    for (const kind of eliteKinds(s.config.chapter, wave, last)) {
+      const e = kind === 'toadKing' ? newElite(0, 0, s.nextId++, TOAD_KING.hp, TOAD_KING.cooldown, kind) : newElite(0, 0, s.nextId++);
+      ringPoint(s.ai, p.x, p.y, e);
+      s.elites.push(e);
+    }
   }
   if (isMidBoss(wave, last)) {
     // the twins come from opposite sides of the hero

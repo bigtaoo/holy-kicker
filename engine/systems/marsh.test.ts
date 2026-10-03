@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_RUN, EMERGE, HURT, SHOOTER, THREATS, type RunConfig } from '../config';
+import { DEFAULT_RUN, EMERGE, HURT, SHOOTER, THREATS, TOAD_KING, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import type { PlayerCommand } from '../input';
 import { dist } from '../math/fixed';
-import { newMob, underground, type Mob } from '../state';
+import { newElite, newMob, underground, type Mob } from '../state';
 import { downMob, targetAt } from './combat';
-import { beginWave, newcomer } from './waves';
+import { laneDistance } from './elite';
+import { beginWave, eliteKinds, newcomer } from './waves';
 
 // Chapter 2's mobs (docs/content.md "Chapters"): water ghosts that rise from a mark next to
 // the hero, and toads that stop at range and spit bullet fans.
@@ -110,5 +111,62 @@ describe('toad (shooter)', () => {
     m.stun = 0;
     for (let i = 0; i < SHOOTER.windup + 1; i++) e.step([still(e)]);
     expect(s.bullets.length).toBe(THREATS.fan);
+  });
+});
+
+describe('toad king (elite)', () => {
+  /** A marsh run with only the hero (not kicking) and a toad king `gap` to his right, ready. */
+  function king(gap: number) {
+    const e = new Engine(MARSH);
+    const s = e.state;
+    s.mobs.length = 0;
+    const p = s.players[0];
+    p.kickCd = 1e6;
+    s.elites = [newElite(p.x + gap, p.y, 1, TOAD_KING.hp, 0, 'toadKing')];
+    return { e, s, p, k: s.elites[0] };
+  }
+
+  it('comes on the marsh elite waves, with a big jiangshi along on the last one', () => {
+    expect(eliteKinds(1, 10, 50)).toEqual(['charger']);
+    expect(eliteKinds(2, 10, 50)).toEqual(['toadKing']);
+    expect(eliteKinds(2, 40, 50)).toEqual(['toadKing', 'charger']);
+    const e = new Engine(MARSH);
+    beginWave(e.state, WAVES.eliteEvery);
+    expect(e.state.elites.map((x) => x.kind)).toEqual(['toadKing']);
+  });
+
+  it('swells, spits a wide fan, then marks poison pools on its next turn', () => {
+    const { e, s, p, k } = king(TOAD_KING.stopDist);
+    e.step([still(e)]);
+    expect(k.phase).toBe('aim');
+    // it marks no lane: the bot and the view leave the charge alone
+    expect(laneDistance(k, p.x, p.y)).toBe(-1);
+    for (let i = 0; i < TOAD_KING.windup; i++) e.step([still(e)]);
+    expect(k.phase).toBe('rest');
+    expect(s.bullets.length).toBe(TOAD_KING.fan);
+    s.bullets.length = 0;
+    for (let i = 0; i < TOAD_KING.rest + TOAD_KING.cooldown + TOAD_KING.windup + 2; i++) e.step([still(e)]);
+    expect(s.bullets.length).toBe(0);
+    expect(s.zones.length).toBe(TOAD_KING.pools);
+    expect(s.zones[0]).toMatchObject({ x: p.x, y: p.y, radius: TOAD_KING.poolRadius });
+  });
+
+  it('hurts a hero who stays in a pool when it goes off', () => {
+    const { e, s, k } = king(TOAD_KING.stopDist);
+    k.shots = 1;
+    let hurt = 0;
+    for (let i = 0; i < TOAD_KING.windup + THREATS.warn + 2; i++) for (const ev of e.step([still(e)])) if (ev.type === 'hurt') hurt += ev.value;
+    expect(s.zones.length).toBe(0);
+    expect(hurt).toBe(HURT.pool);
+  });
+
+  it('walks in to its range, not to the hero, and waits with him out of range', () => {
+    const { e, p, k } = king(3 * TOAD_KING.range);
+    for (let i = 0; i < 30; i++) e.step([still(e)]);
+    expect(k.phase).toBe('walk');
+    for (let i = 0; i < 600 && k.phase === 'walk'; i++) e.step([still(e)]);
+    const d = dist(k.x - p.x, k.y - p.y);
+    expect(d).toBeLessThan(TOAD_KING.range);
+    expect(d).toBeGreaterThan(TOAD_KING.stopDist - 20_000);
   });
 });

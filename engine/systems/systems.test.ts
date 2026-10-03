@@ -7,7 +7,7 @@ import { bossSystem, newBoss } from './boss';
 import { ballSystem, damage, kickTarget, launchBall, nearestTarget } from './combat';
 import { attractAll, dropGem, dropSystem, tierOf } from './drops';
 import { stepHorde } from './horde';
-import { bulletSystem, threatSystem } from './threats';
+import { bulletSystem, threatSystem, zoneSystem } from './threats';
 import { mobHp } from './waves';
 
 /** A state with one player at the origin and nothing else. */
@@ -199,11 +199,11 @@ describe('threats', () => {
     s.mobs.push(newMob(u(400), 0));
     s.zoneT = 1e6;
     const hurt: number[] = [];
-    threatSystem(s, [], (o) => hurt.push(o));
+    threatSystem(s);
     expect(s.bullets.length).toBe(THREATS.fan);
     s.volleyT = 1e6;
     for (let t = 0; t < 40; t++) {
-      threatSystem(s, [], (o) => hurt.push(o));
+      threatSystem(s);
       bulletSystem(s, (o) => hurt.push(o));
     }
     expect(hurt).toEqual([0]);
@@ -215,7 +215,10 @@ describe('threats', () => {
     s.volleyT = 1e6;
     const hurt: number[] = [];
     const events: SimEvent[] = [];
-    for (let t = 0; t < THREATS.warn + 1; t++) threatSystem(s, events, (o) => hurt.push(o));
+    for (let t = 0; t < THREATS.warn + 1; t++) {
+      threatSystem(s);
+      zoneSystem(s, events, (o) => hurt.push(o));
+    }
     expect(events.map((e) => e.type)).toEqual(['blast']);
     const inside = THREATS.zoneSpread <= THREATS.zoneRadius || events.some((e) => e.type === 'blast' && Math.hypot(e.x, e.y) < e.radius);
     expect(hurt.length).toBe(inside ? 1 : 0);

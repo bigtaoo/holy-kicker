@@ -5,7 +5,8 @@ import { sliceSheet, type MobSheet } from './mobView';
 // Chapter 2's mobs, drawn in code at start-up like the wisp (wispSheet.ts) until their art is
 // baked: the water ghost, a drowned figure in a grey-blue robe with a curtain of dark hair,
 // drifting on a rippling hem with its arms reaching out; and the toad, a squat purple-grey
-// toad with red eyes that hops. Both face left, in the sticker style (thick dark outline,
+// toad with red eyes that hops; and the toad king, a bigger slate-teal toad with a jade crown.
+// All face left, in the sticker style (thick dark outline,
 // flat fills, red eyes), on a sheet laid out like a baked one (the frames, then white copies).
 
 const FRAMES = 8;
@@ -83,11 +84,20 @@ function ghost(g: Graphics, ox: number, oy: number, t: number, white: boolean): 
   g.circle(cx - 37 - reach, top + 48, 7.5).fill(GHOST.skin).stroke({ ...line, width: 4 });
 }
 
-const TOAD = { body: 0x7b6d9e, belly: 0xbdb4d6, spot: 0x5b4f7e, outline: 0x19131f };
+interface ToadColors {
+  body: number;
+  belly: number;
+  spot: number;
+  outline: number;
+}
 
-function toad(g: Graphics, ox: number, oy: number, t: number, white: boolean): void {
+const TOAD: ToadColors = { body: 0x7b6d9e, belly: 0xbdb4d6, spot: 0x5b4f7e, outline: 0x19131f };
+const KING: ToadColors = { body: 0x4f7480, belly: 0x9fc4c2, spot: 0x355864, outline: 0x0f1a1f };
+const CROWN = { fill: 0x86e0c8, shade: 0x4fae9a };
+
+function toad(g: Graphics, ox: number, oy: number, t: number, white: boolean, col: ToadColors = TOAD): void {
   const c = (col: number) => (white ? 0xffffff : col);
-  const line = { color: c(TOAD.outline), width: 6, join: 'round' as const };
+  const line = { color: c(col.outline), width: 6, join: 'round' as const };
   const cx = ox + 64;
   // a hop: squat on the ground, stretched in the air
   const air = Math.max(0, Math.sin(t));
@@ -96,23 +106,36 @@ function toad(g: Graphics, ox: number, oy: number, t: number, white: boolean): v
   const sx = 1 / sy;
   const base = oy + 100 - lift;
   // back leg, then the body over it
-  g.ellipse(cx + 28, base - 6, 18 * sx, 11).fill(c(TOAD.body)).stroke(line);
-  g.ellipse(cx, base - 26 * sy, 42 * sx, 27 * sy).fill(c(TOAD.body)).stroke(line);
+  g.ellipse(cx + 28, base - 6, 18 * sx, 11).fill(c(col.body)).stroke(line);
+  g.ellipse(cx, base - 26 * sy, 42 * sx, 27 * sy).fill(c(col.body)).stroke(line);
   if (!white) {
-    g.ellipse(cx - 6, base - 16 * sy, 28 * sx, 12 * sy).fill(TOAD.belly);
-    for (const [dx, dy, r] of [[14, -40, 6], [26, -28, 5], [2, -46, 4]]) g.circle(cx + dx * sx, base + dy * sy, r).fill(TOAD.spot);
+    g.ellipse(cx - 6, base - 16 * sy, 28 * sx, 12 * sy).fill(col.belly);
+    for (const [dx, dy, r] of [[14, -40, 6], [26, -28, 5], [2, -46, 4]]) g.circle(cx + dx * sx, base + dy * sy, r).fill(col.spot);
     g.moveTo(cx - 40 * sx, base - 26 * sy).quadraticCurveTo(cx - 28 * sx, base - 18 * sy, cx - 12 * sx, base - 24 * sy)
-      .stroke({ color: TOAD.outline, width: 4, cap: 'round' });
+      .stroke({ color: col.outline, width: 4, cap: 'round' });
   }
   // front feet
-  for (const dx of [-30, -14]) g.ellipse(cx + dx * sx, base - 2, 9, 6).fill(c(TOAD.body)).stroke({ ...line, width: 4 });
+  for (const dx of [-30, -14]) g.ellipse(cx + dx * sx, base - 2, 9, 6).fill(c(col.body)).stroke({ ...line, width: 4 });
   // eye bumps on top, toward the front
   for (const dx of [-24, -6]) {
     const ex = cx + dx * sx;
     const ey = base - 50 * sy;
-    g.circle(ex, ey, 10).fill(c(TOAD.body)).stroke(line);
-    if (!white) g.circle(ex - 1, ey, 5).fill(EYE).stroke({ color: TOAD.outline, width: 2 });
+    g.circle(ex, ey, 10).fill(c(col.body)).stroke(line);
+    if (!white) g.circle(ex - 1, ey, 5).fill(EYE).stroke({ color: col.outline, width: 2 });
   }
+}
+
+/** The toad king: the toad in its own colours, with a three-pointed jade crown between its eyes. */
+function toadKing(g: Graphics, ox: number, oy: number, t: number, white: boolean): void {
+  toad(g, ox, oy + 14, t, white, KING);
+  const c = (col: number) => (white ? 0xffffff : col);
+  const air = Math.max(0, Math.sin(t));
+  const sy = 1 + air * 0.1 - (1 - air) * 0.04;
+  const cx = ox + 64 - 15 / sy;
+  const base = oy + 114 - air * 14 - 56 * sy;
+  g.poly([cx - 15, base, cx - 17, base - 20, cx - 8, base - 10, cx, base - 24, cx + 8, base - 10, cx + 17, base - 20, cx + 15, base], true)
+    .fill(c(CROWN.fill)).stroke({ color: c(KING.outline), width: 5, join: 'round' });
+  if (!white) g.rect(cx - 14, base - 6, 28, 5).fill(CROWN.shade);
 }
 
 export function waterGhostSheet(renderer: Renderer): MobSheet {
@@ -120,5 +143,9 @@ export function waterGhostSheet(renderer: Renderer): MobSheet {
 }
 
 export function toadSheet(renderer: Renderer): MobSheet {
-  return bakeSheet(renderer, { w: 128, h: 112, foot: 102, height: 72, fps: 9, draw: toad, lift: (t) => Math.max(0, Math.sin(t)) * 14 });
+  return bakeSheet(renderer, { w: 128, h: 112, foot: 102, height: 72, fps: 9, draw: (g, x, y, t, w) => toad(g, x, y, t, w), lift: (t) => Math.max(0, Math.sin(t)) * 14 });
+}
+
+export function toadKingSheet(renderer: Renderer): MobSheet {
+  return bakeSheet(renderer, { w: 128, h: 126, foot: 116, height: 96, fps: 7, draw: toadKing, lift: (t) => Math.max(0, Math.sin(t)) * 14 });
 }

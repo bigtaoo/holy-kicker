@@ -198,7 +198,7 @@ or a new single image is cheap; elites and bosses cost a rig each.
 | Runner | Fast, low health | Done (the fox: 185/s, 60 % health) |
 | Swarm | Many tiny, die in one hit | Done (the ghost wisp: packs of 10) |
 | Shooter | Stops at range, fires a 3-bullet fan | Done (the toad, chapter 2) |
-| Zone caster | Marks a ground circle, blasts after a warning | Done (threats, test only) |
+| Zone caster | Marks a ground circle, blasts after a warning | Done (the toad king's pools; threats test) |
 | Charger | Telegraphs a line, then dashes along it | Done (the big jiangshi elite) |
 | Emerger | Appears from a ground mark next to the hero | Done (the water ghost, chapter 2) |
 | Splitter | Splits into 2 small ones on death | New |
@@ -239,6 +239,20 @@ or a new single image is cheap; elites and bosses cost a rig each.
   chapter 1 is unchanged (casual 35/40). The
   first tuning (toads every 6th firing every 3 s, ghosts every 4th rising 140–320 away,
   bullets and rising 8–10) had the casual bot win 7/40 and die around wave 21.
+- **The toad king** (`CHAPTER_ELITES`, `TOAD_KING` in `engine/config.ts`, `stepToadKing` in
+  `engine/systems/marsh.ts`, ENGINE_VERSION 17). Elites have a kind; each chapter has its
+  own, and the last elite wave (40) brings the previous chapter's along (the big jiangshi on
+  the marsh). The toad king (400 health) walks at 120/s to 380 from the hero and, with him
+  within 800 and its 2 s cooldown done, swells for 0.8 s, then in turn spits a 5-bullet fan
+  at him or marks 3 poison pools (radius 140: one on him, two within 140–300 of him) that go
+  off after the usual 1.2 s warning for 12, and sits 0.6 s. Zones now carry their own
+  damage and age in every run, not only the threats test. Hits push it only 30 (the big
+  jiangshi 160): with the full push it was knocked out of the ball's kick range and lived
+  60–500 s (the big jiangshi on the marsh: 10–170 s, median about 35 s); now 3–270 s, median
+  about 45 s. The bot keeps 90 clear of a marked zone. It is the toad drawn bigger in
+  slate teal with a jade crown (`toadKingSheet`). Balance (40 runs): chapter 2 casual 22/40
+  (level 31), skilled 26/40; staff 13, fish 13, beads 12, bowl 8 out of 20; chapter 1
+  unchanged (35/40).
 
 ## Chapters (5)
 
@@ -247,8 +261,8 @@ mobs (lesson from the readability test: grass works best).
 
 | # | Ground | Mobs | Elites | Mid-boss (25) | Boss (50) |
 |---|---|---|---|---|---|
-| 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
-| 2 | **Misty Marsh** / 雾沼: reeds, shallow water | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone) | Fallen Abbot, empowered | **Black Carp King** / 黑鱼精: dives, surfaces with a shockwave |
+| 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger, implemented) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
+| 2 | **Misty Marsh** / 雾沼: reeds, shallow water | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered | **Black Carp King** / 黑鱼精: dives, surfaces with a shockwave |
 | 3 | **Snow Pass** / 雪岭: snow, pines | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour | Wolf leader (charger + howl buffs) | Black Carp, empowered | **Bone Witch** / 白骨精: summons skeletons (splitters) |
 | 4 | **Ghost Market** / 鬼市: night street, blue lanterns | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) | Door god statue (shielder) | Bone Witch, empowered | **Underworld Judge** / 判官: writes zones in lines, changes them mid-fight |
 | 5 | **Demon Peak** / 魔窟: dark rock, purple fire | Fallen monk (shielder), shadow (runner), every earlier type | Two elites at once | Underworld Judge, empowered | **Inner Demon** / 心魔: a cold-coloured copy of the hero, uses the player's own relic |
@@ -256,7 +270,7 @@ mobs (lesson from the readability test: grass works best).
 - The Inner Demon reuses the hero rig with a cold recolour, which saves a full boss rig and
   is the story beat: the last enemy is yourself.
 - Elite waves (10/20/30/40) use the chapter's elites; wave 40 adds one from the previous
-  chapter.
+  chapter (implemented).
 - Art budget at launch: about 12 new mob images, 5 elites, 4 new boss rigs.
 
 ## Story (light)

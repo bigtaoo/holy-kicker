@@ -1,5 +1,5 @@
 import { Graphics, type Container, type Renderer, type Sprite } from 'pixi.js';
-import { DASH_TICKS, ELITE, FP, type Elite } from '@hk/engine';
+import { DASH_TICKS, ELITE, FP, TOAD_KING, type Elite, type EliteKind } from '@hk/engine';
 import type { BossBar } from './bossBar';
 import { lerpX, lerpY } from './fixedStep';
 import { MobView, type MobLook } from './mobView';
@@ -9,11 +9,15 @@ import { makeRing } from './stageArt';
 // over a ring that marks it in the crowd. While it aims it crouches and trembles and its lane
 // is marked on the ground in the enemy-attack violet, filling in as the dash nears; during
 // the dash it hops at a run and the lane ahead of it fades out; resting, it barely moves.
+// Chapter 2's toad king (engine systems/marsh.ts) marks no lane: it swells up as it winds up,
+// and its bullets and pools are drawn by the threat layer.
 
 const VIOLET = 0xb04cff;
 const OUTLINE = 0x140c18;
 /** Closer to the hero than this (world units), it has stopped walking. */
-const STOP = ELITE.stopDist / FP;
+const STOP: Record<EliteKind, number> = { charger: ELITE.stopDist / FP, toadKing: TOAD_KING.stopDist / FP };
+/** How much the toad king swells at the end of its wind-up. */
+const SWELL = 0.18;
 
 export class EliteView {
   readonly mob: MobView;
@@ -21,7 +25,9 @@ export class EliteView {
   private time = 0;
 
   /** `onTop` draws it and its ring over the horde, just under `topZ` (the hero). */
-  constructor(world: Container, look: MobLook, private readonly ring: Sprite, tint: number, onTop: boolean, topZ: number) {
+  constructor(
+    readonly kind: EliteKind, world: Container, look: MobLook, private readonly ring: Sprite, tint: number, onTop: boolean, topZ: number,
+  ) {
     this.mob = new MobView(look, world);
     this.mob.tint(tint);
     if (onTop) {
@@ -41,20 +47,24 @@ export class EliteView {
   draw(e: Elite | null, alpha: number, dt: number, hx: number, hy: number): void {
     this.mob.setVisible(!!e);
     this.ring.visible = !!e;
-    this.lane.visible = !!e && (e.phase === 'aim' || e.phase === 'dash');
+    const charger = this.kind === 'charger';
+    this.lane.visible = !!e && charger && (e.phase === 'aim' || e.phase === 'dash');
     if (!e) return;
     this.time += dt;
     let x = lerpX(e, alpha);
     const y = lerpY(e, alpha);
-    let speed = Math.hypot(x - hx, y - hy) > STOP + 5 ? 1 : 0.35;
+    let speed = Math.hypot(x - hx, y - hy) > STOP[this.kind] + 5 ? 1 : 0.35;
+    this.mob.swell = !charger && e.phase === 'aim' && e.stun === 0 ? SWELL * Math.min(1, (e.t + alpha) / TOAD_KING.windup) : 0;
     if (e.stun > 0) speed = 0;
-    else if (e.phase === 'aim') {
+    else if (!charger) {
+      if (e.phase !== 'walk') speed = e.phase === 'aim' ? 0 : 0.25;
+    } else if (e.phase === 'aim') {
       speed = 0;
       x += Math.sin(this.time * 70) * 4;
     } else if (e.phase === 'dash') speed = 2.6;
     else if (e.phase === 'rest') speed = 0.25;
     // it faces along its charge, else at the hero
-    const face = e.phase === 'aim' || e.phase === 'dash' ? e.vx : hx - x;
+    const face = charger && (e.phase === 'aim' || e.phase === 'dash') ? e.vx : hx - x;
     this.mob.update(dt, x, y, face, speed);
     this.ring.position.set(x, y);
     if (this.lane.visible) this.drawLane(e, alpha);
@@ -90,13 +100,14 @@ export class EliteView {
 /**
  * Every elite standing (one, or the mid-boss twins), each drawn by its own EliteView: a view
  * keeps the elite it took by id while that one stands, so a twin falling does not swap the
- * other's look or lane. View k uses tints[k]; the twins share one health bar.
+ * other's look or lane; a free view takes only an elite of its kind. `make(k, kind)` makes the
+ * k-th view; the twins share one health bar.
  */
 export class EliteCrowd {
   private readonly views: EliteView[] = [];
   private readonly ids: number[] = [];
 
-  constructor(private readonly make: (k: number) => EliteView, readonly bar: BossBar | null) {
+  constructor(private readonly make: (k: number, kind: EliteKind) => EliteView, readonly bar: BossBar | null) {
     if (bar) bar.view.visible = false;
   }
 
@@ -111,10 +122,10 @@ export class EliteCrowd {
     for (let k = 0; k < this.ids.length; k++) if (!elites.some((e) => e.id === this.ids[k])) this.ids[k] = -1;
     for (const e of elites) {
       if (this.ids.includes(e.id)) continue;
-      let k = this.ids.indexOf(-1);
+      let k = this.ids.findIndex((id, j) => id === -1 && this.views[j].kind === e.kind);
       if (k < 0) {
         k = this.views.length;
-        this.views.push(this.make(k));
+        this.views.push(this.make(k, e.kind));
         this.ids.push(-1);
       }
       this.ids[k] = e.id;

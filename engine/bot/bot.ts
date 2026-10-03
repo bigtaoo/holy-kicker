@@ -13,7 +13,7 @@ import { laneDistance } from '../systems/elite';
 // sim, so a bot run is as reproducible as a replay.
 //
 // Moving: when enemies press close, it steps to the open side (the boss's marked slam circle
-// and the elite's marked charge lane count most); with nothing pressing, it walks to the nearest gem or stands. With the staff
+// the elite's marked charge lane and marked zones count most); with nothing pressing, it walks to the nearest gem or stands. With the staff
 // the wooden fish or the prayer beads it goes after the elite and the boss and lets them into the relic's reach
 // (it still runs from a slam).
 // `skilled` re-decides every tenth of a second, `casual` every 0.4 s and holds the stick in
@@ -47,6 +47,8 @@ const CLOSE_IN: Record<RelicId, CloseIn | null> = {
 /** A bullet's path counts this many ticks ahead, and this far either side of it. */
 const BULLET_AHEAD = 30;
 const NEAR_BULLET = toFp(130);
+/** Keep this much further than its radius from a marked zone. */
+const ZONE_MARGIN = toFp(90);
 /** Keep this far from a marked charge lane. */
 const LANE = toFp(200);
 const GEM_REACH = toFp(900);
@@ -76,6 +78,8 @@ function danger(s: SimState, x: number, y: number, close: CloseIn | null): numbe
     const k = Math.max(0, Math.min(BULLET_AHEAD, Math.trunc(((x - b.x) * b.vx + (y - b.y) * b.vy) / vv)));
     add(b.x + b.vx * k, b.y + b.vy * k, NEAR_BULLET, 8);
   }
+  // a marked zone (a toad king's pool) counts like the slam circle
+  for (const z of s.zones) add(z.x, z.y, z.radius + ZONE_MARGIN, 40);
   const b = s.boss;
   const boss = b && b.phase !== 'down' ? b : null;
   let near: Elite | null = null;

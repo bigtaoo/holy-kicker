@@ -5,8 +5,9 @@ import { atan2B, cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { SimState } from '../state';
 import { nearestPlayer } from './horde';
 
-// Enemy attacks: bullets (fired by shooters, systems/marsh.ts, or for the readability test
-// from random mobs near a player) and ground zones that warn first and then blast.
+// Enemy attacks: bullets (fired by shooters and the toad king, systems/marsh.ts, or for the
+// readability test from random mobs near a player) and ground zones that warn first and then
+// blast (the toad king's poison pools, or the test's random ones).
 
 /** Flies every bullet; one that meets a player hurts him and is gone. */
 export function bulletSystem(s: SimState, hurt: (owner: number, value: number) => void): void {
@@ -31,7 +32,8 @@ export function bulletSystem(s: SimState, hurt: (owner: number, value: number) =
   s.bullets.length = w;
 }
 
-export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+/** The readability test's attacks: fans from random mobs and random zones. */
+export function threatSystem(s: SimState): void {
   const p = THREATS;
   if (--s.volleyT <= 0) {
     s.volleyT += p.volleyEvery;
@@ -41,7 +43,11 @@ export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: numb
     s.zoneT += p.zoneEvery;
     place(s);
   }
+}
 
+/** Ages every zone; one at THREATS.warn goes off, hurting the players in it. */
+export function zoneSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+  const p = THREATS;
   let w = 0;
   for (const z of s.zones) {
     z.age++;
@@ -50,17 +56,17 @@ export function threatSystem(s: SimState, events: SimEvent[], hurt: (owner: numb
       continue;
     }
     events.push({ type: 'blast', x: z.x, y: z.y, radius: z.radius });
-    for (const pl of s.players) if (dist2(z.x - pl.x, z.y - pl.y) < z.radius * z.radius) hurt(pl.owner, HURT.zone);
+    for (const pl of s.players) if (dist2(z.x - pl.x, z.y - pl.y) < z.radius * z.radius) hurt(pl.owner, z.hurt);
   }
   s.zones.length = w;
 }
 
-/** A fan of THREATS.fan bullets from (x, y) aimed at (tx, ty). */
-export function fan(s: SimState, x: number, y: number, tx: number, ty: number): void {
+/** A fan of `n` bullets from (x, y) aimed at (tx, ty). */
+export function fan(s: SimState, x: number, y: number, tx: number, ty: number, n = THREATS.fan): void {
   const p = THREATS;
   const aim = atan2B(ty - y, tx - x);
-  for (let i = 0; i < p.fan; i++) {
-    const a = aim + Math.trunc(((2 * i - (p.fan - 1)) * p.fanStep) / 2);
+  for (let i = 0; i < n; i++) {
+    const a = aim + Math.trunc(((2 * i - (n - 1)) * p.fanStep) / 2);
     const vx = Math.trunc((cosB(a) * p.bulletSpeed) / TRIG_ONE);
     const vy = Math.trunc((sinB(a) * p.bulletSpeed) / TRIG_ONE);
     s.bullets.push({ x, y, px: x, py: y, vx, vy, age: 0 });
@@ -88,6 +94,6 @@ function place(s: SimState): void {
   const a = s.ai.int(65536);
   const r = s.ai.int(p.zoneSpread + 1);
   s.zones.push({
-    x: t.x + Math.trunc((cosB(a) * r) / TRIG_ONE), y: t.y + Math.trunc((sinB(a) * r) / TRIG_ONE), radius: p.zoneRadius, age: 0,
+    x: t.x + Math.trunc((cosB(a) * r) / TRIG_ONE), y: t.y + Math.trunc((sinB(a) * r) / TRIG_ONE), radius: p.zoneRadius, age: 0, hurt: HURT.zone,
   });
 }

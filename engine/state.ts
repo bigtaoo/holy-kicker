@@ -1,4 +1,4 @@
-import { ELITE, HERO, type MobKind, type RunConfig } from './config';
+import { ELITE, HERO, type EliteKind, type MobKind, type RunConfig } from './config';
 import type { Card, PassiveId, RelicId, SpellId } from './content';
 import { Prng } from './math/prng';
 
@@ -91,16 +91,22 @@ export function underground(m: Mob): boolean {
   return m.kind === 'emerger' && m.t > 0;
 }
 
-/** The elite walks in, then aims a charge, dashes along it and catches its breath. */
+/**
+ * The elite walks in, then aims a charge, dashes along it and catches its breath; a toad king
+ * swells (aim) and spits, then sits (rest).
+ */
 export type ElitePhase = 'walk' | 'aim' | 'dash' | 'rest';
 
 export interface Elite extends Body {
   /** Stable while it stands, so the view can tell the twins apart as others fall. */
   id: number;
+  kind: EliteKind;
   hp: number;
   maxHp: number;
   stun: number;
   phase: ElitePhase;
+  /** Attacks made: a toad king takes turns between its fan and its pools. */
+  shots: number;
   /** Ticks into the phase. */
   t: number;
   /** Ticks until it may charge again. */
@@ -153,6 +159,8 @@ export interface Zone {
   y: number;
   radius: number;
   age: number;
+  /** Damage when it goes off. */
+  hurt: number;
 }
 
 export interface Gem extends Body {
@@ -339,6 +347,6 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
   };
 }
 
-export function newElite(x: number, y: number, id = 0, hp = ELITE.hp, cd = ELITE.cooldown): Elite {
-  return { ...body(x, y), id, hp, maxHp: hp, stun: 0, phase: 'walk', t: 0, cd, vx: 0, vy: 0 };
+export function newElite(x: number, y: number, id = 0, hp = ELITE.hp, cd = ELITE.cooldown, kind: EliteKind = 'charger'): Elite {
+  return { ...body(x, y), id, kind, hp, maxHp: hp, stun: 0, phase: 'walk', shots: 0, t: 0, cd, vx: 0, vy: 0 };
 }
