@@ -13,7 +13,7 @@ const FRAMES = 8;
 const COLS = 4;
 const EYE = 0xff3048;
 
-interface Spec {
+export interface Spec {
   w: number;
   h: number;
   /** The figure's foot in frame px. */
@@ -25,7 +25,7 @@ interface Spec {
   lift: (t: number) => number;
 }
 
-function bakeSheet(renderer: Renderer, spec: Spec): MobSheet {
+export function bakeSheet(renderer: Renderer, spec: Spec): MobSheet {
   const box = new Container();
   const g = new Graphics();
   box.addChild(g);

@@ -24,7 +24,7 @@ import { beginWave, waveSystem } from './systems/waves';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 18;
+export const ENGINE_VERSION = 19;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',

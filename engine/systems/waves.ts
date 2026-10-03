@@ -1,4 +1,4 @@
-import { CHAPTER_ELITES, CHAPTER_MOBS, ELITE, EMPOWERED, HORDE, MIX, MOB_KINDS, SHRINE, TOAD_KING, WAVES, type EliteKind, type MobKind } from '../config';
+import { BOSS, CARP, CHAPTER_BOSSES, CHAPTER_ELITES, CHAPTER_MOBS, ELITE, EMPOWERED, HORDE, MIX, MOB_KINDS, SHRINE, TOAD_KING, WAVES, type BossKind, type EliteKind, type MobKind } from '../config';
 import type { SimEvent } from '../events';
 import { body, newElite, newMob, type SimState } from '../state';
 import { newBoss } from './boss';
@@ -11,7 +11,7 @@ import { resetMob } from './marsh';
 // on swarm waves), the chapter's elite comes every tenth wave (the last of them brings the
 // previous chapter's elite along), and the boss waves last until their boss falls:
 // the mid-boss is two elites, the twin big jiangshi, in chapter 1 and the empowered Fallen
-// Abbot after it, and the last wave has the chapter boss. The chapter boss falling wins the run;
+// Abbot after it, and the last wave has the chapter boss (CHAPTER_BOSSES). The chapter boss falling wins the run;
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
 
@@ -36,6 +36,11 @@ export function newcomer(chapter: number, wave: number, n: number): MobKind {
 /** The elite of chapter `chapter` (CHAPTER_ELITES; before the first, none). */
 export function chapterElite(chapter: number): EliteKind {
   return CHAPTER_ELITES[Math.min(Math.max(chapter, 1), CHAPTER_ELITES.length) - 1];
+}
+
+/** The boss of chapter `chapter` (CHAPTER_BOSSES). */
+export function chapterBoss(chapter: number): BossKind {
+  return CHAPTER_BOSSES[Math.min(Math.max(chapter, 1), CHAPTER_BOSSES.length) - 1];
 }
 
 /** The elites coming on elite wave `wave`: the chapter's, and on the last one the previous chapter's too. */
@@ -111,7 +116,8 @@ export function beginWave(s: SimState, wave: number): void {
     s.elites.push(a, b);
   } else if (isBossWave(wave, last) && !s.boss) {
     ringPoint(s.ai, p.x, p.y, at);
-    s.boss = newBoss(at.x, at.y);
+    const kind = chapterBoss(s.config.chapter);
+    s.boss = newBoss(at.x, at.y, kind === 'carp' ? CARP.hp : BOSS.hp, false, kind);
   }
 }
 

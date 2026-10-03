@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
-  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
+  beadsRings, chapterBoss, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
   type MobKind, type RelicId, type RunConfig, type SimEvent, type SimState, type SutraId,
 } from '@hk/engine';
 import { t } from '../i18n';
@@ -26,6 +26,8 @@ import { toadKingSheet, toadSheet, waterGhostSheet } from './marshSheets';
 import { HordeView, MOB_HEIGHT } from './hordeView';
 import { AuraStack } from './aura';
 import { Boss } from './bossView';
+import { BossStage } from './bossStage';
+import { CarpView } from './carpView';
 import { SpellView } from './spellView';
 import { SutraView } from './sutraView';
 import type { TaoAsset } from './tao/TaoActor';
@@ -131,7 +133,7 @@ export class Game {
   private readonly fish: FishTaps;
   private readonly beads: BeadsView;
   private readonly bowls: BowlView;
-  private readonly boss: Boss | null;
+  private readonly boss: BossStage | null;
   private readonly spells: SpellView;
   private readonly sutras: SutraView;
   private readonly aura: AuraStack;
@@ -217,15 +219,18 @@ export class Game {
         kind === 'toadKing' ? 0xffffff : ELITE_TINTS[k % ELITE_TINTS.length], scene.eliteRing, HERO_TOP_Z,
       ), chapter ? new BossBar(t('boss.twins')) : null);
     }
-    this.boss = art.boss && (s.boss || chapter) ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;
+    // chapter 2 on ends with the Black Carp King (CHAPTER_BOSSES); the abbot is still its mid-boss
+    const abbot = art.boss && (s.boss || chapter) ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;
+    const carp = chapter && chapterBoss(setup.chapter) === 'carp' ? new CarpView(app.renderer, this.world, shadowTex, scene.bossSize, this.fx.pool) : null;
+    this.boss = abbot || carp ? new BossStage(abbot, carp) : null;
     // like the elite, the boss draws over the horde
-    if (this.boss && scene.eliteRing) this.boss.view.zIndex = HERO_TOP_Z - 1;
+    if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
     this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx);
     this.aura = new AuraStack(scene.stack);
 
     this.root.addChild(this.world, this.label);
-    if (this.boss) this.root.addChild(this.boss.hud);
+    if (this.boss) this.root.addChild(...this.boss.huds);
     if (this.elites?.bar) this.root.addChild(this.elites.bar.view);
     this.root.mask = this.playMask;
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer, STICK_RADIUS);
@@ -370,17 +375,20 @@ export class Game {
         case 'emerge':
           this.horde.emerge(e.x / FP, e.y / FP);
           break;
+        case 'bossDive':
+          if (s.boss) this.boss?.dive(s.boss, e.x / FP, e.y / FP);
+          break;
         case 'bossWindup':
           if (s.boss) this.boss?.windup(s.boss);
           break;
         case 'bossSlam':
-          this.boss?.impact(e.x / FP, e.y / FP, e.radius / FP);
+          if (s.boss) this.boss?.impact(s.boss, e.x / FP, e.y / FP, e.radius / FP);
           break;
         case 'bossDown':
           if (s.boss) this.boss?.down(s.boss);
           break;
         case 'bossBack':
-          this.boss?.back();
+          if (s.boss) this.boss?.back(s.boss);
           break;
         case 'blast':
           this.threats?.blast(e.x / FP, e.y / FP, e.radius / FP);
@@ -448,8 +456,7 @@ export class Game {
     this.damage.update(dt, hx, hy);
     this.drops.draw(s.gems, alpha);
     this.threats?.draw(s.bullets, s.zones, alpha);
-    if (this.boss) this.boss.show(!!s.boss);
-    if (this.boss && s.boss) this.boss.draw(s.boss, alpha, dt, hx);
+    this.boss?.draw(s.boss, alpha, dt, hx);
 
     // Camera: ease after the hero towards the centre of the play area, on whole pixels.
     const vp = this.vp;

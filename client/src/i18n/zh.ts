@@ -119,6 +119,7 @@ export const zh: Table<typeof en> = {
     abbot: '堕落方丈',
     twins: '双煞僵尸',
     empowered: '狂化方丈',
+    carp: '黑鱼精',
   },
   codex: {
     title: '图鉴 {n}/{total}',

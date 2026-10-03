@@ -1,8 +1,9 @@
-import { BOSS, EMPOWERED, HURT } from '../config';
+import { BOSS, CARP, EMPOWERED, HURT, type BossKind } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import { body, teleport, type Boss, type SimState } from '../state';
+import { stepCarp } from './carp';
 import { nearestPlayer } from './horde';
 import { ring } from './threats';
 
@@ -11,10 +12,13 @@ import { ring } from './threats';
 // out; after the slam it stands winded for a moment. Defeated, it lies down; in a chapter it
 // is then gone (systems/waves.ts), in the sandbox it comes back later from a random side.
 // Empowered (the later chapters' mid-boss), it rests less and every slam also sends a bullet
-// ring out from the rim of its circle, to slip through between the bullets.
+// ring out from the rim of its circle, to slip through between the bullets. The Black Carp
+// King (chapter 2's boss) shares the walk, the fall and the return, and attacks its own way
+// (systems/carp.ts).
 
-export function newBoss(x: number, y: number, hp = BOSS.hp, empowered = false): Boss {
-  return { ...body(x, y), phase: 'walk', t: 0, cooldown: BOSS.cooldown, zoneX: x, zoneY: y, hp, maxHp: hp, empowered };
+export function newBoss(x: number, y: number, hp = BOSS.hp, empowered = false, kind: BossKind = 'abbot'): Boss {
+  const cooldown = kind === 'carp' ? CARP.cooldown : BOSS.cooldown;
+  return { ...body(x, y), kind, phase: 'walk', t: 0, cooldown, zoneX: x, zoneY: y, hp, maxHp: hp, empowered };
 }
 
 /** Takes damage; true when this blow brings it down. */
@@ -44,10 +48,15 @@ export function bossSystem(s: SimState, events: SimEvent[], hurt: (owner: number
       target.y + Math.trunc((sinB(a) * BOSS.respawnDist) / TRIG_ONE),
       b.maxHp,
       b.empowered,
+      b.kind,
     );
     Object.assign(b, back);
     teleport(b, back.x, back.y);
     events.push({ type: 'bossBack' });
+    return;
+  }
+  if (b.kind === 'carp') {
+    stepCarp(s, b, target, events, hurt);
     return;
   }
   const dx = target.x - b.x;

@@ -2,7 +2,7 @@ import { BALL, DAMAGE, ELITE, MIX, TOAD_KING } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
-import { underground, type Ball, type Body, type Elite, type Player, type SimState } from '../state';
+import { submerged, underground, type Ball, type Body, type Elite, type Player, type SimState } from '../state';
 import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
@@ -30,11 +30,11 @@ export function eliteAt(s: SimState, i: number): Elite | null {
   return i >= s.mobs.length ? (s.elites[i - s.mobs.length] ?? null) : null;
 }
 
-/** Target i, or null if it is not there (an emerger under the ground, the boss lying defeated, or no boss). */
+/** Target i, or null if it is not there (an emerger under the ground, the boss lying defeated or under water, or no boss). */
 export function targetAt(s: SimState, i: number): Body | null {
   if (i < s.mobs.length) return underground(s.mobs[i]) ? null : s.mobs[i];
   if (i < bossIndex(s)) return s.elites[i - s.mobs.length];
-  if (i === bossIndex(s) && s.boss && s.boss.phase !== 'down') return s.boss;
+  if (i === bossIndex(s) && s.boss && s.boss.phase !== 'down' && !submerged(s.boss)) return s.boss;
   return null;
 }
 

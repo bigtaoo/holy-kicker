@@ -1,4 +1,4 @@
-import { ELITE, HERO, type EliteKind, type MobKind, type RunConfig } from './config';
+import { ELITE, HERO, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
 import type { Card, PassiveId, RelicId, SpellId } from './content';
 import { Prng } from './math/prng';
 
@@ -119,9 +119,11 @@ export interface Elite extends Body {
 /** Still going, the chapter boss fell (won) or every hero is down (lost, until a revive). */
 export type Outcome = 'playing' | 'won' | 'lost';
 
-export type BossPhase = 'walk' | 'windup' | 'recover' | 'down';
+/** The carp adds 'dive' (under water, swimming after the hero) and 'rise' (its circle locked). */
+export type BossPhase = 'walk' | 'windup' | 'recover' | 'down' | 'dive' | 'rise';
 
 export interface Boss extends Body {
+  kind: BossKind;
   phase: BossPhase;
   /** Ticks into the phase. */
   t: number;
@@ -132,6 +134,11 @@ export interface Boss extends Body {
   maxHp: number;
   /** The empowered mid-boss (EMPOWERED): its slams also send out a bullet ring. */
   empowered: boolean;
+}
+
+/** Under water (the carp diving or rising): out of reach, and nothing to bump into. */
+export function submerged(b: Boss): boolean {
+  return b.phase === 'dive' || b.phase === 'rise';
 }
 
 export interface Ball extends Body {

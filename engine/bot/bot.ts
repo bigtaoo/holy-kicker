@@ -92,7 +92,9 @@ function danger(s: SimState, x: number, y: number, close: CloseIn | null): numbe
   }
   // a close-in relic goes after the nearest elite
   if (near && !boss) chase(near.x, near.y);
-  if (boss) {
+  // the carp under water is nothing to bump into, and its circle once locked counts like the slam's
+  if (boss && boss.phase === 'rise') add(boss.zoneX, boss.zoneY, toFp(460), 40);
+  else if (boss && boss.phase !== 'dive') {
     add(boss.x, boss.y, close ? close.near : NEAR_BOSS, 6);
     if (boss.phase === 'windup') add(boss.zoneX, boss.zoneY, toFp(480), 40);
     else chase(boss.x, boss.y);

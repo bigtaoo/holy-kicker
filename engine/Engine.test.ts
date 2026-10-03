@@ -85,8 +85,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-03 for ENGINE_VERSION 18 (chapter 2's empowered abbot mid-boss). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(18);
+    // Recorded 2026-10-03 for ENGINE_VERSION 19 (chapter 2's boss, the Black Carp King). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(19);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -104,6 +104,6 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 867906798;
+const GOLDEN = 404698850;
 const GOLDEN_CHAPTER = 4016560337;
 const GOLDEN_MARSH = 3906147382;

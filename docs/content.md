@@ -261,6 +261,21 @@ or a new single image is cheap; elites and bosses cost a rig each.
   its bar reads "Fallen Abbot, Empowered" / 狂化方丈. Balance (40 runs, chapter 2 casual):
   21/40 (22 before), skilled 25/40 (26); it falls in a median 76 s (the twins 72 s), and
   4 runs end on waves 25–29 against 7 with the twins.
+- **The Black Carp King** (`CARP`, `CHAPTER_BOSSES` in `engine/config.ts`, `stepCarp` in
+  `engine/systems/carp.ts`, ENGINE_VERSION 19). Bosses have a kind; chapter 2's last wave
+  brings the carp. It swims after the hero at 110/s to 160 from him and every 3 s dives: for
+  1.2 s it is out of reach (no kicks, no contact) and swims under him at 520/s, then locks a
+  circle of radius 240 where he stands and rises under it for 1 s. Surfacing hurts him inside
+  for 25 and sends a ring of 12 bullets out from the rim; it then lies winded for 1.2 s, the
+  time to kick it. It comes to the hero, so it is kicked far more than the abbot the bot keeps
+  away from (the abbot on wave 50 lived a median 181 s; the carp with 2400 health 52 s, less
+  than the mid-boss), so it has 4000: a median 88 s casual, 78 s skilled. On screen it is drawn
+  in code (`carpSheet`) until it gets a rig: an ink-slate carp standing out of the shallows,
+  purple fins, barbels, red eyes and a jade crown; under water a dark shape with ripples and a
+  fin, its circle in the attack violet, a splash when it dives and surfaces; the bar reads
+  "Black Carp King" / 黑鱼精. `BossStage` (client) sends the boss events to the abbot's or the
+  carp's view by kind. Balance (40 runs, chapter 2): casual 17/40 (21 with the abbot), 5 runs
+  lost on wave 50 (1); skilled 24/40 (25), 3 lost on wave 50.
 
 ## Chapters (5)
 
@@ -270,7 +285,7 @@ mobs (lesson from the readability test: grass works best).
 | # | Ground | Mobs | Elites | Mid-boss (25) | Boss (50) |
 |---|---|---|---|---|---|
 | 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger, implemented) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
-| 2 | **Misty Marsh** / 雾沼: reeds, shallow water | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精: dives, surfaces with a shockwave |
+| 2 | **Misty Marsh** / 雾沼: reeds, shallow water | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精 (implemented): dives, surfaces with a shockwave |
 | 3 | **Snow Pass** / 雪岭: snow, pines | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour | Wolf leader (charger + howl buffs) | Black Carp, empowered | **Bone Witch** / 白骨精: summons skeletons (splitters) |
 | 4 | **Ghost Market** / 鬼市: night street, blue lanterns | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) | Door god statue (shielder) | Bone Witch, empowered | **Underworld Judge** / 判官: writes zones in lines, changes them mid-fight |
 | 5 | **Demon Peak** / 魔窟: dark rock, purple fire | Fallen monk (shielder), shadow (runner), every earlier type | Two elites at once | Underworld Judge, empowered | **Inner Demon** / 心魔: a cold-coloured copy of the hero, uses the player's own relic |

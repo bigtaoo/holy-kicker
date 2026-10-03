@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { BOSS, DEFAULT_RUN, EMERGE, EMPOWERED, HURT, SHOOTER, THREATS, TOAD_KING, WAVES, type RunConfig } from '../config';
+import { BOSS, CARP, DEFAULT_RUN, EMERGE, EMPOWERED, HURT, SHOOTER, THREATS, TOAD_KING, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import type { PlayerCommand } from '../input';
 import { dist } from '../math/fixed';
 import { newElite, newMob, underground, type Mob } from '../state';
-import { downMob, targetAt } from './combat';
+import { bossIndex, downMob, targetAt } from './combat';
 import { laneDistance } from './elite';
 import { newBoss } from './boss';
-import { beginWave, eliteKinds, newcomer } from './waves';
+import { beginWave, chapterBoss, eliteKinds, newcomer } from './waves';
 
 // Chapter 2's mobs (docs/content.md "Chapters"): water ghosts that rise from a mark next to
 // the hero, and toads that stop at range and spit bullet fans.
@@ -205,5 +205,46 @@ describe('empowered abbot (mid-boss)', () => {
     for (let i = 0; i < BOSS.recover + 1; i++) e.step([still(e)]);
     expect(s.boss.cooldown).toBeLessThanOrEqual(EMPOWERED.cooldown);
     expect(s.boss.cooldown).toBeGreaterThan(EMPOWERED.cooldown - 3);
+  });
+});
+
+describe('black carp king (boss)', () => {
+  it('is the marsh boss, and later chapters keep it until they get their own', () => {
+    expect([1, 2, 5].map(chapterBoss)).toEqual(['abbot', 'carp', 'carp']);
+    const e = new Engine(MARSH);
+    beginWave(e.state, MARSH.waves);
+    expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: false, hp: CARP.hp });
+  });
+
+  it('dives out of reach, locks a circle on the hero, and surfaces there with a ring', () => {
+    const e = new Engine(MARSH);
+    const s = e.state;
+    s.mobs.length = 0;
+    const p = s.players[0];
+    p.kickCd = 1e6;
+    s.boss = newBoss(p.x + CARP.stopDist, p.y, CARP.hp, false, 'carp');
+    const b = s.boss;
+    b.cooldown = 1;
+    expect(e.step([still(e)]).map((ev) => ev.type)).toContain('bossDive');
+    expect(targetAt(s, bossIndex(s))).toBeNull();
+    let hurt = 0;
+    const types: string[] = [];
+    for (let i = 0; i < CARP.dive + CARP.rise + 2; i++) {
+      for (const ev of e.step([still(e)])) {
+        types.push(ev.type);
+        if (ev.type === 'hurt') hurt += ev.value;
+      }
+    }
+    expect(types.filter((x) => x === 'bossWindup').length).toBe(1);
+    expect(types).toContain('bossSlam');
+    expect(b.phase).toBe('recover');
+    expect([b.x, b.y]).toEqual([p.x, p.y]);
+    expect(hurt).toBe(HURT.surface);
+    expect(s.bullets.length).toBe(CARP.ring);
+    expect(targetAt(s, bossIndex(s))).toBe(b);
+    for (let i = 0; i < CARP.recover; i++) e.step([still(e)]);
+    expect(b.phase).toBe('walk');
+    expect(b.cooldown).toBeLessThanOrEqual(CARP.cooldown);
+    expect(b.cooldown).toBeGreaterThan(CARP.cooldown - 3);
   });
 });

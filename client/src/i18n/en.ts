@@ -116,6 +116,7 @@ export const en = {
   boss: {
     abbot: 'Fallen Abbot',
     empowered: 'Fallen Abbot, Empowered',
+    carp: 'Black Carp King',
     twins: 'Twin Jiangshi',
   },
   codex: {

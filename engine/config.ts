@@ -86,6 +86,8 @@ export const HURT = {
   pool: 12,
   /** A water ghost rising under the hero. */
   emerge: 6,
+  /** The Black Carp King surfacing under the hero. */
+  surface: 25,
 };
 
 export const HORDE = {
@@ -173,6 +175,12 @@ export type EliteKind = 'charger' | 'toadKing';
 
 /** Each chapter's elite; later chapters play the last one until they get their own. */
 export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing'];
+
+/** The boss kinds: the Fallen Abbot slams, the Black Carp King dives and surfaces. */
+export type BossKind = 'abbot' | 'carp';
+
+/** Each chapter's boss (the last wave); later chapters play the last one until they get their own. */
+export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp'];
 
 /**
  * The toad king (systems/marsh.ts): it stops stopDist from the hero; with him within range and
@@ -285,6 +293,28 @@ export const EMPOWERED = {
   hp: 1500,
   cooldown: ticks(1.8),
   ring: 10,
+};
+
+/**
+ * The Black Carp King, chapter 2's boss (systems/carp.ts): it swims after the hero to stopDist
+ * and, its cooldown done, dives for `dive` (out of reach, swimming under him at `swim`), then
+ * locks a circle of `radius` where he stands and rises under it for `rise`. Surfacing it hurts
+ * him inside (HURT.surface) and sends a ring of `ring` bullets out from the rim, then lies
+ * winded for `recover`, the time to kick it. It comes to the hero, so it is kicked more than
+ * the abbot, whom the bot keeps away from: with 2400 health it fell in a median 52 s, quicker
+ * than the mid-boss; with 4000, 80–90 s.
+ */
+export const CARP = {
+  hp: 4000,
+  speed: perTick(110),
+  swim: perTick(520),
+  stopDist: toFp(160),
+  cooldown: ticks(3),
+  dive: ticks(1.2),
+  rise: ticks(1.0),
+  recover: ticks(1.2),
+  radius: toFp(240),
+  ring: 12,
 };
 
 export const THREATS = {
