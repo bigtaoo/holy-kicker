@@ -32,7 +32,7 @@ import { SpellView } from './spellView';
 import { SutraView } from './sutraView';
 import type { TaoAsset } from './tao/TaoActor';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
-import { makeDeco, type DecoSheet } from './decoView';
+import { makeDeco, type DecoSheet, type DecoStyle } from './decoView';
 import type { EliteColor, SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
@@ -49,6 +49,14 @@ import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSpri
 // (FixedStep), draws every sim body interpolated between its last two tick positions, and
 // turns the sim's events into animations, effects and numbers.
 
+/** A chapter's ground: the repeating tile (null draws the flat placeholder field) and the
+ * decorations scattered over it (null when the scene turns them off). */
+export interface StageArt {
+  ground: Texture | null;
+  deco: DecoSheet | null;
+  style: DecoStyle;
+}
+
 export interface Art {
   hero: TaoAsset;
   jiangshi: MobSheet;
@@ -56,10 +64,8 @@ export interface Art {
   cuju: Texture;
   staff: Texture;
   fish: Texture;
-  /** Repeating ground tile; null draws the flat placeholder field. */
-  ground: Texture | null;
-  /** Scattered ground decorations; null when the scene turns them off. */
-  deco: DecoSheet | null;
+  /** Grounds by chapter from chapter 1; a chapter without its own takes the last one. */
+  stages: readonly StageArt[];
   /** The boss rig; null when the scene leaves the boss out. */
   boss: TaoAsset | null;
   /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
@@ -168,9 +174,10 @@ export class Game {
     }
 
     this.world.sortableChildren = true;
-    this.world.addChild(art.ground ? makeTiledGround(art.ground) : makeGround());
-    if (art.deco && scene.deco !== 'none') {
-      const deco = makeDeco(art.deco, scene.deco === 'props');
+    const stage = art.stages[Math.min(Math.max(setup.chapter, 1), art.stages.length) - 1];
+    this.world.addChild(stage.ground ? makeTiledGround(stage.ground) : makeGround());
+    if (stage.deco && scene.deco !== 'none') {
+      const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style);
       deco.zIndex = SHADOW_Z - 1;
       this.world.addChild(deco);
     }

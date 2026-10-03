@@ -6,13 +6,13 @@ import { sliceAtlas, type TaoAsset } from './game/tao/TaoActor';
 import type { TaoSkeleton } from './game/tao/types';
 import type { Platform } from './platform/types';
 import type { SceneOptions } from './game/scene';
-import { sliceDeco, type DecoFrame, type DecoSheet } from './game/decoView';
+import { MARSH_DECO, sliceDeco, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, boss, icons] = await Promise.all([
+  const [hero, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons] = await Promise.all([
     loadTao(platform, 'art/hero'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
@@ -21,10 +21,16 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     Assets.load<Texture>('art/fish.png'),
     ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
     deco === 'none' ? null : loadDeco(platform, 'art/ground/deco'),
+    // chapter 2's misty marsh; ?ground picks chapter 1's only
+    ground === 'flat' ? null : Assets.load<Texture>('art/ground/marsh.png'),
+    deco === 'none' ? null : loadDeco(platform, 'art/ground/marsh_deco'),
     scene.boss ? loadTao(platform, 'art/boss_monk') : null,
     loadDeco(platform, 'art/icons/icons'),
   ]);
-  return { hero, jiangshi, fox, cuju, staff, fish, ground: groundTex, deco: decoSheet, boss, icons: icons.frames };
+  return { hero, jiangshi, fox, cuju, staff, fish, stages: [
+    { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO },
+    { ground: marshTex, deco: marshDeco, style: MARSH_DECO },
+  ], boss, icons: icons.frames };
 }
 
 /** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py). */
