@@ -40,6 +40,7 @@ const CLOSE_IN: Record<RelicId, CloseIn | null> = {
   staff: { near: toFp(200), chase: toFp(280) },
   fish: { near: toFp(220), chase: toFp(330) },
   beads: { near: toFp(200), chase: toFp(260) },
+  bowl: null,
 };
 const GEM_REACH = toFp(900);
 const DIRS = 16;

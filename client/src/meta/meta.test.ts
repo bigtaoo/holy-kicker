@@ -91,6 +91,10 @@ describe('progress', () => {
     const third = settleRun(second.save, { chapter: 3, waves: 50 });
     expect(third.reward.newRelic).toBe('beads');
     expect(unlockedRelics(third.save)).toEqual(['ball', 'staff', 'fish', 'beads']);
+    // the fourth brings the alms bowl
+    const fourth = settleRun(third.save, { chapter: 4, waves: 50 });
+    expect(fourth.reward.newRelic).toBe('bowl');
+    expect(unlockedRelics(fourth.save)).toEqual(['ball', 'staff', 'fish', 'beads', 'bowl']);
   });
 
   it('levels up from wave xp, carrying the remainder', () => {

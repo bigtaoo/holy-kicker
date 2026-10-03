@@ -82,8 +82,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-03 for ENGINE_VERSION 11 (the prayer beads relic). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(11);
+    // Recorded 2026-10-03 for ENGINE_VERSION 12 (Karma and the alms bowl relic). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(12);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
   });
@@ -96,9 +96,9 @@ describe('Engine', () => {
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'rings', 'beads', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'boss', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
   });
 });
 
-const GOLDEN = 1618125198;
-const GOLDEN_CHAPTER = 1807964722;
+const GOLDEN = 3139503888;
+const GOLDEN_CHAPTER = 3684893018;

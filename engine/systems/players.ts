@@ -4,7 +4,8 @@ import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Player, SimState } from '../state';
-import { pickCard, relicCooldown, relicLevel, stat } from './build';
+import { bowlLevel, pickCard, relicCooldown, relicLevel, stat } from './build';
+import { bowlInAir, throwBowl } from './bowl';
 import { eliteIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
 import { breakBell } from './spells';
@@ -12,7 +13,7 @@ import { fishStart, tap } from './fish';
 import { staffStart, sweep } from './staff';
 
 // The hero: moves with the stick (easing into and out of a run), auto-kicks the cuju at the
-// nearest enemy (the boss first) or swings the staff when one comes close (systems/staff.ts) or taps the wooden fish (systems/fish.ts) (prayer beads circle him: systems/beads.ts), and loses health when something reaches him (at most one
+// nearest enemy (the boss first) or swings the staff when one comes close (systems/staff.ts) or taps the wooden fish (systems/fish.ts) or throws the alms bowl (systems/bowl.ts) (prayer beads circle him: systems/beads.ts), and loses health when something reaches him (at most one
 // blow per hurt cooldown; a Golden Bell takes the blow instead). Kick and hurt are one-shot actions; hurt interrupts a kick before
 // its foot meets the ball. At 0 health he is down until a revive; the sandbox (waves 0) only
 // flinches.
@@ -92,12 +93,15 @@ export function kickSystem(s: SimState, events: SimEvent[]): void {
         p.struck = true;
         if (p.relicId === 'staff') sweep(s, events, p);
         else if (p.relicId === 'fish') tap(s, events, p);
+        else if (p.relicId === 'bowl') throwBowl(s, p);
         else strike(s, p);
       }
       if (p.actionT >= (p.action === 'kick' ? HERO.kickTicks : HERO.hurtTicks)) p.action = 'none';
     }
     // the prayer beads turn by themselves (systems/beads.ts)
     if (p.relicId === 'beads' || p.kickCd > 0 || p.action !== 'none') continue;
+    // one alms bowl in the air at a time (systems/bowl.ts)
+    if (p.relicId === 'bowl' && bowlInAir(s, p)) continue;
     const t = kickTarget(s, p, attackRange(p));
     if (t < 0) continue;
     const dx = targetAt(s, t)!.x - p.x;
@@ -114,6 +118,7 @@ export function kickSystem(s: SimState, events: SimEvent[]): void {
 function attackRange(p: Player): number {
   if (p.relicId === 'staff') return staffStart(p);
   if (p.relicId === 'fish') return fishStart(p);
+  if (p.relicId === 'bowl') return bowlLevel(p).reach;
   return HERO.kickRange;
 }
 

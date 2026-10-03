@@ -2,6 +2,7 @@ import { DROPS, OVERFLOW_TIER } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { teleport, type Gem, type Player, type SimState } from '../state';
+import { gainXp, magnetOf } from './build';
 
 // Experience gems. A horde survivor drops a gem per kill, so two rules keep a long run bounded
 // without losing experience:
@@ -71,7 +72,8 @@ export function attractAll(s: SimState, p: Player): void {
 
 /** Resting gems in the cells overlapping the player's magnet circle start flying. */
 function attractNear(s: SimState, p: Player): void {
-  const { magnet, cell } = DROPS;
+  const { cell } = DROPS;
+  const magnet = magnetOf(p);
   const m2 = magnet * magnet;
   const x0 = Math.floor((p.x - magnet) / cell);
   const x1 = Math.floor((p.x + magnet) / cell);
@@ -110,7 +112,7 @@ export function dropSystem(s: SimState, events: SimEvent[]): void {
         }
       }
       if (d2 < pick2) {
-        p.xp += g.value;
+        gainXp(p, g.value);
         best.set(p.owner, Math.max(best.get(p.owner) ?? 0, g.tier));
         continue;
       }

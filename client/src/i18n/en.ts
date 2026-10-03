@@ -61,6 +61,7 @@ export const en = {
     duration: 'Duration {a}s → {b}s',
     beads: 'Beads {a} → {b}',
     spin: 'Spin +{n}%',
+    carry: 'Drags {a} → {b}',
     shrine: 'Shrine',
     evolve: 'Evolve!',
     awaken: 'Awaken!',
@@ -70,6 +71,7 @@ export const en = {
     staff: { name: 'Ruyi Staff', desc: 'Sweeps all the way round' },
     fish: { name: 'Stunning Bell', desc: 'Every {n}th ring stuns for {s}s' },
     beads: { name: '108 Beads', desc: 'A second ring spins the other way' },
+    bowl: { name: 'Bottomless Bowl', desc: 'Swallows {n} enemies a throw, XP at once' },
     palm: { name: 'Mountain Palm', desc: 'Stays and pins enemies {s}s' },
     bolt: { name: 'Endless Chain', desc: 'Forks at every jump' },
     incense: { name: 'Healing Incense', desc: 'Heals {n}% health/s inside' },
@@ -86,6 +88,7 @@ export const en = {
     staff: { name: 'Staff', desc: 'Sweeps nearby enemies, knocks them back' },
     fish: { name: 'Wooden Fish', desc: 'Each tap sends a ring through everything near' },
     beads: { name: 'Prayer Beads', desc: 'Beads circle you and hit all they touch' },
+    bowl: { name: 'Alms Bowl', desc: 'Thrown and caught again, drags enemies away' },
   },
   spell: {
     palm: { name: 'Buddha Palm', desc: 'A giant palm slams the biggest crowd', count: 'Palms {a} → {b}' },
@@ -101,6 +104,7 @@ export const en = {
     eye: { name: 'Wisdom Eye', desc: 'Spell area +{n}%' },
     rice: { name: 'Alms Rice', desc: 'Heal {n}% health per second' },
     wrath: { name: 'Wrath', desc: 'Crit chance +{n}%' },
+    karma: { name: 'Karma', desc: 'XP +{n}%, pickup range +{m}%' },
   },
   boss: {
     abbot: 'Fallen Abbot',

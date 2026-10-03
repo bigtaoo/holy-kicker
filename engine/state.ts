@@ -34,6 +34,8 @@ export interface Player extends Body {
   /** 1-based; `xp` counts toward the next level. */
   level: number;
   xp: number;
+  /** Experience toward the next whole point, in hundredths (the xp stat grows gains by percent). */
+  xpPart: number;
   hp: number;
   maxHp: number;
   /** Down at 0 health: no moving, kicking or picking up until revived. */
@@ -203,6 +205,28 @@ export interface Bead extends Body {
   touching: number[];
 }
 
+/** A thrown alms bowl: flies out, turns at its reach and comes back to its owner. */
+export interface Bowl extends Body {
+  id: number;
+  owner: number;
+  vx: number;
+  vy: number;
+  /** Distance left on the way out; coming back once it runs out. */
+  travel: number;
+  back: boolean;
+  damage: number;
+  /** Mobs it may carry (or swallow, awakened) this throw. */
+  carry: number;
+  /** Bottomless Bowl: swallows instead of carrying. */
+  swallow: boolean;
+  /** Mobs swallowed so far. */
+  swallowed: number;
+  /** Targets hit on this leg (combat.ts numbering). */
+  hit: number[];
+  /** Mobs dragged along on the way out. */
+  carried: number[];
+}
+
 export interface SimState {
   readonly config: RunConfig;
   tick: number;
@@ -225,6 +249,7 @@ export interface SimState {
   cymbals: Cymbal[];
   rings: Ring[];
   beads: Bead[];
+  bowls: Bowl[];
   volleyT: number;
   zoneT: number;
   spellT: number;
@@ -256,7 +281,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
-    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [],
+    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [], bowls: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),
@@ -270,7 +295,7 @@ export function newMob(x: number, y: number, hp = 1): Mob {
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball'): Player {
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
-    action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0,
+    action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0, xpPart: 0,
     hp, maxHp: hp, dead: false, revives, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
     bet: false, offerings: 0, taps: 0,
   };

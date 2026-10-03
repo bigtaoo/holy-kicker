@@ -1,6 +1,6 @@
-import { HERO, SHRINE } from '../config';
+import { DROPS, HERO, SHRINE } from '../config';
 import {
-  BEADS_AWAKENED, BEADS_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
+  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
   xpToNext, type BeadsRing, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat,
 } from '../content';
 import type { SimEvent } from '../events';
@@ -23,8 +23,22 @@ export function stat(p: Player, which: Stat): number {
   for (const slot of p.passives) {
     const def = PASSIVES[slot.id];
     if (def.stat === which) v += def.perLevel * slot.level;
+    if (def.also?.stat === which) v += def.also.perLevel * slot.level;
   }
   return v;
+}
+
+/** Experience for the player, grown by the xp stat; the fraction left over carries to the next gain. */
+export function gainXp(p: Player, value: number): void {
+  p.xpPart += value * (100 + stat(p, 'xp'));
+  const whole = Math.trunc(p.xpPart / 100);
+  p.xpPart -= whole * 100;
+  p.xp += whole;
+}
+
+/** The radius in which resting gems fly to the player. */
+export function magnetOf(p: Player): number {
+  return Math.trunc((DROPS.magnet * (100 + stat(p, 'magnet'))) / 100);
 }
 
 /** Max health with the stat stack applied. */
@@ -50,10 +64,15 @@ export function beadsRings(p: Player): readonly BeadsRing[] {
   return p.awakened ? BEADS_AWAKENED : [BEADS_LEVELS[p.relic - 1]];
 }
 
+export function bowlLevel(p: Player) {
+  return p.awakened ? BOWL_AWAKENED : BOWL_LEVELS[p.relic - 1];
+}
+
 /** Ticks between two attacks of the player's relic (the beads never stop, so never asked). */
 export function relicCooldown(p: Player): number {
   if (p.relicId === 'staff') return staffLevel(p).cooldown;
   if (p.relicId === 'fish') return fishLevel(p).cooldown;
+  if (p.relicId === 'bowl') return bowlLevel(p).cooldown;
   return relicLevel(p).cooldown;
 }
 

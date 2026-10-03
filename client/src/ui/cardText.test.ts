@@ -88,6 +88,17 @@ describe('card text', () => {
     expect(awaken.lines).toEqual(['A second ring spins the other way', 'Beads 6 → 12']);
   });
 
+  it('describes the alms bowl, the Bottomless Bowl and Karma', () => {
+    const p = newPlayer(0, 0, 0, 100, 0, 'bowl');
+    const step = cardText({ kind: 'relic', id: 'bowl' }, p);
+    expect(step).toMatchObject({ name: 'Alms Bowl', icon: 'bowl', pairs: ['karma'] });
+    expect(step.lines).toEqual(['Drags 3 → 4', 'Reach +8%']);
+    const awaken = cardText({ kind: 'evolve', id: 'bowl' }, p);
+    expect(awaken).toMatchObject({ name: 'Bottomless Bowl', tag: 'Awaken!' });
+    expect(awaken.lines).toEqual(['Swallows 8 enemies a throw, XP at once', 'Reach +7%']);
+    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['XP +8%, pickup range +15%']);
+  });
+
   it('has a name and at least one line for every card at every level', () => {
     const p = newPlayer(0, 0, 0);
     const cards: Card[] = [
@@ -95,10 +106,11 @@ describe('card text', () => {
       { kind: 'relic', id: 'staff' },
       { kind: 'relic', id: 'fish' },
       { kind: 'relic', id: 'beads' },
+      { kind: 'relic', id: 'bowl' },
       ...SPELL_IDS.map((id): Card => ({ kind: 'spell', id })),
       ...PASSIVE_IDS.map((id): Card => ({ kind: 'passive', id })),
       ...SHRINE_IDS.map((id): Card => ({ kind: 'shrine', id })),
-      ...['ball', 'staff', 'fish', 'beads', ...SPELL_IDS].map((id): Card => ({ kind: 'evolve', id })),
+      ...['ball', 'staff', 'fish', 'beads', 'bowl', ...SPELL_IDS].map((id): Card => ({ kind: 'evolve', id })),
     ];
     for (let level = 1; level < MAX_LEVEL; level++) {
       p.relic = level;

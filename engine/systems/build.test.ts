@@ -77,7 +77,7 @@ describe('card pool', () => {
   it('drops maxed items and new ones once the slots are full', () => {
     const e = quiet();
     const p = e.state.players[0];
-    expect(cardPool(p).length).toBe(1 + 5 + 6);
+    expect(cardPool(p).length).toBe(1 + 5 + 7);
     p.relic = MAX_LEVEL;
     p.passives = (['calm', 'iron', 'legs', 'eye'] as const).slice(0, MAX_PASSIVES).map((id) => ({ id, level: MAX_LEVEL }));
     p.passives[0].level = 2;

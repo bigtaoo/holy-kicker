@@ -1,5 +1,5 @@
 import {
-  BEADS_AWAKENED, BEADS_LEVELS, EVOLVE, FISH, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, PASSIVES, RELIC_IDS, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, STAFF_AWAKENED, STAFF_LEVELS, TICK_RATE,
+  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE, FISH, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, PASSIVES, RELIC_IDS, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, STAFF_AWAKENED, STAFF_LEVELS, TICK_RATE,
   type Card, type CardKind, type PassiveId, type Player, type RelicId, type SpellId,
 } from '@hk/engine';
 import { t } from '../i18n';
@@ -58,6 +58,11 @@ function relicLines(id: RelicId, level: number): string[] {
   if (id === 'staff') return reachLines(STAFF_LEVELS, level);
   if (id === 'fish') return reachLines(FISH_LEVELS, level);
   if (id === 'beads') return beadsLines(level);
+  if (id === 'bowl') {
+    const a = BOWL_LEVELS[level - 1].carry;
+    const b = BOWL_LEVELS[level].carry;
+    return (b !== a ? [t('card.carry', { a, b })] : []).concat(reachLines(BOWL_LEVELS, level));
+  }
   const a = RELIC_LEVELS[level - 1];
   const b = RELIC_LEVELS[level];
   const lines: string[] = [];
@@ -89,9 +94,10 @@ function spellLines(id: SpellId, level: number): string[] {
 }
 
 function passiveDesc(id: PassiveId): string {
-  const n = PASSIVES[id].perLevel;
+  const def = PASSIVES[id];
+  if (id === 'karma') return t('passive.karma.desc', { n: def.perLevel, m: def.also!.perLevel });
   // regen is per mille of max health per second
-  return t(`passive.${id}.desc`, { n: id === 'rice' ? n / 10 : n });
+  return t(`passive.${id}.desc`, { n: id === 'rice' ? def.perLevel / 10 : def.perLevel });
 }
 
 function isRelic(id: string): id is RelicId {
@@ -104,6 +110,7 @@ export function evolveDesc(id: SpellId | RelicId): string {
   if (id === 'staff') return t('evolve.staff.desc');
   if (id === 'fish') return t('evolve.fish.desc', { n: FISH.stunEvery, s: seconds(FISH.stun) });
   if (id === 'beads') return t('evolve.beads.desc');
+  if (id === 'bowl') return t('evolve.bowl.desc', { n: BOWL_AWAKENED.carry });
   if (id === 'palm') return t('evolve.palm.desc', { s: seconds(SPELL_EVOLVED.palm.life) });
   if (id === 'incense') {
     // per mille of max health per field tick, as percent per second
@@ -123,6 +130,7 @@ function evolveText(id: SpellId | RelicId): CardText {
     const total = BEADS_AWAKENED.reduce((n, r) => n + r.count, 0);
     lines.push(t('card.beads', { a: BEADS_LEVELS[MAX_LEVEL - 1].count, b: total }));
   }
+  else if (id === 'bowl') lines.push(t('card.reach', { n: gain(BOWL_LEVELS[MAX_LEVEL - 1].reach, BOWL_AWAKENED.reach) }));
   else if (!isRelic(id) && id !== 'cymbal') {
     const a = SPELL_LEVELS[id][MAX_LEVEL - 1];
     const b = SPELL_EVOLVED[id];

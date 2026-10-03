@@ -12,6 +12,9 @@ import { mobHp } from './waves';
 // Hit targets and damage. Targets are numbered: the horde mobs first (by index), then the
 // elite, then the boss, so a ball can remember "the one I hit last" as a plain integer.
 
+/** Experience a mob is worth. */
+export const MOB_GEM = 1;
+
 export function eliteIndex(s: SimState): number {
   return s.mobs.length;
 }
@@ -91,13 +94,18 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
   } else {
     const m = s.mobs[i];
     m.hp -= value;
-    if (m.hp > 0) return;
-    m.hp = mobHp(s.wave);
-    m.stun = 0;
-    events.push({ type: 'mobDown', index: i, x: t.x, y: t.y, dx: t.x - by.x, dy: t.y - by.y });
-    dropGem(s, t.x, t.y, 1);
-    ringPoint(s.ai, by.x, by.y, t);
+    if (m.hp <= 0) downMob(s, events, i, by, true);
   }
+}
+
+/** Mob i goes down (dropping its gem, unless swallowed) and respawns on the ring with the wave's health. */
+export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
+  const m = s.mobs[i];
+  m.hp = mobHp(s.wave);
+  m.stun = 0;
+  events.push({ type: 'mobDown', index: i, x: m.x, y: m.y, dx: m.x - by.x, dy: m.y - by.y });
+  if (gem) dropGem(s, m.x, m.y, MOB_GEM);
+  ringPoint(s.ai, by.x, by.y, m);
 }
 
 function aim(b: Ball, tx: number, ty: number): void {

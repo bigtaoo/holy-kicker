@@ -9,6 +9,6 @@ export * from './state';
 export { Engine, ENGINE_VERSION, STEP_ORDER } from './Engine';
 export { hashState } from './hash';
 export { FP, TICK_RATE, fromFp } from './math/fixed';
-export { beadsRings, cardPool, evolutions, maxHpOf, slotStats, stat } from './systems/build';
+export { beadsRings, bowlLevel, cardPool, evolutions, magnetOf, maxHpOf, slotStats, stat } from './systems/build';
 export { tierOf } from './systems/drops';
 export { hordeSize, isBossWave, isEliteWave, isShrineWave, mobHp } from './systems/waves';

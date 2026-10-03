@@ -22,8 +22,8 @@ export function xpToNext(level: number): number {
 }
 
 /** The relic a run is played with (docs/content.md "Relics"), chosen in the lobby. */
-export type RelicId = 'ball' | 'staff' | 'fish' | 'beads';
-export const RELIC_IDS: readonly RelicId[] = ['ball', 'staff', 'fish', 'beads'];
+export type RelicId = 'ball' | 'staff' | 'fish' | 'beads' | 'bowl';
+export const RELIC_IDS: readonly RelicId[] = ['ball', 'staff', 'fish', 'beads', 'bowl'];
 
 /** The cuju ball (the starter relic): bounces per kick, damage percent, kick cooldown. */
 export interface RelicLevel {
@@ -124,6 +124,39 @@ export const BEADS = {
   radius: toFp(85),
 };
 
+/**
+ * The alms bowl: thrown at a target in `reach`, it flies that far and comes back to the hero,
+ * hitting each enemy it passes once each way at `damage` percent; on the way out it drags up to
+ * `carry` mobs along and leaves them at the far end.
+ */
+export interface BowlLevel {
+  damage: number;
+  cooldown: number;
+  reach: number;
+  carry: number;
+}
+
+function bw(damage: number, cooldown: number, reach: number, carry: number): BowlLevel {
+  return { damage, cooldown: ticks(cooldown), reach: toFp(reach), carry };
+}
+
+export const BOWL_LEVELS: readonly BowlLevel[] = [
+  bw(150, 1, 480, 3), bw(150, 1, 520, 4), bw(200, 1, 520, 4), bw(200, 0.85, 560, 5), bw(280, 0.85, 600, 6),
+];
+
+/** Bottomless Bowl: up to `carry` mobs it touches are swallowed, their experience given at once. */
+export const BOWL_AWAKENED: BowlLevel = bw(280, 0.85, 640, 8);
+
+export const BOWL = {
+  speed: perTick(1400),
+  /** The bowl touches what is this close to it. */
+  radius: toFp(80),
+  /** A carried mob further than this from the bowl was knocked away (it respawned): let go. */
+  hold: toFp(200),
+  /** The bowl is caught when it comes this close to the hero. */
+  catch: toFp(60),
+};
+
 export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal';
 export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense', 'bell', 'cymbal'];
 
@@ -177,21 +210,30 @@ export const SPELL_CAST = {
   cymbalSpeed: perTick(1500),
 };
 
-export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit';
-export type PassiveId = 'calm' | 'iron' | 'legs' | 'eye' | 'rice' | 'wrath';
-export const PASSIVE_IDS: readonly PassiveId[] = ['calm', 'iron', 'legs', 'eye', 'rice', 'wrath'];
+export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit' | 'xp' | 'magnet';
+export type PassiveId = 'calm' | 'iron' | 'legs' | 'eye' | 'rice' | 'wrath' | 'karma';
+export const PASSIVE_IDS: readonly PassiveId[] = ['calm', 'iron', 'legs', 'eye', 'rice', 'wrath', 'karma'];
+
+export interface PassiveDef {
+  stat: Stat;
+  perLevel: number;
+  /** A second stat the passive raises (Karma). */
+  also?: { stat: Stat; perLevel: number };
+}
 
 /**
- * Each passive adds `perLevel` to one stat per level. Units: percent, except `regen`
- * (per mille of max health per second).
+ * Each passive adds `perLevel` to one stat per level (Karma to two). Units: percent, except
+ * `regen` (per mille of max health per second).
  */
-export const PASSIVES: Readonly<Record<PassiveId, { stat: Stat; perLevel: number }>> = {
+export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
   calm: { stat: 'cooldown', perLevel: 8 },
   iron: { stat: 'maxHp', perLevel: 15 },
   legs: { stat: 'speed', perLevel: 8 },
   eye: { stat: 'area', perLevel: 10 },
   rice: { stat: 'regen', perLevel: 4 },
   wrath: { stat: 'crit', perLevel: 5 },
+  // experience and the gem magnet's radius
+  karma: { stat: 'xp', perLevel: 8, also: { stat: 'magnet', perLevel: 15 } },
 };
 
 /**
@@ -200,7 +242,7 @@ export const PASSIVES: Readonly<Record<PassiveId, { stat: Stat; perLevel: number
  * way. The evolved row replaces the level-5 row.
  */
 export const EVOLVE_PAIR: Readonly<Record<SpellId | RelicId, PassiveId>> = {
-  ball: 'legs', staff: 'iron', fish: 'calm', beads: 'eye', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
+  ball: 'legs', staff: 'iron', fish: 'calm', beads: 'eye', bowl: 'karma', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
 };
 
 /** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */

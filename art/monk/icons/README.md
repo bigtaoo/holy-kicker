@@ -29,3 +29,8 @@ Findings:
   no person, no character, no body" and leave the game's theme out.
 - The sticker look (thick outline, white sticker border) matches the figures; cutout removes the
   white border with the background.
+
+The alms bowl and Karma (2026-10-03): `bowl.jpg` and `karma.jpg`, packed after `beads.jpg`. The
+thrown bowl in the world is drawn in code (`client/src/game/bowlView.ts`). Karma first came out
+as a lotus (`r1/karma_lotus.jpg`), too close to Calm Mind's lotus on the HUD, so it is a red
+Chinese knot (a bond of fate) instead.

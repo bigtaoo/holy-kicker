@@ -63,6 +63,7 @@ export const zh: Table<typeof en> = {
     duration: '持续 {a} 秒 → {b} 秒',
     beads: '念珠 {a} → {b} 颗',
     spin: '转速 +{n}%',
+    carry: '拖走 {a} → {b} 个',
     shrine: '神龛',
     evolve: '进化！',
     awaken: '觉醒！',
@@ -72,6 +73,7 @@ export const zh: Table<typeof en> = {
     staff: { name: '如意禅杖', desc: '横扫一整圈' },
     fish: { name: '晨钟', desc: '每第 {n} 圈声波眩晕 {s} 秒' },
     beads: { name: '百八念珠', desc: '外圈再多一串，反向旋转' },
+    bowl: { name: '无底钵', desc: '每次吞下 {n} 个敌人，经验立刻到手' },
     palm: { name: '五指山', desc: '巨掌留在原地，定住敌人 {s} 秒' },
     bolt: { name: '雷音', desc: '每次跳跃都分叉击中另一个敌人' },
     incense: { name: '万家香火', desc: '站在阵中每秒回复 {n}% 生命' },
@@ -88,6 +90,7 @@ export const zh: Table<typeof en> = {
     staff: { name: '禅杖', desc: '横扫身边敌人并击退' },
     fish: { name: '木鱼', desc: '每敲一下，声波扫过身边所有敌人' },
     beads: { name: '念珠', desc: '念珠绕身旋转，碰到的敌人都挨打' },
+    bowl: { name: '钵盂', desc: '掷出再飞回，把敌人拖走' },
   },
   spell: {
     palm: { name: '如来掌', desc: '巨掌拍向最密集的敌群', count: '掌数 {a} → {b}' },
@@ -103,6 +106,7 @@ export const zh: Table<typeof en> = {
     eye: { name: '慧眼', desc: '法术范围 +{n}%' },
     rice: { name: '斋饭', desc: '每秒回复 {n}% 生命' },
     wrath: { name: '怒目', desc: '暴击率 +{n}%' },
+    karma: { name: '善缘', desc: '经验 +{n}%，拾取范围 +{m}%' },
   },
   boss: {
     abbot: '堕落方丈',

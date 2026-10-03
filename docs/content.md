@@ -38,12 +38,12 @@ Names are working names; every name ships through the string table (en / zh-CN s
   every jump; Healing Incense heals 2.4 % health per second inside; Golden Body guards 2 s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
-  it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce. Not yet: the
-  alms bowl's awakening.
+  it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce; Bottomless Bowl
+  swallows up to 8 mobs a throw for their experience.
 - **Codex implemented** (`client/src/meta/codex.ts`, `client/src/ui/codexTab.ts`): the save keeps
   every evolution and awakening done at least once; a run reports what it evolved when it is
   settled (also on giving up), and the results name the new entries. The lobby's Codex tab
-  (open after chapter 2) shows all of them (9 with the prayer beads), the found ones by name and the rest as "???";
+  (open after chapter 2) shows all of them (10 with the alms bowl), the found ones by name and the rest as "???";
   tapping one shows what it does and its recipe, which is never hidden.
 - **Build strip on the HUD** (`client/src/ui/buildSlots.ts`, `buildBar.ts`): under the
   experience bar, the relic, 4 spell and 4 passive slots (empty ones as dim discs), each with its
@@ -62,7 +62,7 @@ Unlocked one per chapter clear (the cuju ball is the starter).
 | Staff | Staff / 禅杖 | Close 180° sweep with knockback (implemented) | Iron Head | **Ruyi Staff** / 如意禅杖: sweep grows to a full circle and longer reach (implemented) |
 | Wooden fish | Wooden Fish / 木鱼 | Each tap sends a sound ring around the hero (implemented) | Calm Mind | **Stunning Bell** / 晨钟: every 4th ring stuns for 1 s (implemented) |
 | Prayer beads | Prayer Beads / 念珠 | Beads orbit the hero, hit on contact (implemented) | Wisdom Eye | **108 Beads** / 百八念珠: two rings, opposite directions (implemented) |
-| Alms bowl | Alms Bowl / 钵盂 | Thrown, returns, drags small mobs along | Karma | **Bottomless Bowl** / 无底钵: swallows small mobs, drops their XP at once |
+| Alms bowl | Alms Bowl / 钵盂 | Thrown, returns, drags small mobs along (implemented) | Karma | **Bottomless Bowl** / 无底钵: swallows small mobs, drops their XP at once (implemented) |
 
 Unlock order: ball (start), staff (ch1), wooden fish (ch2), beads (ch3), bowl (ch4), so the
 first clear already changes how the game plays.
@@ -99,6 +99,17 @@ first clear already changes how the game plays.
   outer at 250 turning the other way (gold beads), reaching 335.
 - Balance (`npm run balance -- 10 skilled casual beads`): with the bots closing in like for the
   staff, a chapter takes 804–808 s (ball 803–829, fish 803–805); bosses fall in 25–60 s.
+- **Alms bowl implemented** (`BOWL_LEVELS`, `BOWL_AWAKENED`, `BOWL` in `engine/content.ts`,
+  `engine/systems/bowl.ts`): thrown at a target within its reach (the boss and the elite first),
+  the bowl flies the reach (480 → 600, awakened 640) at 1400 units/s and comes back to the hero,
+  hitting each enemy within 80 of it once each way at 150 → 280 %, the elite and the boss at full
+  relic damage, with no knockback. On the way out it drags up to 3 → 6 mobs it hit and leaves
+  them at the far end, clearing room. One bowl is in the air at a time: the next throw waits for
+  the catch and the cooldown (1 → 0.85 s). The Bottomless Bowl (with Karma) swallows up to 8 mobs
+  a throw instead: they go down without a gem and their experience goes straight to the hero.
+- Balance (`npm run balance -- 10 skilled casual bowl`): kept at the ball's distance (no chase), a
+  chapter takes 807 s skilled and 830 s casual (ball 814 / 823), every skilled run won; one casual
+  run without the Golden Bell fell at the last boss.
 
 ## Spells (8) and evolutions
 
@@ -129,9 +140,11 @@ Lotus Steps rewards moving and Halo Beam rewards standing still, so both fit Sti
 | Alms Rice | Alms Rice / 斋饭 | Regenerate 0.4 % health per second |
 | Wrath | Wrath / 怒目 | Crit chance +5 % |
 | Focus | Focus / 定力 | Duration +10 %, knockback resist |
-| Karma | Karma / 善缘 | XP +8 %, pickup radius +15 % |
+| Karma | Karma / 善缘 | XP +8 %, pickup radius +15 % (implemented) |
 
-Six are in the pool from the start; Focus and Karma come from sutras.
+Seven are in the pool from the start; Focus comes from a sutra. Karma was planned as a sutra
+unlock but is in the pool from the start, since the alms bowl awakens with it (2026-10-03).
+Experience gains keep their fraction (`Player.xpPart`), so +8 % counts on 1-point gems.
 
 ## Shrines (waves 5, 15, 25, 35, 45)
 
