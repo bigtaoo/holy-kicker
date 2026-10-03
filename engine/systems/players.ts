@@ -12,7 +12,7 @@ import { fishStart, tap } from './fish';
 import { staffStart, sweep } from './staff';
 
 // The hero: moves with the stick (easing into and out of a run), auto-kicks the cuju at the
-// nearest enemy (the boss first) or swings the staff when one comes close (systems/staff.ts) or taps the wooden fish (systems/fish.ts), and loses health when something reaches him (at most one
+// nearest enemy (the boss first) or swings the staff when one comes close (systems/staff.ts) or taps the wooden fish (systems/fish.ts) (prayer beads circle him: systems/beads.ts), and loses health when something reaches him (at most one
 // blow per hurt cooldown; a Golden Bell takes the blow instead). Kick and hurt are one-shot actions; hurt interrupts a kick before
 // its foot meets the ball. At 0 health he is down until a revive; the sandbox (waves 0) only
 // flinches.
@@ -96,7 +96,8 @@ export function kickSystem(s: SimState, events: SimEvent[]): void {
       }
       if (p.actionT >= (p.action === 'kick' ? HERO.kickTicks : HERO.hurtTicks)) p.action = 'none';
     }
-    if (p.kickCd > 0 || p.action !== 'none') continue;
+    // the prayer beads turn by themselves (systems/beads.ts)
+    if (p.relicId === 'beads' || p.kickCd > 0 || p.action !== 'none') continue;
     const t = kickTarget(s, p, attackRange(p));
     if (t < 0) continue;
     const dx = targetAt(s, t)!.x - p.x;

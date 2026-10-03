@@ -16,7 +16,7 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 ## Shape
 
 - `Engine` steps the systems in `STEP_ORDER`: input, player movement, horde, boss, kicks,
-  balls, spells, threats, contact, drops, build, waves. The order is part of the contract.
+  balls, rings, beads, spells, threats, contact, drops, build, waves. The order is part of the contract.
 - `RunConfig.waves` > 0 runs a chapter (`systems/waves.ts`): the horde grows each wave, elites
   and bosses arrive on their waves, the hero has health and can go down, and `state.outcome`
   turns `won` (the last boss fell) or `lost` (every hero down). A `revive` command brings a

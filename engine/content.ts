@@ -22,8 +22,8 @@ export function xpToNext(level: number): number {
 }
 
 /** The relic a run is played with (docs/content.md "Relics"), chosen in the lobby. */
-export type RelicId = 'ball' | 'staff' | 'fish';
-export const RELIC_IDS: readonly RelicId[] = ['ball', 'staff', 'fish'];
+export type RelicId = 'ball' | 'staff' | 'fish' | 'beads';
+export const RELIC_IDS: readonly RelicId[] = ['ball', 'staff', 'fish', 'beads'];
 
 /** The cuju ball (the starter relic): bounces per kick, damage percent, kick cooldown. */
 export interface RelicLevel {
@@ -95,6 +95,33 @@ export const FISH = {
   /** Stunning Bell: every this many rings stun mobs and the elite (not the boss) this long. */
   stunEvery: 4,
   stun: ticks(1),
+};
+
+/**
+ * Prayer beads: `count` beads circle the hero at `orbit`, one turn every `turn`, and hit each
+ * enemy they touch once per pass at `damage` percent.
+ */
+export interface BeadsRing {
+  count: number;
+  damage: number;
+  turn: number;
+  orbit: number;
+}
+
+function br(count: number, damage: number, turn: number, orbit = 150): BeadsRing {
+  return { count, damage, turn: ticks(turn), orbit: toFp(orbit) };
+}
+
+export const BEADS_LEVELS: readonly BeadsRing[] = [
+  br(3, 70, 1.6), br(4, 70, 1.6), br(4, 90, 1.4), br(5, 90, 1.4), br(6, 120, 1.2),
+];
+
+/** 108 Beads: a ring inside and one outside, the outer turning the other way. */
+export const BEADS_AWAKENED: readonly BeadsRing[] = [br(6, 120, 1.2, 115), br(6, 120, 1.2, 250)];
+
+export const BEADS = {
+  /** A bead touches what is this close to it (the horde stands at 70 from the hero, inside it). */
+  radius: toFp(85),
 };
 
 export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal';
@@ -173,7 +200,7 @@ export const PASSIVES: Readonly<Record<PassiveId, { stat: Stat; perLevel: number
  * way. The evolved row replaces the level-5 row.
  */
 export const EVOLVE_PAIR: Readonly<Record<SpellId | RelicId, PassiveId>> = {
-  ball: 'legs', staff: 'iron', fish: 'calm', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
+  ball: 'legs', staff: 'iron', fish: 'calm', beads: 'eye', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
 };
 
 /** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */

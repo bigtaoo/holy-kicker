@@ -12,7 +12,7 @@ import type { Player, SimState } from '../state';
 //
 // Moving: when enemies press close, it steps to the open side (the boss's marked slam circle
 // counts most); with nothing pressing, it walks to the nearest gem or stands. With the staff
-// or the wooden fish it goes after the elite and the boss and lets them into the relic's reach
+// the wooden fish or the prayer beads it goes after the elite and the boss and lets them into the relic's reach
 // (it still runs from a slam).
 // `skilled` re-decides every tenth of a second, `casual` every 0.4 s and holds the stick in
 // between; `still` never moves: the floor of what a build alone survives.
@@ -39,6 +39,7 @@ const CLOSE_IN: Record<RelicId, CloseIn | null> = {
   ball: null,
   staff: { near: toFp(200), chase: toFp(280) },
   fish: { near: toFp(220), chase: toFp(330) },
+  beads: { near: toFp(200), chase: toFp(260) },
 };
 const GEM_REACH = toFp(900);
 const DIRS = 16;

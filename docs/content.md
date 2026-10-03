@@ -39,11 +39,11 @@ Names are working names; every name ships through the string table (en / zh-CN s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
   it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce. Not yet: the
-  awakenings of the relics after the wooden fish.
+  alms bowl's awakening.
 - **Codex implemented** (`client/src/meta/codex.ts`, `client/src/ui/codexTab.ts`): the save keeps
   every evolution and awakening done at least once; a run reports what it evolved when it is
   settled (also on giving up), and the results name the new entries. The lobby's Codex tab
-  (open after chapter 2) shows all of them (8 with the wooden fish), the found ones by name and the rest as "???";
+  (open after chapter 2) shows all of them (9 with the prayer beads), the found ones by name and the rest as "???";
   tapping one shows what it does and its recipe, which is never hidden.
 - **Build strip on the HUD** (`client/src/ui/buildSlots.ts`, `buildBar.ts`): under the
   experience bar, the relic, 4 spell and 4 passive slots (empty ones as dim discs), each with its
@@ -61,7 +61,7 @@ Unlocked one per chapter clear (the cuju ball is the starter).
 | Cuju ball | Cuju Ball / 蹴鞠 | Kicked, bounces between 3 targets (implemented) | Arhat Legs | **Meteor Ball** / 流星鞠: splits into 3 on every bounce |
 | Staff | Staff / 禅杖 | Close 180° sweep with knockback (implemented) | Iron Head | **Ruyi Staff** / 如意禅杖: sweep grows to a full circle and longer reach (implemented) |
 | Wooden fish | Wooden Fish / 木鱼 | Each tap sends a sound ring around the hero (implemented) | Calm Mind | **Stunning Bell** / 晨钟: every 4th ring stuns for 1 s (implemented) |
-| Prayer beads | Prayer Beads / 念珠 | Beads orbit the hero, hit on contact | Wisdom Eye | **108 Beads** / 百八念珠: two rings, opposite directions |
+| Prayer beads | Prayer Beads / 念珠 | Beads orbit the hero, hit on contact (implemented) | Wisdom Eye | **108 Beads** / 百八念珠: two rings, opposite directions (implemented) |
 | Alms bowl | Alms Bowl / 钵盂 | Thrown, returns, drags small mobs along | Karma | **Bottomless Bowl** / 无底钵: swallows small mobs, drops their XP at once |
 
 Unlock order: ball (start), staff (ch1), wooden fish (ch2), beads (ch3), bowl (ch4), so the
@@ -90,6 +90,15 @@ first clear already changes how the game plays.
   level with the ball, and the hero takes less damage than with it. Kept away (the ball's
   distance) the rings never reach the boss and a chapter took 960–1020 s.
   Without the chase the boss took 3–10 times as long.
+- **Prayer beads implemented** (`BEADS_LEVELS`, `BEADS_AWAKENED`, `BEADS` in `engine/content.ts`,
+  `engine/systems/beads.ts`): 3 → 6 beads circle the hero at 150 (one turn every 1.6 → 1.2 s)
+  and hit each enemy a bead touches (within 85 of it) once per pass, at 70 → 120 %, the elite and
+  the boss at full relic damage, with no knockback. The ring covers 65–235 from the hero, where
+  the horde (70), the boss (150) and the elite (220) stop, so the hero never swings: he only has
+  to stand close. 108 Beads (with Wisdom Eye) adds a second ring of 6: the inner one at 115, the
+  outer at 250 turning the other way (gold beads), reaching 335.
+- Balance (`npm run balance -- 10 skilled casual beads`): with the bots closing in like for the
+  staff, a chapter takes 804–808 s (ball 803–829, fish 803–805); bosses fall in 25–60 s.
 
 ## Spells (8) and evolutions
 

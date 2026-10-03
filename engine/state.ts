@@ -192,6 +192,17 @@ export interface Ring {
   hit: number[];
 }
 
+/** A prayer bead: circles its owner on ring `ring` and hits what it touches once per pass. */
+export interface Bead extends Body {
+  id: number;
+  owner: number;
+  ring: number;
+  /** Angle around the owner, brads. */
+  angle: number;
+  /** Targets it touches now (combat.ts numbering): hit when they come in, again only after they left. */
+  touching: number[];
+}
+
 export interface SimState {
   readonly config: RunConfig;
   tick: number;
@@ -213,6 +224,7 @@ export interface SimState {
   fields: Field[];
   cymbals: Cymbal[];
   rings: Ring[];
+  beads: Bead[];
   volleyT: number;
   zoneT: number;
   spellT: number;
@@ -244,7 +256,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elite: null, boss: null, balls: [], bullets: [], zones: [],
-    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [],
+    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),

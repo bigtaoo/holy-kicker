@@ -13,9 +13,10 @@ import { COLORS, fit, label, panel } from './widgets';
 const GOLD = 0xffd860;
 const COLS = 2;
 const CELL_W = 470;
-const CELL_H = 220;
-const GAP = 20;
-const ICON_R = 62;
+// short cells: ten entries (five rows) and the detail fit between the header and the tab bar
+const CELL_H = 184;
+const GAP = 16;
+const ICON_R = 52;
 const DETAIL_H = 280;
 const HEAD_H = 110;
 
@@ -57,7 +58,7 @@ function entryCell(e: CodexEntry, icons: IconSheet, selected: boolean): Containe
   cell.addChild(panel(CELL_W, CELL_H, e.found ? COLORS.panel : COLORS.panelLocked));
   if (selected) cell.addChild(new Graphics().roundRect(-CELL_W / 2 + 8, -CELL_H / 2 + 8, CELL_W - 16, CELL_H - 16, 22).stroke({ color: GOLD, width: 6 }));
   const badge = new Container();
-  badge.y = -38;
+  badge.y = -30;
   badge.addChild(new Graphics().circle(0, 0, ICON_R).fill(COLORS.panelLocked).stroke({ color: COLORS.outline, width: 8 })
     .circle(0, 0, ICON_R - 4).stroke({ color: e.found ? GOLD : COLORS.dim, width: e.found ? 6 : 4 }));
   const icon = iconSprite(icons, e.id, ICON_R * 1.6);
@@ -74,7 +75,7 @@ function entryCell(e: CodexEntry, icons: IconSheet, selected: boolean): Containe
   if (small) pair.addChild(small);
   badge.addChild(pair);
   const name = fit(label(e.found ? t(`evolve.${e.id}.name`) : t('codex.unknown'), 48, e.found ? GOLD : COLORS.dim), CELL_W - 40);
-  name.y = 68;
+  name.y = 56;
   cell.addChild(badge, name);
   cell.eventMode = 'static';
   cell.cursor = 'pointer';

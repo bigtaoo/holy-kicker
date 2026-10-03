@@ -87,6 +87,10 @@ describe('progress', () => {
     expect(second.reward.newRelic).toBe('fish');
     expect(unlockedRelics(second.save)).toEqual(['ball', 'staff', 'fish']);
     expect(parseSave(JSON.stringify({ ...second.save, relic: 'fish' })).relic).toBe('fish');
+    // the third brings the prayer beads
+    const third = settleRun(second.save, { chapter: 3, waves: 50 });
+    expect(third.reward.newRelic).toBe('beads');
+    expect(unlockedRelics(third.save)).toEqual(['ball', 'staff', 'fish', 'beads']);
   });
 
   it('levels up from wave xp, carrying the remainder', () => {

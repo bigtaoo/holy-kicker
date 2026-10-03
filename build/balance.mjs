@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 
 // Prints the balance report: bots play whole chapters over many seeds (engine/bot/balance.ts).
 // Usage: npm run balance [-- runs [style ...] [relic]]   e.g. npm run balance -- 20 casual staff
-const RELICS = ['ball', 'staff', 'fish'];
+const RELICS = ['ball', 'staff', 'fish', 'beads'];
 const [runs = '10', ...rest] = process.argv.slice(2);
 const relic = rest.find((a) => RELICS.includes(a)) ?? 'ball';
 const styles = rest.filter((a) => !RELICS.includes(a));

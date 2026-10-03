@@ -18,6 +18,11 @@ tools/cutout.py art/monk/icons/fish_world.jpg client/public/art/fish.png 200`) a
 (`fish.jpg` is a copy, packed after `staff.jpg`). The prompt with a mallet leaning on it
 (`fish.txt`) came out as a sad pumpkin with a stick, so the icon is the fish alone.
 
+The prayer beads (2026-10-03): `beads.jpg` is the icon, packed last. The in-world beads are drawn
+in code (`client/src/game/beadsView.ts`: an outlined disc, cel shadow, highlight). The first try
+(`r1/beads_on_drum.jpg`) had a broken prompt and put the beads on a drum; the prompt now also
+says "nothing under them".
+
 Findings:
 - The first round (`r1/`) said "for a kung-fu monk roguelite" and every icon came back with a
   monk holding or standing next to the object. The prompt must say "a single object, no people,

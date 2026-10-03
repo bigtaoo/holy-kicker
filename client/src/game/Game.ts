@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
-  Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, WAVES, quantizeMove,
+  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, HORDE, ELITE, TICK_RATE, WAVES, quantizeMove,
   type RelicId, type RunConfig, type SimEvent, type SimState,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
@@ -8,6 +8,7 @@ import type { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
 import { StaffSwing } from './staffView';
 import { FishTaps } from './fishView';
+import { BeadsView } from './beadsView';
 import { Hero } from './hero';
 import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
@@ -119,6 +120,7 @@ export class Game {
   private readonly balls: Balls;
   private readonly staff: StaffSwing;
   private readonly fish: FishTaps;
+  private readonly beads: BeadsView;
   private readonly boss: Boss | null;
   private readonly spells: SpellView;
   private readonly aura: AuraStack;
@@ -170,6 +172,7 @@ export class Game {
     // the crescent draws over the horde, under the elite
     this.staff = new StaffSwing(this.world, art.staff, HERO_TOP_Z - 3);
     this.fish = new FishTaps(this.world, art.fish, HERO_TOP_Z - 3);
+    this.beads = new BeadsView(app.renderer, this.world);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
     this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
@@ -396,6 +399,7 @@ export class Game {
     this.balls.sync(s.balls, alpha, dt);
     this.staff.update(dt, hx, hy, this.hero.view.zIndex);
     this.fish.update(dt, hx, hy, this.hero.view.zIndex);
+    this.beads.draw(s.beads, p.relicId === 'beads' && !p.dead ? beadsRings(p) : [], alpha, hx, hy, this.hero.view.zIndex);
     this.spells.drawFields(s.fields, alpha, dt);
     this.spells.drawCymbals(s.cymbals, alpha, dt);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);

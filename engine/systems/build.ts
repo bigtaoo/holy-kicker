@@ -1,7 +1,7 @@
 import { HERO, SHRINE } from '../config';
 import {
-  EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
-  xpToNext, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat,
+  BEADS_AWAKENED, BEADS_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS,
+  xpToNext, type BeadsRing, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat,
 } from '../content';
 import type { SimEvent } from '../events';
 import { TICK_RATE } from '../math/fixed';
@@ -45,7 +45,12 @@ export function fishLevel(p: Player) {
   return p.awakened ? FISH_AWAKENED : FISH_LEVELS[p.relic - 1];
 }
 
-/** Ticks between two attacks of the player's relic. */
+/** The prayer beads' rings: one per level row, two awakened. */
+export function beadsRings(p: Player): readonly BeadsRing[] {
+  return p.awakened ? BEADS_AWAKENED : [BEADS_LEVELS[p.relic - 1]];
+}
+
+/** Ticks between two attacks of the player's relic (the beads never stop, so never asked). */
 export function relicCooldown(p: Player): number {
   if (p.relicId === 'staff') return staffLevel(p).cooldown;
   if (p.relicId === 'fish') return fishLevel(p).cooldown;

@@ -1,5 +1,5 @@
 import {
-  EVOLVE, FISH, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, PASSIVES, RELIC_IDS, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, STAFF_AWAKENED, STAFF_LEVELS, TICK_RATE,
+  BEADS_AWAKENED, BEADS_LEVELS, EVOLVE, FISH, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, PASSIVES, RELIC_IDS, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, STAFF_AWAKENED, STAFF_LEVELS, TICK_RATE,
   type Card, type CardKind, type PassiveId, type Player, type RelicId, type SpellId,
 } from '@hk/engine';
 import { t } from '../i18n';
@@ -43,9 +43,21 @@ function reachLines(rows: readonly { reach: number; damage: number; cooldown: nu
   return lines;
 }
 
+/** The prayer beads' steps: beads, damage, spin (a shorter turn). */
+function beadsLines(level: number): string[] {
+  const a = BEADS_LEVELS[level - 1];
+  const b = BEADS_LEVELS[level];
+  const lines: string[] = [];
+  if (b.count !== a.count) lines.push(t('card.beads', { a: a.count, b: b.count }));
+  if (b.damage !== a.damage) lines.push(t('card.damage', { n: gain(a.damage, b.damage) }));
+  if (b.turn !== a.turn) lines.push(t('card.spin', { n: gain(b.turn, a.turn) }));
+  return lines;
+}
+
 function relicLines(id: RelicId, level: number): string[] {
   if (id === 'staff') return reachLines(STAFF_LEVELS, level);
   if (id === 'fish') return reachLines(FISH_LEVELS, level);
+  if (id === 'beads') return beadsLines(level);
   const a = RELIC_LEVELS[level - 1];
   const b = RELIC_LEVELS[level];
   const lines: string[] = [];
@@ -91,6 +103,7 @@ export function evolveDesc(id: SpellId | RelicId): string {
   if (id === 'ball') return t('evolve.ball.desc', { n: EVOLVE.splinters + 1 });
   if (id === 'staff') return t('evolve.staff.desc');
   if (id === 'fish') return t('evolve.fish.desc', { n: FISH.stunEvery, s: seconds(FISH.stun) });
+  if (id === 'beads') return t('evolve.beads.desc');
   if (id === 'palm') return t('evolve.palm.desc', { s: seconds(SPELL_EVOLVED.palm.life) });
   if (id === 'incense') {
     // per mille of max health per field tick, as percent per second
@@ -106,6 +119,10 @@ function evolveText(id: SpellId | RelicId): CardText {
   const lines = [evolveDesc(id)];
   if (id === 'staff') lines.push(t('card.reach', { n: gain(STAFF_LEVELS[MAX_LEVEL - 1].reach, STAFF_AWAKENED.reach) }));
   else if (id === 'fish') lines.push(t('card.reach', { n: gain(FISH_LEVELS[MAX_LEVEL - 1].reach, FISH_AWAKENED.reach) }));
+  else if (id === 'beads') {
+    const total = BEADS_AWAKENED.reduce((n, r) => n + r.count, 0);
+    lines.push(t('card.beads', { a: BEADS_LEVELS[MAX_LEVEL - 1].count, b: total }));
+  }
   else if (!isRelic(id) && id !== 'cymbal') {
     const a = SPELL_LEVELS[id][MAX_LEVEL - 1];
     const b = SPELL_EVOLVED[id];
