@@ -209,6 +209,9 @@ export const en = {
   settings: {
     title: 'Settings',
     language: 'Language',
+    sound: 'Sound',
+    on: 'On',
+    off: 'Off',
   },
   currency: {
     copper: 'Copper',

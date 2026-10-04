@@ -26,6 +26,9 @@ export interface LobbyActions {
   selectChapter(chapter: number): void;
   selectRelic(relic: RelicId): void;
   setLanguage(locale: Locale): void;
+  /** Whether sound effects are on, and turning them on or off. */
+  soundOn(): boolean;
+  setSound(on: boolean): void;
   /** Stores a save the lobby changed (a merge, a training node). */
   commit(save: SaveData): void;
 }
@@ -338,7 +341,7 @@ export class LobbyScreen implements Screen {
     this.view.addChild(backdrop(w, h));
     const box = new Container();
     box.position.set(w / 2, h / 2);
-    const boxH = 290 + LOCALES.length * 150 + 150;
+    const boxH = 290 + LOCALES.length * 150 + 330;
     const top = -boxH / 2;
     box.addChild(panel(800, boxH));
     const title = label(t('settings.title'), 64);
@@ -355,8 +358,19 @@ export class LobbyScreen implements Screen {
       b.y = top + 290 + i * 150;
       box.addChild(b);
     });
+    const soundY = top + 290 + LOCALES.length * 150 + 20;
+    const on = this.actions.soundOn();
+    const sound = button(`${t('settings.sound')}: ${on ? t('settings.on') : t('settings.off')}`, 560, 120, () => {
+      this.actions.setSound(!on);
+      this.relayout();
+    }, {
+      fill: on ? COLORS.saffron : COLORS.panelLocked,
+      textFill: on ? COLORS.outline : COLORS.text,
+    });
+    sound.y = soundY;
+    box.addChild(sound);
     const back = button(t('common.back'), 400, 110, close, { fill: COLORS.panelLocked });
-    back.y = top + 290 + LOCALES.length * 150 + 20;
+    back.y = soundY + 180;
     box.addChild(back);
     this.view.addChild(box);
   }

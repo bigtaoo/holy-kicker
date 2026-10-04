@@ -1,6 +1,7 @@
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import type { Ads, Portal } from '../types';
+import type { Ads, AudioHost, Portal } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
+import { webAudioHost } from '../web/webAudio';
 import { CrazyGamesSdk } from './sdk';
 
 // The CrazyGames host: the browser host plus the SDK for saves, ads, the gameplay brackets
@@ -12,6 +13,7 @@ export class CrazyGamesPlatform extends WebPlatform {
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
   override readonly ads: Ads;
+  override readonly audio: AudioHost | null;
   /** Called after a guest signs in or a user signs out, once the new name is known. */
   onAccountChange: () => void = () => {};
   private name: string | null = null;
@@ -29,6 +31,9 @@ export class CrazyGamesPlatform extends WebPlatform {
       celebrate: () => sdk.happytime(),
       userName: () => this.name,
     };
+    // the browser's audio, plus the portal's own mute button
+    const web = webAudioHost();
+    this.audio = web && { ...web, onHostMute: (cb) => sdk.onMuteChange(cb) };
     this.ads = {
       rewardedAvailable: async () => sdk.isEnabled() && !(await sdk.hasAdblock()),
       rewarded: () => sdk.requestAd('rewarded'),

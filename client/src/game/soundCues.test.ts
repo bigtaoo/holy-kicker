@@ -1,0 +1,28 @@
+import { describe, expect, it } from 'vitest';
+import { eventCue } from './soundCues';
+
+describe('eventCue', () => {
+  it('plays the local hero\'s own actions and silences another player\'s', () => {
+    expect(eventCue({ type: 'kick', owner: 0, dir: 1 }, 0)).toBe('kick');
+    expect(eventCue({ type: 'kick', owner: 1, dir: 1 }, 0)).toBeNull();
+    expect(eventCue({ type: 'levelUp', owner: 1, level: 3 }, 0)).toBeNull();
+  });
+
+  it('keeps the sandbox\'s harmless hurts quiet', () => {
+    expect(eventCue({ type: 'hurt', owner: 0, value: 0 }, 0)).toBeNull();
+    expect(eventCue({ type: 'hurt', owner: 0, value: 5 }, 0)).toBe('hurt');
+  });
+
+  it('tells crits and ball hits from plain hits', () => {
+    const hit = { type: 'hit', kind: 'mob', index: 0, x: 0, y: 0, value: 1, crit: false, ball: false, bx: 0, by: 0 } as const;
+    expect(eventCue(hit, 0)).toBe('hit');
+    expect(eventCue({ ...hit, ball: true }, 0)).toBe('thump');
+    expect(eventCue({ ...hit, ball: true, crit: true }, 0)).toBe('crit');
+  });
+
+  it('gives every spell a voice', () => {
+    for (const kind of ['nova', 'meteor', 'field', 'chain'] as const) {
+      expect(eventCue({ type: 'cast', kind, x: 0, y: 0, radius: 1 }, 0)).not.toBeNull();
+    }
+  });
+});

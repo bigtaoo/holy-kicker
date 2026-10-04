@@ -42,7 +42,8 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   `src/main.crazygames.ts` (`npm run build:crazygames` → `client/dist-crazygames/`, the zip to
   upload) and `src/main.wechat.ts`, all through `src/boot.ts`; `src/platform/{web,crazygames,wechat}`
   host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,
-  results and HUD; `src/meta` save, progress and balance; `src/i18n` string tables.
+  results and HUD; `src/meta` save, progress and balance; `src/audio` sound effects (cue table, procedural
+  voices, rate limits and voice cap); `src/i18n` string tables.
   Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host, `?waves=0` (or any
   `?mobs=`) runs the engine sandbox: a fixed horde and a hero who cannot die, for stress tests.
   `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; mid-boss 25), `?chapter=N` plays chapter N; `?relic=staff` (or `fish`, `beads`, `bowl`) plays

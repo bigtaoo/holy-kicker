@@ -34,6 +34,9 @@ export interface CgSdkShape {
     gameplayStart?: () => unknown;
     gameplayStop?: () => unknown;
     happytime?: () => unknown;
+    /** The portal's own toggles; muteAudio is set when the player muted the game there. */
+    settings?: { muteAudio?: unknown };
+    addSettingsChangeListener?: (listener: (settings: unknown) => void) => unknown;
   };
   ad?: {
     requestAd?: (type: CgAdType, callbacks: CgAdCallbacks) => unknown;
@@ -202,6 +205,14 @@ export class CrazyGamesSdk {
   async userName(): Promise<string | null> {
     const user = (await settle(() => this.sdk?.user?.getUser?.())) as CgUser | null | undefined;
     return typeof user?.username === 'string' && user.username !== '' ? user.username : null;
+  }
+
+  /** The portal's mute: called now with the current state, then on every change. */
+  onMuteChange(listener: (muted: boolean) => void): void {
+    if (!this.isEnabled()) return;
+    const read = (settings: unknown) => (settings as { muteAudio?: unknown } | null | undefined)?.muteAudio === true;
+    guard(() => listener(read(this.sdk?.game?.settings)));
+    void settle(() => this.sdk?.game?.addSettingsChangeListener?.((settings) => guard(() => listener(read(settings)))));
   }
 
   onAuthChange(listener: () => void): void {

@@ -118,6 +118,8 @@ export class Game {
   private readonly stickBase: Sprite;
   private readonly stickKnob: Sprite;
   private hurtFlash = 0;
+  /** Every tick's events after the view reacted, for the shell (sounds). */
+  onEvents: (events: readonly SimEvent[]) => void = () => {};
   private vp: Viewport = computeViewport(1, 1);
   private screenKey = '';
   private fpsTimer = 0;
@@ -260,6 +262,7 @@ export class Game {
       // null only while a network input source waits for the server; never offline
       if (!events) break;
       this.react(events);
+      this.onEvents(events);
     }
     this.draw(this.loop.alpha, Math.min(frameMs / 1000, 0.05));
   }

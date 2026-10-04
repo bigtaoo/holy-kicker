@@ -2,7 +2,8 @@ import { Application } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { FAKE_ADS, NO_ADS, NO_PORTAL, type Ads, type Platform, type Portal } from '../types';
+import { FAKE_ADS, NO_ADS, NO_PORTAL, type Ads, type AudioHost, type Platform, type Portal } from '../types';
+import { webAudioHost } from './webAudio';
 
 const KEY_DIRS: Record<string, Vec2> = {
   KeyW: { x: 0, y: -1 },
@@ -31,6 +32,7 @@ export class WebPlatform implements Platform {
   readonly storage: KeyValueStore = new SafeStore(browserStorage());
   readonly portal: Portal = NO_PORTAL;
   readonly ads: Ads = new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
+  readonly audio: AudioHost | null = webAudioHost();
 
   languages(): string[] {
     return [...(navigator.languages ?? [navigator.language])];

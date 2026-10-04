@@ -2,22 +2,25 @@ import { detectLocale, isLocale, type Locale } from '../i18n';
 import type { KeyValueStore } from './saveStore';
 
 // Device-only settings (docs/design.md: quality, volume and language stay local and are not
-// part of the save). Only the language exists so far.
+// part of the save): the language and whether sound effects play.
 
 export const SETTINGS_KEY = 'hk.settings';
 
 export interface Settings {
   /** Chosen in the settings panel; null follows the platform / browser language. */
   locale: Locale | null;
+  /** Sound effects on; on unless the player turned them off. */
+  sound: boolean;
 }
 
 export function loadSettings(kv: KeyValueStore): Settings {
   try {
     const raw: unknown = JSON.parse(kv.getItem(SETTINGS_KEY) ?? '{}');
-    const locale = (raw as { locale?: unknown } | null)?.locale;
-    return { locale: isLocale(locale) ? locale : null };
+    const r = raw as { locale?: unknown; sound?: unknown } | null;
+    const locale = r?.locale;
+    return { locale: isLocale(locale) ? locale : null, sound: r?.sound !== false };
   } catch {
-    return { locale: null };
+    return { locale: null, sound: true };
   }
 }
 

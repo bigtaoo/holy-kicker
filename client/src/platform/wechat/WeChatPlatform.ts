@@ -2,7 +2,7 @@ import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_ADS, NO_PORTAL, type Ads, type Platform, type Portal } from '../types';
+import { NO_ADS, NO_PORTAL, type Ads, type AudioHost, type Platform, type Portal } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
 
@@ -23,6 +23,21 @@ export class WeChatPlatform implements Platform {
   });
   readonly portal: Portal = NO_PORTAL;
   readonly ads: Ads = NO_ADS;
+  // wx.createWebAudioContext implements the Web Audio API; it is missing on old base
+  // libraries, so it is feature-detected. No autoplay gate here, but a touch still resumes
+  // a context the system suspended.
+  readonly audio: AudioHost | null = typeof wx.createWebAudioContext === 'function' ? {
+    context: () => wx.createWebAudioContext?.() ?? null,
+    onGesture: (cb) => wx.onTouchEnd(cb),
+    onFocus(cb) {
+      wx.onHide?.(() => cb(false));
+      wx.onShow?.(() => cb(true));
+      // an incoming call takes the audio session without hiding the game
+      wx.onAudioInterruptionBegin?.(() => cb(false));
+      wx.onAudioInterruptionEnd?.(() => cb(true));
+    },
+    onHostMute() {},
+  } : null;
 
   languages(): string[] {
     const lang = wx.getAppBaseInfo?.().language;

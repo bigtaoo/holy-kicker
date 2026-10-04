@@ -13,7 +13,9 @@ import { doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/prog
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, saveSettings } from '../meta/settings';
-import type { Platform } from '../platform/types';
+import type { Ads, Platform } from '../platform/types';
+import { Sound } from '../audio/Sound';
+import { eventCue } from '../game/soundCues';
 import { loadChapterArt } from '../art';
 import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
@@ -21,6 +23,7 @@ import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
 import { buildSlots } from './buildSlots';
 import { uiFrame, type Screen } from './uiLayout';
+import { onButtonTap } from './widgets';
 
 // The game's flow (docs/design.md "Flow"): the first launch goes straight into chapter 1,
 // afterwards lobby -> run -> results -> lobby. Owns the save, the current screen and the
@@ -50,6 +53,9 @@ export class Shell {
   private freeRevives = 0;
   /** A chapter's art pack is being fetched; taps on play wait for it. */
   private loading = false;
+  readonly sound: Sound;
+  /** The host's ads, with the game silent while one plays. */
+  private readonly ads: Ads;
 
   constructor(
     private readonly app: Application,
@@ -59,6 +65,9 @@ export class Shell {
     private readonly store: SaveStore,
   ) {
     this.save = store.load();
+    this.sound = new Sound(platform.audio, loadSettings(platform.storage).sound);
+    this.ads = this.sound.muteDuring(platform.ads);
+    onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
@@ -113,6 +122,8 @@ export class Shell {
         this.showLobby();
       },
       setLanguage: (locale) => this.setLanguage(locale),
+      soundOn: () => this.sound.enabled,
+      setSound: (on) => this.setSound(on),
       commit: (save) => this.commit(save),
     }, this.art.icons, this.app.renderer));
   }
@@ -121,6 +132,11 @@ export class Shell {
     setLocale(locale);
     saveSettings(this.platform.storage, { ...loadSettings(this.platform.storage), locale });
     this.showLobby();
+  }
+
+  private setSound(on: boolean): void {
+    this.sound.setEnabled(on);
+    saveSettings(this.platform.storage, { ...loadSettings(this.platform.storage), sound: on });
   }
 
   /** Starts a run of `chapter` once its art is in (a later chapter's pack may need fetching). */
@@ -158,6 +174,12 @@ export class Shell {
     this.downShown = false;
     this.shownOffer = null;
     if (this.quality) this.game.applyQuality(this.quality);
+    this.game.onEvents = (events) => {
+      for (const e of events) {
+        const cue = eventCue(e, 0);
+        if (cue) this.sound.play(cue);
+      }
+    };
     // the run adds itself to the stage; keep the UI above it
     this.app.stage.addChild(this.ui);
     this.hud = new RunHud(BALANCE.waves, {
@@ -184,7 +206,7 @@ export class Shell {
       this.game.revive();
       return true;
     }
-    const paid = await this.platform.ads.rewarded();
+    const paid = await this.ads.rewarded();
     if (!paid || !this.game) return false;
     // the engine stands the hero up on its next tick; watchRun then resumes the portal
     this.game.revive();
@@ -220,7 +242,7 @@ export class Shell {
     let leaving = false;
     this.setScreen(new ResultsScreen(reward, waves, {
       double: async () => {
-        const paid = await this.platform.ads.rewarded();
+        const paid = await this.ads.rewarded();
         if (paid) this.commit(doubleCopper(this.save, reward));
         return paid;
       },
@@ -228,9 +250,9 @@ export class Shell {
         if (leaving) return;
         leaving = true;
         // the interstitial sits on the results -> lobby break, never inside a run
-        void this.platform.ads.midgame().then(() => this.showLobby());
+        void this.ads.midgame().then(() => this.showLobby());
       },
-    }, this.platform.ads.rewardedAvailable()));
+    }, this.ads.rewardedAvailable()));
   }
 
   private tick(): void {
@@ -242,6 +264,7 @@ export class Shell {
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);
+    this.sound.flush();
   }
 
   private watchRun(game: Game, hud: RunHud): void {
@@ -278,7 +301,7 @@ export class Shell {
       const revives = s.players[0].revives;
       hud.showDown(revives > 0 && this.freeRevives > 0 ? 'free' : 'none');
       if (revives > 0 && this.freeRevives === 0) {
-        void this.platform.ads.rewardedAvailable().then((ok) => {
+        void this.ads.rewardedAvailable().then((ok) => {
           if (ok && this.hud === hud && this.downShown) hud.showDown('ad');
         });
       }

@@ -211,6 +211,9 @@ export const zh: Table<typeof en> = {
   settings: {
     title: '设置',
     language: '语言',
+    sound: '音效',
+    on: '开',
+    off: '关',
   },
   currency: {
     copper: '铜钱',

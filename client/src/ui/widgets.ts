@@ -38,6 +38,13 @@ export interface ButtonOptions {
   textFill?: number;
 }
 
+let tapSound = () => {};
+
+/** What every button does on a tap besides its own action (the shell plays a click). */
+export function onButtonTap(fn: () => void): void {
+  tapSound = fn;
+}
+
 /**
  * A tappable panel with a centred label. It sinks a little while pressed and fires on
  * release over it, so a drag that starts on a button and leaves it does nothing.
@@ -65,7 +72,10 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
   c.on('pointerup', () => {
     const fire = down;
     reset();
-    if (fire) onTap();
+    if (fire) {
+      tapSound();
+      onTap();
+    }
   });
   return c;
 }

@@ -202,6 +202,8 @@ interface Wx {
    * entry point that assumes a lifecycle API exists turns a missing one into a boot failure.
    */
   onHide?: (cb: () => void) => void;
+  /** The mini-game came back to the foreground. */
+  onShow?: (cb: () => void) => void;
   getWindowInfo(): WxWindowInfo;
   /** Base library 2.25+; `language` is WeChat's UI language, e.g. 'zh_CN' or 'en'. */
   getAppBaseInfo?: () => { language?: string };

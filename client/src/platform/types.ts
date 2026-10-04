@@ -27,6 +27,20 @@ export interface Platform {
   languages(): string[];
   readonly portal: Portal;
   readonly ads: Ads;
+  /** Sound output; null where the host has none (the game then runs silent). */
+  readonly audio: AudioHost | null;
+}
+
+/** What the sound effects need from a host. */
+export interface AudioHost {
+  /** A new Web Audio context, or null without one. Called once, from a gesture. */
+  context(): AudioContext | null;
+  /** A user gesture that may start audio (browsers keep a context suspended until one). */
+  onGesture(cb: () => void): void;
+  /** The game went to the background (false) or came back (true). */
+  onFocus(cb: (focused: boolean) => void): void;
+  /** The portal muted or unmuted the game from its own controls. */
+  onHostMute(cb: (muted: boolean) => void): void;
 }
 
 /** The host's session hooks; every method is a no-op where the host has none. */
@@ -44,8 +58,7 @@ export interface Portal {
 
 /**
  * Ads (docs/design.md "Ads and monetization"). Only called outside gameplay, so the game is
- * already stopped while one plays. The game has no audio yet; once it does, mute it around
- * these calls.
+ * already stopped while one plays; the shell mutes the sound around them (Sound.muteDuring).
  */
 export interface Ads {
   /** Whether to offer a rewarded ad at all: false with an adblocker or no ad host, and then
