@@ -1,4 +1,5 @@
 import { Container, Graphics, Rectangle, type Renderer } from 'pixi.js';
+import { bakeTexture } from './bake';
 import type { SheetMeta } from './mobAnim';
 import { sliceSheet, type MobSheet } from './mobView';
 
@@ -52,7 +53,7 @@ export function wispSheet(renderer: Renderer): MobSheet {
     if (i < FRAMES) lift.push(8 + Math.sin(t) * 6);
   }
   const rows = Math.ceil((FRAMES * 2) / COLS);
-  const tex = renderer.generateTexture({ target: box, frame: new Rectangle(0, 0, COLS * W, rows * H), resolution: 1, antialias: true });
+  const tex = bakeTexture(renderer, { target: box, frame: new Rectangle(0, 0, COLS * W, rows * H), resolution: 1, antialias: true });
   box.destroy({ children: true });
   const meta: SheetMeta = {
     frames: FRAMES, flash: FRAMES, cols: COLS, frameW: W, frameH: H, fps: 10, anchor: [W / 2, FOOT_Y], height: FOOT_Y - 14, lift,

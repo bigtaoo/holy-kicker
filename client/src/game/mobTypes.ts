@@ -1,4 +1,5 @@
 import { ColorMatrixFilter, Container, Rectangle, Sprite, Texture, type Renderer } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { gridPack } from './atlasPack';
 import type { SheetMeta } from './mobAnim';
 import { sliceSheet, type MobSheet } from './mobView';
@@ -42,7 +43,7 @@ export function fakeMobTypes(renderer: Renderer, base: MobSheet, types: number, 
       box.addChild(copy);
     });
     const size = page > 0 ? new Rectangle(0, 0, page, page) : new Rectangle(0, 0, w, h);
-    pages.push(renderer.generateTexture({ target: box, frame: size, resolution: 1 }));
+    pages.push(bakeTexture(renderer, { target: box, frame: size, resolution: 1 }));
     box.destroy({ children: true });
   }
   return slots.map((s) => sliceSheet(meta, pages[s.page], s.x, s.y));

@@ -1,4 +1,5 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { FP, type Bead, type BeadsRing } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 
@@ -25,7 +26,7 @@ function beadTexture(renderer: Renderer, fill: number, shade: number): Texture {
     // one hard cel shadow on the lower right, a small highlight on the upper left
     .arc(r, r, r - 6, -0.3, Math.PI * 0.85).arc(r - 6, r - 6, r - 8, Math.PI * 0.85, -0.3, true).fill(shade)
     .ellipse(r - 9, r - 10, 6, 4).fill(0xffffff);
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, BEAD_D, BEAD_D), resolution: 1, antialias: true });
+  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, BEAD_D, BEAD_D), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }

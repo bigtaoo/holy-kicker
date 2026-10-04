@@ -1,4 +1,5 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { FP, TICK_RATE, type Cymbal, type Field } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 import type { FxPool } from './fx';
@@ -27,7 +28,7 @@ interface FieldSprite {
 const FIELD_R = 128;
 
 function bake(renderer: Renderer, g: Graphics, size: number): Texture {
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
+  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }

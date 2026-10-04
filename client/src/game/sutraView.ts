@@ -1,4 +1,5 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Lotus, type Player } from '@hk/engine';
 import { SHADOW_Z } from './shadow';
 
@@ -31,7 +32,7 @@ function budTexture(renderer: Renderer, fill: number): Texture {
     .ellipse(r + 10, r, 9, 16).fill(fill).stroke({ color: 0x5a2038, width: 4 })
     .ellipse(r, r - 4, 10, 19).fill(fill).stroke({ color: 0x5a2038, width: 4 })
     .ellipse(r + 3, r - 2, 4, 12).fill({ color: 0x000000, alpha: 0.18 });
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, BUD, BUD + 8), resolution: 1, antialias: true });
+  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, BUD, BUD + 8), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }

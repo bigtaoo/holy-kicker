@@ -1,4 +1,5 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { bakeTexture } from './bake';
 import type { Bowl } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 import { makeShadow } from './shadow';
@@ -28,7 +29,7 @@ function bowlTexture(renderer: Renderer, look: (typeof LOOKS)[number]): Texture 
     .circle(r, r, r - 24).fill(OUTLINE)
     .circle(r, r, r - 28).fill(look.inside)
     .ellipse(r - 26, r - 30, 9, 5).fill(0xffffff);
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, SIZE, SIZE), resolution: 1, antialias: true });
+  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, SIZE, SIZE), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }

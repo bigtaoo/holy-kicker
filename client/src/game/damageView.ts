@@ -1,4 +1,5 @@
 import { Container, Particle, ParticleContainer, Rectangle, Text, Texture, type Renderer } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { DamagePool, damageAlpha, damageScale, heroClear, type CritLook } from './damage';
 
 // Draws the DamagePool through one ParticleContainer, one particle per digit. The ten digit
@@ -35,7 +36,7 @@ function drawGlyphs(renderer: Renderer): Glyphs {
     g.x = i * w + (w - g.width) / 2;
     box.addChild(g);
   });
-  const atlas = renderer.generateTexture({ target: box, frame: new Rectangle(0, 0, w * 10, h), resolution: 1 });
+  const atlas = bakeTexture(renderer, { target: box, frame: new Rectangle(0, 0, w * 10, h), resolution: 1 });
   box.destroy({ children: true });
   const textures = glyphs.map((_, i) => new Texture({ source: atlas.source, frame: new Rectangle(i * w, 0, w, h) }));
   // neighbouring outlines overlap a little, as in a hand-lettered number

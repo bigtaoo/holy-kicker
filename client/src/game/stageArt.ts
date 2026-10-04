@@ -1,4 +1,5 @@
 import { Graphics, Rectangle, Sprite, TilingSprite, type Renderer, type Texture } from 'pixi.js';
+import { bakeTexture } from './bake';
 import type { DecoSheet, DecoStyle } from './decoView';
 import type { MistLayer } from './mistView';
 import { SHADOW_Z } from './shadow';
@@ -92,7 +93,7 @@ export function stickSprites(renderer: Renderer, radius: number): [Sprite, Sprit
 }
 
 function bake(renderer: Renderer, g: Graphics, w: number, h: number, resolution: number): Texture {
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, w, h), resolution, antialias: true });
+  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, w, h), resolution, antialias: true });
   g.destroy();
   return tex;
 }

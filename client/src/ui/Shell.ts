@@ -288,8 +288,10 @@ export class Shell {
       next: () => {
         if (leaving) return;
         leaving = true;
-        // the interstitial sits on the results -> lobby break, never inside a run
-        void this.ads.midgame().then(() => this.showLobby());
+        // the interstitial sits on the results -> lobby break, never inside a run, and never
+        // after the first run (the tutorial), so a new player reaches the lobby before any ad
+        const ad = this.save.runs > 1 ? this.ads.midgame() : Promise.resolve();
+        void ad.then(() => this.showLobby());
       },
     }, this.ads.rewardedAvailable()));
   }

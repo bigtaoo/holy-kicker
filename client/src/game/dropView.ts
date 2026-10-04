@@ -1,4 +1,5 @@
 import { Container, Graphics, Particle, ParticleContainer, Rectangle, Texture, type Renderer } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { OVERFLOW_TIER, TICK_RATE, type Gem } from '@hk/engine';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -61,7 +62,7 @@ function drawGems(renderer: Renderer, colors: number[]): Texture[] {
     x += Math.ceil(w) + 2;
   });
   const h = Math.max(...SIZES) + PAD * 2;
-  const atlas = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, x, h), resolution: BAKE_RES, antialias: true });
+  const atlas = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, x, h), resolution: BAKE_RES, antialias: true });
   g.destroy();
   return boxes.map((b) => new Texture({ source: atlas.source, frame: b }));
 }

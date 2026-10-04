@@ -34,6 +34,7 @@ import { computeViewport, type Viewport } from './viewport';
 import { Autoplay } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
+import { releaseBaked } from './bake';
 import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSprites } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
@@ -205,11 +206,13 @@ export class Game {
     app.ticker.add(this.onTick);
   }
 
-  /** Removes the run from the stage. Shared art textures stay loaded for the next run. */
+  /** Removes the run from the stage and frees the textures it baked. Shared art textures stay
+   *  loaded for the next run. */
   destroy(): void {
     this.app.ticker.remove(this.onTick);
     this.app.stage.removeChild(this.playMask, this.root, this.stickBase, this.stickKnob);
     for (const c of [this.playMask, this.root, this.stickBase, this.stickKnob]) c.destroy({ children: true });
+    releaseBaked(this.app.renderer);
   }
 
   /** Quality level parts that live in the scene; the runtime handles resolution and fps. */

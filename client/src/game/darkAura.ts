@@ -1,4 +1,5 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { WISPS, hazePulse, wispPose } from './darkWisps';
 
 // The empowered boss's dark aura, drawn behind its figure: a breathing violet haze around the
@@ -58,7 +59,7 @@ function blob(renderer: Renderer): Texture {
   const r = 64;
   const g = new Graphics();
   for (let i = 10; i >= 1; i--) g.circle(r, r, (r * i) / 10).fill({ color: 0xffffff, alpha: 0.16 });
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, r * 2, r * 2), resolution: 1, antialias: true });
+  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, r * 2, r * 2), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }

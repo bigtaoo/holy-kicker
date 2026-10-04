@@ -228,7 +228,7 @@ Two currencies only:
 | Double results | Results | Main revenue |
 | Patrol double / instant | Lobby | Brings players back |
 | Ad chest | Shop | 3 per day |
-| Interstitial | Results → lobby | Per platform rules (CrazyGames `requestAd('midgame')`) |
+| Interstitial | Results → lobby (not after the first run) | Per platform rules (CrazyGames `requestAd('midgame')`) |
 
 - No reroll ad on the in-run pick: it breaks the pace.
 - Ads only on all platforms. IAP (ad-free card, battle pass, jade packs) is a later option for

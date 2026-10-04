@@ -14,6 +14,7 @@
     "build:wechat": "npm run build:wechat -w client",
     "build:crazygames": "npm run build:crazygames -w client",
     "dev:crazygames": "npm run dev:crazygames -w client",
+    "preview:crazygames": "npm run preview:crazygames -w client",
     "test": "npm run test --workspaces",
     "typecheck": "npm run typecheck --workspaces",
     "check:filelength": "node build/checkFileLength.mjs",

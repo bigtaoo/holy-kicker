@@ -1,4 +1,5 @@
 import { Container, Graphics, Rectangle, TilingSprite, type Renderer, type Texture } from 'pixi.js';
+import { bakeTexture } from './bake';
 import { mistBlobs, type MistTile } from './mistLayout';
 import { SHADOW_Z } from './shadow';
 
@@ -66,7 +67,7 @@ function bakeTile(renderer: Renderer, l: MistLayer): Texture {
     for (let i = RINGS; i >= 1; i--) g.circle(b.x, b.y, (b.r * i) / RINGS).fill({ color: 0xffffff, alpha: k });
   }
   const size = l.tile.size;
-  const tex = renderer.generateTexture({ target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
+  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
   g.destroy();
   return tex;
 }
