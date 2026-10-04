@@ -24,13 +24,15 @@ export type SimEvent =
   /** A mob went down at (x, y), knocked away along (dx, dy), and respawned elsewhere. */
   | { type: 'mobDown'; index: number; x: number; y: number; dx: number; dy: number }
   | { type: 'eliteDown'; id: number; x: number; y: number }
+  /** A door god's shield took a relic hit on elite target `index`, standing at (x, y). */
+  | { type: 'block'; index: number; x: number; y: number }
   /** Mob `index`, an emerger, rose from its mark at (x, y). */
   | { type: 'emerge'; index: number; x: number; y: number }
   /** A wolf leader howled at (x, y): the mobs within `radius` run fast for a while. */
   | { type: 'howl'; x: number; y: number; radius: number }
   /** The Bone Witch called a skeleton up at (x, y). */
   | { type: 'summon'; x: number; y: number }
-  /** The Bone Witch brought her staff down (a summons or a bone fan), standing at (x, y). */
+  /** The Bone Witch brought her staff down (a summons or a bone fan), or the Judge his brush, standing at (x, y). */
   | { type: 'bossCast'; x: number; y: number }
   /** The carp dived at (x, y). */
   | { type: 'bossDive'; x: number; y: number }

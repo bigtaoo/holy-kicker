@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { cpSync, rmSync } from 'node:fs';
+import { cpSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { engineAlias } from '../build/hkAlias.mjs';
 
 // WeChat mini-game bundle: one self-contained IIFE at wechat/js/game.js, which
@@ -27,6 +27,10 @@ const stripWebGPU = {
 
 // A mini-game reads art from its own package by path, so public/art is mirrored next to
 // the bundle rather than bundled. Mirror, not merge: a deleted texture leaves the package.
+// The main package is capped at 4 MB, so each later chapter's art (public/art/ch<n>) is a
+// subpackage of its own, named ch<n>: game.json declares it and its root gets the game.js
+// entry WeChat requires; the game fetches it with wx.loadSubpackage before the chapter's run
+// (art.ts loadChapterArt). build/checkWeChatPackage.mjs budgets each package.
 const copyArt = {
   name: 'copy-art',
   closeBundle() {
@@ -34,7 +38,13 @@ const copyArt = {
     const to = fileURLToPath(new URL('./wechat/art', import.meta.url));
     rmSync(to, { recursive: true, force: true });
     cpSync(from, to, { recursive: true });
-    console.log('  mirrored public/art -> wechat/art');
+    const packs = readdirSync(to).filter((d) => /^ch\d+$/.test(d)).sort();
+    for (const name of packs) writeFileSync(`${to}/${name}/game.js`, `// ${name}: chapter art, loaded by wx.loadSubpackage\n`);
+    const gameJson = fileURLToPath(new URL('./wechat/game.json', import.meta.url));
+    const game = JSON.parse(readFileSync(gameJson, 'utf8'));
+    game.subpackages = packs.map((name) => ({ name, root: `art/${name}/` }));
+    writeFileSync(gameJson, `${JSON.stringify(game, null, 2)}\n`);
+    console.log(`  mirrored public/art -> wechat/art (subpackages: ${packs.join(', ') || 'none'})`);
   },
 };
 

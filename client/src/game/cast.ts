@@ -13,7 +13,7 @@ import { fakeMobTypes } from './mobTypes';
 import type { MobLook, MobSheet } from './mobView';
 import type { EliteColor, SceneOptions } from './scene';
 import { makeRing } from './stageArt';
-import { WitchView } from './witchView';
+import { JUDGE_STYLE, StaffBossView, WITCH_STYLE } from './witchView';
 import { wispSheet } from './wispSheet';
 
 // Who a run is played against, by chapter (engine CHAPTER_MOBS, CHAPTER_ELITES,
@@ -30,29 +30,39 @@ const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff,
 const ELITE_TINTS = [0x9fb2d8, 0xb4a6d4];
 /** Chapter 3's jiangshi are frosted a pale ice blue. */
 const FROST_TINT = 0xb8d0f0;
-/** The Bone Witch is drawn a little taller than the abbot. */
+/** The door god, chapter 4's elite: a big statue. */
+const DOOR_GOD_HEIGHT = 155;
+/** The Bone Witch is drawn a little taller than the abbot, the Underworld Judge taller still. */
 const WITCH_SCALE = 1.1;
+const JUDGE_SCALE = 1.2;
+/** Chapter 4's lantern ghost floats a little taller than a toad squats. */
+const LANTERN_HEIGHT = 80;
 
 /** The looks of every mob kind in chapter `chapter` (0 for the sandbox). */
 export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, chapter: number, shadowTex: Texture): Record<MobKind, MobLook[]> {
-  const look = (sheet: MobSheet, kind: MobKind, shadow: [number, number], facesLeft = true, tint?: number): MobLook => (
-    { sheet, height: MOB_HEIGHT[kind], facesLeft, shadow, shadowTex, tint }
+  const look = (sheet: MobSheet, kind: MobKind, shadow: [number, number], facesLeft = true, tint?: number, height = MOB_HEIGHT[kind]): MobLook => (
+    { sheet, height, facesLeft, shadow, shadowTex, tint }
   );
   const jiangshi = fakeMobTypes(renderer, art.jiangshi, scene.types, scene.page, scene.mobRes);
-  // chapter 2's walkers are water ghosts, chapter 3's frosted jiangshi
-  const ghost = art.marsh.ghost;
+  // chapter 2's walkers are water ghosts, chapter 3's frosted jiangshi, chapter 4's long-tongue
+  // ghosts (its emergers too); its shooters are lantern ghosts
+  const ghost = art.ghost && chapter >= 4 ? art.ghost.tongue : art.marsh.ghost;
   const snow = art.snow;
+  const market = art.ghost;
+  const effigy = market?.effigy ?? art.jiangshi;
   return {
-    chaser: chapter === 2 ? [look(ghost, 'chaser', [27, 9])]
+    chaser: chapter === 2 || (market && chapter >= 4) ? [look(ghost, 'chaser', [27, 9])]
       : jiangshi.map((sheet) => look(sheet, 'chaser', [27, 9], true, chapter === 3 ? FROST_TINT : undefined)),
     runner: [look(art.fox, 'runner', [36, 9], false)],
     swarm: [look(wispSheet(renderer), 'swarm', [18, 6])],
     emerger: [look(ghost, 'emerger', [27, 9])],
-    shooter: [look(art.marsh.toad, 'shooter', [34, 10])],
+    shooter: [market && chapter >= 4 ? look(market.lantern, 'shooter', [26, 8], true, undefined, LANTERN_HEIGHT) : look(art.marsh.toad, 'shooter', [34, 10])],
     wolf: [look(snow.wolf, 'wolf', [38, 10])],
     caster: [look(snow.wraith, 'caster', [26, 8])],
     skeleton: [look(snow.skeleton, 'skeleton', [28, 9])],
     shard: [look(snow.shard, 'shard', [26, 8])],
+    effigy: [look(effigy, 'effigy', [28, 9])],
+    scrap: [look(effigy, 'scrap', [18, 6])],
   };
 }
 
@@ -62,6 +72,7 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
     charger: { sheet: art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14], shadowTex },
     toadKing: { sheet: art.marsh.toadKing, height: TOAD_KING_HEIGHT, facesLeft: true, shadow: [70, 20], shadowTex },
     wolfLeader: { sheet: art.snow.wolfLeader, height: WOLF_LEADER_HEIGHT, facesLeft: true, shadow: [64, 16], shadowTex },
+    doorGod: { sheet: art.ghost?.doorGod ?? art.jiangshi, height: DOOR_GOD_HEIGHT, facesLeft: true, shadow: [60, 18], shadowTex },
   };
   const ring = () => makeRing(renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
   // only the big jiangshi is tinted; the others are drawn in their own colours
@@ -85,6 +96,7 @@ export function makeBosses(renderer: Renderer, world: Container, art: Art, scene
   const views: BossViews = {};
   if (kinds.has('abbot') && art.boss) views.abbot = new Boss(renderer, world, art.boss, shadowTex, scene.bossSize, fx);
   if (kinds.has('carp')) views.carp = new CarpView(renderer, art.marsh.carp, world, shadowTex, scene.bossSize, fx);
-  if (kinds.has('witch')) views.witch = new WitchView(art.snow.witch, world, shadowTex, scene.bossSize * WITCH_SCALE, fx);
+  if (kinds.has('witch')) views.witch = new StaffBossView(renderer, art.snow.witch, world, shadowTex, scene.bossSize * WITCH_SCALE, fx, WITCH_STYLE);
+  if (kinds.has('judge') && art.ghost) views.judge = new StaffBossView(renderer, art.ghost.judge, world, shadowTex, scene.bossSize * JUDGE_SCALE, fx, JUDGE_STYLE);
   return Object.keys(views).length > 0 ? new BossStage(views) : null;
 }

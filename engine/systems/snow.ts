@@ -2,6 +2,7 @@ import { CASTER, HURT, MOB_KINDS, WITCH, WOLF_LEADER, tempKind } from '../config
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { newMob, teleport, underground, type Elite, type Mob, type SimState } from '../state';
+import { splitInto } from './ghost';
 import { nearestPlayer } from './horde';
 import { mobHp } from './waves';
 
@@ -42,18 +43,7 @@ export function howl(s: SimState, e: Elite, events: SimEvent[]): void {
 
 /** A skeleton fell at (x, y): its shards join at the end of the tick, side by side. */
 export function split(s: SimState, x: number, y: number): void {
-  for (let k = 0; k < WITCH.shards; k++) {
-    const off = Math.trunc(((2 * k - (WITCH.shards - 1)) * WITCH.shardSpread) / Math.max(1, WITCH.shards - 1));
-    s.spawns.push({ kind: 'shard', x: x + off, y });
-  }
-}
-
-/** Skeletons standing now, and those joining at the end of the tick. */
-export function skeletons(s: SimState): number {
-  let n = 0;
-  for (const m of s.mobs) if (m.kind === 'skeleton' && !underground(m)) n++;
-  for (const sp of s.spawns) if (sp.kind === 'skeleton') n++;
-  return n;
+  splitInto(s, 'shard', WITCH.shards, WITCH.shardSpread, x, y);
 }
 
 /**

@@ -1,15 +1,16 @@
-import { WITCH } from '../config';
+import { EMPOWERED_WITCH, WITCH } from '../config';
 import type { SimEvent } from '../events';
 import { dist } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Boss, Player, SimState } from '../state';
-import { skeletons } from './snow';
+import { standing } from './ghost';
 import { fan } from './threats';
 
 // The Bone Witch, chapter 3's boss (docs/content.md "Chapters"): she keeps her distance from
 // the hero and, every few seconds, raises her staff; then in turn she calls skeletons up out of
 // the ground around her (they split into bone crawlers when they fall, systems/snow.ts) or
 // throws a wide fan of bone bullets at him. A full guard of skeletons and she throws instead.
+// Empowered (chapter 4's mid-boss) she rests less, keeps a bigger guard and throws wider.
 
 /** Steps a witch that is not down; `target` is the nearest player. */
 export function stepWitch(s: SimState, b: Boss, target: Player, events: SimEvent[]): void {
@@ -32,16 +33,17 @@ export function stepWitch(s: SimState, b: Boss, target: Player, events: SimEvent
     if (b.t < WITCH.windup) return;
     b.phase = 'recover';
     b.t = 0;
-    const room = WITCH.maxSkeletons - skeletons(s);
-    if (b.shots++ % 2 === 0 && room > 0) summon(s, b, Math.min(WITCH.summon, room), events);
-    else fan(s, b.x, b.y, target.x, target.y, WITCH.fan);
+    const k = b.empowered ? EMPOWERED_WITCH : WITCH;
+    const room = k.maxSkeletons - standing(s, 'skeleton');
+    if (b.shots++ % 2 === 0 && room > 0) summon(s, b, Math.min(k.summon, room), events);
+    else fan(s, b.x, b.y, target.x, target.y, k.fan);
     events.push({ type: 'bossCast', x: b.x, y: b.y });
     return;
   }
   if (b.t >= WITCH.recover) {
     b.phase = 'walk';
     b.t = 0;
-    b.cooldown = WITCH.cooldown;
+    b.cooldown = b.empowered ? EMPOWERED_WITCH.cooldown : WITCH.cooldown;
   }
 }
 

@@ -123,6 +123,8 @@ export const zh: Table<typeof en> = {
     carp: '黑鱼精',
     carpEmpowered: '狂化黑鱼精',
     witch: '白骨精',
+    witchEmpowered: '狂化白骨精',
+    judge: '判官',
   },
   codex: {
     title: '图鉴 {n}/{total}',

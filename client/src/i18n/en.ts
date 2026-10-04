@@ -120,6 +120,8 @@ export const en = {
     carp: 'Black Carp King',
     carpEmpowered: 'Black Carp King, Empowered',
     witch: 'Bone Witch',
+    witchEmpowered: 'Bone Witch, Empowered',
+    judge: 'Underworld Judge',
     twins: 'Twin Jiangshi',
   },
   codex: {

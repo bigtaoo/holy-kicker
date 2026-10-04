@@ -14,6 +14,7 @@ import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, saveSettings } from '../meta/settings';
 import type { Platform } from '../platform/types';
+import { loadChapterArt } from '../art';
 import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
@@ -47,6 +48,8 @@ export class Shell {
   private shownOffer: readonly Card[] | null = null;
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
   private freeRevives = 0;
+  /** A chapter's art pack is being fetched; taps on play wait for it. */
+  private loading = false;
 
   constructor(
     private readonly app: Application,
@@ -63,7 +66,7 @@ export class Shell {
 
   /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
   start(direct = false): void {
-    if (direct || !this.save.firstRunDone) this.startRun(this.scene.chapter || this.save.chapter);
+    if (direct || !this.save.firstRunDone) this.play(this.scene.chapter || this.save.chapter);
     else this.showLobby();
     this.platform.portal.loaded();
   }
@@ -100,7 +103,7 @@ export class Shell {
 
   private showLobby(): void {
     this.setScreen(new LobbyScreen(this.save, this.platform.portal.userName(), {
-      play: (chapter) => this.startRun(chapter),
+      play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => {
         this.commit({ ...this.save, chapter });
         this.showLobby();
@@ -118,6 +121,24 @@ export class Shell {
     setLocale(locale);
     saveSettings(this.platform.storage, { ...loadSettings(this.platform.storage), locale });
     this.showLobby();
+  }
+
+  /** Starts a run of `chapter` once its art is in (a later chapter's pack may need fetching). */
+  private play(chapter: number): void {
+    if (this.loading) return;
+    this.loading = true;
+    loadChapterArt(this.platform, this.scene, this.art, chapter).then(
+      () => {
+        this.loading = false;
+        this.startRun(chapter);
+      },
+      (err: unknown) => {
+        // stay in (or go back to) the lobby; the next tap tries again
+        this.loading = false;
+        console.error(err);
+        this.showLobby();
+      },
+    );
   }
 
   private startRun(chapter: number): void {

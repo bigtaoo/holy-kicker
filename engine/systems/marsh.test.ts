@@ -210,7 +210,7 @@ describe('empowered abbot (mid-boss)', () => {
 
 describe('black carp king (boss)', () => {
   it('is the marsh boss, and later chapters keep it until they get their own', () => {
-    expect([1, 2, 3, 5].map(chapterBoss)).toEqual(['abbot', 'carp', 'witch', 'witch']);
+    expect([1, 2, 3, 4, 6].map(chapterBoss)).toEqual(['abbot', 'carp', 'witch', 'judge', 'judge']);
     const e = new Engine(MARSH);
     beginWave(e.state, MARSH.waves);
     expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: false, hp: CARP.hp });

@@ -1,5 +1,5 @@
 import {
-  BOSS, CARP, CHAPTER_BOSSES, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HORDE, MOB_KINDS, SHRINE,
+  BOSS, CARP, CHAPTER_BOSSES, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HORDE, MOB_KINDS, SHRINE,
   TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
@@ -71,13 +71,15 @@ export function isPackWave(chapter: number, wave: number, last: number): boolean
 /** The boss of kind `kind` with its health, empowered for a mid-boss. */
 function bossOf(kind: BossKind, empowered: boolean): { hp: number } {
   if (kind === 'carp') return empowered ? EMPOWERED_CARP : CARP;
-  if (kind === 'witch') return WITCH;
+  if (kind === 'witch') return empowered ? EMPOWERED_WITCH : WITCH;
+  if (kind === 'judge') return JUDGE;
   return empowered ? EMPOWERED : BOSS;
 }
 
 function newEliteOf(s: SimState, kind: EliteKind) {
   if (kind === 'toadKing') return newElite(0, 0, s.nextId++, TOAD_KING.hp, TOAD_KING.cooldown, kind);
   if (kind === 'wolfLeader') return newElite(0, 0, s.nextId++, WOLF_LEADER.hp, ELITE.cooldown, kind);
+  if (kind === 'doorGod') return newElite(0, 0, s.nextId++, DOOR_GOD.hp, DOOR_GOD.cooldown, kind);
   return newElite(0, 0, s.nextId++);
 }
 

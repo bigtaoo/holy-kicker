@@ -110,6 +110,13 @@ export class WeChatPlatform implements Platform {
     return { x: 0, y: 0 };
   }
 
+  loadPack(name: string): Promise<void> {
+    // the subpackage is declared in game.json by the build (vite.wechat.config.js)
+    return new Promise((resolve, reject) => {
+      wx.loadSubpackage({ name, success: () => resolve(), fail: (res) => reject(new Error(`loadSubpackage ${name}: ${res?.errMsg ?? 'failed'}`)) });
+    });
+  }
+
   async readText(path: string): Promise<string> {
     // there is no fetch; package files are read straight from the file system
     return wx.getFileSystemManager().readFileSync(path, 'utf8');

@@ -49,6 +49,6 @@ export function sweep(s: SimState, events: SimEvent[], p: Player): void {
       m.x += Math.trunc(((m.x - p.x) * lv.knockback) / d);
       m.y += Math.trunc(((m.y - p.y) * lv.knockback) / d);
     }
-    damage(s, events, i, p, null, lv.damage, false);
+    damage(s, events, i, p, null, lv.damage, false, p);
   }
 }

@@ -94,7 +94,7 @@ function hit(s: SimState, events: SimEvent[], b: Bowl, by: Player): void {
       gainXp(by, MOB_GEM);
       continue;
     }
-    damage(s, events, i, by, null, b.damage, false);
+    damage(s, events, i, by, null, b.damage, false, b);
     // still in reach: it took the blow without going down, so it comes along
     const m = s.mobs[i];
     if (mob && !b.back && !b.swallow && b.carried.length < b.carry && dist2(m.x - b.x, m.y - b.y) <= r2) b.carried.push(i);

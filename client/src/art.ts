@@ -7,7 +7,7 @@ import type { TaoSkeleton } from './game/tao/types';
 import { MARSH_MIST } from './game/mistView';
 import type { Platform } from './platform/types';
 import type { SceneOptions } from './game/scene';
-import { MARSH_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
+import { GHOST_DECO, MARSH_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
@@ -46,7 +46,31 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
     { ground: snowTex, deco: snowDeco, style: SNOW_DECO, mist: null },
-  ], boss, icons: icons.frames, marsh: { ghost, toad, toadKing, carp }, snow: { wolf, wolfLeader, wraith, skeleton, shard, witch } };
+  ], boss, icons: icons.frames, marsh: { ghost, toad, toadKing, carp }, snow: { wolf, wolfLeader, wraith, skeleton, shard, witch }, ghost: null };
+}
+
+/** Chapters whose art comes in a pack of its own (art/ch<n>/, a WeChat subpackage). */
+export const PACKED_CHAPTERS = 4;
+
+/**
+ * Loads chapter `chapter`'s art pack into `art` if it has one and it is not loaded yet:
+ * chapter 4's ghost market (art/ch4: its ground, props and mobs).
+ */
+export async function loadChapterArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco'>, art: Art, chapter: number): Promise<void> {
+  if (chapter < PACKED_CHAPTERS || art.ghost) return;
+  await platform.loadPack('ch4');
+  const { ground, deco } = scene;
+  const [street, streetDeco, tongue, lantern, effigy, doorGod, judge] = await Promise.all([
+    ground === 'flat' ? null : Assets.load<Texture>('art/ch4/ground/street.png'),
+    deco === 'none' ? null : loadDeco(platform, 'art/ch4/ground/street_deco'),
+    loadSheet(platform, 'art/ch4/mobs/tongue'),
+    loadSheet(platform, 'art/ch4/mobs/lantern'),
+    loadSheet(platform, 'art/ch4/mobs/effigy'),
+    loadSheet(platform, 'art/ch4/mobs/doorgod'),
+    loadSheet(platform, 'art/ch4/mobs/judge'),
+  ]);
+  art.stages[3] = { ground: street, deco: streetDeco, style: GHOST_DECO, mist: null };
+  art.ghost = { tongue, lantern, effigy, doorGod, judge };
 }
 
 /** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py). */

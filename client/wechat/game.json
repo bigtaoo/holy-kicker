@@ -4,5 +4,11 @@
   "networkTimeout": {
     "request": 10000,
     "downloadFile": 10000
-  }
+  },
+  "subpackages": [
+    {
+      "name": "ch4",
+      "root": "art/ch4/"
+    }
+  ]
 }

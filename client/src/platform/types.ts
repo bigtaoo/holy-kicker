@@ -16,6 +16,11 @@ export interface Platform {
   readKeys(): Vec2;
   /** Reads a text file shipped with the game (relative path, as for textures). */
   readText(path: string): Promise<string>;
+  /**
+   * Makes a chapter's art pack readable (art/<name>/): a WeChat subpackage is fetched first,
+   * since the main package is capped at 4 MB; on the web the files are always there.
+   */
+  loadPack(name: string): Promise<void>;
   /** Where the save and the settings live. Never throws (wrap in SafeStore). */
   readonly storage: KeyValueStore;
   /** The player's languages, most preferred first (BCP 47 tags or WeChat's 'zh_CN'). */

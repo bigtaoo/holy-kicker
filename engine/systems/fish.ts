@@ -43,7 +43,7 @@ export function ringSystem(s: SimState, events: SimEvent[]): void {
       const e = eliteAt(s, i);
       if (r.stun > 0 && i < s.mobs.length) s.mobs[i].stun = r.stun;
       else if (r.stun > 0 && e) e.stun = r.stun;
-      damage(s, events, i, by, null, r.damage, false);
+      damage(s, events, i, by, null, r.damage, false, r);
     }
     if (r.radius < r.reach) s.rings[w++] = r;
   }

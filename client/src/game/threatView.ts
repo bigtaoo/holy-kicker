@@ -121,7 +121,8 @@ export class ThreatLayer {
       outer.visible = inner.visible = !!z;
       if (!z) return;
       const k = (z.radius * 2) / FP / (ZONE_TEX - 8);
-      const age = z.age + alpha;
+      // a zone written to go off later (the judge's strokes) starts below 0 and waits half-drawn
+      const age = Math.max(0, z.age + alpha);
       const t = Math.min(1, age / warn);
       outer.position.set(z.x / FP, z.y / FP);
       inner.position.set(z.x / FP, z.y / FP);

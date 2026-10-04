@@ -1,4 +1,4 @@
-import { BOSS, CARP, EMPOWERED, HURT, WITCH, type BossKind } from '../config';
+import { BOSS, CARP, EMPOWERED, HURT, JUDGE, WITCH, type BossKind } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -6,6 +6,7 @@ import { body, teleport, type Boss, type SimState } from '../state';
 import { stepCarp } from './carp';
 import { nearestPlayer } from './horde';
 import { ring } from './threats';
+import { stepJudge } from './judge';
 import { stepWitch } from './witch';
 
 // The boss lumbers after the nearest player and, once close, winds up a two-fisted slam on a
@@ -14,11 +15,12 @@ import { stepWitch } from './witch';
 // is then gone (systems/waves.ts), in the sandbox it comes back later from a random side.
 // Empowered (the later chapters' mid-boss), it rests less and every slam also sends a bullet
 // ring out from the rim of its circle, to slip through between the bullets. The Black Carp
-// King (chapter 2's boss) and the Bone Witch (chapter 3's) share the fall and the return, and
-// move and attack their own ways (systems/carp.ts, systems/witch.ts).
+// King (chapter 2's boss), the Bone Witch (chapter 3's) and the Underworld Judge (chapter 4's)
+// share the fall and the return, and move and attack their own ways (systems/carp.ts,
+// systems/witch.ts, systems/judge.ts).
 
 export function newBoss(x: number, y: number, hp = BOSS.hp, empowered = false, kind: BossKind = 'abbot'): Boss {
-  const cooldown = kind === 'carp' ? CARP.cooldown : kind === 'witch' ? WITCH.cooldown : BOSS.cooldown;
+  const cooldown = kind === 'carp' ? CARP.cooldown : kind === 'witch' ? WITCH.cooldown : kind === 'judge' ? JUDGE.cooldown : BOSS.cooldown;
   return { ...body(x, y), kind, phase: 'walk', t: 0, cooldown, zoneX: x, zoneY: y, hp, maxHp: hp, empowered, shots: 0 };
 }
 
@@ -58,6 +60,7 @@ export function bossSystem(s: SimState, events: SimEvent[], hurt: (owner: number
   }
   if (b.kind === 'carp') return stepCarp(s, b, target, events, hurt);
   if (b.kind === 'witch') return stepWitch(s, b, target, events);
+  if (b.kind === 'judge') return stepJudge(s, b, target, events);
   const dx = target.x - b.x;
   const dy = target.y - b.y;
   const d = dist(dx, dy);

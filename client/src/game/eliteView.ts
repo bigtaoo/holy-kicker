@@ -1,5 +1,5 @@
 import { Graphics, type Container, type Renderer, type Sprite } from 'pixi.js';
-import { DASH_TICKS, ELITE, FP, TOAD_KING, WOLF_LEADER, type Elite, type EliteKind } from '@hk/engine';
+import { DASH_TICKS, DOOR_GOD, ELITE, FP, THREATS, TOAD_KING, WOLF_LEADER, type Elite, type EliteKind } from '@hk/engine';
 import type { BossBar } from './bossBar';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -12,12 +12,21 @@ import { makeRing } from './stageArt';
 // the dash it hops at a run and the lane ahead of it fades out; resting, it barely moves.
 // Chapter 2's toad king (engine systems/marsh.ts) marks no lane: it swells up as it winds up,
 // and its bullets and pools are drawn by the threat layer. Chapter 3's wolf leader charges
-// down the same lane and, every other time, swells up to howl (the ring is howlFx).
+// down the same lane and, every other time, swells up to howl (the ring is howlFx). Chapter 4's
+// door god faces where it turns, not at the hero, and a pale arc on the ground marks the side
+// its shield guards; it rises and trembles while its halberd is up (the circle is the threat
+// layer's) and, winded, sags with the arc gone: the time to hit it from the front.
 
 const VIOLET = 0xb04cff;
 const OUTLINE = 0x140c18;
 /** Closer to the hero than this (world units), it has stopped walking. */
-const STOP: Record<EliteKind, number> = { charger: ELITE.stopDist / FP, toadKing: TOAD_KING.stopDist / FP, wolfLeader: ELITE.stopDist / FP };
+const STOP: Record<EliteKind, number> = {
+  charger: ELITE.stopDist / FP, toadKing: TOAD_KING.stopDist / FP, wolfLeader: ELITE.stopDist / FP, doorGod: DOOR_GOD.stopDist / FP,
+};
+const SHIELD = 0xd8f0ff;
+/** The door god's guarded arc on the ground: its radius (world units), flattened like the shadows. */
+const SHIELD_R = 105;
+const FLAT = 0.45;
 /** How much the toad king swells at the end of its wind-up, and the wolf leader before it howls. */
 const SWELL = 0.18;
 const HOWL_SWELL = 0.14;
@@ -50,7 +59,8 @@ export class EliteView {
   draw(e: Elite | null, alpha: number, dt: number, hx: number, hy: number): void {
     this.mob.setVisible(!!e);
     this.ring.visible = !!e;
-    const charger = this.kind !== 'toadKing';
+    const charger = this.kind === 'charger' || this.kind === 'wolfLeader';
+    const statue = this.kind === 'doorGod';
     this.lane.visible = !!e && charger && (e.phase === 'aim' || e.phase === 'dash');
     if (!e) return;
     this.time += dt;
@@ -58,22 +68,41 @@ export class EliteView {
     const y = lerpY(e, alpha);
     let speed = Math.hypot(x - hx, y - hy) > STOP[this.kind] + 5 ? 1 : 0.35;
     this.mob.swell = e.stun > 0 ? 0
+      : statue && e.phase === 'aim' ? HOWL_SWELL * Math.min(1, (e.t + alpha) / THREATS.warn)
       : !charger && e.phase === 'aim' ? SWELL * Math.min(1, (e.t + alpha) / TOAD_KING.windup)
       : e.phase === 'howl' ? HOWL_SWELL * Math.min(1, (e.t + alpha) / WOLF_LEADER.howl)
       : 0;
     if (e.stun > 0 || e.phase === 'howl') speed = 0;
-    else if (!charger) {
+    else if (statue && e.phase === 'aim') {
+      speed = 0;
+      x += Math.sin(this.time * 60) * 3;
+    } else if (!charger) {
       if (e.phase !== 'walk') speed = e.phase === 'aim' ? 0 : 0.25;
     } else if (e.phase === 'aim') {
       speed = 0;
       x += Math.sin(this.time * 70) * 4;
     } else if (e.phase === 'dash') speed = 2.6;
     else if (e.phase === 'rest') speed = 0.25;
-    // it faces along its charge, else at the hero
-    const face = charger && (e.phase === 'aim' || e.phase === 'dash') ? e.vx : hx - x;
+    // it faces along its charge (the door god where it turned), else at the hero
+    const face = statue || (charger && (e.phase === 'aim' || e.phase === 'dash')) ? e.vx : hx - x;
     this.mob.update(dt, x, y, face, speed);
     this.ring.position.set(x, y);
     if (this.lane.visible) this.drawLane(e, alpha);
+    if (statue) this.drawShield(e, x, y);
+  }
+
+  /** The arc of ground the door god's shield guards, while it is up. */
+  private drawShield(e: Elite, x: number, y: number): void {
+    const g = this.lane.clear();
+    this.lane.visible = e.phase !== 'rest';
+    if (!this.lane.visible) return;
+    g.position.set(x, y);
+    g.rotation = 0;
+    g.scale.set(1, FLAT);
+    const a = Math.atan2(e.vy, e.vx);
+    const half = (DOOR_GOD.blockHalf / 65536) * Math.PI * 2;
+    g.arc(0, 0, SHIELD_R, a - half, a + half).stroke({ color: OUTLINE, width: 14, alpha: 0.45 });
+    g.arc(0, 0, SHIELD_R, a - half, a + half).stroke({ color: SHIELD, width: 8, alpha: 0.85 });
   }
 
   private drawLane(e: Elite, alpha: number): void {
@@ -88,6 +117,7 @@ export class EliteView {
     const oy = lerpY(e, alpha) - Math.sin(a) * gone;
     g.position.set(ox, oy);
     g.rotation = a;
+    g.scale.set(1, 1);
     const from = gone;
     const fill = Math.max(0, k);
     g.rect(from, -half, len - from, half * 2).fill({ color: VIOLET, alpha: 0.06 + 0.1 * fill });
@@ -160,6 +190,20 @@ export function nearestElite(elites: readonly Elite[], x: number, y: number): El
     }
   }
   return best;
+}
+
+/** A door god's shield took a hit; it stands at (x, y), world units: a bright ping off the shield. */
+export function blockFx(fx: FxPool, x: number, y: number, toward: number): void {
+  const sx = x + Math.sign(toward || 1) * 50;
+  const sy = y - 80;
+  fx.emit({ shape: 'ring', x: sx, y: sy, vx: 0, vy: 0, life: 0.2, size0: 30, size1: 110, rotation: 0, spin: 0, drag: 1, color: SHIELD, alpha: 0.9 });
+  for (let k = 0; k < 4; k++) {
+    const a = Math.random() * Math.PI * 2;
+    fx.emit({
+      shape: 'spark', x: sx, y: sy, vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, life: 0.22, size0: 16, size1: 3,
+      rotation: a, spin: 0, drag: 0.1, color: SHIELD, alpha: 1,
+    });
+  }
 }
 
 /** A wolf leader howled at (x, y), world units: rings in the enemy-attack violet running out to `r`. */

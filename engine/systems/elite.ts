@@ -4,6 +4,7 @@ import { dist, dist2 } from '../math/fixed';
 import type { Elite, SimState } from '../state';
 import { nearestPlayer, stepHorde } from './horde';
 import { stepToadKing } from './marsh';
+import { stepDoorGod } from './ghost';
 import { howl } from './snow';
 
 // The elite, a charger (docs/content.md "Enemies"): it walks at the nearest hero, and once
@@ -14,6 +15,7 @@ import { howl } from './snow';
 // Several elites (the mid-boss twins) take turns: one aims only while no other is charging.
 // Chapter 2's toad king (systems/marsh.ts) shoots instead. Chapter 3's wolf leader charges
 // faster and, every other time, howls instead (systems/snow.ts): the mobs around it run fast.
+// Chapter 4's door god shields itself and smashes (systems/ghost.ts).
 
 export type HurtFn = (owner: number, value: number) => void;
 
@@ -25,7 +27,7 @@ export function eliteSystem(s: SimState, events: SimEvent[], hurt: HurtFn): void
 }
 
 function charging(e: Elite): boolean {
-  return e.kind !== 'toadKing' && (e.phase === 'aim' || e.phase === 'dash');
+  return (e.kind === 'charger' || e.kind === 'wolfLeader') && (e.phase === 'aim' || e.phase === 'dash');
 }
 
 function stepElite(s: SimState, e: Elite, events: SimEvent[], hurt: HurtFn): void {
@@ -36,6 +38,7 @@ function stepElite(s: SimState, e: Elite, events: SimEvent[], hurt: HurtFn): voi
     return;
   }
   if (e.kind === 'toadKing') return stepToadKing(s, e);
+  if (e.kind === 'doorGod') return stepDoorGod(s, e);
   if (e.cd > 0) e.cd--;
   e.t++;
   if (e.phase === 'aim') {

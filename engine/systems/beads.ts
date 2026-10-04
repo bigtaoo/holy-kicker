@@ -63,7 +63,7 @@ export function beadSystem(s: SimState, events: SimEvent[]): void {
     }
     b.touching = now;
     for (const i of fresh) {
-      damage(s, events, i, p, null, ring.damage, false);
+      damage(s, events, i, p, null, ring.damage, false, b);
       // the target went down and came back elsewhere: it no longer touches this bead
       const t = targetAt(s, i);
       if (!t || dist2(t.x - b.x, t.y - b.y) >= r2) b.touching.splice(b.touching.indexOf(i), 1);

@@ -1,4 +1,4 @@
-import { BALL, DAMAGE, ELITE, MIX, TOAD_KING, WOLF_LEADER, tempKind } from '../config';
+import { BALL, DAMAGE, DOOR_GOD, ELITE, MIX, TOAD_KING, WOLF_LEADER, tempKind } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
@@ -6,6 +6,7 @@ import { submerged, underground, type Ball, type Body, type Elite, type Player, 
 import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
+import { shielded, tear } from './ghost';
 import { ringPoint } from './horde';
 import { resetMob } from './marsh';
 import { split } from './snow';
@@ -78,10 +79,20 @@ export function kickTarget(s: SimState, p: Player, range: number): number {
  * raises the crit chance). Mobs lose health and at 0 go down (a gem drops, they respawn on the
  * ring with the wave's health), the elite loses health and is knocked back (the toad king
  * barely; none when `knock` is off: the staff keeps it in reach), the boss loses health.
+ * A relic hit comes `from` a point (the ball's, else the one given): a door god's shield
+ * facing it takes the hit whole. Spells give none, so they always land.
  */
-export function damage(s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null, pct = 100, knock = true): void {
+export function damage(
+  s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null, pct = 100, knock = true, from: { x: number; y: number } | null = null,
+): void {
   const t = targetAt(s, i);
   if (!t) return;
+  const src = ball ?? from;
+  const shield = src ? eliteAt(s, i) : null;
+  if (shield && shielded(shield, src!.x, src!.y)) {
+    events.push({ type: 'block', index: i, x: t.x, y: t.y });
+    return;
+  }
   const crit = s.combat.chance(DAMAGE.critPercent + stat(by, 'crit'), 100);
   const roll = s.combat.range(DAMAGE.min, DAMAGE.max) * (crit ? DAMAGE.critMul : 1);
   const value = Math.max(1, Math.trunc((roll * pct * (100 + stat(by, 'attack'))) / 10000));
@@ -106,7 +117,7 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
     }
     if (!knock) return;
     const d = dist(t.x - by.x, t.y - by.y) || 1;
-    const push = e.kind === 'toadKing' ? TOAD_KING.knockback : e.kind === 'wolfLeader' ? WOLF_LEADER.knockback : ELITE.knockback;
+    const push = e.kind === 'toadKing' ? TOAD_KING.knockback : e.kind === 'wolfLeader' ? WOLF_LEADER.knockback : e.kind === 'doorGod' ? DOOR_GOD.knockback : ELITE.knockback;
     t.x += Math.trunc(((t.x - by.x) * push) / d);
     t.y += Math.trunc(((t.y - by.y) * push) / d);
   } else {
@@ -119,12 +130,13 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
 /**
  * Mob i goes down (dropping its gem, unless swallowed; only some swarm mobs and shards leave
  * one) and respawns on the ring with the wave's health (an emerger goes under the ground to
- * rise again). A skeleton or a shard falls for good, a skeleton splitting into shards.
+ * rise again); a paper effigy tears into scraps as it goes. A skeleton, a shard or a scrap falls
+ * for good, a skeleton splitting into shards.
  */
 export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
   const m = s.mobs[i];
   events.push({ type: 'mobDown', index: i, x: m.x, y: m.y, dx: m.x - by.x, dy: m.y - by.y });
-  const few = m.kind === 'swarm' || m.kind === 'shard';
+  const few = m.kind === 'swarm' || m.kind === 'shard' || m.kind === 'scrap';
   if (gem && (!few || s.drop.chance(MIX.swarmGemPercent, 100))) dropGem(s, m.x, m.y, MOB_GEM);
   m.stun = 0;
   if (tempKind(m.kind)) {
@@ -133,6 +145,7 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
     m.haste = 0;
     return;
   }
+  if (m.kind === 'effigy') tear(s, m.x, m.y);
   m.hp = mobHp(s.wave, m.kind, s.config.chapter);
   resetMob(s, m);
   ringPoint(s.ai, by.x, by.y, m);

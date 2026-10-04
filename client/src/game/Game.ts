@@ -17,7 +17,7 @@ import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
 import { Corpses, type MobSheet } from './mobView';
 import { HealthBar } from './healthBar';
-import { howlFx, nearestElite, type EliteCrowd } from './eliteView';
+import { blockFx, howlFx, nearestElite, type EliteCrowd } from './eliteView';
 import { HordeView, MOB_HEIGHT } from './hordeView';
 import { AuraStack } from './aura';
 import type { BossStage } from './bossStage';
@@ -52,8 +52,11 @@ export interface Art {
   cuju: Texture;
   staff: Texture;
   fish: Texture;
-  /** Grounds by chapter from chapter 1; a chapter without its own takes the last one. */
-  stages: readonly StageArt[];
+  /**
+   * Grounds by chapter from chapter 1; a chapter without its own takes the last one. Chapters
+   * in an art pack (chapter 4 on) add theirs when the pack is loaded (loadChapterArt).
+   */
+  stages: StageArt[];
   /** The boss rig; null when the scene leaves the boss out. */
   boss: TaoAsset | null;
   /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
@@ -62,6 +65,16 @@ export interface Art {
   marsh: { ghost: MobSheet; toad: MobSheet; toadKing: MobSheet; carp: MobSheet };
   /** Chapter 3's. */
   snow: { wolf: MobSheet; wolfLeader: MobSheet; wraith: MobSheet; skeleton: MobSheet; shard: MobSheet; witch: MobSheet };
+  /** Chapter 4's, from its art pack: null until a chapter 4 run loads it. */
+  ghost: GhostArt | null;
+}
+
+export interface GhostArt {
+  tongue: MobSheet;
+  lantern: MobSheet;
+  effigy: MobSheet;
+  doorGod: MobSheet;
+  judge: MobSheet;
 }
 
 const HERO_HEIGHT = 120;
@@ -345,7 +358,13 @@ export class Game {
             if (v) this.corpses.spawn(v, e.dx, e.dy);
           }
           this.fx.puff(e.x / FP, e.y / FP);
+          if (s.mobs[e.index]?.kind === 'effigy') this.horde.tear(e.x / FP, e.y / FP);
           break;
+        case 'block': {
+          const g = nearestElite(s.elites, e.x, e.y);
+          if (g) blockFx(this.fx.pool, e.x / FP, e.y / FP, g.vx);
+          break;
+        }
         case 'emerge':
           this.horde.emerge(e.x / FP, e.y / FP);
           break;

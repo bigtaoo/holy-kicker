@@ -300,6 +300,27 @@ or a new single image is cheap; elites and bosses cost a rig each.
   after chapter 2 (all common, about 10 training nodes) casual 29/40, skilled 37/40; bare 7/40
   (median wave 22); with tier-1 gear 39/40. The empowered carp falls in a median 98 s and the
   witch in about 80 s; at the abbot's pace (100) the bot outran her and fights ran to 13 min.
+- **Chapter 4, the Ghost Market** (ENGINE_VERSION 23). The horde is long-tongue ghosts
+  (chasers, and emergers that rise under the hero), lantern ghosts (`shooter`) and paper
+  effigies (`effigy`, `EFFIGY`): an effigy tears into 2 paper scraps (`scrap`, fast and
+  frail) as it falls and comes back on the ring; scraps fall for good, at most 24 standing.
+  Wisp packs as in chapter 2. The elite is the door god (`DOOR_GOD`, systems/ghost.ts, 600
+  health): it turns toward the hero at 100°/s and its shield takes every relic hit from
+  within 70° of its front (the ball's, the staff's, a ring's, a bead's, the bowl's point
+  decides; spells always land), so the player goes round it or lets the spells work. Every
+  2.4 s with the hero within 420 it smashes a circle 190 ahead of it (HURT.smash 20) and
+  stands winded for 1.6 s with its shield down. The mid-boss is the empowered Bone Witch
+  (`EMPOWERED_WITCH`: 2600 health, staff every 2.2 s, 4 skeletons at a time, at most 8,
+  9-bullet fans). The boss is the Underworld Judge (`JUDGE`, systems/judge.ts, 4400 health):
+  he keeps 320 from the hero and every 2.4 s in turn writes a line of 7 verdict zones from
+  himself through the hero, going off one after another (HURT.verdict 14), or flicks a
+  5-bullet ink fan. Below half his health he throbs violet, acts every 1.9 s and in turn
+  crosses two lines on the hero (13 zones, the middle one first) or throws a 14-bullet ring.
+  Mob health is 190 % of chapter 1's. Chapter 4's art is the WeChat subpackage `ch4`
+  (`client/public/art/ch4`, fetched by `loadChapterArt` before the run), so the main package
+  stays under 4 MB. Balance (40 runs each) with the gear expected after chapter 3: casual
+  37/40, skilled 36/40; bare (20 runs) casual 1/20 (median wave 24), skilled 6/20. The door
+  god falls in a median 50 s, the empowered witch in 75 s and the Judge in about 105 s.
 
 ## Chapters (5)
 
@@ -311,7 +332,7 @@ mobs (lesson from the readability test: grass works best).
 | 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger, implemented) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
 | 2 | **Misty Marsh** / 雾沼: reeds, shallow water (implemented: tile, props and drifting low mist) | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精 (implemented): dives, surfaces with a shockwave |
 | 3 | **Snow Pass** / 雪岭: snow, pines (implemented: tile and props) | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour (implemented) | Wolf leader (charger + howl buffs, implemented) | Black Carp, empowered (implemented) | **Bone Witch** / 白骨精 (implemented): summons skeletons (splitters) |
-| 4 | **Ghost Market** / 鬼市: night street, blue lanterns | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) | Door god statue (shielder) | Bone Witch, empowered | **Underworld Judge** / 判官: writes zones in lines, changes them mid-fight |
+| 4 | **Ghost Market** / 鬼市: night street, blue lanterns (implemented: tile and props) | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) (implemented) | Door god statue (shielder, implemented) | Bone Witch, empowered (implemented) | **Underworld Judge** / 判官 (implemented): writes zones in lines, crosses them below half health |
 | 5 | **Demon Peak** / 魔窟: dark rock, purple fire | Fallen monk (shielder), shadow (runner), every earlier type | Two elites at once | Underworld Judge, empowered | **Inner Demon** / 心魔: a cold-coloured copy of the hero, uses the player's own relic |
 
 - The Inner Demon reuses the hero rig with a cold recolour, which saves a full boss rig and

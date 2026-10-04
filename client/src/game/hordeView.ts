@@ -12,11 +12,12 @@ import { SHADOW_Z } from './shadow';
 // in, the disc filling as it nears), and it rises with a splash. A toad about to spit swells.
 // Chapter 3: an ice wraith swells as it raises its arms (its frost circle is the threat
 // layer's), a mob a howl drives runs its cycle fast and kicks up snow, and a fallen skeleton
-// or shard lies hidden under the ground until the witch calls it up again.
+// or shard lies hidden under the ground until the witch calls it up again. Chapter 4: a paper
+// effigy tears into flying scraps of paper as it falls (its scraps are small effigies).
 
 /** In-world height by mob kind. */
 export const MOB_HEIGHT: Record<MobKind, number> = {
-  chaser: 80, runner: 76, swarm: 62, emerger: 84, shooter: 66, wolf: 70, caster: 90, skeleton: 84, shard: 50,
+  chaser: 80, runner: 76, swarm: 62, emerger: 84, shooter: 66, wolf: 70, caster: 90, skeleton: 84, shard: 50, effigy: 86, scrap: 48,
 };
 /** World units per second, for the jiangshi's hop pacing. */
 const MOB_WALK = (HORDE.speed * TICK_RATE) / FP;
@@ -32,6 +33,7 @@ const CAST_SWELL = 0.15;
 const HASTE_CYCLE = 1.7;
 const HASTE_PUFFS = 5;
 const SNOW = 0xc8d4ec;
+const PAPER = 0xc4ccdc;
 
 export interface HordeOptions {
   calm: boolean;
@@ -107,6 +109,18 @@ export class HordeView {
       const walk = this.opts.settle && m.kind === 'chaser' ? MOB_WALK : 0;
       v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : m.haste > 0 ? HASTE_CYCLE : 1, walk, this.opts.sway);
       if (this.opts.calm) v.shade(depthShade(Math.hypot(x - hx, y - hy)));
+    }
+  }
+
+  /** A paper effigy tore at (x, y), world units: scraps of paper flutter off. */
+  tear(x: number, y: number): void {
+    for (let k = 0; k < 7; k++) {
+      const a = -Math.PI * (0.15 + 0.7 * Math.random());
+      const v = 140 + Math.random() * 160;
+      this.fx.emit({
+        shape: 'spark', x, y: y - 40, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.5, size0: 18, size1: 8,
+        rotation: Math.random() * Math.PI, spin: 8, drag: 0.08, color: k % 3 ? PAPER : VIOLET, alpha: 0.95,
+      });
     }
   }
 

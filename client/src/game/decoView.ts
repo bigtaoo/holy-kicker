@@ -78,6 +78,24 @@ export const SNOW_DECO: DecoStyle = {
   light: { tint: 0xb8c8e8, alpha: 0.16 },
 };
 
+/** Chapter 4, the ghost market at night: blue lantern posts, empty stalls, jars, crates and
+ * incense burners on the flagstones, spirit money lying flat; the patches lean to a cold teal
+ * so the lantern light seems to pool on the street. */
+export const GHOST_DECO: DecoStyle = {
+  kinds: [
+    { name: 'lantern_post', weight: 3, size: 140 },
+    { name: 'papers', weight: 3, size: 150 },
+    { name: 'jars', weight: 2, size: 110 },
+    { name: 'crates', weight: 2, size: 115 },
+    { name: 'stall', weight: 1, size: 150 },
+    { name: 'burner', weight: 1, size: 105 },
+  ],
+  tint: 0xb0b8cc,
+  decal: { papers: { tint: 0x9ca4bc, alpha: 0.8 } },
+  dark: { tint: 0x080c18, alpha: 0.4 },
+  light: { tint: 0x80d8e8, alpha: 0.14 },
+};
+
 export function sliceDeco(frames: readonly DecoFrame[], sheet: Texture): DecoSheet {
   const out = new Map<string, Texture>();
   for (const f of frames) {
