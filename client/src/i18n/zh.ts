@@ -121,6 +121,8 @@ export const zh: Table<typeof en> = {
     twins: '双煞僵尸',
     empowered: '狂化方丈',
     carp: '黑鱼精',
+    carpEmpowered: '狂化黑鱼精',
+    witch: '白骨精',
   },
   codex: {
     title: '图鉴 {n}/{total}',

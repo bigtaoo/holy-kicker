@@ -1,9 +1,8 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
 import {
-  beadsRings, chapterBoss, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
-  type MobKind, type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
+  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
+  type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
 } from '@hk/engine';
-import { t } from '../i18n';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
 import { BALL_LIFT, Balls } from './ballView';
@@ -16,24 +15,21 @@ import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
-import { Corpses, type MobLook, type MobSheet } from './mobView';
+import { Corpses, type MobSheet } from './mobView';
 import { HealthBar } from './healthBar';
-import { fakeMobTypes } from './mobTypes';
-import { EliteCrowd, EliteView, nearestElite } from './eliteView';
-import { BossBar } from './bossBar';
-import { wispSheet } from './wispSheet';
+import { howlFx, nearestElite, type EliteCrowd } from './eliteView';
 import { HordeView, MOB_HEIGHT } from './hordeView';
 import { AuraStack } from './aura';
-import { Boss } from './bossView';
-import { BossStage } from './bossStage';
-import { CarpView } from './carpView';
+import type { BossStage } from './bossStage';
+import { ELITE_HEIGHT, hordeLooks, makeBosses, makeElites } from './cast';
+import { summonFx } from './witchView';
 import { SpellView } from './spellView';
 import { SutraView } from './sutraView';
 import type { TaoAsset } from './tao/TaoActor';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
 import { makeDeco } from './decoView';
 import { Mist } from './mistView';
-import type { EliteColor, SceneOptions } from './scene';
+import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
@@ -64,23 +60,18 @@ export interface Art {
   icons: ReadonlyMap<string, Texture>;
   /** Chapter 2's mobs, elite and boss (tools/bake_mob.py, specs in art/monk/mobs). */
   marsh: { ghost: MobSheet; toad: MobSheet; toadKing: MobSheet; carp: MobSheet };
+  /** Chapter 3's. */
+  snow: { wolf: MobSheet; wolfLeader: MobSheet; wraith: MobSheet; skeleton: MobSheet; shard: MobSheet; witch: MobSheet };
 }
 
 const HERO_HEIGHT = 120;
 export const STICK_RADIUS = 70;
 /** Seconds the hero's red hurt flash takes to fade. */
 const HURT_FLASH = 0.35;
-/** The elite is a big jiangshi. */
-const ELITE_HEIGHT = 140;
-/** The toad king, chapter 2's elite, squat and wide. */
-const TOAD_KING_HEIGHT = 150;
 /** Above every mob, below the effects (1e7) and numbers (1e7 + 1). */
 const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
 const SCREEN_AREA = 1080 * 1920;
-const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff, violet: 0xb04cff };
-/** The big jiangshi is a darker steel blue than the horde; the mid-boss's second twin a slate violet. */
-const ELITE_TINTS = [0x9fb2d8, 0xb4a6d4];
 const DOWN_TINT = 0x8a8a8a;
 /** Damage-number keys for elites, by id, clear of the target indices. */
 const ELITE_KEY = 1e6;
@@ -202,33 +193,10 @@ export class Game {
     this.threats = scene.threats || chapter
       ? new ThreatLayer(app.renderer, this.world, scene.bullet, scene.zone, scene.zoneLayer, this.fx.pool)
       : null;
-    const jiangshi = fakeMobTypes(app.renderer, art.jiangshi, scene.types, scene.page, scene.mobRes);
-    const look = (sheet: MobSheet, kind: MobKind, facesLeft: boolean, shadow: [number, number]): MobLook => (
-      { sheet, height: MOB_HEIGHT[kind], facesLeft, shadow, shadowTex }
-    );
-    // chapter 2 on brings water ghosts and toads (CHAPTER_MOBS); the marsh's walkers are water ghosts too
-    const ghost = setup.chapter >= 2 ? art.marsh.ghost : null;
-    this.horde = new HordeView(this.world, {
-      chaser: ghost && setup.chapter === 2 ? [look(ghost, 'chaser', true, [27, 9])] : jiangshi.map((sheet) => look(sheet, 'chaser', true, [27, 9])),
-      runner: [look(art.fox, 'runner', false, [36, 9])],
-      swarm: [look(wispSheet(app.renderer), 'swarm', true, [18, 6])],
-      emerger: ghost ? [look(ghost, 'emerger', true, [27, 9])] : [],
-      shooter: setup.chapter >= 2 ? [look(art.marsh.toad, 'shooter', true, [34, 10])] : [],
-    }, scene, this.fx.pool);
+    this.horde = new HordeView(this.world, hordeLooks(app.renderer, art, scene, setup.chapter, shadowTex), scene, this.fx.pool);
     // in a chapter the elite and boss arrive later, so their views wait hidden
-    this.elites = null;
-    if (s.elites.length > 0 || chapter) {
-      const big = { sheet: art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14] as [number, number], shadowTex };
-      const king = setup.chapter >= 2 ? { sheet: art.marsh.toadKing, height: TOAD_KING_HEIGHT, facesLeft: true, shadow: [70, 20] as [number, number], shadowTex } : big;
-      this.elites = new EliteCrowd((k, kind) => new EliteView(
-        kind, this.world, kind === 'toadKing' ? king : big, makeRing(app.renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red'),
-        kind === 'toadKing' ? 0xffffff : ELITE_TINTS[k % ELITE_TINTS.length], scene.eliteRing, HERO_TOP_Z,
-      ), chapter ? new BossBar(t('boss.twins')) : null);
-    }
-    // chapter 2 on ends with the Black Carp King (CHAPTER_BOSSES); the abbot is still its mid-boss
-    const abbot = art.boss && (s.boss || chapter) ? new Boss(app.renderer, this.world, art.boss, shadowTex, scene.bossSize, this.fx.pool) : null;
-    const carp = chapter && chapterBoss(setup.chapter) === 'carp' ? new CarpView(app.renderer, art.marsh.carp, this.world, shadowTex, scene.bossSize, this.fx.pool) : null;
-    this.boss = abbot || carp ? new BossStage(abbot, carp) : null;
+    this.elites = s.elites.length > 0 || chapter ? makeElites(app.renderer, this.world, art, scene, chapter, shadowTex, HERO_TOP_Z) : null;
+    this.boss = makeBosses(app.renderer, this.world, art, scene, chapter ? setup.chapter : 0, !!s.boss, shadowTex, this.fx.pool);
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
@@ -380,6 +348,15 @@ export class Game {
           break;
         case 'emerge':
           this.horde.emerge(e.x / FP, e.y / FP);
+          break;
+        case 'howl':
+          howlFx(this.fx.pool, e.x / FP, e.y / FP, e.radius / FP);
+          break;
+        case 'summon':
+          summonFx(this.fx.pool, e.x / FP, e.y / FP);
+          break;
+        case 'bossCast':
+          if (s.boss) this.boss?.cast(s.boss, e.x / FP, e.y / FP);
           break;
         case 'bossDive':
           if (s.boss) this.boss?.dive(s.boss, e.x / FP, e.y / FP);

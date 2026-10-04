@@ -1,6 +1,7 @@
 import { Graphics, type Container, type Renderer, type Sprite } from 'pixi.js';
-import { DASH_TICKS, ELITE, FP, TOAD_KING, type Elite, type EliteKind } from '@hk/engine';
+import { DASH_TICKS, ELITE, FP, TOAD_KING, WOLF_LEADER, type Elite, type EliteKind } from '@hk/engine';
 import type { BossBar } from './bossBar';
+import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { MobView, type MobLook } from './mobView';
 import { makeRing } from './stageArt';
@@ -10,14 +11,16 @@ import { makeRing } from './stageArt';
 // is marked on the ground in the enemy-attack violet, filling in as the dash nears; during
 // the dash it hops at a run and the lane ahead of it fades out; resting, it barely moves.
 // Chapter 2's toad king (engine systems/marsh.ts) marks no lane: it swells up as it winds up,
-// and its bullets and pools are drawn by the threat layer.
+// and its bullets and pools are drawn by the threat layer. Chapter 3's wolf leader charges
+// down the same lane and, every other time, swells up to howl (the ring is howlFx).
 
 const VIOLET = 0xb04cff;
 const OUTLINE = 0x140c18;
 /** Closer to the hero than this (world units), it has stopped walking. */
-const STOP: Record<EliteKind, number> = { charger: ELITE.stopDist / FP, toadKing: TOAD_KING.stopDist / FP };
-/** How much the toad king swells at the end of its wind-up. */
+const STOP: Record<EliteKind, number> = { charger: ELITE.stopDist / FP, toadKing: TOAD_KING.stopDist / FP, wolfLeader: ELITE.stopDist / FP };
+/** How much the toad king swells at the end of its wind-up, and the wolf leader before it howls. */
 const SWELL = 0.18;
+const HOWL_SWELL = 0.14;
 
 export class EliteView {
   readonly mob: MobView;
@@ -47,15 +50,18 @@ export class EliteView {
   draw(e: Elite | null, alpha: number, dt: number, hx: number, hy: number): void {
     this.mob.setVisible(!!e);
     this.ring.visible = !!e;
-    const charger = this.kind === 'charger';
+    const charger = this.kind !== 'toadKing';
     this.lane.visible = !!e && charger && (e.phase === 'aim' || e.phase === 'dash');
     if (!e) return;
     this.time += dt;
     let x = lerpX(e, alpha);
     const y = lerpY(e, alpha);
     let speed = Math.hypot(x - hx, y - hy) > STOP[this.kind] + 5 ? 1 : 0.35;
-    this.mob.swell = !charger && e.phase === 'aim' && e.stun === 0 ? SWELL * Math.min(1, (e.t + alpha) / TOAD_KING.windup) : 0;
-    if (e.stun > 0) speed = 0;
+    this.mob.swell = e.stun > 0 ? 0
+      : !charger && e.phase === 'aim' ? SWELL * Math.min(1, (e.t + alpha) / TOAD_KING.windup)
+      : e.phase === 'howl' ? HOWL_SWELL * Math.min(1, (e.t + alpha) / WOLF_LEADER.howl)
+      : 0;
+    if (e.stun > 0 || e.phase === 'howl') speed = 0;
     else if (!charger) {
       if (e.phase !== 'walk') speed = e.phase === 'aim' ? 0 : 0.25;
     } else if (e.phase === 'aim') {
@@ -154,4 +160,14 @@ export function nearestElite(elites: readonly Elite[], x: number, y: number): El
     }
   }
   return best;
+}
+
+/** A wolf leader howled at (x, y), world units: rings in the enemy-attack violet running out to `r`. */
+export function howlFx(fx: FxPool, x: number, y: number, r: number): void {
+  for (let k = 0; k < 3; k++) {
+    fx.emit({
+      shape: 'ring', x, y: y - 40, vx: 0, vy: 0, life: 0.4 + k * 0.12, size0: 60, size1: r * 2 * (0.5 + k * 0.25),
+      rotation: 0, spin: 0, drag: 1, color: k === 1 ? 0xc8d4ec : VIOLET, alpha: 0.8 - k * 0.2, aspect: 0.6,
+    });
+  }
 }

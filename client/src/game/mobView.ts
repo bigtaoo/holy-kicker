@@ -33,6 +33,8 @@ export interface MobLook {
   /** Ground shadow half-width and half-height. */
   shadow: [number, number];
   shadowTex: Texture;
+  /** A multiply tint, e.g. chapter 3's frosted jiangshi. */
+  tint?: number;
 }
 
 /** Cuts the frames out of a sheet, which may sit at (x0, y0) inside a larger atlas page. */

@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite, type Renderer, type Texture } from 'pixi.j
 import { CARP, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
+import { DarkAura } from './darkAura';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import type { MobSheet } from './mobView';
@@ -12,7 +13,8 @@ import { ZONE_TOP_Z, zoneTextures } from './threatView';
 // waddling on its stubby feet, its wake while it swims under water (a dark shape and a fin
 // cutting the surface, rippling), its locked circle in the enemy attack violet filling as it
 // rises, and the splash when it surfaces. Same surface as the abbot's view (bossView.ts), so
-// the game drives either through BossStage.
+// the game drives either through BossStage. Empowered (chapter 3's mid-boss) it is tinted
+// a dusky violet and wrapped in the abbot's dark aura, and its bar says so.
 
 const VIOLET = 0xb04cff;
 const SPLASH = 0x9fe0e6;
@@ -22,6 +24,8 @@ const HURT_TINT_TIME = 0.15;
 const FADE = 0.5;
 /** Seconds it takes to come up out of the water after surfacing. */
 const POP = 0.25;
+/** The empowered carp's multiply tint. */
+const EMPOWERED_TINT = 0xb8a0e8;
 
 export class CarpView {
   readonly view = new Container();
@@ -32,13 +36,14 @@ export class CarpView {
   private readonly wake = new Graphics();
   private readonly zone: [Sprite, Sprite];
   private readonly scale: number;
+  private aura: DarkAura | null = null;
   private facing = -1;
   private tint = 0;
   private time = 0;
   /** Seconds since it surfaced (it rises out of the water over POP). */
   private popped = POP;
 
-  constructor(renderer: Renderer, private readonly sheet: MobSheet, world: Container, shadowTex: Texture, readonly height: number, private readonly fx: FxPool) {
+  constructor(private readonly renderer: Renderer, private readonly sheet: MobSheet, world: Container, shadowTex: Texture, readonly height: number, private readonly fx: FxPool) {
     const m = this.sheet.meta;
     this.sprite = new Sprite(this.sheet.textures[0]);
     this.sprite.anchor.set(m.anchor[0] / m.frameW, m.anchor[1] / m.frameH);
@@ -71,11 +76,17 @@ export class CarpView {
     const rise = Math.min(1, this.popped / POP);
     this.sprite.scale.set(-this.facing * this.scale, this.scale * (0.55 + 0.45 * rise));
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
-    this.sprite.tint = flash(this.tint / HURT_TINT_TIME);
+    this.sprite.tint = flash(this.tint / HURT_TINT_TIME, b.empowered ? EMPOWERED_TINT : 0xffffff);
+    if (b.empowered && !this.aura) {
+      this.aura = new DarkAura(this.renderer, this.height);
+      this.view.addChildAt(this.aura.view, 0);
+    }
+    this.aura?.update(dt);
     this.view.position.set(x, y);
     this.shadow.position.set(x, y);
     this.drawWake(under ? x : NaN, y);
     this.drawZone(b, alpha);
+    this.bar.rename(t(b.empowered ? 'boss.carpEmpowered' : 'boss.carp'));
     this.bar.set(b.hp, b.maxHp);
   }
 
@@ -156,8 +167,11 @@ export class CarpView {
   }
 }
 
-/** White at 0; a pale cold flash at 1. */
-function flash(k: number): number {
-  const ch = (to: number) => Math.round(255 + (to - 255) * k);
-  return (ch(195) << 16) | (ch(195) << 8) | 255;
+/** `base` at 0; a pale cold flash at 1. */
+function flash(k: number, base: number): number {
+  const ch = (shift: number, to: number) => {
+    const c = (base >> shift) & 0xff;
+    return Math.round(c + (to - c) * k);
+  };
+  return (ch(16, 195) << 16) | (ch(8, 195) << 8) | ch(0, 255);
 }

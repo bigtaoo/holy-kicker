@@ -36,7 +36,7 @@ describe('chapter mix', () => {
     expect([...kinds(1)].sort()).toEqual(['chaser', 'runner', 'swarm']);
     expect([...kinds(2)].sort()).toEqual(['chaser', 'emerger', 'shooter', 'swarm']);
     // chapters without their own list play the last one
-    expect(newcomer(5, 30, 5)).toBe(newcomer(2, 30, 5));
+    expect(newcomer(5, 30, 7)).toBe(newcomer(3, 30, 7));
     expect(newcomer(2, 1, 5)).toBe('chaser');
   });
 });
@@ -210,7 +210,7 @@ describe('empowered abbot (mid-boss)', () => {
 
 describe('black carp king (boss)', () => {
   it('is the marsh boss, and later chapters keep it until they get their own', () => {
-    expect([1, 2, 5].map(chapterBoss)).toEqual(['abbot', 'carp', 'carp']);
+    expect([1, 2, 3, 5].map(chapterBoss)).toEqual(['abbot', 'carp', 'witch', 'witch']);
     const e = new Engine(MARSH);
     beginWave(e.state, MARSH.waves);
     expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: false, hp: CARP.hp });

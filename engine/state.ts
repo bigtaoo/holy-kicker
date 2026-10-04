@@ -1,4 +1,4 @@
-import { ELITE, HERO, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
+import { ELITE, HERO, tempKind, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
 import type { Card, PassiveId, RelicId, SpellId, StatBonus } from './content';
 import { Prng } from './math/prng';
 
@@ -84,20 +84,30 @@ export interface Mob extends Body {
   hp: number;
   /** Ticks left standing stunned (the Stunning Bell). */
   stun: number;
-  /** An emerger: ticks until it rises (0 once up). A shooter: ticks to its next volley. */
+  /** An emerger: ticks until it rises (0 once up). A shooter or caster: ticks to its next attack. */
   t: number;
+  /** Ticks left running fast (the wolf leader's howl). */
+  haste: number;
 }
 
-/** An emerger still under the ground (or rising from its mark) cannot be hit, hurt or moved. */
+/**
+ * An emerger still under the ground (or rising from its mark), or a skeleton or shard that fell
+ * (health 0, until summoned again), cannot be hit, hurt or moved.
+ */
 export function underground(m: Mob): boolean {
-  return m.kind === 'emerger' && m.t > 0;
+  return (m.kind === 'emerger' && m.t > 0) || (m.hp === 0 && tempKind(m.kind));
+}
+
+/** An emerger on its way up: its mark shows. */
+export function rising(m: Mob, warn: number): boolean {
+  return m.kind === 'emerger' && m.t > 0 && m.t <= warn;
 }
 
 /**
  * The elite walks in, then aims a charge, dashes along it and catches its breath; a toad king
- * swells (aim) and spits, then sits (rest).
+ * swells (aim) and spits, then sits (rest); a wolf leader also howls.
  */
-export type ElitePhase = 'walk' | 'aim' | 'dash' | 'rest';
+export type ElitePhase = 'walk' | 'aim' | 'dash' | 'rest' | 'howl';
 
 export interface Elite extends Body {
   /** Stable while it stands, so the view can tell the twins apart as others fall. */
@@ -107,7 +117,7 @@ export interface Elite extends Body {
   maxHp: number;
   stun: number;
   phase: ElitePhase;
-  /** Attacks made: a toad king takes turns between its fan and its pools. */
+  /** Attacks made: a toad king takes turns between its fan and its pools, a wolf leader between charging and howling. */
   shots: number;
   /** Ticks into the phase. */
   t: number;
@@ -136,6 +146,8 @@ export interface Boss extends Body {
   maxHp: number;
   /** The empowered mid-boss (EMPOWERED): its slams also send out a bullet ring. */
   empowered: boolean;
+  /** Attacks made: the witch takes turns between summoning and her bone fan. */
+  shots: number;
 }
 
 /** Under water (the carp diving or rising): out of reach, and nothing to bump into. */
@@ -283,6 +295,13 @@ export interface Bowl extends Body {
   carried: number[];
 }
 
+/** A mob to join the horde at the end of the tick (a summoned skeleton, a shard). */
+export interface Spawn {
+  kind: MobKind;
+  x: number;
+  y: number;
+}
+
 export interface SimState {
   readonly config: RunConfig;
   tick: number;
@@ -295,6 +314,8 @@ export interface SimState {
   balls: Ball[];
   bullets: Bullet[];
   zones: Zone[];
+  /** Mobs joining at the end of this tick, so target numbers hold while the tick runs. */
+  spawns: Spawn[];
   gems: Gem[];
   /** Resting gems by merge cell; derived from `gems`, so not hashed. */
   gemCells: Map<number, Gem>;
@@ -337,7 +358,7 @@ export function teleport(b: Body, x: number, y: number): void {
 export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
-    config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [],
+    config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [], spawns: [],
     gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
@@ -346,7 +367,7 @@ export function createState(config: RunConfig): SimState {
 }
 
 export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser', t = 0): Mob {
-  return { ...body(x, y), kind, hp, stun: 0, t };
+  return { ...body(x, y), kind, hp, stun: 0, t, haste: 0 };
 }
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball', bonus: StatBonus = {}): Player {

@@ -1,5 +1,5 @@
 import { Graphics, type Container } from 'pixi.js';
-import { EMERGE, FP, HORDE, SHOOTER, TICK_RATE, underground, type Mob, type MobKind } from '@hk/engine';
+import { CASTER, EMERGE, FP, HORDE, SHOOTER, TICK_RATE, rising, underground, type Mob, type MobKind } from '@hk/engine';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { depthShade } from './mobAnim';
@@ -10,9 +10,14 @@ import { SHADOW_Z } from './shadow';
 // the run), plus chapter 2's tells. A water ghost under the ground is hidden; on its last
 // stretch down there its mark shows on the ground (rings in the enemy-attack violet rippling
 // in, the disc filling as it nears), and it rises with a splash. A toad about to spit swells.
+// Chapter 3: an ice wraith swells as it raises its arms (its frost circle is the threat
+// layer's), a mob a howl drives runs its cycle fast and kicks up snow, and a fallen skeleton
+// or shard lies hidden under the ground until the witch calls it up again.
 
 /** In-world height by mob kind. */
-export const MOB_HEIGHT: Record<MobKind, number> = { chaser: 80, runner: 76, swarm: 62, emerger: 84, shooter: 66 };
+export const MOB_HEIGHT: Record<MobKind, number> = {
+  chaser: 80, runner: 76, swarm: 62, emerger: 84, shooter: 66, wolf: 70, caster: 90, skeleton: 84, shard: 50,
+};
 /** World units per second, for the jiangshi's hop pacing. */
 const MOB_WALK = (HORDE.speed * TICK_RATE) / FP;
 const FOX_TINT = 0xc8a8ff;
@@ -21,6 +26,12 @@ const OUTLINE = 0x140c18;
 const SPLASH = 0x9fe0e6;
 /** How much a toad swells at the end of its wind-up. */
 const SWELL = 0.22;
+/** An ice wraith's swell at the end of its wind-up. */
+const CAST_SWELL = 0.15;
+/** A hasted mob's cycle runs this much faster, and kicks up this many snow puffs a second. */
+const HASTE_CYCLE = 1.7;
+const HASTE_PUFFS = 5;
+const SNOW = 0xc8d4ec;
 
 export interface HordeOptions {
   calm: boolean;
@@ -70,6 +81,8 @@ export class HordeView {
       const v = new MobView(looks[this.mobs.length % looks.length], this.world, this.opts.calm);
       // a multiply tint is free: it turns the pale fox lavender, away from the teal jiangshi
       if (this.opts.foxTint && m.kind === 'runner') v.tint(FOX_TINT);
+      const tint = looks[this.mobs.length % looks.length].tint;
+      if (tint !== undefined) v.tint(tint);
       this.mobs.push(v);
     }
     const g = this.marks.clear();
@@ -81,16 +94,28 @@ export class HordeView {
       const hidden = underground(m);
       v.setVisible(!hidden);
       if (hidden) {
-        if (m.t <= EMERGE.warn) this.mark(g, x, y, 1 - (m.t - alpha) / EMERGE.warn);
+        if (rising(m, EMERGE.warn)) this.mark(g, x, y, 1 - (m.t - alpha) / EMERGE.warn);
         continue;
       }
-      // a toad swells over its wind-up
-      v.swell = m.kind === 'shooter' && m.stun === 0 && m.t <= SHOOTER.windup ? SWELL * (1 - (m.t - alpha) / SHOOTER.windup) : 0;
+      // a toad swells over its wind-up, an ice wraith over its cast
+      v.swell = m.stun > 0 ? 0
+        : m.kind === 'shooter' && m.t <= SHOOTER.windup ? SWELL * (1 - (m.t - alpha) / SHOOTER.windup)
+        : m.kind === 'caster' && m.t <= CASTER.windup ? CAST_SWELL * (1 - (m.t - alpha) / CASTER.windup)
+        : 0;
+      if (m.haste > 0 && m.stun === 0 && Math.random() < dt * HASTE_PUFFS) this.kick(x, y);
       // a stunned mob (the Stunning Bell) freezes mid-pose
       const walk = this.opts.settle && m.kind === 'chaser' ? MOB_WALK : 0;
-      v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : 1, walk, this.opts.sway);
+      v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : m.haste > 0 ? HASTE_CYCLE : 1, walk, this.opts.sway);
       if (this.opts.calm) v.shade(depthShade(Math.hypot(x - hx, y - hy)));
     }
+  }
+
+  /** A puff of snow kicked up behind a running mob. */
+  private kick(x: number, y: number): void {
+    this.fx.emit({
+      shape: 'puff', x: x + (Math.random() - 0.5) * 30, y: y - 6, vx: (Math.random() - 0.5) * 60, vy: -50, life: 0.35, size0: 14, size1: 4,
+      rotation: 0, spin: 0, drag: 0.1, color: SNOW, alpha: 0.8,
+    });
   }
 
   /** A water ghost's mark, `k` (0..1) of the way to its rising. */

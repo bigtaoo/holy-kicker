@@ -1,8 +1,10 @@
-import { ELITE, HURT } from '../config';
+import { ELITE, HURT, WOLF_LEADER } from '../config';
+import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Elite, SimState } from '../state';
 import { nearestPlayer, stepHorde } from './horde';
 import { stepToadKing } from './marsh';
+import { howl } from './snow';
 
 // The elite, a charger (docs/content.md "Enemies"): it walks at the nearest hero, and once
 // one is within ELITE.chargeRange and its cooldown is done it stops and marks a lane at him
@@ -10,22 +12,23 @@ import { stepToadKing } from './marsh';
 // hero it passes within ELITE.laneHalf, and stands for ELITE.rest before walking again. The
 // lane is fixed when it aims, so stepping aside is the answer. A stun freezes it in any phase.
 // Several elites (the mid-boss twins) take turns: one aims only while no other is charging.
-// Chapter 2's toad king (systems/marsh.ts) shoots instead.
+// Chapter 2's toad king (systems/marsh.ts) shoots instead. Chapter 3's wolf leader charges
+// faster and, every other time, howls instead (systems/snow.ts): the mobs around it run fast.
 
 export type HurtFn = (owner: number, value: number) => void;
 
 /** Ticks a charge lasts. */
 export const DASH_TICKS = Math.ceil(ELITE.dashLength / ELITE.dashSpeed);
 
-export function eliteSystem(s: SimState, hurt: HurtFn): void {
-  for (const e of s.elites) stepElite(s, e, hurt);
+export function eliteSystem(s: SimState, events: SimEvent[], hurt: HurtFn): void {
+  for (const e of s.elites) stepElite(s, e, events, hurt);
 }
 
 function charging(e: Elite): boolean {
-  return e.kind === 'charger' && (e.phase === 'aim' || e.phase === 'dash');
+  return e.kind !== 'toadKing' && (e.phase === 'aim' || e.phase === 'dash');
 }
 
-function stepElite(s: SimState, e: Elite, hurt: HurtFn): void {
+function stepElite(s: SimState, e: Elite, events: SimEvent[], hurt: HurtFn): void {
   e.px = e.x;
   e.py = e.y;
   if (e.stun > 0) {
@@ -48,15 +51,25 @@ function stepElite(s: SimState, e: Elite, hurt: HurtFn): void {
       enter(e, 'walk');
       e.cd = ELITE.cooldown;
     }
+  } else if (e.phase === 'howl') {
+    if (e.t < WOLF_LEADER.howl) return;
+    howl(s, e, events);
+    enter(e, 'walk');
+    e.cd = ELITE.cooldown;
   } else {
     const p = nearestPlayer(s.players, e.x, e.y);
     const d = dist(p.x - e.x, p.y - e.y);
-    if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange && !s.elites.some(charging)) {
+    const wolf = e.kind === 'wolfLeader';
+    if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange && wolf && e.shots % 2 === 1) {
+      e.shots++;
+      enter(e, 'howl');
+    } else if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange && !s.elites.some(charging)) {
+      e.shots++;
       enter(e, 'aim');
       e.vx = Math.trunc(((p.x - e.x) * ELITE.dashSpeed) / d);
       e.vy = Math.trunc(((p.y - e.y) * ELITE.dashSpeed) / d);
     } else {
-      stepHorde([e], s.players, { speed: ELITE.speed, stopDist: ELITE.stopDist, sep: 0, queue: false });
+      stepHorde([e], s.players, { speed: wolf ? WOLF_LEADER.speed : ELITE.speed, stopDist: ELITE.stopDist, sep: 0, queue: false });
     }
   }
 }

@@ -7,13 +7,13 @@ import type { TaoSkeleton } from './game/tao/types';
 import { MARSH_MIST } from './game/mistView';
 import type { Platform } from './platform/types';
 import type { SceneOptions } from './game/scene';
-import { MARSH_DECO, sliceDeco, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
+import { MARSH_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
+  const [hero, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp, snowTex, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([
     loadTao(platform, 'art/hero'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
@@ -32,11 +32,21 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     loadSheet(platform, 'art/mobs/toad'),
     loadSheet(platform, 'art/mobs/toad_king'),
     loadSheet(platform, 'art/mobs/carp'),
+    // chapter 3's snow pass: wolves, the wolf leader, ice wraiths and the Bone Witch's own
+    ground === 'flat' ? null : Assets.load<Texture>('art/ground/snow.png'),
+    deco === 'none' ? null : loadDeco(platform, 'art/ground/snow_deco'),
+    loadSheet(platform, 'art/mobs/wolf'),
+    loadSheet(platform, 'art/mobs/wolf_leader'),
+    loadSheet(platform, 'art/mobs/icewraith'),
+    loadSheet(platform, 'art/mobs/skeleton'),
+    loadSheet(platform, 'art/mobs/shard'),
+    loadSheet(platform, 'art/mobs/witch'),
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
-  ], boss, icons: icons.frames, marsh: { ghost, toad, toadKing, carp } };
+    { ground: snowTex, deco: snowDeco, style: SNOW_DECO, mist: null },
+  ], boss, icons: icons.frames, marsh: { ghost, toad, toadKing, carp }, snow: { wolf, wolfLeader, wraith, skeleton, shard, witch } };
 }
 
 /** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py). */

@@ -1,4 +1,4 @@
-import { CARP, HURT } from '../config';
+import { CARP, EMPOWERED_CARP, HURT } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Boss, Player, SimState } from '../state';
@@ -8,7 +8,8 @@ import { ring } from './threats';
 // and, every few seconds, dives. Under water it is out of reach and swims after him fast; then
 // it locks a circle where he stands and rises under it, the circle filling as it comes. It
 // surfaces with a shockwave that hurts him inside and a ring of bullets out from the rim, and
-// lies winded a moment, the time to kick it.
+// lies winded a moment, the time to kick it. Empowered (chapter 3's mid-boss), it dives more
+// often and its rings are fuller.
 
 /** Moves `b` up to `step` toward (x, y), stopping `stop` short. */
 function swimTo(b: Boss, x: number, y: number, step: number, stop: number): void {
@@ -52,12 +53,12 @@ export function stepCarp(s: SimState, b: Boss, target: Player, events: SimEvent[
     events.push({ type: 'bossSlam', x: b.zoneX, y: b.zoneY, radius: CARP.radius });
     const r2 = CARP.radius * CARP.radius;
     for (const p of s.players) if (dist2(p.x - b.zoneX, p.y - b.zoneY) <= r2) hurt(p.owner, HURT.surface);
-    ring(s, b.zoneX, b.zoneY, CARP.radius, CARP.ring, s.tick);
+    ring(s, b.zoneX, b.zoneY, CARP.radius, b.empowered ? EMPOWERED_CARP.ring : CARP.ring, s.tick);
     return;
   }
   if (b.t >= CARP.recover) {
     b.phase = 'walk';
     b.t = 0;
-    b.cooldown = CARP.cooldown;
+    b.cooldown = b.empowered ? EMPOWERED_CARP.cooldown : CARP.cooldown;
   }
 }

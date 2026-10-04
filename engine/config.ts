@@ -90,6 +90,8 @@ export const HURT = {
   emerge: 6,
   /** The Black Carp King surfacing under the hero. */
   surface: 25,
+  /** An ice wraith's frost circle going off. */
+  frost: 12,
 };
 
 export const HORDE = {
@@ -105,9 +107,14 @@ export const HORDE = {
   hp: 10,
   hpStep: 300,
   hpSquare: 30,
+  /**
+   * Mob health by chapter, percent (later chapters play the last): from chapter 3 the hero
+   * comes in with gear and training (RunConfig.bonus), so the horde is tougher.
+   */
+  chapterHp: [100, 100, 140],
 };
 
-export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter';
+export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter' | 'wolf' | 'caster' | 'skeleton' | 'shard';
 
 /**
  * Kinds of horde mob (docs/content.md "Enemies"): how fast each walks and its share of the
@@ -119,17 +126,37 @@ export const MOB_KINDS: Record<MobKind, { speed: number; hpPercent: number }> = 
   swarm: { speed: perTick(150), hpPercent: 0 },
   emerger: { speed: HORDE.speed, hpPercent: 100 },
   shooter: { speed: perTick(95), hpPercent: 80 },
+  wolf: { speed: perTick(215), hpPercent: 70 },
+  caster: { speed: perTick(90), hpPercent: 90 },
+  skeleton: { speed: perTick(120), hpPercent: 100 },
+  shard: { speed: perTick(160), hpPercent: 35 },
 };
+
+/**
+ * Mobs that come and go outside the horde's count: swarm and wolf packs (they still come back
+ * on the ring when they fall), and the Bone Witch's skeletons and their shards, which do not:
+ * fallen, they lie under the ground (health 0) until she summons again.
+ */
+export function extraKind(kind: MobKind): boolean {
+  return kind === 'swarm' || kind === 'wolf' || kind === 'skeleton' || kind === 'shard';
+}
+
+/** Mobs that fall for good (lying under the ground until summoned again), see extraKind. */
+export function tempKind(kind: MobKind): boolean {
+  return kind === 'skeleton' || kind === 'shard';
+}
 
 /**
  * Who joins each chapter's horde (docs/content.md "Chapters"): from wave `from`, newcomer n
  * with n % every === every - 1 is of `kind` (the first rule that matches wins), the rest are
  * chasers. Chapter 1 has fox runners; chapter 2 water ghosts that rise next to the hero and
- * toads that shoot. Later chapters play the last list until they get their own.
+ * toads that shoot; chapter 3 ice wraiths that mark frost circles (its wolves come in packs,
+ * CHAPTER_PACKS). Later chapters play the last list until they get their own.
  */
 export const CHAPTER_MOBS: readonly (readonly { kind: MobKind; from: number; every: number }[])[] = [
   [{ kind: 'runner', from: 3, every: 4 }],
   [{ kind: 'shooter', from: 3, every: 10 }, { kind: 'emerger', from: 2, every: 5 }],
+  [{ kind: 'caster', from: 3, every: 6 }],
 ];
 
 /**
@@ -159,30 +186,81 @@ export const SHOOTER = {
 };
 
 /**
- * Swarm waves (swarmFrom, then every swarmEvery) bring a bunched pack of swarm mobs on top of
- * the horde, up to swarmMax of them in all.
+ * The ice wraith, a zone caster (systems/snow.ts): it stops stopDist from the hero; every
+ * cooldown..cooldown+spread it raises its arms for `windup` (with him within range), then marks
+ * a frost circle of `radius` where he stands, which goes off after THREATS.warn (HURT.frost).
  */
+export const CASTER = {
+  stopDist: toFp(520),
+  range: toFp(820),
+  cooldown: ticks(5),
+  spread: ticks(2),
+  windup: ticks(0.6),
+  radius: toFp(150),
+};
+
+/**
+ * Pack waves (from, then every `every`) bring a bunched pack of `size` mobs of `kind` on top of
+ * the horde, up to `max` of that kind in all: ghost wisps in chapters 1 and 2, snow wolves in 3.
+ */
+export interface Pack {
+  kind: MobKind;
+  from: number;
+  every: number;
+  size: number;
+  max: number;
+  spread: number;
+}
+
+const WISPS: Pack = { kind: 'swarm', from: 6, every: 4, size: 10, max: 40, spread: toFp(110) };
+
+/** Each chapter's packs; later chapters play the last one until they get their own. */
+export const CHAPTER_PACKS: readonly Pack[] = [
+  WISPS,
+  WISPS,
+  { kind: 'wolf', from: 3, every: 2, size: 6, max: 36, spread: toFp(160) },
+];
+
 export const MIX = {
-  swarmFrom: 6,
-  swarmEvery: 4,
-  swarmPack: 10,
-  swarmMax: 40,
-  swarmSpread: toFp(110),
-  /** Share of fallen swarm mobs that leave a gem, so the packs do not flood the run with levels. */
+  /** Share of fallen swarm mobs and shards that leave a gem, so they do not flood the run with levels. */
   swarmGemPercent: 25,
 };
 
-/** The elite kinds: the big jiangshi charges, the toad king spits fans and poison pools. */
-export type EliteKind = 'charger' | 'toadKing';
+/**
+ * The elite kinds: the big jiangshi charges, the toad king spits fans and poison pools, the
+ * wolf leader charges and howls.
+ */
+export type EliteKind = 'charger' | 'toadKing' | 'wolfLeader';
 
 /** Each chapter's elite; later chapters play the last one until they get their own. */
-export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing'];
+export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing', 'wolfLeader'];
 
-/** The boss kinds: the Fallen Abbot slams, the Black Carp King dives and surfaces. */
-export type BossKind = 'abbot' | 'carp';
+/**
+ * The boss kinds: the Fallen Abbot slams, the Black Carp King dives and surfaces, the Bone
+ * Witch summons skeletons and throws bone fans.
+ */
+export type BossKind = 'abbot' | 'carp' | 'witch';
 
-/** Each chapter's boss (the last wave); later chapters play the last one until they get their own. */
-export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp'];
+/**
+ * Each chapter's boss (the last wave); later chapters play the last one until they get their
+ * own. From chapter 2 on, the mid-boss is the previous chapter's boss, empowered.
+ */
+export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp', 'witch'];
+
+/**
+ * The wolf leader, chapter 3's elite (systems/elite.ts): it charges like the big jiangshi and,
+ * every other time instead, howls for `howl`, then every mob within howlRadius of it runs at
+ * hastePercent of its speed for `haste`.
+ */
+export const WOLF_LEADER = {
+  hp: 600,
+  speed: perTick(190),
+  knockback: toFp(110),
+  howl: ticks(0.8),
+  howlRadius: toFp(900),
+  haste: ticks(4),
+  hastePercent: 160,
+};
 
 /**
  * The toad king (systems/marsh.ts): it stops stopDist from the hero; with him within range and
@@ -298,6 +376,16 @@ export const EMPOWERED = {
 };
 
 /**
+ * The empowered Black Carp King, chapter 3's mid-boss: its own health, a shorter wait between
+ * dives and a fuller bullet ring when it surfaces.
+ */
+export const EMPOWERED_CARP = {
+  hp: 2600,
+  cooldown: ticks(2.4),
+  ring: 16,
+};
+
+/**
  * The Black Carp King, chapter 2's boss (systems/carp.ts): it swims after the hero to stopDist
  * and, its cooldown done, dives for `dive` (out of reach, swimming under him at `swim`), then
  * locks a circle of `radius` where he stands and rises under it for `rise`. Surfacing it hurts
@@ -317,6 +405,31 @@ export const CARP = {
   recover: ticks(1.2),
   radius: toFp(240),
   ring: 12,
+};
+
+/**
+ * The Bone Witch, chapter 3's boss (systems/witch.ts): she walks to stopDist from the hero and,
+ * her cooldown done and him within range, raises her staff for `windup`, then in turn summons
+ * `summon` skeletons around her (at near..far, while fewer than maxSkeletons stand) or throws a
+ * fan of `fan` bone bullets at him, and rests for `recover`. A skeleton that falls splits into
+ * `shards` bone crawlers (systems/snow.ts). She keeps up with a hero who runs: at the abbot's
+ * pace the bot outran her kicks and fights ran to 10+ minutes; at 160 she falls in about 80 s.
+ */
+export const WITCH = {
+  hp: 4000,
+  speed: perTick(160),
+  stopDist: toFp(240),
+  range: toFp(900),
+  cooldown: ticks(2.6),
+  windup: ticks(0.9),
+  recover: ticks(0.5),
+  summon: 3,
+  maxSkeletons: 6,
+  near: toFp(140),
+  far: toFp(260),
+  fan: 7,
+  shards: 2,
+  shardSpread: toFp(40),
 };
 
 export const THREATS = {

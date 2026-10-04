@@ -4,7 +4,7 @@ import { dist, dist2, toFp } from '../math/fixed';
 import { atan2B, BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import { Prng } from '../math/prng';
 import { EMERGE } from '../config';
-import { underground, type Elite, type Player, type SimState } from '../state';
+import { rising, underground, type Elite, type Player, type SimState } from '../state';
 import { laneDistance } from '../systems/elite';
 
 // A bot that plays a chapter for the balance report (bot/balance.ts), and later perhaps a
@@ -70,7 +70,7 @@ function danger(s: SimState, x: number, y: number, close: CloseIn | null): numbe
   for (const m of s.mobs) {
     // a water ghost's mark counts like a slam circle; one deeper under the ground not at all
     if (!underground(m)) add(m.x, m.y, NEAR_MOB, 1);
-    else if (m.t <= EMERGE.warn) add(m.x, m.y, EMERGE.grab * 3, 20);
+    else if (rising(m, EMERGE.warn)) add(m.x, m.y, EMERGE.grab * 3, 20);
   }
   for (const b of s.bullets) {
     // the nearest point of its path ahead

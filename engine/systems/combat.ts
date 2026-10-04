@@ -1,4 +1,4 @@
-import { BALL, DAMAGE, ELITE, MIX, TOAD_KING } from '../config';
+import { BALL, DAMAGE, ELITE, MIX, TOAD_KING, WOLF_LEADER, tempKind } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
@@ -8,6 +8,7 @@ import { stat } from './build';
 import { dropGem } from './drops';
 import { ringPoint } from './horde';
 import { resetMob } from './marsh';
+import { split } from './snow';
 import { mobHp } from './waves';
 
 // Hit targets and damage. Targets are numbered: the horde mobs first (by index), then the
@@ -105,7 +106,7 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
     }
     if (!knock) return;
     const d = dist(t.x - by.x, t.y - by.y) || 1;
-    const push = e.kind === 'toadKing' ? TOAD_KING.knockback : ELITE.knockback;
+    const push = e.kind === 'toadKing' ? TOAD_KING.knockback : e.kind === 'wolfLeader' ? WOLF_LEADER.knockback : ELITE.knockback;
     t.x += Math.trunc(((t.x - by.x) * push) / d);
     t.y += Math.trunc(((t.y - by.y) * push) / d);
   } else {
@@ -116,16 +117,24 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
 }
 
 /**
- * Mob i goes down (dropping its gem, unless swallowed; only some swarm mobs leave one) and
- * respawns on the ring with the wave's health (an emerger goes under the ground to rise again).
+ * Mob i goes down (dropping its gem, unless swallowed; only some swarm mobs and shards leave
+ * one) and respawns on the ring with the wave's health (an emerger goes under the ground to
+ * rise again). A skeleton or a shard falls for good, a skeleton splitting into shards.
  */
 export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
   const m = s.mobs[i];
-  m.hp = mobHp(s.wave, m.kind);
-  m.stun = 0;
-  resetMob(s, m);
   events.push({ type: 'mobDown', index: i, x: m.x, y: m.y, dx: m.x - by.x, dy: m.y - by.y });
-  if (gem && (m.kind !== 'swarm' || s.drop.chance(MIX.swarmGemPercent, 100))) dropGem(s, m.x, m.y, MOB_GEM);
+  const few = m.kind === 'swarm' || m.kind === 'shard';
+  if (gem && (!few || s.drop.chance(MIX.swarmGemPercent, 100))) dropGem(s, m.x, m.y, MOB_GEM);
+  m.stun = 0;
+  if (tempKind(m.kind)) {
+    if (m.kind === 'skeleton') split(s, m.x, m.y);
+    m.hp = 0;
+    m.haste = 0;
+    return;
+  }
+  m.hp = mobHp(s.wave, m.kind, s.config.chapter);
+  resetMob(s, m);
   ringPoint(s.ai, by.x, by.y, m);
 }
 

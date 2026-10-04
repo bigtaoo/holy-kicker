@@ -61,6 +61,23 @@ export const MARSH_DECO: DecoStyle = {
   light: { tint: 0x9cc4b8, alpha: 0.14 },
 };
 
+/** Chapter 3, the snow pass at dusk: snowy pines and rocks, bare shrubs, cairns, and ice
+ * lying flat; the patches lean cold blue so the drifts read under the twilight. */
+export const SNOW_DECO: DecoStyle = {
+  kinds: [
+    { name: 'pine', weight: 4, size: 130 },
+    { name: 'snowrock', weight: 3, size: 115 },
+    { name: 'shrub', weight: 3, size: 110 },
+    { name: 'ice', weight: 2, size: 190 },
+    { name: 'stump', weight: 1, size: 100 },
+    { name: 'cairn', weight: 1, size: 110 },
+  ],
+  tint: 0xa8b4c8,
+  decal: { ice: { tint: 0x8c9cb8, alpha: 0.75 } },
+  dark: { tint: 0x0a1020, alpha: 0.38 },
+  light: { tint: 0xb8c8e8, alpha: 0.16 },
+};
+
 export function sliceDeco(frames: readonly DecoFrame[], sheet: Texture): DecoSheet {
   const out = new Map<string, Texture>();
   for (const f of frames) {

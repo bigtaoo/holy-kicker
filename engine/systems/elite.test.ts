@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_RUN, ELITE, HURT, MIX, MOB_KINDS, type RunConfig } from '../config';
+import { CHAPTER_PACKS, DEFAULT_RUN, ELITE, HURT, MOB_KINDS, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import type { PlayerCommand } from '../input';
 import { dist } from '../math/fixed';
 import { newElite } from '../state';
 import { DASH_TICKS, laneDistance } from './elite';
-import { beginWave, hordeSize, isSwarmWave, mobHp } from './waves';
+import { beginWave, hordeSize, isPackWave, mobHp } from './waves';
+
+const MIX = CHAPTER_PACKS[0];
 
 // The chapter's enemy kinds (docs/content.md "Enemies"): chasers, runners and swarm packs in
 // the horde, and the elite that charges along a marked lane.
@@ -35,16 +37,16 @@ describe('horde mix', () => {
     const s = e.state;
     const count = (k: string) => s.mobs.filter((m) => m.kind === k).length;
     expect(count('chaser')).toBe(hordeSize(1));
-    for (let w = 2; w <= MIX.swarmFrom; w++) beginWave(s, w);
+    for (let w = 2; w <= MIX.from; w++) beginWave(s, w);
     expect(count('runner')).toBeGreaterThan(0);
-    expect(count('chaser') + count('runner')).toBe(hordeSize(MIX.swarmFrom));
-    expect(count('swarm')).toBe(MIX.swarmPack);
+    expect(count('chaser') + count('runner')).toBe(hordeSize(MIX.from));
+    expect(count('swarm')).toBe(MIX.size);
     // the pack arrives bunched
     const pack = s.mobs.filter((m) => m.kind === 'swarm');
-    for (const m of pack) expect(dist(m.x - pack[0].x, m.y - pack[0].y)).toBeLessThanOrEqual(MIX.swarmSpread * 3);
-    for (let w = MIX.swarmFrom + 1; w <= 50; w++) beginWave(s, w);
-    expect(count('swarm')).toBe(MIX.swarmMax);
-    expect(isSwarmWave(50, 50)).toBe(false);
+    for (const m of pack) expect(dist(m.x - pack[0].x, m.y - pack[0].y)).toBeLessThanOrEqual(MIX.spread * 3);
+    for (let w = MIX.from + 1; w <= 50; w++) beginWave(s, w);
+    expect(count('swarm')).toBe(MIX.max);
+    expect(isPackWave(1, 50, 50)).toBe(false);
   });
 
   it('gives each kind its share of the wave health; a swarm mob always falls to one hit', () => {

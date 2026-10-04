@@ -118,6 +118,8 @@ export const en = {
     abbot: 'Fallen Abbot',
     empowered: 'Fallen Abbot, Empowered',
     carp: 'Black Carp King',
+    carpEmpowered: 'Black Carp King, Empowered',
+    witch: 'Bone Witch',
     twins: 'Twin Jiangshi',
   },
   codex: {

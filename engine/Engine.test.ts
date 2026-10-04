@@ -17,6 +17,7 @@ const CHAPTER: RunConfig = { ...DEFAULT_RUN, seed: 77, waves: 50, threats: true 
 
 /** Chapter 2: water ghosts rising next to the hero, toads spitting bullet fans, the toad king on wave 10. */
 const MARSH: RunConfig = { ...DEFAULT_RUN, seed: 78, waves: 50, chapter: 2 };
+const SNOW: RunConfig = { ...MARSH, chapter: 3 };
 
 /** A scripted stick: circles, stops and dashes, the same for every run; takes any level-up card. */
 function stick(tick: number, owner = 0): PlayerCommand {
@@ -85,11 +86,12 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-04 for ENGINE_VERSION 21 (stats from gear and training: RunConfig.bonus and the attack stat). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(21);
+    // Recorded 2026-10-04 for ENGINE_VERSION 22 (chapter 3: ice wraiths, wolf packs, the wolf leader, the empowered carp, the Bone Witch). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(22);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
+    expect(run(SNOW, 4800, 4800).hashes[0]).toBe(GOLDEN_SNOW);
   });
 
   it('plays a chapter the same way twice', () => {
@@ -100,10 +102,11 @@ describe('Engine', () => {
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns']);
   });
 });
 
-const GOLDEN = 2499864137;
-const GOLDEN_CHAPTER = 2804159226;
-const GOLDEN_MARSH = 1412385403;
+const GOLDEN = 1785290024;
+const GOLDEN_CHAPTER = 3735409988;
+const GOLDEN_MARSH = 2058916043;
+const GOLDEN_SNOW = 2694025855;

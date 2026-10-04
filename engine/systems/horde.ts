@@ -1,9 +1,10 @@
-import { HORDE, MOB_KINDS, SHOOTER } from '../config';
+import { CASTER, HORDE, SHOOTER } from '../config';
 import { SpatialGrid } from '../grid';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Prng } from '../math/prng';
 import { teleport, underground, type Body, type Player, type SimState } from '../state';
+import { mobSpeed } from './snow';
 
 // Horde movement: every mob walks toward its nearest player, then soft collision moves it out
 // of any neighbour closer than the separation radius (resolving overlap in position holds up
@@ -125,9 +126,10 @@ function pin(s: SimState): void {
   }
 }
 
-/** Stunned mobs (the Stunning Bell) stay where they were; the timers run down. */
+/** Stunned mobs (the Stunning Bell) stay where they were; the timers run down, the howl's too. */
 function stunned(s: SimState): void {
   for (const m of s.mobs) {
+    if (m.haste > 0) m.haste--;
     if (m.stun <= 0) continue;
     m.stun--;
     m.x = m.px;
@@ -136,13 +138,16 @@ function stunned(s: SimState): void {
 }
 
 /**
- * The horde step (each kind at its own speed, shooters stopping at their range, emergers under
- * the ground staying put), then mobs left far behind come back around their player.
+ * The horde step (each kind at its own speed, shooters and casters stopping at their range,
+ * those under the ground staying put), then mobs left far behind come back around their player.
  */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
-  const speedOf = (i: number) => MOB_KINDS[s.mobs[i].kind].speed;
-  const stopOf = (i: number) => (s.mobs[i].kind === 'shooter' ? SHOOTER.stopDist : HORDE.stopDist);
+  const speedOf = (i: number) => mobSpeed(s.mobs[i]);
+  const stopOf = (i: number) => {
+    const k = s.mobs[i].kind;
+    return k === 'shooter' ? SHOOTER.stopDist : k === 'caster' ? CASTER.stopDist : HORDE.stopDist;
+  };
   const still = (i: number) => underground(s.mobs[i]);
   stepHorde(s.mobs, s.players, { speed: HORDE.speed, speedOf, stopDist: HORDE.stopDist, stopOf, still, sep: grid.cell, queue: c.queue }, grid);
   pin(s);

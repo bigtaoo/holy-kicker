@@ -282,6 +282,24 @@ or a new single image is cheap; elites and bosses cost a rig each.
   and spits every 6–8 s (5–7); the abbot rests 2.2 s between slams (1.8) and rings 8 bullets
   (10). Balance (80 runs, same seeds): casual 42/80 (26 before), skilled 52/80 (36); chapter 1
   is untouched (casual 35/40).
+- **Chapter 3, the Snow Pass** (ENGINE_VERSION 22). The horde is frosted jiangshi (tinted ice
+  blue) and ice wraiths (`caster`, `CASTER`): they stop at 520 and every 5–7 s, with the hero
+  in reach, raise their arms for 0.6 s and mark a frost circle under him that goes off after
+  the usual warning (HURT.frost 12). The wisp packs give way to wolf packs (`CHAPTER_PACKS`):
+  6 fast wolves every 2nd wave from wave 3, at most 36, on top of the horde size. The elite
+  is the wolf leader (`WOLF_LEADER`, 600 health): it charges down the big jiangshi's lane and,
+  every other time, howls instead, sending every mob within 900 running at 160 % for 4 s
+  (snow puffs at their feet, violet rings out of it). The mid-boss is the empowered Black
+  Carp King (`EMPOWERED_CARP`: 2600 health, dives every 2.4 s, rings 16 bullets), tinted and
+  wrapped in the dark aura. The boss is the Bone Witch (`WITCH`, systems/witch.ts): she walks
+  to 240 from the hero at 160 and, every 2.6 s, raises her staff and in turn calls 3 skeletons
+  up around her (at most 6 standing) or throws a 7-bullet bone fan. A skeleton splits into 2
+  bone crawlers (`shard`) when it falls; skeletons and shards fall for good and lie under the
+  ground until called up again, so they never grow the horde. Mob health is 140 % of the
+  earlier chapters' (`HORDE.chapterHp`). Balance (40 runs each): with the gear a player holds
+  after chapter 2 (all common, about 10 training nodes) casual 29/40, skilled 37/40; bare 7/40
+  (median wave 22); with tier-1 gear 39/40. The empowered carp falls in a median 98 s and the
+  witch in about 80 s; at the abbot's pace (100) the bot outran her and fights ran to 13 min.
 
 ## Chapters (5)
 
@@ -292,7 +310,7 @@ mobs (lesson from the readability test: grass works best).
 |---|---|---|---|---|---|
 | 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger, implemented) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
 | 2 | **Misty Marsh** / 雾沼: reeds, shallow water (implemented: tile, props and drifting low mist) | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精 (implemented): dives, surfaces with a shockwave |
-| 3 | **Snow Pass** / 雪岭: snow, pines | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour | Wolf leader (charger + howl buffs) | Black Carp, empowered | **Bone Witch** / 白骨精: summons skeletons (splitters) |
+| 3 | **Snow Pass** / 雪岭: snow, pines (implemented: tile and props) | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour (implemented) | Wolf leader (charger + howl buffs, implemented) | Black Carp, empowered (implemented) | **Bone Witch** / 白骨精 (implemented): summons skeletons (splitters) |
 | 4 | **Ghost Market** / 鬼市: night street, blue lanterns | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) | Door god statue (shielder) | Bone Witch, empowered | **Underworld Judge** / 判官: writes zones in lines, changes them mid-fight |
 | 5 | **Demon Peak** / 魔窟: dark rock, purple fire | Fallen monk (shielder), shadow (runner), every earlier type | Two elites at once | Underworld Judge, empowered | **Inner Demon** / 心魔: a cold-coloured copy of the hero, uses the player's own relic |
 
