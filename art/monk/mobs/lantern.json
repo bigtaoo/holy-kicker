@@ -1,0 +1,152 @@
+{
+ "source": "ghost/lantern_v2.png",
+ "out": "../../../client/public/art/ch4/mobs/lantern",
+ "frames": 10,
+ "fps": 9,
+ "height": 190,
+ "ground": [
+  290,
+  760
+ ],
+ "pad": [
+  30,
+  40,
+  40,
+  10
+ ],
+ "body": {
+  "dy": {
+   "sin": 14,
+   "bias": -22
+  },
+  "sy": {
+   "sin": 0.025,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     40,
+     455
+    ],
+    "r": [
+     75,
+     60
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    95,
+    450
+   ],
+   "angle": {
+    "sin": 12,
+    "phase": 0.1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     400,
+     520
+    ],
+    "r": [
+     95,
+     60
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    350,
+    500
+   ],
+   "angle": {
+    "sin": 10,
+    "phase": 0.6
+   }
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     340,
+     80
+    ],
+    "r": [
+     90,
+     100
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    330,
+    160
+   ],
+   "dir": [
+    0,
+    -1
+   ],
+   "length": 160,
+   "wavelength": 130,
+   "amp": 10,
+   "cycles": 2
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     530,
+     640
+    ],
+    "r": [
+     80,
+     90
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    490,
+    660
+   ],
+   "dir": [
+    1,
+    -0.4
+   ],
+   "length": 110,
+   "wavelength": 180,
+   "amp": 12,
+   "cycles": 1
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     290,
+     730
+    ],
+    "r": [
+     230,
+     60
+    ],
+    "feather": 0.5
+   },
+   "root": [
+    290,
+    690
+   ],
+   "dir": [
+    0,
+    1
+   ],
+   "length": 80,
+   "wavelength": 200,
+   "amp": 8,
+   "cycles": 1
+  }
+ ]
+}

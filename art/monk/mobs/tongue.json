@@ -1,0 +1,180 @@
+{
+ "source": "ghost/tongue_v2.png",
+ "out": "../../../client/public/art/ch4/mobs/tongue",
+ "frames": 10,
+ "fps": 9,
+ "height": 200,
+ "ground": [
+  195,
+  795
+ ],
+ "pad": [
+  30,
+  40,
+  30,
+  10
+ ],
+ "body": {
+  "dy": {
+   "sin": 8,
+   "bias": -4,
+   "cycles": 1
+  },
+  "sy": {
+   "sin": 0.015,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     125,
+     450
+    ],
+    "r": [
+     75,
+     160
+    ],
+    "feather": 0.4
+   },
+   "root": [
+    130,
+    320
+   ],
+   "dir": [
+    0,
+    1
+   ],
+   "length": 270,
+   "wavelength": 300,
+   "amp": 14,
+   "cycles": 1
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     30,
+     330
+    ],
+    "r": [
+     60,
+     160
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    50,
+    180
+   ],
+   "dir": [
+    0,
+    1
+   ],
+   "length": 280,
+   "wavelength": 320,
+   "amp": 8,
+   "cycles": 1
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     355,
+     330
+    ],
+    "r": [
+     60,
+     160
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    340,
+    180
+   ],
+   "dir": [
+    0,
+    1
+   ],
+   "length": 280,
+   "wavelength": 320,
+   "amp": 8,
+   "cycles": 1
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     45,
+     565
+    ],
+    "r": [
+     60,
+     70
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    65,
+    490
+   ],
+   "angle": {
+    "sin": 8,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     340,
+     580
+    ],
+    "r": [
+     60,
+     70
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    330,
+    500
+   ],
+   "angle": {
+    "sin": 8,
+    "cycles": 1,
+    "phase": 0.5
+   }
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     195,
+     710
+    ],
+    "r": [
+     190,
+     60
+    ],
+    "feather": 0.5
+   },
+   "root": [
+    195,
+    670
+   ],
+   "dir": [
+    0,
+    1
+   ],
+   "length": 90,
+   "wavelength": 200,
+   "amp": 8,
+   "cycles": 1
+  }
+ ]
+}

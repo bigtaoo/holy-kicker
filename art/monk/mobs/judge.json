@@ -1,0 +1,112 @@
+{
+ "source": "ghost/judge_v2.png",
+ "out": "../../../client/public/art/ch4/mobs/judge",
+ "frames": 12,
+ "fps": 9,
+ "height": 380,
+ "ground": [
+  355,
+  712
+ ],
+ "pad": [
+  30,
+  40,
+  30,
+  10
+ ],
+ "body": {
+  "dy": {
+   "sin": 5,
+   "bias": -2
+  },
+  "sy": {
+   "sin": 0.012,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     51,
+     390
+    ],
+    "r": [
+     130,
+     380
+    ],
+    "feather": 0.2
+   },
+   "pivot": [
+    131,
+    450
+   ],
+   "angle": {
+    "sin": 4
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     591,
+     450
+    ],
+    "r": [
+     120,
+     150
+    ],
+    "feather": 0.3
+   },
+   "pivot": [
+    511,
+    490
+   ],
+   "angle": {
+    "sin": 3,
+    "phase": 0.5
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     361,
+     120
+    ],
+    "r": [
+     300,
+     200
+    ],
+    "feather": 0.35
+   },
+   "pivot": [
+    361,
+    310
+   ],
+   "angle": {
+    "sin": 2,
+    "cycles": 2
+   }
+  },
+  {
+   "type": "move",
+   "region": {
+    "c": [
+     361,
+     670
+    ],
+    "r": [
+     230,
+     60
+    ],
+    "feather": 0.4
+   },
+   "dx": {
+    "sin": 3
+   }
+  }
+ ]
+}
