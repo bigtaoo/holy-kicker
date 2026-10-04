@@ -10,6 +10,7 @@ import { newBoss } from './boss';
 import { damage, downMob, eliteIndex } from './combat';
 import { shielded } from './ghost';
 import { enraged } from './judge';
+import { chapterHurt } from './players';
 import { beginWave, chapterBoss, eliteKinds, hordeSize } from './waves';
 
 // Chapter 4, the Ghost Market (docs/content.md "Chapters"): lantern ghosts (shooters),
@@ -131,7 +132,7 @@ describe('door god (elite)', () => {
     expect(s.zones[0].hurt).toBe(HURT.smash);
     expect(dist(s.zones[0].x - g.x, s.zones[0].y - g.y)).toBeGreaterThan(DOOR_GOD.reach - 10_000);
     const hurt = steps(e, THREATS.warn).filter((x) => x.type === 'hurt');
-    expect(hurt.map((x) => (x.type === 'hurt' ? x.value : 0))).toEqual([HURT.smash]);
+    expect(hurt.map((x) => (x.type === 'hurt' ? x.value : 0))).toEqual([chapterHurt(4, HURT.smash)]);
     expect(g.phase).toBe('rest');
     expect(shielded(g, p.x, p.y)).toBe(false);
     steps(e, DOOR_GOD.rest);

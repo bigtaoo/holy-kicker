@@ -65,6 +65,12 @@ export function movePlayers(s: SimState): void {
   }
 }
 
+/** What a hurt of `value` takes in chapter `chapter` (HURT.chapterPercent). */
+export function chapterHurt(chapter: number, value: number): number {
+  const pct = HURT.chapterPercent[Math.min(Math.max(chapter, 1), HURT.chapterPercent.length) - 1];
+  return Math.trunc((value * pct) / 100);
+}
+
 export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value: number): void {
   const p = s.players.find((q) => q.owner === owner);
   if (!p || p.dead || p.hurtCd > 0) return;
@@ -73,7 +79,7 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   p.hurtCd = Math.trunc((HERO.hurtCooldown * (100 + stat(p, 'guard'))) / 100);
   p.action = 'hurt';
   p.actionT = 0;
-  const dealt = s.config.waves > 0 ? Math.min(p.hp, value) : 0;
+  const dealt = s.config.waves > 0 ? Math.min(p.hp, chapterHurt(s.config.chapter, value)) : 0;
   p.hp -= dealt;
   events.push({ type: 'hurt', owner, value: dealt });
   if (p.hp > 0) return;

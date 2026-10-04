@@ -18,6 +18,7 @@
     "typecheck": "npm run typecheck --workspaces",
     "check:filelength": "node build/checkFileLength.mjs",
     "balance": "node build/balance.mjs",
+    "journey": "node build/journey.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
     "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build:wechat && npm run build:crazygames && npm run check:wechatpackage"
   },

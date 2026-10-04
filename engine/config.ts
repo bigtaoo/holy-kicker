@@ -99,6 +99,8 @@ export const HURT = {
   /** The Inner Demon's dark spell (a zone going off) and its landing after a staff leap. */
   demonSpell: 14,
   demonLeap: 20,
+  /** Every hurt by chapter, percent (later chapters play the last), so health from gear does not make them safe. */
+  chapterPercent: [100, 100, 120, 155, 175],
 };
 
 export const HORDE = {
@@ -115,10 +117,11 @@ export const HORDE = {
   hpStep: 300,
   hpSquare: 30,
   /**
-   * Mob health by chapter, percent (later chapters play the last): from chapter 3 the hero
-   * comes in with gear and training (RunConfig.bonus), so the horde is tougher.
+   * Mob health by chapter, percent (later chapters play the last): the hero comes in with
+   * gear and training (RunConfig.bonus), and the meta game's pacing (`npm run journey`,
+   * docs/design.md "Pacing targets") asks a few days of farming for each later chapter.
    */
-  chapterHp: [100, 100, 140, 190, 250],
+  chapterHp: [100, 140, 420, 1300, 2400],
 };
 
 export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter' | 'wolf' | 'caster' | 'skeleton' | 'shard' | 'effigy' | 'scrap' | 'monk';

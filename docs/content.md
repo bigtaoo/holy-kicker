@@ -338,6 +338,12 @@ or a new single image is cheap; elites and bosses cost a rig each.
   subpackage `ch5` (0.34 MB; the run also loads `ch4`). Balance (40 runs, the ball) with the
   gear expected after chapter 4: casual 37/40, skilled 40/40; with chapter 4's gear casual
   30/40. The empowered Judge falls in a median 64 s, the Inner Demon in 88 s.
+- **Chapter difficulty retuned for the meta game** (ENGINE_VERSION 25). Measured through whole
+  player journeys (`npm run journey`, docs/design.md "Pacing targets") rather than one chapter
+  with an assumed gear set: mob health by chapter is now 100/140/420/1300/2400 % of chapter 1's
+  (was 100/100/140/190/250) and every hurt the hero takes is 100/100/120/155/175 %
+  (`HURT.chapterPercent`, so health from gear does not make the late chapters safe). Elites
+  and bosses keep their health.
 
 ## Chapters (5)
 

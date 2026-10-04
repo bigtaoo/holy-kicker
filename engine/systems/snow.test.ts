@@ -6,6 +6,7 @@ import { dist } from '../math/fixed';
 import { newElite, newMob, underground, type Mob } from '../state';
 import { downMob, targetAt } from './combat';
 import { newBoss } from './boss';
+import { chapterHurt } from './players';
 import { beginWave, chapterBoss, eliteKinds, hordeSize, isPackWave } from './waves';
 
 // Chapter 3, the Snow Pass (docs/content.md "Chapters"): ice wraiths that mark frost circles,
@@ -69,7 +70,7 @@ describe('ice wraith (caster)', () => {
     expect(m.t).toBeGreaterThanOrEqual(CASTER.cooldown);
     let hurt = 0;
     for (let i = 0; i < THREATS.warn; i++) for (const ev of e.step([still(e)])) if (ev.type === 'hurt') hurt += ev.value;
-    expect(hurt).toBe(HURT.frost);
+    expect(hurt).toBe(chapterHurt(3, HURT.frost));
   });
 
   it('waits to raise its arms until the hero is in range', () => {
