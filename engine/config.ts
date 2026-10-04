@@ -127,7 +127,7 @@ export const MOB_KINDS: Record<MobKind, { speed: number; hpPercent: number }> = 
  */
 export const CHAPTER_MOBS: readonly (readonly { kind: MobKind; from: number; every: number }[])[] = [
   [{ kind: 'runner', from: 3, every: 4 }],
-  [{ kind: 'shooter', from: 3, every: 8 }, { kind: 'emerger', from: 2, every: 5 }],
+  [{ kind: 'shooter', from: 3, every: 10 }, { kind: 'emerger', from: 2, every: 5 }],
 ];
 
 /**
@@ -151,7 +151,7 @@ export const EMERGE = {
 export const SHOOTER = {
   stopDist: toFp(460),
   range: toFp(720),
-  cooldown: ticks(5),
+  cooldown: ticks(6),
   spread: ticks(2),
   windup: ticks(0.5),
 };
@@ -291,8 +291,8 @@ export const BOSS = {
  */
 export const EMPOWERED = {
   hp: 1500,
-  cooldown: ticks(1.8),
-  ring: 10,
+  cooldown: ticks(2.2),
+  ring: 8,
 };
 
 /**

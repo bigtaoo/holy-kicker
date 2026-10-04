@@ -227,11 +227,11 @@ or a new single image is cheap; elites and bosses cost a rig each.
 - **Chapter 2's kinds implemented** (`RunConfig.chapter`, `CHAPTER_MOBS`, `EMERGE`, `SHOOTER`
   in `engine/config.ts`, `engine/systems/marsh.ts`, ENGINE_VERSION 16). Each chapter has its
   own newcomer rules; chapter 2 drops the fox for the water ghost (emerger: every 5th
-  newcomer from wave 2) and the toad (shooter: every 8th from wave 3), and its plain walkers
+  newcomer from wave 2) and the toad (shooter: every 10th from wave 3), and its plain walkers
   are drawn as water ghosts too. A water ghost waits under the ground (2–5 s after it falls
   or joins, untouchable), then marks a spot 180–340 from the hero for 1 s (violet ripples)
   and rises there with a splash, hurting a hero within 80 for 6. The toad walks slower
-  (95/s, 80 % health), stops 460 from the hero and every 5–7 s swells for 0.5 s and spits a
+  (95/s, 80 % health), stops 460 from the hero and every 6–8 s swells for 0.5 s and spits a
   3-bullet fan (6 per hit); it only starts to swell with the hero within 720. The bot now
   reads a bullet's path a second ahead and keeps clear of marks. Both are baked frame loops
   (`tools/bake_mob.py`, specs and drawings in `art/monk/mobs`). Balance (40 runs): chapter 2
@@ -255,8 +255,8 @@ or a new single image is cheap; elites and bosses cost a rig each.
   unchanged (35/40).
 - **The empowered abbot** (`EMPOWERED` in `engine/config.ts`, ENGINE_VERSION 18). From
   chapter 2 on, wave 25 brings the Fallen Abbot instead of the twins, and the wave lasts
-  until it falls: 1500 health (the chapter boss 3000), 1.8 s between slams (2.5 s), and every
-  slam also sends a ring of 10 bullets out from the rim of its circle (turned by the tick,
+  until it falls: 1500 health (the chapter boss 3000), 2.2 s between slams (2.5 s), and every
+  slam also sends a ring of 8 bullets out from the rim of its circle (turned by the tick,
   so rings differ), to slip through between them. On screen it is tinted dusky violet, stands
   in a dark aura (`client/src/game/darkAura.ts`: a breathing violet haze behind it, a dark
   pool under its feet, wisps rising off it) and its bar reads "Fallen Abbot, Empowered" / 狂化方丈. Balance (40 runs, chapter 2 casual):
@@ -277,6 +277,11 @@ or a new single image is cheap; elites and bosses cost a rig each.
   "Black Carp King" / 黑鱼精. `BossStage` (client) sends the boss events to the abbot's or the
   carp's view by kind. Balance (40 runs, chapter 2): casual 17/40 (21 with the abbot), 5 runs
   lost on wave 50 (1); skilled 24/40 (25), 3 lost on wave 50.
+- **Chapter 2 eased** (ENGINE_VERSION 20). Most chapter 2 runs died on waves 22–34 to the
+  toads' fans and the empowered abbot's rings. A toad now comes every 10th newcomer (was 8th)
+  and spits every 6–8 s (5–7); the abbot rests 2.2 s between slams (1.8) and rings 8 bullets
+  (10). Balance (80 runs, same seeds): casual 42/80 (26 before), skilled 52/80 (36); chapter 1
+  is untouched (casual 35/40).
 
 ## Chapters (5)
 
