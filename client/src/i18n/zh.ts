@@ -50,6 +50,12 @@ export const zh: Table<typeof en> = {
     revive: '复活',
     reviveFree: '复活（修炼所得）',
   },
+  tutorial: {
+    move: '按住屏幕任意处拖动来移动',
+    keys: '也可以用 WASD 或方向键',
+    auto: '踢球是自动的',
+    gems: '捡起宝石来升级',
+  },
   card: {
     levelUp: '升级！',
     pickOne: '选择一项',

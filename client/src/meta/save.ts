@@ -40,6 +40,8 @@ export interface SaveData {
   patrol: number;
   /** Today's tasks, chests and quick patrols (daily.ts). */
   daily: Daily;
+  /** Lobby tabs opened at least once, bit i for TABS[i] (progress.ts): an open tab not yet seen gets a dot. */
+  seen: number;
 }
 
 export function newSave(): SaveData {
@@ -47,7 +49,7 @@ export function newSave(): SaveData {
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
-    gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(),
+    gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0,
   };
 }
 
@@ -111,5 +113,7 @@ export function parseSave(text: string | null): SaveData {
     trained: int(raw.trained, 0, BALANCE.training.nodes, 0),
     patrol: int(raw.patrol, 0, max, 0),
     daily: parseDaily(raw.daily),
+    // a save from before the dots has seen every tab it could open
+    seen: int(raw.seen, 0, 0xff, 0xff),
   };
 }

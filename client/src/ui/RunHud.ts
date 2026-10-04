@@ -1,9 +1,10 @@
-import { Container, Sprite, Texture, type Text } from 'pixi.js';
+import { Container, Graphics, Sprite, Texture, type Text } from 'pixi.js';
 import { t } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot } from './buildSlots';
 import { cardPanel } from './cardPanel';
 import type { CardText } from './cardText';
+import type { TutorialStep } from './tutorial';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
@@ -54,11 +55,17 @@ export class RunHud implements Screen {
   private build: BuildBar | null = null;
   private slots: readonly BuildSlot[] = [];
   private slotsKey = '';
+  /** The first run's hint, and the hand that sways on the move hint. */
+  private tutorial: TutorialStep = 'done';
+  private hand: Container | null = null;
+  private clock = 0;
 
   constructor(
     private readonly total: number,
     private readonly actions: RunActions,
     private readonly icons: IconSheet,
+    /** The move hint also names the keyboard. */
+    private readonly keys = false,
   ) {}
 
   layout(f: UiFrame): void {
@@ -83,6 +90,8 @@ export class RunHud implements Screen {
       pause.position.set(f.w - 90, 300);
       this.view.addChild(pause);
     }
+    this.hand = null;
+    if (this.tutorial !== 'done' && !this.paused && !this.down && !this.offer) this.drawTutorial(f);
     this.bannerView = null;
     // a panel covers the middle, so a banner then waits out its time unseen
     if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
@@ -151,8 +160,17 @@ export class RunHud implements Screen {
     this.relayout();
   }
 
+  /** The first run's hint to show ('done' for none). */
+  setTutorial(step: TutorialStep): void {
+    if (step === this.tutorial) return;
+    this.tutorial = step;
+    this.relayout();
+  }
+
   update(dt: number): void {
     this.build?.update(dt);
+    this.clock += dt;
+    if (this.hand) this.hand.x = Math.sin(this.clock * 4) * 120;
     // a banner waits out the card choice
     if (!this.banner || this.offer) return;
     this.banner.t -= dt;
@@ -211,6 +229,29 @@ export class RunHud implements Screen {
     if (this.picked) return;
     this.picked = true;
     this.actions.pick(index);
+  }
+
+  /** The hint low on the screen, under the hero: a swaying finger to move, then a line. */
+  private drawTutorial(f: UiFrame): void {
+    const box = new Container();
+    box.position.set(f.w / 2, f.h * 0.7);
+    box.eventMode = 'none';
+    const lines = this.tutorial === 'move' ? [t('tutorial.move'), ...(this.keys ? [t('tutorial.keys')] : [])] : [t('tutorial.auto'), t('tutorial.gems')];
+    lines.forEach((text, i) => {
+      const l = fit(label(text, i === 0 ? 60 : 48, i === 0 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), f.w - 80);
+      l.y = i * 80;
+      box.addChild(l);
+    });
+    if (this.tutorial === 'move') {
+      const hand = (this.hand = new Container());
+      hand.y = -170;
+      hand.addChild(
+        new Graphics().roundRect(-150, -6, 300, 12, 6).fill({ color: COLORS.text, alpha: 0.35 }),
+        new Graphics().circle(0, 0, 46).fill({ color: COLORS.text, alpha: 0.85 }).stroke({ color: COLORS.outline, width: 8 }),
+      );
+      box.addChild(hand);
+    }
+    this.view.addChild(box);
   }
 
   private drawBanner(f: UiFrame): void {

@@ -23,6 +23,7 @@ import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
+import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
 import { buildSlots } from './buildSlots';
 import { uiFrame, type Screen } from './uiLayout';
 import { onButtonTap } from './widgets';
@@ -55,6 +56,7 @@ export class Shell {
   private freeRevives = 0;
   /** Enemies defeated in this run, for the daily tasks. */
   private kills = 0;
+  private tutorial: Tutorial | null = null;
   /** A chapter's art pack is being fetched; taps on play wait for it. */
   private loading = false;
   readonly sound: Sound;
@@ -67,6 +69,8 @@ export class Shell {
     private readonly art: Art,
     private readonly scene: SceneOptions,
     private readonly store: SaveStore,
+    /** A desktop: the first run's move hint also names the keyboard. */
+    private readonly keys = false,
   ) {
     this.save = store.load();
     this.sound = new Sound(platform.audio, loadSettings(platform.storage).sound);
@@ -186,6 +190,8 @@ export class Shell {
     this.downShown = false;
     this.shownOffer = null;
     this.kills = 0;
+    // the first run teaches moving; a replayed first chapter does not
+    this.tutorial = this.save.firstRunDone || !this.scene.waves ? null : newTutorial();
     if (this.quality) this.game.applyQuality(this.quality);
     this.game.onEvents = (events) => {
       for (const e of events) {
@@ -202,7 +208,7 @@ export class Shell {
       giveUp: () => this.endRun(),
       revive: () => this.revive(),
       pick: (index) => this.game?.pick(index),
-    }, this.art.icons);
+    }, this.art.icons, this.keys);
     this.setScreen(this.hud);
     this.platform.portal.gameplayStart();
   }
@@ -295,6 +301,10 @@ export class Shell {
       if (s.wave > 0) hud.announce(s.wave, warning);
     }
     const p = s.players[0];
+    if (this.tutorial && !game.paused && p.offer.length === 0) {
+      this.tutorial = stepTutorial(this.tutorial, this.app.ticker.deltaMS / 1000, p.moving);
+      hud.setTutorial(this.tutorial.step);
+    }
     hud.setXp(p.level, p.xp / xpToNext(p.level));
     hud.setBuild(buildSlots(p));
     // offers come one after another (several levels at once, a shrine's insight), each a new list

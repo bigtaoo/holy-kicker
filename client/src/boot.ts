@@ -18,7 +18,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   const app = await platform.createApp(useMsaa(scene.quality, device));
   device.gpu = gpuName(app.renderer);
   await Assets.init({ skipDetections: opts.skipDetections });
-  const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage));
+  const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), !device.mobile);
   const quality = new QualityRuntime(app, levelRange(scene.quality, device), (s) => shell.applyQuality(s));
   shell.start(opts.direct);
   return { app, shell, quality, device };

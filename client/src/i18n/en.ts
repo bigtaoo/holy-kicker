@@ -48,6 +48,12 @@ export const en = {
     revive: 'Revive',
     reviveFree: 'Revive (training)',
   },
+  tutorial: {
+    move: 'Drag anywhere to move',
+    keys: 'or use WASD / the arrow keys',
+    auto: 'Your kicks are automatic',
+    gems: 'Grab the gems to level up',
+  },
   card: {
     levelUp: 'Level up!',
     pickOne: 'Pick one',

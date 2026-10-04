@@ -143,6 +143,16 @@ export function tabLock(save: SaveData, tab: Tab): Lock | null {
 }
 
 /** Relics the player may take into a run: the cuju, then one more per chapter cleared. */
+/** The tab is open but the player has never looked at it (Play is always seen). */
+export function tabNew(save: SaveData, tab: Tab): boolean {
+  return tab !== 'play' && !tabLock(save, tab) && !(save.seen & (1 << TABS.indexOf(tab)));
+}
+
+export function seeTab(save: SaveData, tab: Tab): SaveData {
+  const bit = 1 << TABS.indexOf(tab);
+  return save.seen & bit ? save : { ...save, seen: save.seen | bit };
+}
+
 export function unlockedRelics(save: SaveData): RelicId[] {
   return RELIC_IDS.slice(0, save.cleared + 1);
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { doubleCopper, earnedSutras, settleRun, tabLock, unlockedRelics, xpToNext } from './progress';
+import { doubleCopper, earnedSutras, seeTab, settleRun, tabLock, tabNew, unlockedRelics, xpToNext } from './progress';
 import { newSave, parseSave } from './save';
 import { MemoryStore, SafeStore, SaveStore } from './saveStore';
 
@@ -71,6 +71,19 @@ describe('progress', () => {
     const replay = settleRun({ ...save, chapter: 1 }, { chapter: 1, waves: 50 });
     expect(replay.reward.firstClear).toBe(false);
     expect(replay.save.chapter).toBe(1);
+  });
+
+  it('marks a tab newly open until it is seen; an old save has seen them all', () => {
+    const { save } = settleRun(newSave(), { chapter: 1, waves: 50 });
+    expect(tabNew(save, 'shop')).toBe(true);
+    expect(tabNew(save, 'play')).toBe(false);
+    expect(tabNew(save, 'codex')).toBe(false);
+    const seen = seeTab(save, 'shop');
+    expect(tabNew(seen, 'shop')).toBe(false);
+    expect(seeTab(seen, 'shop')).toBe(seen);
+    const old = JSON.parse(JSON.stringify(save));
+    delete old.seen;
+    expect(tabNew(parseSave(JSON.stringify(old)), 'shop')).toBe(false);
   });
 
   it('unlocks the staff with the first clear, and the save keeps only an unlocked relic', () => {
