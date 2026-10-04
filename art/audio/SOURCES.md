@@ -4,8 +4,9 @@ Downloaded sound effects and music. The raw downloads live in `art/audio/source/
 the repo; re-download from the links below). `tools/audio_audition.py` writes
 `audition.html`, which lists the candidates for each cue.
 
-Everything is CC0 (no attribution needed) except where marked **CC-BY**, which must be credited
-in the game's credits and the store page.
+Everything is CC0 (no attribution needed) except where marked **CC-BY**, which would need a
+credit in the game and on the store page; the game has no credits screen, so CC-BY sounds are
+not used (art/audio/picks.json has the shipped picks).
 
 | Folder | Source | Author | License |
 |---|---|---|---|

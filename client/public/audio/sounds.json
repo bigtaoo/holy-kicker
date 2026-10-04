@@ -1,0 +1,98 @@
+{
+ "sfx": {
+  "bell": [
+   "audio/sfx/bell.mp3"
+  ],
+  "bellBreak": [
+   "audio/sfx/bellBreak.mp3"
+  ],
+  "bloom": [
+   "audio/sfx/bloom.mp3"
+  ],
+  "bossDown": [
+   "audio/sfx/bossDown.mp3"
+  ],
+  "clang": [
+   "audio/sfx/clang.mp3"
+  ],
+  "cleared": [
+   "audio/sfx/cleared.mp3"
+  ],
+  "crit": [
+   "audio/sfx/crit.mp3"
+  ],
+  "eliteDown": [
+   "audio/sfx/eliteDown.mp3"
+  ],
+  "gem": [
+   "audio/sfx/gem.mp3"
+  ],
+  "heroDown": [
+   "audio/sfx/heroDown.mp3"
+  ],
+  "hit": [
+   "audio/sfx/hit.mp3"
+  ],
+  "hurt": [
+   "audio/sfx/hurt.mp3"
+  ],
+  "kick": [
+   "audio/sfx/kick.mp3"
+  ],
+  "levelUp": [
+   "audio/sfx/levelUp.mp3"
+  ],
+  "meteor": [
+   "audio/sfx/meteor.mp3"
+  ],
+  "nova": [
+   "audio/sfx/nova.mp3"
+  ],
+  "pick": [
+   "audio/sfx/pick.mp3"
+  ],
+  "pop": [
+   "audio/sfx/pop.mp3"
+  ],
+  "revive": [
+   "audio/sfx/revive.mp3"
+  ],
+  "roar": [
+   "audio/sfx/roar.mp3"
+  ],
+  "slam": [
+   "audio/sfx/slam.mp3"
+  ],
+  "splash": [
+   "audio/sfx/splash.mp3"
+  ],
+  "summon": [
+   "audio/sfx/summon.mp3"
+  ],
+  "swish": [
+   "audio/sfx/swish.mp3"
+  ],
+  "tap": [
+   "audio/sfx/tap.mp3"
+  ],
+  "thump": [
+   "audio/sfx/thump.mp3"
+  ],
+  "wave": [
+   "audio/sfx/wave.mp3"
+  ],
+  "woodfish": [
+   "audio/sfx/woodfish.mp3"
+  ]
+ },
+ "music": {
+  "battle": {
+   "path": "audio/music/battle.mp3",
+   "length": 68.571
+  },
+  "lobby": {
+   "path": "audio/music/lobby.mp3",
+   "length": 64.0
+  }
+ }
+}

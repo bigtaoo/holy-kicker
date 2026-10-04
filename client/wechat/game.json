@@ -13,6 +13,10 @@
     {
       "name": "ch5",
       "root": "art/ch5/"
+    },
+    {
+      "name": "audio",
+      "root": "audio/"
     }
   ]
 }
