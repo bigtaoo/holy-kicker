@@ -3,7 +3,7 @@ usage: python pack_icons.py <out dir> <img>...
 Each image is cut out (cutout.py), trimmed, scaled to fit a CELL px square keeping its shape,
 centred in that cell, and laid out in a grid in <out dir>/icons.png with <out dir>/icons.json:
   {"frames": [{"name", "x", "y", "w", "h"}, ...]}   (the same layout as deco.json)
-The frame name is the file stem, which is the item id in the engine."""
+The frame name is the file stem, which is the item id in the engine (or the gear slot)."""
 import json
 import sys
 from pathlib import Path
@@ -12,6 +12,9 @@ from PIL import Image
 
 sys.path.insert(0, str(Path(__file__).parent))
 from cutout import cutout  # noqa: E402
+
+# background showing through a closed shape, seeded by points as fractions of the source image
+HOLES = {"pendant": [(0.52, 0.56)], "sash": [(0.5, 0.2)]}
 
 CELL = 128
 COLS = 4
@@ -25,7 +28,7 @@ def main():
     page = Image.new("RGBA", (COLS * step, rows * step))
     frames = []
     for i, s in enumerate(srcs):
-        im = cutout(s)
+        im = cutout(s, HOLES.get(Path(s).stem, ()))
         im = im.crop(im.getbbox())
         k = CELL / max(im.size)
         im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)

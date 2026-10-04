@@ -2,7 +2,7 @@ import { Container, Graphics, type Renderer, type Text } from 'pixi.js';
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { LOCALES, formatAmount, getLocale, localeName, t, type Locale } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { earnedSutras, playableChapters, TABS, tabLock, unlockedRelics, type Lock, type Tab } from '../meta/progress';
+import { earnedSutras, playableChapters, seeTab, TABS, tabLock, tabNew, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
@@ -84,6 +84,7 @@ export class LobbyScreen implements Screen {
       relayout: () => this.relayout(),
       toast: (text) => this.showToast(text),
       rewarded: () => actions.rewarded(),
+      icons: this.icons,
     }, ads);
   }
 
@@ -346,13 +347,14 @@ export class LobbyScreen implements Screen {
         const l = label('🔒', 36);
         l.y = -55;
         c.addChild(l);
-      } else if (tab === 'shop' && shopWaiting(this.save, Date.now())) {
+      } else if (tabNew(this.save, tab) || (tab === 'shop' && shopWaiting(this.save, Date.now()))) {
         c.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
       }
       c.eventMode = 'static';
       c.cursor = 'pointer';
       c.on('pointertap', () => {
         if (lock) return this.showToast(lockText(lock));
+        if (tabNew(this.save, tab)) this.change(seeTab(this.save, tab));
         this.tab = tab;
         this.gearOpen = null;
         this.relayout();

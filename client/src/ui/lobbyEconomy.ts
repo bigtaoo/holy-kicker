@@ -6,6 +6,7 @@ import type { Haul } from '../meta/haul';
 import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
+import { iconSprite, type IconSheet } from './buildBar';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live } from './economyPanels';
 import { COLORS, button, fit, label, panel } from './widgets';
 
@@ -24,6 +25,8 @@ export interface EconomyHost {
   toast(text: string): void;
   /** Plays a rewarded ad; resolves whether it finished. */
   rewarded(): Promise<boolean>;
+  /** The icon sheet, with the chests as chest_free, chest_ad and chest_jade. */
+  icons: IconSheet;
 }
 
 type Modal = 'patrol' | 'tasks' | null;
@@ -190,8 +193,9 @@ export class EconomyUi {
     const now = this.now();
     const card = new Container();
     card.addChild(panel(CARD_W, CARD_H));
-    const tint = kind === 'free' ? COLORS.saffron : kind === 'ad' ? COLORS.jade : 0x4f9df0;
-    card.addChild(chestIcon(-380, 0, tint));
+    const icon = iconSprite(this.host.icons, `chest_${kind}`, 200) ?? chestIcon(kind);
+    icon.x = -380;
+    card.addChild(icon);
     const c = chestContents(save, kind);
     const left = chestsLeft(save, now, kind);
     const info = kind === 'free' ? t('shop.freeInfo', { copper: formatAmount(c.copper), n: c.drops })
@@ -221,8 +225,11 @@ export class EconomyUi {
   }
 }
 
-/** A placeholder chest: a box, its lid line and a latch, `tint` coloured. */
-function chestIcon(x: number, y: number, tint: number): Graphics {
+/** A placeholder chest for a sheet without the chest icons: a box, its lid line and a latch. */
+function chestIcon(kind: ChestKind): Graphics {
+  const tint = kind === 'free' ? COLORS.saffron : kind === 'ad' ? COLORS.jade : 0x4f9df0;
+  const x = 0;
+  const y = 0;
   return new Graphics()
     .roundRect(x - 80, y - 60, 160, 130, 18).fill(tint).stroke({ color: COLORS.outline, width: 8 })
     .rect(x - 80, y - 14, 160, 8).fill(COLORS.outline)

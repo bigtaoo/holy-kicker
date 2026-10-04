@@ -1,13 +1,14 @@
 """Cut a character out of its white background and export it at in-game size.
 usage: python cutout.py <in> <out.png> <height>
 Background = light, low-saturation pixels (white paper, grey ground or sticker shadows)
-connected to the image border. White inside the black outline is kept."""
+connected to the image border. White inside the black outline is kept, except for the holes
+seeded by `holes` (points as fractions of the image, e.g. the middle of a ring)."""
 import sys
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
-def background_mask(rgb, min_light=130, max_chroma=30):
-    """L-mode mask, 255 where the pixel is border-connected background."""
+def background_mask(rgb, min_light=130, max_chroma=30, holes=()):
+    """L-mode mask, 255 where the pixel is border-connected background or in a seeded hole."""
     r, g, b = rgb.split()
     hi = ImageChops.lighter(ImageChops.lighter(r, g), b)
     lo = ImageChops.darker(ImageChops.darker(r, g), b)
@@ -18,12 +19,14 @@ def background_mask(rgb, min_light=130, max_chroma=30):
     pad = Image.new("L", (cand.width + 2, cand.height + 2), 255)
     pad.paste(cand, (1, 1))
     ImageDraw.floodfill(pad, (0, 0), 128)
+    for fx, fy in holes:
+        ImageDraw.floodfill(pad, (round(fx * cand.width) + 1, round(fy * cand.height) + 1), 128)
     return pad.crop((1, 1, cand.width + 1, cand.height + 1)).point(lambda v: 255 if v == 128 else 0)
 
 
-def cutout(src):
+def cutout(src, holes=()):
     im = Image.open(src).convert("RGBA")
-    bg = background_mask(im.convert("RGB"))
+    bg = background_mask(im.convert("RGB"), holes=holes)
     # 1px feather so the resized edge is not jagged
     alpha = ImageChops.invert(bg).filter(ImageFilter.GaussianBlur(0.6))
     im.putalpha(alpha)

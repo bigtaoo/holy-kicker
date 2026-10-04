@@ -41,3 +41,15 @@ pod, since Calm Mind is already a lotus flower; the first pod seen from the side
 (`r1/lotus_melon.jpg`) read as a melon, so the prompt asks for its flat top. The first halo
 (`r1/halo_thin.jpg`) was a thin ring with faint rays. The seeds, beams and roar in the world
 are drawn in code (`client/src/game/sutraView.ts`).
+
+The gear slot items (2026-10-04): `pendant.jpg`, `bracers.jpg`, `robe.jpg`, `sash.jpg` and
+`sandals.jpg`, packed after `focus.jpg`; they replace the code-drawn placeholders in
+`client/src/ui/gearIcons.ts`. The first pendant (`r1/pendant_ball.jpg`) had no hole and read as
+a glass bauble; the prompt now asks for a ring with the background showing through. The sash
+is a brown belt, since Karma is already a red knot. The pendant's hole and the belt's loop are
+closed shapes, so `tools/pack_icons.py` seeds them as background (`HOLES`).
+
+The shop's chests (`chest_free`, `chest_ad`, `chest_jade`): prompts here; only
+`chest_free.jpg` came out before Mistral rate-limited, so none is packed yet and the shop
+draws its placeholder (`lobbyEconomy.ts` falls back when the sheet lacks `chest_<kind>`).
+Pack them after `sandals.jpg` once all three exist.
