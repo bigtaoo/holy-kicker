@@ -1,14 +1,14 @@
 # Sourced by generate_image.sh / edit_image.sh before they do any work.
-# Runs the calling script once per attempt (MISTRAL_ONCE=1). Keys rotate B -> C -> A -> B.
+# Runs the calling script once per attempt (MISTRAL_ONCE=1). Keys rotate D -> E -> B -> C -> A -> D.
 # On "rate limit" it retries every 20 s; once the current key has been rate-limited for
 # 3 minutes it moves to the next key (agreed with the owner on 2026-09-30; the free tier
 # seems to have a daily image quota per workspace). Other errors fail at once.
 # The key that last succeeded is remembered in ~/.vibe/mistral_last_key, so the next run
-# starts there. MISTRAL_KEY=A|B|C forces the starting key. Gives up after 15 minutes.
+# starts there. MISTRAL_KEY=A|B|C|D|E forces the starting key. Gives up after 15 minutes.
 if [ -z "${MISTRAL_ONCE:-}" ]; then
   last_file="$HOME/.vibe/mistral_last_key"
   key="${MISTRAL_KEY:-$(cat "$last_file" 2>/dev/null || echo B)}"
-  next_key() { case "$1" in B) echo C ;; C) echo A ;; *) echo B ;; esac; }
+  next_key() { case "$1" in D) echo E ;; E) echo B ;; B) echo C ;; C) echo A ;; *) echo D ;; esac; }
   start=$(date +%s)
   limited_since=""
   while :; do

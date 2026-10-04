@@ -1,0 +1,24 @@
+{
+ "source": "demon/shadow_v2.png",
+ "out": "../../../client/public/art/ch5/mobs/shadow",
+ "frames": 10,
+ "fps": 18,
+ "height": 200,
+ "ground": [470, 665],
+ "pad": [30, 50, 30, 10],
+ "drop": [{"below": 625, "hsv": [[[0, 0, 100], [179, 45, 255]]]}],
+ "body": {
+  "dy": {"keys": [[0, 0], [0.25, -26], [0.5, 0], [0.75, -26]]},
+  "sy": {"keys": [[0, 0.96], [0.25, 1.03], [0.5, 0.96], [0.75, 1.03]]},
+  "sx": {"keys": [[0, 1.03], [0.25, 0.98], [0.5, 1.03], [0.75, 0.98]]}
+ },
+ "deform": [
+  {"type": "wave", "region": {"c": [440, 170], "r": [220, 150], "feather": 0.4}, "root": [330, 270], "dir": [0.7, -0.7], "length": 330, "wavelength": 300, "amp": 20, "cycles": 1},
+  {"type": "wave", "region": {"c": [850, 170], "r": [130, 190], "feather": 0.4}, "root": [800, 330], "dir": [0.3, -1], "length": 330, "wavelength": 340, "amp": 18, "cycles": 1},
+  {"type": "rotate", "region": {"c": [200, 300], "r": [200, 190], "feather": 0.3}, "pivot": [330, 400], "angle": {"sin": 2.5, "cycles": 2, "phase": 0.1}},
+  {"type": "rotate", "region": {"c": [180, 590], "r": [90, 75], "feather": 0.35}, "pivot": [250, 510], "angle": {"sin": 14, "cycles": 1}},
+  {"type": "rotate", "region": {"c": [385, 600], "r": [70, 80], "feather": 0.35}, "pivot": [380, 520], "angle": {"sin": 14, "cycles": 1, "phase": 0.5}},
+  {"type": "rotate", "region": {"c": [600, 590], "r": [75, 80], "feather": 0.35}, "pivot": [610, 510], "angle": {"sin": 14, "cycles": 1, "phase": 0.25}},
+  {"type": "rotate", "region": {"c": [800, 600], "r": [75, 75], "feather": 0.35}, "pivot": [780, 520], "angle": {"sin": 14, "cycles": 1, "phase": 0.75}}
+ ]
+}

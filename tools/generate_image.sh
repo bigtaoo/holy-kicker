@@ -4,12 +4,14 @@
 set -euo pipefail
 source "$(dirname "$0")/mistral_failover.sh"
 OUT="$1"; PROMPT_FILE="$2"
-# MISTRAL_KEY=A|B|C picks the workspace; each workspace has its own agent
+# MISTRAL_KEY=A|B|C|D|E picks the workspace; each workspace has its own agent
 case "${MISTRAL_KEY:-B}" in
+  D) CONF="$HOME/.vibe/mistral_curl_keyD.conf"; AGENT="ag_01a1071339ed769f8a3e6ecb75bf26dd" ;;
+  E) CONF="$HOME/.vibe/mistral_curl_keyE.conf"; AGENT="ag_01a107169f87737ab93655134b97f1fb" ;;
   C) CONF="$HOME/.vibe/mistral_curl_keyC.conf"; AGENT="ag_01a0f2bc01d4739880edc0be391ad765" ;;
   A) CONF="$HOME/.vibe/mistral_curl_keyA.conf"; AGENT="ag_01a0f2153a017375ae140eab15522710" ;;
   B) CONF="$HOME/.vibe/mistral_curl_keyB.conf"; AGENT="ag_01a0f2702e31768a9bde515228083588" ;;
-  *) echo "MISTRAL_KEY must be A, B or C" >&2; exit 2 ;;
+  *) echo "MISTRAL_KEY must be A, B, C, D or E" >&2; exit 2 ;;
 esac
 TMP="${TMPDIR:-/tmp}/mistral_gen_$$"; mkdir -p "$TMP"
 

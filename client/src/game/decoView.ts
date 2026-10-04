@@ -107,8 +107,8 @@ export const PEAK_DECO: DecoStyle = {
     { name: 'brazier', weight: 2, size: 115 },
     { name: 'stupa', weight: 1, size: 150 },
   ],
-  tint: 0xb4b0c8,
-  decal: { bones: { tint: 0xa0a0b8, alpha: 0.85 }, brazier: { tint: 0xffffff, alpha: 1 }, crystals: { tint: 0xe0d8ff, alpha: 1 } },
+  tint: 0xa8b4c4,
+  decal: { bones: { tint: 0xa0a0b8, alpha: 0.85 }, brazier: { tint: 0xffffff, alpha: 1 }, crystals: { tint: 0xffffff, alpha: 1 } },
   dark: { tint: 0x06040e, alpha: 0.45 },
   light: { tint: 0x8a96b0, alpha: 0.1 },
 };

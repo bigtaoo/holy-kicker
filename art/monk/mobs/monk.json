@@ -1,0 +1,19 @@
+{
+ "source": "demon/monk_v2.png",
+ "out": "../../../client/public/art/ch5/mobs/monk",
+ "frames": 10,
+ "fps": 10,
+ "height": 180,
+ "ground": [262, 745],
+ "pad": [30, 30, 30, 10],
+ "body": {
+  "dy": {"sin": 6, "bias": -3, "cycles": 2},
+  "sx": {"sin": 0.012, "bias": 1, "cycles": 2, "phase": 0.25}
+ },
+ "deform": [
+  {"type": "move", "region": {"c": [110, 700], "r": [80, 55], "feather": 0.4}, "dy": {"keys": [[0, 0], [0.25, -16], [0.5, 0], [1, 0]]}},
+  {"type": "move", "region": {"c": [430, 700], "r": [80, 55], "feather": 0.4}, "dy": {"keys": [[0, 0], [0.5, 0], [0.75, -16], [1, 0]]}},
+  {"type": "rotate", "region": {"c": [140, 470], "r": [150, 150], "feather": 0.3}, "pivot": [280, 470], "angle": {"sin": 3, "cycles": 1}},
+  {"type": "rotate", "region": {"c": [265, 170], "r": [200, 170], "feather": 0.3}, "pivot": [265, 330], "angle": {"sin": 2.5, "cycles": 1, "phase": 0.5}}
+ ]
+}

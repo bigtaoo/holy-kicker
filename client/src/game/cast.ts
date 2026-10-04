@@ -60,7 +60,7 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
       : jiangshi.map((sheet) => look(sheet, 'chaser', [27, 9], true, chapter === 3 ? FROST_TINT : undefined));
   return {
     chaser: walkers,
-    // a white tint keeps the fox's lavender off the shadow
+    // a white tint: the shadow is drawn in its own colours, not the fox's lavender
     runner: [peak ? look(peak.shadow, 'runner', [36, 9], true, 0xffffff) : look(art.fox, 'runner', [36, 9], false)],
     swarm: [look(wispSheet(renderer), 'swarm', [18, 6])],
     emerger: [look(ghost, 'emerger', [27, 9])],

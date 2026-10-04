@@ -8,5 +8,5 @@
   (the `*_v0.png` were warm or off-style rejects) and packed by `tools/pack_deco.py` into
   `client/public/art/ch4/ground/street_deco.{png,json}` (`GHOST_DECO` in
   `client/src/game/decoView.ts`). The lantern post, paper offerings and crates were
-  rate-limited; `GHOST_DECO` already lists them and kinds missing from the sheet are left
-  out, so repacking with them is all that is needed.
+  rate-limited at first and added later; the paper offerings took three tries (`papers_v0`
+  pale with no outline, `papers_v1` filling the whole frame).
