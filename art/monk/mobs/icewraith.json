@@ -1,0 +1,122 @@
+{
+ "source": "snow/icewraith_v2.png",
+ "out": "../../../client/public/art/mobs/icewraith",
+ "frames": 10,
+ "fps": 9,
+ "height": 190,
+ "ground": [
+  380,
+  782
+ ],
+ "pad": [
+  30,
+  40,
+  30,
+  10
+ ],
+ "body": {
+  "dy": {
+   "sin": 14,
+   "bias": -18
+  },
+  "sy": {
+   "sin": 0.02,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     140,
+     370
+    ],
+    "r": [
+     110,
+     100
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    240,
+    410
+   ],
+   "angle": {
+    "sin": 9,
+    "phase": 0.1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     640,
+     380
+    ],
+    "r": [
+     110,
+     100
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    540,
+    420
+   ],
+   "angle": {
+    "sin": 9,
+    "phase": 0.6
+   }
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     130,
+     640
+    ],
+    "r": [
+     160,
+     150
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    250,
+    620
+   ],
+   "dir": [
+    -1,
+    0
+   ],
+   "length": 240,
+   "wavelength": 260,
+   "amp": 16,
+   "cycles": 1
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     380,
+     170
+    ],
+    "r": [
+     220,
+     180
+    ],
+    "feather": 0.35
+   },
+   "pivot": [
+    380,
+    330
+   ],
+   "angle": {
+    "sin": 3,
+    "phase": 0.3
+   }
+  }
+ ]
+}
