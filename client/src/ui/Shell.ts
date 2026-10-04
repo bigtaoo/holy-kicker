@@ -9,6 +9,8 @@ import { computeViewport } from '../game/viewport';
 import { BALANCE } from '../meta/balance';
 import { evolvedIn } from '../meta/codex';
 import { loadout } from '../meta/loadout';
+import { bump, rollDay } from '../meta/daily';
+import { fixPatrolClock, startPatrol } from '../meta/patrol';
 import { doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
@@ -51,6 +53,8 @@ export class Shell {
   private shownOffer: readonly Card[] | null = null;
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
   private freeRevives = 0;
+  /** Enemies defeated in this run, for the daily tasks. */
+  private kills = 0;
   /** A chapter's art pack is being fetched; taps on play wait for it. */
   private loading = false;
   readonly sound: Sound;
@@ -113,6 +117,10 @@ export class Shell {
   }
 
   private showLobby(): void {
+    // a new day's counters, and the patrol once it opens
+    const now = Date.now();
+    const save = startPatrol(fixPatrolClock(rollDay(this.save, now), now), now);
+    if (save !== this.save) this.commit(save);
     this.setScreen(new LobbyScreen(this.save, this.platform.portal.userName(), {
       play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => {
@@ -127,6 +135,8 @@ export class Shell {
       soundOn: () => this.sound.enabled,
       setSound: (on) => this.setSound(on),
       commit: (save) => this.commit(save),
+      adAvailable: () => this.ads.rewardedAvailable(),
+      rewarded: () => this.ads.rewarded(),
     }, this.art.icons, this.app.renderer));
   }
 
@@ -175,9 +185,11 @@ export class Shell {
     this.shownWave = -1;
     this.downShown = false;
     this.shownOffer = null;
+    this.kills = 0;
     if (this.quality) this.game.applyQuality(this.quality);
     this.game.onEvents = (events) => {
       for (const e of events) {
+        if (e.type === 'mobDown') this.kills++;
         const cue = eventCue(e, 0);
         if (cue) this.sound.play(cue);
       }
@@ -233,7 +245,10 @@ export class Shell {
     this.hud = null;
     // the death panel already told the portal
     if (!this.downShown) this.platform.portal.gameplayStop();
-    const { save, reward } = settleRun(this.save, { chapter: this.chapter, waves, offerings, evolved });
+    const settled = settleRun(this.save, { chapter: this.chapter, waves, offerings, evolved });
+    const { reward } = settled;
+    const now = Date.now();
+    const save = bump(bump(bump(settled.save, now, 'runs', 1), now, 'waves', waves), now, 'kills', this.kills);
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);
     if (reward.firstClear) this.platform.portal.celebrate();

@@ -1,5 +1,8 @@
 import data from './balance.json';
+import type { DailyBalance } from './daily';
 import type { GearBalance } from './gear';
+import type { PatrolBalance } from './patrol';
+import type { ShopBalance } from './shop';
 import type { TrainingBalance } from './training';
 
 // Balance numbers live in balance.json, never in code, so they can move to remote config
@@ -29,6 +32,9 @@ export interface Balance {
   sutras: SutraGoal[];
   gear: GearBalance;
   training: TrainingBalance;
+  shop: ShopBalance;
+  patrol: PatrolBalance;
+  daily: DailyBalance;
 }
 
 /**

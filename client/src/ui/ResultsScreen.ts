@@ -2,7 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
 import type { Reward } from '../meta/progress';
 import { sutraName } from './cardText';
-import { itemName, TIER_COLORS, tierName } from './gearText';
+import { dropLines } from './gearText';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, fit, label, panel } from './widgets';
 
@@ -58,14 +58,7 @@ export class ResultsScreen implements Screen {
     for (const c of r.chests) lines.push([t('results.chest', { wave: c.wave, copper: c.copper, jade: c.jade }), 44, COLORS.jade]);
     if (r.drops.length > 0) {
       lines.push([t('results.drops'), 48, COLORS.dim]);
-      // one line per item and tier, the best first
-      const seen = new Map<string, number>();
-      for (const d of [...r.drops].sort((a, b) => b.tier - a.tier)) seen.set(`${d.tier}|${d.item}`, (seen.get(`${d.tier}|${d.item}`) ?? 0) + 1);
-      for (const [key, n] of seen) {
-        const [tier, item] = key.split('|');
-        const d = r.drops.find((x) => x.item === item && x.tier === Number(tier))!;
-        lines.push([`${tierName(d.tier)} ${itemName(d.item)}${n > 1 ? ` ${t('gear.count', { n })}` : ''}`, 48, TIER_COLORS[d.tier]]);
-      }
+      for (const [text, color] of dropLines(r.drops)) lines.push([text, 48, color]);
     }
     if (this.offer === 'paid') lines.push([t('results.doubled'), 48, COLORS.saffron]);
     // the card grows with its lines; the buttons sit a fixed distance below it

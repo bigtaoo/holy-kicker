@@ -153,8 +153,13 @@ export function rollDrops(chapter: number, waves: number, relics: readonly Relic
   const every = GEAR.dropEveryWaves;
   let n = Math.floor(waves / every) + (rand() < (waves % every) / every ? 1 : 0);
   if (first) n = Math.max(1, n);
+  return rollItems(chapter, n, relics, rand);
+}
+
+/** `n` items with an even slot and the tier from `chapter`'s weights (chests, patrol). */
+export function rollItems(chapter: number, n: number, relics: readonly RelicId[], rand: () => number): Drop[] {
   const pool = dropPool(relics);
-  const tiers = GEAR.dropTiers[Math.min(GEAR.dropTiers.length, chapter) - 1];
+  const tiers = GEAR.dropTiers[Math.min(GEAR.dropTiers.length, Math.max(1, chapter)) - 1];
   const out: Drop[] = [];
   for (let i = 0; i < n; i++) {
     const items = pool[Math.floor(rand() * pool.length)];

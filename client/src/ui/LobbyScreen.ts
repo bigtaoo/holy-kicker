@@ -9,6 +9,7 @@ import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/
 import { train } from '../meta/training';
 import { iconSprite, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
+import { dot, EconomyUi, shopHeight, shopWaiting } from './lobbyEconomy';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
 import { trainHeight, trainTab } from './trainTab';
@@ -16,9 +17,9 @@ import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
-// chests and the relic to play with, PLAY, and five bottom tabs. Play, Gear, Train and the
-// Codex have content so far; the Shop shows its unlock condition or a placeholder. Gear merges
-// and training are pure save changes made here and handed to the shell to store.
+// chests and the relic to play with, PLAY with the patrol and daily tasks under it, and five
+// bottom tabs. Gear merges, training and the economy (lobbyEconomy.ts: shop, patrol, tasks)
+// are pure save changes made here and handed to the shell to store.
 
 export interface LobbyActions {
   play(chapter: number): void;
@@ -31,6 +32,9 @@ export interface LobbyActions {
   setSound(on: boolean): void;
   /** Stores a save the lobby changed (a merge, a training node). */
   commit(save: SaveData): void;
+  /** Whether a rewarded ad can be offered, and playing one (shop chests, patrol). */
+  adAvailable(): Promise<boolean>;
+  rewarded(): Promise<boolean>;
 }
 
 const TOP_H = 150;
@@ -58,6 +62,9 @@ export class LobbyScreen implements Screen {
   private frame: UiFrame | null = null;
   private toast: Text | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
+  private readonly econ: EconomyUi;
+  /** Whether rewarded ads can be offered, for the shop tab's height. */
+  private adOk = false;
 
   constructor(
     private save: SaveData,
@@ -65,7 +72,20 @@ export class LobbyScreen implements Screen {
     private readonly actions: LobbyActions,
     private readonly icons: IconSheet,
     private readonly renderer: Renderer,
-  ) {}
+  ) {
+    const ads = actions.adAvailable();
+    void ads.then((ok) => (this.adOk = ok));
+    this.econ = new EconomyUi({
+      save: () => this.save,
+      change: (s) => {
+        this.change(s);
+        this.relayout();
+      },
+      relayout: () => this.relayout(),
+      toast: (text) => this.showToast(text),
+      rewarded: () => actions.rewarded(),
+    }, ads);
+  }
 
   layout(f: UiFrame): void {
     this.frame = f;
@@ -74,6 +94,7 @@ export class LobbyScreen implements Screen {
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
+    this.econ.reset();
     this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg));
     this.topBar(f.w);
     const midY = TOP_H + (f.h - TOP_H - TAB_H) / 2;
@@ -81,15 +102,18 @@ export class LobbyScreen implements Screen {
     else if (this.tab === 'codex') this.codexTab(f.w, midY);
     else if (this.tab === 'gear') this.gearTab(f.w, midY);
     else if (this.tab === 'train') this.trainTab(f.w, midY);
-    else this.placeholderTab(f.w, midY);
+    else this.shopTab(f.w, midY);
     this.tabBar(f.w, f.h);
     if (this.tab === 'gear' && this.gearOpen) this.view.addChild(gearDetail(this.save, this.gearOpen, this.icons, f.w, f.h, this.gearActions()));
+    const overlay = this.econ.overlay(f.w, f.h);
+    if (overlay) this.view.addChild(overlay);
     if (this.settingsOpen) this.settings(f.w, f.h);
     if (this.merging) this.view.addChild(this.merging.view);
   }
 
   update(dt: number): void {
     this.merging?.update(dt);
+    this.econ.update(dt);
   }
 
   destroy(): void {
@@ -163,7 +187,8 @@ export class LobbyScreen implements Screen {
   }
 
   private relayout(): void {
-    if (this.frame) this.layout(this.frame);
+    // an ad can finish after the lobby is gone
+    if (this.frame && !this.view.destroyed) this.layout(this.frame);
   }
 
   private topBar(w: number): void {
@@ -235,6 +260,9 @@ export class LobbyScreen implements Screen {
       play.position.set(w / 2, Math.min(midY + 300, h - TAB_H - 140));
       this.view.addChild(play);
     }
+    const row = this.econ.playRow();
+    row.position.set(w / 2, Math.min(midY + 300, h - TAB_H - 140) + 200);
+    this.view.addChild(row);
   }
 
   /** The relic for the next run: its name, then one badge per relic (locked ones dimmed). */
@@ -296,15 +324,10 @@ export class LobbyScreen implements Screen {
     this.view.addChild(tab);
   }
 
-  private placeholderTab(w: number, midY: number): void {
-    const card = new Container();
-    card.position.set(w / 2, midY);
-    const name = label(t(`tab.${this.tab}` as never), 72);
-    name.y = -40;
-    const soon = label(t('common.comingSoon'), 48, COLORS.dim);
-    soon.y = 110;
-    card.addChild(panel(860, 520), name, soon);
-    this.view.addChild(card);
+  private shopTab(w: number, midY: number): void {
+    const tab = this.econ.shopTab();
+    tab.position.set(w / 2, midY - shopHeight(this.adOk) / 2);
+    this.view.addChild(tab);
   }
 
   private tabBar(w: number, h: number): void {
@@ -323,6 +346,8 @@ export class LobbyScreen implements Screen {
         const l = label('🔒', 36);
         l.y = -55;
         c.addChild(l);
+      } else if (tab === 'shop' && shopWaiting(this.save, Date.now())) {
+        c.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
       }
       c.eventMode = 'static';
       c.cursor = 'pointer';

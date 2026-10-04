@@ -45,7 +45,7 @@ export interface Reward {
 }
 
 /** Chapter multiplier for copper: 1, 1.5, 2, ... */
-function chapterMul(chapter: number): number {
+export function chapterMul(chapter: number): number {
   return 1 + BALANCE.copperChapterStep * (chapter - 1);
 }
 
@@ -167,6 +167,11 @@ function reached(save: SaveData, goal: SutraGoal): boolean {
  */
 export function earnedSutras(save: SaveData): SutraId[] {
   return SUTRA_IDS.filter((id) => reached(save, sutraGoal(id)));
+}
+
+/** The highest cleared chapter, at least 1: what patrol and the shop pay by. */
+export function bestChapter(save: SaveData): number {
+  return Math.max(1, save.cleared);
 }
 
 /** Chapters the player may start: every cleared one and the first uncleared one. */

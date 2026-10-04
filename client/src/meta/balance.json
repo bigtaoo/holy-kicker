@@ -52,5 +52,34 @@
     "reviveNodes": [12, 30],
     "costBase": 100,
     "costStep": 40
+  },
+  "shop": {
+    "freeChest": { "copper": 100, "drops": 1 },
+    "adChest": { "perDay": 3, "jade": 10, "drops": 2 },
+    "jadeChest": { "jade": 60, "drops": 4 }
+  },
+  "patrol": {
+    "capHours": 12,
+    "copperPercent": 5,
+    "dropHours": 3,
+    "minMinutes": 10,
+    "doubleMinHours": 1,
+    "quickHours": 2,
+    "quickDrops": 1,
+    "quickAdsPerDay": 2,
+    "quickJade": 20,
+    "quickJadePerDay": 3
+  },
+  "daily": {
+    "tasks": [
+      { "kind": "runs", "n": 3 },
+      { "kind": "waves", "n": 60 },
+      { "kind": "kills", "n": 1500 },
+      { "kind": "chests", "n": 2 },
+      { "kind": "patrol", "n": 1 }
+    ],
+    "copper": 100,
+    "jade": 10,
+    "bonusJade": 20
   }
 }

@@ -1,13 +1,14 @@
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
+import { newDaily, parseDaily, type Daily } from './daily';
 import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './gear';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export interface SaveData {
   version: number;
@@ -35,6 +36,10 @@ export interface SaveData {
   gear: Inventory;
   /** Training nodes bought, in line order (training.ts). */
   trained: number;
+  /** When the patrol started piling up (ms since the epoch), 0 before it opens (patrol.ts). */
+  patrol: number;
+  /** Today's tasks, chests and quick patrols (daily.ts). */
+  daily: Daily;
 }
 
 export function newSave(): SaveData {
@@ -42,7 +47,7 @@ export function newSave(): SaveData {
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
-    gear: grantRelics(emptyInventory(), ['ball']), trained: 0,
+    gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(),
   };
 }
 
@@ -71,6 +76,7 @@ function inventory(v: unknown): Inventory {
  * A valid save from stored text. Missing or broken text gives a new save; every field is
  * checked on its own, so one bad value does not throw away the rest of the progress.
  * Version 1 had no gear or training: it reads as none, and its unlocked relics get their copy.
+ * Version 2 had no patrol or daily counters: the patrol starts in the lobby, the day afresh.
  */
 export function parseSave(text: string | null): SaveData {
   const fresh = newSave();
@@ -103,5 +109,7 @@ export function parseSave(text: string | null): SaveData {
     codex: Array.isArray(raw.codex) ? mergeCodex(raw.codex) : [],
     gear: grantRelics(inventory(raw.gear), RELIC_IDS.slice(0, cleared + 1)),
     trained: int(raw.trained, 0, BALANCE.training.nodes, 0),
+    patrol: int(raw.patrol, 0, max, 0),
+    daily: parseDaily(raw.daily),
   };
 }
