@@ -9,20 +9,21 @@ import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The in-run overlay: the experience bar and level, the build strip, the wave counter, a pause button and the
 // pause panel, a banner when a wave starts, the level-up cards, and the death panel (revive
-// with an ad, or give up).
+// free from training or with an ad, or give up).
 
 export interface RunActions {
   pause(): void;
   resume(): void;
   giveUp(): void;
-  /** Plays the rewarded ad and revives; resolves whether it paid. */
+  /** Revives, free or after the rewarded ad; resolves whether it did. */
   revive(): Promise<boolean>;
   /** Takes card `index` of the level-up offer. */
   pick(index: number): void;
 }
 
-/** Death panel: no revive to offer, offered, or the ad is playing. */
-type Down = 'none' | 'offered' | 'playing';
+/** Death panel: no revive to offer, a free one (training), the ad offered, or the ad playing. */
+type Down = 'none' | 'free' | 'offered' | 'playing';
+export type ReviveOffer = 'none' | 'free' | 'ad';
 
 /** Seconds a wave banner stays, the last of them fading. */
 const BANNER_TIME = 2;
@@ -138,9 +139,9 @@ export class RunHud implements Screen {
     this.relayout();
   }
 
-  /** The hero went down; `canRevive` offers the rewarded ad. */
-  showDown(canRevive: boolean): void {
-    this.down = canRevive ? 'offered' : 'none';
+  /** The hero went down: offers a free revive, the rewarded ad or nothing. */
+  showDown(offer: ReviveOffer): void {
+    this.down = offer === 'free' ? 'free' : offer === 'ad' ? 'offered' : 'none';
     this.paused = false;
     this.relayout();
   }
@@ -246,8 +247,9 @@ export class RunHud implements Screen {
     giveUp.y = down === 'none' ? 70 : 190;
     if (down !== 'none') {
       const playing = down === 'playing';
-      const revive = button(playing ? '…' : t('run.revive'), 640, 160, () => void this.playRevive(), {
-        fill: playing ? COLORS.panelLocked : COLORS.jade,
+      const free = down === 'free';
+      const revive = button(playing ? '…' : free ? t('run.reviveFree') : t('run.revive'), 640, 160, () => void this.playRevive(), {
+        fill: playing ? COLORS.panelLocked : free ? COLORS.saffron : COLORS.jade,
         textFill: COLORS.outline,
       });
       if (playing) revive.eventMode = giveUp.eventMode = 'none';
@@ -258,14 +260,15 @@ export class RunHud implements Screen {
   }
 
   private async playRevive(): Promise<void> {
-    if (this.down !== 'offered') return;
+    if (this.down !== 'offered' && this.down !== 'free') return;
+    const was = this.down;
     this.down = 'playing';
     this.relayout();
     const paid = await this.actions.revive();
     if (this.view.destroyed) return;
     // a skipped or unfilled ad keeps the offer; a paid one closes the panel
     if (paid) this.down = null;
-    else this.down = 'offered';
+    else this.down = was;
     this.relayout();
   }
 }

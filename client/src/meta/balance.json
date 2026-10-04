@@ -25,5 +25,32 @@
     { "kind": "codex", "n": 1 },
     { "kind": "clear", "n": 2 },
     { "kind": "runs", "n": 10 }
-  ]
+  ],
+  "gear": {
+    "mergeCount": 5,
+    "mergeCopper": [200, 1000, 4000, 15000],
+    "dropEveryWaves": 10,
+    "dropTiers": [
+      [100, 0, 0, 0, 0],
+      [80, 20, 0, 0, 0],
+      [40, 50, 10, 0, 0],
+      [10, 50, 35, 5, 0],
+      [0, 30, 50, 18, 2]
+    ],
+    "items": {
+      "relic": { "main": { "attack": [4, 10, 18, 28, 40] }, "affixes": [["area", 6], ["cooldown", 3], ["crit", 3], ["attack", 10]] },
+      "pendant": { "main": { "attack": [5, 10, 16, 24, 34] }, "affixes": [["crit", 2], ["xp", 5], ["crit", 3], ["attack", 6]] },
+      "bracers": { "main": { "attack": [3, 6, 10, 15, 21], "crit": [1, 2, 3, 4, 6] }, "affixes": [["cooldown", 3], ["crit", 2], ["cooldown", 4], ["area", 8]] },
+      "robe": { "main": { "maxHp": [8, 16, 26, 38, 52] }, "affixes": [["guard", 10], ["regen", 2], ["guard", 15], ["maxHp", 10]] },
+      "sash": { "main": { "maxHp": [4, 8, 13, 19, 26], "regen": [2, 3, 4, 6, 8] }, "affixes": [["xp", 5], ["regen", 2], ["magnet", 15], ["duration", 10]] },
+      "sandals": { "main": { "speed": [3, 5, 8, 11, 15], "magnet": [10, 20, 30, 40, 55] }, "affixes": [["xp", 4], ["speed", 2], ["magnet", 15], ["guard", 10]] }
+    }
+  },
+  "training": {
+    "nodes": 50,
+    "cycle": [["attack", 2], ["maxHp", 3], ["xp", 2], ["copper", 3], ["magnet", 5]],
+    "reviveNodes": [12, 30],
+    "costBase": 100,
+    "costStep": 40
+  }
 }

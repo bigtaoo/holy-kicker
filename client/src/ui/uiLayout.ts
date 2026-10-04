@@ -26,5 +26,7 @@ export function uiFrame(vp: Viewport): UiFrame {
 export interface Screen {
   readonly view: Container;
   layout(f: UiFrame): void;
+  /** Animates, every frame, if the screen has anything moving. */
+  update?(dt: number): void;
   destroy(): void;
 }

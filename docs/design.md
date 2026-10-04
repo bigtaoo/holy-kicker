@@ -100,7 +100,7 @@ otherwise taking Insight):
 | Slot | Role |
 |---|---|
 | **Relic** (main hand) | Decides the starting weapon and its evolution path — the key slot |
-| Beads | Attack |
+| Jade Pendant / 玉佩 | Attack |
 | Bracers | Attack / crit |
 | Robe | Health |
 | Sash | Health / regen |
@@ -108,6 +108,16 @@ otherwise taking Insight):
 
 **Tiers:** Common, Fine, Refined, Treasured, Sacred. Each tier raises the item's stats and
 adds a passive affix. Gear has no levels.
+
+**As built** (`client/src/meta/gear.ts`, numbers in `balance.json` "gear"): one item per slot,
+and every relic is an item of the relic slot. The relic chosen in the lobby is the one worn; a
+relic unlocked by a chapter clear comes as one Common copy, and relic copies drop like any other
+item, so a main relic can be merged up. Items stack as counts per tier and the best tier owned is
+worn: there is nothing to equip by hand. Affixes are fixed per slot and tier (no random rolls).
+A run drops one item per 10 waves cleared and a chance at one for the rest (the first run always
+one); the slot is even, the tier comes from the chapter's weights (chapter 1 all Common, chapter
+5 mostly Refined, 2 % Sacred). Gear and training reach the engine only as `RunConfig.bonus`
+(engine stats, including the gear-only `attack`) summed in `meta/loadout.ts`.
 
 **One upgrade operation — gear and copper only, no other materials:**
 
@@ -146,6 +156,15 @@ in-game particle pool (`fx.ts`) and shares no drawing with the world.
 **Training (talents):** each player level unlocks one node on a single fixed line, bought with
 copper. Plain stats only: health, attack, XP gain, copper gain, pickup radius, extra revive.
 No random rolls.
+
+**As built** (`client/src/meta/training.ts`, `balance.json` "training"): 50 nodes; node n opens at
+player level n + 1 and costs 100 + 40 (n − 1) copper. The line repeats attack +2 %, health +3 %,
+XP +2 %, copper +3 %, pickup range +5 %; nodes 12 and 30 give a free revive instead, offered on
+the death panel before the rewarded-ad one.
+
+**Balance check** (balance bots, 40 runs, chapter 2 casual, no revives): 24/40 bare; 36/40 with
+every slot Common and 10 training nodes; 40/40 with about all-Fine gear and 25 nodes. Farming a
+chapter is meant to carry the next one; chapters 3–5 are to be tuned against that gear.
 
 ### B. Content line (the replay motivation)
 
@@ -259,8 +278,8 @@ re-simulate submitted runs with the deterministic engine to verify them.
 **Poki later:** Poki wants exclusivity, so moving there would mean taking the game off
 CrazyGames; the `SaveStore` and ad interfaces must not assume CrazyGames.
 
-**Save contents** (well under 50 KB): player level and XP, copper, jade, gear list and
-equipped items, per-chapter best wave and claimed chests, unlocked relics / sutras / codex
+**Save contents** (well under 50 KB): player level and XP, copper, jade, gear counts per item
+and tier (the best is worn), training nodes bought, per-chapter best wave and claimed chests, unlocked relics / sutras / codex
 entries, daily tasks and ad counts, patrol start time, save version.
 
 ## Localization

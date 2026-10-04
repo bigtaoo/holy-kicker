@@ -1,18 +1,24 @@
-import { Container, Graphics, type Text } from 'pixi.js';
+import { Container, Graphics, type Renderer, type Text } from 'pixi.js';
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { LOCALES, formatAmount, getLocale, localeName, t, type Locale } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { earnedSutras, playableChapters, TABS, tabLock, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
+import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
+import { train } from '../meta/training';
 import { iconSprite, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
+import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
+import { MergeView } from './MergeView';
+import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
-// chests and the relic to play with, PLAY, and five bottom tabs. Play and the Codex have
-// content so far; the other tabs show their unlock condition or a placeholder.
+// chests and the relic to play with, PLAY, and five bottom tabs. Play, Gear, Train and the
+// Codex have content so far; the Shop shows its unlock condition or a placeholder. Gear merges
+// and training are pure save changes made here and handed to the shell to store.
 
 export interface LobbyActions {
   play(chapter: number): void;
@@ -20,6 +26,8 @@ export interface LobbyActions {
   selectChapter(chapter: number): void;
   selectRelic(relic: RelicId): void;
   setLanguage(locale: Locale): void;
+  /** Stores a save the lobby changed (a merge, a training node). */
+  commit(save: SaveData): void;
 }
 
 const TOP_H = 150;
@@ -38,19 +46,26 @@ export class LobbyScreen implements Screen {
   private settingsOpen = false;
   /** The Codex entry shown in detail. */
   private codexPick: EvolveId | null = null;
+  /** The gear slot open in detail, the training node shown, the merge effect playing. */
+  private gearOpen: GearSlot | null = null;
+  private trainPick: number | null = null;
+  private merging: MergeView | null = null;
   private frame: UiFrame | null = null;
   private toast: Text | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
-    private readonly save: SaveData,
+    private save: SaveData,
     private readonly userName: string | null,
     private readonly actions: LobbyActions,
     private readonly icons: IconSheet,
+    private readonly renderer: Renderer,
   ) {}
 
   layout(f: UiFrame): void {
     this.frame = f;
+    // the merge effect lives across relayouts
+    if (this.merging) this.view.removeChild(this.merging.view);
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
@@ -59,14 +74,87 @@ export class LobbyScreen implements Screen {
     const midY = TOP_H + (f.h - TOP_H - TAB_H) / 2;
     if (this.tab === 'play') this.playTab(f.w, midY, f.h);
     else if (this.tab === 'codex') this.codexTab(f.w, midY);
+    else if (this.tab === 'gear') this.gearTab(f.w, midY);
+    else if (this.tab === 'train') this.trainTab(f.w, midY);
     else this.placeholderTab(f.w, midY);
     this.tabBar(f.w, f.h);
+    if (this.tab === 'gear' && this.gearOpen) this.view.addChild(gearDetail(this.save, this.gearOpen, this.icons, f.w, f.h, this.gearActions()));
     if (this.settingsOpen) this.settings(f.w, f.h);
+    if (this.merging) this.view.addChild(this.merging.view);
+  }
+
+  update(dt: number): void {
+    this.merging?.update(dt);
   }
 
   destroy(): void {
     clearTimeout(this.toastTimer);
+    this.merging?.destroy();
     this.view.destroy({ children: true });
+  }
+
+  private change(save: SaveData): void {
+    this.save = save;
+    this.actions.commit(save);
+  }
+
+  private gearActions(): GearActions {
+    return {
+      open: (slot) => {
+        this.gearOpen = slot;
+        this.relayout();
+      },
+      close: () => {
+        this.gearOpen = null;
+        this.relayout();
+      },
+      merge: (item: ItemId, tier: Tier) => {
+        this.change(merge(this.save, item, tier));
+        this.playMerge({ item, tier: (tier + 1) as Tier });
+      },
+      mergeAll: () => {
+        const { save, done } = mergeAll(this.save);
+        if (done.length === 0) return;
+        this.change(save);
+        const best = done.reduce((a, b) => (b.tier >= a.tier ? b : a));
+        this.playMerge({ ...best, all: done });
+      },
+      toast: (text) => this.showToast(text),
+    };
+  }
+
+  private playMerge(show: ConstructorParameters<typeof MergeView>[4]): void {
+    if (!this.frame) return;
+    this.merging?.destroy();
+    this.merging = new MergeView(this.renderer, this.icons, this.frame.w, this.frame.h, show, () => {
+      this.merging?.destroy();
+      this.merging = null;
+      this.relayout();
+    });
+    this.relayout();
+  }
+
+  private gearTab(w: number, midY: number): void {
+    const tab = gearTab(this.save, this.icons, this.gearActions());
+    tab.position.set(w / 2, midY - gearHeight(this.save) / 2);
+    this.view.addChild(tab);
+  }
+
+  private trainTab(w: number, midY: number): void {
+    const tab = trainTab(this.save, this.trainPick, {
+      train: () => {
+        this.change(train(this.save));
+        this.trainPick = null;
+        this.relayout();
+      },
+      pick: (n) => {
+        this.trainPick = n;
+        this.relayout();
+      },
+      toast: (text) => this.showToast(text),
+    });
+    tab.position.set(w / 2, midY - trainHeight(this.save) / 2);
+    this.view.addChild(tab);
   }
 
   private relayout(): void {
@@ -235,6 +323,7 @@ export class LobbyScreen implements Screen {
       c.on('pointertap', () => {
         if (lock) return this.showToast(lockText(lock));
         this.tab = tab;
+        this.gearOpen = null;
         this.relayout();
       });
       this.view.addChild(c);

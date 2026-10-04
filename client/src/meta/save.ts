@@ -1,12 +1,13 @@
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
+import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './gear';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export interface SaveData {
   version: number;
@@ -30,6 +31,10 @@ export interface SaveData {
   relic: RelicId;
   /** Evolutions and awakenings done at least once, in Codex order (codex.ts). */
   codex: EvolveId[];
+  /** Owned gear, counts per item and tier (gear.ts); unlocked relics have at least one copy. */
+  gear: Inventory;
+  /** Training nodes bought, in line order (training.ts). */
+  trained: number;
 }
 
 export function newSave(): SaveData {
@@ -37,6 +42,7 @@ export function newSave(): SaveData {
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
+    gear: grantRelics(emptyInventory(), ['ball']), trained: 0,
   };
 }
 
@@ -50,10 +56,21 @@ function ints(v: unknown, min: number, max: number): number[] {
   return out;
 }
 
+function inventory(v: unknown): Inventory {
+  const out = emptyInventory();
+  if (v === null || typeof v !== 'object') return out;
+  const raw = v as Record<string, unknown>;
+  for (const id of ITEM_IDS) {
+    const counts = raw[id];
+    if (Array.isArray(counts)) for (let t = 0; t < TIERS; t++) out[id][t] = int(counts[t], 0, Number.MAX_SAFE_INTEGER, 0);
+  }
+  return out;
+}
+
 /**
  * A valid save from stored text. Missing or broken text gives a new save; every field is
  * checked on its own, so one bad value does not throw away the rest of the progress.
- * Migrations from older versions go here, keyed on `version`.
+ * Version 1 had no gear or training: it reads as none, and its unlocked relics get their copy.
  */
 export function parseSave(text: string | null): SaveData {
   const fresh = newSave();
@@ -84,5 +101,7 @@ export function parseSave(text: string | null): SaveData {
     // only a relic the clears have unlocked
     relic: RELIC_IDS.indexOf(raw.relic as RelicId) >= 0 && RELIC_IDS.indexOf(raw.relic as RelicId) <= cleared ? (raw.relic as RelicId) : 'ball',
     codex: Array.isArray(raw.codex) ? mergeCodex(raw.codex) : [],
+    gear: grantRelics(inventory(raw.gear), RELIC_IDS.slice(0, cleared + 1)),
+    trained: int(raw.trained, 0, BALANCE.training.nodes, 0),
   };
 }

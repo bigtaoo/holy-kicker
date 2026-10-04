@@ -1,4 +1,6 @@
 import data from './balance.json';
+import type { GearBalance } from './gear';
+import type { TrainingBalance } from './training';
 
 // Balance numbers live in balance.json, never in code, so they can move to remote config
 // later (docs/design.md "Platforms, saves and server"). All values are starting points.
@@ -25,6 +27,8 @@ export interface Balance {
   unlocks: { trainLevel: number; shopChapter: number; codexChapter: number };
   /** What earns each sutra (progress.ts sutraGoal), in SUTRA_IDS order. */
   sutras: SutraGoal[];
+  gear: GearBalance;
+  training: TrainingBalance;
 }
 
 /**
@@ -36,4 +40,4 @@ export interface SutraGoal {
   n: number;
 }
 
-export const BALANCE: Balance = data as Balance;
+export const BALANCE: Balance = data as unknown as Balance;

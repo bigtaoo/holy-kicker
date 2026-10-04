@@ -93,6 +93,8 @@ export interface SceneOptions {
   relic: RelicId | null;
   /** Dev: every sutra for every run, whatever the save has earned (?sutras). */
   sutras: boolean;
+  /** Dev: no stats from gear and training, to compare with a fresh account (?bare). */
+  bare: boolean;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -127,6 +129,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   chapter: 0,
   relic: null,
   sutras: false,
+  bare: false,
 };
 
 export function parseScene(query: string): SceneOptions {
@@ -179,6 +182,7 @@ export function parseScene(query: string): SceneOptions {
     chapter: Math.min(5, intAtLeast(q.get('chapter'), 1, DEFAULT_SCENE.chapter)),
     relic: RELIC_IDS.find((r) => r === q.get('relic')) ?? DEFAULT_SCENE.relic,
     sutras: q.has('sutras'),
+    bare: q.has('bare'),
   };
 }
 

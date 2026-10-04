@@ -8,6 +8,7 @@ import type { SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
 import { BALANCE } from '../meta/balance';
 import { evolvedIn } from '../meta/codex';
+import { loadout } from '../meta/loadout';
 import { doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
@@ -44,6 +45,8 @@ export class Shell {
   private downShown = false;
   /** The offer whose cards the HUD shows; null when none are up. */
   private shownOffer: readonly Card[] | null = null;
+  /** Free revives (training) left in this run; they come before the rewarded-ad one. */
+  private freeRevives = 0;
 
   constructor(
     private readonly app: Application,
@@ -107,7 +110,8 @@ export class Shell {
         this.showLobby();
       },
       setLanguage: (locale) => this.setLanguage(locale),
-    }, this.art.icons));
+      commit: (save) => this.commit(save),
+    }, this.art.icons, this.app.renderer));
   }
 
   private setLanguage(locale: Locale): void {
@@ -119,12 +123,15 @@ export class Shell {
   private startRun(chapter: number): void {
     this.chapter = chapter;
     this.setScreen(null);
+    const { bonus, freeRevives } = loadout(this.save);
+    this.freeRevives = freeRevives;
     this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, {
       chapter,
       waves: this.scene.waves ? BALANCE.waves : 0,
-      revives: BALANCE.revives,
+      revives: BALANCE.revives + freeRevives,
       relic: this.scene.relic ?? this.save.relic,
       sutras: this.scene.sutras ? SUTRA_IDS : earnedSutras(this.save),
+      bonus: this.scene.bare ? {} : bonus,
     });
     this.shownWave = -1;
     this.downShown = false;
@@ -151,6 +158,11 @@ export class Shell {
   }
 
   private async revive(): Promise<boolean> {
+    if (this.freeRevives > 0 && this.game) {
+      this.freeRevives--;
+      this.game.revive();
+      return true;
+    }
     const paid = await this.platform.ads.rewarded();
     if (!paid || !this.game) return false;
     // the engine stands the hero up on its next tick; watchRun then resumes the portal
@@ -208,6 +220,7 @@ export class Shell {
       this.screen.layout(uiFrame(computeViewport(width, height)));
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
+    else this.screen?.update?.(this.app.ticker.deltaMS / 1000);
   }
 
   private watchRun(game: Game, hud: RunHud): void {
@@ -241,10 +254,11 @@ export class Shell {
       this.downShown = true;
       this.platform.portal.gameplayStop();
       // the offer appears once the host says an ad can play
-      hud.showDown(false);
-      if (s.players[0].revives > 0) {
+      const revives = s.players[0].revives;
+      hud.showDown(revives > 0 && this.freeRevives > 0 ? 'free' : 'none');
+      if (revives > 0 && this.freeRevives === 0) {
         void this.platform.ads.rewardedAvailable().then((ok) => {
-          if (ok && this.hud === hud && this.downShown) hud.showDown(true);
+          if (ok && this.hud === hud && this.downShown) hud.showDown('ad');
         });
       }
     }

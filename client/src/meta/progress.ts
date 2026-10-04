@@ -1,9 +1,12 @@
 import { RELIC_IDS, SUTRA_IDS, type RelicId, type SutraId } from '@hk/engine';
 import { BALANCE, type Chest, type SutraGoal } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
+import { addDrops, grantRelics, rollDrops, type Drop } from './gear';
 import type { SaveData } from './save';
+import { trainingStats } from './training';
 
-// What a finished run pays and unlocks. Pure: takes a save, returns a new one.
+// What a finished run pays and unlocks. Pure: takes a save (and, for the gear drops, a random
+// source giving [0, 1)), returns a new one.
 
 export interface RunResult {
   chapter: number;
@@ -20,7 +23,7 @@ export interface ChestReward extends Chest {
 }
 
 export interface Reward {
-  /** Copper for the waves cleared and the offerings; the part a rewarded ad doubles. */
+  /** Copper for the waves cleared and the offerings, with training's bonus; the part a rewarded ad doubles. */
   copper: number;
   /** The offerings' share of `copper`. */
   offering: number;
@@ -37,6 +40,8 @@ export interface Reward {
   /** Sutras this run earned. */
   newSutras: SutraId[];
   newBest: boolean;
+  /** Gear the run dropped, already in the save. */
+  drops: Drop[];
 }
 
 /** Chapter multiplier for copper: 1, 1.5, 2, ... */
@@ -53,7 +58,7 @@ export function xpToNext(level: number): number {
 }
 
 /** Pays the run into the save: copper, unclaimed chests, xp, best wave, chapter clear. */
-export function settleRun(save: SaveData, run: RunResult): { save: SaveData; reward: Reward } {
+export function settleRun(save: SaveData, run: RunResult, rand: () => number = Math.random): { save: SaveData; reward: Reward } {
   const i = run.chapter - 1;
   const waves = Math.max(0, Math.min(BALANCE.waves, Math.floor(run.waves)));
   const mul = chapterMul(run.chapter);
@@ -67,8 +72,9 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
     }
   });
   const base = waves * copperPerWave(run.chapter);
-  const offering = Math.round((base * BALANCE.offeringPercent * (run.offerings ?? 0)) / 100);
-  const copper = base + offering;
+  const more = 100 + (trainingStats(save).copper ?? 0);
+  const offering = Math.round((base * BALANCE.offeringPercent * (run.offerings ?? 0) * more) / 10000);
+  const copper = Math.round((base * more) / 100) + offering;
 
   let level = save.level;
   let xp = save.xp + waves * BALANCE.xpPerWave;
@@ -80,6 +86,8 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
   const won = waves >= BALANCE.waves;
   const firstClear = won && save.cleared < run.chapter;
   const cleared = firstClear ? run.chapter : save.cleared;
+  const relics = RELIC_IDS.slice(0, cleared + 1);
+  const drops = rollDrops(run.chapter, waves, relics, !save.firstRunDone, rand);
   const next: SaveData = {
     ...save,
     firstRunDone: true,
@@ -94,6 +102,7 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
     chests: save.chests.map((c, k) => (k === i ? claimed : c)),
     runs: save.runs + 1,
     codex: mergeCodex(save.codex, run.evolved),
+    gear: grantRelics(addDrops(save.gear, drops), relics),
   };
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
@@ -101,6 +110,7 @@ export function settleRun(save: SaveData, run: RunResult): { save: SaveData; rew
     newCodex: next.codex.filter((id) => !save.codex.includes(id)),
     newSutras: earnedSutras(next).filter((id) => !earnedSutras(save).includes(id)),
     newBest: waves > save.best[i],
+    drops,
   };
   return { save: next, reward };
 }
