@@ -7,7 +7,7 @@ the Chinese column is for the WeChat listing and the CrazyGames zh page.
 
 | Field | Value |
 |---|---|
-| Title | Holy Kicker |
+| Title | Holy Kicker (zh: 蹴鞠僧) |
 | Category | Action (secondary: Casual) |
 | Tags | survival, roguelite, bullet heaven, monster, one hand, upgrade, mobile, idle |
 | Orientation | Portrait; desktop plays in a 3:4 window |
@@ -37,7 +37,7 @@ the Chinese column is for the WeChat listing and the CrazyGames zh page.
 
 **zh**
 
-> 《Holy Kicker》是一款单手操作的割草肉鸽游戏。一个乐呵呵的小和尚踢着蹴鞠，闯进妖魔横行的
+> 《蹴鞠僧》是一款单手操作的割草肉鸽游戏。一个乐呵呵的小和尚踢着蹴鞠，闯进妖魔横行的
 > 山野。攻击全是自动的，你只管走位。
 >
 > 每次升级三选一：如来掌、金刚雷、飞钹……把法术升满，再配上对应的心法，就能进化成更强的形态。
@@ -68,7 +68,9 @@ thumbnail size.
 Covers are painted key art in the game's sticker style (see `docs/content.md` and
 `art/monk/`), not cropped gameplay: a portrait game screen does not fill a 16:9 cover.
 
-## Open decisions
+## Title and logo
 
-- **Chinese title** for WeChat: the WeChat listing needs one. Candidates: 蹴鞠僧, 踢球小和尚, 少林蹴鞠.
-- **Logo**: a lettered "Holy Kicker" (and the Chinese title) in the sticker style.
+- Chinese title: **蹴鞠僧** (decided 2026-10-04); used for the WeChat listing and the zh page.
+- **Logo**: decided; the lettered "Holy Kicker" and 蹴鞠僧 in the sticker style (thick dark
+  outline, flat saffron and gold, one hard shadow), set from SIL OFL fonts so the shipped logo
+  needs no font licence.
