@@ -263,9 +263,15 @@ export const en = {
   settings: {
     title: 'Settings',
     language: 'Language',
-    sound: 'Sound',
-    on: 'On',
-    off: 'Off',
+    off: 'Sound: Off',
+    level: 'Sound: {n}%',
+    quality: 'Graphics',
+    auto: 'Auto',
+    high: 'High',
+    saver: 'Saver',
+    autoHint: 'Adjusts itself to keep the game smooth',
+    highHint: 'Best effects; phones may get warm',
+    saverHint: '30 fps and fewer effects, saves battery',
   },
   currency: {
     copper: 'Copper',

@@ -3,7 +3,7 @@ import { isBossWave, isEliteWave, SUTRA_IDS, xpToNext, type Card } from '@hk/eng
 import { setLocale, t, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
-import type { LevelSettings } from '../game/quality';
+import type { LevelSettings, QualityMode } from '../game/quality';
 import type { SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
 import { BALANCE } from '../meta/balance';
@@ -14,7 +14,7 @@ import { fixPatrolClock, startPatrol } from '../meta/patrol';
 import { doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
-import { loadSettings, saveSettings } from '../meta/settings';
+import { loadSettings, updateSettings } from '../meta/settings';
 import type { Ads, Platform } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import { eventCue } from '../game/soundCues';
@@ -47,6 +47,8 @@ export class Shell {
   private chapter = 1;
   private screenKey = '';
   private quality: LevelSettings | null = null;
+  /** Switches the render quality mode (boot.ts wires it to the quality runtime). */
+  onQualityMode: (mode: QualityMode) => void = () => {};
   /** The wave the HUD last showed, and whether the death panel is up. */
   private shownWave = -1;
   private downShown = false;
@@ -73,7 +75,7 @@ export class Shell {
     private readonly keys = false,
   ) {
     this.save = store.load();
-    this.sound = new Sound(platform.audio, loadSettings(platform.storage).sound);
+    this.sound = new Sound(platform.audio, loadSettings(platform.storage).volume);
     this.ads = this.sound.muteDuring(platform.ads);
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
@@ -120,12 +122,13 @@ export class Shell {
     this.store.save(save);
   }
 
-  private showLobby(): void {
+  /** `settings` opens the lobby on its settings panel (after a language change). */
+  private showLobby(settings = false): void {
     // a new day's counters, and the patrol once it opens
     const now = Date.now();
     const save = startPatrol(fixPatrolClock(rollDay(this.save, now), now), now);
     if (save !== this.save) this.commit(save);
-    this.setScreen(new LobbyScreen(this.save, this.platform.portal.userName(), {
+    const lobby = new LobbyScreen(this.save, this.platform.portal.userName(), {
       play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => {
         this.commit({ ...this.save, chapter });
@@ -135,24 +138,31 @@ export class Shell {
         this.commit({ ...this.save, relic });
         this.showLobby();
       },
-      setLanguage: (locale) => this.setLanguage(locale),
-      soundOn: () => this.sound.enabled,
-      setSound: (on) => this.setSound(on),
+      settings: {
+        setLanguage: (locale) => this.setLanguage(locale),
+        volume: () => this.sound.level,
+        setVolume: (volume) => {
+          this.sound.setVolume(volume);
+          updateSettings(this.platform.storage, { volume });
+        },
+        quality: () => loadSettings(this.platform.storage).quality,
+        setQuality: (quality) => {
+          updateSettings(this.platform.storage, { quality });
+          this.onQualityMode(quality);
+        },
+      },
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
       rewarded: () => this.ads.rewarded(),
-    }, this.art.icons, this.app.renderer));
+    }, this.art.icons, this.app.renderer);
+    if (settings) lobby.openSettings();
+    this.setScreen(lobby);
   }
 
   private setLanguage(locale: Locale): void {
     setLocale(locale);
-    saveSettings(this.platform.storage, { ...loadSettings(this.platform.storage), locale });
-    this.showLobby();
-  }
-
-  private setSound(on: boolean): void {
-    this.sound.setEnabled(on);
-    saveSettings(this.platform.storage, { ...loadSettings(this.platform.storage), sound: on });
+    updateSettings(this.platform.storage, { locale });
+    this.showLobby(true);
   }
 
   /** Starts a run of `chapter` once its art is in (a later chapter's pack may need fetching). */

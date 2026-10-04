@@ -47,6 +47,11 @@ export function onButtonTap(fn: () => void): void {
   tapSound = fn;
 }
 
+/** The button click, for tappable things that are not buttons. */
+export function playTap(): void {
+  tapSound();
+}
+
 /**
  * A tappable panel with a centred label. It sinks a little while pressed and fires on
  * release over it, so a drag that starts on a button and leaves it does nothing.

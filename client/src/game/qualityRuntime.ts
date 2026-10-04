@@ -15,7 +15,7 @@ export function gpuName(renderer: Renderer): string {
 }
 
 export class QualityRuntime {
-  readonly governor: FrameGovernor;
+  governor: FrameGovernor;
   private readonly gate: FrameGate;
   private readonly maxResolution: number;
   private last = 0;
@@ -41,6 +41,12 @@ export class QualityRuntime {
       app.ticker.update(now);
     };
     requestAnimationFrame(loop);
+  }
+
+  /** A new quality mode from the settings panel. MSAA stays as the context was made with. */
+  setRange(range: LevelRange): void {
+    this.governor = new FrameGovernor(range);
+    this.apply();
   }
 
   get settings(): LevelSettings {

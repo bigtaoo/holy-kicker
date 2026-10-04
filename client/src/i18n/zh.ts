@@ -265,9 +265,15 @@ export const zh: Table<typeof en> = {
   settings: {
     title: '设置',
     language: '语言',
-    sound: '音效',
-    on: '开',
-    off: '关',
+    off: '音效：关',
+    level: '音效：{n}%',
+    quality: '画质',
+    auto: '自动',
+    high: '高',
+    saver: '省电',
+    autoHint: '根据流畅度自动调整',
+    highHint: '特效最全，手机可能发热',
+    saverHint: '30 帧、特效减少，更省电',
   },
   currency: {
     copper: '铜钱',

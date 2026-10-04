@@ -13,13 +13,17 @@ import { Shell } from './ui/Shell';
 // platform is fully initialised before this runs (CrazyGames waits for its SDK first, since
 // the save lives in the SDK's data module).
 export async function boot(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean } = {}) {
-  setLocale(pickLocale(loadSettings(platform.storage), platform.languages()));
+  const settings = loadSettings(platform.storage);
+  setLocale(pickLocale(settings, platform.languages()));
+  const mode = scene.quality ?? settings.quality;
   const device = await platform.probe();
-  const app = await platform.createApp(useMsaa(scene.quality, device));
+  const app = await platform.createApp(useMsaa(mode, device));
   device.gpu = gpuName(app.renderer);
   await Assets.init({ skipDetections: opts.skipDetections });
   const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), !device.mobile);
-  const quality = new QualityRuntime(app, levelRange(scene.quality, device), (s) => shell.applyQuality(s));
+  const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s));
+  // a ?quality= dev switch pins the mode for the session
+  if (!scene.quality) shell.onQualityMode = (m) => quality.setRange(levelRange(m, device));
   shell.start(opts.direct);
   return { app, shell, quality, device };
 }

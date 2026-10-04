@@ -16,6 +16,8 @@ const VOICE_CAP = 14;
 const FADE = 0.04;
 /** The effects bus level at full settings volume. */
 const MASTER = 0.8;
+/** Settings volume steps (meta/settings.ts VOLUME_STEPS); the level grows as a square, as ears hear. */
+const STEPS = 5;
 
 export type HoldReason = 'setting' | 'hidden' | 'ad' | 'host';
 
@@ -27,20 +29,30 @@ export class Sound {
   private master: GainNode | null = null;
   private noise: AudioBuffer | null = null;
   private failed = false;
+  private volume: number;
 
-  constructor(private readonly host: AudioHost | null, enabled: boolean) {
-    if (!enabled) this.holds.add('setting');
+  constructor(private readonly host: AudioHost | null, volume: number) {
+    this.volume = volume;
+    if (volume <= 0) this.holds.add('setting');
     host?.onGesture(() => this.resume());
     host?.onFocus((focused) => this.hold('hidden', !focused));
     host?.onHostMute((muted) => this.hold('host', muted));
   }
 
-  get enabled(): boolean {
-    return !this.holds.has('setting');
+  /** The settings volume, 0 (off) to 5. */
+  get level(): number {
+    return this.volume;
   }
 
-  setEnabled(on: boolean): void {
-    this.hold('setting', !on);
+  setVolume(volume: number): void {
+    this.volume = volume;
+    // the button's own tap plays at the next flush, at the new level
+    this.hold('setting', volume <= 0);
+  }
+
+  /** The master gain while nothing holds the sound. */
+  private get open(): number {
+    return MASTER * (this.volume / STEPS) ** 2;
   }
 
   /** Asks for a cue; it plays at the next flush if the gate lets it. */
@@ -81,7 +93,7 @@ export class Sound {
     else this.holds.delete(reason);
     const ctx = this.ctx;
     if (!ctx || !this.master) return;
-    const level = this.holds.size === 0 ? MASTER : 0;
+    const level = this.holds.size === 0 ? this.open : 0;
     const t = ctx.currentTime;
     this.master.gain.cancelScheduledValues(t);
     this.master.gain.setValueAtTime(this.master.gain.value, t);
@@ -102,7 +114,7 @@ export class Sound {
           return;
         }
         this.master = this.ctx.createGain();
-        this.master.gain.value = this.holds.size === 0 ? MASTER : 0;
+        this.master.gain.value = this.holds.size === 0 ? this.open : 0;
         this.master.connect(limiter(this.ctx));
         this.noise = noiseBuffer(this.ctx);
       } catch (err) {

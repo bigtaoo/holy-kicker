@@ -39,8 +39,8 @@ export interface SceneOptions {
   blur: boolean;
   /** Effect fill budget in screens (1080x1920 world units); 0 follows the quality level. */
   fxBudget: number;
-  /** Render quality; until a settings screen exists, ?quality=auto|high|saver. */
-  quality: QualityMode;
+  /** Render quality forced by ?quality=auto|high|saver; null follows the settings panel. */
+  quality: QualityMode | null;
   /** Experience gem colours, for the readability comparison. */
   gem: GemPalette;
   /** Gems scattered around the start (stress test). */
@@ -108,7 +108,7 @@ export const ELITE_COLORS: readonly EliteColor[] = ['red', 'white', 'violet'];
 export const DEFAULT_SCENE: SceneOptions = {
   mobs: 40, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: true, eliteRing: true,
   types: 1, page: 0, mobRes: 1,
-  spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: 'auto',
+  spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: null,
   gem: 'pink', drops: 0,
   threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
   crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true,

@@ -1,6 +1,6 @@
 import { Container, Graphics, type Renderer, type Text } from 'pixi.js';
 import { RELIC_IDS, type RelicId } from '@hk/engine';
-import { LOCALES, formatAmount, getLocale, localeName, t, type Locale } from '../i18n';
+import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { earnedSutras, playableChapters, seeTab, TABS, tabLock, tabNew, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -12,9 +12,10 @@ import { codexHeight, codexTab } from './codexTab';
 import { dot, EconomyUi, shopHeight, shopWaiting } from './lobbyEconomy';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
+import { settingsPanel, type SettingsActions } from './settingsPanel';
 import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, backdrop, button, fit, label, panel } from './widgets';
+import { COLORS, button, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
 // chests and the relic to play with, PLAY with the patrol and daily tasks under it, and five
@@ -26,10 +27,8 @@ export interface LobbyActions {
   /** Shows another chapter on the card (cleared ones and the first uncleared one). */
   selectChapter(chapter: number): void;
   selectRelic(relic: RelicId): void;
-  setLanguage(locale: Locale): void;
-  /** Whether sound effects are on, and turning them on or off. */
-  soundOn(): boolean;
-  setSound(on: boolean): void;
+  /** The settings panel's reads and changes (settingsPanel.ts), all but closing it. */
+  settings: Omit<SettingsActions, 'close'>;
   /** Stores a save the lobby changed (a merge, a training node). */
   commit(save: SaveData): void;
   /** Whether a rewarded ad can be offered, and playing one (shop chests, patrol). */
@@ -108,7 +107,24 @@ export class LobbyScreen implements Screen {
     if (this.tab === 'gear' && this.gearOpen) this.view.addChild(gearDetail(this.save, this.gearOpen, this.icons, f.w, f.h, this.gearActions()));
     const overlay = this.econ.overlay(f.w, f.h);
     if (overlay) this.view.addChild(overlay);
-    if (this.settingsOpen) this.settings(f.w, f.h);
+    if (this.settingsOpen) {
+      const set = this.actions.settings;
+      this.view.addChild(settingsPanel(f.w, f.h, {
+        ...set,
+        setVolume: (v) => {
+          set.setVolume(v);
+          this.relayout();
+        },
+        setQuality: (m) => {
+          set.setQuality(m);
+          this.relayout();
+        },
+        close: () => {
+          this.settingsOpen = false;
+          this.relayout();
+        },
+      }));
+    }
     if (this.merging) this.view.addChild(this.merging.view);
   }
 
@@ -185,6 +201,11 @@ export class LobbyScreen implements Screen {
     });
     tab.position.set(w / 2, midY - trainHeight(this.save) / 2);
     this.view.addChild(tab);
+  }
+
+  /** Opens on the settings panel (the lobby is rebuilt after a language change). */
+  openSettings(): void {
+    this.settingsOpen = true;
   }
 
   private relayout(): void {
@@ -361,48 +382,6 @@ export class LobbyScreen implements Screen {
       });
       this.view.addChild(c);
     });
-  }
-
-  private settings(w: number, h: number): void {
-    const close = () => {
-      this.settingsOpen = false;
-      this.relayout();
-    };
-    this.view.addChild(backdrop(w, h));
-    const box = new Container();
-    box.position.set(w / 2, h / 2);
-    const boxH = 290 + LOCALES.length * 150 + 330;
-    const top = -boxH / 2;
-    box.addChild(panel(800, boxH));
-    const title = label(t('settings.title'), 64);
-    title.y = top + 80;
-    const lang = label(t('settings.language'), 48, COLORS.dim);
-    lang.y = top + 180;
-    box.addChild(title, lang);
-    LOCALES.forEach((locale, i) => {
-      const current = locale === getLocale();
-      const b = button(localeName(locale), 560, 120, () => this.actions.setLanguage(locale), {
-        fill: current ? COLORS.saffron : COLORS.panelLocked,
-        textFill: current ? COLORS.outline : COLORS.text,
-      });
-      b.y = top + 290 + i * 150;
-      box.addChild(b);
-    });
-    const soundY = top + 290 + LOCALES.length * 150 + 20;
-    const on = this.actions.soundOn();
-    const sound = button(`${t('settings.sound')}: ${on ? t('settings.on') : t('settings.off')}`, 560, 120, () => {
-      this.actions.setSound(!on);
-      this.relayout();
-    }, {
-      fill: on ? COLORS.saffron : COLORS.panelLocked,
-      textFill: on ? COLORS.outline : COLORS.text,
-    });
-    sound.y = soundY;
-    box.addChild(sound);
-    const back = button(t('common.back'), 400, 110, close, { fill: COLORS.panelLocked });
-    back.y = soundY + 180;
-    box.addChild(back);
-    this.view.addChild(box);
   }
 
   private showToast(text: string): void {
