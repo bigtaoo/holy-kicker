@@ -112,7 +112,9 @@ export class Sound {
         return;
       }
     }
-    if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    // iOS leaves a context 'interrupted' after a call or Siri; only a gesture's resume() wakes it
+    const state = this.ctx.state as string;
+    if (state === 'suspended' || state === 'interrupted') this.ctx.resume().catch(() => {});
   }
 
   private voice(ctx: AudioContext, master: GainNode, noise: AudioBuffer, cue: Cue, count: number, now: number): void {

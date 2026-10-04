@@ -25,10 +25,20 @@ export interface Platform {
   readonly storage: KeyValueStore;
   /** The player's languages, most preferred first (BCP 47 tags or WeChat's 'zh_CN'). */
   languages(): string[];
+  /** Screen bands at the top and bottom the UI must keep clear (status bar, notch, WeChat's
+   *  menu capsule, the home indicator), in the same units as app.screen. */
+  safeInsets(): Insets;
+  /** The game went to the background (tab hidden, app switched, a call came in). */
+  onHide(cb: () => void): void;
   readonly portal: Portal;
   readonly ads: Ads;
   /** Sound output; null where the host has none (the game then runs silent). */
   readonly audio: AudioHost | null;
+}
+
+export interface Insets {
+  top: number;
+  bottom: number;
 }
 
 /** What the sound effects need from a host. */

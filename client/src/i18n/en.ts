@@ -46,7 +46,7 @@ export const en = {
     elite: 'An elite is coming!',
     boss: 'Boss fight!',
     down: 'You fell',
-    revive: 'Revive (ad)',
+    revive: 'Revive',
     reviveFree: 'Revive (training)',
   },
   card: {
@@ -151,7 +151,7 @@ export const en = {
     newRelic: 'New relic: {name}!',
     newCodex: 'New in the Codex: {name}!',
     newSutra: 'New sutra: {name}!',
-    double: 'Double copper (ad)',
+    double: 'Double copper',
     doubled: 'Copper doubled!',
     drops: 'Gear found',
   },

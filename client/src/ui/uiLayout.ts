@@ -17,9 +17,16 @@ export interface UiFrame {
   h: number;
 }
 
-export function uiFrame(vp: Viewport): UiFrame {
+/**
+ * `insets` are the screen bands to keep clear (status bar, notch, WeChat's capsule, home
+ * indicator); a letterbox bar already counts towards them. The world still draws under them.
+ */
+export function uiFrame(vp: Viewport, insets: { top: number; bottom: number } = { top: 0, bottom: 0 }): UiFrame {
   const scale = Math.min(vp.playW / DESIGN_W, vp.playH / DESIGN_H);
-  return { scale, x: vp.playX, y: vp.playY, w: vp.playW / scale, h: vp.playH / scale };
+  // the play area is centred, so each letterbox bar is playY tall
+  const top = Math.max(0, insets.top - vp.playY);
+  const bottom = Math.max(0, insets.bottom - vp.playY);
+  return { scale, x: vp.playX, y: vp.playY + top, w: vp.playW / scale, h: (vp.playH - top - bottom) / scale };
 }
 
 /** A full-screen UI layer; layout() rebuilds it for the current frame. */

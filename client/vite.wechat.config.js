@@ -54,7 +54,11 @@ export default defineConfig(({ mode }) => ({
   // public/ is mirrored by copyArt; Vite must not also copy it into wechat/js.
   publicDir: false,
   build: {
-    target: 'es2020',
+    // es2019: WeChat DevTools' package validator (which also gates preview QR codes and
+    // real-device debugging) rejects optional chaining and ?? (a sibling project hit
+    // "SyntaxError: Unexpected token ." there), so esbuild lowers them, dependencies included.
+    // build/checkWeChatPackage.mjs fails the check if any slip through.
+    target: 'es2019',
     outDir: 'wechat/js',
     emptyOutDir: true,
     minify: mode !== 'development',

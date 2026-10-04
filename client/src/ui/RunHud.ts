@@ -169,6 +169,11 @@ export class RunHud implements Screen {
     this.view.destroy({ children: true });
   }
 
+  /** The game went to the background: opens the pause panel unless a panel is already up. */
+  pauseForHost(): void {
+    if (!this.paused && !this.down && !this.offer) this.setPaused(true);
+  }
+
   private relayout(): void {
     if (this.frame && !this.view.destroyed) this.layout(this.frame);
   }
@@ -243,14 +248,16 @@ export class RunHud implements Screen {
     const title = label(t('run.down'), 80, COLORS.text);
     title.y = down === 'none' ? -110 : -200;
     box.addChild(panel(800, down === 'none' ? 440 : 640), title);
-    const giveUp = button(t('run.giveUp'), 560, 130, () => this.actions.giveUp(), { fill: COLORS.panelLocked });
+    // the way out matches the revive in size, font and colour, so declining the ad never looks
+    // disabled (CrazyGames' rewarded-ad rules)
+    const giveUp = button(t('run.giveUp'), 640, 150, () => this.actions.giveUp());
     giveUp.y = down === 'none' ? 70 : 190;
     if (down !== 'none') {
       const playing = down === 'playing';
       const free = down === 'free';
-      const revive = button(playing ? '…' : free ? t('run.reviveFree') : t('run.revive'), 640, 160, () => void this.playRevive(), {
-        fill: playing ? COLORS.panelLocked : free ? COLORS.saffron : COLORS.jade,
-        textFill: COLORS.outline,
+      const revive = button(playing ? '…' : free ? t('run.reviveFree') : t('run.revive'), 640, 150, () => void this.playRevive(), {
+        fill: playing ? COLORS.panelLocked : COLORS.saffron,
+        video: !playing && !free,
       });
       if (playing) revive.eventMode = giveUp.eventMode = 'none';
       box.addChild(revive);

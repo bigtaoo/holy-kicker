@@ -48,7 +48,7 @@ export const zh: Table<typeof en> = {
     elite: '精英来袭！',
     boss: '首领战！',
     down: '你倒下了',
-    revive: '复活（看广告）',
+    revive: '复活',
     reviveFree: '复活（修炼所得）',
   },
   card: {
@@ -153,7 +153,7 @@ export const zh: Table<typeof en> = {
     newRelic: '新法器：{name}！',
     newCodex: '图鉴新增：{name}！',
     newSutra: '获得经文：{name}！',
-    double: '铜钱翻倍（看广告）',
+    double: '铜钱翻倍',
     doubled: '铜钱已翻倍！',
     drops: '获得装备',
   },

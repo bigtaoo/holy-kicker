@@ -1,6 +1,7 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "client", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 5174 }
+    { "name": "client", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev"], "port": 5174 },
+    { "name": "crazygames", "runtimeExecutable": "npm", "runtimeArgs": ["run", "dev:crazygames"], "port": 5175 }
   ]
 }

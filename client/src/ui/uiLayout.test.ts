@@ -18,4 +18,15 @@ describe('uiFrame', () => {
     expect(desk.w).toBeGreaterThan(1080);
     expect(desk.w / desk.h).toBeCloseTo(3 / 4);
   });
+
+  it('keeps the UI out of the safe-area bands, which a letterbox bar already covers', () => {
+    const f = uiFrame(computeViewport(390, 844), { top: 90, bottom: 34 });
+    expect(f.y).toBeCloseTo(90);
+    expect(f.h * f.scale).toBeCloseTo(844 - 90 - 34);
+    expect(f.w).toBeCloseTo(1080);
+    // a screen taller than 9:22 is letterboxed; a bar taller than the inset absorbs it
+    const boxed = computeViewport(300, 900);
+    expect(boxed.playY).toBeGreaterThan(40);
+    expect(uiFrame(boxed, { top: 40, bottom: 0 }).y).toBeCloseTo(boxed.playY);
+  });
 });

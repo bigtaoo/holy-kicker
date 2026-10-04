@@ -43,6 +43,8 @@ export interface CgSdkShape {
     hasAdblock?: () => unknown;
   };
   user?: {
+    /** e.g. { locale: 'en-US', device: { type: 'desktop' } } */
+    systemInfo?: { locale?: unknown; device?: { type?: unknown } };
     getUser?: () => unknown;
     addAuthListener?: (listener: (user: unknown) => void) => unknown;
   };
@@ -205,6 +207,20 @@ export class CrazyGamesSdk {
   async userName(): Promise<string | null> {
     const user = (await settle(() => this.sdk?.user?.getUser?.())) as CgUser | null | undefined;
     return typeof user?.username === 'string' && user.username !== '' ? user.username : null;
+  }
+
+  /** The player's locale as the portal sees it (e.g. 'de-DE'), null without the SDK. */
+  locale(): string | null {
+    if (!this.isEnabled()) return null;
+    const v = this.sdk?.user?.systemInfo?.locale;
+    return typeof v === 'string' && v !== '' ? v : null;
+  }
+
+  /** 'desktop', 'tablet' or 'mobile' as the portal sees it, null without the SDK. */
+  deviceType(): string | null {
+    if (!this.isEnabled()) return null;
+    const v = this.sdk?.user?.systemInfo?.device?.type;
+    return typeof v === 'string' && v !== '' ? v : null;
   }
 
   /** The portal's mute: called now with the current state, then on every change. */

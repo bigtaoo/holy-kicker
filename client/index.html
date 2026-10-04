@@ -7,6 +7,8 @@
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #141816; touch-action: none; }
       canvas { display: block; }
+      /* no text selection, long-press menu or tap flash on touch screens (a portal requirement) */
+      html, body, canvas { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
     </style>
   </head>
   <body>

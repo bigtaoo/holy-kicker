@@ -36,6 +36,8 @@ export interface ButtonOptions {
   fill?: number;
   size?: number;
   textFill?: number;
+  /** Marks a button that plays a rewarded ad with a video badge (a portal requirement). */
+  video?: boolean;
 }
 
 let tapSound = () => {};
@@ -53,9 +55,16 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
   const c = new Container();
   const t = label(text, o.size ?? 56, o.textFill ?? COLORS.text);
   // long translations shrink to fit instead of overflowing (design: leave ~30 % room)
-  const room = w - 48;
+  const badge = o.video ? videoBadge(h * 0.42, o.textFill ?? COLORS.text) : null;
+  const gap = badge ? badge.width + 20 : 0;
+  const room = w - 48 - gap;
   if (t.width > room) t.scale.set(room / t.width);
   c.addChild(panel(w, h, o.fill ?? COLORS.saffron), t);
+  if (badge) {
+    t.x = gap / 2;
+    badge.x = t.x - t.width / 2 - gap + badge.width / 2;
+    c.addChild(badge);
+  }
   c.eventMode = 'static';
   c.cursor = 'pointer';
   let down = false;
@@ -80,6 +89,14 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
   return c;
 }
 
+/** A video camera's play sign: a rounded frame with a triangle, `h` tall, centred. */
+function videoBadge(h: number, color: number): Graphics {
+  const w = h * 1.4;
+  const g = new Graphics().roundRect(-w / 2, -h / 2, w, h, h * 0.22).stroke({ width: h * 0.13, color });
+  const r = h * 0.26;
+  return g.poly([-r * 0.7, -r, r, 0, -r * 0.7, r]).fill(color);
+}
+
 /** Scales a text down so it fits `maxW`, keeping it centred. */
 export function fit(t: Text, maxW: number): Text {
   t.scale.set(1);
@@ -89,7 +106,8 @@ export function fit(t: Text, maxW: number): Text {
 
 /** A dark full-screen layer that swallows taps, for modal panels. */
 export function backdrop(w: number, h: number, alpha = 0.6): Graphics {
-  const g = new Graphics().rect(0, 0, w, h).fill({ color: 0x000000, alpha });
+  // reaches past the frame's top and bottom, over the safe-area bands the UI keeps clear of
+  const g = new Graphics().rect(0, -h, w, 3 * h).fill({ color: 0x000000, alpha });
   g.eventMode = 'static';
   return g;
 }

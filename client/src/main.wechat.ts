@@ -4,10 +4,17 @@ import 'pixi.js/unsafe-eval';
 import { boot } from './boot';
 import { DEFAULT_SCENE } from './game/scene';
 import { WeChatPlatform } from './platform/wechat/WeChatPlatform';
+import { watchBoot } from './platform/wechat/bootReport';
 
 // WeChat mini-game entry, required by client/wechat/game.js.
 // Pixi's format detection calls document.createElement('video'); a mini-game has no
 // document, so detection is skipped (Assets.init must run before the first load).
-boot(new WeChatPlatform(), DEFAULT_SCENE, { skipDetections: true }).catch((err) => {
-  console.error('[holy-kicker] boot failed', err);
-});
+const platform = new WeChatPlatform();
+// debug builds (build:wechat:debug) leave a boot report on disk; release builds skip it
+const report = import.meta.env.MODE === 'development' ? watchBoot() : null;
+boot(platform, DEFAULT_SCENE, { skipDetections: true })
+  .then(({ app }) => report?.booted(app, platform.safeInsets()))
+  .catch((err) => {
+    console.error('[holy-kicker] boot failed', err);
+    report?.failed(err);
+  });

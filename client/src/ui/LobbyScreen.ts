@@ -35,6 +35,8 @@ export interface LobbyActions {
 
 const TOP_H = 150;
 const TAB_H = 190;
+/** How far the bars reach past the frame, over the safe-area bands (more than any inset). */
+const BLEED = 800;
 const RELIC_R = 60;
 
 function lockText(lock: Lock): string {
@@ -72,7 +74,7 @@ export class LobbyScreen implements Screen {
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
-    this.view.addChild(new Graphics().rect(0, 0, f.w, f.h).fill(COLORS.bg));
+    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg));
     this.topBar(f.w);
     const midY = TOP_H + (f.h - TOP_H - TAB_H) / 2;
     if (this.tab === 'play') this.playTab(f.w, midY, f.h);
@@ -165,7 +167,8 @@ export class LobbyScreen implements Screen {
   }
 
   private topBar(w: number): void {
-    const bar = new Graphics().rect(0, 0, w, TOP_H).fill(COLORS.panel);
+    // the bars run on into the safe-area bands above and below the frame
+    const bar = new Graphics().rect(0, -BLEED, w, TOP_H + BLEED).fill(COLORS.panel);
     const avatar = new Graphics().circle(90, TOP_H / 2, 50).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 });
     const name = fit(label(this.userName ?? t('lobby.guest'), 44, COLORS.text, { align: 'left' }), 300);
     name.anchor.set(0, 0.5);
@@ -306,7 +309,7 @@ export class LobbyScreen implements Screen {
 
   private tabBar(w: number, h: number): void {
     const tw = w / TABS.length;
-    this.view.addChild(new Graphics().rect(0, h - TAB_H, w, TAB_H).fill(COLORS.panel));
+    this.view.addChild(new Graphics().rect(0, h - TAB_H, w, TAB_H + BLEED).fill(COLORS.panel));
     TABS.forEach((tab, i) => {
       const lock = tabLock(this.save, tab);
       const active = tab === this.tab;

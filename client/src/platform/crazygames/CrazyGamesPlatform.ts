@@ -1,3 +1,4 @@
+import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import type { Ads, AudioHost, Portal } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
@@ -41,6 +42,20 @@ export class CrazyGamesPlatform extends WebPlatform {
         await sdk.requestAd('midgame');
       },
     };
+  }
+
+  /** The portal's locale alone when it has one: CrazyGames asks for that, falling back to
+   *  English rather than to the browser's other languages. */
+  override languages(): string[] {
+    const portal = this.sdk.locale();
+    return portal ? [portal] : super.languages();
+  }
+
+  /** The portal's device type when it has one: it knows tablets the user agent hides. */
+  override async probe(): Promise<DeviceInfo> {
+    const info = await super.probe();
+    const type = this.sdk.deviceType();
+    return type ? { ...info, mobile: type !== 'desktop' } : info;
   }
 
   static async create(sdk = new CrazyGamesSdk()): Promise<CrazyGamesPlatform> {

@@ -2,7 +2,7 @@ import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_ADS, NO_PORTAL, type Ads, type AudioHost, type Platform, type Portal } from '../types';
+import { NO_ADS, NO_PORTAL, type Ads, type AudioHost, type Insets, type Platform, type Portal } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
 
@@ -38,6 +38,26 @@ export class WeChatPlatform implements Platform {
     },
     onHostMute() {},
   } : null;
+
+  safeInsets(): Insets {
+    const info = wx.getWindowInfo();
+    let top = info.safeArea?.top ?? 0;
+    let bottom = info.safeArea ? Math.max(0, info.windowHeight - info.safeArea.bottom) : 0;
+    try {
+      // the capsule sits over the top-right corner on every device; keep a little air below it
+      const menu = wx.getMenuButtonBoundingClientRect?.();
+      if (menu && menu.bottom > 0) top = Math.max(top, menu.bottom + 8);
+    } catch {
+      /* an old base library without it: the safe area alone */
+    }
+    if (!(top >= 0)) top = 0;
+    if (!(bottom >= 0)) bottom = 0;
+    return { top, bottom };
+  }
+
+  onHide(cb: () => void): void {
+    wx.onHide?.(cb);
+  }
 
   languages(): string[] {
     const lang = wx.getAppBaseInfo?.().language;

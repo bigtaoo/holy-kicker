@@ -2,7 +2,7 @@ import { Application } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { FAKE_ADS, NO_ADS, NO_PORTAL, type Ads, type AudioHost, type Platform, type Portal } from '../types';
+import { FAKE_ADS, NO_ADS, NO_PORTAL, type Ads, type AudioHost, type Insets, type Platform, type Portal } from '../types';
 import { webAudioHost } from './webAudio';
 
 const KEY_DIRS: Record<string, Vec2> = {
@@ -38,6 +38,24 @@ export class WebPlatform implements Platform {
     return [...(navigator.languages ?? [navigator.language])];
   }
 
+  safeInsets(): Insets {
+    // env() is only readable through a laid-out element; 0 outside notched, full-bleed pages
+    const probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;'
+      + 'padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)';
+    document.body.appendChild(probe);
+    const s = getComputedStyle(probe);
+    const insets = { top: parseFloat(s.paddingTop) || 0, bottom: parseFloat(s.paddingBottom) || 0 };
+    probe.remove();
+    return insets;
+  }
+
+  onHide(cb: () => void): void {
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) cb();
+    });
+  }
+
   async probe(): Promise<DeviceInfo> {
     const nav = navigator as Navigator & { userAgentData?: { mobile: boolean }; deviceMemory?: number };
     const ua = nav.userAgent;
@@ -58,8 +76,13 @@ export class WebPlatform implements Platform {
       preference: 'webgl',
     });
     document.body.appendChild(app.canvas);
+    // a right-click or long press is a game input, never the browser's menu
+    app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     window.addEventListener('keydown', (e) => {
-      if (KEY_DIRS[e.code]) this.held.add(e.code);
+      if (!KEY_DIRS[e.code]) return;
+      this.held.add(e.code);
+      // arrows must not scroll a portal page around the game's iframe
+      e.preventDefault();
     });
     window.addEventListener('keyup', (e) => this.held.delete(e.code));
     window.addEventListener('blur', () => this.held.clear());

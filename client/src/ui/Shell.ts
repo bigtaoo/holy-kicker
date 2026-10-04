@@ -69,6 +69,8 @@ export class Shell {
     this.ads = this.sound.muteDuring(platform.ads);
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
+    // coming back to a run mid-fight is unfair; it waits on the pause panel instead
+    platform.onHide(() => this.hud?.pauseForHost());
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
   }
@@ -260,7 +262,7 @@ export class Shell {
     const key = `${width}x${height}`;
     if (this.screen && key !== this.screenKey) {
       this.screenKey = key;
-      this.screen.layout(uiFrame(computeViewport(width, height)));
+      this.screen.layout(uiFrame(computeViewport(width, height), this.platform.safeInsets()));
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);

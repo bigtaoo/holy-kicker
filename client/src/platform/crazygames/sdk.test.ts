@@ -75,4 +75,15 @@ describe('CrazyGamesSdk', () => {
     await cg.init();
     expect(await cg.userName()).toBeNull();
   });
+
+  it('reads the portal locale and device, and nothing without the SDK', async () => {
+    const { cg } = make({ environment: 'crazygames', user: { systemInfo: { locale: 'de-DE', device: { type: 'tablet' } } } });
+    await cg.init();
+    expect(cg.locale()).toBe('de-DE');
+    expect(cg.deviceType()).toBe('tablet');
+    const bare = make();
+    await bare.cg.init();
+    expect(bare.cg.locale()).toBeNull();
+    expect(bare.cg.deviceType()).toBeNull();
+  });
 });

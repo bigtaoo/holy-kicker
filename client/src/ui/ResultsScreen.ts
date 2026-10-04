@@ -42,7 +42,7 @@ export class ResultsScreen implements Screen {
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
-    this.view.addChild(new Graphics().rect(0, 0, f.w, f.h).fill({ color: COLORS.bg, alpha: 0.92 }));
+    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill({ color: COLORS.bg, alpha: 0.92 }));
 
     const r = this.reward;
     const lines: [string, number, number][] = [
@@ -85,16 +85,17 @@ export class ResultsScreen implements Screen {
     let by = card.y + cardH / 2 + 150;
     if (this.offer === 'offered' || this.offer === 'playing') {
       const playing = this.offer === 'playing';
-      const ad = button(playing ? '…' : t('results.double'), 760, 160, () => void this.playAd(), {
-        fill: playing ? COLORS.panelLocked : COLORS.jade,
-        textFill: COLORS.outline,
+      // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
+      const ad = button(playing ? '…' : t('results.double'), 640, 150, () => void this.playAd(), {
+        fill: playing ? COLORS.panelLocked : COLORS.saffron,
+        video: !playing,
       });
       ad.position.set(f.w / 2, by);
       if (playing) ad.eventMode = 'none';
       this.view.addChild(ad);
-      by += 200;
+      by += 190;
     }
-    const next = button(t('common.continue'), 560, 150, () => this.actions.next(), { fill: COLORS.saffron });
+    const next = button(t('common.continue'), 640, 150, () => this.actions.next());
     next.position.set(f.w / 2, by);
     if (this.offer === 'playing') next.eventMode = 'none';
     this.view.addChild(next);

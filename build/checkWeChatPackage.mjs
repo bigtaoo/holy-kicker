@@ -1,6 +1,8 @@
 // Fails if a built WeChat package (client/wechat) is over its limit: the main package and
 // each chapter subpackage (art/ch<n>, declared in game.json by vite.wechat.config.js) at
 // 4 MB, the whole game at 30 MB. Run after `npm run build:wechat`.
+// Also fails if the bundle still has optional chaining or ?? / ??= (vite.wechat.config.js
+// targets es2019 because DevTools' package validator rejects them).
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -50,5 +52,19 @@ for (const p of packs) {
 if (total > TOTAL_LIMIT) {
   failed = true;
   console.error(`WeChat game ${mb(total)}, over the ${mb(TOTAL_LIMIT)} limit`);
+}
+// `?.` followed by a name, call or index (not the ternary `c?.5:1`); `??` between operands
+// (not a regex's lazy `??` or a '???' string); `??=`
+const SYNTAX = [
+  ['optional chaining', /\?\.[A-Za-z_$([]/],
+  ['nullish coalescing', /[\w$)\]]\s*\?\?\s*[\w$("'`[!{-]/],
+  ['logical nullish assignment', /\?\?=/],
+];
+const bundle = readFileSync(join(PKG, 'js', 'game.js'), 'utf8');
+for (const [name, re] of SYNTAX) {
+  const m = re.exec(bundle);
+  if (!m) continue;
+  failed = true;
+  console.error(`WeChat bundle has ${name} near "${bundle.slice(Math.max(0, m.index - 30), m.index + 30)}"`);
 }
 if (failed) process.exit(1);

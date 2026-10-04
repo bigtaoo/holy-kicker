@@ -20,6 +20,8 @@ interface WxWindowInfo {
   windowWidth: number;
   windowHeight: number;
   pixelRatio: number;
+  /** The area clear of the notch and home indicator, in window coordinates. */
+  safeArea?: { top: number; bottom: number; left: number; right: number };
 }
 
 interface WxDeviceInfo {
@@ -55,6 +57,7 @@ interface WxFileSystemManager {
    *  'utf8' the result is a string, without an encoding it is an ArrayBuffer. */
   readFileSync(path: string, encoding: 'utf8'): string;
   readFileSync(path: string): ArrayBuffer;
+  writeFileSync(path: string, data: string, encoding: 'utf8'): void;
 }
 
 /**
@@ -205,8 +208,14 @@ interface Wx {
   /** The mini-game came back to the foreground. */
   onShow?: (cb: () => void) => void;
   getWindowInfo(): WxWindowInfo;
+  /** The menu capsule (… and close) WeChat draws over the game's top-right corner. */
+  getMenuButtonBoundingClientRect?: () => { top: number; bottom: number; left: number; right: number };
   /** Base library 2.25+; `language` is WeChat's UI language, e.g. 'zh_CN' or 'en'. */
-  getAppBaseInfo?: () => { language?: string };
+  getAppBaseInfo?: () => { language?: string; SDKVersion?: string };
+  /** `USER_DATA_PATH` is the writable file area (in DevTools, a real folder on this PC). */
+  env?: { USER_DATA_PATH?: string };
+  /** An uncaught script error anywhere in the game. */
+  onError?: (cb: (e: { message?: string; stack?: string }) => void) => void;
   getDeviceInfo?: () => WxDeviceInfo;
   /** Base library 2.15+; feature-detect. */
   getDeviceBenchmarkInfo?: (opts: { success: (r: WxBenchmarkInfo) => void; fail?: () => void }) => void;
