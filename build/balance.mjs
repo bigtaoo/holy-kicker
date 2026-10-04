@@ -5,7 +5,8 @@ import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 // Prints the balance report: bots play whole chapters over many seeds (engine/bot/balance.ts).
-// Usage: npm run balance [-- runs [style ...] [relic] [sutras] [ch=N]]   e.g. npm run balance -- 20 casual staff ch=2
+// Usage: npm run balance [-- runs [style ...] [relic] [sutras] [ch=N] [bonus=stat:n,...]]   e.g. npm run balance -- 20 casual staff ch=2
+// `bonus=attack:20,maxHp:30` plays with stats from gear and training (RunConfig.bonus).
 // `sutras` puts every sutra's spells and passive in the pool, `sutras=roar,focus` only those.
 const RELICS = ['ball', 'staff', 'fish', 'beads', 'bowl'];
 const [runs = '10', ...rest] = process.argv.slice(2);
@@ -14,7 +15,9 @@ const sutraArg = rest.find((a) => a.startsWith('sutras'));
 const sutras = !sutraArg ? [] : sutraArg === 'sutras' ? ['lotus', 'halo', 'roar', 'focus'] : sutraArg.slice('sutras='.length).split(',');
 const chArg = rest.find((a) => a.startsWith('ch='));
 const chapter = chArg ? Number(chArg.slice(3)) : 1;
-const styles = rest.filter((a) => !RELICS.includes(a) && a !== sutraArg && a !== chArg);
+const bonusArg = rest.find((a) => a.startsWith('bonus='));
+const bonus = bonusArg ? Object.fromEntries(bonusArg.slice('bonus='.length).split(',').map((kv) => kv.split(':')).map(([k, v]) => [k, Number(v)])) : {};
+const styles = rest.filter((a) => !RELICS.includes(a) && a !== sutraArg && a !== chArg && a !== bonusArg);
 
 const dir = mkdtempSync(join(tmpdir(), 'hk-balance-'));
 const out = join(dir, 'balance.mjs');
@@ -22,7 +25,7 @@ try {
   await build({ entryPoints: ['engine/bot/balance.ts'], bundle: true, platform: 'node', format: 'esm', outfile: out, logLevel: 'error' });
   const { balanceReport } = await import(pathToFileURL(out).href);
   const started = Date.now();
-  for (const line of balanceReport(Number(runs), styles.length ? styles : undefined, 50, relic, sutras, chapter)) console.log(line);
+  for (const line of balanceReport(Number(runs), styles.length ? styles : undefined, 50, relic, sutras, chapter, bonus)) console.log(line);
   console.log(`(${((Date.now() - started) / 1000).toFixed(1)}s)`);
 } finally {
   rmSync(dir, { recursive: true, force: true });

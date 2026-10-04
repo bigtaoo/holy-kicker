@@ -83,7 +83,7 @@ export function damage(s: SimState, events: SimEvent[], i: number, by: Player, b
   if (!t) return;
   const crit = s.combat.chance(DAMAGE.critPercent + stat(by, 'crit'), 100);
   const roll = s.combat.range(DAMAGE.min, DAMAGE.max) * (crit ? DAMAGE.critMul : 1);
-  const value = Math.max(1, Math.trunc((roll * pct) / 100));
+  const value = Math.max(1, Math.trunc((roll * pct * (100 + stat(by, 'attack'))) / 10000));
   const elite = eliteAt(s, i);
   const kind = i < s.mobs.length ? 'mob' : elite ? 'elite' : 'boss';
   events.push({ type: 'hit', kind, index: i, x: t.x, y: t.y, value, crit, ball: !!ball, bx: ball?.x ?? 0, by: ball?.y ?? 0 });

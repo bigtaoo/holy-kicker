@@ -1,5 +1,5 @@
 import { ELITE, HERO, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
-import type { Card, PassiveId, RelicId, SpellId } from './content';
+import type { Card, PassiveId, RelicId, SpellId, StatBonus } from './content';
 import { Prng } from './math/prng';
 
 // The whole simulation state: plain data, integers only (FP positions, tick timers), in
@@ -62,6 +62,8 @@ export interface Player extends Body {
   taps: number;
   /** Halo Beam: the first beam's angle, brads. */
   halo: number;
+  /** Stats brought from outside the run (RunConfig.bonus), under the passives in the stack. */
+  bonus: StatBonus;
 }
 
 export interface SpellSlot {
@@ -347,12 +349,12 @@ export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser', t
   return { ...body(x, y), kind, hp, stun: 0, t };
 }
 
-export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball'): Player {
+export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball', bonus: StatBonus = {}): Player {
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0, xpPart: 0,
     hp, maxHp: hp, dead: false, revives, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
-    bet: false, offerings: 0, taps: 0, halo: 0,
+    bet: false, offerings: 0, taps: 0, halo: 0, bonus,
   };
 }
 

@@ -1,6 +1,6 @@
 import { FP, perTick, TICK_RATE, ticks, toFp } from './math/fixed';
 import { degToBrad } from './math/trig';
-import type { RelicId, SutraId } from './content';
+import type { RelicId, StatBonus, SutraId } from './content';
 
 // Run configuration (what a match is set up with, part of a replay) and the tuning numbers,
 // all converted once at load into FP units per tick and whole ticks.
@@ -39,11 +39,13 @@ export interface RunConfig {
   sutras: readonly SutraId[];
   /** The chapter played (1-based): which kinds of mob join the horde (CHAPTER_MOBS). */
   chapter: number;
+  /** Stats from gear and training, the same for every hero (whole numbers, passive units). */
+  bonus: StatBonus;
 }
 
 export const DEFAULT_RUN: RunConfig = {
   seed: 1, players: 1, mobs: 40, sep: 75, queue: true, heroEase: 379, elite: true, boss: true,
-  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', sutras: [], chapter: 1,
+  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', sutras: [], chapter: 1, bonus: {},
 };
 
 /** The smooth hero ease, 1 - exp(-tick / 0.07 s), as a constant so no exp runs in the sim. */

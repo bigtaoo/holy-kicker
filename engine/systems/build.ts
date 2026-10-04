@@ -19,7 +19,7 @@ import type { Player, SimState, SpellSlot } from '../state';
 const REGEN_UNIT = 1000 * TICK_RATE;
 
 export function stat(p: Player, which: Stat): number {
-  let v = 0;
+  let v = p.bonus[which] ?? 0;
   for (const slot of p.passives) {
     const def = PASSIVES[slot.id];
     if (def.stat === which) v += def.perLevel * slot.level;

@@ -6,7 +6,7 @@ import { toFp } from './math/fixed';
 import { cosB, sinB, TRIG_ONE } from './math/trig';
 import { createState, newElite, newMob, newPlayer, type SimState } from './state';
 import { bossSystem, newBoss } from './systems/boss';
-import { buildSystem, choosing } from './systems/build';
+import { buildSystem, choosing, maxHpOf } from './systems/build';
 import { ballSystem } from './systems/combat';
 import { ringSystem } from './systems/fish';
 import { beadSystem } from './systems/beads';
@@ -24,7 +24,7 @@ import { beginWave, waveSystem } from './systems/waves';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 20;
+export const ENGINE_VERSION = 21;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves',
@@ -101,7 +101,11 @@ export class Engine {
  */
 function setup(s: SimState): void {
   const c = s.config;
-  for (let i = 0; i < c.players; i++) s.players.push(newPlayer(i, i * toFp(120), 0, HERO.hp, c.revives, c.relic));
+  for (let i = 0; i < c.players; i++) {
+    const p = newPlayer(i, i * toFp(120), 0, HERO.hp, c.revives, c.relic, c.bonus);
+    p.hp = p.maxHp = maxHpOf(p);
+    s.players.push(p);
+  }
   if (c.waves > 0) return beginWave(s, 1);
   const p = s.players[0];
   for (let i = 0; i < c.mobs; i++) {

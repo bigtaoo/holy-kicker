@@ -202,3 +202,25 @@ describe('build effects', () => {
     expect(s.cymbals.length).toBe(0);
   });
 });
+
+describe('stats from outside the run', () => {
+  it('start the hero with the bonus health and add under the passives', () => {
+    const e = new Engine({ ...CHAPTER, bonus: { maxHp: 20, crit: 3 } });
+    const p = e.state.players[0];
+    expect(p.maxHp).toBe(Math.trunc((HERO.hp * 120) / 100));
+    expect(p.hp).toBe(p.maxHp);
+    expect(stat(p, 'crit')).toBe(3);
+    p.passives.push({ id: 'wrath', level: 2 });
+    expect(stat(p, 'crit')).toBe(3 + 2 * PASSIVES.wrath.perLevel);
+  });
+
+  it('grow every hit by the attack bonus', () => {
+    const hits = (attack: number) => {
+      const e = new Engine({ ...DEFAULT_RUN, mobs: 30, bonus: { attack } });
+      let sum = 0;
+      for (let i = 0; i < 300; i++) for (const ev of e.step([cmd(e)])) if (ev.type === 'hit') sum += ev.value;
+      return sum;
+    };
+    expect(hits(50)).toBeGreaterThan(hits(0) * 1.3);
+  });
+});

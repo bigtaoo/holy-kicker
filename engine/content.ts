@@ -246,7 +246,15 @@ export const SPELL_CAST = {
   cymbalSpeed: perTick(1500),
 };
 
-export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit' | 'xp' | 'magnet' | 'duration' | 'guard';
+export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit' | 'xp' | 'magnet' | 'duration' | 'guard' | 'attack';
+export const STATS: readonly Stat[] = ['cooldown', 'maxHp', 'speed', 'area', 'regen', 'crit', 'xp', 'magnet', 'duration', 'guard', 'attack'];
+
+/**
+ * Stats the hero brings into a run from outside it (gear and training, docs/design.md "Meta
+ * progression"), in the passives' units; they sit at the bottom of the stat stack. `attack`
+ * only comes from here: it grows every hit by percent.
+ */
+export type StatBonus = Readonly<Partial<Record<Stat, number>>>;
 export type PassiveId = 'calm' | 'iron' | 'legs' | 'eye' | 'rice' | 'wrath' | 'karma' | 'focus';
 export const PASSIVE_IDS: readonly PassiveId[] = ['calm', 'iron', 'legs', 'eye', 'rice', 'wrath', 'karma', 'focus'];
 

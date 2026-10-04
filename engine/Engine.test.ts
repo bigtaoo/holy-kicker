@@ -85,8 +85,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-04 for ENGINE_VERSION 20 (chapter 2 eased: fewer, slower toads; a lighter empowered abbot). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(20);
+    // Recorded 2026-10-04 for ENGINE_VERSION 21 (stats from gear and training: RunConfig.bonus and the attack stat). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(21);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -104,6 +104,6 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 404698850;
-const GOLDEN_CHAPTER = 4016560337;
-const GOLDEN_MARSH = 2256572520;
+const GOLDEN = 2499864137;
+const GOLDEN_CHAPTER = 2804159226;
+const GOLDEN_MARSH = 1412385403;
