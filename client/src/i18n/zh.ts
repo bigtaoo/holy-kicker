@@ -267,6 +267,8 @@ export const zh: Table<typeof en> = {
     language: '语言',
     off: '音效：关',
     level: '音效：{n}%',
+    musicOff: '音乐：关',
+    musicLevel: '音乐：{n}%',
     quality: '画质',
     auto: '自动',
     high: '高',

@@ -115,6 +115,10 @@ export class LobbyScreen implements Screen {
           set.setVolume(v);
           this.relayout();
         },
+        setMusic: (v) => {
+          set.setMusic(v);
+          this.relayout();
+        },
         setQuality: (m) => {
           set.setQuality(m);
           this.relayout();

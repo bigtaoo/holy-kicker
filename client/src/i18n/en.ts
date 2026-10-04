@@ -263,8 +263,10 @@ export const en = {
   settings: {
     title: 'Settings',
     language: 'Language',
-    off: 'Sound: Off',
-    level: 'Sound: {n}%',
+    off: 'Effects: Off',
+    level: 'Effects: {n}%',
+    musicOff: 'Music: Off',
+    musicLevel: 'Music: {n}%',
     quality: 'Graphics',
     auto: 'Auto',
     high: 'High',

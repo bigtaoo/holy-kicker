@@ -1,4 +1,5 @@
 import type { AudioHost } from '../types';
+import { WebMusicDeck } from './webMusicDeck';
 
 // The browser's sound output: a Web Audio context (the webkit one on old Safari), resumed on
 // the first gesture (autoplay rules), and silenced while the tab is hidden.
@@ -21,5 +22,6 @@ export function webAudioHost(): AudioHost | null {
       document.addEventListener('visibilitychange', () => cb(!document.hidden));
     },
     onHostMute() {},
+    musicDecks: (ctx) => [new WebMusicDeck(ctx), new WebMusicDeck(ctx)],
   };
 }

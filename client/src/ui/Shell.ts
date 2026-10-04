@@ -75,7 +75,8 @@ export class Shell {
     private readonly keys = false,
   ) {
     this.save = store.load();
-    this.sound = new Sound(platform.audio, loadSettings(platform.storage).volume);
+    const settings = loadSettings(platform.storage);
+    this.sound = new Sound(platform, settings.volume, settings.music);
     this.ads = this.sound.muteDuring(platform.ads);
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
@@ -144,6 +145,11 @@ export class Shell {
         setVolume: (volume) => {
           this.sound.setVolume(volume);
           updateSettings(this.platform.storage, { volume });
+        },
+        music: () => this.sound.musicLevel,
+        setMusic: (music) => {
+          this.sound.setMusicVolume(music);
+          updateSettings(this.platform.storage, { music });
         },
         quality: () => loadSettings(this.platform.storage).quality,
         setQuality: (quality) => {
@@ -297,7 +303,8 @@ export class Shell {
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);
-    this.sound.flush();
+    // the run has the battle music, every screen around it the lobby's
+    this.sound.flush(this.game ? 'battle' : 'lobby', this.app.ticker.deltaMS);
   }
 
   private watchRun(game: Game, hud: RunHud): void {

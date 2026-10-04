@@ -4,6 +4,7 @@ import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { NO_ADS, NO_PORTAL, type Ads, type AudioHost, type Insets, type Platform, type Portal } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
+import { WeChatMusicDeck } from './weChatMusicDeck';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
 
 // WeChat mini-game host (adapted from daydayup's WeChatPlatform).
@@ -37,6 +38,11 @@ export class WeChatPlatform implements Platform {
       wx.onAudioInterruptionEnd?.(() => cb(true));
     },
     onHostMute() {},
+    musicDecks() {
+      if (typeof wx.createInnerAudioContext !== 'function') return null;
+      const create = () => wx.createInnerAudioContext!();
+      return [new WeChatMusicDeck(create), new WeChatMusicDeck(create)];
+    },
   } : null;
 
   safeInsets(): Insets {
@@ -155,5 +161,9 @@ export class WeChatPlatform implements Platform {
   async readText(path: string): Promise<string> {
     // there is no fetch; package files are read straight from the file system
     return wx.getFileSystemManager().readFileSync(path, 'utf8');
+  }
+
+  async readBinary(path: string): Promise<ArrayBuffer> {
+    return wx.getFileSystemManager().readFileSync(path);
   }
 }

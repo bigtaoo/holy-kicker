@@ -15,26 +15,33 @@ export interface Settings {
   locale: Locale | null;
   /** Sound effects volume, 0 (off) to VOLUME_STEPS. */
   volume: number;
+  /** Music volume, 0 (off) to VOLUME_STEPS. */
+  music: number;
   /** Render quality; a ?quality= dev switch wins over it. */
   quality: QualityMode;
 }
 
-export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, quality: 'auto' };
+export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto' };
+
+function isStep(v: unknown): v is number {
+  return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= VOLUME_STEPS;
+}
 
 export function loadSettings(kv: KeyValueStore): Settings {
   try {
     const raw: unknown = JSON.parse(kv.getItem(SETTINGS_KEY) ?? '{}');
-    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; quality?: unknown } | null;
-    const v = r?.volume;
+    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; quality?: unknown } | null;
     // files from before the volume steps only had sound on or off
-    const volume = typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= VOLUME_STEPS
-      ? v
-      : r?.sound === false ? 0 : VOLUME_STEPS;
+    const v = r?.volume;
+    const m = r?.music;
+    const volume = isStep(v) ? v : r?.sound === false ? 0 : VOLUME_STEPS;
+    const music = isStep(m) ? m : VOLUME_STEPS;
     const q = r?.quality;
     const locale = r?.locale;
     return {
       locale: isLocale(locale) ? locale : null,
       volume,
+      music,
       quality: QUALITY_MODES.includes(q as QualityMode) ? (q as QualityMode) : 'auto',
     };
   } catch {

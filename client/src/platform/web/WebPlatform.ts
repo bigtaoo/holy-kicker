@@ -122,4 +122,10 @@ export class WebPlatform implements Platform {
     if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
     return res.text();
   }
+
+  async readBinary(path: string): Promise<ArrayBuffer> {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
+    return res.arrayBuffer();
+  }
 }

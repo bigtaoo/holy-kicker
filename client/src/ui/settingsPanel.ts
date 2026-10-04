@@ -4,14 +4,16 @@ import { QUALITY_MODES, type QualityMode } from '../game/quality';
 import { VOLUME_STEPS } from '../meta/settings';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
 
-// The settings panel, opened from the lobby's gear: language, the sound effects' volume in
-// steps (0 is off) and the graphics quality. Every change goes straight to the shell, which
+// The settings panel, opened from the lobby's gear: language, the sound effects' and the
+// music's volume in steps (0 is off) and the graphics quality. Every change goes straight to the shell, which
 // stores it and redraws the lobby, so the panel just shows the current values.
 
 export interface SettingsActions {
   setLanguage(locale: Locale): void;
   volume(): number;
   setVolume(volume: number): void;
+  music(): number;
+  setMusic(volume: number): void;
   quality(): QualityMode;
   setQuality(mode: QualityMode): void;
   close(): void;
@@ -74,7 +76,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   view.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const boxH = 1130;
+  const boxH = 1370;
   let y = -boxH / 2;
   box.addChild(panel(W, boxH));
   const add = (c: Container, step: number) => {
@@ -92,6 +94,9 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   const volume = a.volume();
   heading(volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }));
   add(volumeRow(volume, (v) => a.setVolume(v)), 150);
+  const music = a.music();
+  heading(music === 0 ? t('settings.musicOff') : t('settings.musicLevel', { n: Math.round((100 * music) / VOLUME_STEPS) }));
+  add(volumeRow(music, (v) => a.setMusic(v)), 150);
 
   const mode = a.quality();
   heading(t('settings.quality'));

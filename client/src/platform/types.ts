@@ -1,4 +1,5 @@
 import type { Application } from 'pixi.js';
+import type { MusicDeck } from '../audio/music';
 import type { DragStick, Vec2 } from '../game/dragStick';
 import type { DeviceInfo } from '../game/quality';
 import type { KeyValueStore } from '../meta/saveStore';
@@ -16,6 +17,8 @@ export interface Platform {
   readKeys(): Vec2;
   /** Reads a text file shipped with the game (relative path, as for textures). */
   readText(path: string): Promise<string>;
+  /** Reads a binary file shipped with the game (the sound samples). */
+  readBinary(path: string): Promise<ArrayBuffer>;
   /**
    * Makes a chapter's art pack readable (art/<name>/): a WeChat subpackage is fetched first,
    * since the main package is capped at 4 MB; on the web the files are always there.
@@ -51,6 +54,9 @@ export interface AudioHost {
   onFocus(cb: (focused: boolean) => void): void;
   /** The portal muted or unmuted the game from its own controls. */
   onHostMute(cb: (muted: boolean) => void): void;
+  /** Two streaming players for the music (audio/music.ts), or null where the host cannot
+   *  stream; `ctx` is the effects' context, which the web decks play through. */
+  musicDecks(ctx: AudioContext): [MusicDeck, MusicDeck] | null;
 }
 
 /** The host's session hooks; every method is a no-op where the host has none. */

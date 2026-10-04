@@ -1,6 +1,6 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
-import { cpSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { engineAlias } from '../build/hkAlias.mjs';
 
 // WeChat mini-game bundle: one self-contained IIFE at wechat/js/game.js, which
@@ -30,7 +30,8 @@ const stripWebGPU = {
 // The main package is capped at 4 MB, so each later chapter's art (public/art/ch<n>) is a
 // subpackage of its own, named ch<n>: game.json declares it and its root gets the game.js
 // entry WeChat requires; the game fetches it with wx.loadSubpackage before the chapter's run
-// (art.ts loadChapterArt). build/checkWeChatPackage.mjs budgets each package.
+// (art.ts loadChapterArt). The recorded sounds and music (public/audio) are one more
+// subpackage, 'audio', which Sound loads at boot. build/checkWeChatPackage.mjs budgets each package.
 const copyArt = {
   name: 'copy-art',
   closeBundle() {
@@ -43,8 +44,17 @@ const copyArt = {
     const gameJson = fileURLToPath(new URL('./wechat/game.json', import.meta.url));
     const game = JSON.parse(readFileSync(gameJson, 'utf8'));
     game.subpackages = packs.map((name) => ({ name, root: `art/${name}/` }));
+    const audioFrom = fileURLToPath(new URL('./public/audio', import.meta.url));
+    const audioTo = fileURLToPath(new URL('./wechat/audio', import.meta.url));
+    rmSync(audioTo, { recursive: true, force: true });
+    if (existsSync(audioFrom)) {
+      cpSync(audioFrom, audioTo, { recursive: true });
+      writeFileSync(`${audioTo}/game.js`, '// audio: sounds and music, loaded by wx.loadSubpackage\n');
+      game.subpackages.push({ name: 'audio', root: 'audio/' });
+      packs.push('audio');
+    }
     writeFileSync(gameJson, `${JSON.stringify(game, null, 2)}\n`);
-    console.log(`  mirrored public/art -> wechat/art (subpackages: ${packs.join(', ') || 'none'})`);
+    console.log(`  mirrored public/art and public/audio -> wechat (subpackages: ${packs.join(', ') || 'none'})`);
   },
 };
 
