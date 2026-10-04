@@ -1,4 +1,4 @@
-import { HURT, JUDGE } from '../config';
+import { EMPOWERED_JUDGE, HURT, JUDGE } from '../config';
 import type { SimEvent } from '../events';
 import { dist } from '../math/fixed';
 import { TRIG_ONE } from '../math/trig';
@@ -60,7 +60,8 @@ export function stepJudge(s: SimState, b: Boss, target: Player, events: SimEvent
   if (b.t >= JUDGE.recover) {
     b.phase = 'walk';
     b.t = 0;
-    b.cooldown = enraged(b) ? JUDGE.rageCooldown : JUDGE.cooldown;
+    const k = b.empowered ? EMPOWERED_JUDGE : JUDGE;
+    b.cooldown = enraged(b) ? k.rageCooldown : k.cooldown;
   }
 }
 

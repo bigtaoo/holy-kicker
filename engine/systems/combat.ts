@@ -6,6 +6,7 @@ import { submerged, underground, type Ball, type Body, type Elite, type Player, 
 import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
+import { gonged } from './demon';
 import { shielded, tear } from './ghost';
 import { ringPoint } from './horde';
 import { resetMob } from './marsh';
@@ -80,7 +81,7 @@ export function kickTarget(s: SimState, p: Player, range: number): number {
  * ring with the wave's health), the elite loses health and is knocked back (the toad king
  * barely; none when `knock` is off: the staff keeps it in reach), the boss loses health.
  * A relic hit comes `from` a point (the ball's, else the one given): a door god's shield
- * facing it takes the hit whole. Spells give none, so they always land.
+ * facing it takes the hit whole, as does a fallen monk's gong. Spells give none, so they always land.
  */
 export function damage(
   s: SimState, events: SimEvent[], i: number, by: Player, ball: Body | null, pct = 100, knock = true, from: { x: number; y: number } | null = null,
@@ -90,6 +91,10 @@ export function damage(
   const src = ball ?? from;
   const shield = src ? eliteAt(s, i) : null;
   if (shield && shielded(shield, src!.x, src!.y)) {
+    events.push({ type: 'block', index: i, x: t.x, y: t.y });
+    return;
+  }
+  if (src && i < s.mobs.length && gonged(s, s.mobs[i], src.x, src.y)) {
     events.push({ type: 'block', index: i, x: t.x, y: t.y });
     return;
   }

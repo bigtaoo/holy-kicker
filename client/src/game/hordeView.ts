@@ -17,7 +17,7 @@ import { SHADOW_Z } from './shadow';
 
 /** In-world height by mob kind. */
 export const MOB_HEIGHT: Record<MobKind, number> = {
-  chaser: 80, runner: 76, swarm: 62, emerger: 84, shooter: 66, wolf: 70, caster: 90, skeleton: 84, shard: 50, effigy: 86, scrap: 48,
+  chaser: 80, runner: 76, swarm: 62, emerger: 84, shooter: 66, wolf: 70, caster: 90, skeleton: 84, shard: 50, effigy: 86, scrap: 48, monk: 84,
 };
 /** World units per second, for the jiangshi's hop pacing. */
 const MOB_WALK = (HORDE.speed * TICK_RATE) / FP;

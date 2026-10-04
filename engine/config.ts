@@ -96,6 +96,9 @@ export const HURT = {
   smash: 20,
   /** A zone of the Underworld Judge's verdict going off. */
   verdict: 14,
+  /** The Inner Demon's dark spell (a zone going off) and its landing after a staff leap. */
+  demonSpell: 14,
+  demonLeap: 20,
 };
 
 export const HORDE = {
@@ -115,10 +118,10 @@ export const HORDE = {
    * Mob health by chapter, percent (later chapters play the last): from chapter 3 the hero
    * comes in with gear and training (RunConfig.bonus), so the horde is tougher.
    */
-  chapterHp: [100, 100, 140, 190],
+  chapterHp: [100, 100, 140, 190, 250],
 };
 
-export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter' | 'wolf' | 'caster' | 'skeleton' | 'shard' | 'effigy' | 'scrap';
+export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter' | 'wolf' | 'caster' | 'skeleton' | 'shard' | 'effigy' | 'scrap' | 'monk';
 
 /**
  * Kinds of horde mob (docs/content.md "Enemies"): how fast each walks and its share of the
@@ -136,6 +139,7 @@ export const MOB_KINDS: Record<MobKind, { speed: number; hpPercent: number }> = 
   shard: { speed: perTick(160), hpPercent: 35 },
   effigy: { speed: perTick(115), hpPercent: 90 },
   scrap: { speed: perTick(170), hpPercent: 30 },
+  monk: { speed: perTick(100), hpPercent: 120 },
 };
 
 /**
@@ -159,7 +163,8 @@ export function tempKind(kind: MobKind): boolean {
  * chasers. Chapter 1 has fox runners; chapter 2 water ghosts that rise next to the hero and
  * toads that shoot; chapter 3 ice wraiths that mark frost circles (its wolves come in packs,
  * CHAPTER_PACKS); chapter 4 lantern ghosts that shoot, long-tongue ghosts that rise next to the
- * hero and paper effigies that tear into scraps. Later chapters play the last list until they
+ * hero and paper effigies that tear into scraps; chapter 5 fallen monks behind their gongs (shielders)
+ * and shadows (runners) among every earlier kind. Later chapters play the last list until they
  * get their own.
  */
 export const CHAPTER_MOBS: readonly (readonly { kind: MobKind; from: number; every: number }[])[] = [
@@ -167,11 +172,15 @@ export const CHAPTER_MOBS: readonly (readonly { kind: MobKind; from: number; eve
   [{ kind: 'shooter', from: 3, every: 10 }, { kind: 'emerger', from: 2, every: 5 }],
   [{ kind: 'caster', from: 3, every: 6 }],
   [{ kind: 'shooter', from: 3, every: 9 }, { kind: 'emerger', from: 2, every: 6 }, { kind: 'effigy', from: 2, every: 3 }],
+  [
+    { kind: 'monk', from: 2, every: 5 }, { kind: 'runner', from: 2, every: 4 }, { kind: 'shooter', from: 4, every: 11 },
+    { kind: 'caster', from: 5, every: 9 }, { kind: 'effigy', from: 3, every: 7 }, { kind: 'emerger', from: 2, every: 6 },
+  ],
 ];
 
 /**
  * Pack waves (from, then every `every`) bring a bunched pack of `size` mobs of `kind` on top of
- * the horde, up to `max` of that kind in all: ghost wisps in chapters 1 and 2, snow wolves in 3.
+ * the horde, up to `max` of that kind in all: ghost wisps in chapters 1, 2 and 4, snow wolves in 3 and 5.
  */
 export interface Pack {
   kind: MobKind;
@@ -190,6 +199,7 @@ export const CHAPTER_PACKS: readonly Pack[] = [
   WISPS,
   { kind: 'wolf', from: 3, every: 2, size: 6, max: 36, spread: toFp(160) },
   WISPS,
+  { kind: 'wolf', from: 4, every: 3, size: 6, max: 30, spread: toFp(160) },
 ];
 
 export const MIX = {
@@ -203,20 +213,24 @@ export const MIX = {
  */
 export type EliteKind = 'charger' | 'toadKing' | 'wolfLeader' | 'doorGod';
 
-/** Each chapter's elite; later chapters play the last one until they get their own. */
-export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing', 'wolfLeader', 'doorGod'];
+/**
+ * Each chapter's elite; later chapters play the last one until they get their own. Chapter 5
+ * has none of its own: its elite waves bring two earlier ones at once (ELITE_PAIRS).
+ */
+export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing', 'wolfLeader', 'doorGod', 'doorGod'];
 
 /**
  * The boss kinds: the Fallen Abbot slams, the Black Carp King dives and surfaces, the Bone
- * Witch summons skeletons and throws bone fans, the Underworld Judge writes lines of zones.
+ * Witch summons skeletons and throws bone fans, the Underworld Judge writes lines of zones, the
+ * Inner Demon turns the hero's own relic against him.
  */
-export type BossKind = 'abbot' | 'carp' | 'witch' | 'judge';
+export type BossKind = 'abbot' | 'carp' | 'witch' | 'judge' | 'demon';
 
 /**
  * Each chapter's boss (the last wave); later chapters play the last one until they get their
  * own. From chapter 2 on, the mid-boss is the previous chapter's boss, empowered.
  */
-export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp', 'witch', 'judge'];
+export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp', 'witch', 'judge', 'demon'];
 
 export const ELITE = {
   speed: perTick(160),

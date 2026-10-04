@@ -1,5 +1,6 @@
 import { perTick, ticks, toFp } from './math/fixed';
 import { degToBrad } from './math/trig';
+import type { EliteKind } from './config';
 
 // Tuning of the chapters' enemies past the plain horde (docs/content.md "Enemies" and
 // "Chapters"): the mob mechanics, the elites and the bosses, in FP units per tick and whole
@@ -219,4 +220,74 @@ export const JUDGE = {
   stagger: 3,
   fan: 5,
   ring: 14,
+};
+
+/**
+ * The fallen monk, chapter 5's shielder mob (systems/demon.ts): its gong faces its nearest hero
+ * and takes a relic hit from within blockHalf of him (spells still hit), `blocks` times, then
+ * cracks and it fights bare until it falls (it comes back on the ring with a whole gong).
+ */
+export const MONK = {
+  blockHalf: degToBrad(60),
+  blocks: 3,
+};
+
+/**
+ * Chapter 5's elite waves (10, 20, 30, 40) bring two of the earlier chapters' elites at once,
+ * in turn; the empowered ones in between are the bosses.
+ */
+export const ELITE_PAIRS: readonly (readonly EliteKind[])[] = [
+  ['charger', 'toadKing'],
+  ['wolfLeader', 'toadKing'],
+  ['doorGod', 'charger'],
+  ['doorGod', 'wolfLeader'],
+];
+
+/** The empowered Underworld Judge, chapter 5's mid-boss: his own health and shorter rests. */
+export const EMPOWERED_JUDGE = {
+  hp: 3000,
+  cooldown: ticks(2.1),
+  rageCooldown: ticks(1.7),
+};
+
+/**
+ * The Inner Demon, chapter 5's boss and the last (systems/demon.ts): a cold copy of the hero. It
+ * circles him at stopDist and, its cooldown done, gathers itself for `windup`; then in turn it
+ * turns his own relic against him or casts a dark spell (`spell` zones of spellRadius: one on
+ * him, the rest within spellSpread), and recovers for `recover`, during which the relic attack
+ * plays out:
+ * - the ball: `volleys` fans of ballFan bullets at him, volleyGap apart;
+ * - the staff: it marks a circle of leapRadius on him and lands there after THREATS.warn
+ *   (HURT.demonLeap), sending a ring of leapRing bullets out;
+ * - the wooden fish: `waves` rings of waveRing bullets, waveGap apart, each turned half a gap;
+ * - the beads: `spiral` rings of spiralRing bullets, spiralGap apart, each turned spiralTurn;
+ * - the alms bowl: a wide fan of bowlFan bullets.
+ * Below ragePercent of its health it rests rageCooldown.
+ */
+export const DEMON = {
+  hp: 5200,
+  speed: perTick(170),
+  stopDist: toFp(330),
+  range: toFp(1000),
+  cooldown: ticks(2.3),
+  rageCooldown: ticks(1.7),
+  ragePercent: 50,
+  windup: ticks(0.6),
+  recover: ticks(1.2),
+  spell: 3,
+  spellRadius: toFp(150),
+  spellSpread: toFp(260),
+  volleys: 3,
+  volleyGap: 6,
+  ballFan: 3,
+  leapRadius: toFp(220),
+  leapRing: 10,
+  waves: 2,
+  waveRing: 14,
+  waveGap: 10,
+  spiral: 6,
+  spiralRing: 5,
+  spiralGap: 4,
+  spiralTurn: degToBrad(12),
+  bowlFan: 9,
 };

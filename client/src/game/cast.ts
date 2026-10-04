@@ -5,6 +5,7 @@ import { BossBar } from './bossBar';
 import { Boss } from './bossView';
 import { BossStage, type BossViews } from './bossStage';
 import { CarpView } from './carpView';
+import { DemonView } from './demonView';
 import { EliteCrowd, EliteView } from './eliteView';
 import type { FxPool } from './fx';
 import type { Art } from './Game';
@@ -35,6 +36,8 @@ const DOOR_GOD_HEIGHT = 155;
 /** The Bone Witch is drawn a little taller than the abbot, the Underworld Judge taller still. */
 const WITCH_SCALE = 1.1;
 const JUDGE_SCALE = 1.2;
+/** The Inner Demon is the hero's rig half as tall again as him: a boss, still plainly his copy. */
+const DEMON_SCALE = 0.6;
 /** Chapter 4's lantern ghost floats a little taller than a toad squats. */
 const LANTERN_HEIGHT = 80;
 
@@ -50,10 +53,15 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
   const snow = art.snow;
   const market = art.ghost;
   const effigy = market?.effigy ?? art.jiangshi;
+  // chapter 5's walkers are every earlier chapter's in turn, its runners shadows
+  const peak = chapter >= 5 ? art.peak : null;
+  const walkers = peak ? [look(art.jiangshi, 'chaser', [27, 9]), look(ghost, 'chaser', [27, 9]), look(art.marsh.ghost, 'chaser', [27, 9])]
+    : chapter === 2 || (market && chapter >= 4) ? [look(ghost, 'chaser', [27, 9])]
+      : jiangshi.map((sheet) => look(sheet, 'chaser', [27, 9], true, chapter === 3 ? FROST_TINT : undefined));
   return {
-    chaser: chapter === 2 || (market && chapter >= 4) ? [look(ghost, 'chaser', [27, 9])]
-      : jiangshi.map((sheet) => look(sheet, 'chaser', [27, 9], true, chapter === 3 ? FROST_TINT : undefined)),
-    runner: [look(art.fox, 'runner', [36, 9], false)],
+    chaser: walkers,
+    // a white tint keeps the fox's lavender off the shadow
+    runner: [peak ? look(peak.shadow, 'runner', [36, 9], true, 0xffffff) : look(art.fox, 'runner', [36, 9], false)],
     swarm: [look(wispSheet(renderer), 'swarm', [18, 6])],
     emerger: [look(ghost, 'emerger', [27, 9])],
     shooter: [market && chapter >= 4 ? look(market.lantern, 'shooter', [26, 8], true, undefined, LANTERN_HEIGHT) : look(art.marsh.toad, 'shooter', [34, 10])],
@@ -63,6 +71,7 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
     shard: [look(snow.shard, 'shard', [26, 8])],
     effigy: [look(effigy, 'effigy', [28, 9])],
     scrap: [look(effigy, 'scrap', [18, 6])],
+    monk: [look(art.peak?.monk ?? art.jiangshi, 'monk', [30, 9])],
   };
 }
 
@@ -98,5 +107,6 @@ export function makeBosses(renderer: Renderer, world: Container, art: Art, scene
   if (kinds.has('carp')) views.carp = new CarpView(renderer, art.marsh.carp, world, shadowTex, scene.bossSize, fx);
   if (kinds.has('witch')) views.witch = new StaffBossView(renderer, art.snow.witch, world, shadowTex, scene.bossSize * WITCH_SCALE, fx, WITCH_STYLE);
   if (kinds.has('judge') && art.ghost) views.judge = new StaffBossView(renderer, art.ghost.judge, world, shadowTex, scene.bossSize * JUDGE_SCALE, fx, JUDGE_STYLE);
+  if (kinds.has('demon') && art.peak) views.demon = new DemonView(renderer, world, art.peak.demon, shadowTex, scene.bossSize * DEMON_SCALE, fx);
   return Object.keys(views).length > 0 ? new BossStage(views) : null;
 }

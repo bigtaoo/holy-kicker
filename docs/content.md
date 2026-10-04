@@ -202,7 +202,7 @@ or a new single image is cheap; elites and bosses cost a rig each.
 | Charger | Telegraphs a line, then dashes along it | Done (the big jiangshi elite) |
 | Emerger | Appears from a ground mark next to the hero | Done (the water ghost, chapter 2) |
 | Splitter | Splits into 2 small ones on death | New |
-| Shielder | Blocks the relic from the front, spells still hit | New |
+| Shielder | Blocks the relic from the front, spells still hit | Done (the door god, chapter 4; the fallen monk, chapter 5) |
 
 - **Chapter 1's kinds implemented** (`MOB_KINDS`, `MIX`, `ELITE` in `engine/config.ts`,
   `engine/systems/elite.ts`, ENGINE_VERSION 14). Every mob has a kind it keeps for the run
@@ -321,6 +321,23 @@ or a new single image is cheap; elites and bosses cost a rig each.
   stays under 4 MB. Balance (40 runs each) with the gear expected after chapter 3: casual
   37/40, skilled 36/40; bare (20 runs) casual 1/20 (median wave 24), skilled 6/20. The door
   god falls in a median 50 s, the empowered witch in 75 s and the Judge in about 105 s.
+- **Chapter 5, Demon Peak** (ENGINE_VERSION 24). The horde mixes every earlier kind (walkers
+  drawn as jiangshi, long-tongue and water ghosts in turn; lantern ghosts, ice wraiths, effigies,
+  emergers) with shadows (`runner`, drawn dark) and fallen monks (`monk`, `MONK`,
+  systems/demon.ts): a shielder mob whose gong faces its nearest hero and takes 3 relic hits from
+  within 60° of him (spells always land, hits from behind land), then cracks until it falls.
+  Wolf packs every 3rd wave from wave 4. Elite waves bring two earlier elites at once
+  (`ELITE_PAIRS`: big jiangshi + toad king, wolf leader + toad king, door god + big jiangshi,
+  door god + wolf leader). The mid-boss is the empowered Judge (`EMPOWERED_JUDGE`: 3000 health,
+  rests 2.1 s, 1.7 s enraged). The last boss is the Inner Demon (`DEMON`, 5200 health), the
+  hero's own rig recoloured cold (`tools/recolor_cold.py`): it circles him at 330 and every
+  2.3 s (1.7 s below half health) in turn turns his own relic on him (the ball: 3 volleys of
+  3-bullet fans; the staff: a leap onto a marked circle, then a 10-bullet ring; the fish: 2
+  staggered 14-bullet rings; the beads: a 6-ring spiral; the bowl: a 9-bullet fan) or casts a
+  dark spell of 3 zones on and around him. Mob health is 250 % of chapter 1's. Its art is the
+  subpackage `ch5` (0.34 MB; the run also loads `ch4`). Balance (40 runs, the ball) with the
+  gear expected after chapter 4: casual 37/40, skilled 40/40; with chapter 4's gear casual
+  30/40. The empowered Judge falls in a median 64 s, the Inner Demon in 88 s.
 
 ## Chapters (5)
 
@@ -333,7 +350,7 @@ mobs (lesson from the readability test: grass works best).
 | 2 | **Misty Marsh** / 雾沼: reeds, shallow water (implemented: tile, props and drifting low mist) | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精 (implemented): dives, surfaces with a shockwave |
 | 3 | **Snow Pass** / 雪岭: snow, pines (implemented: tile and props) | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour (implemented) | Wolf leader (charger + howl buffs, implemented) | Black Carp, empowered (implemented) | **Bone Witch** / 白骨精 (implemented): summons skeletons (splitters) |
 | 4 | **Ghost Market** / 鬼市: night street, blue lanterns (implemented: tile and props) | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) (implemented) | Door god statue (shielder, implemented) | Bone Witch, empowered (implemented) | **Underworld Judge** / 判官 (implemented): writes zones in lines, crosses them below half health |
-| 5 | **Demon Peak** / 魔窟: dark rock, purple fire | Fallen monk (shielder), shadow (runner), every earlier type | Two elites at once | Underworld Judge, empowered | **Inner Demon** / 心魔: a cold-coloured copy of the hero, uses the player's own relic |
+| 5 | **Demon Peak** / 魔窟: dark rock, purple fire (implemented: code-drawn tile; props to generate) | Fallen monk (shielder), shadow (runner), every earlier type (implemented; monk and shadow art are stand-ins) | Two elites at once (implemented) | Underworld Judge, empowered (implemented) | **Inner Demon** / 心魔 (implemented): a cold-coloured copy of the hero, uses the player's own relic |
 
 - The Inner Demon reuses the hero rig with a cold recolour, which saves a full boss rig and
   is the story beat: the last enemy is yourself.

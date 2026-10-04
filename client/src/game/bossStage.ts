@@ -2,10 +2,11 @@ import type { Container } from 'pixi.js';
 import type { Boss as BossState, BossKind } from '@hk/engine';
 import type { Boss } from './bossView';
 import type { CarpView } from './carpView';
+import type { DemonView } from './demonView';
 import type { StaffBossView } from './witchView';
 
-// The chapter's boss views by kind: the abbot's rig, the Black Carp King, the Bone Witch and
-// the Underworld Judge, each the boss of its chapter and, empowered, the mid-boss of the next.
+// The chapter's boss views by kind: the abbot's rig, the Black Carp King, the Bone Witch, the
+// Underworld Judge and the Inner Demon, each the boss of its chapter and, empowered, the mid-boss of the next.
 // The sim has one boss at a time; the stage sends its events and drawing to that kind's view
 // and keeps the others hidden.
 
@@ -14,9 +15,10 @@ export interface BossViews {
   carp?: CarpView;
   witch?: StaffBossView;
   judge?: StaffBossView;
+  demon?: DemonView;
 }
 
-type BossLike = Boss | CarpView | StaffBossView;
+type BossLike = Boss | CarpView | StaffBossView | DemonView;
 
 export class BossStage {
   private readonly all: BossLike[];
@@ -55,7 +57,7 @@ export class BossStage {
   }
 
   cast(b: BossState, x: number, y: number): void {
-    if (b.kind === 'witch' || b.kind === 'judge') this.views[b.kind]?.cast(x, y);
+    if (b.kind === 'witch' || b.kind === 'judge' || b.kind === 'demon') this.views[b.kind]?.cast(x, y);
   }
 
   windup(b: BossState): void {

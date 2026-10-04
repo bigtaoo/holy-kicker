@@ -96,6 +96,23 @@ export const GHOST_DECO: DecoStyle = {
   light: { tint: 0x80d8e8, alpha: 0.14 },
 };
 
+/** Chapter 5, Demon Peak: braziers of violet fire, rock spikes, bones, broken stone pagodas and
+ * glowing crystals on the dark cave rock; the light patches are slate, so the violet stays the
+ * enemy attacks' colour. */
+export const PEAK_DECO: DecoStyle = {
+  kinds: [
+    { name: 'spikes', weight: 3, size: 130 },
+    { name: 'bones', weight: 3, size: 120 },
+    { name: 'crystals', weight: 2, size: 110 },
+    { name: 'brazier', weight: 2, size: 115 },
+    { name: 'stupa', weight: 1, size: 150 },
+  ],
+  tint: 0xb4b0c8,
+  decal: { bones: { tint: 0xa0a0b8, alpha: 0.85 }, brazier: { tint: 0xffffff, alpha: 1 }, crystals: { tint: 0xe0d8ff, alpha: 1 } },
+  dark: { tint: 0x06040e, alpha: 0.45 },
+  light: { tint: 0x8a96b0, alpha: 0.1 },
+};
+
 export function sliceDeco(frames: readonly DecoFrame[], sheet: Texture): DecoSheet {
   const out = new Map<string, Texture>();
   for (const f of frames) {

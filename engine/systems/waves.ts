@@ -1,5 +1,5 @@
 import {
-  BOSS, CARP, CHAPTER_BOSSES, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HORDE, MOB_KINDS, SHRINE,
+  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HORDE, MOB_KINDS, SHRINE,
   TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
@@ -52,6 +52,8 @@ export function chapterBoss(chapter: number): BossKind {
 
 /** The elites coming on elite wave `wave`: the chapter's, and on the last one the previous chapter's too. */
 export function eliteKinds(chapter: number, wave: number, last: number): EliteKind[] {
+  // chapter 5 has none of its own: two earlier ones at once, in turn
+  if (chapter >= 5) return [...ELITE_PAIRS[(Math.trunc(wave / WAVES.eliteEvery) + ELITE_PAIRS.length - 1) % ELITE_PAIRS.length]];
   const kinds = [chapterElite(chapter)];
   if (chapter > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
   return kinds;
@@ -72,7 +74,8 @@ export function isPackWave(chapter: number, wave: number, last: number): boolean
 function bossOf(kind: BossKind, empowered: boolean): { hp: number } {
   if (kind === 'carp') return empowered ? EMPOWERED_CARP : CARP;
   if (kind === 'witch') return empowered ? EMPOWERED_WITCH : WITCH;
-  if (kind === 'judge') return JUDGE;
+  if (kind === 'judge') return empowered ? EMPOWERED_JUDGE : JUDGE;
+  if (kind === 'demon') return DEMON;
   return empowered ? EMPOWERED : BOSS;
 }
 

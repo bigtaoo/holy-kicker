@@ -41,7 +41,7 @@ export const WITCH_STYLE: StaffBossStyle = {
 };
 
 export const JUDGE_STYLE: StaffBossStyle = {
-  name: 'boss.judge', empoweredName: 'boss.judge', windup: JUDGE.windup, swell: 0.08, staff: [0.43, 0.87], glow: VIOLET, spark: 0x2a2440,
+  name: 'boss.judge', empoweredName: 'boss.judgeEmpowered', windup: JUDGE.windup, swell: 0.08, staff: [0.43, 0.87], glow: VIOLET, spark: 0x2a2440,
 };
 
 /** The empowered boss's multiply tint, and the enraged judge's at the top of its throb. */

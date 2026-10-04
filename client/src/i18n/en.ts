@@ -122,6 +122,8 @@ export const en = {
     witch: 'Bone Witch',
     witchEmpowered: 'Bone Witch, Empowered',
     judge: 'Underworld Judge',
+    judgeEmpowered: 'Underworld Judge, Empowered',
+    demon: 'Inner Demon',
     twins: 'Twin Jiangshi',
   },
   codex: {

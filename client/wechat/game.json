@@ -9,6 +9,10 @@
     {
       "name": "ch4",
       "root": "art/ch4/"
+    },
+    {
+      "name": "ch5",
+      "root": "art/ch5/"
     }
   ]
 }

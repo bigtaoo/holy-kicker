@@ -193,9 +193,9 @@ export function nearestElite(elites: readonly Elite[], x: number, y: number): El
 }
 
 /** A door god's shield took a hit; it stands at (x, y), world units: a bright ping off the shield. */
-export function blockFx(fx: FxPool, x: number, y: number, toward: number): void {
+export function blockFx(fx: FxPool, x: number, y: number, toward: number, lift = 80): void {
   const sx = x + Math.sign(toward || 1) * 50;
-  const sy = y - 80;
+  const sy = y - lift;
   fx.emit({ shape: 'ring', x: sx, y: sy, vx: 0, vy: 0, life: 0.2, size0: 30, size1: 110, rotation: 0, spin: 0, drag: 1, color: SHIELD, alpha: 0.9 });
   for (let k = 0; k < 4; k++) {
     const a = Math.random() * Math.PI * 2;

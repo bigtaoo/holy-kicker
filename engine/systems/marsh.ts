@@ -1,4 +1,4 @@
-import { CASTER, EMERGE, HURT, SHOOTER, TOAD_KING } from '../config';
+import { CASTER, EMERGE, HURT, MONK, SHOOTER, TOAD_KING } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -17,6 +17,7 @@ export function resetMob(s: SimState, m: Mob): void {
   if (m.kind === 'emerger') m.t = EMERGE.under + s.ai.int(EMERGE.underSpread + 1) + EMERGE.warn;
   else if (m.kind === 'shooter') m.t = SHOOTER.cooldown + s.ai.int(SHOOTER.spread + 1);
   else if (m.kind === 'caster') m.t = CASTER.cooldown + s.ai.int(CASTER.spread + 1);
+  else if (m.kind === 'monk') m.t = MONK.blocks;
   else m.t = 0;
   m.haste = 0;
 }

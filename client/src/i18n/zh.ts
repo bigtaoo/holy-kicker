@@ -125,6 +125,8 @@ export const zh: Table<typeof en> = {
     witch: '白骨精',
     witchEmpowered: '狂化白骨精',
     judge: '判官',
+    judgeEmpowered: '狂化判官',
+    demon: '心魔',
   },
   codex: {
     title: '图鉴 {n}/{total}',

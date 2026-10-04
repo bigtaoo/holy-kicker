@@ -1,4 +1,4 @@
-import { Application, BlurFilter, Container, Graphics, Sprite, Text, type Texture } from 'pixi.js';
+import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
   beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
   type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
@@ -15,7 +15,7 @@ import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
-import { Corpses, type MobSheet } from './mobView';
+import { Corpses } from './mobView';
 import { HealthBar } from './healthBar';
 import { blockFx, howlFx, nearestElite, type EliteCrowd } from './eliteView';
 import { HordeView, MOB_HEIGHT } from './hordeView';
@@ -25,7 +25,6 @@ import { ELITE_HEIGHT, hordeLooks, makeBosses, makeElites } from './cast';
 import { summonFx } from './witchView';
 import { SpellView } from './spellView';
 import { SutraView } from './sutraView';
-import type { TaoAsset } from './tao/TaoActor';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
 import { makeDeco } from './decoView';
 import { Mist } from './mistView';
@@ -34,7 +33,7 @@ import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
-import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSprites, type StageArt } from './stageArt';
+import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSprites } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -45,37 +44,9 @@ import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSpri
 // (FixedStep), draws every sim body interpolated between its last two tick positions, and
 // turns the sim's events into animations, effects and numbers.
 
-export interface Art {
-  hero: TaoAsset;
-  jiangshi: MobSheet;
-  fox: MobSheet;
-  cuju: Texture;
-  staff: Texture;
-  fish: Texture;
-  /**
-   * Grounds by chapter from chapter 1; a chapter without its own takes the last one. Chapters
-   * in an art pack (chapter 4 on) add theirs when the pack is loaded (loadChapterArt).
-   */
-  stages: StageArt[];
-  /** The boss rig; null when the scene leaves the boss out. */
-  boss: TaoAsset | null;
-  /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
-  icons: ReadonlyMap<string, Texture>;
-  /** Chapter 2's mobs, elite and boss (tools/bake_mob.py, specs in art/monk/mobs). */
-  marsh: { ghost: MobSheet; toad: MobSheet; toadKing: MobSheet; carp: MobSheet };
-  /** Chapter 3's. */
-  snow: { wolf: MobSheet; wolfLeader: MobSheet; wraith: MobSheet; skeleton: MobSheet; shard: MobSheet; witch: MobSheet };
-  /** Chapter 4's, from its art pack: null until a chapter 4 run loads it. */
-  ghost: GhostArt | null;
-}
+import type { Art } from './artTypes';
 
-export interface GhostArt {
-  tongue: MobSheet;
-  lantern: MobSheet;
-  effigy: MobSheet;
-  doorGod: MobSheet;
-  judge: MobSheet;
-}
+export type { Art, GhostArt, PeakArt } from './artTypes';
 
 const HERO_HEIGHT = 120;
 export const STICK_RADIUS = 70;
@@ -361,8 +332,9 @@ export class Game {
           if (s.mobs[e.index]?.kind === 'effigy') this.horde.tear(e.x / FP, e.y / FP);
           break;
         case 'block': {
-          const g = nearestElite(s.elites, e.x, e.y);
-          if (g) blockFx(this.fx.pool, e.x / FP, e.y / FP, g.vx);
+          // a door god's shield, or a fallen monk's gong (held toward the hero)
+          const g = e.index < s.mobs.length ? null : nearestElite(s.elites, e.x, e.y);
+          blockFx(this.fx.pool, e.x / FP, e.y / FP, g ? g.vx : s.players[0].x - e.x, g ? 80 : 45);
           break;
         }
         case 'emerge':
