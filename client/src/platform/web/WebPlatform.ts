@@ -66,15 +66,17 @@ export class WebPlatform implements Platform {
 
   async createApp(msaa: boolean): Promise<Application> {
     const app = new Application();
+    // dev ?record: a fixed phone-sized canvas, scaled to the window by CSS (dev/recorder.ts)
+    const record = new URLSearchParams(location.search).has('record');
     await app.init({
       background: '#141816',
-      resizeTo: window,
+      ...(record ? { width: 1080, height: 1920, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, 2) }),
       antialias: msaa,
-      resolution: Math.min(window.devicePixelRatio || 1, 2),
-      autoDensity: true,
+      autoDensity: !record,
       // WeChat has no WebGPU; use WebGL everywhere so both hosts behave the same.
       preference: 'webgl',
     });
+    if (record) app.canvas.style.cssText = 'display:block;height:100vh;width:auto;margin:0 auto';
     document.body.appendChild(app.canvas);
     // a right-click or long press is a game input, never the browser's menu
     app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());

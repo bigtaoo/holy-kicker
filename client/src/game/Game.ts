@@ -31,6 +31,7 @@ import { Mist } from './mistView';
 import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
+import { Autoplay } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
 import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSprites } from './stageArt';
@@ -127,6 +128,8 @@ export class Game {
   /** A paused run neither simulates nor animates; it is still drawn. */
   paused = false;
   private readonly onTick = (t: { deltaMS: number }) => this.frame(t.deltaMS);
+  /** Dev: the bot playing instead of the stick (?autoplay). */
+  private readonly autoplay: Autoplay | null;
 
   constructor(
     private readonly app: Application,
@@ -139,6 +142,7 @@ export class Game {
   ) {
     const seed = scene.seed || 1 + Math.floor(Math.random() * 0x7ffffffe);
     this.engine = new Engine(runConfig(scene, seed, setup));
+    this.autoplay = scene.autoplay ? new Autoplay(LOCAL, seed) : null;
     const chapter = setup.waves > 0;
     const s = this.engine.state;
     // dev: skip ahead, so the next tick begins the asked-for wave
@@ -197,7 +201,7 @@ export class Game {
     app.stage.addChild(this.playMask, this.root, this.stickBase, this.stickKnob);
 
     // the fps / tick readout is for development only
-    this.label.visible = import.meta.env.DEV;
+    this.label.visible = import.meta.env.DEV && !scene.record;
     app.ticker.add(this.onTick);
   }
 
@@ -250,6 +254,9 @@ export class Game {
     // a finished run (won, or lost until a revive) and an open level-up are drawn but not
     // stepped, until the command that resumes them is ready
     const s = this.engine.state;
+    if (this.autoplay && s.players[0].offer.length > 0 && this.picking === undefined && !this.paused) {
+      this.picking = this.autoplay.pick(s, frameMs);
+    }
     const over = (s.outcome !== 'playing' && !this.reviving) || (s.players[0].offer.length > 0 && this.picking === undefined);
     if (this.paused || over) {
       this.draw(this.loop.alpha, 0);
@@ -275,7 +282,8 @@ export class Game {
     const pick = this.picking;
     this.reviving = false;
     this.picking = undefined;
-    return { owner: LOCAL, tick: this.engine.nextTick, ...quantizeMove(s.x + k.x, s.y + k.y), revive, pick };
+    const move = this.autoplay ? this.autoplay.move(this.engine.state) : quantizeMove(s.x + k.x, s.y + k.y);
+    return { owner: LOCAL, tick: this.engine.nextTick, ...move, revive, pick };
   }
 
   /** One tick's events: animations, effects and numbers. Positions arrive in FP. */

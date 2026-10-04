@@ -65,6 +65,13 @@ thumbnail size.
 | Square cover | 800×800 | Monk and ball only, close up; logo at the bottom |
 | Gameplay video (optional) | 1080×1920, 15–20 s | A late-wave screen full of mobs, an evolution card, the boss |
 
+**Recording the video**: run the dev server (`npm run dev`) and open, in Chrome,
+`http://localhost:5174/?direct&autoplay&record=20&chapter=1&wave=38&sutras&quality=high&seed=7`.
+`autoplay` lets the balance bot play (the level-up cards stay up 1.3 s, so they show),
+`record=20` draws a fixed 1080×1920 canvas and saves 20 s of the run as MP4 (WebM where the
+browser has no H.264); R stops early. Keep the tab in front: a hidden tab stops drawing. Try
+other `seed`, `wave`, `chapter` and `relic` values for a fuller screen or a boss (wave 50).
+
 Covers are painted key art in the game's sticker style (see `docs/content.md` and
 `art/monk/`), not cropped gameplay: a portrait game screen does not fill a 16:9 cover.
 

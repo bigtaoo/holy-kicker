@@ -12,7 +12,7 @@ describe('parseScene', () => {
       mobs: 300, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: false, eliteRing: true,
       types: 1, page: 0, mobRes: 1, spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: null,
       gem: 'pink', drops: 0, threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
-      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true, deco: 'props', mist: true, cam: 'smooth', settle: true, queue: true, calm: true, sep: 75, softFace: true, sway: true, boss: true, bossSize: 300, seed: 0, waves: false, wave: 1, chapter: 0, relic: null, sutras: false, bare: false,
+      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true, deco: 'props', mist: true, cam: 'smooth', settle: true, queue: true, calm: true, sep: 75, softFace: true, sway: true, boss: true, bossSize: 300, seed: 0, waves: false, wave: 1, chapter: 0, relic: null, sutras: false, bare: false, autoplay: false, record: 0,
     });
     expect(parseScene('?mist=0').mist).toBe(false);
     expect(parseScene('?spells=nova,lava,chain&rate=3&stack=6&ringfx=quad&blur=1&fxbudget=2')).toMatchObject({
@@ -36,6 +36,8 @@ describe('parseScene', () => {
     expect(parseScene('?mobs=99999').mobs).toBe(2000);
     expect(parseScene('?quality=saver').quality).toBe('saver');
     expect(parseScene('?quality=ultra').quality).toBe(null);
+    expect(parseScene('?autoplay&record=20')).toMatchObject({ autoplay: true, record: 20 });
+    expect(parseScene('?record=0').record).toBe(0);
     expect(parseScene('?gem=lime&drops=5000')).toMatchObject({ gem: 'lime', drops: 5000 });
     expect(parseScene('?threats=1&bullet=ink&zone=edge&zonez=over')).toMatchObject({ threats: true, bullet: 'ink', zone: 'edge', zoneLayer: 'over' });
     expect(parseScene('?crit=red&numfade=0&heroback=0&elitecolor=violet&foxtint=0')).toMatchObject({
