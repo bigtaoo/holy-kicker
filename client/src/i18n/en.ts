@@ -365,4 +365,7 @@ export const en = {
     copper: 'Copper',
     jade: 'Jade',
   },
+  share: {
+    title: 'One monk, one ball, a screen of demons. How many waves can you last?',
+  },
 };

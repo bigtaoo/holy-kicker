@@ -297,6 +297,10 @@ is stopped at death and the player opts in, so it should be fine; confirm during
   chapter, runs per day, time between merges, ad view rate) go to our server (server/), and the
   lobby's settings panel says so in a short data notice whenever the game is online.
 
+**WeChat share:** the capsule menu forwards to a chat (a 5:4 card cut from the store cover,
+`client/wechat/share/<lang>.jpg`, and a one-line pitch) and to Moments (the pitch over the icon).
+No share rewards: WeChat bans incentivised sharing.
+
 A small server on the existing VPS comes with WeChat: `code2session` login (the app secret
 must not ship), cloud save, server time, remote config, analytics. Leaderboards later can
 re-simulate submitted runs with the deterministic engine to verify them.

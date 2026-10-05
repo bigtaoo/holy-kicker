@@ -5,11 +5,13 @@ import { boot } from './boot';
 import { DEFAULT_SCENE } from './game/scene';
 import { WeChatPlatform } from './platform/wechat/WeChatPlatform';
 import { watchBoot } from './platform/wechat/bootReport';
+import { installWeChatShare } from './platform/wechat/weChatShare';
 
 // WeChat mini-game entry, required by client/wechat/game.js.
 // Pixi's format detection calls document.createElement('video'); a mini-game has no
 // document, so detection is skipped (Assets.init must run before the first load).
 const platform = new WeChatPlatform();
+installWeChatShare();
 // debug builds (build:wechat:debug) leave a boot report on disk; release builds skip it
 const report = import.meta.env.MODE === 'development' ? watchBoot() : null;
 boot(platform, DEFAULT_SCENE, { skipDetections: true })

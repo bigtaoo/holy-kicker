@@ -367,4 +367,7 @@ export const zh: Table<typeof en> = {
     copper: '铜钱',
     jade: '玉',
   },
+  share: {
+    title: '一个和尚一只鞠，满屏妖怪踢不完，你能撑几波？',
+  },
 };

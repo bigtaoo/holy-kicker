@@ -239,6 +239,12 @@ interface Wx {
    *  is no DOM here, so this is the only signal. Optional for the same reason as above. */
   onAudioInterruptionBegin?: (cb: () => void) => void;
   onAudioInterruptionEnd?: (cb: () => void) => void;
+  /** Turns on the capsule menu's forward items (platform/wechat/weChatShare.ts). */
+  showShareMenu?: (opts: { withShareTicket?: boolean; menus?: ('shareAppMessage' | 'shareTimeline')[] }) => void;
+  /** What a forward to a chat shows; `imageUrl` is a package path, 5:4 reads best. */
+  onShareAppMessage?: (cb: () => { title?: string; imageUrl?: string; query?: string }) => void;
+  /** Base library 2.11.3+: what a share to Moments shows (the icon unless `imageUrl`). */
+  onShareTimeline?: (cb: () => { title?: string; imageUrl?: string; query?: string }) => void;
 }
 
 declare const wx: Wx;

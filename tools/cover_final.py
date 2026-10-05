@@ -1,7 +1,8 @@
 """Finishes the store covers: crops each painted cover to its store size and lays the logo over it.
 usage: python cover_final.py <store dir> [en|zh]
 Reads <store dir>/cover_{landscape,portrait,square}.png and logo_<lang>.png, writes
-<store dir>/final/<lang>_{landscape,portrait,square}.png (docs/store.md "Images")."""
+<store dir>/final/<lang>_{landscape,portrait,square}.png (docs/store.md "Images"), and the WeChat
+share card client/wechat/share/<lang>.jpg (5:4, cut from the landscape cover)."""
 import sys
 from pathlib import Path
 
@@ -14,6 +15,9 @@ COVERS = {
     "portrait": ((800, 1200), (0.5, 0.5), (0.5, 0.13, 0.74)),
     "square": ((800, 800), (0.5, 0.5), (0.5, 0.895, 0.40)),
 }
+# the card a WeChat share shows: 5:4 at 500x400, a JPEG to stay light in the main package
+SHARE = ((500, 400), (0.44, 0.5), (0.5, 0.15, 0.42))
+SHARE_DIR = Path(__file__).resolve().parent.parent / "client" / "wechat" / "share"
 
 
 def fit(im, size, focus):
@@ -33,12 +37,23 @@ def main():
     out = store / "final"
     out.mkdir(exist_ok=True)
     for name, (size, focus, (lx, ly, lw)) in COVERS.items():
-        page = fit(Image.open(store / f"cover_{name}.png").convert("RGBA"), size, focus)
-        k = lw * size[0] / logo.width
-        mark = logo.resize((round(logo.width * k), round(logo.height * k)), Image.LANCZOS)
-        page.alpha_composite(mark, (round(lx * size[0] - mark.width / 2), round(ly * size[1] - mark.height / 2)))
-        page.convert("RGB").save(out / f"{lang}_{name}.png", optimize=True)
+        page = cover(store / f"cover_{name}.png", logo, size, focus, (lx, ly, lw))
+        page.save(out / f"{lang}_{name}.png", optimize=True)
         print(out / f"{lang}_{name}.png", size)
+    SHARE_DIR.mkdir(exist_ok=True)
+    size, focus, place = SHARE
+    cover(store / "cover_landscape.png", logo, size, focus, place).save(SHARE_DIR / f"{lang}.jpg", quality=82, optimize=True)
+    print(SHARE_DIR / f"{lang}.jpg", size)
+
+
+def cover(path, logo, size, focus, place):
+    """The painted cover cut to size, with the logo laid over it."""
+    lx, ly, lw = place
+    page = fit(Image.open(path).convert("RGBA"), size, focus)
+    k = lw * size[0] / logo.width
+    mark = logo.resize((round(logo.width * k), round(logo.height * k)), Image.LANCZOS)
+    page.alpha_composite(mark, (round(lx * size[0] - mark.width / 2), round(ly * size[1] - mark.height / 2)))
+    return page.convert("RGB")
 
 
 if __name__ == "__main__":
