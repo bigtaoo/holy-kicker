@@ -1,5 +1,6 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
-import { scatterDeco, type DecoKind } from './deco';
+import { wrapNear, type Vec } from './camera';
+import { DECO, scatterDeco, type DecoKind } from './deco';
 
 // Draws the scattered ground decorations from one sheet (tools/pack_deco.py), in a single
 // container lying on the ground tile under every figure, so it adds one batch and no sorting.
@@ -122,8 +123,13 @@ export function sliceDeco(frames: readonly DecoFrame[], sheet: Texture): DecoShe
 }
 
 /** Patches only, or patches and props. Kinds missing from the sheet are left out. */
-export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle = TEMPLE_DECO): Container {
+/** Camera travel between two rewraps of the props, world units. */
+const REWRAP = 500;
+
+/** The stage's props and patches; each keeps within half a field of the camera `cam`. */
+export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam: Vec): Container {
   const view = new Container();
+  const home: { s: Sprite; x: number; y: number }[] = [];
   const kinds = style.kinds.filter((k) => props && sheet.frames.has(k.name));
   const patch = sheet.frames.get('patch');
   for (const d of scatterDeco(kinds)) {
@@ -146,6 +152,15 @@ export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle = TE
       s.alpha = decal?.alpha ?? 1;
     }
     view.addChild(s);
+    home.push({ s, x: d.x, y: d.y });
   }
+  const period = DECO.field * 2;
+  let at = '';
+  view.onRender = () => {
+    const key = `${Math.floor(cam.x / REWRAP)},${Math.floor(cam.y / REWRAP)}`;
+    if (key === at) return;
+    at = key;
+    for (const h of home) h.s.position.set(wrapNear(h.x, cam.x, period), wrapNear(h.y, cam.y, period));
+  };
   return view;
 }

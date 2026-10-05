@@ -1,5 +1,6 @@
-import { Graphics, Rectangle, Sprite, TilingSprite, type Renderer, type Texture } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite, TilingSprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
+import { periodStart, type Vec } from './camera';
 import type { DecoSheet, DecoStyle } from './decoView';
 import type { MistLayer } from './mistView';
 import { SHADOW_Z } from './shadow';
@@ -12,6 +13,8 @@ const TUFT = 0x2f3e31;
 const FIELD = 4000;
 /** World units per ground tile pixel. */
 const GROUND_SCALE = 1.5;
+/** The ground under the side bars is dimmed, so the play area stands out. */
+const SIDE_TINT = 0x6a6a6a;
 
 /** A chapter's ground: the repeating tile (null draws the flat placeholder field), the
  * decorations scattered over it (null when the scene turns them off) and its low mist, if any. */
@@ -41,11 +44,32 @@ export function makeGround(): Graphics {
   return g;
 }
 
-export function makeTiledGround(tex: Texture): TilingSprite {
+/** The repeating ground, kept under the camera `cam` (the world has no edge). */
+export function makeTiledGround(tex: Texture, cam: Vec): TilingSprite {
   const g = new TilingSprite({ texture: tex, width: FIELD * 2, height: FIELD * 2 });
-  g.position.set(-FIELD, -FIELD);
   g.tileScale.set(GROUND_SCALE);
   g.zIndex = -Infinity;
+  const span = tex.width * GROUND_SCALE;
+  g.onRender = () => g.position.set(periodStart(cam.x, span) - FIELD, periodStart(cam.y, span) - FIELD);
+  return g;
+}
+
+/**
+ * The ground again under the side bars of a wide screen (and the bands of a very tall one),
+ * dimmed and scrolling with the play area's, so the stage seems to go on past the frame.
+ * It sits on the stage under the play area: `root` is the play area, `world` the scene in it.
+ */
+export function sideGround(tex: Texture | null, screen: Rectangle, root: Container, world: Container): Container {
+  if (!tex) return new Container();
+  const g = new TilingSprite({ texture: tex });
+  g.tint = SIDE_TINT;
+  g.onRender = () => {
+    if (g.width !== screen.width || g.height !== screen.height) g.setSize(screen.width, screen.height);
+    const k = world.scale.x;
+    g.tileScale.set(GROUND_SCALE * k);
+    // the play area's tiles start at -FIELD in the world (makeTiledGround)
+    g.tilePosition.set(root.x + world.x - FIELD * k, root.y + world.y - FIELD * k);
+  };
   return g;
 }
 

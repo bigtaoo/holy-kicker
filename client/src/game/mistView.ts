@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle, TilingSprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
+import { periodStart, type Vec } from './camera';
 import { mistBlobs, type MistTile } from './mistLayout';
 import { SHADOW_Z } from './shadow';
 
@@ -36,10 +37,9 @@ export class Mist {
   private readonly sprites: TilingSprite[] = [];
   private time = 0;
 
-  constructor(renderer: Renderer, private readonly layers: readonly MistLayer[]) {
+  constructor(renderer: Renderer, private readonly layers: readonly MistLayer[], private readonly cam: Vec) {
     for (const l of layers) {
       const s = new TilingSprite({ texture: bakeTile(renderer, l), width: FIELD * 2, height: FIELD * 2 });
-      s.position.set(-FIELD, -FIELD);
       s.tileScale.set(l.span / l.tile.size);
       s.tint = l.tint;
       this.sprites.push(s);
@@ -52,6 +52,8 @@ export class Mist {
     this.time += dt;
     this.layers.forEach((l, i) => {
       const s = this.sprites[i];
+      // under the camera, in whole tiles
+      s.position.set(periodStart(this.cam.x, l.span) - FIELD, periodStart(this.cam.y, l.span) - FIELD);
       s.tilePosition.x = (this.time * l.vx) % l.span;
       s.tilePosition.y = (this.time * l.vy) % l.span;
       s.alpha = l.alpha * (0.875 + 0.125 * Math.sin((this.time / l.breath) * Math.PI * 2 + i));

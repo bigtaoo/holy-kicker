@@ -37,3 +37,17 @@ export function faceSide(prev: number, dx: number, dead: number): number {
   if (dx < -dead) return -1;
   return prev;
 }
+
+// The world has no edge, but the ground, its mist and its props are each one finite field.
+// They follow the camera in whole periods of their pattern, so the jump never shows.
+
+/** The start of the period of length `span` that holds `c`. */
+export function periodStart(c: number, span: number): number {
+  return Math.floor(c / span) * span;
+}
+
+/** `x` moved by whole periods into the window of length `period` centred on `c`. */
+export function wrapNear(x: number, c: number, period: number): number {
+  const d = (((x - c + period / 2) % period) + period) % period;
+  return c + d - period / 2;
+}

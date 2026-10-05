@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ease, faceSide, snapToPixel } from './camera';
+import { ease, faceSide, snapToPixel, periodStart, wrapNear } from './camera';
 
 describe('ease', () => {
   it('jumps straight there without easing', () => {
@@ -37,5 +37,23 @@ describe('faceSide', () => {
     expect(faceSide(-1, 10, 30)).toBe(-1);
     expect(faceSide(1, -31, 30)).toBe(-1);
     expect(faceSide(-1, 31, 30)).toBe(1);
+  });
+});
+
+describe('periodStart', () => {
+  it('snaps down to whole periods, below zero too', () => {
+    expect(periodStart(950, 300)).toBe(900);
+    expect(periodStart(-10, 300)).toBe(-300);
+  });
+});
+
+describe('wrapNear', () => {
+  it('moves a point by whole periods to within half a period of the centre', () => {
+    expect(wrapNear(100, 0, 8000)).toBe(100);
+    expect(wrapNear(-3900, 5000, 8000)).toBe(4100);
+    expect(wrapNear(3900, -5000, 8000)).toBe(-4100);
+    const x = wrapNear(1234, 98765, 8000);
+    expect(Math.abs(x - 98765)).toBeLessThanOrEqual(4000);
+    expect((x - 1234) % 8000).toBe(0);
   });
 });

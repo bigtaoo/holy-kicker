@@ -36,7 +36,7 @@ import { Autoplay } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
 import { releaseBaked } from './bake';
-import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSprites } from './stageArt';
+import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -97,6 +97,7 @@ export class Game {
   private readonly root = new Container();
   private readonly world = new Container();
   private readonly playMask = new Graphics();
+  private readonly sides: Container;
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
   private readonly hero: Hero;
   /** World point the camera centres on; trails the hero under the smooth camera. */
@@ -161,13 +162,13 @@ export class Game {
 
     this.world.sortableChildren = true;
     const stage = art.stages[Math.min(Math.max(setup.chapter, 1), art.stages.length) - 1];
-    this.world.addChild(stage.ground ? makeTiledGround(stage.ground) : makeGround());
+    this.world.addChild(stage.ground ? makeTiledGround(stage.ground, this.camPos) : makeGround());
     if (stage.deco && scene.deco !== 'none') {
-      const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style);
+      const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style, this.camPos);
       deco.zIndex = SHADOW_Z - 1;
       this.world.addChild(deco);
     }
-    this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist) : null;
+    this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist, this.camPos) : null;
     if (this.mist) this.world.addChild(this.mist.view);
     const shadowTex = shadowTexture(app.renderer);
     const monk = setup.monk ?? 'kicker';
@@ -208,19 +209,19 @@ export class Game {
     if (this.elites?.bar) this.root.addChild(this.elites.bar.view);
     this.root.mask = this.playMask;
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer, STICK_RADIUS);
-    app.stage.addChild(this.playMask, this.root, this.stickBase, this.stickKnob);
+    this.sides = sideGround(stage.ground, app.screen, this.root, this.world);
+    app.stage.addChild(this.sides, this.playMask, this.root, this.stickBase, this.stickKnob);
 
     // the fps / tick readout is for development only
     this.label.visible = import.meta.env.DEV && !scene.record;
     app.ticker.add(this.onTick);
   }
 
-  /** Removes the run from the stage and frees the textures it baked. Shared art textures stay
-   *  loaded for the next run. */
+  /** Removes the run from the stage (destroy unparents) and frees the textures it baked. Shared art
+   *  textures stay loaded for the next run. */
   destroy(): void {
     this.app.ticker.remove(this.onTick);
-    this.app.stage.removeChild(this.playMask, this.root, this.stickBase, this.stickKnob);
-    for (const c of [this.playMask, this.root, this.stickBase, this.stickKnob]) c.destroy({ children: true });
+    for (const c of [this.sides, this.playMask, this.root, this.stickBase, this.stickKnob]) c.destroy({ children: true });
     releaseBaked(this.app.renderer);
   }
 
@@ -244,7 +245,6 @@ export class Game {
     this.world.scale.set(vp.scale);
     this.label.style.fontSize = Math.max(10, 48 * vp.scale);
     this.label.style.stroke = { color: 0x000000, width: Math.max(1, 4 * vp.scale) };
-    // under the HUD's experience bar
     // dev only, below the HUD strip, the wave counter and the boss bar
     this.label.position.set(24 * vp.scale, 460 * vp.scale);
     this.boss?.layout(vp.playW, vp.scale);
