@@ -396,7 +396,7 @@ mobs (lesson from the readability test: grass works best).
 | 2 | **Misty Marsh** / 雾沼: reeds, shallow water (implemented: tile, props and drifting low mist) | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精 (implemented): dives, surfaces with a shockwave |
 | 3 | **Snow Pass** / 雪岭: snow, pines (implemented: tile and props) | Snow wolf (runner pack), ice wraith (zone), jiangshi recolour (implemented) | Wolf leader (charger + howl buffs, implemented) | Black Carp, empowered (implemented) | **Bone Witch** / 白骨精 (implemented): summons skeletons (splitters) |
 | 4 | **Ghost Market** / 鬼市: night street, blue lanterns (implemented: tile and props) | Paper effigy (splitter), lantern ghost (shooter), long-tongue ghost (emerger) (implemented) | Door god statue (shielder, implemented) | Bone Witch, empowered (implemented) | **Underworld Judge** / 判官 (implemented): writes zones in lines, crosses them below half health |
-| 5 | **Demon Peak** / 魔窟: dark rock, purple fire (implemented: code-drawn tile; props to generate) | Fallen monk (shielder), shadow (runner), every earlier type (implemented; monk and shadow art are stand-ins) | Two elites at once (implemented) | Underworld Judge, empowered (implemented) | **Inner Demon** / 心魔 (implemented): a cold-coloured copy of the hero, uses the player's own relic |
+| 5 | **Demon Peak** / 魔窟: dark rock, purple fire (implemented: tile and props) | Fallen monk (shielder), shadow (runner), every earlier type (implemented) | Two elites at once (implemented) | Underworld Judge, empowered (implemented) | **Inner Demon** / 心魔 (implemented): a cold-coloured copy of the hero, uses the player's own relic |
 
 - The Inner Demon reuses the hero rig with a cold recolour, which saves a full boss rig and
   is the story beat: the last enemy is yourself.
@@ -409,6 +409,14 @@ mobs (lesson from the readability test: grass works best).
 A cheerful, slightly dim monk kicks a cuju ball through a land where the temple's abbot has
 fallen to darkness. One line of text before each boss, one after; no cut-scenes. Tone:
 funny outside, serious threat (as agreed for the art).
+
+- **Implemented** (`client/src/ui/story.ts`, lines under `story` in the string tables): the boss
+  wave's banner carries the boss's line (on wave 25 of chapter 1 the monk's, facing the mute
+  twins); the mid-boss's line after rides wave 26's banner, which only starts once it fell; after
+  the chapter boss the won run stands still 3.5 s on the monk's line, then the results. The
+  thread: the abbot fell, the darkness leads from the marsh up the snow pass and through the
+  ghost market (the judge's book names Demon Peak), and the last boss is the monk himself.
+  Hard mode replays the same lines.
 
 ## International players
 

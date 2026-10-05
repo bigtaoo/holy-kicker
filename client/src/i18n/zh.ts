@@ -147,6 +147,40 @@ export const zh: Table<typeof en> = {
     judgeEmpowered: '狂化判官',
     demon: '心魔',
   },
+  story: {
+    quote: '“{text}”',
+    monk: '小和尚',
+    c1: {
+      midBefore: '两个？那就踢两脚。',
+      midAfter: '好了，方丈在哪儿？',
+      bossBefore: '你扫了十年院子，今天我把你扫出去。',
+      bossAfter: '师父眼里全是黑气……是从沼泽那边来的。',
+    },
+    c2: {
+      midBefore: '黑暗又给了我一条命！',
+      midAfter: '师父，这回躺好别起来了。',
+      bossBefore: '进了我的沼泽，没有干着出去的。',
+      bossAfter: '袜子又湿了。黑气往雪岭去了。',
+    },
+    c3: {
+      midBefore: '我可是逆着瀑布游上来的！',
+      midAfter: '鱼就不该上雪山。',
+      bossBefore: '好暖和的血呀……我的骨头冷得很。',
+      bossAfter: '原来只是一堆骨头。是谁在背后牵线？',
+    },
+    c4: {
+      midBefore: '骨头散了，还能拼回去。',
+      midAfter: '散了还能再踢散。',
+      bossBefore: '你的名字在我簿上。今天就是你的死期。',
+      bossAfter: '簿子上写着，黑气的老窝在魔窟。谢啦！',
+    },
+    c5: {
+      midBefore: '阴司公堂，从不退堂！',
+      midAfter: '退堂！',
+      bossBefore: '你一路打上来，要找的就是我。我就是你。',
+      bossAfter: '原来黑气也在我心里。好了，回寺里扫地去。',
+    },
+  },
   codex: {
     title: '图鉴 {n}/{total}',
     unknown: '？？？',

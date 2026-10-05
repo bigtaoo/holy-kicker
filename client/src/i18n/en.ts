@@ -145,6 +145,40 @@ export const en = {
     demon: 'Inner Demon',
     twins: 'Twin Jiangshi',
   },
+  story: {
+    quote: '"{text}"',
+    monk: 'Little monk',
+    c1: {
+      midBefore: 'Two of them? Then two kicks.',
+      midAfter: 'Now, where is the abbot?',
+      bossBefore: 'Ten years you swept my halls. Today I sweep you out.',
+      bossAfter: "Master's eyes were full of darkness... It came from the marsh.",
+    },
+    c2: {
+      midBefore: 'The darkness gave me a second life!',
+      midAfter: 'Stay down this time, Master.',
+      bossBefore: 'Nobody leaves my marsh dry.',
+      bossAfter: 'Wet socks again. The darkness went up the snowy pass.',
+    },
+    c3: {
+      midBefore: 'I swam up a waterfall for this!',
+      midAfter: 'Fish do not belong in the snow.',
+      bossBefore: 'Such warm blood... and my bones are so cold.',
+      bossAfter: 'Only a pile of bones. Who is pulling the strings?',
+    },
+    c4: {
+      midBefore: 'Bones can always be put back together.',
+      midAfter: 'And kicked apart again.',
+      bossBefore: 'Your name is in my book. Today is your last day.',
+      bossAfter: 'His book says the darkness lives on Demon Peak. Thanks!',
+    },
+    c5: {
+      midBefore: 'The court of the dead never closes!',
+      midAfter: 'Court dismissed.',
+      bossBefore: 'You climbed all this way to find me. I am you.',
+      bossAfter: 'The darkness was in me too. Time to go home and sweep the temple.',
+    },
+  },
   codex: {
     title: 'Codex {n}/{total}',
     unknown: '???',

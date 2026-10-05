@@ -24,6 +24,7 @@ import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
+import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
 import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
 import { buildSlots } from './buildSlots';
 import { uiFrame, type Screen } from './uiLayout';
@@ -55,6 +56,8 @@ export class Shell {
   /** The wave the HUD last showed, and whether the death panel is up. */
   private shownWave = -1;
   private downShown = false;
+  /** Seconds left on the monk's line after a won run's boss, before the results. */
+  private clearWait: number | null = null;
   /** The offer whose cards the HUD shows; null when none are up. */
   private shownOffer: readonly Card[] | null = null;
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
@@ -218,6 +221,7 @@ export class Shell {
     });
     this.shownWave = -1;
     this.downShown = false;
+    this.clearWait = null;
     this.shownOffer = null;
     this.kills = 0;
     // the first run teaches moving; a replayed first chapter does not
@@ -331,7 +335,7 @@ export class Shell {
       hud.setWave(s.wave);
       const last = s.config.waves;
       const warning = isBossWave(s.wave, last) ? t('run.boss') : isEliteWave(s.wave, last) ? t('run.elite') : null;
-      if (s.wave > 0) hud.announce(s.wave, warning);
+      if (s.wave > 0) hud.announce(s.wave, warning, waveLine(this.chapter, s.wave, last));
     }
     const p = s.players[0];
     if (this.tutorial && !game.paused && p.offer.length === 0) {
@@ -353,7 +357,16 @@ export class Shell {
       this.downShown = false;
       this.portal.gameplayStart();
     }
-    if (s.outcome === 'won') this.endRun();
+    if (s.outcome === 'won') {
+      // the run stands still on the monk's line after the boss, then the results
+      if (this.clearWait === null) {
+        this.clearWait = CLEAR_LINE_TIME;
+        this.portal.gameplayStop();
+        hud.speak(clearLine(this.chapter));
+      }
+      this.clearWait -= this.app.ticker.deltaMS / 1000;
+      if (this.clearWait <= 0) this.endRun();
+    }
     else if (s.outcome === 'lost' && !this.downShown) {
       this.downShown = true;
       this.portal.gameplayStop();

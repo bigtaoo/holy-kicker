@@ -4,6 +4,7 @@ import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot } from './buildSlots';
 import { cardPanel } from './cardPanel';
 import type { CardText } from './cardText';
+import type { StoryLine } from './story';
 import type { TutorialStep } from './tutorial';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
@@ -26,8 +27,9 @@ export interface RunActions {
 type Down = 'none' | 'free' | 'offered' | 'playing';
 export type ReviveOffer = 'none' | 'free' | 'ad';
 
-/** Seconds a wave banner stays, the last of them fading. */
+/** Seconds a wave banner stays (longer with a story line to read), the last of them fading. */
 const BANNER_TIME = 2;
+const STORY_TIME = 4;
 const BANNER_FADE = 0.5;
 const XP_H = 30;
 const XP_Y = 52;
@@ -41,7 +43,7 @@ export class RunHud implements Screen {
   private wave = 0;
   private paused = false;
   private down: Down | null = null;
-  private banner: { lines: [string, number][]; t: number } | null = null;
+  private banner: { lines: [string, number][]; story: StoryLine | null; t: number } | null = null;
   /** Rebuilt with every layout, like the rest of the HUD. */
   private xpView: Container | null = null;
   private xpFill: Sprite | null = null;
@@ -142,11 +144,20 @@ export class RunHud implements Screen {
     this.relayout();
   }
 
-  /** A banner across the middle: the wave number and, for elite and boss waves, a warning. */
-  announce(wave: number, warning: string | null): void {
+  /**
+   * A banner across the middle: the wave number, for elite and boss waves a warning, and around
+   * a boss its line of the story.
+   */
+  announce(wave: number, warning: string | null, story: StoryLine | null = null): void {
     const lines: [string, number][] = [[t('run.waveStart', { wave }), 96]];
     if (warning) lines.push([warning, 64]);
-    this.banner = { lines, t: BANNER_TIME };
+    this.banner = { lines, story, t: story ? STORY_TIME : BANNER_TIME };
+    this.relayout();
+  }
+
+  /** A story line alone across the middle (the monk's, once the chapter boss fell). */
+  speak(story: StoryLine): void {
+    this.banner = { lines: [], story, t: STORY_TIME };
     this.relayout();
   }
 
@@ -265,6 +276,20 @@ export class RunHud implements Screen {
       l.y = y;
       box.addChild(l);
       y += size + 24;
+    }
+    const story = this.banner!.story;
+    if (story) {
+      const who = label(t(story.who), 44, COLORS.saffron, { stroke: { color: COLORS.outline, width: 8 } });
+      who.y = y + 16;
+      const say = label(t('story.quote', { text: t(story.say) }), 52, COLORS.text, {
+        stroke: { color: COLORS.outline, width: 8 },
+        wordWrap: true,
+        wordWrapWidth: f.w - 160,
+        breakWords: true,
+      });
+      say.anchor.set(0.5, 0);
+      say.y = who.y + 44;
+      box.addChild(who, say);
     }
     box.eventMode = 'none';
     this.bannerView = box;
