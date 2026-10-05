@@ -16,4 +16,5 @@ red cords, "not fire") and the ball is already on the canvas.
 
 The landscape boss first came out with a topknot and brown skin (`r1/cover_landscape_topknot.png`);
 `cover_landscape.png` is that cover edited with `cover_landscape_boss.txt` into a bald, grey-blue
-fallen monk.
+fallen monk (`r1/cover_landscape_nobeads.png`, which drew only a brooch), then with
+`cover_landscape_beads.txt` to hang a dark prayer bead necklace on him.
