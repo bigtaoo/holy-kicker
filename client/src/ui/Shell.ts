@@ -113,6 +113,12 @@ export class Shell {
     return this.game;
   }
 
+  /** Records a share from the host's menu, with the screen it was made from. */
+  shared(to: 'chat' | 'moments'): void {
+    const from = this.screen instanceof LobbyScreen ? 'lobby' : this.screen instanceof ResultsScreen ? 'results' : 'run';
+    this.net.track('share', { to, from });
+  }
+
   applyQuality(s: LevelSettings): void {
     this.quality = s;
     this.game?.applyQuality(s);

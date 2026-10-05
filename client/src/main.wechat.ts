@@ -11,11 +11,14 @@ import { installWeChatShare } from './platform/wechat/weChatShare';
 // Pixi's format detection calls document.createElement('video'); a mini-game has no
 // document, so detection is skipped (Assets.init must run before the first load).
 const platform = new WeChatPlatform();
-installWeChatShare();
 // debug builds (build:wechat:debug) leave a boot report on disk; release builds skip it
 const report = import.meta.env.MODE === 'development' ? watchBoot() : null;
 boot(platform, DEFAULT_SCENE, { skipDetections: true })
-  .then(({ app }) => report?.booted(app, platform.safeInsets()))
+  .then(({ app, shell }) => {
+    // the menu stays grey until the shell is up to record the share
+    installWeChatShare((to) => shell.shared(to));
+    report?.booted(app, platform.safeInsets());
+  })
   .catch((err) => {
     console.error('[holy-kicker] boot failed', err);
     report?.failed(err);
