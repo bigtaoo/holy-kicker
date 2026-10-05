@@ -37,9 +37,9 @@ export class CrazyGamesPlatform extends WebPlatform {
     this.audio = web && { ...web, onHostMute: (cb) => sdk.onMuteChange(cb) };
     this.ads = {
       rewardedAvailable: async () => sdk.isEnabled() && !(await sdk.hasAdblock()),
-      rewarded: () => sdk.requestAd('rewarded'),
-      midgame: async () => {
-        await sdk.requestAd('midgame');
+      rewarded: (started) => sdk.requestAd('rewarded', { adStarted: started }),
+      midgame: async (started) => {
+        await sdk.requestAd('midgame', { adStarted: started });
       },
     };
   }

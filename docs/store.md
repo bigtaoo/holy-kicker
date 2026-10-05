@@ -81,3 +81,31 @@ Covers are painted key art in the game's sticker style (see `docs/content.md` an
 - **Logo**: decided; the lettered "Holy Kicker" and 蹴鞠僧 in the sticker style (thick dark
   outline, flat saffron and gold, one hard shadow), set from SIL OFL fonts so the shipped logo
   needs no font licence.
+
+## CrazyGames QA (2026-10-05)
+
+The `npm run build:crazygames` bundle was checked against docs.crazygames.com (technical,
+gameplay, ads, quality and SDK game-module pages). It was served from a sub-path
+(`/games/holy-kicker/`) with the real SDK, which was 3.8.0 in its `local` environment.
+
+| Requirement | Result |
+|---|---|
+| ≤250 MB, ≤1,500 files, relative paths only | 7.8 MB in 120 files; nothing absolute in the bundle; loads from a sub-path |
+| ≤50 MB initial download (≤20 MB for the mobile homepage); ≤20 s to gameplay | The whole bundle is 7.8 MB; locally the first run starts about 0.5 s after the page opens (audio and chapters 2–5 load later) |
+| New users land in gameplay | The first launch goes straight into chapter 1, with the move hint |
+| loadingStart / loadingStop / gameplayStart / gameplayStop | All sent; pause, death, revive and results bracket play, and each change is sent once (`platform/brackets.ts`) |
+| happytime used sparingly | Only on a first chapter clear (a boss kill) |
+| Midgame ads only at breaks, never after the first run | Only results → lobby, from the second run on |
+| Mute during an ad, from when it starts until it ends; pause the game | Muted on `adStarted`; ads only play outside a run |
+| Rewarded: video icon, skip option the same size and colour, reward confirmed, none on `adError` | Double copper and revive both follow this; the copper line shows the doubled total |
+| Adblock: no penalty, no inert buttons | Rewarded offers are hidden when `hasAdblock` is true |
+| Portal `muteAudio` takes priority | Holds every sound while set (`?muteAudio=true` checked) |
+| English, SDK locale first | en and zh; the SDK locale is read before the browser's |
+| Legible from 800×450 to 1920×1080; desktop landscape | Portrait 3:4 play area with side bars; HUD and lobby text are readable at 800×450 |
+| No custom fullscreen button, no Escape, AZERTY-safe keys | None; movement reads physical key codes, so ZQSD works on AZERTY |
+| No page scroll or selection, safe areas | Arrow keys are cancelled; `user-select` and `touch-action` are set in `index.html`; safe-area insets are respected |
+| No external links; no personal data collected | None; the save is the SDK data module |
+| Username shown, no login screen | The lobby header shows the SDK username |
+
+Still to check on the portal itself: upload the zip to the developer portal's QA preview, then
+watch a real ad fill and a signed-in save carry over between devices.

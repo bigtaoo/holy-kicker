@@ -109,20 +109,23 @@ export class Sound {
     for (const { cue, count } of this.gate.flush(now)) this.voice(ctx, this.master, this.noise, cue, count, now);
   }
 
-  /** Wraps the host's ads so the game is silent while one plays. */
+  /** Wraps the host's ads so the game is silent while one plays: from the moment it is on
+   *  screen, not from the request, until it is over or failed. */
   muteDuring(ads: Ads): Ads {
-    const around = async <T>(work: () => Promise<T>): Promise<T> => {
-      this.hold('ad', true);
+    const around = async <T>(work: (started: () => void) => Promise<T>, started?: () => void): Promise<T> => {
       try {
-        return await work();
+        return await work(() => {
+          this.hold('ad', true);
+          started?.();
+        });
       } finally {
         this.hold('ad', false);
       }
     };
     return {
       rewardedAvailable: () => ads.rewardedAvailable(),
-      rewarded: () => around(() => ads.rewarded()),
-      midgame: () => around(() => ads.midgame()),
+      rewarded: (started) => around((s) => ads.rewarded(s), started),
+      midgame: (started) => around((s) => ads.midgame(s), started),
     };
   }
 

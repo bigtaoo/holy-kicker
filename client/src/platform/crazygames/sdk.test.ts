@@ -49,7 +49,10 @@ describe('CrazyGamesSdk', () => {
       },
     });
     await cg.init();
-    expect(await cg.requestAd('rewarded')).toBe(true);
+    let started = 0;
+    expect(await cg.requestAd('rewarded', { adStarted: () => started++ })).toBe(true);
+    // the game mutes on adStarted, so an unfilled ad never silences it
+    expect(started).toBe(1);
     mode = 'error';
     expect(await cg.requestAd('rewarded')).toBe(false);
     mode = 'throw';

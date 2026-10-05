@@ -74,16 +74,18 @@ export interface Portal {
 
 /**
  * Ads (docs/design.md "Ads and monetization"). Only called outside gameplay, so the game is
- * already stopped while one plays; the shell mutes the sound around them (Sound.muteDuring).
+ * already stopped while one plays. `started` runs when the ad is actually on screen (an unfilled
+ * request never calls it): the shell mutes the sound from then until the ad is over, as
+ * CrazyGames asks (Sound.muteDuring).
  */
 export interface Ads {
   /** Whether to offer a rewarded ad at all: false with an adblocker or no ad host, and then
    *  the offer is hidden rather than shown disabled. */
   rewardedAvailable(): Promise<boolean>;
   /** Plays a rewarded ad; true only when it finished and the reward may be paid. */
-  rewarded(): Promise<boolean>;
+  rewarded(started?: () => void): Promise<boolean>;
   /** An interstitial at a natural break; resolves when it is over or was not shown. */
-  midgame(): Promise<void>;
+  midgame(started?: () => void): Promise<void>;
 }
 
 /** For hosts without a portal. */
@@ -106,6 +108,12 @@ export const NO_ADS: Ads = {
  *  interstitial flows can be exercised without a portal. */
 export const FAKE_ADS: Ads = {
   rewardedAvailable: async () => true,
-  rewarded: () => new Promise((r) => setTimeout(() => r(true), 800)),
-  midgame: () => new Promise((r) => setTimeout(r, 400)),
+  rewarded: (started) => {
+    started?.();
+    return new Promise((r) => setTimeout(() => r(true), 800));
+  },
+  midgame: (started) => {
+    started?.();
+    return new Promise((r) => setTimeout(r, 400));
+  },
 };

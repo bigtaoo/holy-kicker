@@ -15,7 +15,8 @@ import { chooseTrack, doubleCopper, earnedSutras, settleRun, type Reward } from 
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, updateSettings } from '../meta/settings';
-import type { Ads, Platform } from '../platform/types';
+import { bracketed } from '../platform/brackets';
+import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
@@ -66,6 +67,8 @@ export class Shell {
   readonly sound: Sound;
   /** The host's ads, with the game silent while one plays. */
   private readonly ads: Ads;
+  /** The host's session hooks, each gameplay start or stop sent once. */
+  private readonly portal: Portal;
 
   constructor(
     private readonly app: Application,
@@ -80,6 +83,7 @@ export class Shell {
     const settings = loadSettings(platform.storage);
     this.sound = new Sound(platform, settings.volume, settings.music);
     this.ads = this.sound.muteDuring(platform.ads);
+    this.portal = bracketed(platform.portal);
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
     // coming back to a run mid-fight is unfair; it waits on the pause panel instead
@@ -92,7 +96,7 @@ export class Shell {
   start(direct = false): void {
     if (direct || !this.save.firstRunDone) this.play(this.scene.chapter || this.save.chapter);
     else this.showLobby();
-    this.platform.portal.loaded();
+    this.portal.loaded();
   }
 
   /** The current run, for dev console hooks. */
@@ -131,7 +135,7 @@ export class Shell {
     const now = Date.now();
     const save = startPatrol(fixPatrolClock(rollDay(this.save, now), now), now);
     if (save !== this.save) this.commit(save);
-    const lobby = new LobbyScreen(this.save, this.platform.portal.userName(), {
+    const lobby = new LobbyScreen(this.save, this.portal.userName(), {
       play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => {
         this.commit({ ...this.save, chapter });
@@ -236,14 +240,14 @@ export class Shell {
       pick: (index) => this.game?.pick(index),
     }, this.art.icons, this.keys);
     this.setScreen(this.hud);
-    this.platform.portal.gameplayStart();
+    this.portal.gameplayStart();
   }
 
   private setPaused(paused: boolean): void {
     if (!this.game) return;
     this.game.paused = paused;
-    if (paused) this.platform.portal.gameplayStop();
-    else this.platform.portal.gameplayStart();
+    if (paused) this.portal.gameplayStop();
+    else this.portal.gameplayStart();
   }
 
   private async revive(): Promise<boolean> {
@@ -276,14 +280,14 @@ export class Shell {
     this.game = null;
     this.hud = null;
     // the death panel already told the portal
-    if (!this.downShown) this.platform.portal.gameplayStop();
+    if (!this.downShown) this.portal.gameplayStop();
     const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings, evolved });
     const { reward } = settled;
     const now = Date.now();
     const save = bump(bump(bump(settled.save, now, 'runs', 1), now, 'waves', waves), now, 'kills', this.kills);
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);
-    if (reward.firstClear) this.platform.portal.celebrate();
+    if (reward.firstClear) this.portal.celebrate();
     this.showResults(reward, waves);
   }
 
@@ -347,12 +351,12 @@ export class Shell {
     }
     if (s.outcome === 'playing' && this.downShown) {
       this.downShown = false;
-      this.platform.portal.gameplayStart();
+      this.portal.gameplayStart();
     }
     if (s.outcome === 'won') this.endRun();
     else if (s.outcome === 'lost' && !this.downShown) {
       this.downShown = true;
-      this.platform.portal.gameplayStop();
+      this.portal.gameplayStop();
       // the offer appears once the host says an ad can play
       const revives = s.players[0].revives;
       hud.showDown(revives > 0 && this.freeRevives > 0 ? 'free' : 'none');
