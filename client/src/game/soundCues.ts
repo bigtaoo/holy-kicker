@@ -57,6 +57,10 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
       return 'bloom';
     case 'roar':
       return 'roar';
+    case 'bounce':
+      return 'thump';
+    case 'dodge':
+      return e.owner === local ? 'swish' : null;
     case 'bellUp':
       return e.owner === local ? 'bell' : null;
     case 'bellBreak':

@@ -203,6 +203,20 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
  * (docs/design.md "Content line"), granted by an achievement and handed to the run in
  * RunConfig.sutras.
  */
+/**
+ * The monk a run is played as (docs/content.md "Monks"), chosen in the lobby: his stats sit
+ * with the gear's at the bottom of the stat stack, and the fat monk and the novice each have a
+ * passive of their own (MONK_PASSIVE, systems/monks.ts).
+ */
+export type MonkId = 'kicker' | 'fat' | 'novice';
+export const MONK_IDS: readonly MonkId[] = ['kicker', 'fat', 'novice'];
+
+export const MONK_STATS: Readonly<Record<MonkId, StatBonus>> = {
+  kicker: {},
+  fat: { maxHp: 50, speed: -15 },
+  novice: { maxHp: -30, speed: 20, xp: 15 },
+};
+
 export type SutraId = 'lotus' | 'halo' | 'roar' | 'focus';
 export const SUTRA_IDS: readonly SutraId[] = ['lotus', 'halo', 'roar', 'focus'];
 

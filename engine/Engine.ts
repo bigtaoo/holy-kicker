@@ -20,12 +20,13 @@ import { bulletSystem, threatSystem, zoneSystem } from './systems/threats';
 import { emergeSystem, shooterSystem } from './systems/marsh';
 import { casterSystem, spawnSystem } from './systems/snow';
 import { beginWave, waveSystem } from './systems/waves';
+import { monkBonus } from './systems/monks';
 
 // The simulation: fixed 30 Hz steps over plain integer state, fed only by player commands.
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 27;
+export const ENGINE_VERSION = 28;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns',
@@ -105,7 +106,7 @@ export class Engine {
 function setup(s: SimState): void {
   const c = s.config;
   for (let i = 0; i < c.players; i++) {
-    const p = newPlayer(i, i * toFp(120), 0, HERO.hp, c.revives, c.relic, c.bonus);
+    const p = newPlayer(i, i * toFp(120), 0, HERO.hp, c.revives, c.relic, monkBonus(c.bonus, c.monk), c.monk);
     p.hp = p.maxHp = maxHpOf(p);
     s.players.push(p);
   }

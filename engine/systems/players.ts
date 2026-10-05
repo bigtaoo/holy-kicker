@@ -8,6 +8,7 @@ import { bowlLevel, pickCard, relicCooldown, relicLevel, stat } from './build';
 import { bowlInAir, throwBowl } from './bowl';
 import { bigTarget, bossIndex, kickTarget, launchBall, markOf, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
+import { bellyBounce, dodged } from './monks';
 import { breakBell } from './spells';
 import { fishStart, tap } from './fish';
 import { staffStart, sweep } from './staff';
@@ -76,6 +77,7 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   const p = s.players.find((q) => q.owner === owner);
   if (!p || p.dead || p.hurtCd > 0) return;
   if (breakBell(s, events, p)) return;
+  if (dodged(events, p)) return;
   // Focus keeps the hero untouchable a little longer
   p.hurtCd = Math.trunc((HERO.hurtCooldown * (100 + stat(p, 'guard'))) / 100);
   p.action = 'hurt';
@@ -83,7 +85,7 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   const dealt = s.config.waves > 0 ? Math.min(p.hp, chapterHurt(s.config.chapter, value, s.wave, s.config.hard)) : 0;
   p.hp -= dealt;
   events.push({ type: 'hurt', owner, value: dealt });
-  if (p.hp > 0) return;
+  if (p.hp > 0) return bellyBounce(s, events, p);
   p.dead = true;
   p.action = 'none';
   events.push({ type: 'heroDown', owner });

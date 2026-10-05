@@ -15,6 +15,10 @@
       "root": "art/ch5/"
     },
     {
+      "name": "monks",
+      "root": "art/monks/"
+    },
+    {
       "name": "audio",
       "root": "audio/"
     }

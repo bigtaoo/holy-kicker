@@ -111,6 +111,29 @@ first clear already changes how the game plays.
   chapter takes 807 s skilled and 830 s casual (ball 814 / 823), every skilled run won; one casual
   run without the Golden Bell fell at the last boss.
 
+## Monks (3)
+
+The monk is who plays the run; the relic is what he fights with, and any monk takes any relic.
+Chosen and bought in the lobby's monk panel (the avatar at the top left, `client/src/ui/monkPanel.ts`).
+The kicker is free; the others are bought once with jade (`balance.json` "monks"), which gives
+jade a long-term sink. A red dot on the avatar says one is affordable.
+
+| Monk | Price | Stats (`MONK_STATS`) | Passive (`MONK_PASSIVE`, `engine/systems/monks.ts`) |
+|---|---|---|---|
+| Kicker Monk 蹴鞠僧 | free | none | none: the all-rounder |
+| Fat Monk 胖和尚 | 500 jade | health +50 %, speed −15 % | Belly Bounce: every blow he takes hits everything within 300 for 150 % (the elite and the boss half) and throws the horde back 240 |
+| Little Novice 小沙弥 | 300 jade | health −30 %, speed +20 %, XP +15 % | Light Feet: while he runs, every 3rd blow misses him (and leaves him untouchable for the hurt cooldown, as a blow would) |
+
+- The monk's stats join the gear's and training's at the bottom of the stat stack (`monkBonus`),
+  so a −30 % health monk with +30 % health from gear has none left over.
+- Balance (`npm run balance -- 24 casual ch=3 bonus=attack:100,maxHp:120 monk=fat`): wins of 24,
+  ball / staff: kicker 8 / 10, fat (health +60 then) 9 / 13, novice 10 / 12; chapter 2 with light
+  gear (`bonus=attack:20,maxHp:20`): kicker 15, fat 19, novice 16. A side step, a little ahead
+  of the free kicker; the fat monk's health was cut to +50 % after this run.
+- Art (`art/monk/monks/README.md`): both are edit_image redraws of the hero's A-pose, split on
+  the hero's bones so they play his clips; the novice is drawn at 88 % of the hero's height.
+  Their rigs are the `monks` art pack (a WeChat subpackage), fetched before the first run as him.
+
 ## Spells (8) and evolutions
 
 Five spells are in the pool from the start; three are unlocked by sutras (achievements).

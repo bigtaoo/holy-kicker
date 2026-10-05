@@ -1,3 +1,4 @@
+import type { MonkId } from '@hk/engine';
 import { Assets, type Texture } from 'pixi.js';
 import type { Art } from './game/Game';
 import type { SheetMeta } from './game/mobAnim';
@@ -13,8 +14,10 @@ import { GHOST_DECO, MARSH_DECO, PEAK_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, t
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp, snowTex, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([
+  const [hero, monkIcons, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp, snowTex, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([
     loadTao(platform, 'art/hero'),
+    // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
+    loadDeco(platform, 'art/icons/monks'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
@@ -46,7 +49,7 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
     { ground: snowTex, deco: snowDeco, style: SNOW_DECO, mist: null },
-  ], boss, icons: icons.frames, marsh: { ghost, toad, toadKing, carp }, snow: { wolf, wolfLeader, wraith, skeleton, shard, witch }, ghost: null, peak: null };
+  ], monks: {}, boss, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: { ghost, toad, toadKing, carp }, snow: { wolf, wolfLeader, wraith, skeleton, shard, witch }, ghost: null, peak: null };
 }
 
 /**
@@ -82,6 +85,13 @@ export async function loadChapterArt(platform: Platform, scene: Pick<SceneOption
     art.stages[4] = { ground: cave, deco: caveDeco, style: PEAK_DECO, mist: null };
     art.peak = { monk, shadow, demon };
   }
+}
+
+/** Loads monk `monk`'s rig into `art` (the kicker's is always there) from the 'monks' art pack. */
+export async function loadMonkArt(platform: Platform, art: Art, monk: MonkId): Promise<void> {
+  if (monk === 'kicker' || art.monks[monk]) return;
+  await platform.loadPack('monks');
+  art.monks[monk] = await loadTao(platform, `art/monks/${monk}`);
 }
 
 /** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py). */

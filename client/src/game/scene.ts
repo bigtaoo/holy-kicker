@@ -2,7 +2,7 @@
 // &hero=top|overfx|sort&ring=1&elite=1, plus types/page/mobres for the mob-type stress test) so readability variants can be compared side by side. WeChat and a
 // bare URL get the defaults.
 
-import { RELIC_IDS, SPELL_KINDS, type RelicId, type SpellKind } from '@hk/engine';
+import { MONK_IDS, RELIC_IDS, SPELL_KINDS, type MonkId, type RelicId, type SpellKind } from '@hk/engine';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
 import { GEM_PALETTES, type GemPalette } from './dropView';
@@ -97,6 +97,8 @@ export interface SceneOptions {
   bare: boolean;
   /** Dev: the run plays hard mode whatever the lobby shows (?hard). */
   hard: boolean;
+  /** Dev: the monk for every run, whatever the save says (?monk=fat); null keeps the save's. */
+  monk: MonkId | null;
   /** Dev: the balance bot plays (?autoplay), for videos and soak tests. */
   autoplay: boolean;
   /** Dev: records this many seconds of the first run to a video file (?record=20); 0 off. */
@@ -137,6 +139,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   sutras: false,
   bare: false,
   hard: false,
+  monk: null,
   autoplay: false,
   record: 0,
 };
@@ -193,6 +196,7 @@ export function parseScene(query: string): SceneOptions {
     sutras: q.has('sutras'),
     bare: q.has('bare'),
     hard: q.has('hard'),
+    monk: MONK_IDS.find((m) => m === q.get('monk')) ?? DEFAULT_SCENE.monk,
     autoplay: q.has('autoplay'),
     record: num(q.get('record'), 1, 120, DEFAULT_SCENE.record),
   };

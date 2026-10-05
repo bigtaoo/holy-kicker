@@ -1,6 +1,6 @@
 import { FP, perTick, TICK_RATE, ticks, toFp } from './math/fixed';
 import { degToBrad } from './math/trig';
-import type { RelicId, StatBonus, SutraId } from './content';
+import type { MonkId, RelicId, StatBonus, SutraId } from './content';
 
 // Run configuration (what a match is set up with, part of a replay) and the tuning numbers,
 // all converted once at load into FP units per tick and whole ticks.
@@ -35,6 +35,8 @@ export interface RunConfig {
   revives: number;
   /** The relic every hero plays the run with. */
   relic: RelicId;
+  /** The monk every hero plays the run as (MONK_STATS, MONK_PASSIVE). */
+  monk: MonkId;
   /** Sutras the player has: their spells and passives join the level-up pool. */
   sutras: readonly SutraId[];
   /** The chapter played (1-based): which kinds of mob join the horde (CHAPTER_MOBS). */
@@ -47,7 +49,7 @@ export interface RunConfig {
 
 export const DEFAULT_RUN: RunConfig = {
   seed: 1, players: 1, mobs: 40, sep: 75, queue: true, heroEase: 379, elite: true, boss: true,
-  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', sutras: [], chapter: 1, bonus: {}, hard: false,
+  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', monk: 'kicker', sutras: [], chapter: 1, bonus: {}, hard: false,
 };
 
 /** The smooth hero ease, 1 - exp(-tick / 0.07 s), as a constant so no exp runs in the sim. */
@@ -72,6 +74,18 @@ export const HERO = {
   /** After a revive: untouchable this long, and the horde this close is sent back to the ring. */
   reviveGuard: ticks(2),
   reviveClear: toFp(600),
+};
+
+/**
+ * The monks' passives (systems/monks.ts). Fat monk, Belly Bounce: every blow he takes bounces
+ * the enemies within `radius` back by `knockback` and hits them for `damage` percent. Novice,
+ * Light Feet: while he runs, every `dodgeEvery`th blow misses him.
+ */
+export const MONK_PASSIVE = {
+  radius: toFp(300),
+  knockback: toFp(240),
+  damage: 150,
+  dodgeEvery: 3,
 };
 
 /** Health the hero loses per blow, by source (at most one blow per HERO.hurtCooldown). */

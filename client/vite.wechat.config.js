@@ -30,7 +30,8 @@ const stripWebGPU = {
 // The main package is capped at 4 MB, so each later chapter's art (public/art/ch<n>) is a
 // subpackage of its own, named ch<n>: game.json declares it and its root gets the game.js
 // entry WeChat requires; the game fetches it with wx.loadSubpackage before the chapter's run
-// (art.ts loadChapterArt). The recorded sounds and music (public/audio) are one more
+// (art.ts loadChapterArt). The bought monks' rigs (public/art/monks) are a pack the same way,
+// 'monks' (art.ts loadMonkArt). The recorded sounds and music (public/audio) are one more
 // subpackage, 'audio', which Sound loads at boot. build/checkWeChatPackage.mjs budgets each package.
 const copyArt = {
   name: 'copy-art',
@@ -39,8 +40,8 @@ const copyArt = {
     const to = fileURLToPath(new URL('./wechat/art', import.meta.url));
     rmSync(to, { recursive: true, force: true });
     cpSync(from, to, { recursive: true });
-    const packs = readdirSync(to).filter((d) => /^ch\d+$/.test(d)).sort();
-    for (const name of packs) writeFileSync(`${to}/${name}/game.js`, `// ${name}: chapter art, loaded by wx.loadSubpackage\n`);
+    const packs = readdirSync(to).filter((d) => /^(ch\d+|monks)$/.test(d)).sort();
+    for (const name of packs) writeFileSync(`${to}/${name}/game.js`, `// ${name}: an art pack, loaded by wx.loadSubpackage\n`);
     const gameJson = fileURLToPath(new URL('./wechat/game.json', import.meta.url));
     const game = JSON.parse(readFileSync(gameJson, 'utf8'));
     game.subpackages = packs.map((name) => ({ name, root: `art/${name}/` }));

@@ -1,4 +1,4 @@
-import { RELIC_IDS, type RelicId } from '@hk/engine';
+import { MONK_IDS, RELIC_IDS, type MonkId, type RelicId } from '@hk/engine';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { newDaily, parseDaily, type Daily } from './daily';
@@ -50,6 +50,9 @@ export interface SaveData {
   hardCleared: number;
   hardBest: number[];
   hardChests: number[];
+  /** The monk played as (monks.ts), and the monks owned, bit i for MONK_IDS[i] (the kicker always). */
+  monk: MonkId;
+  monks: number;
 }
 
 export function newSave(): SaveData {
@@ -58,7 +61,7 @@ export function newSave(): SaveData {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
-    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(),
+    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), monk: 'kicker', monks: 1,
   };
 }
 
@@ -83,6 +86,12 @@ function inventory(v: unknown): Inventory {
   return out;
 }
 
+/** Whether `id` names a monk in the `monks` bits. */
+function owned(monks: number, id: unknown): boolean {
+  const i = MONK_IDS.indexOf(id as MonkId);
+  return i >= 0 && (monks & (1 << i)) !== 0;
+}
+
 /**
  * A valid save from stored text. Missing or broken text gives a new save; every field is
  * checked on its own, so one bad value does not throw away the rest of the progress.
@@ -105,6 +114,7 @@ export function parseSave(text: string | null): SaveData {
   // hard mode only once every chapter is cleared
   const hardCleared = cleared >= BALANCE.chapters ? int(raw.hardCleared, 0, BALANCE.chapters, 0) : 0;
   const hard = cleared >= BALANCE.chapters && raw.hard === true;
+  const monks = int(raw.monks, 0, (1 << MONK_IDS.length) - 1, 1) | 1;
   return {
     version: SAVE_VERSION,
     firstRunDone: raw.firstRunDone === true,
@@ -132,5 +142,7 @@ export function parseSave(text: string | null): SaveData {
     hardCleared,
     hardBest: ints(raw.hardBest, 0, BALANCE.waves),
     hardChests: ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1),
+    monk: owned(monks, raw.monk) ? (raw.monk as MonkId) : 'kicker',
+    monks,
   };
 }

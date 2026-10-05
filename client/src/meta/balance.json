@@ -87,5 +87,6 @@
     "copper": 100,
     "jade": 10,
     "bonusJade": 20
-  }
+  },
+  "monks": { "kicker": 0, "fat": 500, "novice": 300 }
 }

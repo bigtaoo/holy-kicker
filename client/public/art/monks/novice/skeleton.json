@@ -1,0 +1,1873 @@
+{
+ "version": 1,
+ "name": "novice",
+ "height": 259.2,
+ "bones": [
+  {
+   "id": "root",
+   "parent": null,
+   "x": 0,
+   "y": 0
+  },
+  {
+   "id": "leg_b_thigh",
+   "parent": "root",
+   "x": -16.96,
+   "y": -61.44
+  },
+  {
+   "id": "leg_b_shin",
+   "parent": "leg_b_thigh",
+   "x": 0.96,
+   "y": 32.64
+  },
+  {
+   "id": "leg_f_thigh",
+   "parent": "root",
+   "x": 16.64,
+   "y": -61.44
+  },
+  {
+   "id": "leg_f_shin",
+   "parent": "leg_f_thigh",
+   "x": 3.2,
+   "y": 32.64
+  },
+  {
+   "id": "skirt",
+   "parent": "root",
+   "x": -4.16,
+   "y": -82.24
+  },
+  {
+   "id": "torso",
+   "parent": "root",
+   "x": -4.16,
+   "y": -82.24
+  },
+  {
+   "id": "knot",
+   "parent": "torso",
+   "x": -6.4,
+   "y": 0.0
+  },
+  {
+   "id": "head",
+   "parent": "torso",
+   "x": -3.2,
+   "y": -62.4
+  },
+  {
+   "id": "face",
+   "parent": "head",
+   "x": 0.0,
+   "y": 0.0
+  },
+  {
+   "id": "arm_f_upper",
+   "parent": "torso",
+   "x": 25.6,
+   "y": -51.2
+  },
+  {
+   "id": "arm_b_upper",
+   "parent": "torso",
+   "x": -33.6,
+   "y": -51.2
+  },
+  {
+   "id": "sandal_b",
+   "parent": "leg_b_shin",
+   "x": -2.56,
+   "y": 15.36
+  },
+  {
+   "id": "sandal_f",
+   "parent": "leg_f_shin",
+   "x": 3.2,
+   "y": 15.36
+  },
+  {
+   "id": "skirt_tail",
+   "parent": "skirt",
+   "x": 25.6,
+   "y": 4.8
+  },
+  {
+   "id": "arm_f_lower",
+   "parent": "arm_f_upper",
+   "x": 17.6,
+   "y": 27.2
+  },
+  {
+   "id": "arm_b_lower",
+   "parent": "arm_b_upper",
+   "x": -11.2,
+   "y": 27.2
+  },
+  {
+   "id": "hand_f",
+   "parent": "arm_f_lower",
+   "x": 9.6,
+   "y": 30.4
+  },
+  {
+   "id": "hand_b",
+   "parent": "arm_b_lower",
+   "x": -4.8,
+   "y": 28.8
+  }
+ ],
+ "slots": [
+  {
+   "id": "hand_b",
+   "bone": "hand_b",
+   "image": "hand_b",
+   "x": -9.92,
+   "y": -6.72
+  },
+  {
+   "id": "arm_b_lower",
+   "bone": "arm_b_lower",
+   "image": "arm_b_lower",
+   "x": -14.72,
+   "y": -2.88
+  },
+  {
+   "id": "arm_b_upper",
+   "bone": "arm_b_upper",
+   "image": "arm_b_upper",
+   "x": -19.84,
+   "y": -7.68
+  },
+  {
+   "id": "leg_b_thigh",
+   "bone": "leg_b_thigh",
+   "image": "leg_b_thigh",
+   "x": -20.16,
+   "y": -4.48
+  },
+  {
+   "id": "sandal_b",
+   "bone": "sandal_b",
+   "image": "sandal_b",
+   "x": -26.24,
+   "y": -2.88
+  },
+  {
+   "id": "leg_b_shin",
+   "bone": "leg_b_shin",
+   "image": "leg_b_shin",
+   "x": -14.4,
+   "y": 1.6
+  },
+  {
+   "id": "leg_f_thigh",
+   "bone": "leg_f_thigh",
+   "image": "leg_f_thigh",
+   "x": -16.96,
+   "y": -4.48
+  },
+  {
+   "id": "sandal_f",
+   "bone": "sandal_f",
+   "image": "sandal_f",
+   "x": -16.64,
+   "y": -2.88
+  },
+  {
+   "id": "leg_f_shin",
+   "bone": "leg_f_shin",
+   "image": "leg_f_shin",
+   "x": -14.08,
+   "y": 1.6
+  },
+  {
+   "id": "skirt_tail",
+   "bone": "skirt_tail",
+   "image": "skirt_tail",
+   "x": -9.28,
+   "y": -1.92
+  },
+  {
+   "id": "skirt",
+   "bone": "skirt",
+   "image": "skirt",
+   "x": -40.64,
+   "y": -5.44
+  },
+  {
+   "id": "torso",
+   "bone": "torso",
+   "image": "torso",
+   "x": -43.84,
+   "y": -67.52
+  },
+  {
+   "id": "knot",
+   "bone": "knot",
+   "image": "knot",
+   "x": -20.48,
+   "y": -9.92
+  },
+  {
+   "id": "head",
+   "bone": "head",
+   "image": "head",
+   "x": -57.28,
+   "y": -114.56
+  },
+  {
+   "id": "face",
+   "bone": "face",
+   "image": "face",
+   "x": -49.28,
+   "y": -68.48
+  },
+  {
+   "id": "hand_f",
+   "bone": "hand_f",
+   "image": "hand_f",
+   "x": -14.72,
+   "y": -6.4
+  },
+  {
+   "id": "arm_f_lower",
+   "bone": "arm_f_lower",
+   "image": "arm_f_lower",
+   "x": -11.52,
+   "y": -10.24
+  },
+  {
+   "id": "arm_f_upper",
+   "bone": "arm_f_upper",
+   "image": "arm_f_upper",
+   "x": -9.92,
+   "y": -11.84
+  }
+ ],
+ "images": {
+  "arm_b_lower": {
+   "x": 861,
+   "y": 2,
+   "w": 30,
+   "h": 32
+  },
+  "arm_b_upper": {
+   "x": 825,
+   "y": 2,
+   "w": 34,
+   "h": 40
+  },
+  "arm_f_lower": {
+   "x": 786,
+   "y": 2,
+   "w": 37,
+   "h": 41
+  },
+  "arm_f_upper": {
+   "x": 664,
+   "y": 2,
+   "w": 41,
+   "h": 44
+  },
+  "face": {
+   "x": 221,
+   "y": 2,
+   "w": 91,
+   "h": 66
+  },
+  "face_hurt": {
+   "x": 314,
+   "y": 2,
+   "w": 91,
+   "h": 66
+  },
+  "face_strain": {
+   "x": 407,
+   "y": 2,
+   "w": 91,
+   "h": 66
+  },
+  "hand_b": {
+   "x": 922,
+   "y": 2,
+   "w": 25,
+   "h": 26
+  },
+  "hand_f": {
+   "x": 893,
+   "y": 2,
+   "w": 27,
+   "h": 29
+  },
+  "head": {
+   "x": 2,
+   "y": 2,
+   "w": 124,
+   "h": 120
+  },
+  "knot": {
+   "x": 590,
+   "y": 2,
+   "w": 41,
+   "h": 47
+  },
+  "leg_b_shin": {
+   "x": 38,
+   "y": 124,
+   "w": 26,
+   "h": 17
+  },
+  "leg_b_thigh": {
+   "x": 707,
+   "y": 2,
+   "w": 39,
+   "h": 41
+  },
+  "leg_f_shin": {
+   "x": 66,
+   "y": 124,
+   "w": 28,
+   "h": 17
+  },
+  "leg_f_thigh": {
+   "x": 748,
+   "y": 2,
+   "w": 36,
+   "h": 41
+  },
+  "sandal_b": {
+   "x": 949,
+   "y": 2,
+   "w": 44,
+   "h": 19
+  },
+  "sandal_f": {
+   "x": 2,
+   "y": 124,
+   "w": 34,
+   "h": 19
+  },
+  "skirt": {
+   "x": 500,
+   "y": 2,
+   "w": 88,
+   "h": 52
+  },
+  "skirt_tail": {
+   "x": 633,
+   "y": 2,
+   "w": 29,
+   "h": 44
+  },
+  "torso": {
+   "x": 128,
+   "y": 2,
+   "w": 91,
+   "h": 69
+  }
+ },
+ "variants": {
+  "face": [
+   "face",
+   "face_hurt",
+   "face_strain"
+  ]
+ },
+ "animations": {
+  "idle": {
+   "duration": 1.6,
+   "loop": true,
+   "bones": {
+    "torso": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.8,
+       "v": [
+        -2
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 1.6,
+       "v": [
+        0
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "head": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.8,
+       "v": [
+        3
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 1.6,
+       "v": [
+        0
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "arm_b_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        4
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.8,
+       "v": [
+        7
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 1.6,
+       "v": [
+        4
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "arm_f_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -4
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.8,
+       "v": [
+        -7
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 1.6,
+       "v": [
+        -4
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "skirt_tail": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.8,
+       "v": [
+        6
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 1.6,
+       "v": [
+        0
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "root": {
+     "translate": [
+      {
+       "t": 0,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.8,
+       "v": [
+        0.0,
+        1.92
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 1.6,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    }
+   }
+  },
+  "run": {
+   "duration": 0.5,
+   "loop": true,
+   "bones": {
+    "torso": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -4
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        4
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        -4
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "head": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        5
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -6
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        5
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "knot": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        8
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        8
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "arm_b_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        22
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -22
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        22
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "arm_b_lower": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -15
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        15
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        -15
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "hand_b": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        -10
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "arm_f_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -22
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        22
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        -22
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "arm_f_lower": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        20
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -20
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        20
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "hand_f": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "leg_b_thigh": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        20
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -18
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        20
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "leg_b_shin": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -20
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        25
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        -20
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "sandal_b": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "leg_f_thigh": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -18
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        20
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        -18
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "leg_f_shin": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        15
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -20
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        15
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "sandal_f": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        -10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        -10
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "skirt": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        3
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -3
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        3
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "skirt_tail": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        15
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        -12
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        15
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    },
+    "root": {
+     "translate": [
+      {
+       "t": 0,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.125,
+       "v": [
+        0.0,
+        -5.76
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.25,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.375,
+       "v": [
+        0.0,
+        -5.76
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.5,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-in-out"
+      }
+     ]
+    }
+   }
+  },
+  "kick": {
+   "duration": 0.4,
+   "loop": false,
+   "bones": {
+    "torso": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        -6
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        12
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        12
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "head": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        4
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        -6
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        -6
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "leg_b_thigh": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        -35
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        80
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        80
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "leg_b_shin": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        45
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        -5
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        -5
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "sandal_b": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        10
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        -25
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        -25
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "leg_f_thigh": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        5
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        -8
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        -8
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_f_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        25
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        -50
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        -50
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_f_lower": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        -20
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        30
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        30
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_b_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        -30
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        40
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        40
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_b_lower": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        20
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        -30
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        -30
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "skirt": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        -3
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        6
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        6
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "skirt_tail": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        -10
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        25
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        25
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "leg_f_shin": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        5
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        5
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "knot": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        10
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "root": {
+     "translate": [
+      {
+       "t": 0,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.1,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-in"
+      },
+      {
+       "t": 0.18,
+       "v": [
+        0.0,
+        -3.2
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.26,
+       "v": [
+        0.0,
+        -3.2
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.4,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    }
+   }
+  },
+  "hurt": {
+   "duration": 0.35,
+   "loop": false,
+   "bones": {
+    "torso": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        14
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "head": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        10
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_f_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        45
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_f_lower": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        -25
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_b_upper": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        50
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "arm_b_lower": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        -30
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "leg_f_thigh": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        12
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "leg_b_thigh": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        -6
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "skirt": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        4
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "skirt_tail": {
+     "rotate": [
+      {
+       "t": 0,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        -15
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    },
+    "root": {
+     "translate": [
+      {
+       "t": 0,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-out"
+      },
+      {
+       "t": 0.08,
+       "v": [
+        4.48,
+        -2.56
+       ],
+       "e": "ease-in-out"
+      },
+      {
+       "t": 0.35,
+       "v": [
+        0.0,
+        0.0
+       ],
+       "e": "ease-out"
+      }
+     ]
+    }
+   }
+  }
+ }
+}

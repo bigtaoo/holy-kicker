@@ -18,6 +18,10 @@ export type SimEvent =
   /** A player took `value` damage (0 in the sandbox, where heroes cannot die). */
   | { type: 'hurt'; owner: number; value: number }
   | { type: 'heroDown'; owner: number }
+  /** The fat monk's belly bounced the enemies within `radius` of (x, y) back. */
+  | { type: 'bounce'; owner: number; x: number; y: number; radius: number }
+  /** A blow missed the running novice. */
+  | { type: 'dodge'; owner: number }
   | { type: 'revive'; owner: number }
   /** Damage dealt. `ball` is set for a ball hit, at the ball's position. */
   | { type: 'hit'; kind: TargetKind; index: number; x: number; y: number; value: number; crit: boolean; ball: boolean; bx: number; by: number }

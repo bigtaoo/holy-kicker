@@ -7,12 +7,14 @@ import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
 import { gritBonus } from '../meta/loadout';
+import { buyMonk, chooseMonk, monkAffordable } from '../meta/monks';
 import { train } from '../meta/training';
 import { iconSprite, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
 import { dot, EconomyUi, shopHeight, shopWaiting } from './lobbyEconomy';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
+import { monkPanel } from './monkPanel';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
 import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
@@ -55,6 +57,7 @@ export class LobbyScreen implements Screen {
   readonly view = new Container();
   private tab: Tab = 'play';
   private settingsOpen = false;
+  private monksOpen = false;
   /** The Codex entry shown in detail. */
   private codexPick: EvolveId | null = null;
   /** The gear slot open in detail, the training node shown, the merge effect playing. */
@@ -132,7 +135,29 @@ export class LobbyScreen implements Screen {
         },
       }));
     }
+    if (this.monksOpen) this.view.addChild(this.monkPanel(f));
     if (this.merging) this.view.addChild(this.merging.view);
+  }
+
+  /** The monk panel over the lobby: buying a monk plays him at once. */
+  private monkPanel(f: UiFrame): Container {
+    return monkPanel(f.w, f.h, this.save, this.icons, {
+      choose: (id) => {
+        this.change(chooseMonk(this.save, id));
+        this.relayout();
+      },
+      buy: (id) => {
+        const next = buyMonk(this.save, id);
+        if (!next) return this.showToast(t('shop.noJade'));
+        this.change(next);
+        this.relayout();
+        this.showToast(t('monk.joined', { name: t(`monk.${id}.name`) }));
+      },
+      close: () => {
+        this.monksOpen = false;
+        this.relayout();
+      },
+    });
   }
 
   update(dt: number): void {
@@ -223,7 +248,25 @@ export class LobbyScreen implements Screen {
   private topBar(w: number): void {
     // the bars run on into the safe-area bands above and below the frame
     const bar = new Graphics().rect(0, -BLEED, w, TOP_H + BLEED).fill(COLORS.panel);
-    const avatar = new Graphics().circle(90, TOP_H / 2, 50).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 });
+    // the avatar is the monk played as; it opens the monk panel
+    const avatar = new Container();
+    avatar.position.set(90, TOP_H / 2);
+    avatar.addChild(new Graphics().circle(0, 0, 58).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 }));
+    // the portrait's head and shoulders, cut to the circle
+    const face = iconSprite(this.icons, `monk_${this.save.monk}`, 230);
+    if (face) {
+      face.y = 62;
+      const mask = new Graphics().circle(0, 0, 53).fill(0xffffff);
+      face.mask = mask;
+      avatar.addChild(face, mask);
+    }
+    if (monkAffordable(this.save)) avatar.addChild(dot(44, -44));
+    avatar.eventMode = 'static';
+    avatar.cursor = 'pointer';
+    avatar.on('pointertap', () => {
+      this.monksOpen = true;
+      this.relayout();
+    });
     const name = fit(label(this.userName ?? t('lobby.guest'), 44, COLORS.text, { align: 'left' }), 300);
     name.anchor.set(0, 0.5);
     name.position.set(160, TOP_H / 2 - 24);

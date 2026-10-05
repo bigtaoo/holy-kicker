@@ -22,6 +22,9 @@ const GHOST: RunConfig = { ...MARSH, chapter: 4 };
 const PEAK: RunConfig = { ...MARSH, chapter: 5 };
 /** Hard mode on chapter 5: HARD's health and hurt, and three elites on wave 10. */
 const HARD_PEAK: RunConfig = { ...PEAK, hard: true };
+/** The other monks: their stats and passives (systems/monks.ts). */
+const FAT: RunConfig = { ...SNOW, monk: 'fat' };
+const NOVICE: RunConfig = { ...SNOW, monk: 'novice' };
 
 /** A scripted stick: circles, stops and dashes, the same for every run; takes any level-up card. */
 function stick(tick: number, owner = 0): PlayerCommand {
@@ -90,8 +93,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-05 for ENGINE_VERSION 27 (hard mode; the normal chapters as in 26). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(27);
+    // Recorded 2026-10-05 for ENGINE_VERSION 28 (the monks). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(28);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -100,6 +103,8 @@ describe('Engine', () => {
     expect(run(PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_PEAK);
     expect(run(HARD_PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_HARD);
     expect(GOLDEN_HARD).not.toBe(GOLDEN_PEAK);
+    expect(run(FAT, 4800, 4800).hashes[0]).toBe(GOLDEN_FAT);
+    expect(run(NOVICE, 4800, 4800).hashes[0]).toBe(GOLDEN_NOVICE);
   });
 
   it('plays a chapter the same way twice', () => {
@@ -114,10 +119,12 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 926060662;
-const GOLDEN_CHAPTER = 3735409988;
-const GOLDEN_MARSH = 2146469689;
-const GOLDEN_SNOW = 3079788159;
-const GOLDEN_GHOST = 3820211288;
-const GOLDEN_PEAK = 4081783956;
-const GOLDEN_HARD = 3958871344;
+const GOLDEN = 1010763723;
+const GOLDEN_CHAPTER = 1719824153;
+const GOLDEN_MARSH = 847737016;
+const GOLDEN_SNOW = 2330683014;
+const GOLDEN_GHOST = 2760094641;
+const GOLDEN_PEAK = 675144953;
+const GOLDEN_HARD = 3400573475;
+const GOLDEN_FAT = 2922641654;
+const GOLDEN_NOVICE = 3160508817;

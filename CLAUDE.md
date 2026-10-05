@@ -51,7 +51,8 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   `?mobs=`) runs the engine sandbox: a fixed horde and a hero who cannot die, for stress tests.
   `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; mid-boss 25), `?chapter=N` plays chapter N; `?relic=staff` (or `fish`, `beads`, `bowl`) plays
   the run with that relic whatever the save says; `?sutras` gives every run all four sutras;
-  `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode.
+  `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode;
+  `?monk=fat` (or `novice`) plays as that monk whatever the save says.
   `?autoplay` lets the balance bot play; `?record=SECONDS` records the run to a 1080x1920 video (`src/dev/recorder.ts`).
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.

@@ -22,6 +22,15 @@ export const en = {
     hard: 'Hard',
     hardTitle: 'Hard {n}: {name}',
   },
+  monk: {
+    title: 'Monks',
+    play: 'Play as him',
+    playing: 'Playing',
+    joined: '{name} joined you!',
+    kicker: { name: 'Kicker Monk', role: 'All-rounder: no strengths, no weaknesses', stats: 'Balanced' },
+    fat: { name: 'Fat Monk', role: 'Belly Bounce: every blow he takes bounces nearby foes away', stats: 'Health +{hp}%, speed −{speed}%' },
+    novice: { name: 'Little Novice', role: 'Light Feet: on the run, 1 in {n} blows misses him', stats: 'Health −{hp}%, speed +{speed}%, XP +{xp}%' },
+  },
   tab: {
     shop: 'Shop',
     gear: 'Gear',

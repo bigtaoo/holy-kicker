@@ -1,7 +1,7 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
   beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
-  type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
+  type MonkId, type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
@@ -46,11 +46,13 @@ import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, stickSpri
 // (FixedStep), draws every sim body interpolated between its last two tick positions, and
 // turns the sim's events into animations, effects and numbers.
 
-import type { Art } from './artTypes';
+import { monkRig, type Art } from './artTypes';
 
 export type { Art, GhostArt, PeakArt } from './artTypes';
 
 const HERO_HEIGHT = 120;
+/** Each monk's height, percent of HERO_HEIGHT: the novice is a small boy. */
+const MONK_HEIGHT: Record<MonkId, number> = { kicker: 100, fat: 100, novice: 88 };
 export const STICK_RADIUS = 70;
 /** Seconds the hero's red hurt flash takes to fade. */
 const HURT_FLASH = 0.35;
@@ -73,6 +75,8 @@ export interface RunSetup {
   sutras: readonly SutraId[];
   bonus?: StatBonus;
   hard?: boolean;
+  /** The monk played as (the kicker by default); his rig must be loaded (art.ts loadMonkArt). */
+  monk?: MonkId;
 }
 
 /** The run a scene sets up: what the engine simulates. */
@@ -82,7 +86,7 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
     waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras, chapter: setup.chapter,
-    bonus: setup.bonus ?? {}, hard: setup.hard ?? false,
+    bonus: setup.bonus ?? {}, hard: setup.hard ?? false, monk: setup.monk ?? 'kicker',
   };
 }
 
@@ -164,7 +168,8 @@ export class Game {
     this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist) : null;
     if (this.mist) this.world.addChild(this.mist.view);
     const shadowTex = shadowTexture(app.renderer);
-    this.hero = new Hero(art.hero, HERO_HEIGHT);
+    const monk = setup.monk ?? 'kicker';
+    this.hero = new Hero(monkRig(art, monk), Math.round((HERO_HEIGHT * MONK_HEIGHT[monk]) / 100));
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view, this.healthBar.view);
     this.healthBar.view.visible = chapter;
     if (scene.ring) this.hero.view.addChildAt(makeRing(app.renderer, 0xffb030), 0);
@@ -399,6 +404,14 @@ export class Game {
         case 'roar':
           this.sutras.roar(e.x / FP, e.y / FP, e.brad, e.radius / FP, e.full);
           break;
+        case 'bounce':
+          this.sutras.bounce(e.x / FP, e.y / FP, e.radius / FP);
+          break;
+        case 'dodge': {
+          const p = s.players.find((q) => q.owner === e.owner);
+          if (p) this.sutras.dodge(p.x / FP, p.y / FP);
+          break;
+        }
         case 'bellUp':
           if (e.owner === LOCAL) this.spells.bellUp();
           break;

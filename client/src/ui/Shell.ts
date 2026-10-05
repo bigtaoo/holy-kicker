@@ -18,7 +18,7 @@ import { loadSettings, updateSettings } from '../meta/settings';
 import type { Ads, Platform } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import { eventCue } from '../game/soundCues';
-import { loadChapterArt } from '../art';
+import { loadChapterArt, loadMonkArt } from '../art';
 import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
@@ -177,11 +177,12 @@ export class Shell {
     this.showLobby(true);
   }
 
-  /** Starts a run of `chapter` once its art is in (a later chapter's pack may need fetching). */
+  /** Starts a run of `chapter` once its art is in (a later chapter's pack or a monk's rig may need fetching). */
   private play(chapter: number): void {
     if (this.loading) return;
     this.loading = true;
-    loadChapterArt(this.platform, this.scene, this.art, chapter).then(
+    const monk = this.scene.monk ?? this.save.monk;
+    Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)]).then(
       () => {
         this.loading = false;
         this.startRun(chapter);
@@ -209,6 +210,7 @@ export class Shell {
       sutras: this.scene.sutras ? SUTRA_IDS : earnedSutras(this.save),
       bonus: this.scene.bare ? {} : bonus,
       hard: this.hard,
+      monk: this.scene.monk ?? this.save.monk,
     });
     this.shownWave = -1;
     this.downShown = false;

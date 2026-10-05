@@ -24,6 +24,15 @@ export const zh: Table<typeof en> = {
     hard: '困难',
     hardTitle: '困难 {n}：{name}',
   },
+  monk: {
+    title: '武僧',
+    play: '出战',
+    playing: '出战中',
+    joined: '{name}加入了！',
+    kicker: { name: '蹴鞠僧', role: '均衡：没有长处，也没有短板', stats: '均衡' },
+    fat: { name: '胖和尚', role: '肚皮弹：每次挨打，都把身边的敌人弹开', stats: '生命 +{hp}%，移速 −{speed}%' },
+    novice: { name: '小沙弥', role: '轻功：跑动时，每 {n} 次攻击闪开 1 次', stats: '生命 −{hp}%，移速 +{speed}%，经验 +{xp}%' },
+  },
   tab: {
     shop: '商店',
     gear: '装备',

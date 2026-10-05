@@ -7,7 +7,9 @@ import { SHADOW_Z } from './shadow';
 // on the ground (gold for the Lotus Path) and a ring of petals opening where one blooms. Halo
 // Beam: the hero's beams drawn from his chest out to their length, over the horde, turning
 // with the sim's angle. Lion's Roar: three sound waves rolling out through the cone (all the
-// way round for the Thunder Roar).
+// way round for the Thunder Roar). The monks' passives (engine systems/monks.ts) use the same
+// bursts: the fat monk's Belly Bounce rolls saffron rings out over the ground, and the
+// novice's dodge leaves white speed streaks either side of him.
 
 const TAU = Math.PI * 2;
 const BRADS = 65536;
@@ -20,6 +22,9 @@ const BEAM = 0xfff0b8;
 const CHEST = 60;
 const BLOOM_LIFE = 0.45;
 const ROAR_LIFE = 0.4;
+const BOUNCE = 0xffb030;
+const BOUNCE_LIFE = 0.35;
+const DODGE_LIFE = 0.3;
 /** Ground effects are drawn squashed like the spell fields (spellView.ts). */
 const GROUND = 0.45;
 
@@ -83,6 +88,32 @@ export class SutraView {
         const style = { color: BEAM, width: 18 - w * 4, alpha: 0.85 * (1 - kk), cap: 'round' as const };
         if (full) g.circle(0, 0, rr).stroke(style);
         else g.arc(0, 0, rr, mid - half, mid + half).stroke(style);
+      }
+    }, this.overZ);
+  }
+
+  /** Belly Bounce: two saffron rings out to `r` on the ground around (x, y). */
+  bounce(x: number, y: number, r: number): void {
+    this.burst(x, y, BOUNCE_LIFE, (g, k) => {
+      g.scale.y = GROUND;
+      for (let w = 0; w < 2; w++) {
+        const kk = k * 1.2 - w * 0.2;
+        if (kk <= 0 || kk >= 1) continue;
+        g.circle(0, 0, r * kk).stroke({ color: BOUNCE, width: 26 - w * 8, alpha: 0.9 * (1 - kk) });
+      }
+    }, SHADOW_Z + 1);
+  }
+
+  /** A dodge: speed streaks on both sides of the hero at (x, y), fading as they slide back. */
+  dodge(x: number, y: number): void {
+    this.burst(x, y - CHEST, DODGE_LIFE, (g, k) => {
+      const a = 0.9 * (1 - k);
+      for (const side of [-1, 1]) {
+        for (let i = 0; i < 3; i++) {
+          const sx = side * (55 + 30 * k + i * 6);
+          const sy = -30 + i * 30;
+          g.moveTo(sx, sy).lineTo(sx + side * (40 - i * 8), sy).stroke({ color: 0xffffff, width: 10, alpha: a, cap: 'round' });
+        }
       }
     }, this.overZ);
   }

@@ -1,13 +1,17 @@
 import type { Texture } from 'pixi.js';
 import type { MobSheet } from './mobView';
 import type { StageArt } from './stageArt';
+import type { MonkId } from '@hk/engine';
 import type { TaoAsset } from './tao/TaoActor';
 
 // The art a run is drawn with (loaded by art.ts): what every chapter shares, and the chapters'
 // own, chapter 4 and 5 from their art packs once a run of theirs has loaded them.
 
 export interface Art {
+  /** The kicker's rig. */
   hero: TaoAsset;
+  /** The bought monks' rigs (art/monks, an art pack): each loaded by the first run played as him. */
+  monks: Partial<Record<MonkId, TaoAsset>>;
   jiangshi: MobSheet;
   fox: MobSheet;
   cuju: Texture;
@@ -45,4 +49,9 @@ export interface GhostArt {
   effigy: MobSheet;
   doorGod: MobSheet;
   judge: MobSheet;
+}
+
+/** The rig a run plays monk `monk` with. */
+export function monkRig(art: Art, monk: MonkId): TaoAsset {
+  return art.monks[monk] ?? art.hero;
 }
