@@ -38,6 +38,8 @@ export interface Platform {
   onHide(cb: () => void): void;
   readonly portal: Portal;
   readonly ads: Ads;
+  /** The lobby's banner ad; NO_BANNER where the host has none. */
+  readonly banner: Banner;
   /** Sound output; null where the host has none (the game then runs silent). */
   readonly audio: AudioHost | null;
 }
@@ -90,6 +92,26 @@ export interface Ads {
   /** An interstitial at a natural break; resolves when it is over or was not shown. */
   midgame(started?: () => void): Promise<void>;
 }
+
+/**
+ * A banner ad in a band along the bottom of the screen, under the UI rather than over it: the
+ * shell keeps `height` clear like a safe-area inset while the banner is up. Only the lobby
+ * shows one (CrazyGames: never in gameplay, only on screens open 5 s or more).
+ */
+export interface Banner {
+  /** The band's height in app.screen units. */
+  readonly height: number;
+  /** Puts the banner up; resolves whether it is up (false with an adblocker or no ad host). */
+  show(): Promise<boolean>;
+  /** Takes it down and clears it. */
+  hide(): void;
+}
+
+export const NO_BANNER: Banner = {
+  height: 0,
+  show: async () => false,
+  hide() {},
+};
 
 /** For hosts without a portal. */
 export const NO_PORTAL: Portal = {

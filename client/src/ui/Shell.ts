@@ -51,6 +51,8 @@ export class Shell {
   /** The run in play is hard mode. */
   private hard = false;
   private screenKey = '';
+  /** The lobby's banner is up: its band is kept clear like a safe-area inset. */
+  private bannerUp = false;
   private quality: LevelSettings | null = null;
   /** Switches the render quality mode (boot.ts wires it to the quality runtime). */
   onQualityMode: (mode: QualityMode) => void = () => {};
@@ -123,6 +125,17 @@ export class Shell {
   }
 
   private setScreen(screen: Screen | null): void {
+    // the banner goes up on the way into the lobby (not on each rebuild of it) and down on the way out
+    const lobby = screen instanceof LobbyScreen;
+    if (!lobby) {
+      this.platform.banner.hide();
+      this.bannerUp = false;
+    } else if (!(this.screen instanceof LobbyScreen)) {
+      void this.platform.banner.show().then((up) => {
+        this.bannerUp = up && this.screen instanceof LobbyScreen;
+        this.screenKey = '';
+      });
+    }
     this.screen?.destroy();
     this.screen = screen;
     if (screen) {
@@ -351,7 +364,9 @@ export class Shell {
     const key = `${width}x${height}`;
     if (this.screen && key !== this.screenKey) {
       this.screenKey = key;
-      this.screen.layout(uiFrame(computeViewport(width, height), this.platform.safeInsets()));
+      const insets = this.platform.safeInsets();
+      if (this.bannerUp) insets.bottom += this.platform.banner.height;
+      this.screen.layout(uiFrame(computeViewport(width, height), insets));
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);

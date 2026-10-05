@@ -1,12 +1,13 @@
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import type { Ads, AudioHost, Portal } from '../types';
+import type { Ads, AudioHost, Banner, Portal } from '../types';
+import { BannerHost } from '../web/banner';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { webAudioHost } from '../web/webAudio';
 import { CrazyGamesSdk } from './sdk';
 
-// The CrazyGames host: the browser host plus the SDK for saves, ads, the gameplay brackets
-// and the signed-in username (docs/design.md "Platforms, saves and server").
+// The CrazyGames host: the browser host plus the SDK for saves, ads (the lobby banner too), the
+// gameplay brackets and the signed-in username (docs/design.md "Platforms, saves and server").
 //
 // Built with `create()`, which waits (bounded) for the SDK before anything else, because the
 // data module only exists after init: reading the save before that would read the wrong store.
@@ -15,6 +16,7 @@ export class CrazyGamesPlatform extends WebPlatform {
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
   override readonly ads: Ads;
+  override readonly banner: Banner;
   override readonly audio: AudioHost | null;
   /** Called after a guest signs in or a user signs out, once the new name is known. */
   onAccountChange: () => void = () => {};
@@ -36,8 +38,14 @@ export class CrazyGamesPlatform extends WebPlatform {
     // the browser's audio, plus the portal's own mute button
     const web = webAudioHost();
     this.audio = web && { ...web, onHostMute: (cb) => sdk.onMuteChange(cb) };
+    const adsOk = async () => sdk.isEnabled() && !(await sdk.hasAdblock());
+    this.banner = new BannerHost({
+      available: adsOk,
+      request: (id, width, height) => sdk.requestBanner(id, width, height),
+      clear: (id) => sdk.clearBanner(id),
+    });
     this.ads = {
-      rewardedAvailable: async () => sdk.isEnabled() && !(await sdk.hasAdblock()),
+      rewardedAvailable: adsOk,
       rewarded: (started) => sdk.requestAd('rewarded', { adStarted: started }),
       midgame: async (started) => {
         await sdk.requestAd('midgame', { adStarted: started });

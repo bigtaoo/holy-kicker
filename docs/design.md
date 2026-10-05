@@ -254,6 +254,7 @@ Two currencies only:
 | Patrol double / instant | Lobby | Brings players back |
 | Ad chest | Shop | 3 per day |
 | Interstitial | Results → lobby (not after the first run) | Per platform rules (CrazyGames `requestAd('midgame')`) |
+| Banner | Lobby, every tab | 320×50 in a band under the tab bar, which moves up to keep it clear; down in runs and on results; at most one request per 30 s (`platform/web/banner.ts`) |
 
 - No reroll ad on the in-run pick: it breaks the pace.
 - Ads only on all platforms. IAP (ad-free card, battle pass, jade packs) is a later option for
@@ -273,7 +274,7 @@ rules and four live SDK findings); adapt it rather than rewrite it.
 | ≤50 MB initial download (≤20 MB for the mobile homepage) | Boot loads lobby + chapter 1 only; other chapters load in the background |
 | Ads only through the SDK, never interrupting gameplay | Interstitials only on results → lobby; game muted and frozen during any ad |
 | Adblocked players play normally | Rewarded offers are hidden, not shown disabled |
-| Banners only on menus open 5 s or more | At most one banner, on the lobby |
+| Banners only on menus open 5 s or more | At most one banner, on the lobby, in its own band so it covers no UI |
 | English mandatory, detect the user's language | See Localization |
 | Signed-in users are signed in automatically and see their username; guest progress carries over on sign-in | Use the SDK account + data module; no login screen |
 | IAP only for invited games, through the platform | No IAP anyway |

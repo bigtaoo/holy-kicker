@@ -48,6 +48,10 @@ export interface CgSdkShape {
     getUser?: () => unknown;
     addAuthListener?: (listener: (user: unknown) => void) => unknown;
   };
+  banner?: {
+    requestBanner?: (opts: { id: string; width: number; height: number }) => unknown;
+    clearBanner?: (containerId: string) => unknown;
+  };
   data?: {
     getItem?: (key: string) => unknown;
     setItem?: (key: string, value: string) => unknown;
@@ -201,6 +205,16 @@ export class CrazyGamesSdk {
     if (typeof fn !== 'function') return false;
     this.adblock = (await settle(() => fn.call(this.sdk?.ad))) === true;
     return this.adblock;
+  }
+
+  /** Fills a container with a banner of an explicit size: the responsive request found no
+   *  size to fit even in a sized container (daydayup's live finding). */
+  async requestBanner(id: string, width: number, height: number): Promise<void> {
+    await settle(() => this.sdk?.banner?.requestBanner?.({ id, width, height }));
+  }
+
+  clearBanner(id: string): void {
+    void settle(() => this.sdk?.banner?.clearBanner?.(id));
   }
 
   /** The signed-in user's name, null for a guest or on any failure. */
