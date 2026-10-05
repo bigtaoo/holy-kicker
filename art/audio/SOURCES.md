@@ -14,6 +14,8 @@ not used (art/audio/picks.json has the shipped picks).
 | `kenney/kenney_rpg-audio` | https://kenney.nl/assets/rpg-audio | Kenney | CC0 |
 | `kenney/kenney_interface-sounds` | https://kenney.nl/assets/interface-sounds | Kenney | CC0 |
 | `kenney/kenney_music-jingles` | https://kenney.nl/assets/music-jingles | Kenney | CC0 |
+| `kenney/kenney_sci-fi-sounds` | https://kenney.nl/assets/sci-fi-sounds | Kenney | CC0 |
+| `kenney/kenney_digital-audio` | https://kenney.nl/assets/digital-audio | Kenney | CC0 |
 | `oga/pleasing-bell.wav` | https://opengameart.org/content/pleasing-bell-sound-effect | Spring Spring | CC0 |
 | `oga/asianoriental1_0.ogg` | https://opengameart.org/content/asianoriental1 | Tozan | CC0 |
 | `oga/menu_1.mp3` | https://opengameart.org/node/101396 | wipics | CC0 |
@@ -31,4 +33,5 @@ not used (art/audio/picks.json has the shipped picks).
 | `oga/lib/animal-or-beast-sounds` | https://opengameart.org/content/animal-or-beast-sounds | pauliuw | CC0 |
 | `oga/lib/metal-interactions` | https://opengameart.org/content/metal-interactions | qubodup | CC0 |
 | `oga/lib/teleport-spell` | https://opengameart.org/content/teleport-spell | ogrebane | CC0 |
+| `oga/lib2/wolf_monster_6.mp3` | https://opengameart.org/content/wolf-monster-sound | CaveboyTup | CC0 |
 | `itch/` (downloaded by hand: Cloudflare check) | https://bitemegames.itch.io/chinese-game-music | BiteMe Games | CC0 |

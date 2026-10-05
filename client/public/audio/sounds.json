@@ -6,8 +6,14 @@
   "bellBreak": [
    "audio/sfx/bellBreak.mp3"
   ],
+  "blast": [
+   "audio/sfx/blast.mp3"
+  ],
   "bloom": [
    "audio/sfx/bloom.mp3"
+  ],
+  "bossCast": [
+   "audio/sfx/bossCast.mp3"
   ],
   "bossDown": [
    "audio/sfx/bossDown.mp3"
@@ -24,6 +30,9 @@
   "eliteDown": [
    "audio/sfx/eliteDown.mp3"
   ],
+  "field": [
+   "audio/sfx/field.mp3"
+  ],
   "gem": [
    "audio/sfx/gem.mp3"
   ],
@@ -32,6 +41,9 @@
   ],
   "hit": [
    "audio/sfx/hit.mp3"
+  ],
+  "howl": [
+   "audio/sfx/howl.mp3"
   ],
   "hurt": [
    "audio/sfx/hurt.mp3"
@@ -81,8 +93,14 @@
   "wave": [
    "audio/sfx/wave.mp3"
   ],
+  "windup": [
+   "audio/sfx/windup.mp3"
+  ],
   "woodfish": [
    "audio/sfx/woodfish.mp3"
+  ],
+  "zap": [
+   "audio/sfx/zap.mp3"
   ]
  },
  "music": {

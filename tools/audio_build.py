@@ -6,7 +6,8 @@ and prints the authors to credit. Needs ffmpeg and ffprobe on the PATH.
 
     python tools/audio_build.py [picks.json]
 
-A cue picked as "synth" (or not picked) keeps its generated voice. MP3 because it is the one
+A cue picked as "synth" (or not picked) keeps its generated voice. A pick may end in "#seconds" to
+cut that effect shorter than MAX_SFX (e.g. a chain zap that fires many times a second). MP3 because it is the one
 format every target decodes: browsers, iOS and WeChat's decodeAudioData and InnerAudioContext.
 """
 import json
@@ -44,6 +45,7 @@ AUTHORS = [
     ('oga/lib/teleport-spell', 'ogrebane (CC0)'),
     ('oga/lib/monster-or-beast-sounds', 'pauliuw (CC0)'),
     ('oga/lib/animal-or-beast-sounds', 'pauliuw (CC0)'),
+    ('oga/lib2/wolf_monster', 'CaveboyTup (CC0)'),
     ('oga/lib/', 'qubodup (CC0)'),
 ]
 
@@ -73,11 +75,12 @@ def encode(src: str, dst: str, filters: str, channels: str, kbps: str) -> None:
          '-ac', channels, '-ar', SFX_RATE, '-c:a', 'libmp3lame', '-b:a', kbps, dst])
 
 
-def sfx_filters() -> str:
+def sfx_filters(length: float = MAX_SFX) -> str:
     trim = f'silenceremove=start_periods=1:start_threshold={SILENCE}:start_silence=0.005'
     # trim the tail by trimming the reversed head; then cap the length with a fade out
+    fade = min(0.15, length / 3)
     return (f'{trim},areverse,{trim},areverse,'
-            f'atrim=0:{MAX_SFX},afade=t=out:st={MAX_SFX - 0.15}:d=0.15')
+            f'atrim=0:{length},afade=t=out:st={length - fade:.3f}:d={fade:.3f}')
 
 
 def credit(path: str) -> str:
@@ -96,6 +99,7 @@ def main() -> None:
     for slot, pick in sorted(picks.items()):
         if not pick or pick == 'synth':
             continue
+        pick, _, cut = pick.partition('#')
         rel = pick.removeprefix('source/')
         src = os.path.join(ART, 'source', rel)
         if slot.startswith('music.'):
@@ -105,7 +109,7 @@ def main() -> None:
             manifest['music'][track] = {'path': f'audio/{dst}', 'length': round(duration(os.path.join(OUT, dst)), 3)}
         else:
             dst = f'sfx/{slot}.mp3'
-            encode(src, os.path.join(OUT, dst), sfx_filters(), '1', SFX_KBPS)
+            encode(src, os.path.join(OUT, dst), sfx_filters(min(float(cut or MAX_SFX), MAX_SFX)), '1', SFX_KBPS)
             manifest['sfx'][slot] = [f'audio/{dst}']
         used.setdefault(credit(rel), []).append(slot)
     with open(os.path.join(OUT, 'sounds.json'), 'w', encoding='utf-8') as f:
