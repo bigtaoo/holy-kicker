@@ -18,6 +18,8 @@ export interface RunResult {
   offerings?: number;
   /** What the run evolved or awakened (codex.ts evolvedIn). */
   evolved?: EvolveId[];
+  /** Enemies the run defeated, for the lifetime count (achievements.ts). */
+  kills?: number;
 }
 
 export interface ChestReward extends Chest {
@@ -155,6 +157,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
     hardBest: hard ? best : save.hardBest,
     hardChests: hard ? claimedAll : save.hardChests,
     runs: save.runs + 1,
+    kills: save.kills + Math.max(0, Math.floor(run.kills ?? 0)),
     codex: mergeCodex(save.codex, run.evolved),
     gear: grantRelics(addDrops(save.gear, drops), relics),
     grit,

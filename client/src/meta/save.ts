@@ -8,7 +8,7 @@ import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export interface SaveData {
   version: number;
@@ -53,6 +53,10 @@ export interface SaveData {
   /** The monk played as (monks.ts), and the monks owned, bit i for MONK_IDS[i] (the kicker always). */
   monk: MonkId;
   monks: number;
+  /** Enemies defeated over every run, for the achievements (achievements.ts). */
+  kills: number;
+  /** Claimed achievements, bit i for BALANCE.achievements[i]. */
+  achieved: number;
 }
 
 export function newSave(): SaveData {
@@ -62,6 +66,7 @@ export function newSave(): SaveData {
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), monk: 'kicker', monks: 1,
+    kills: 0, achieved: 0,
   };
 }
 
@@ -97,6 +102,8 @@ function owned(monks: number, id: unknown): boolean {
  * checked on its own, so one bad value does not throw away the rest of the progress.
  * Version 1 had no gear or training: it reads as none, and its unlocked relics get their copy.
  * Version 2 had no patrol or daily counters: the patrol starts in the lobby, the day afresh.
+ * Version 3 had no achievements: the kills start at 0, and what the progress already reached
+ * waits to be claimed.
  */
 export function parseSave(text: string | null): SaveData {
   const fresh = newSave();
@@ -144,5 +151,7 @@ export function parseSave(text: string | null): SaveData {
     hardChests: ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1),
     monk: owned(monks, raw.monk) ? (raw.monk as MonkId) : 'kicker',
     monks,
+    kills: int(raw.kills, 0, max, 0),
+    achieved: int(raw.achieved, 0, (2 ** BALANCE.achievements.length) - 1, 0),
   };
 }

@@ -5,10 +5,12 @@ import { bonusReady, taskState, today } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLeft } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
+import { ROWS_TOP, ROW_H, TASKS_BOX_H, achieveRows, tasksSwitch, type AchievePanelActions, type TasksView } from './achievePanel';
 import { dropLines } from './gearText';
-import { COLORS, backdrop, button, fit, label, panel } from './widgets';
+import { COLORS, backdrop, button, fit, label, meter, panel } from './widgets';
 
-// The lobby's modal panels for the patrol, the daily tasks and what a chest or a patrol paid.
+// The lobby's modal panels for the patrol, the daily tasks (achievements: achievePanel.ts) and
+// what a chest or a patrol paid.
 // Builders only: the state and the paying live in lobbyEconomy.ts. Panels that show the
 // patrol's running time hand back refreshers, called every second while they are up.
 
@@ -21,20 +23,6 @@ const BAR_W = 760;
 export function hoursText(hours: number): string {
   const h = Math.floor(hours);
   return t('patrol.time', { h, m: Math.floor((hours - h) * 60) });
-}
-
-/** A horizontal bar centred on x = 0, filled to `share`; returns its fill to update. */
-function bar(w: number, share: number, color: number): { view: Container; set(share: number): void } {
-  const view = new Container();
-  const back = new Graphics().roundRect(-w / 2 - 6, -20, w + 12, 40, 14).fill(COLORS.outline);
-  const fill = new Graphics().roundRect(0, 0, w, 28, 10).fill(color);
-  fill.position.set(-w / 2, -14);
-  view.addChild(back, fill);
-  const set = (s: number) => {
-    fill.scale.x = Math.max(0.001, Math.min(1, s));
-  };
-  set(share);
-  return { view, set };
 }
 
 export interface PatrolPanelActions {
@@ -58,18 +46,18 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   title.y = top + 80;
   const stored = label('', 48);
   stored.y = top + 180;
-  const meter = bar(BAR_W, 0, COLORS.saffron);
-  meter.view.y = top + 260;
+  const gauge = meter(BAR_W, 0, COLORS.saffron);
+  gauge.view.y = top + 260;
   const pays = label('', 44, COLORS.copper);
   pays.y = top + 340;
   const rate = fit(label(t('patrol.rate', { h: P.dropHours, cap: P.capHours }), 40, COLORS.dim), 840);
   rate.y = top + 410;
-  box.addChild(title, stored, meter.view, pays, rate);
+  box.addChild(title, stored, gauge.view, pays, rate);
   const refresh = () => {
     const hours = patrolHours(save, now());
     stored.text = t('patrol.stored', { time: hoursText(hours), cap: P.capHours });
     fit(stored, 840);
-    meter.set(hours / P.capHours);
+    gauge.set(hours / P.capHours);
     pays.text = t('patrol.pays', { copper: formatAmount(Math.floor(copperPerHour(save) * hours)), n: patrolDrops(hours) });
     fit(pays, 840);
   };
@@ -127,66 +115,72 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   return root;
 }
 
-export interface TasksPanelActions {
-  claim(i: number): void;
+export interface TasksPanelActions extends AchievePanelActions {
+  claimTask(i: number): void;
   bonus(): void;
+  view(v: TasksView): void;
   close(): void;
 }
 
-const ROW_H = 170;
-
-/** Today's tasks with their progress and Claim, the bonus for claiming them all. */
-export function tasksPanel(save: SaveData, now: number, w: number, h: number, a: TasksPanelActions): Container {
-  const D = BALANCE.daily;
-  const d = today(save, now);
+/** The tasks panel: the Daily / Achievements switch over today's tasks or the achievements. */
+export function tasksPanel(save: SaveData, now: number, w: number, h: number, view: TasksView, page: number, a: TasksPanelActions): Container {
   const root = new Container();
   root.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const boxH = 300 + D.tasks.length * ROW_H + 340;
-  const top = -boxH / 2;
-  box.addChild(panel(960, boxH));
-  const title = label(t('tasks.title'), 72);
-  title.y = top + 80;
+  const top = -TASKS_BOX_H / 2;
+  box.addChild(panel(960, TASKS_BOX_H));
+  const pick = tasksSwitch(save, now, view, a.view);
+  pick.y = top + 85;
+  box.addChild(pick, view === 'daily' ? dailyRows(save, now, top, a) : achieveRows(save, page, top, a));
+  const back = button(t('common.back'), 400, 110, a.close, { fill: COLORS.panelLocked });
+  back.y = top + TASKS_BOX_H - 90;
+  box.addChild(back);
+  root.addChild(box);
+  return root;
+}
+
+/** Today's tasks with their progress and Claim, the bonus for claiming them all, from the box top `top`. */
+function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelActions): Container {
+  const D = BALANCE.daily;
+  const d = today(save, now);
+  const c = new Container();
   const reward = fit(label(t('tasks.reward', { copper: D.copper, jade: D.jade }), 40, COLORS.dim), 880);
-  reward.y = top + 170;
-  box.addChild(title, reward);
+  reward.y = top + 215;
+  c.addChild(reward);
   D.tasks.forEach((goal, i) => {
     const row = new Container();
-    row.y = top + 300 + i * ROW_H;
+    row.y = top + ROWS_TOP + i * ROW_H;
     const state = taskState(d, i);
     const name = fit(label(t(`tasks.${goal.kind}`, { n: goal.n }), 46, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
     const done = Math.min(goal.n, d.progress[i]);
-    const meter = bar(380, done / goal.n, state === 'open' ? COLORS.copper : COLORS.jade);
-    meter.view.position.set(-240, 40);
+    const gauge = meter(380, done / goal.n, state === 'open' ? COLORS.copper : COLORS.jade);
+    gauge.view.position.set(-240, 40);
     const count = label(`${done}/${goal.n}`, 42, COLORS.dim);
     count.anchor.set(0, 0.5);
     count.position.set(-20, 40);
-    row.addChild(name, meter.view, count);
+    row.addChild(name, gauge.view, count);
     if (state !== 'open') {
       const ready = state === 'ready';
-      const b = button(ready ? t('tasks.claim') : t('tasks.done'), 230, 110, () => ready && a.claim(i), {
+      const b = button(ready ? t('tasks.claim') : t('tasks.done'), 230, 110, () => ready && a.claimTask(i), {
         fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim, size: 44,
       });
       b.x = 320;
       row.addChild(b);
     }
-    box.addChild(row);
+    c.addChild(row);
   });
   const ready = bonusReady(d);
   const bonus = button(t('tasks.bonus', { jade: D.bonusJade }), 760, 130, () => ready && a.bonus(), {
     fill: ready ? COLORS.jade : COLORS.panelLocked, textFill: ready ? COLORS.outline : COLORS.dim, size: 48,
   });
-  bonus.y = top + 300 + D.tasks.length * ROW_H + 10;
+  bonus.y = top + ROWS_TOP + D.tasks.length * ROW_H + 10;
   const resets = label(t('tasks.resets'), 38, COLORS.dim);
   resets.y = bonus.y + 110;
-  const back = button(t('common.back'), 400, 110, a.close, { fill: COLORS.panelLocked });
-  back.y = top + boxH - 90;
-  box.addChild(bonus, resets, back);
-  root.addChild(box);
-  return root;
+  c.addChild(bonus, resets);
+  return c;
 }
 
 /** What a chest or a patrol just paid, over everything, until OK. */

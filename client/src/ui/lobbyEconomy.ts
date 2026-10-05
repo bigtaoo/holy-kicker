@@ -1,14 +1,16 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
+import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { claimable, claimBonus, claimTask, tasksOpen } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
+import type { TasksView } from './achievePanel';
 import { iconSprite, type IconSheet } from './buildBar';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live } from './economyPanels';
-import { COLORS, button, fit, label, panel } from './widgets';
+import { COLORS, button, dot, fit, label, panel } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
 // chests, the patrol and daily-task buttons under PLAY, and their panels. Holds what is open
@@ -34,12 +36,6 @@ type Modal = 'patrol' | 'tasks' | null;
 const CARD_W = 1000;
 const CARD_H = 290;
 const CARD_GAP = 40;
-const DOT_R = 18;
-
-/** A red dot that marks something to collect, at (x, y). */
-export function dot(x: number, y: number): Graphics {
-  return new Graphics().circle(x, y, DOT_R).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 5 });
-}
 
 /** Whether the Shop tab has something free waiting. */
 export function shopWaiting(save: SaveData, now: number): boolean {
@@ -58,6 +54,9 @@ export class EconomyUi {
   private playing = false;
   private live: Live[] = [];
   private clock = 0;
+  /** The tasks panel's page: today's tasks first, unless only an achievement waits. */
+  private tasksView: TasksView = 'daily';
+  private achievePage = 0;
 
   constructor(private readonly host: EconomyHost, adAvailable: Promise<boolean>, private readonly now: () => number = Date.now) {
     void adAvailable.then((ok) => {
@@ -101,9 +100,15 @@ export class EconomyUi {
     patrol.addChild(full);
     row.addChild(patrol);
     if (tasksOpen(save)) {
-      const tasks = button(t('tasks.button'), 460, 130, () => this.show('tasks'), { fill: COLORS.panel, size: 46 });
+      const daily = claimable(save, this.now()) > 0;
+      const achieve = achievementsReady(save).length > 0;
+      const tasks = button(t('tasks.button'), 460, 130, () => {
+        this.tasksView = achieve && !daily ? 'achieve' : 'daily';
+        this.achievePage = 0;
+        this.show('tasks');
+      }, { fill: COLORS.panel, size: 46 });
       tasks.x = 250;
-      if (claimable(save, this.now()) > 0) tasks.addChild(dot(205, -50));
+      if (daily || achieve) tasks.addChild(dot(205, -50));
       row.addChild(tasks);
     }
     return row;
@@ -134,9 +139,20 @@ export class EconomyUi {
         toast: (text) => this.host.toast(text),
       }, this.live));
     } else if (this.modal === 'tasks') {
-      c.addChild(tasksPanel(save, this.now(), w, h, {
-        claim: (i) => this.host.change(claimTask(this.host.save(), this.now(), i)),
+      c.addChild(tasksPanel(save, this.now(), w, h, this.tasksView, this.achievePage, {
+        claimTask: (i) => this.host.change(claimTask(this.host.save(), this.now(), i)),
         bonus: () => this.host.change(claimBonus(this.host.save(), this.now())),
+        claim: (i) => this.host.change(claimAchievement(this.host.save(), i)),
+        claimAll: () => this.host.change(claimAllAchievements(this.host.save())),
+        page: (n) => {
+          this.achievePage = n;
+          this.host.relayout();
+        },
+        view: (v) => {
+          this.tasksView = v;
+          this.achievePage = 0;
+          this.host.relayout();
+        },
         close: () => this.show(null),
       }));
     }

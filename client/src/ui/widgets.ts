@@ -116,3 +116,22 @@ export function backdrop(w: number, h: number, alpha = 0.6): Graphics {
   g.eventMode = 'static';
   return g;
 }
+
+/** A red dot that marks something to collect, at (x, y). */
+export function dot(x: number, y: number): Graphics {
+  return new Graphics().circle(x, y, 18).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 5 });
+}
+
+/** A horizontal bar centred on x = 0, filled to `share`; returns its fill to update. */
+export function meter(w: number, share: number, color: number): { view: Container; set(share: number): void } {
+  const view = new Container();
+  const back = new Graphics().roundRect(-w / 2 - 6, -20, w + 12, 40, 14).fill(COLORS.outline);
+  const fill = new Graphics().roundRect(0, 0, w, 28, 10).fill(color);
+  fill.position.set(-w / 2, -14);
+  view.addChild(back, fill);
+  const set = (s: number) => {
+    fill.scale.x = Math.max(0.001, Math.min(1, s));
+  };
+  set(share);
+  return { view, set };
+}

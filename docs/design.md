@@ -239,7 +239,11 @@ Two currencies only:
   grants 2 h instantly.
 - 3–5 daily tasks (e.g. "kill 1000 mobs").
 - One free chest per day.
-- Achievements (also the sutra source).
+- Achievements (also the sutra source). Implemented as a second page of the tasks panel
+  (`client/src/meta/achievements.ts`, goals in `balance.json` `achievements`): 27 long-term
+  goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
+  gear tier, monks), each paying jade once, about 800 in all. Progress is read from the save,
+  so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.
 
 ## Ads and monetization
 
@@ -301,7 +305,7 @@ CrazyGames; the `SaveStore` and ad interfaces must not assume CrazyGames.
 
 **Save contents** (well under 50 KB): player level and XP, copper, jade, gear counts per item
 and tier (the best is worn), training nodes bought, per-chapter best wave and claimed chests, unlocked relics / sutras / codex
-entries, daily tasks and ad counts, patrol start time, save version.
+entries, daily tasks and ad counts, patrol start time, lifetime kills and claimed achievements, save version.
 
 ## Localization
 

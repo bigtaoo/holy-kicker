@@ -11,14 +11,14 @@ import { buyMonk, chooseMonk, monkAffordable } from '../meta/monks';
 import { train } from '../meta/training';
 import { iconSprite, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
-import { dot, EconomyUi, shopHeight, shopWaiting } from './lobbyEconomy';
+import { EconomyUi, shopHeight, shopWaiting } from './lobbyEconomy';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
 import { monkPanel } from './monkPanel';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
 import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, button, fit, label, panel } from './widgets';
+import { COLORS, button, dot, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
 // chests and the relic to play with, PLAY with the patrol and daily tasks under it, and five

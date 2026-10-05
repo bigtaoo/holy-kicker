@@ -1,4 +1,5 @@
 import type { MonkId } from '@hk/engine';
+import type { AchievementGoal } from './achievements';
 import type { Stat } from '@hk/engine';
 import data from './balance.json';
 import type { DailyBalance } from './daily';
@@ -38,6 +39,8 @@ export interface Balance {
   shop: ShopBalance;
   patrol: PatrolBalance;
   daily: DailyBalance;
+  /** The long-term goals and the jade each pays once (achievements.ts), at most 30. */
+  achievements: AchievementGoal[];
   /** Jade price of each monk (monks.ts); the kicker is free. */
   monks: Record<MonkId, number>;
 }

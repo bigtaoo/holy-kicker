@@ -285,7 +285,7 @@ export class Shell {
     this.hud = null;
     // the death panel already told the portal
     if (!this.downShown) this.portal.gameplayStop();
-    const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings, evolved });
+    const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings, evolved, kills: this.kills });
     const { reward } = settled;
     const now = Date.now();
     const save = bump(bump(bump(settled.save, now, 'runs', 1), now, 'waves', waves), now, 'kills', this.kills);
