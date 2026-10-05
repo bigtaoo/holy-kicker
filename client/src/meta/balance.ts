@@ -1,3 +1,4 @@
+import type { Stat } from '@hk/engine';
 import data from './balance.json';
 import type { DailyBalance } from './daily';
 import type { GearBalance } from './gear';
@@ -19,6 +20,7 @@ export interface Balance {
   waves: number;
   /** Rewarded-ad revives per run; wave length and the wave plan are engine rules (engine/config.ts). */
   revives: number;
+  grit: GritBalance;
   copperPerWave: number;
   copperChapterStep: number;
   chests: Chest[];
@@ -35,6 +37,17 @@ export interface Balance {
   shop: ShopBalance;
   patrol: PatrolBalance;
   daily: DailyBalance;
+}
+
+/**
+ * Grit (loadout.ts): every lost run on the first uncleared chapter that got at least `minWaves`
+ * far adds `bonus` to the next tries there, up to `max` times; clearing it starts over. It
+ * turns the long tail of unlucky tries into a few.
+ */
+export interface GritBalance {
+  max: number;
+  minWaves: number;
+  bonus: Partial<Record<Stat, number>>;
 }
 
 /**

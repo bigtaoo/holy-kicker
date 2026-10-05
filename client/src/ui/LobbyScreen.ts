@@ -6,6 +6,7 @@ import { earnedSutras, playableChapters, seeTab, TABS, tabLock, tabNew, unlocked
 import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
+import { gritBonus } from '../meta/loadout';
 import { train } from '../meta/training';
 import { iconSprite, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
@@ -252,7 +253,15 @@ export class LobbyScreen implements Screen {
     const open = n <= playableChapters(this.save);
     const card = new Container();
     card.position.set(w / 2, midY - 180);
-    card.addChild(panel(900, 620));
+    // grit on the first uncleared chapter takes a line: the rows below move down and the card grows
+    const grit = gritBonus(this.save, n);
+    const gritLine = open && Object.keys(grit).length > 0
+      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, COLORS.saffron), 840)
+      : null;
+    const shift = gritLine ? 50 : 0;
+    const back = panel(900, 620 + shift);
+    back.y = shift / 2;
+    card.addChild(back);
     const title = fit(label(t('lobby.chapterTitle', { n, name: t(`chapter.${n}` as never) }), 64), 640);
     title.y = -235;
     const best = this.save.best[n - 1];
@@ -264,10 +273,14 @@ export class LobbyScreen implements Screen {
     );
     status.y = -145;
     const chests = this.chests(n);
-    chests.y = -95;
+    chests.y = -95 + shift;
     const relics = this.relics();
-    relics.y = 85;
+    relics.y = 85 + shift;
     card.addChild(title, status, chests, relics);
+    if (gritLine) {
+      gritLine.y = -85;
+      card.addChild(gritLine);
+    }
 
     // chapter arrows: through the cleared chapters and the first uncleared one
     const arrow = (dir: -1 | 1) => {

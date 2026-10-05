@@ -11,7 +11,7 @@ import { shielded, tear } from './ghost';
 import { ringPoint } from './horde';
 import { resetMob } from './marsh';
 import { split } from './snow';
-import { mobHp } from './waves';
+import { bossThins, mobHp } from './waves';
 
 // Hit targets and damage. Targets are numbered: the horde mobs first (by index), then the
 // elites, then the boss, so a ball can remember "the one I hit last" as a plain integer.
@@ -58,8 +58,8 @@ export function nearestTarget(s: SimState, x: number, y: number, maxDist: number
   return best;
 }
 
-/** The boss, else the nearest elite, when in range (the relic locks onto them first), else the nearest target. */
-export function kickTarget(s: SimState, p: Player, range: number): number {
+/** The boss, else the nearest elite, within `range` of p; -1 if none. */
+export function bigTarget(s: SimState, p: Player, range: number): number {
   const boss = targetAt(s, bossIndex(s));
   if (boss && dist2(boss.x - p.x, boss.y - p.y) <= range * range) return bossIndex(s);
   let best = -1;
@@ -72,7 +72,26 @@ export function kickTarget(s: SimState, p: Player, range: number): number {
       best = i;
     }
   }
-  return best >= 0 ? best : nearestTarget(s, p.x, p.y, range);
+  return best;
+}
+
+/** The mark a ball locked onto target i keeps: -1 the boss, the elite's id, 0 for a mob. */
+export function markOf(s: SimState, i: number): number {
+  if (i === bossIndex(s)) return -1;
+  return eliteAt(s, i)?.id ?? 0;
+}
+
+/** Target number of mark `mark` (markOf), or -1 if it is gone or cannot be hit now. */
+function markTarget(s: SimState, mark: number): number {
+  if (mark === -1) return targetAt(s, bossIndex(s)) ? bossIndex(s) : -1;
+  const k = s.elites.findIndex((e) => e.id === mark);
+  return k >= 0 ? eliteIndex(s) + k : -1;
+}
+
+/** The boss, else the nearest elite, when in range (the relic locks onto them first), else the nearest target. */
+export function kickTarget(s: SimState, p: Player, range: number): number {
+  const big = bigTarget(s, p, range);
+  return big >= 0 ? big : nearestTarget(s, p.x, p.y, range);
 }
 
 /**
@@ -136,7 +155,8 @@ export function damage(
  * Mob i goes down (dropping its gem, unless swallowed; only some swarm mobs and shards leave
  * one) and respawns on the ring with the wave's health (an emerger goes under the ground to
  * rise again); a paper effigy tears into scraps as it goes. A skeleton, a shard or a scrap falls
- * for good, a skeleton splitting into shards.
+ * for good, a skeleton splitting into shards. In a boss fight with the horde thinned enough
+ * (WAVES.bossHordePercent) it rests at health 0 until the next wave.
  */
 export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
   const m = s.mobs[i];
@@ -151,6 +171,11 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
     return;
   }
   if (m.kind === 'effigy') tear(s, m.x, m.y);
+  if (bossThins(s)) {
+    m.hp = 0;
+    m.haste = 0;
+    return;
+  }
   m.hp = mobHp(s.wave, m.kind, s.config.chapter);
   resetMob(s, m);
   ringPoint(s.ai, by.x, by.y, m);
@@ -164,13 +189,15 @@ function aim(b: Ball, tx: number, ty: number): void {
 
 /**
  * A ball from (x, y) at (tx, ty) that bounces `maxHits` times at `damagePct` percent; a `split`
- * ball (the awakened Meteor Ball) sends splinters at every bounce.
+ * ball (the awakened Meteor Ball) sends splinters at every bounce. A `mark` (markOf) makes it
+ * fly at that boss or elite through the horde.
  */
 export function launchBall(
-  s: SimState, owner: number, x: number, y: number, tx: number, ty: number, maxHits: number, damagePct: number, split = false,
+  s: SimState, owner: number, x: number, y: number, tx: number, ty: number, maxHits: number, damagePct: number, split = false, mark = 0,
 ): Ball {
   const b: Ball = {
-    id: s.nextId++, owner, x, y, px: x, py: y, vx: 0, vy: 0, hits: 0, maxHits, damage: damagePct, last: -1, travel: BALL.maxTravel, split,
+    id: s.nextId++, owner, x, y, px: x, py: y, vx: 0, vy: 0, hits: 0, maxHits, damage: damagePct, last: -1,
+    travel: mark !== 0 ? BALL.lockRange : BALL.maxTravel, split, mark,
   };
   aim(b, tx, ty);
   s.balls.push(b);
@@ -200,18 +227,32 @@ function splinter(s: SimState, b: Ball, hit: number, next: number): void {
 }
 
 /** Flies every ball; a hit ricochets to the nearest other target until the bounces run out. */
+/** `mark` if ball b is on it, else -1. */
+function reached(s: SimState, b: Ball, mark: number): number {
+  const t = targetAt(s, mark)!;
+  return dist2(t.x - b.x, t.y - b.y) <= BALL.hitRadius * BALL.hitRadius ? mark : -1;
+}
+
 export function ballSystem(s: SimState, events: SimEvent[]): void {
   const balls = s.balls;
   for (let i = 0; i < balls.length; i++) {
     const b = balls[i];
     b.px = b.x;
     b.py = b.y;
+    // a ball on its mark follows it through the horde; a mark gone (fallen, under water) lets go
+    const mark = b.mark !== 0 ? markTarget(s, b.mark) : -1;
+    if (b.mark !== 0 && mark < 0) b.mark = 0;
+    if (mark >= 0) {
+      const t = targetAt(s, mark)!;
+      aim(b, t.x, t.y);
+    }
     b.x += b.vx;
     b.y += b.vy;
     b.travel -= BALL.speed;
     let alive = b.travel > 0;
-    const hit = nearestTarget(s, b.x, b.y, BALL.hitRadius, b.last);
+    const hit = mark >= 0 ? reached(s, b, mark) : nearestTarget(s, b.x, b.y, BALL.hitRadius, b.last);
     if (hit >= 0) {
+      b.mark = 0;
       b.hits++;
       b.last = hit;
       b.travel = BALL.maxTravel;

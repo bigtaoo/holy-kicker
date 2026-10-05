@@ -1,4 +1,4 @@
-import { HERO, HURT } from '../config';
+import { BALL, HERO, HURT, rampChapter } from '../config';
 import type { SimEvent } from '../events';
 import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
@@ -6,7 +6,7 @@ import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Player, SimState } from '../state';
 import { bowlLevel, pickCard, relicCooldown, relicLevel, stat } from './build';
 import { bowlInAir, throwBowl } from './bowl';
-import { bossIndex, kickTarget, launchBall, nearestTarget, targetAt } from './combat';
+import { bigTarget, bossIndex, kickTarget, launchBall, markOf, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
 import { breakBell } from './spells';
 import { fishStart, tap } from './fish';
@@ -65,9 +65,9 @@ export function movePlayers(s: SimState): void {
   }
 }
 
-/** What a hurt of `value` takes in chapter `chapter` (HURT.chapterPercent). */
-export function chapterHurt(chapter: number, value: number): number {
-  const pct = HURT.chapterPercent[Math.min(Math.max(chapter, 1), HURT.chapterPercent.length) - 1];
+/** What a hurt of `value` takes on wave `wave` of chapter `chapter` (HURT.chapterPercent, ramped in over the run). */
+export function chapterHurt(chapter: number, value: number, wave: number): number {
+  const pct = rampChapter(HURT.chapterPercent[Math.min(Math.max(chapter, 1), HURT.chapterPercent.length) - 1], wave);
   return Math.trunc((value * pct) / 100);
 }
 
@@ -79,7 +79,7 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   p.hurtCd = Math.trunc((HERO.hurtCooldown * (100 + stat(p, 'guard'))) / 100);
   p.action = 'hurt';
   p.actionT = 0;
-  const dealt = s.config.waves > 0 ? Math.min(p.hp, chapterHurt(s.config.chapter, value)) : 0;
+  const dealt = s.config.waves > 0 ? Math.min(p.hp, chapterHurt(s.config.chapter, value, s.wave)) : 0;
   p.hp -= dealt;
   events.push({ type: 'hurt', owner, value: dealt });
   if (p.hp > 0) return;
@@ -109,7 +109,9 @@ export function kickSystem(s: SimState, events: SimEvent[]): void {
     if (p.relicId === 'beads' || p.kickCd > 0 || p.action !== 'none') continue;
     // one alms bowl in the air at a time (systems/bowl.ts)
     if (p.relicId === 'bowl' && bowlInAir(s, p)) continue;
-    const t = kickTarget(s, p, attackRange(p));
+    const near = kickTarget(s, p, attackRange(p));
+    // the cuju also goes off for a boss or an elite as far as its lock reaches
+    const t = near < 0 && p.relicId === 'ball' ? bigTarget(s, p, BALL.lockRange) : near;
     if (t < 0) continue;
     const dx = targetAt(s, t)!.x - p.x;
     if (dx !== 0) p.facing = dx < 0 ? -1 : 1;
@@ -129,13 +131,20 @@ function attackRange(p: Player): number {
   return HERO.kickRange;
 }
 
-/** The foot meets the ball: launch it from the foot at the target, or straight ahead. */
+/**
+ * The foot meets the ball: launch it from the foot at the target, or straight ahead; a boss or
+ * an elite within BALL.lockRange comes first, and the ball flies at it through the horde.
+ */
 function strike(s: SimState, p: Player): void {
-  const t = kickTarget(s, p, HERO.strikeRange);
+  const big = bigTarget(s, p, BALL.lockRange);
+  const t = big >= 0 ? big : kickTarget(s, p, HERO.strikeRange);
   const fx = p.x + p.facing * HERO.footOffset;
   const target = t >= 0 ? targetAt(s, t)! : null;
   const r = relicLevel(p);
-  launchBall(s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y, r.hits, r.damage, p.awakened);
+  launchBall(
+    s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y, r.hits, r.damage, p.awakened,
+    big >= 0 ? markOf(s, big) : 0,
+  );
 }
 
 /** Anything touching a player hurts them, by what it is; the horde hits harder in later waves. */

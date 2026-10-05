@@ -233,11 +233,12 @@ export const MONK = {
 };
 
 /**
- * Chapter 5's elite waves (10, 20, 30, 40) bring two of the earlier chapters' elites at once,
- * in turn; the empowered ones in between are the bosses.
+ * Chapter 5's elite waves (10, 20, 30, 40) bring the earlier chapters' elites, in turn: one on
+ * the first, so the step into the chapter is not a wall, then two at once; the empowered ones
+ * in between are the bosses.
  */
 export const ELITE_PAIRS: readonly (readonly EliteKind[])[] = [
-  ['charger', 'toadKing'],
+  ['charger'],
   ['wolfLeader', 'toadKing'],
   ['doorGod', 'charger'],
   ['doorGod', 'wolfLeader'],

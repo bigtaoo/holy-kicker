@@ -42,6 +42,8 @@ export interface Reward {
   newBest: boolean;
   /** Gear the run dropped, already in the save. */
   drops: Drop[];
+  /** The grit this lost run added (the new count), 0 if none. */
+  grit: number;
 }
 
 /** Chapter multiplier for copper: 1, 1.5, 2, ... */
@@ -88,6 +90,9 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   const cleared = firstClear ? run.chapter : save.cleared;
   const relics = RELIC_IDS.slice(0, cleared + 1);
   const drops = rollDrops(run.chapter, waves, relics, !save.firstRunDone, rand);
+  // a real try on the first uncleared chapter that fell short gives grit for the next ones
+  const tried = !won && run.chapter === save.cleared + 1 && waves >= BALANCE.grit.minWaves && save.grit < BALANCE.grit.max;
+  const grit = firstClear ? 0 : tried ? save.grit + 1 : save.grit;
   const next: SaveData = {
     ...save,
     firstRunDone: true,
@@ -103,6 +108,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
     runs: save.runs + 1,
     codex: mergeCodex(save.codex, run.evolved),
     gear: grantRelics(addDrops(save.gear, drops), relics),
+    grit,
   };
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
@@ -111,6 +117,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
     newSutras: earnedSutras(next).filter((id) => !earnedSutras(save).includes(id)),
     newBest: waves > save.best[i],
     drops,
+    grit: tried ? grit : 0,
   };
   return { save: next, reward };
 }

@@ -19,6 +19,7 @@ export const zh: Table<typeof en> = {
     chapterTitle: '第 {n} 章：{name}',
     unlockAtChapter: '通关第 {n} 章解锁',
     relic: '法器',
+    grit: '愈挫愈勇 ×{n}：攻击 +{attack}%，生命 +{hp}%',
   },
   tab: {
     shop: '商店',
@@ -155,6 +156,7 @@ export const zh: Table<typeof en> = {
     offering: '供奉：铜钱 +{n}',
     chest: '宝箱（第 {wave} 波）：铜钱 +{copper}，玉 +{jade}',
     newBest: '新纪录！',
+    grit: '愈挫愈勇 ×{n}：下次挑战本章更强',
     newRelic: '新法器：{name}！',
     newCodex: '图鉴新增：{name}！',
     newSutra: '获得经文：{name}！',

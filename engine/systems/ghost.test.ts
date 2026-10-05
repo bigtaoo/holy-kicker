@@ -132,7 +132,7 @@ describe('door god (elite)', () => {
     expect(s.zones[0].hurt).toBe(HURT.smash);
     expect(dist(s.zones[0].x - g.x, s.zones[0].y - g.y)).toBeGreaterThan(DOOR_GOD.reach - 10_000);
     const hurt = steps(e, THREATS.warn).filter((x) => x.type === 'hurt');
-    expect(hurt.map((x) => (x.type === 'hurt' ? x.value : 0))).toEqual([chapterHurt(4, HURT.smash)]);
+    expect(hurt.map((x) => (x.type === 'hurt' ? x.value : 0))).toEqual([chapterHurt(4, HURT.smash, s.wave)]);
     expect(g.phase).toBe('rest');
     expect(shielded(g, p.x, p.y)).toBe(false);
     steps(e, DOOR_GOD.rest);

@@ -100,7 +100,7 @@ export const HURT = {
   demonSpell: 14,
   demonLeap: 20,
   /** Every hurt by chapter, percent (later chapters play the last), so health from gear does not make them safe. */
-  chapterPercent: [100, 100, 120, 155, 175],
+  chapterPercent: [100, 100, 125, 210, 250],
 };
 
 export const HORDE = {
@@ -121,8 +121,28 @@ export const HORDE = {
    * gear and training (RunConfig.bonus), and the meta game's pacing (`npm run journey`,
    * docs/design.md "Pacing targets") asks a few days of farming for each later chapter.
    */
-  chapterHp: [100, 140, 420, 1300, 2400],
+  chapterHp: [100, 140, 440, 3000, 7000],
 };
+
+/**
+ * A later chapter's extra mob health and hurt (over 100 %, HORDE.chapterHp and
+ * HURT.chapterPercent) come in over the run: `from` percent of the extra on wave 1, rising to
+ * `to` percent on wave `wave` and after. The hero starts every run at level 1, so a flat step
+ * makes the first waves the wall and the rest of the run a formality.
+ */
+export const CHAPTER_RAMP = {
+  from: 0,
+  to: 180,
+  wave: 50,
+};
+
+/** `pct` percent (a chapter's HORDE.chapterHp or HURT.chapterPercent) ramped in for wave `wave` (CHAPTER_RAMP). */
+export function rampChapter(pct: number, wave: number): number {
+  const span = CHAPTER_RAMP.wave - 1;
+  const n = Math.min(Math.max(wave - 1, 0), span);
+  const share = CHAPTER_RAMP.from + Math.trunc(((CHAPTER_RAMP.to - CHAPTER_RAMP.from) * n) / span);
+  return 100 + Math.trunc(((pct - 100) * share) / 100);
+}
 
 export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter' | 'wolf' | 'caster' | 'skeleton' | 'shard' | 'effigy' | 'scrap' | 'monk';
 
@@ -200,7 +220,7 @@ const WISPS: Pack = { kind: 'swarm', from: 6, every: 4, size: 10, max: 40, sprea
 export const CHAPTER_PACKS: readonly Pack[] = [
   WISPS,
   WISPS,
-  { kind: 'wolf', from: 3, every: 2, size: 6, max: 36, spread: toFp(160) },
+  { kind: 'wolf', from: 3, every: 3, size: 6, max: 36, spread: toFp(160) },
   WISPS,
   { kind: 'wolf', from: 4, every: 3, size: 6, max: 30, spread: toFp(160) },
 ];
@@ -272,6 +292,12 @@ export const WAVES = {
    */
   twinHp: 650,
   twinDelay: ticks(1.5),
+  /**
+   * A boss fight thins the horde: while the mid-boss or the boss stands, a mob that falls stays
+   * down as long as the standing horde is above this percent of the wave's size, so the relic
+   * can reach the boss through it; the next wave brings them back.
+   */
+  bossHordePercent: 40,
 };
 
 /**
@@ -290,6 +316,11 @@ export const BALL = {
   hitRadius: toFp(55),
   seekRange: toFp(600),
   maxTravel: toFp(900),
+  /**
+   * The relic locks onto the boss or an elite this far away, and the ball flies at it through
+   * the horde (the relic is the weapon against the big ones; spells clear the horde).
+   */
+  lockRange: toFp(1100),
 };
 
 export const DAMAGE = {

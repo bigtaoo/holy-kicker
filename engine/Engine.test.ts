@@ -88,8 +88,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-04 for ENGINE_VERSION 25 (chapter difficulty: mob health and hurts by chapter). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(25);
+    // Recorded 2026-10-05 for ENGINE_VERSION 26 (boss arena, homing relic, chapter ramp). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(26);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -110,9 +110,9 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 1785290024;
+const GOLDEN = 926060662;
 const GOLDEN_CHAPTER = 3735409988;
-const GOLDEN_MARSH = 235013851;
-const GOLDEN_SNOW = 3455682564;
-const GOLDEN_GHOST = 465755430;
-const GOLDEN_PEAK = 1517044368;
+const GOLDEN_MARSH = 2146469689;
+const GOLDEN_SNOW = 3079788159;
+const GOLDEN_GHOST = 3820211288;
+const GOLDEN_PEAK = 4081783956;

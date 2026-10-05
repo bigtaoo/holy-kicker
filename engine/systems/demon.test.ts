@@ -76,14 +76,14 @@ describe('demon peak horde', () => {
 });
 
 describe('two elites at once', () => {
-  it('every elite wave brings a pair of earlier elites, in turn', () => {
-    expect(eliteKinds(5, 10, 50)).toEqual(['charger', 'toadKing']);
+  it('the first elite wave brings one earlier elite, the later ones a pair, in turn', () => {
+    expect(eliteKinds(5, 10, 50)).toEqual(['charger']);
     expect(eliteKinds(5, 20, 50)).toEqual(['wolfLeader', 'toadKing']);
     expect(eliteKinds(5, 30, 50)).toEqual(['doorGod', 'charger']);
     expect(eliteKinds(5, 40, 50)).toEqual(['doorGod', 'wolfLeader']);
     const e = new Engine(PEAK);
-    beginWave(e.state, 10);
-    expect(e.state.elites.map((x) => x.kind)).toEqual(['charger', 'toadKing']);
+    beginWave(e.state, 20);
+    expect(e.state.elites.map((x) => x.kind)).toEqual(['wolfLeader', 'toadKing']);
   });
 
   it('the mid-boss is the empowered judge, the last boss the Inner Demon', () => {

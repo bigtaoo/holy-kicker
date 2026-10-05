@@ -70,7 +70,7 @@ describe('ice wraith (caster)', () => {
     expect(m.t).toBeGreaterThanOrEqual(CASTER.cooldown);
     let hurt = 0;
     for (let i = 0; i < THREATS.warn; i++) for (const ev of e.step([still(e)])) if (ev.type === 'hurt') hurt += ev.value;
-    expect(hurt).toBe(chapterHurt(3, HURT.frost));
+    expect(hurt).toBe(chapterHurt(3, HURT.frost, e.state.wave));
   });
 
   it('waits to raise its arms until the hero is in range', () => {

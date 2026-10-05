@@ -286,7 +286,7 @@ or a new single image is cheap; elites and bosses cost a rig each.
   blue) and ice wraiths (`caster`, `CASTER`): they stop at 520 and every 5–7 s, with the hero
   in reach, raise their arms for 0.6 s and mark a frost circle under him that goes off after
   the usual warning (HURT.frost 12). The wisp packs give way to wolf packs (`CHAPTER_PACKS`):
-  6 fast wolves every 2nd wave from wave 3, at most 36, on top of the horde size. The elite
+  6 fast wolves every 3rd wave from wave 3 (every 2nd before ENGINE_VERSION 26), at most 36, on top of the horde size. The elite
   is the wolf leader (`WOLF_LEADER`, 600 health): it charges down the big jiangshi's lane and,
   every other time, howls instead, sending every mob within 900 running at 160 % for 4 s
   (snow puffs at their feet, violet rings out of it). The mid-boss is the empowered Black
@@ -327,8 +327,8 @@ or a new single image is cheap; elites and bosses cost a rig each.
   systems/demon.ts): a shielder mob whose gong faces its nearest hero and takes 3 relic hits from
   within 60° of him (spells always land, hits from behind land), then cracks until it falls.
   Wolf packs every 3rd wave from wave 4. Elite waves bring two earlier elites at once
-  (`ELITE_PAIRS`: big jiangshi + toad king, wolf leader + toad king, door god + big jiangshi,
-  door god + wolf leader). The mid-boss is the empowered Judge (`EMPOWERED_JUDGE`: 3000 health,
+  (`ELITE_PAIRS`: the big jiangshi alone on wave 10, then wolf leader + toad king, door god +
+  big jiangshi, door god + wolf leader). The mid-boss is the empowered Judge (`EMPOWERED_JUDGE`: 3000 health,
   rests 2.1 s, 1.7 s enraged). The last boss is the Inner Demon (`DEMON`, 5200 health), the
   hero's own rig recoloured cold (`tools/recolor_cold.py`): it circles him at 330 and every
   2.3 s (1.7 s below half health) in turn turns his own relic on him (the ball: 3 volleys of
@@ -344,6 +344,18 @@ or a new single image is cheap; elites and bosses cost a rig each.
   (was 100/100/140/190/250) and every hurt the hero takes is 100/100/120/155/175 %
   (`HURT.chapterPercent`, so health from gear does not make the late chapters safe). Elites
   and bosses keep their health.
+- **Boss arena, homing relic and the chapter ramp** (ENGINE_VERSION 26). The journeys showed
+  the chapter 4 and 5 bosses all but unkillable (the relic spent its hits on the horde in
+  front of them) and runs that either died early or snowballed. Now:
+  - While the mid-boss or the boss stands, a fallen mob stays down while the standing horde is
+    above `WAVES.bossHordePercent` (40 %) of the wave's size; the next wave brings them back.
+  - The relic locks onto the boss or an elite within `BALL.lockRange` (1100): the kick aims at
+    it and the ball flies through the horde, hitting only its mark.
+  - A chapter's extra mob health and hurt come in over the run (`CHAPTER_RAMP`, `rampChapter`):
+    none of the extra on wave 1, 180 % of it on wave 50. Mob health is 100/140/440/3000/7000 %
+    and hurt 100/100/125/210/250 % at full share.
+  - Chapter 3's wolf packs come every 3rd wave, and chapter 5's first elite wave brings one
+    elite instead of two.
 
 ## Chapters (5)
 

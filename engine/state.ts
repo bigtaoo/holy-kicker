@@ -1,4 +1,4 @@
-import { ELITE, HERO, tempKind, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
+import { ELITE, HERO, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
 import type { Card, PassiveId, RelicId, SpellId, StatBonus } from './content';
 import { Prng } from './math/prng';
 
@@ -91,11 +91,12 @@ export interface Mob extends Body {
 }
 
 /**
- * An emerger still under the ground (or rising from its mark), or a skeleton or shard that fell
- * (health 0, until summoned again), cannot be hit, hurt or moved.
+ * An emerger still under the ground (or rising from its mark), a skeleton or shard that fell
+ * (until summoned again) or a mob resting out a boss fight (both health 0) cannot be hit, hurt
+ * or moved.
  */
 export function underground(m: Mob): boolean {
-  return (m.kind === 'emerger' && m.t > 0) || (m.hp === 0 && tempKind(m.kind));
+  return (m.kind === 'emerger' && m.t > 0) || m.hp === 0;
 }
 
 /** An emerger on its way up: its mark shows. */
@@ -169,6 +170,11 @@ export interface Ball extends Body {
   travel: number;
   /** An awakened ball sends splinters at every bounce; splinters themselves do not. */
   split: boolean;
+  /**
+   * The big one the kick locked onto, which the ball flies at through the horde until it hits
+   * it: -1 the boss, an elite's id, 0 none (then it hits whatever it meets).
+   */
+  mark: number;
 }
 
 export interface Bullet extends Body {

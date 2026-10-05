@@ -1,9 +1,9 @@
 import {
   BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HORDE, MOB_KINDS, SHRINE,
-  TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
+  rampChapter, tempKind, TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
-import { body, newElite, newMob, type SimState } from '../state';
+import { body, newElite, newMob, underground, type SimState } from '../state';
 import { newBoss } from './boss';
 import { openShrine, payBet } from './build';
 import { ringPoint } from './horde';
@@ -29,8 +29,12 @@ export function hordeSize(wave: number): number {
 export function mobHp(wave: number, kind: MobKind = 'chaser', chapter = 1): number {
   const n = wave - 1;
   const hp = wave > 0 ? HORDE.hp + Math.trunc((HORDE.hpStep * n + HORDE.hpSquare * n * n) / 1000) : 1;
-  const ch = HORDE.chapterHp[Math.min(Math.max(chapter, 1), HORDE.chapterHp.length) - 1];
-  return Math.max(1, Math.trunc((hp * MOB_KINDS[kind].hpPercent * ch) / 10000));
+  return Math.max(1, Math.trunc((hp * MOB_KINDS[kind].hpPercent * chapterHp(chapter, wave)) / 10000));
+}
+
+/** Mob health percent of chapter `chapter` on wave `wave` (HORDE.chapterHp, ramped in over the run). */
+export function chapterHp(chapter: number, wave: number): number {
+  return rampChapter(HORDE.chapterHp[Math.min(Math.max(chapter, 1), HORDE.chapterHp.length) - 1], wave);
 }
 
 /** The kind of the n-th mob (0-based) of the horde, joining on wave `wave` of chapter `chapter`. */
@@ -52,7 +56,7 @@ export function chapterBoss(chapter: number): BossKind {
 
 /** The elites coming on elite wave `wave`: the chapter's, and on the last one the previous chapter's too. */
 export function eliteKinds(chapter: number, wave: number, last: number): EliteKind[] {
-  // chapter 5 has none of its own: two earlier ones at once, in turn
+  // chapter 5 has none of its own: earlier ones, in turn (ELITE_PAIRS)
   if (chapter >= 5) return [...ELITE_PAIRS[(Math.trunc(wave / WAVES.eliteEvery) + ELITE_PAIRS.length - 1) % ELITE_PAIRS.length]];
   const kinds = [chapterElite(chapter)];
   if (chapter > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
@@ -95,6 +99,21 @@ export function isMidBoss(wave: number, last: number): boolean {
   return wave === WAVES.midBoss && wave < last;
 }
 
+/** The mid-boss (the twins or the empowered boss) or the chapter boss is standing. */
+export function bossUp(s: SimState): boolean {
+  const last = s.config.waves;
+  if (!isBossWave(s.wave, last)) return false;
+  return (s.boss !== null && s.boss.phase !== 'down') || (isMidBoss(s.wave, last) && s.elites.length > 0);
+}
+
+/** A boss stands and the standing horde is still above WAVES.bossHordePercent of the wave's. */
+export function bossThins(s: SimState): boolean {
+  if (!bossUp(s)) return false;
+  let standing = 0;
+  for (const m of s.mobs) if (!underground(m)) standing++;
+  return standing * 100 > hordeSize(s.wave) * WAVES.bossHordePercent;
+}
+
 /** Shrine waves open with the shrine cards (never the last wave). */
 export function isShrineWave(wave: number, last: number): boolean {
   return wave >= SHRINE.first && (wave - SHRINE.first) % SHRINE.every === 0 && wave < last;
@@ -118,6 +137,12 @@ export function beginWave(s: SimState, wave: number): void {
   for (const m of s.mobs) {
     if (extraKind(m.kind)) extra++;
     if (m.kind === k.kind) packed++;
+    // the mobs that rested out the boss fight come back
+    if (m.hp === 0 && !tempKind(m.kind)) {
+      m.hp = mobHp(wave, m.kind, s.config.chapter);
+      resetMob(s, m);
+      ringPoint(s.ai, p.x, p.y, m);
+    }
   }
   for (let n = s.mobs.length - extra; n < hordeSize(wave); n++) {
     const kind = newcomer(s.config.chapter, wave, n);

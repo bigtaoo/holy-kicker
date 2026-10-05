@@ -319,18 +319,26 @@ entries, daily tasks and ad counts, patrol start time, save version.
   chapter.
 - All 5 chapters: about 2 weeks; then hard mode and new chapters.
 
-**Measured** (2026-10-04, ENGINE_VERSION 25, `npm run journey`: the casual bot from a new
+**Measured** (2026-10-05, ENGINE_VERSION 26, `npm run journey`: the casual bot from a new
 save, merging, training, using the shop, patrol and daily tasks between runs and always
 pushing the highest open chapter; no revives; 6 seeds). Days to clear, median (range):
 
 | Player | Ch 1 | Ch 2 | Ch 3 | Ch 4 | Ch 5 |
 |---|---|---|---|---|---|
-| 2 sessions × 2 runs a day, every ad | 1 | 1 (3–4 tries) | 3.5 (2–5) | 4.5 (3–7) | 9.5 (7–25) |
-| 2 sessions × 1 run a day, no ads | 1 | 2 | 6 (4–9) | 9.5 (6–14) | 2 of 6 by day 45 (12, 28) |
+| 2 sessions × 2 runs a day, every ad | 1 | 1 | 2 (2–3) | 4 (3–6) | 8 (6–9) |
+| 2 sessions × 1 run a day, no ads | 1 | 2 (1–2) | 4 (3–7) | 8 (7–10) | 16.5 (9–26) |
 
-Before the retune every chapter fell at the first or second try (all 5 in about 8 runs), with
-or without the lobby's income. The levers are mob health and every hurt by chapter
-(`HORDE.chapterHp` 100/140/420/1300/2400 %, `HURT.chapterPercent` 100/100/120/155/175 %) and
-the lobby's gear (one patrol item per 6 h, 1 item per ad chest, the jade chest 80 jade for 3).
-Deaths cluster on the first elite (waves 10–14) and the second elite and mid-boss (20–25); a
-run past the mid-boss nearly always wins, so the tries are luck-heavy and the tail is long.
+Before ENGINE_VERSION 26 the no-ads player had cleared chapter 5 in 2 of 6 journeys by day 45:
+the chapter 4 and 5 bosses were all but unkillable through their horde, and a try died on the
+first elite or the mid-boss or else won, so luck set the pace. The levers now:
+
+- In the run: mob health and every hurt by chapter (`HORDE.chapterHp`, `HURT.chapterPercent`),
+  ramped in over the run (`CHAPTER_RAMP`: a later chapter starts near chapter 1 and is at its
+  hardest by the last boss), so a try's reach grows with the hero's strength rather than
+  falling to a coin toss at one wave. Lost tries on chapter 5 now end anywhere from wave 17 to
+  the Inner Demon on 49.
+- Grit (`BALANCE.grit`, loadout.ts): every lost try of at least 5 waves on the first uncleared
+  chapter adds +3 % attack and +4 % health there, up to 20 times; clearing it starts over. It
+  turns a long run of bad luck into a few more tries and is the main pacing lever for the last
+  chapters (at +4/+6 the ads player cleared chapter 5 on days 5–7).
+- The lobby's gear: one patrol item per 6 h, 1 item per ad chest, the jade chest 80 jade for 3.

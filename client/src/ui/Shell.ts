@@ -192,7 +192,7 @@ export class Shell {
   private startRun(chapter: number): void {
     this.chapter = chapter;
     this.setScreen(null);
-    const { bonus, freeRevives } = loadout(this.save);
+    const { bonus, freeRevives } = loadout(this.save, chapter);
     this.freeRevives = freeRevives;
     this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, {
       chapter,

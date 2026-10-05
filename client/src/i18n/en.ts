@@ -17,6 +17,7 @@ export const en = {
     chapterTitle: 'Chapter {n}: {name}',
     unlockAtChapter: 'Clear chapter {n} to unlock',
     relic: 'Relic',
+    grit: 'Grit ×{n}: +{attack}% ATK, +{hp}% HP',
   },
   tab: {
     shop: 'Shop',
@@ -153,6 +154,7 @@ export const en = {
     offering: 'Offerings: copper +{n}',
     chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
     newBest: 'New best!',
+    grit: 'Grit ×{n}: the next try here is stronger',
     newRelic: 'New relic: {name}!',
     newCodex: 'New in the Codex: {name}!',
     newSutra: 'New sutra: {name}!',

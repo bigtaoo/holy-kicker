@@ -2,6 +2,7 @@
   "chapters": 5,
   "waves": 50,
   "revives": 1,
+  "grit": {"max": 20, "minWaves": 5, "bonus": {"attack": 3, "maxHp": 4}},
   "copperPerWave": 10,
   "copperChapterStep": 0.5,
   "chests": [

@@ -50,6 +50,7 @@ export class ResultsScreen implements Screen {
       [t('results.reached', { wave: this.waves }), 52, COLORS.text],
     ];
     if (r.newBest) lines.push([t('results.newBest'), 48, COLORS.saffron]);
+    if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.saffron]);
     if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 52, COLORS.saffron]);
     for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 48, COLORS.saffron]);
     for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 48, COLORS.saffron]);
