@@ -7,11 +7,11 @@ import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
 import { gritBonus } from '../meta/loadout';
-import { buyMonk, chooseMonk, monkAffordable } from '../meta/monks';
+import { buyMonk, chooseMonk, monkAffordable, monkPrice } from '../meta/monks';
 import { train } from '../meta/training';
 import { iconSprite, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
-import { EconomyUi, shopHeight, shopWaiting } from './lobbyEconomy';
+import { EconomyUi, shopHeight, shopWaiting, type LobbyTrack } from './lobbyEconomy';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
 import { monkPanel } from './monkPanel';
@@ -42,6 +42,7 @@ export interface LobbyActions {
   rewarded(): Promise<boolean>;
   /** Fetches a leaderboard; null offline (no Ranks button then). */
   board: FetchBoard | null;
+  track: LobbyTrack;
 }
 
 const TOP_H = 150;
@@ -94,6 +95,7 @@ export class LobbyScreen implements Screen {
       toast: (text) => this.showToast(text),
       rewarded: () => actions.rewarded(),
       icons: this.icons,
+      track: actions.track,
     }, ads);
     this.boards = new BoardUi(actions.board, () => this.relayout());
   }
@@ -157,6 +159,7 @@ export class LobbyScreen implements Screen {
         const next = buyMonk(this.save, id);
         if (!next) return this.showToast(t('shop.noJade'));
         this.change(next);
+        this.actions.track('buy', { item: 'monk', monk: id, spent: monkPrice(id) });
         this.relayout();
         this.showToast(t('monk.joined', { name: t(`monk.${id}.name`) }));
       },
@@ -228,7 +231,9 @@ export class LobbyScreen implements Screen {
   private trainTab(w: number, midY: number): void {
     const tab = trainTab(this.save, this.trainPick, {
       train: () => {
-        this.change(train(this.save));
+        const next = train(this.save);
+        if (next !== this.save) this.actions.track('buy', { item: 'train', node: next.trained, spent: this.save.copper - next.copper });
+        this.change(next);
         this.trainPick = null;
         this.relayout();
       },

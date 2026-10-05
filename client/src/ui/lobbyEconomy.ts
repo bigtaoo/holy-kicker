@@ -1,3 +1,4 @@
+import type { PropValue } from '@hk/protocol';
 import { Container, Graphics, type Text } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
@@ -15,7 +16,8 @@ import { COLORS, button, dot, fit, label, panel } from './widgets';
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
 // chests, the patrol and daily-task buttons under PLAY, and their panels. Holds what is open
 // and whether an ad is playing; the save changes themselves are pure (meta/shop.ts,
-// meta/patrol.ts, meta/daily.ts) and go back to the lobby to store.
+// meta/patrol.ts, meta/daily.ts) and go back to the lobby to store. Each one that went through
+// is reported to analytics: a chest or a quick patrol as `buy`, anything paid out as `claim`.
 //
 // Rewarded offers are hidden, not shown disabled, when the host has no ad (CrazyGames' rule
 // for adblocked players).
@@ -29,7 +31,11 @@ export interface EconomyHost {
   rewarded(): Promise<boolean>;
   /** The icon sheet, with the chests as chest_free, chest_ad and chest_jade. */
   icons: IconSheet;
+  track: LobbyTrack;
 }
+
+/** Reports a lobby purchase or payout to analytics (Backend.track). */
+export type LobbyTrack = (e: 'buy' | 'claim', p: Record<string, PropValue>) => void;
 
 type Modal = 'patrol' | 'tasks' | null;
 
@@ -140,10 +146,13 @@ export class EconomyUi {
       }, this.live));
     } else if (this.modal === 'tasks') {
       c.addChild(tasksPanel(save, this.now(), w, h, this.tasksView, this.achievePage, {
-        claimTask: (i) => this.host.change(claimTask(this.host.save(), this.now(), i)),
-        bonus: () => this.host.change(claimBonus(this.host.save(), this.now())),
-        claim: (i) => this.host.change(claimAchievement(this.host.save(), i)),
-        claimAll: () => this.host.change(claimAllAchievements(this.host.save())),
+        claimTask: (i) => this.claim(claimTask(this.host.save(), this.now(), i), [{ what: 'task', task: i }]),
+        bonus: () => this.claim(claimBonus(this.host.save(), this.now()), [{ what: 'bonus' }]),
+        claim: (i) => this.claim(claimAchievement(this.host.save(), i), [{ what: 'achievement', goal: i }]),
+        claimAll: () => {
+          const goals = achievementsReady(this.host.save()).map((i) => ({ what: 'achievement', goal: i, all: true }));
+          this.claim(claimAllAchievements(this.host.save()), goals);
+        },
         page: (n) => {
           this.achievePage = n;
           this.host.relayout();
@@ -170,10 +179,20 @@ export class EconomyUi {
     this.host.relayout();
   }
 
-  private pay(r: { save: SaveData; haul: Haul } | null): void {
+  /** Stores a payout and reports it, unless nothing was paid (the save came back as it was). */
+  private claim(next: SaveData, events: Record<string, PropValue>[]): void {
+    if (next === this.host.save()) return;
+    this.host.change(next);
+    for (const p of events) this.host.track('claim', p);
+  }
+
+  private pay(r: { save: SaveData; haul: Haul } | null, e: 'buy' | 'claim', p: Record<string, PropValue>): void {
     if (!r) return;
+    // a buy's price is the jade that went beyond what the haul paid in
+    const spent = this.host.save().jade + r.haul.jade - r.save.jade;
     this.haul = r.haul;
     this.host.change(r.save);
+    this.host.track(e, { ...p, ...(e === 'buy' ? { spent } : {}), copper: r.haul.copper, jade: r.haul.jade, drops: r.haul.drops.length });
   }
 
   /** Plays the rewarded ad with every ad button locked; resolves whether it finished. */
@@ -189,19 +208,20 @@ export class EconomyUi {
 
   private async collect(double: boolean): Promise<void> {
     if (double && !(await this.watch())) return;
-    this.pay(collectPatrol(this.host.save(), this.now(), double));
+    const hours = patrolHours(this.host.save(), this.now());
+    this.pay(collectPatrol(this.host.save(), this.now(), double), 'claim', { what: 'patrol', hours: Math.round(hours * 10) / 10, double });
   }
 
   private async quick(pay: QuickPay): Promise<void> {
     if (pay === 'ad' && !(await this.watch())) return;
-    this.pay(quickPatrol(this.host.save(), this.now(), pay));
+    this.pay(quickPatrol(this.host.save(), this.now(), pay), 'buy', { item: 'patrol', pay });
   }
 
   private async open(kind: ChestKind): Promise<void> {
     const block = chestBlock(this.host.save(), this.now(), kind);
     if (block) return this.host.toast(block === 'jade' ? t('shop.noJade') : t('shop.tomorrow'));
     if (kind === 'ad' && !(await this.watch())) return;
-    this.pay(openChest(this.host.save(), this.now(), kind));
+    this.pay(openChest(this.host.save(), this.now(), kind), 'buy', { item: 'chest', kind });
   }
 
   private chestCard(kind: ChestKind): Container {

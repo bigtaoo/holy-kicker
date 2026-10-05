@@ -179,6 +179,7 @@ export class Shell {
       adAvailable: () => this.ads.rewardedAvailable(),
       rewarded: () => this.rewarded('lobby'),
       board: this.net.online ? (id) => this.net.board(id) : null,
+      track: (e, p) => this.net.track(e, p),
     }, this.art.icons, this.app.renderer);
     if (settings) lobby.openSettings();
     this.setScreen(lobby);

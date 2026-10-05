@@ -9,7 +9,12 @@ export type Host = (typeof HOSTS)[number];
 /**
  * Analytics event names. `session` opens a play session; `run_start` / `run_end` bracket a
  * chapter run; `tutorial` marks the first run's hints done; `buy` a lobby purchase; `ad` a
- * rewarded ad watched to the end; `claim` a daily task or achievement paid out.
+ * rewarded ad watched to the end; `claim` a daily task, achievement or patrol paid out.
+ *
+ * `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
+ * `node`) and `spent` (copper for training, jade otherwise). `claim` has `what` (`task` with
+ * `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours` and
+ * `double`). Chests and patrols also carry their haul: `copper`, `jade` and `drops`.
  */
 export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim'] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
