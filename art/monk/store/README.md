@@ -13,3 +13,7 @@ The pictures carry no text; the logo (`logo_en.png`, `logo_zh.png`, lettered by
 Round 1 (`r1/*_fire.png`) edited the plain 4:3 hero picture: every cover came out 4:3, and a
 "glowing golden-red ball" became a fireball. The prompts now describe the real ball (cream leather,
 red cords, "not fire") and the ball is already on the canvas.
+
+The landscape boss first came out with a topknot and brown skin (`r1/cover_landscape_topknot.png`);
+`cover_landscape.png` is that cover edited with `cover_landscape_boss.txt` into a bald, grey-blue
+fallen monk.
