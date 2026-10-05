@@ -218,6 +218,8 @@ export const en = {
     offering: 'Offerings: copper +{n}',
     chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
     newBest: 'New best!',
+    rankNew: 'Leaderboard: #{rank}!',
+    rankKept: 'Your best on the leaderboard: #{rank}',
     grit: 'Grit ×{n}: the next try here is stronger',
     newRelic: 'New relic: {name}!',
     newCodex: 'New in the Codex: {name}!',

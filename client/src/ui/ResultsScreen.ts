@@ -1,13 +1,15 @@
 import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
 import type { Reward } from '../meta/progress';
+import type { RunRank } from '../net/backend';
 import { sutraName } from './cardText';
 import { dropLines } from './gearText';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, fit, label, panel } from './widgets';
 
-// Results after a run: what it paid and dropped (already in the save), the rewarded "double copper"
-// offer when an ad can be shown, and Continue back to the lobby.
+// Results after a run: what it paid and dropped (already in the save), its place on the
+// leaderboard once the server answers, the rewarded "double copper" offer when an ad can be
+// shown, and Continue back to the lobby.
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
@@ -21,13 +23,22 @@ export class ResultsScreen implements Screen {
   readonly view = new Container();
   private frame: UiFrame | null = null;
   private offer: Offer = 'hidden';
+  private rank: RunRank | null = null;
 
   constructor(
     private readonly reward: Reward,
     private readonly waves: number,
     private readonly actions: ResultsActions,
     adAvailable: Promise<boolean>,
+    rank: Promise<RunRank | null>,
   ) {
+    // the leaderboard line comes in when the server answers; offline or unranked runs have none
+    void rank.then((r) => {
+      if (r && !this.view.destroyed) {
+        this.rank = r;
+        this.relayout();
+      }
+    });
     // copper 0 has nothing to double
     void adAvailable.then((ok) => {
       if (ok && reward.copper > 0 && this.offer === 'hidden' && !this.view.destroyed) {
@@ -50,6 +61,8 @@ export class ResultsScreen implements Screen {
       [t('results.reached', { wave: this.waves }), 52, COLORS.text],
     ];
     if (r.newBest) lines.push([t('results.newBest'), 48, COLORS.saffron]);
+    const rank = this.rank;
+    if (rank) lines.push(rank.best ? [t('results.rankNew', { rank: rank.rank }), 52, COLORS.saffron] : [t('results.rankKept', { rank: rank.rank }), 44, COLORS.dim]);
     if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.saffron]);
     if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 48, COLORS.danger]);
     if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 52, COLORS.saffron]);

@@ -220,6 +220,8 @@ export const zh: Table<typeof en> = {
     offering: '供奉：铜钱 +{n}',
     chest: '宝箱（第 {wave} 波）：铜钱 +{copper}，玉 +{jade}',
     newBest: '新纪录！',
+    rankNew: '排行榜：第 {rank} 名！',
+    rankKept: '你的最佳排名：第 {rank} 名',
     grit: '愈挫愈勇 ×{n}：下次挑战本章更强',
     newRelic: '新法器：{name}！',
     newCodex: '图鉴新增：{name}！',

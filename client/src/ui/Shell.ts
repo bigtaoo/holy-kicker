@@ -18,7 +18,7 @@ import { loadSettings, updateSettings } from '../meta/settings';
 import { bracketed } from '../platform/brackets';
 import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
-import type { Backend } from '../net/backend';
+import type { Backend, RunRank } from '../net/backend';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
 import { cardText } from './cardText';
@@ -293,7 +293,7 @@ export class Shell {
     const p = this.game.engine.state.players[0];
     const { offerings } = p;
     const evolved = evolvedIn(p);
-    this.report(this.game.engine.state, p.level);
+    const rank = this.report(this.game.engine.state, p.level);
     this.game.destroy();
     this.game = null;
     this.hud = null;
@@ -306,22 +306,26 @@ export class Shell {
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);
     if (reward.firstClear) this.portal.celebrate();
-    this.showResults(reward, waves);
+    this.showResults(reward, waves, rank);
   }
 
-  /** Tells the backend how the run went, and enters it on its board when no dev switch bent the rules. */
-  private report(s: Game['engine']['state'], level: number): void {
+  /**
+   * Tells the backend how the run went, and enters it on its board when no dev switch bent the
+   * rules; resolves to the install's rank there, or null (offline, unranked, failed).
+   */
+  private report(s: Game['engine']['state'], level: number): Promise<RunRank | null> {
     const p = s.players[0];
     const run = {
       chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
       level, kills: this.kills, monk: p.monk, relic: p.relicId,
     };
     this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
-    if (rankedRun(this.scene)) void this.net.submitRun(run);
+    const rank = rankedRun(this.scene) ? this.net.submitRun(run) : Promise.resolve(null);
     void this.net.flush();
+    return rank;
   }
 
-  private showResults(reward: Reward, waves: number): void {
+  private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>): void {
     let leaving = false;
     this.setScreen(new ResultsScreen(reward, waves, {
       double: async () => {
@@ -337,7 +341,7 @@ export class Shell {
         const ad = this.save.runs > 1 ? this.ads.midgame() : Promise.resolve();
         void ad.then(() => this.showLobby());
       },
-    }, this.ads.rewardedAvailable()));
+    }, this.ads.rewardedAvailable(), rank));
   }
 
   private tick(): void {

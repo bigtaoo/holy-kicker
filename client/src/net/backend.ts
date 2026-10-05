@@ -27,6 +27,13 @@ export function apiBase(host: Host, dev: boolean, query: URLSearchParams, config
 
 export type RunResult = Omit<RunEntry, 'install' | 'host' | 'build'>;
 
+/** The server's answer to a run: the install's rank on the board, and whether this run is its new best there. */
+export interface RunRank {
+  board: string;
+  rank: number;
+  best: boolean;
+}
+
 export class Backend {
   readonly install: string;
   private readonly session = newId(Math.random);
@@ -79,9 +86,10 @@ export class Backend {
   }
 
   /** Enters a finished run on its board; the reply has the install's rank there, or null offline. */
-  async submitRun(run: RunResult): Promise<{ board: string; rank: number; best: boolean } | null> {
+  async submitRun(run: RunResult): Promise<RunRank | null> {
     const entry: RunEntry = { ...run, install: this.install, host: this.platform.host, build: this.build };
-    return (await this.send('POST', '/v1/runs', entry)) as { board: string; rank: number; best: boolean } | null;
+    const r = (await this.send('POST', '/v1/runs', entry)) as Partial<RunRank> | null;
+    return r && typeof r.rank === 'number' && r.rank > 0 ? (r as RunRank) : null;
   }
 
   async board(id: string): Promise<BoardReply | null> {
