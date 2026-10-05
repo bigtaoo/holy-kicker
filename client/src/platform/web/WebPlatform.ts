@@ -6,6 +6,7 @@ import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { FAKE_ADS, NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal } from '../types';
 import { BannerHost, FAKE_BANNER_FILL } from './banner';
 import { webAudioHost } from './webAudio';
+import { installTextCanvasFix } from './textCanvas';
 
 const KEY_DIRS: Record<string, Vec2> = {
   KeyW: { x: 0, y: -1 },
@@ -69,6 +70,7 @@ export class WebPlatform implements Platform {
   }
 
   async createApp(msaa: boolean): Promise<Application> {
+    installTextCanvasFix();
     const app = new Application();
     // dev ?record: a fixed phone-sized canvas, scaled to the window by CSS (dev/recorder.ts)
     const record = new URLSearchParams(location.search).has('record');
