@@ -13,13 +13,25 @@ from cutout import cutout  # noqa: E402
 ART = Path(__file__).parent.parent / "art" / "monk" / "rig"
 SKY = (24, 58, 72, 255)
 
-# name: canvas size, monk (centre x, centre y, height), ball (centre x, centre y, diameter), all
-# as fractions of the canvas height except the centres, which are fractions of width / height
+# monk poses: file in ART, whether the picture has a painted ground shadow under the figure to drop
+POSES = {"apose": ("hero_apose_v3.png", False), "kick": ("hero_kick_v1.png", True)}
+
+# name: canvas size, pose, monk (centre x, centre y, height), ball (centre x, centre y, diameter),
+# all as fractions of the canvas height except the centres, which are fractions of width / height
 LAYOUTS = {
-    "landscape": ((1456, 816), (0.27, 0.58, 0.78), (0.47, 0.50, 0.17)),
-    "portrait": ((832, 1248), (0.42, 0.70, 0.52), (0.64, 0.42, 0.12)),
-    "square": ((1024, 1024), (0.42, 0.52, 0.80), (0.74, 0.58, 0.20)),
+    "landscape": ((1456, 816), "apose", (0.27, 0.58, 0.78), (0.47, 0.50, 0.17)),
+    "portrait": ((832, 1248), "kick", (0.45, 0.68, 0.46), (0.83, 0.53, 0.12)),
+    "square": ((1024, 1024), "kick", (0.44, 0.42, 0.62), (0.80, 0.26, 0.15)),
 }
+
+
+def drop_shadow(im):
+    """Cuts a cutout at its first empty row, dropping a ground shadow painted apart below the figure."""
+    a = im.getchannel("A")
+    for y in range(im.height):
+        if a.crop((0, y, im.width, y + 1)).getbbox() is None:
+            return im.crop((0, 0, im.width, y))
+    return im
 
 
 def place(page, im, cx, cy, h):
@@ -31,9 +43,12 @@ def place(page, im, cx, cy, h):
 
 def main():
     out = Path(sys.argv[1])
-    monk = cutout(str(ART / "hero_apose_v3.png"))
     ball = Image.open(ART / "cuju_cut.png").convert("RGBA")
-    for name, (size, m, b) in LAYOUTS.items():
+    for name, (size, pose, m, b) in LAYOUTS.items():
+        file, shadow = POSES[pose]
+        monk = cutout(str(ART / file))
+        if shadow:
+            monk = drop_shadow(monk)
         page = Image.new("RGBA", size, SKY)
         place(page, monk, *m)
         place(page, ball, *b)
