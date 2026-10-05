@@ -60,7 +60,7 @@ thumbnail size.
 
 | Image | Size | Composition |
 |---|---|---|
-| Landscape cover | 1920×1080 | The monk mid-kick on the left third, the ball flying right into a crowd of jiangshi and wisps, the Fallen Abbot looming behind; logo top left |
+| Landscape cover | 1920×1080 | The monk mid-kick on the left third, the ball flying right into a crowd of jiangshi and wisps, the Fallen Abbot looming behind; logo top centre |
 | Portrait cover | 800×1200 | The monk mid-kick in the lower half, horde above; logo on top |
 | Square cover | 800×800 | Monk and ball only, close up; logo at the bottom |
 | Gameplay video (optional) | 1080×1920, 15–20 s | A late-wave screen full of mobs, an evolution card, the boss |

@@ -49,7 +49,6 @@ a glass bauble; the prompt now asks for a ring with the background showing throu
 is a brown belt, since Karma is already a red knot. The pendant's hole and the belt's loop are
 closed shapes, so `tools/pack_icons.py` seeds them as background (`HOLES`).
 
-The shop's chests (`chest_free`, `chest_ad`, `chest_jade`): prompts here; only
-`chest_free.jpg` came out before Mistral rate-limited, so none is packed yet and the shop
-draws its placeholder (`lobbyEconomy.ts` falls back when the sheet lacks `chest_<kind>`).
-Pack them after `sandals.jpg` once all three exist.
+The shop's chests (2026-10-05): `chest_free.jpg`, `chest_ad.png` and `chest_jade.jpg`, packed after
+`sandals.jpg`. The first wooden chest (`r1/chest_ad_shadow.jpg`) stood on a black ground slab;
+`chest_ad.png` is that image edited with `chest_ad_fix.txt`.
