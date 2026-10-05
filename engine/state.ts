@@ -22,6 +22,8 @@ export interface Player extends Body {
   /** -1 facing left, 1 right. */
   facing: number;
   moving: boolean;
+  /** Ticks stood still, up to ZEN.enter (in Zen once there; systems/players.ts). */
+  still: number;
   /** Last command, held while no new one arrives. */
   moveBrad: number;
   moveMag: number;
@@ -381,7 +383,7 @@ export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser', t
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball', bonus: StatBonus = {}, monk: MonkId = 'kicker'): Player {
   return {
-    ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, moveBrad: 0, moveMag: 0,
+    ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, still: 0, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0, xpPart: 0,
     hp, maxHp: hp, dead: false, revives, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
     bet: false, offerings: 0, taps: 0, halo: 0, bonus, monk, dodge: 0,

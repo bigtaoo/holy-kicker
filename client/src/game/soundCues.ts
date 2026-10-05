@@ -14,6 +14,8 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
       return e.owner === local ? 'swish' : null;
     case 'ring':
       return e.owner === local ? 'woodfish' : null;
+    case 'zen':
+      return e.owner === local ? 'zen' : null;
     case 'hurt':
       return e.owner === local && e.value > 0 ? 'hurt' : null;
     case 'heroDown':

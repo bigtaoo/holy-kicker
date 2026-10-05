@@ -249,7 +249,7 @@ export class RunHud implements Screen {
     const box = new Container();
     box.position.set(f.w / 2, f.h * 0.7);
     box.eventMode = 'none';
-    const lines = this.tutorial === 'move' ? [t('tutorial.move'), ...(this.keys ? [t('tutorial.keys')] : [])] : [t('tutorial.auto'), t('tutorial.gems')];
+    const lines = this.tutorial === 'move' ? [t('tutorial.move'), ...(this.keys ? [t('tutorial.keys')] : [])] : [t('tutorial.auto'), t('tutorial.zen'), t('tutorial.gems')];
     lines.forEach((text, i) => {
       const l = fit(label(text, i === 0 ? 60 : 48, i === 0 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), f.w - 80);
       l.y = i * 80;

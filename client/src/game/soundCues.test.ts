@@ -6,6 +6,8 @@ describe('eventCue', () => {
     expect(eventCue({ type: 'kick', owner: 0, dir: 1 }, 0)).toBe('kick');
     expect(eventCue({ type: 'kick', owner: 1, dir: 1 }, 0)).toBeNull();
     expect(eventCue({ type: 'levelUp', owner: 1, level: 3 }, 0)).toBeNull();
+    expect(eventCue({ type: 'zen', owner: 0 }, 0)).toBe('zen');
+    expect(eventCue({ type: 'zen', owner: 1 }, 0)).toBeNull();
   });
 
   it('keeps the sandbox\'s harmless hurts quiet', () => {

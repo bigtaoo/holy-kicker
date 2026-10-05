@@ -93,8 +93,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-05 for ENGINE_VERSION 28 (the monks). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(28);
+    // Recorded 2026-10-05 for ENGINE_VERSION 29 (Stillness). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(29);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -119,12 +119,12 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 1010763723;
-const GOLDEN_CHAPTER = 1719824153;
-const GOLDEN_MARSH = 847737016;
-const GOLDEN_SNOW = 2330683014;
-const GOLDEN_GHOST = 2760094641;
-const GOLDEN_PEAK = 675144953;
-const GOLDEN_HARD = 3400573475;
-const GOLDEN_FAT = 2922641654;
-const GOLDEN_NOVICE = 3160508817;
+const GOLDEN = 1927321151;
+const GOLDEN_CHAPTER = 1172435790;
+const GOLDEN_MARSH = 1138549386;
+const GOLDEN_SNOW = 99659598;
+const GOLDEN_GHOST = 1373527490;
+const GOLDEN_PEAK = 315801467;
+const GOLDEN_HARD = 3730082272;
+const GOLDEN_FAT = 3829437146;
+const GOLDEN_NOVICE = 3005154409;

@@ -1,10 +1,10 @@
-import { BALL, HARD, HERO, HURT, rampChapter } from '../config';
+import { BALL, HARD, HERO, HURT, rampChapter, ZEN } from '../config';
 import type { SimEvent } from '../events';
 import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Player, SimState } from '../state';
-import { bowlLevel, pickCard, relicCooldown, relicLevel, stat } from './build';
+import { bowlLevel, pickCard, relicCooldown, relicLevel, relicPct, stat } from './build';
 import { bowlInAir, throwBowl } from './bowl';
 import { bigTarget, bossIndex, kickTarget, launchBall, markOf, nearestTarget, targetAt } from './combat';
 import { ringPoint } from './horde';
@@ -17,7 +17,8 @@ import { staffStart, sweep } from './staff';
 // nearest enemy (the boss first) or swings the staff when one comes close (systems/staff.ts) or taps the wooden fish (systems/fish.ts) or throws the alms bowl (systems/bowl.ts) (prayer beads circle him: systems/beads.ts), and loses health when something reaches him (at most one
 // blow per hurt cooldown; a Golden Bell takes the blow instead). Kick and hurt are one-shot actions; hurt interrupts a kick before
 // its foot meets the ball. At 0 health he is down until a revive; the sandbox (waves 0) only
-// flinches.
+// flinches. Standing still for ZEN.enter puts him in Zen: relic attacks started then hit harder
+// (relicPct in systems/build.ts).
 
 export function applyInput(s: SimState, events: SimEvent[], cmds: readonly PlayerCommand[]): void {
   for (const c of cmds) {
@@ -42,7 +43,7 @@ function revive(s: SimState, events: SimEvent[], p: Player): void {
   events.push({ type: 'revive', owner: p.owner });
 }
 
-export function movePlayers(s: SimState): void {
+export function movePlayers(s: SimState, events: SimEvent[]): void {
   const ease = s.config.heroEase;
   for (const p of s.players) {
     p.px = p.x;
@@ -50,6 +51,7 @@ export function movePlayers(s: SimState): void {
     if (p.dead) {
       p.vx = p.vy = 0;
       p.moving = false;
+      p.still = 0;
       continue;
     }
     const top = Math.trunc((HERO.speed * (100 + stat(p, 'speed'))) / 100);
@@ -62,6 +64,10 @@ export function movePlayers(s: SimState): void {
     p.x += p.vx;
     p.y += p.vy;
     p.moving = p.moveMag > HERO.moveMag;
+    // Stillness: standing still charges the relic, moving drops it at once
+    const was = p.still;
+    p.still = p.moving ? 0 : Math.min(ZEN.enter, p.still + 1);
+    if (p.still === ZEN.enter && was < ZEN.enter) events.push({ type: 'zen', owner: p.owner });
     if (p.action === 'none' && p.moveMag > 0 && cos !== 0) p.facing = cos < 0 ? -1 : 1;
   }
 }
@@ -145,7 +151,7 @@ function strike(s: SimState, p: Player): void {
   const target = t >= 0 ? targetAt(s, t)! : null;
   const r = relicLevel(p);
   launchBall(
-    s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y, r.hits, r.damage, p.awakened,
+    s, p.owner, fx, p.y, target ? target.x : fx + p.facing * 100 * FP, target ? target.y : p.y, r.hits, relicPct(p, r.damage), p.awakened,
     big >= 0 ? markOf(s, big) : 0,
   );
 }

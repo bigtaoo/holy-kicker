@@ -9,7 +9,7 @@
 
 export type Cue =
   // the hero and his relics
-  | 'kick' | 'thump' | 'swish' | 'woodfish' | 'hurt' | 'heroDown' | 'revive'
+  | 'kick' | 'thump' | 'swish' | 'woodfish' | 'zen' | 'hurt' | 'heroDown' | 'revive'
   // hits and kills
   | 'hit' | 'crit' | 'pop' | 'eliteDown' | 'clang'
   // spells and sutras
@@ -32,6 +32,8 @@ export const CUES: Record<Cue, CueDef> = {
   thump: { priority: 1, gain: 0.45, gap: 0.06 },
   swish: { priority: 2, gain: 0.7, gap: 0.1 },
   woodfish: { priority: 2, gain: 0.3, gap: 0.1 },
+  // every stop enters Zen, so it stays soft and spaced out
+  zen: { priority: 1, gain: 0.16, gap: 1.2 },
   hurt: { priority: 4, gain: 0.3, gap: 0.25 },
   heroDown: { priority: 5, gain: 0.7, gap: 1 },
   revive: { priority: 5, gain: 0.6, gap: 1 },

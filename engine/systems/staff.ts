@@ -3,7 +3,7 @@ import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { atan2B } from '../math/trig';
 import type { Player, SimState } from '../state';
-import { staffLevel } from './build';
+import { relicPct, staffLevel } from './build';
 import { bossIndex, damage, kickTarget, targetAt } from './combat';
 
 // The staff relic (docs/content.md "Relics"): instead of kicking a ball the hero sweeps the
@@ -34,6 +34,8 @@ export function sweep(s: SimState, events: SimEvent[], p: Player): void {
   // gathered first: a mob that goes down respawns elsewhere, and must not be hit twice
   const r2 = lv.reach * lv.reach;
   const hits: number[] = [];
+  // charged once for the whole sweep (Stillness)
+  const pct = relicPct(p, lv.damage);
   for (let i = 0; i <= bossIndex(s); i++) {
     const b = targetAt(s, i);
     if (!b) continue;
@@ -49,6 +51,6 @@ export function sweep(s: SimState, events: SimEvent[], p: Player): void {
       m.x += Math.trunc(((m.x - p.x) * lv.knockback) / d);
       m.y += Math.trunc(((m.y - p.y) * lv.knockback) / d);
     }
-    damage(s, events, i, p, null, lv.damage, false, p);
+    damage(s, events, i, p, null, pct, false, p);
   }
 }

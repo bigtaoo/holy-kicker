@@ -1,4 +1,4 @@
-import { DROPS, HERO, SHRINE } from '../config';
+import { DROPS, HERO, SHRINE, ZEN } from '../config';
 import {
   BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS, SUTRA_IDS,
   xpToNext, type BeadsRing, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat, type SutraId,
@@ -52,6 +52,16 @@ export function maxHpOf(p: Player): number {
 }
 
 /** The cuju's numbers at the player's relic level (also read for a staff's level-ups). */
+/** Stood still long enough for Zen (config.ts ZEN). */
+export function inZen(p: Player): boolean {
+  return p.still >= ZEN.enter;
+}
+
+/** A relic attack's damage percent `pct`, charged up when it starts in Zen. */
+export function relicPct(p: Player, pct: number): number {
+  return inZen(p) ? Math.trunc((pct * ZEN.damage) / 100) : pct;
+}
+
 export function relicLevel(p: Player) {
   return p.awakened ? RELIC_AWAKENED : RELIC_LEVELS[p.relic - 1];
 }

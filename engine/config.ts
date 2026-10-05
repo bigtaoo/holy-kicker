@@ -77,6 +77,15 @@ export const HERO = {
 };
 
 /**
+ * Stillness (docs/content.md "Combat roles"): a hero who stands still for `enter` ticks is in
+ * Zen, and every relic attack started in Zen deals `damage` percent; moving drops it at once.
+ */
+export const ZEN = {
+  enter: ticks(0.5),
+  damage: 150,
+};
+
+/**
  * The monks' passives (systems/monks.ts). Fat monk, Belly Bounce: every blow he takes bounces
  * the enemies within `radius` back by `knockback` and hits them for `damage` percent. Novice,
  * Light Feet: while he runs, every `dodgeEvery`th blow misses him.

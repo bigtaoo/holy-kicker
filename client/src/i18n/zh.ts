@@ -69,6 +69,7 @@ export const zh: Table<typeof en> = {
     keys: '也可以用 WASD 或方向键',
     auto: '踢球是自动的',
     gems: '捡起宝石来升级',
+    zen: '站定不动，攻击会蓄力加强',
   },
   card: {
     levelUp: '升级！',

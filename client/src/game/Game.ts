@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
-  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, isMidBoss, TICK_RATE, WAVES, quantizeMove,
+  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, inZen, isMidBoss, TICK_RATE, WAVES, quantizeMove,
   type MonkId, type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
@@ -20,6 +20,7 @@ import { HealthBar } from './healthBar';
 import { blockFx, howlFx, nearestElite, type EliteCrowd } from './eliteView';
 import { HordeView, MOB_HEIGHT } from './hordeView';
 import { AuraStack } from './aura';
+import { ZenRing } from './zenView';
 import type { BossStage } from './bossStage';
 import { ELITE_HEIGHT, hordeLooks, makeBosses, makeElites } from './cast';
 import { summonFx } from './witchView';
@@ -122,6 +123,7 @@ export class Game {
   private readonly spells: SpellView;
   private readonly sutras: SutraView;
   private readonly aura: AuraStack;
+  private readonly zen: ZenRing;
   private readonly stickBase: Sprite;
   private readonly stickKnob: Sprite;
   private hurtFlash = 0;
@@ -199,6 +201,7 @@ export class Game {
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
     this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx);
     this.aura = new AuraStack(scene.stack);
+    this.zen = new ZenRing(this.world);
 
     this.root.addChild(this.world, this.label);
     if (this.boss) this.root.addChild(...this.boss.huds);
@@ -454,6 +457,7 @@ export class Game {
     this.spells.drawCymbals(s.cymbals, alpha, dt);
     this.sutras.draw(s.lotuses, p, alpha, dt, hx, hy);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
+    this.zen.update(dt, inZen(p) && !p.dead, hx, hy);
     this.aura.update(dt, hx, hy, this.fx.pool);
     this.fx.update(dt, this.aura.parts);
     this.damage.update(dt, hx, hy);

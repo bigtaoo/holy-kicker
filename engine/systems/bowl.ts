@@ -2,7 +2,7 @@ import { BOWL } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Bowl, Player, SimState } from '../state';
-import { bowlLevel, gainXp } from './build';
+import { bowlLevel, gainXp, relicPct } from './build';
 import { bossIndex, damage, downMob, kickTarget, MOB_GEM, targetAt } from './combat';
 
 // The alms bowl relic (docs/content.md "Relics"): thrown at a target in reach, it flies its
@@ -27,7 +27,7 @@ export function throwBowl(s: SimState, p: Player): void {
   s.bowls.push({
     id: s.nextId++, owner: p.owner, x: p.x, y: p.y, px: p.x, py: p.y,
     vx: Math.trunc((dx * BOWL.speed) / d), vy: Math.trunc((dy * BOWL.speed) / d),
-    travel: lv.reach, back: false, damage: lv.damage, carry: lv.carry, swallow: p.awakened, swallowed: 0, hit: [], carried: [],
+    travel: lv.reach, back: false, damage: relicPct(p, lv.damage), carry: lv.carry, swallow: p.awakened, swallowed: 0, hit: [], carried: [],
   });
 }
 

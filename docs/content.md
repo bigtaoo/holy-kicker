@@ -8,9 +8,14 @@ Names are working names; every name ships through the string table (en / zh-CN s
 - **Relic = the weapon.** Auto-fires, prefers elites and the boss, high single-target damage.
   It is the only way to kill elites quickly, so they force the player to position.
 - **Spells clear the horde.** Area damage, deals **50 %** to elites and bosses *(tune)*.
-- **Stillness** *(later, after the base loop is fun)*: standing still for 0.5 s enters *Zen*:
-  relic attacks charge up (+50 % damage, bigger hit) while spells keep their normal timing.
-  Moving drops it at once: a "move to dodge, stop to burst" rhythm.
+- **Stillness**: standing still for 0.5 s enters *Zen*: relic attacks charge up (+50 % damage)
+  while spells keep their normal timing. Moving drops it at once: a "move to dodge, stop to
+  burst" rhythm. **Implemented** (`ZEN` in `engine/config.ts`, `relicPct` in
+  `engine/systems/build.ts`, ENGINE_VERSION 29): an attack is charged when it starts (the ball
+  on the kick, the ring on the tap, the bowl on the throw, the sweep when it lands); the beads
+  hit charged while the hero stands. The view lays a turning gold lotus ring at his feet
+  (`client/src/game/zenView.ts`) with a soft singing-bowl cue, and the first run's second hint
+  names it.
 
 ## Build in a run
 

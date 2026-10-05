@@ -67,6 +67,7 @@ export const en = {
     keys: 'or use WASD / the arrow keys',
     auto: 'Your kicks are automatic',
     gems: 'Grab the gems to level up',
+    zen: 'Stand still to charge them up',
   },
   card: {
     levelUp: 'Level up!',

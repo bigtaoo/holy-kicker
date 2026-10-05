@@ -26,7 +26,7 @@ import { monkBonus } from './systems/monks';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 28;
+export const ENGINE_VERSION = 29;
 
 export const STEP_ORDER = [
   'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns',
@@ -69,7 +69,7 @@ export class Engine {
     // a finished run stands still, and so does a level-up until its card is picked; a revive
     // or a pick (in the input) sets it going again
     if (s.outcome !== 'playing' || choosing(s)) return events;
-    movePlayers(s);
+    movePlayers(s, events);
     hordeSystem(s, this.grid);
     emergeSystem(s, events, hurt);
     eliteSystem(s, events, hurt);

@@ -3,7 +3,7 @@ import type { SimEvent } from '../events';
 import { dist2 } from '../math/fixed';
 import { BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Bead, Player, SimState } from '../state';
-import { beadsRings } from './build';
+import { beadsRings, relicPct } from './build';
 import { bossIndex, damage, targetAt } from './combat';
 
 // The prayer beads relic (docs/content.md "Relics"): the beads circle the hero for good and
@@ -63,7 +63,7 @@ export function beadSystem(s: SimState, events: SimEvent[]): void {
     }
     b.touching = now;
     for (const i of fresh) {
-      damage(s, events, i, p, null, ring.damage, false, b);
+      damage(s, events, i, p, null, relicPct(p, ring.damage), false, b);
       // the target went down and came back elsewhere: it no longer touches this bead
       const t = targetAt(s, i);
       if (!t || dist2(t.x - b.x, t.y - b.y) >= r2) b.touching.splice(b.touching.indexOf(i), 1);

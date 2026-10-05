@@ -23,6 +23,8 @@ export type SimEvent =
   /** A blow missed the running novice. */
   | { type: 'dodge'; owner: number }
   | { type: 'revive'; owner: number }
+  /** A player stood still long enough to enter Zen (Stillness). */
+  | { type: 'zen'; owner: number }
   /** Damage dealt. `ball` is set for a ball hit, at the ball's position. */
   | { type: 'hit'; kind: TargetKind; index: number; x: number; y: number; value: number; crit: boolean; ball: boolean; bx: number; by: number }
   /** A mob went down at (x, y), knocked away along (dx, dy), and respawned elsewhere. */

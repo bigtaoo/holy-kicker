@@ -1,6 +1,6 @@
 // The first run's tutorial (docs/design.md "Flow": only moving is prompted, everything else is
 // automatic). A hint to move stays until the hero has walked for a moment; then a hint that the
-// kicks are automatic and the gems level him up shows for a few seconds. Pure: the shell feeds
+// kicks are automatic, standing still charges them (Stillness) and the gems level him up shows for a few seconds. Pure: the shell feeds
 // it the frame time and whether the hero moves, the HUD draws the step.
 
 export type TutorialStep = 'move' | 'gems' | 'done';
@@ -13,7 +13,7 @@ export interface Tutorial {
 
 /** Seconds of walking that count as learnt, and how long the second hint stays. */
 export const TUTORIAL_MOVE = 1.2;
-export const TUTORIAL_GEMS = 5;
+export const TUTORIAL_GEMS = 7;
 
 export function newTutorial(): Tutorial {
   return { step: 'move', t: 0 };

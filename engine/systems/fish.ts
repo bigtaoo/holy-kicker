@@ -2,7 +2,7 @@ import { FISH } from '../content';
 import type { SimEvent } from '../events';
 import { dist2 } from '../math/fixed';
 import type { Player, SimState } from '../state';
-import { fishLevel } from './build';
+import { fishLevel, relicPct } from './build';
 import { bossIndex, damage, eliteAt, targetAt } from './combat';
 
 // The wooden fish relic (docs/content.md "Relics"): every tap sends a sound ring out from the
@@ -20,7 +20,7 @@ export function tap(s: SimState, events: SimEvent[], p: Player): void {
   const lv = fishLevel(p);
   p.taps++;
   const stun = p.awakened && p.taps % FISH.stunEvery === 0 ? FISH.stun : 0;
-  s.rings.push({ id: s.nextId++, owner: p.owner, x: p.x, y: p.y, radius: 0, reach: lv.reach, damage: lv.damage, stun, hit: [] });
+  s.rings.push({ id: s.nextId++, owner: p.owner, x: p.x, y: p.y, radius: 0, reach: lv.reach, damage: relicPct(p, lv.damage), stun, hit: [] });
   events.push({ type: 'ring', owner: p.owner, x: p.x, y: p.y, reach: lv.reach, stun: stun > 0 });
 }
 

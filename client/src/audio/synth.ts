@@ -79,6 +79,8 @@ export const VOICES: Record<Cue, (k: Kit) => void> = {
     k.metal(820, WOOD, 0.12, 1);
     k.noise(0.012, 0.4, { type: 'bandpass', cut: 2500, q: 2 });
   },
+  // a small singing bowl, high and quiet
+  zen: (k) => k.metal(1180, BELL, 1.1, 0.5),
   hurt: (k) => {
     k.tone(320, 0.16, 0.6, { type: 'square', to: 140 });
     k.noise(0.08, 0.5, { cut: 1800 });
