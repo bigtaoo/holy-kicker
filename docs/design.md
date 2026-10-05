@@ -56,7 +56,7 @@ wave reached is recorded.
 - Death: one rewarded-ad revive per run; otherwise results are paid by the wave reached.
 - **Progress chests** at waves 10/20/30/40/50 of each chapter, claimable once each, so a
   failed push still pays.
-- Clearing a chapter unlocks the next. Hard mode comes later.
+- Clearing a chapter unlocks the next. Clearing chapter 5 opens hard mode.
 - **Launch with 5 chapters.** Each needs a ground, 3–4 mob types, 1–2 elites and a boss.
 
 ### Difficulty
@@ -90,6 +90,26 @@ otherwise taking Insight):
   meta upgrades and revives make the target easier, so a first clear of chapter 1 is a few
   tries for a new player.
 - Relics, spells, passives, shrines, enemies and chapter themes: see [content.md](content.md).
+
+### Hard mode
+
+The endgame after chapter 5, so a player who has cleared everything still has a climb (about
+3 more weeks with ads, 5–6 without; see "Pacing targets").
+
+- **Opens** when chapter 5 is first cleared: the results say so and the lobby moves to hard
+  chapter 1. A Normal / Hard switch then sits above the chapter card; hard chapters unlock one
+  by one like the normal ones.
+- **The same five chapters, tougher** (engine `HARD`, `RunConfig.hard`): mob health and every
+  hurt take hard mode's own percents by chapter (ramped in over the run like the normal ones),
+  elites and bosses have 3.5–4.5× their health, and every elite wave brings one elite more.
+- **Its own progress**: clears, best waves and progress chests are kept apart from the normal
+  chapters (`hardCleared`, `hardBest`, `hardChests` in the save).
+- **Better pay**: hard chapter n counts as stage 5 + n (progress.ts `stage`), so its copper,
+  chests and gear drops continue the normal chapters' growth (`dropTiers` rows 6–10 bring
+  more Treasured and Sacred items), and so do patrol and the shop once a hard chapter is cleared.
+- **Grit** gathers on the first uncleared chapter of the whole climb: the last normal one, then
+  the first uncleared hard one.
+- Relics and sutras come from the normal chapters only.
 
 ## Meta progression
 
@@ -317,7 +337,7 @@ entries, daily tasks and ad counts, patrol start time, save version.
 - Chapter 2: 3–5 tries.
 - Chapter 3 on: requires farming the previous chapter for gear and copper, about 1–2 days per
   chapter.
-- All 5 chapters: about 2 weeks; then hard mode and new chapters.
+- All 5 chapters: about 2 weeks; then hard mode, about 3–6 weeks more; then new chapters.
 
 **Measured** (2026-10-05, ENGINE_VERSION 26, `npm run journey`: the casual bot from a new
 save, merging, training, using the shop, patrol and daily tasks between runs and always
@@ -342,3 +362,15 @@ first elite or the mid-boss or else won, so luck set the pace. The levers now:
   turns a long run of bad luck into a few more tries and is the main pacing lever for the last
   chapters (at +4/+6 the ads player cleared chapter 5 on days 5–7).
 - The lobby's gear: one patrol item per 6 h, 1 item per ad chest, the jade chest 80 jade for 3.
+
+**Hard mode measured** (2026-10-05, ENGINE_VERSION 27, the same journeys run on through hard
+mode; 6 seeds). Day the hard chapter is cleared, median (range):
+
+| Player | Hard 1 | Hard 2 | Hard 3 | Hard 4 | Hard 5 |
+|---|---|---|---|---|---|
+| 2 sessions × 2 runs a day, every ad | 9.5 (8–11) | 13 (12–15) | 20 (17–22) | 24 (19–26) | 27.5 (21–42) |
+| 2 sessions × 1 run a day, no ads | 22 (12–28) | 26 (20–35) | 37.5 (26–46) | 43.5 (35–49) | 54.5 (52–66) |
+
+Lost hard tries end anywhere from wave 10 to 48. A first pass with elites and bosses at 5–10×
+their health (`HARD.foeHp`) made the last boss the wall (most lost tries died on wave 49), so
+the walls are now in the horde (`HARD.hp`, `HARD.hurt`) and grit; those three are the levers.

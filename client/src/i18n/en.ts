@@ -18,6 +18,9 @@ export const en = {
     unlockAtChapter: 'Clear chapter {n} to unlock',
     relic: 'Relic',
     grit: 'Grit ×{n}: +{attack}% ATK, +{hp}% HP',
+    normal: 'Normal',
+    hard: 'Hard',
+    hardTitle: 'Hard {n}: {name}',
   },
   tab: {
     shop: 'Shop',
@@ -39,6 +42,7 @@ export const en = {
   run: {
     level: 'Lv {level}',
     wave: 'Wave {wave}/{total}',
+    hardWave: 'Hard · wave {wave}/{total}',
     paused: 'Paused',
     resume: 'Resume',
     giveUp: 'Give up',
@@ -148,6 +152,8 @@ export const en = {
   },
   results: {
     cleared: 'Chapter cleared!',
+    hardCleared: 'Hard chapter cleared!',
+    hardUnlocked: 'Hard mode open: tougher foes, better gear',
     fallen: 'Run over',
     reached: 'Waves cleared: {wave}',
     copper: 'Copper +{n}',

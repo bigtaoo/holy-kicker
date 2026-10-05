@@ -46,11 +46,12 @@ export class ResultsScreen implements Screen {
 
     const r = this.reward;
     const lines: [string, number, number][] = [
-      [r.firstClear ? t('results.cleared') : t('results.fallen'), 80, r.firstClear ? COLORS.saffron : COLORS.text],
+      [r.firstClear ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen'), 80, r.firstClear ? COLORS.saffron : COLORS.text],
       [t('results.reached', { wave: this.waves }), 52, COLORS.text],
     ];
     if (r.newBest) lines.push([t('results.newBest'), 48, COLORS.saffron]);
     if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.saffron]);
+    if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 48, COLORS.danger]);
     if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 52, COLORS.saffron]);
     for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 48, COLORS.saffron]);
     for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 48, COLORS.saffron]);

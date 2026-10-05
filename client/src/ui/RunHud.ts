@@ -62,6 +62,8 @@ export class RunHud implements Screen {
 
   constructor(
     private readonly total: number,
+    /** Hard mode: the wave counter says so. */
+    private readonly hard: boolean,
     private readonly actions: RunActions,
     private readonly icons: IconSheet,
     /** The move hint also names the keyboard. */
@@ -105,7 +107,7 @@ export class RunHud implements Screen {
     this.wave = wave;
     if (!this.waveText) return;
     this.waveText.visible = wave > 0;
-    this.waveText.text = t('run.wave', { wave, total: this.total });
+    this.waveText.text = t(this.hard ? 'run.hardWave' : 'run.wave', { wave, total: this.total });
     if (this.xpView) this.xpView.visible = wave > 0;
     if (this.build) this.build.view.visible = wave > 0;
   }

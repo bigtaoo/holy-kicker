@@ -64,7 +64,7 @@ const ELITE_KEY = 1e6;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
 
-/** What the shell sets a run up with: the chapter and its length (0 for the sandbox), revives, the relic, the sutras and the stats from gear and training. */
+/** What the shell sets a run up with: the chapter, hard mode and its length (0 for the sandbox), revives, the relic, the sutras and the stats from gear and training. */
 export interface RunSetup {
   chapter: number;
   waves: number;
@@ -72,6 +72,7 @@ export interface RunSetup {
   relic: RelicId;
   sutras: readonly SutraId[];
   bonus?: StatBonus;
+  hard?: boolean;
 }
 
 /** The run a scene sets up: what the engine simulates. */
@@ -81,7 +82,7 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
     waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras, chapter: setup.chapter,
-    bonus: setup.bonus ?? {},
+    bonus: setup.bonus ?? {}, hard: setup.hard ?? false,
   };
 }
 

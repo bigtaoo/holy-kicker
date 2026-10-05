@@ -29,7 +29,7 @@ try {
   const { journey } = await import(pathToFileURL(out).href);
   console.log(JSON.stringify(plan));
   for (const c of journey(plan, (line) => console.log(line))) {
-    console.log(`== ch${c.chapter}: day ${c.day}, run ${c.runs}, trained ${c.trained}\n   ${c.bonus}\n   ${c.gear}`);
+    console.log(`== ${c.hard ? 'hard ' : ''}ch${c.chapter}: day ${c.day}, run ${c.runs}, trained ${c.trained}\n   ${c.bonus}\n   ${c.gear}`);
   }
 } finally {
   rmSync(dir, { recursive: true, force: true });

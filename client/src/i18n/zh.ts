@@ -20,6 +20,9 @@ export const zh: Table<typeof en> = {
     unlockAtChapter: '通关第 {n} 章解锁',
     relic: '法器',
     grit: '愈挫愈勇 ×{n}：攻击 +{attack}%，生命 +{hp}%',
+    normal: '普通',
+    hard: '困难',
+    hardTitle: '困难 {n}：{name}',
   },
   tab: {
     shop: '商店',
@@ -41,6 +44,7 @@ export const zh: Table<typeof en> = {
   run: {
     level: '{level} 级',
     wave: '第 {wave}/{total} 波',
+    hardWave: '困难 · 第 {wave}/{total} 波',
     paused: '暂停',
     resume: '继续',
     giveUp: '放弃',
@@ -150,6 +154,8 @@ export const zh: Table<typeof en> = {
   },
   results: {
     cleared: '通关！',
+    hardCleared: '困难通关！',
+    hardUnlocked: '困难模式已开启：敌人更强，装备更好',
     fallen: '本局结束',
     reached: '完成波数：{wave}',
     copper: '铜钱 +{n}',

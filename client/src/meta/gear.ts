@@ -35,7 +35,7 @@ export interface GearBalance {
   mergeCopper: number[];
   /** A full drop every this many waves cleared; the rest of the waves give a chance at one. */
   dropEveryWaves: number;
-  /** Per chapter, the weight of each tier a drop comes in. */
+  /** Per stage (progress.ts `stage`: chapters 1-5, then hard mode 6-10), the weight of each tier a drop comes in. */
   dropTiers: number[][];
   items: Record<GearSlot, ItemDef>;
 }

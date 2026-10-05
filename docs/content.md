@@ -344,6 +344,11 @@ or a new single image is cheap; elites and bosses cost a rig each.
   (was 100/100/140/190/250) and every hurt the hero takes is 100/100/120/155/175 %
   (`HURT.chapterPercent`, so health from gear does not make the late chapters safe). Elites
   and bosses keep their health.
+- **Hard mode** (ENGINE_VERSION 27, docs/design.md "Hard mode"): with `RunConfig.hard` a
+  chapter takes `HARD.hp` (16000/21000/26000/32000/40000 %) and `HARD.hurt`
+  (300/320/340/360/380 %) in place of its own, ramped in the same way; elites, the twins and
+  bosses get `HARD.foeHp` (350–450 %) of their health, and every elite wave brings one more of
+  its first elite.
 - **Boss arena, homing relic and the chapter ramp** (ENGINE_VERSION 26). The journeys showed
   the chapter 4 and 5 bosses all but unkillable (the relic spent its hits on the horde in
   front of them) and runs that either died early or snowballed. Now:

@@ -58,7 +58,7 @@ export function spawnSystem(s: SimState): void {
       s.mobs.push(m);
     }
     teleport(m, sp.x, sp.y);
-    m.hp = mobHp(s.wave, sp.kind, s.config.chapter);
+    m.hp = mobHp(s.wave, sp.kind, s.config.chapter, s.config.hard);
     m.stun = 0;
     m.haste = 0;
     m.t = 0;

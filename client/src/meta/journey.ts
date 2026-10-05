@@ -5,7 +5,7 @@ import { bump, claimBonus, claimTask, rollDay } from './daily';
 import { mergeAll } from './gear';
 import { loadout } from './loadout';
 import { collectPatrol, patrolOpen, quickLeft, quickPatrol, startPatrol } from './patrol';
-import { bestChapter, doubleCopper, earnedSutras, settleRun } from './progress';
+import { bestChapter, doubleCopper, earnedSutras, frontier, settleRun } from './progress';
 import { newSave, type SaveData } from './save';
 import { chestBlock, chestsLeft, openChest } from './shop';
 import { train } from './training';
@@ -30,6 +30,7 @@ export interface JourneyPlan {
 
 export interface ChapterClear {
   chapter: number;
+  hard: boolean;
   day: number;
   runs: number;
   /** Runs played on this chapter, and the waves each reached. */
@@ -92,24 +93,24 @@ export function journey(plan: JourneyPlan, log: (line: string) => void = () => {
   let runs = 0;
   let tries: number[] = [];
   const clears: ChapterClear[] = [];
-  for (let day = 1; day <= plan.days && s.cleared < BALANCE.chapters; day++) {
-    for (let session = 0; session < 2 && s.cleared < BALANCE.chapters; session++) {
+  for (let day = 1; day <= plan.days && frontier(s); day++) {
+    for (let session = 0; session < 2 && frontier(s); session++) {
       s = spend(lobby(s, now, plan, rand), now, plan, rand);
-      for (let r = 0; r < plan.runsPerSession && s.cleared < BALANCE.chapters; r++) {
-        const chapter = s.chapter;
+      for (let r = 0; r < plan.runsPerSession && frontier(s); r++) {
+        const { chapter, hard } = s;
         const st: RunStats = playChapter(
-          plan.seed * 1000 + runs, plan.style, BALANCE.waves, 30, s.relic, earnedSutras(s), chapter, loadout(s).bonus,
+          plan.seed * 1000 + runs, plan.style, BALANCE.waves, 30, s.relic, earnedSutras(s), chapter, loadout(s).bonus, hard,
         );
         const waves = st.outcome === 'won' ? BALANCE.waves : st.wave - 1;
         runs++;
         tries.push(waves);
-        const settled = settleRun(s, { chapter, waves }, rand);
+        const settled = settleRun(s, { chapter, hard, waves }, rand);
         s = plan.ads ? doubleCopper(settled.save, settled.reward) : settled.save;
         s = bump(bump(bump(s, now, 'runs', 1), now, 'waves', waves), now, 'kills', st.kills);
         s = spend(plan.lobby ? claimAll(s, now) : s, now, plan, rand);
         if (settled.reward.firstClear) {
-          clears.push({ chapter, day, runs, tries, trained: s.trained, ...describe(s) });
-          log(`ch${chapter} cleared on day ${day} after ${runs} runs (${tries.length} on it: ${tries.join(' ')})`);
+          clears.push({ chapter, hard, day, runs, tries, trained: s.trained, ...describe(s) });
+          log(`${hard ? 'hard ' : ''}ch${chapter} cleared on day ${day} after ${runs} runs (${tries.length} on it: ${tries.join(' ')})`);
           tries = [];
         }
         now += 15 * 60 * 1000;

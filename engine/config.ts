@@ -41,11 +41,13 @@ export interface RunConfig {
   chapter: number;
   /** Stats from gear and training, the same for every hero (whole numbers, passive units). */
   bonus: StatBonus;
+  /** Hard mode (HARD): the chapter's waves for heroes with endgame gear. */
+  hard: boolean;
 }
 
 export const DEFAULT_RUN: RunConfig = {
   seed: 1, players: 1, mobs: 40, sep: 75, queue: true, heroEase: 379, elite: true, boss: true,
-  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', sutras: [], chapter: 1, bonus: {},
+  threats: false, spells: [], spellRate: 1, drops: 0, waves: 0, revives: 1, relic: 'ball', sutras: [], chapter: 1, bonus: {}, hard: false,
 };
 
 /** The smooth hero ease, 1 - exp(-tick / 0.07 s), as a constant so no exp runs in the sim. */
@@ -134,6 +136,18 @@ export const CHAPTER_RAMP = {
   from: 0,
   to: 180,
   wave: 50,
+};
+
+/**
+ * Hard mode (docs/design.md "Hard mode"), open once chapter 5 is cleared: the same chapters for
+ * a hero with endgame gear. Mob health and every hurt take these percents by chapter in place of
+ * HORDE.chapterHp and HURT.chapterPercent (ramped in the same way, CHAPTER_RAMP), elites and
+ * bosses have foeHp percent of their health, and every elite wave brings one elite more.
+ */
+export const HARD = {
+  hp: [16000, 21000, 26000, 32000, 40000],
+  hurt: [300, 320, 340, 360, 380],
+  foeHp: [350, 380, 400, 420, 450],
 };
 
 /** `pct` percent (a chapter's HORDE.chapterHp or HURT.chapterPercent) ramped in for wave `wave` (CHAPTER_RAMP). */

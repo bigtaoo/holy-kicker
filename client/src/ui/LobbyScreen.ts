@@ -2,7 +2,7 @@ import { Container, Graphics, type Renderer, type Text } from 'pixi.js';
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { earnedSutras, playableChapters, seeTab, TABS, tabLock, tabNew, unlockedRelics, type Lock, type Tab } from '../meta/progress';
+import { earnedSutras, hardOpen, playableChapters, seeTab, TABS, tabLock, tabNew, track, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
@@ -27,6 +27,8 @@ export interface LobbyActions {
   play(chapter: number): void;
   /** Shows another chapter on the card (cleared ones and the first uncleared one). */
   selectChapter(chapter: number): void;
+  /** Switches the card between the normal chapters and hard mode (open once all are cleared). */
+  chooseTrack(hard: boolean): void;
   selectRelic(relic: RelicId): void;
   /** The settings panel's reads and changes (settingsPanel.ts), all but closing it. */
   settings: Omit<SettingsActions, 'close'>;
@@ -262,12 +264,15 @@ export class LobbyScreen implements Screen {
     const back = panel(900, 620 + shift);
     back.y = shift / 2;
     card.addChild(back);
-    const title = fit(label(t('lobby.chapterTitle', { n, name: t(`chapter.${n}` as never) }), 64), 640);
+    const hard = this.save.hard;
+    const progress = track(this.save, hard);
+    const name = t(`chapter.${n}` as never);
+    const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text), 640);
     title.y = -235;
-    const best = this.save.best[n - 1];
+    const best = progress.best[n - 1];
     const status = label(
       !open ? t('lobby.unlockAtChapter', { n: n - 1 })
-        : this.save.cleared >= n ? t('lobby.cleared')
+        : progress.cleared >= n ? t('lobby.cleared')
         : best > 0 ? t('lobby.best', { wave: best }) : t('lobby.notPlayed'),
       48, open ? COLORS.dim : COLORS.danger,
     );
@@ -292,6 +297,7 @@ export class LobbyScreen implements Screen {
     };
     arrow(-1);
     arrow(1);
+    if (hardOpen(this.save)) card.addChild(this.trackSwitch(-400));
     this.view.addChild(card);
 
     if (open) {
@@ -302,6 +308,20 @@ export class LobbyScreen implements Screen {
     const row = this.econ.playRow();
     row.position.set(w / 2, Math.min(midY + 300, h - TAB_H - 140) + 200);
     this.view.addChild(row);
+  }
+
+  /** Normal and hard side by side above the card, the shown one lit. */
+  private trackSwitch(y: number): Container {
+    const row = new Container();
+    ([[false, 'lobby.normal'], [true, 'lobby.hard']] as const).forEach(([hard, key], i) => {
+      const on = this.save.hard === hard;
+      const b = button(t(key), 300, 100, () => {
+        if (!on) this.actions.chooseTrack(hard);
+      }, { fill: on ? (hard ? COLORS.danger : COLORS.saffron) : COLORS.panelLocked, size: 52, textFill: on ? COLORS.text : COLORS.dim });
+      b.position.set((i - 0.5) * 320, y);
+      row.addChild(b);
+    });
+    return row;
   }
 
   /** The relic for the next run: its name, then one badge per relic (locked ones dimmed). */
@@ -341,7 +361,7 @@ export class LobbyScreen implements Screen {
   /** The five progress chests of a chapter: gold once claimed, outlined until then. */
   private chests(chapter: number): Container {
     const row = new Container();
-    const claimed = this.save.chests[chapter - 1];
+    const claimed = track(this.save, this.save.hard).chests[chapter - 1];
     BALANCE.chests.forEach((c, i) => {
       const x = (i - 2) * 160;
       const got = (claimed & (1 << i)) !== 0;

@@ -95,6 +95,8 @@ export interface SceneOptions {
   sutras: boolean;
   /** Dev: no stats from gear and training, to compare with a fresh account (?bare). */
   bare: boolean;
+  /** Dev: the run plays hard mode whatever the lobby shows (?hard). */
+  hard: boolean;
   /** Dev: the balance bot plays (?autoplay), for videos and soak tests. */
   autoplay: boolean;
   /** Dev: records this many seconds of the first run to a video file (?record=20); 0 off. */
@@ -134,6 +136,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   relic: null,
   sutras: false,
   bare: false,
+  hard: false,
   autoplay: false,
   record: 0,
 };
@@ -189,6 +192,7 @@ export function parseScene(query: string): SceneOptions {
     relic: RELIC_IDS.find((r) => r === q.get('relic')) ?? DEFAULT_SCENE.relic,
     sutras: q.has('sutras'),
     bare: q.has('bare'),
+    hard: q.has('hard'),
     autoplay: q.has('autoplay'),
     record: num(q.get('record'), 1, 120, DEFAULT_SCENE.record),
   };

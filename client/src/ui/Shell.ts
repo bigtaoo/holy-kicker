@@ -11,7 +11,7 @@ import { evolvedIn } from '../meta/codex';
 import { loadout } from '../meta/loadout';
 import { bump, rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
-import { doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
+import { chooseTrack, doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, updateSettings } from '../meta/settings';
@@ -45,6 +45,8 @@ export class Shell {
   private game: Game | null = null;
   private hud: RunHud | null = null;
   private chapter = 1;
+  /** The run in play is hard mode. */
+  private hard = false;
   private screenKey = '';
   private quality: LevelSettings | null = null;
   /** Switches the render quality mode (boot.ts wires it to the quality runtime). */
@@ -135,6 +137,10 @@ export class Shell {
         this.commit({ ...this.save, chapter });
         this.showLobby();
       },
+      chooseTrack: (hard) => {
+        this.commit(chooseTrack(this.save, hard));
+        this.showLobby();
+      },
       selectRelic: (relic) => {
         this.commit({ ...this.save, relic });
         this.showLobby();
@@ -191,8 +197,9 @@ export class Shell {
 
   private startRun(chapter: number): void {
     this.chapter = chapter;
+    this.hard = this.scene.hard || this.save.hard;
     this.setScreen(null);
-    const { bonus, freeRevives } = loadout(this.save, chapter);
+    const { bonus, freeRevives } = loadout(this.save, chapter, this.hard);
     this.freeRevives = freeRevives;
     this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, {
       chapter,
@@ -201,6 +208,7 @@ export class Shell {
       relic: this.scene.relic ?? this.save.relic,
       sutras: this.scene.sutras ? SUTRA_IDS : earnedSutras(this.save),
       bonus: this.scene.bare ? {} : bonus,
+      hard: this.hard,
     });
     this.shownWave = -1;
     this.downShown = false;
@@ -218,7 +226,7 @@ export class Shell {
     };
     // the run adds itself to the stage; keep the UI above it
     this.app.stage.addChild(this.ui);
-    this.hud = new RunHud(BALANCE.waves, {
+    this.hud = new RunHud(BALANCE.waves, this.hard, {
       pause: () => this.setPaused(true),
       resume: () => this.setPaused(false),
       giveUp: () => this.endRun(),
@@ -267,7 +275,7 @@ export class Shell {
     this.hud = null;
     // the death panel already told the portal
     if (!this.downShown) this.platform.portal.gameplayStop();
-    const settled = settleRun(this.save, { chapter: this.chapter, waves, offerings, evolved });
+    const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings, evolved });
     const { reward } = settled;
     const now = Date.now();
     const save = bump(bump(bump(settled.save, now, 'runs', 1), now, 'waves', waves), now, 'kills', this.kills);

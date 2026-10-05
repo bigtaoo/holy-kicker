@@ -44,6 +44,12 @@ export interface SaveData {
   seen: number;
   /** Lost tries on the first uncleared chapter, each worth BALANCE.grit.bonus there (loadout.ts). */
   grit: number;
+  /** The lobby shows hard mode (open once every chapter is cleared); `chapter` is on that track. */
+  hard: boolean;
+  /** Hard mode's own clears, best waves and claimed chests, as `cleared`, `best` and `chests`. */
+  hardCleared: number;
+  hardBest: number[];
+  hardChests: number[];
 }
 
 export function newSave(): SaveData {
@@ -52,6 +58,7 @@ export function newSave(): SaveData {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
+    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(),
   };
 }
 
@@ -95,6 +102,9 @@ export function parseSave(text: string | null): SaveData {
   }
   const max = Number.MAX_SAFE_INTEGER;
   const cleared = int(raw.cleared, 0, BALANCE.chapters, 0);
+  // hard mode only once every chapter is cleared
+  const hardCleared = cleared >= BALANCE.chapters ? int(raw.hardCleared, 0, BALANCE.chapters, 0) : 0;
+  const hard = cleared >= BALANCE.chapters && raw.hard === true;
   return {
     version: SAVE_VERSION,
     firstRunDone: raw.firstRunDone === true,
@@ -102,8 +112,8 @@ export function parseSave(text: string | null): SaveData {
     xp: int(raw.xp, 0, max, 0),
     copper: int(raw.copper, 0, max, 0),
     jade: int(raw.jade, 0, max, 0),
-    // the shown chapter can never be past the first uncleared one
-    chapter: int(raw.chapter, 1, Math.min(BALANCE.chapters, cleared + 1), 1),
+    // the shown chapter can never be past the first uncleared one of its track
+    chapter: int(raw.chapter, 1, Math.min(BALANCE.chapters, (hard ? hardCleared : cleared) + 1), 1),
     cleared,
     best: ints(raw.best, 0, BALANCE.waves),
     chests: ints(raw.chests, 0, (1 << BALANCE.chests.length) - 1),
@@ -118,5 +128,9 @@ export function parseSave(text: string | null): SaveData {
     // a save from before the dots has seen every tab it could open
     seen: int(raw.seen, 0, 0xff, 0xff),
     grit: int(raw.grit, 0, BALANCE.grit.max, 0),
+    hard,
+    hardCleared,
+    hardBest: ints(raw.hardBest, 0, BALANCE.waves),
+    hardChests: ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1),
   };
 }

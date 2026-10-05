@@ -20,6 +20,8 @@ const MARSH: RunConfig = { ...DEFAULT_RUN, seed: 78, waves: 50, chapter: 2 };
 const SNOW: RunConfig = { ...MARSH, chapter: 3 };
 const GHOST: RunConfig = { ...MARSH, chapter: 4 };
 const PEAK: RunConfig = { ...MARSH, chapter: 5 };
+/** Hard mode on chapter 5: HARD's health and hurt, and three elites on wave 10. */
+const HARD_PEAK: RunConfig = { ...PEAK, hard: true };
 
 /** A scripted stick: circles, stops and dashes, the same for every run; takes any level-up card. */
 function stick(tick: number, owner = 0): PlayerCommand {
@@ -88,14 +90,16 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-05 for ENGINE_VERSION 26 (boss arena, homing relic, chapter ramp). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(26);
+    // Recorded 2026-10-05 for ENGINE_VERSION 27 (hard mode; the normal chapters as in 26). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(27);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
     expect(run(SNOW, 4800, 4800).hashes[0]).toBe(GOLDEN_SNOW);
     expect(run(GHOST, 4800, 4800).hashes[0]).toBe(GOLDEN_GHOST);
     expect(run(PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_PEAK);
+    expect(run(HARD_PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_HARD);
+    expect(GOLDEN_HARD).not.toBe(GOLDEN_PEAK);
   });
 
   it('plays a chapter the same way twice', () => {
@@ -116,3 +120,4 @@ const GOLDEN_MARSH = 2146469689;
 const GOLDEN_SNOW = 3079788159;
 const GOLDEN_GHOST = 3820211288;
 const GOLDEN_PEAK = 4081783956;
+const GOLDEN_HARD = 3958871344;

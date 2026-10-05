@@ -1,6 +1,7 @@
 import { STATS, type Stat, type StatBonus } from '@hk/engine';
 import { BALANCE } from './balance';
 import { gearStats } from './gear';
+import { atFrontier } from './progress';
 import type { SaveData } from './save';
 import { trainingStats } from './training';
 
@@ -14,11 +15,11 @@ export interface Loadout {
   freeRevives: number;
 }
 
-/** A run of chapter `chapter` (the lobby's by default). */
-export function loadout(save: SaveData, chapter = save.chapter): Loadout {
+/** A run of chapter `chapter` (the lobby's by default) on the given track. */
+export function loadout(save: SaveData, chapter = save.chapter, hard = save.hard): Loadout {
   const gear = gearStats(save);
   const trained = trainingStats(save);
-  const grit = gritBonus(save, chapter);
+  const grit = gritBonus(save, chapter, hard);
   const bonus: Partial<Record<Stat, number>> = {};
   for (const stat of STATS) {
     const n = (gear[stat] ?? 0) + (trained[stat] ?? 0) + (grit[stat] ?? 0);
@@ -27,9 +28,9 @@ export function loadout(save: SaveData, chapter = save.chapter): Loadout {
   return { bonus, freeRevives: trained.revive ?? 0 };
 }
 
-/** What the grit adds to a run of chapter `chapter`: only the first uncleared one has it. */
-export function gritBonus(save: SaveData, chapter = save.chapter): Partial<Record<Stat, number>> {
-  if (save.grit === 0 || chapter !== save.cleared + 1) return {};
+/** What the grit adds to a run of chapter `chapter`: only the first uncleared one of the climb has it. */
+export function gritBonus(save: SaveData, chapter = save.chapter, hard = save.hard): Partial<Record<Stat, number>> {
+  if (save.grit === 0 || !atFrontier(save, chapter, hard)) return {};
   const out: Partial<Record<Stat, number>> = {};
   for (const [stat, n] of Object.entries(BALANCE.grit.bonus) as [Stat, number][]) out[stat] = n * save.grit;
   return out;

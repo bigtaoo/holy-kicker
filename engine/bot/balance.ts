@@ -31,9 +31,9 @@ export interface RunStats {
 /** Plays one chapter with a bot; stops at the first death or after `maxMinutes`. */
 export function playChapter(
   seed: number, style: BotStyle, waves = 50, maxMinutes = 30, relic: RelicId = 'ball', sutras: readonly SutraId[] = [], chapter = 1,
-  bonus: StatBonus = {},
+  bonus: StatBonus = {}, hard = false,
 ): RunStats {
-  const config: RunConfig = { ...DEFAULT_RUN, seed, waves, revives: 0, relic, sutras, chapter, bonus };
+  const config: RunConfig = { ...DEFAULT_RUN, seed, waves, revives: 0, relic, sutras, chapter, bonus, hard };
   const e = new Engine(config);
   const s = e.state;
   const bot = new Bot(0, style, seed);

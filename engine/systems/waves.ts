@@ -1,5 +1,5 @@
 import {
-  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HORDE, MOB_KINDS, SHRINE,
+  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HARD, HORDE, MOB_KINDS, SHRINE,
   rampChapter, tempKind, TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
@@ -26,15 +26,21 @@ export function hordeSize(wave: number): number {
  * Health of a mob of `kind` that joins or comes back on wave `wave` of chapter `chapter`; the
  * sandbox (wave 0) horde has 1.
  */
-export function mobHp(wave: number, kind: MobKind = 'chaser', chapter = 1): number {
+export function mobHp(wave: number, kind: MobKind = 'chaser', chapter = 1, hard = false): number {
   const n = wave - 1;
   const hp = wave > 0 ? HORDE.hp + Math.trunc((HORDE.hpStep * n + HORDE.hpSquare * n * n) / 1000) : 1;
-  return Math.max(1, Math.trunc((hp * MOB_KINDS[kind].hpPercent * chapterHp(chapter, wave)) / 10000));
+  return Math.max(1, Math.trunc((hp * MOB_KINDS[kind].hpPercent * chapterHp(chapter, wave, hard)) / 10000));
 }
 
-/** Mob health percent of chapter `chapter` on wave `wave` (HORDE.chapterHp, ramped in over the run). */
-export function chapterHp(chapter: number, wave: number): number {
-  return rampChapter(HORDE.chapterHp[Math.min(Math.max(chapter, 1), HORDE.chapterHp.length) - 1], wave);
+/** Mob health percent of chapter `chapter` on wave `wave` (HORDE.chapterHp or HARD.hp, ramped in over the run). */
+export function chapterHp(chapter: number, wave: number, hard = false): number {
+  const table = hard ? HARD.hp : HORDE.chapterHp;
+  return rampChapter(table[Math.min(Math.max(chapter, 1), table.length) - 1], wave);
+}
+
+/** Health `hp` of an elite or boss of chapter `chapter`: HARD.foeHp percent of it in hard mode. */
+export function foeHp(hp: number, chapter: number, hard: boolean): number {
+  return hard ? Math.trunc((hp * HARD.foeHp[Math.min(Math.max(chapter, 1), HARD.foeHp.length) - 1]) / 100) : hp;
 }
 
 /** The kind of the n-th mob (0-based) of the horde, joining on wave `wave` of chapter `chapter`. */
@@ -54,12 +60,19 @@ export function chapterBoss(chapter: number): BossKind {
   return CHAPTER_BOSSES[Math.min(Math.max(chapter, 1), CHAPTER_BOSSES.length) - 1];
 }
 
-/** The elites coming on elite wave `wave`: the chapter's, and on the last one the previous chapter's too. */
-export function eliteKinds(chapter: number, wave: number, last: number): EliteKind[] {
+/**
+ * The elites coming on elite wave `wave`: the chapter's, and on the last one the previous
+ * chapter's too; hard mode adds a second of the first.
+ */
+export function eliteKinds(chapter: number, wave: number, last: number, hard = false): EliteKind[] {
+  let kinds: EliteKind[];
   // chapter 5 has none of its own: earlier ones, in turn (ELITE_PAIRS)
-  if (chapter >= 5) return [...ELITE_PAIRS[(Math.trunc(wave / WAVES.eliteEvery) + ELITE_PAIRS.length - 1) % ELITE_PAIRS.length]];
-  const kinds = [chapterElite(chapter)];
-  if (chapter > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
+  if (chapter >= 5) kinds = [...ELITE_PAIRS[(Math.trunc(wave / WAVES.eliteEvery) + ELITE_PAIRS.length - 1) % ELITE_PAIRS.length]];
+  else {
+    kinds = [chapterElite(chapter)];
+    if (chapter > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
+  }
+  if (hard) kinds.push(kinds[0]);
   return kinds;
 }
 
@@ -84,10 +97,11 @@ function bossOf(kind: BossKind, empowered: boolean): { hp: number } {
 }
 
 function newEliteOf(s: SimState, kind: EliteKind) {
-  if (kind === 'toadKing') return newElite(0, 0, s.nextId++, TOAD_KING.hp, TOAD_KING.cooldown, kind);
-  if (kind === 'wolfLeader') return newElite(0, 0, s.nextId++, WOLF_LEADER.hp, ELITE.cooldown, kind);
-  if (kind === 'doorGod') return newElite(0, 0, s.nextId++, DOOR_GOD.hp, DOOR_GOD.cooldown, kind);
-  return newElite(0, 0, s.nextId++);
+  const hp = (n: number) => foeHp(n, s.config.chapter, s.config.hard);
+  if (kind === 'toadKing') return newElite(0, 0, s.nextId++, hp(TOAD_KING.hp), TOAD_KING.cooldown, kind);
+  if (kind === 'wolfLeader') return newElite(0, 0, s.nextId++, hp(WOLF_LEADER.hp), ELITE.cooldown, kind);
+  if (kind === 'doorGod') return newElite(0, 0, s.nextId++, hp(DOOR_GOD.hp), DOOR_GOD.cooldown, kind);
+  return newElite(0, 0, s.nextId++, hp(ELITE.hp));
 }
 
 export function isBossWave(wave: number, last: number): boolean {
@@ -139,14 +153,14 @@ export function beginWave(s: SimState, wave: number): void {
     if (m.kind === k.kind) packed++;
     // the mobs that rested out the boss fight come back
     if (m.hp === 0 && !tempKind(m.kind)) {
-      m.hp = mobHp(wave, m.kind, s.config.chapter);
+      m.hp = mobHp(wave, m.kind, s.config.chapter, s.config.hard);
       resetMob(s, m);
       ringPoint(s.ai, p.x, p.y, m);
     }
   }
   for (let n = s.mobs.length - extra; n < hordeSize(wave); n++) {
     const kind = newcomer(s.config.chapter, wave, n);
-    const m = newMob(0, 0, mobHp(wave, kind, s.config.chapter), kind);
+    const m = newMob(0, 0, mobHp(wave, kind, s.config.chapter, s.config.hard), kind);
     resetMob(s, m);
     ringPoint(s.ai, p.x, p.y, m);
     s.mobs.push(m);
@@ -157,10 +171,10 @@ export function beginWave(s: SimState, wave: number): void {
   if (pack > 0) ringPoint(s.ai, p.x, p.y, at);
   for (let j = 0; j < pack; j++) {
     const r = k.spread;
-    s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, k.kind, s.config.chapter), k.kind));
+    s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, k.kind, s.config.chapter, s.config.hard), k.kind));
   }
   if (isEliteWave(wave, last) && s.elites.length === 0) {
-    for (const kind of eliteKinds(s.config.chapter, wave, last)) {
+    for (const kind of eliteKinds(s.config.chapter, wave, last, s.config.hard)) {
       const e = newEliteOf(s, kind);
       ringPoint(s.ai, p.x, p.y, e);
       s.elites.push(e);
@@ -170,17 +184,18 @@ export function beginWave(s: SimState, wave: number): void {
     // the previous chapter's boss, empowered
     ringPoint(s.ai, p.x, p.y, at);
     const kind = chapterBoss(s.config.chapter - 1);
-    s.boss = newBoss(at.x, at.y, bossOf(kind, true).hp, true, kind);
+    s.boss = newBoss(at.x, at.y, foeHp(bossOf(kind, true).hp, s.config.chapter, s.config.hard), true, kind);
   } else if (isMidBoss(wave, last)) {
     // the twins come from opposite sides of the hero
-    const a = newElite(0, 0, s.nextId++, WAVES.twinHp);
+    const twinHp = foeHp(WAVES.twinHp, s.config.chapter, s.config.hard);
+    const a = newElite(0, 0, s.nextId++, twinHp);
     ringPoint(s.ai, p.x, p.y, a);
-    const b = newElite(2 * p.x - a.x, 2 * p.y - a.y, s.nextId++, WAVES.twinHp, ELITE.cooldown + WAVES.twinDelay);
+    const b = newElite(2 * p.x - a.x, 2 * p.y - a.y, s.nextId++, twinHp, ELITE.cooldown + WAVES.twinDelay);
     s.elites.push(a, b);
   } else if (isBossWave(wave, last) && !s.boss) {
     ringPoint(s.ai, p.x, p.y, at);
     const kind = chapterBoss(s.config.chapter);
-    s.boss = newBoss(at.x, at.y, bossOf(kind, false).hp, false, kind);
+    s.boss = newBoss(at.x, at.y, foeHp(bossOf(kind, false).hp, s.config.chapter, s.config.hard), false, kind);
   }
 }
 

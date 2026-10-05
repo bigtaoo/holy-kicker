@@ -12,7 +12,7 @@ describe('parseScene', () => {
       mobs: 300, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: false, eliteRing: true,
       types: 1, page: 0, mobRes: 1, spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: null,
       gem: 'pink', drops: 0, threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
-      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true, deco: 'props', mist: true, cam: 'smooth', settle: true, queue: true, calm: true, sep: 75, softFace: true, sway: true, boss: true, bossSize: 300, seed: 0, waves: false, wave: 1, chapter: 0, relic: null, sutras: false, bare: false, autoplay: false, record: 0,
+      crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true, deco: 'props', mist: true, cam: 'smooth', settle: true, queue: true, calm: true, sep: 75, softFace: true, sway: true, boss: true, bossSize: 300, seed: 0, waves: false, wave: 1, chapter: 0, relic: null, sutras: false, bare: false, hard: false, autoplay: false, record: 0,
     });
     expect(parseScene('?mist=0').mist).toBe(false);
     expect(parseScene('?spells=nova,lava,chain&rate=3&stack=6&ringfx=quad&blur=1&fxbudget=2')).toMatchObject({
@@ -26,6 +26,7 @@ describe('parseScene', () => {
     expect(parseScene('?relic=sword').relic).toBeNull();
     expect(parseScene('?sutras').sutras).toBe(true);
     expect(parseScene('?bare').bare).toBe(true);
+    expect(parseScene('?hard').hard).toBe(true);
     // a stress test sets the horde size, so it runs the sandbox unless asked for waves
     expect(parseScene('?mobs=300&waves=1').waves).toBe(true);
     expect(parseScene('?waves=0').waves).toBe(false);

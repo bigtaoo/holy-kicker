@@ -176,7 +176,7 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
     m.haste = 0;
     return;
   }
-  m.hp = mobHp(s.wave, m.kind, s.config.chapter);
+  m.hp = mobHp(s.wave, m.kind, s.config.chapter, s.config.hard);
   resetMob(s, m);
   ringPoint(s.ai, by.x, by.y, m);
 }
