@@ -25,7 +25,7 @@ OUT = os.path.join(HERE, '..', 'client', 'public', 'audio')
 MAX_SFX = 3.0
 SFX_RATE = '44100'
 SFX_KBPS = '96k'
-MUSIC_KBPS = '128k'
+MUSIC_KBPS = '96k'
 PEAK_DB = -1.0
 # silence below this at either end of an effect is trimmed
 SILENCE = '-50dB'
@@ -46,6 +46,15 @@ AUTHORS = [
     ('oga/lib/monster-or-beast-sounds', 'pauliuw (CC0)'),
     ('oga/lib/animal-or-beast-sounds', 'pauliuw (CC0)'),
     ('oga/lib2/wolf_monster', 'CaveboyTup (CC0)'),
+    ('oga/boss/determined_pursuit', 'Emma_MA (CC0)'),
+    ('oga/boss/ninja', 'Spring Spring (CC0)'),
+    ('oga/boss/Heavy Concept', 'cynicmusic (CC0)'),
+    ('oga/boss/Swordfight', 'Kistol (CC0)'),
+    ('oga/boss/CleytonRX', 'CleytonKauffman (CC0)'),
+    ('oga/boss/heavy_boss', 'MintoDog (CC0)'),
+    ('oga/boss/fight', 'Ville Nousiainen (CC0)'),
+    ('oga/boss/Oriental', 'Shadowfire452 (CC0)'),
+    ('oga/boss/jrpg5/', 'Juhani Junkala (CC0)'),
     ('oga/lib/', 'qubodup (CC0)'),
 ]
 

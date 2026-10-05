@@ -34,5 +34,6 @@
  "cleared": "source/kenney/kenney_music-jingles/Audio/Steel jingles/jingles_STEEL14.ogg",
  "tap": "source/kenney/kenney_interface-sounds/Audio/click_002.ogg",
  "music.lobby": "source/itch/Lotus Pond - Loop.wav",
- "music.battle": "source/itch/Dragon Dance - Loop.wav"
+ "music.battle": "source/itch/Dragon Dance - Loop.wav",
+ "music.boss": "source/oga/boss/determined_pursuit_loop.wav"
 }

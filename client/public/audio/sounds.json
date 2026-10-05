@@ -108,6 +108,10 @@
    "path": "audio/music/battle.mp3",
    "length": 68.571
   },
+  "boss": {
+   "path": "audio/music/boss.mp3",
+   "length": 108.0
+  },
   "lobby": {
    "path": "audio/music/lobby.mp3",
    "length": 64.0

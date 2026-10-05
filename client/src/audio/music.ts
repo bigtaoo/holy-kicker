@@ -54,10 +54,14 @@ export class MusicPlayer {
     for (const d of [0, 1] as const) this.apply(d);
   }
 
-  /** One frame: `want` is what should be playing; asking for the same track again does nothing. */
+  /**
+   * One frame: `want` is what should be playing; asking for the same track again does nothing.
+   * A boss track that did not ship keeps the battle music.
+   */
   update(want: Track | null, dtMs: number): void {
     if (this.paused) return;
-    const next = want && this.tracks[want] ? want : null;
+    const asked = want === 'boss' && !this.tracks.boss ? 'battle' : want;
+    const next = asked && this.tracks[asked] ? asked : null;
     if (this.fade) this.advance(dtMs / 1000);
     if (next !== this.track) this.change(next);
     else if (!this.fade) this.checkWrap();

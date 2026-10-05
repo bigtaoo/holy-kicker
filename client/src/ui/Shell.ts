@@ -323,8 +323,15 @@ export class Shell {
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);
-    // the run has the battle music, every screen around it the lobby's
-    this.sound.flush(this.game ? 'battle' : 'lobby', this.app.ticker.deltaMS);
+    // the run has the battle music (the boss's on the mid-boss and boss waves), every screen
+    // around it the lobby's
+    this.sound.flush(this.game ? (this.bossFight(this.game) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS);
+  }
+
+  /** The run is on a mid-boss or boss wave (the boss music plays through to the results). */
+  private bossFight(game: Game): boolean {
+    const s = game.engine.state;
+    return s.config.waves > 0 && isBossWave(s.wave, s.config.waves);
   }
 
   private watchRun(game: Game, hud: RunHud): void {

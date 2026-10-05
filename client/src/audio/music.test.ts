@@ -103,6 +103,19 @@ describe('MusicPlayer', () => {
     bare.update('battle', 0);
     expect(bare.current).toBeNull();
   });
+
+  it('plays the boss track, or keeps the battle music without one', () => {
+    const { a, player } = setup();
+    player.update('boss', 0);
+    expect(player.current).toBe('battle');
+    expect(a.path).toBe('battle.mp3');
+    const { a: c, b: d } = setup();
+    const full = new MusicPlayer([c, d], { ...TRACKS, boss: { path: 'boss.mp3', length: 100 } });
+    full.update('battle', 0);
+    full.update('boss', fadeMs);
+    expect(full.current).toBe('boss');
+    expect(d.path).toBe('boss.mp3');
+  });
 });
 
 describe('sound manifest', () => {

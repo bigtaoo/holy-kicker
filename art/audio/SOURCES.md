@@ -35,3 +35,12 @@ not used (art/audio/picks.json has the shipped picks).
 | `oga/lib/teleport-spell` | https://opengameart.org/content/teleport-spell | ogrebane | CC0 |
 | `oga/lib2/wolf_monster_6.mp3` | https://opengameart.org/content/wolf-monster-sound | CaveboyTup | CC0 |
 | `itch/` (downloaded by hand: Cloudflare check) | https://bitemegames.itch.io/chinese-game-music | BiteMe Games | CC0 |
+| `oga/boss/determined_pursuit_loop.wav` | https://opengameart.org/content/determined-pursuit-epic-orchestra-loop | Emma_MA | CC0 |
+| `oga/boss/ninja theme_0.ogg` | https://opengameart.org/content/ninja-theme | Spring Spring | CC0 |
+| `oga/boss/Heavy Concept A Bass Master.wav` | https://opengameart.org/content/dramatic-boss-encounter | cynicmusic | CC0 |
+| `oga/boss/Swordfight_0.ogg` | https://opengameart.org/content/swordfight | Kistol | CC0 |
+| `oga/boss/CleytonRX - Battle RPG Theme_1.mp3` | https://opengameart.org/content/boss-battle-theme | CleytonKauffman | CC0 |
+| `oga/boss/heavy_boss_battle_1_bpm200_0.ogg` | https://opengameart.org/content/heavy-boss-battle-1 | MintoDog | CC0 |
+| `oga/boss/fight.ogg` | https://opengameart.org/content/fast-fight-battle-music | Ville Nousiainen | CC0 |
+| `oga/boss/Oriental.wav` | https://opengameart.org/content/oriental | Shadowfire452 | CC0 |
+| `oga/boss/jrpg5/` | https://opengameart.org/content/jrpg-pack-5-action | Juhani Junkala (SubspaceAudio) | CC0 |

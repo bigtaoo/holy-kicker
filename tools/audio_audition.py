@@ -1,5 +1,5 @@
-"""Writes art/audio/audition.html: for each sound cue (client/src/audio/cues.ts) and the two
-music slots, the downloaded candidates (art/audio/source) to listen to and pick from.
+"""Writes art/audio/audition.html: for each sound cue (client/src/audio/cues.ts) and the
+music slots (lobby, battle, boss), the downloaded candidates (art/audio/source) to listen to and pick from.
 
 The page keeps the picks in the browser and shows them as JSON to paste back. Run it again
 after adding sources; the candidate globs are below.
@@ -59,6 +59,7 @@ CUES = {
 MUSIC = {
     'music.lobby': ('Lobby music (calm, loops)', ['oga/asianoriental1_0.ogg', 'oga/menu_1.mp3', 'itch/**/*.*']),
     'music.battle': ('Battle music (driving, loops)', ['oga/chipnese_2.ogg', 'oga/menu_1.mp3', 'itch/**/*.*']),
+    'music.boss': ('Boss music (mid-boss and boss waves, loops)', ['oga/boss/**/*.ogg', 'oga/boss/**/*.wav', 'oga/boss/**/*.mp3']),
 }
 
 AUDIO = ('.wav', '.ogg', '.mp3', '.flac')

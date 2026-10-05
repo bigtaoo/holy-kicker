@@ -6,7 +6,7 @@ import type { Cue } from './cues';
 
 export const SOUNDS_MANIFEST = 'audio/sounds.json';
 
-export type Track = 'lobby' | 'battle';
+export type Track = 'lobby' | 'battle' | 'boss';
 
 export interface MusicDef {
   path: string;
