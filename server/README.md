@@ -31,7 +31,7 @@ until the backend has an ICP-filed domain on the mini-game's request whitelist.
 
 ## Storage
 
-MongoDB Atlas, the cluster daydayup uses, its own database `holykicker` (`HK_MONGO_DB`):
+MongoDB Atlas, a cluster of its own (`cluster0.qcp0r96`, not daydayup's), database `holykicker` (`HK_MONGO_DB`):
 `events` (TTL 90 days), `installs` (first day seen), `active` (install per day), `best` (one
 per install per board). Without `HK_MONGO_URI` the server keeps everything in memory
 (development, tests).
@@ -62,7 +62,7 @@ Secrets live in `D:\secrets` (`secrets/holykicker/prod.yaml`); the box keeps the
 sops -d --output-type dotenv secrets/holykicker/prod.yaml | ssh blightbloom 'umask 077; cat > /home/deploy/holykicker/.env; chown deploy:deploy /home/deploy/holykicker/.env'
 ```
 
-Variables: `HK_MONGO_URI` (a user with readWrite on `holykicker` only), `HK_MONGO_DB`,
+Variables: `HK_MONGO_URI` (the box's IP, 62.238.1.182, is on that project's Network Access list), `HK_MONGO_DB`,
 `HK_TAG_SALT` (never change it: every tag, so every board name, would change), `HK_ADMIN_KEY`.
 
 DNS: an A record `hk` → 62.238.1.182 in Cloudflare's `gamestao.com` zone, **DNS only (grey
