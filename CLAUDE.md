@@ -63,3 +63,5 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).
 - `art/` — source art and style exploration; `tools/` — art scripts.
 - `build/` — check scripts.
+- `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` publishes
+  the web build to h.gamestao.com (Cloudflare, `wrangler/web.jsonc`) once `WEB_DEPLOY_ENABLED` is set.
