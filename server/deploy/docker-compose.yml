@@ -1,7 +1,8 @@
-# Holy Kicker's API on the box daydayup ("blightbloom") owns (server/README.md). Its own compose
-# project, so the two deploy separately; it joins blightbloom's network only so blightbloom's
-# Caddy, the box's one public entry, can reach it as `hk-api` for hk.gamestao.com. It publishes
-# no port: the box's rule is that only Caddy does.
+# Holy Kicker's API on the box daydayup ("blightbloom") owns (server/README.md). Fully apart from
+# daydayup: its own compose project, its own network, its own way in. The box's ports 80/443
+# belong to daydayup's Caddy, so this publishes none; `tunnel` (cloudflared) dials out to
+# Cloudflare instead, which serves hk.gamestao.com and sends its requests down that connection
+# to `api`. Nothing of daydayup knows this project exists.
 name: holykicker
 
 services:
@@ -11,10 +12,8 @@ services:
     container_name: hk-api
     restart: unless-stopped
     env_file: .env
-    networks:
-      - bb
     mem_limit: 128m
-    logging:
+    logging: &logging
       driver: json-file
       options:
         max-size: "10m"
@@ -26,7 +25,17 @@ services:
       retries: 3
       start_period: 10s
 
-networks:
-  bb:
-    external: true
-    name: blightbloom_bb
+  # A remotely managed tunnel: its route (hk.gamestao.com -> http://api:8080) is set on
+  # Cloudflare's side; the token in .env is all it needs here.
+  tunnel:
+    image: cloudflare/cloudflared:2026.9.3
+    container_name: hk-tunnel
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${HK_TUNNEL_TOKEN:?HK_TUNNEL_TOKEN missing from .env}
+    depends_on:
+      api:
+        condition: service_healthy
+    mem_limit: 128m
+    logging: *logging

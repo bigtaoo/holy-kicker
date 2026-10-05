@@ -53,8 +53,13 @@ function readBody(req: IncomingMessage): Promise<unknown> {
   });
 }
 
-/** The caller: Caddy is the only way in and puts the client's address first in X-Forwarded-For. */
+/**
+ * The caller: the Cloudflare tunnel is the only way in and names the client in CF-Connecting-IP
+ * (X-Forwarded-For first, as a fallback for other proxies).
+ */
 function ipOf(req: IncomingMessage): string {
+  const cf = req.headers['cf-connecting-ip'];
+  if (typeof cf === 'string' && cf) return cf;
   const fwd = req.headers['x-forwarded-for'];
   const first = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(',')[0]?.trim();
   return first || req.socket.remoteAddress || '?';

@@ -46,24 +46,28 @@ npm test -w server
 ## Deploy
 
 It runs on the box daydayup owns (Hetzner `blightbloom`, 62.238.1.182; ssh alias
-`blightbloom`), as its own compose project in `/home/deploy/holykicker` (`deploy/`): one
-container, `hk-api`, 128 MB, no published port. It joins blightbloom's network
-`blightbloom_bb` so the box's one Caddy can reach it; the `hk.gamestao.com` site block lives in
-daydayup's `server/caddy/Caddyfile`.
+`blightbloom`) and shares nothing with daydayup but the machine: its own compose project in
+`/home/deploy/holykicker` (`deploy/`), its own network, its own Atlas cluster, its own secrets.
+Two containers: `hk-api` (128 MB, no published port) and `hk-tunnel` (cloudflared). The
+box's ports 80/443 are daydayup's Caddy, so the way in is a Cloudflare Tunnel: `hk-tunnel`
+dials out to Cloudflare, which serves https://hk.gamestao.com and passes the requests down to
+`http://api:8080`. The client's address arrives in `CF-Connecting-IP`.
 
 ```bash
-npm run deploy:server        # build, ship, docker compose up, wait for healthy
+npm run deploy:server        # build, ship, docker compose up, wait for both containers
 ```
 
-Secrets live in `D:\secrets` (`secrets/holykicker/prod.yaml`); the box keeps them in
+Secrets live in `D:secrets` (`secrets/holykicker/prod.yaml`); the box keeps them in
 `/home/deploy/holykicker/.env`, which the deploy never touches. To (re)write it:
 
 ```bash
 sops -d --output-type dotenv secrets/holykicker/prod.yaml | ssh blightbloom 'umask 077; cat > /home/deploy/holykicker/.env; chown deploy:deploy /home/deploy/holykicker/.env'
 ```
 
-Variables: `HK_MONGO_URI` (the box's IP, 62.238.1.182, is on that project's Network Access list), `HK_MONGO_DB`,
-`HK_TAG_SALT` (never change it: every tag, so every board name, would change), `HK_ADMIN_KEY`.
+Variables: `HK_MONGO_URI` (the box's IP is on that Atlas project's Network Access list),
+`HK_MONGO_DB`, `HK_TAG_SALT` (never change it: every tag, so every board name, would change),
+`HK_ADMIN_KEY`, `HK_TUNNEL_TOKEN` (the tunnel's connector token).
 
-DNS: an A record `hk` → 62.238.1.182 in Cloudflare's `gamestao.com` zone, **DNS only (grey
-cloud)**, in place *before* Caddy loads the site block (its certificate request fails otherwise).
+The tunnel is remotely managed (Cloudflare Zero Trust → Networks → Tunnels): its one public
+hostname is `hk.gamestao.com` → `http://api:8080`, and Cloudflare keeps the proxied (orange)
+DNS record for it.

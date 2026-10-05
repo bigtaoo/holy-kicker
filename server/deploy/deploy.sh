@@ -18,9 +18,11 @@ tar -C "$STAGE" -cf - . | ssh blightbloom '
   docker compose up -d --build --force-recreate
   for i in $(seq 1 20); do
     s=$(docker inspect -f "{{.State.Health.Status}}" hk-api)
-    [ "$s" = healthy ] && { echo "hk-api healthy"; exit 0; }
+    t=$(docker inspect -f "{{.State.Status}}" hk-tunnel 2>/dev/null || true)
+    [ "$s" = healthy ] && [ "$t" = running ] && { echo "hk-api healthy, hk-tunnel running"; exit 0; }
     sleep 2
   done
   docker logs --tail 30 hk-api
-  echo "hk-api did not become healthy"; exit 1
+  docker logs --tail 15 hk-tunnel || true
+  echo "hk-api or hk-tunnel did not come up"; exit 1
 '
