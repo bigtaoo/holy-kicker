@@ -374,7 +374,7 @@ or a new single image is cheap; elites and bosses cost a rig each.
   and bosses keep their health.
 - **Hard mode** (ENGINE_VERSION 27, docs/design.md "Hard mode"): with `RunConfig.hard` a
   chapter takes `HARD.hp` (16000/21000/26000/32000/40000 %) and `HARD.hurt`
-  (300/320/340/360/380 %) in place of its own, ramped in the same way; elites, the twins and
+  (300/320/340/360/380 %; 8000–20000 % and 240–300 % since ENGINE_VERSION 30) in place of its own, ramped in the same way; elites, the twins and
   bosses get `HARD.foeHp` (350–450 %) of their health, and every elite wave brings one more of
   its first elite.
 - **Boss arena, homing relic and the chapter ramp** (ENGINE_VERSION 26). The journeys showed
@@ -389,6 +389,15 @@ or a new single image is cheap; elites and bosses cost a rig each.
     and hurt 100/100/125/210/250 % at full share.
   - Chapter 3's wolf packs come every 3rd wave, and chapter 5's first elite wave brings one
     elite instead of two.
+- **A harder curve** (ENGINE_VERSION 30). Bots that moved took next to no damage in chapter 1
+  and won every try; a first run should be lost in 5–10 minutes. Mob health grows faster late
+  (`HORDE.hpSquare` 30 → 140: 360 health on wave 50 instead of 96, 97 instead of 34 on wave 25),
+  mob contact hurts 3 more every 10 waves (was 1), and so that does not make the last chapters a
+  wall, hurt by chapter is 100/100/125/180/180 % (was 210/250 for chapters 4 and 5). Chapter 1
+  from a new save (`npm run balance -- 12`): the casual bot wins 2 of 12 and loses the rest on
+  waves 20–38 (median time 7:49), the skilled bot wins 6 of 12, the still bot dies on waves 10–27.
+  Hard mode's horde got the same steeper base, so `HARD.hp` is halved (8000–20000 %) and
+  `HARD.hurt` is 240–300 % (was 300–380). Journeys: docs/design.md "Pacing targets".
 
 ## Chapters (5)
 

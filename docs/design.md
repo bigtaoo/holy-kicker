@@ -343,20 +343,26 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
 
 ## Pacing targets
 
-- Chapter 1: cleared in 1–2 tries, inside the first session.
-- Chapter 2: 3–5 tries.
-- Chapter 3 on: requires farming the previous chapter for gear and copper, about 1–2 days per
+- Chapter 1: the first try is lost in 5–10 minutes (waves 20–40) and sends the player to the
+  lobby; cleared in 2–5 tries, on the first or second day.
+- Chapter 2: 5–10 tries.
+- Chapter 3 on: requires farming the previous chapter for gear and copper, a few days per
   chapter.
-- All 5 chapters: about 2 weeks; then hard mode, about 3–6 weeks more; then new chapters.
+- All 5 chapters: about 2 weeks with ads, 3–4 without; then hard mode, about 3–6 weeks more;
+  then new chapters.
 
-**Measured** (2026-10-05, ENGINE_VERSION 26, `npm run journey`: the casual bot from a new
+**Measured** (2026-10-05, ENGINE_VERSION 30, `npm run journey`: the casual bot from a new
 save, merging, training, using the shop, patrol and daily tasks between runs and always
 pushing the highest open chapter; no revives; 6 seeds). Days to clear, median (range):
 
 | Player | Ch 1 | Ch 2 | Ch 3 | Ch 4 | Ch 5 |
 |---|---|---|---|---|---|
-| 2 sessions × 2 runs a day, every ad | 1 | 1 | 2 (2–3) | 4 (3–6) | 8 (6–9) |
-| 2 sessions × 1 run a day, no ads | 1 | 2 (1–2) | 4 (3–7) | 8 (7–10) | 16.5 (9–26) |
+| 2 sessions × 2 runs a day, every ad | 1 (1–2) | 2 (2–4) | 4.5 (4–6) | 7.5 (6–9) | 12 (8–15) |
+| 2 sessions × 1 run a day, no ads | 2 (1–3) | 5 (4–7) | 9 (7–11) | 16 (12–19) | 26.5 (15–30) |
+
+ENGINE_VERSION 30 made the curve harder: at 26–29 the casual bot won chapter 1 on its first
+try and took next to no damage, and the clears came on days 1/1/2/4/8 with ads and 1/2/4/8/16.5
+without (docs/content.md "A harder curve").
 
 Before ENGINE_VERSION 26 the no-ads player had cleared chapter 5 in 2 of 6 journeys by day 45:
 the chapter 4 and 5 bosses were all but unkillable through their horde, and a try died on the
@@ -373,13 +379,15 @@ first elite or the mid-boss or else won, so luck set the pace. The levers now:
   chapters (at +4/+6 the ads player cleared chapter 5 on days 5–7).
 - The lobby's gear: one patrol item per 6 h, 1 item per ad chest, the jade chest 80 jade for 3.
 
-**Hard mode measured** (2026-10-05, ENGINE_VERSION 27, the same journeys run on through hard
-mode; 6 seeds). Day the hard chapter is cleared, median (range):
+**Hard mode measured** (2026-10-05, ENGINE_VERSION 30, the same journeys run on through hard
+mode, 60 days; 6 seeds). Day the hard chapter is cleared, median (range):
 
 | Player | Hard 1 | Hard 2 | Hard 3 | Hard 4 | Hard 5 |
 |---|---|---|---|---|---|
-| 2 sessions × 2 runs a day, every ad | 9.5 (8–11) | 13 (12–15) | 20 (17–22) | 24 (19–26) | 27.5 (21–42) |
-| 2 sessions × 1 run a day, no ads | 22 (12–28) | 26 (20–35) | 37.5 (26–46) | 43.5 (35–49) | 54.5 (52–66) |
+| 2 sessions × 2 runs a day, every ad | 16.5 (12–28) | 20 (15–38) | 31 (22–43) | 44 (27–51) | 49 (42–59; 1 of 6 not by day 60) |
+
+The no-ads player was last measured at ENGINE_VERSION 27 (hard 5 on day 54.5, 52–66) and has
+not been run again since the harder curve.
 
 Lost hard tries end anywhere from wave 10 to 48. A first pass with elites and bosses at 5–10×
 their health (`HARD.foeHp`) made the last boss the wall (most lost tries died on wave 49), so

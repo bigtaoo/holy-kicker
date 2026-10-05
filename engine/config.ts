@@ -101,7 +101,7 @@ export const MONK_PASSIVE = {
 export const HURT = {
   mob: 6,
   /** Mob contact hurts this much more every 10 waves. */
-  mobPerTenWaves: 1,
+  mobPerTenWaves: 3,
   swarm: 3,
   elite: 12,
   charge: 22,
@@ -125,7 +125,7 @@ export const HURT = {
   demonSpell: 14,
   demonLeap: 20,
   /** Every hurt by chapter, percent (later chapters play the last), so health from gear does not make them safe. */
-  chapterPercent: [100, 100, 125, 210, 250],
+  chapterPercent: [100, 100, 125, 180, 180],
 };
 
 export const HORDE = {
@@ -140,7 +140,7 @@ export const HORDE = {
    */
   hp: 10,
   hpStep: 300,
-  hpSquare: 30,
+  hpSquare: 140,
   /**
    * Mob health by chapter, percent (later chapters play the last): the hero comes in with
    * gear and training (RunConfig.bonus), and the meta game's pacing (`npm run journey`,
@@ -168,8 +168,8 @@ export const CHAPTER_RAMP = {
  * bosses have foeHp percent of their health, and every elite wave brings one elite more.
  */
 export const HARD = {
-  hp: [16000, 21000, 26000, 32000, 40000],
-  hurt: [300, 320, 340, 360, 380],
+  hp: [8000, 10500, 13000, 16000, 20000],
+  hurt: [240, 255, 270, 285, 300],
   foeHp: [350, 380, 400, 420, 450],
 };
 
