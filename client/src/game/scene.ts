@@ -144,6 +144,13 @@ export const DEFAULT_SCENE: SceneOptions = {
   record: 0,
 };
 
+/** No dev switch changes the rules of a run, so it may go on the leaderboard. */
+export function rankedRun(s: SceneOptions): boolean {
+  const d = DEFAULT_SCENE;
+  return s.waves && s.wave === d.wave && s.mobs === d.mobs && s.spells.length === 0 && s.drops === d.drops && !s.threats
+    && s.relic === d.relic && !s.sutras && !s.bare && !s.hard && s.monk === d.monk && !s.autoplay;
+}
+
 export function parseScene(query: string): SceneOptions {
   const q = new URLSearchParams(query);
   const mobs = Number(q.get('mobs'));

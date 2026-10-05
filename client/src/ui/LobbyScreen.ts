@@ -18,6 +18,7 @@ import { monkPanel } from './monkPanel';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
 import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
+import { BoardUi, type FetchBoard } from './boardPanel';
 import { COLORS, button, dot, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
@@ -39,6 +40,8 @@ export interface LobbyActions {
   /** Whether a rewarded ad can be offered, and playing one (shop chests, patrol). */
   adAvailable(): Promise<boolean>;
   rewarded(): Promise<boolean>;
+  /** Fetches a leaderboard; null offline (no Ranks button then). */
+  board: FetchBoard | null;
 }
 
 const TOP_H = 150;
@@ -68,6 +71,7 @@ export class LobbyScreen implements Screen {
   private toast: Text | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly econ: EconomyUi;
+  private readonly boards: BoardUi;
   /** Whether rewarded ads can be offered, for the shop tab's height. */
   private adOk = false;
 
@@ -91,6 +95,7 @@ export class LobbyScreen implements Screen {
       rewarded: () => actions.rewarded(),
       icons: this.icons,
     }, ads);
+    this.boards = new BoardUi(actions.board, () => this.relayout());
   }
 
   layout(f: UiFrame): void {
@@ -113,6 +118,8 @@ export class LobbyScreen implements Screen {
     if (this.tab === 'gear' && this.gearOpen) this.view.addChild(gearDetail(this.save, this.gearOpen, this.icons, f.w, f.h, this.gearActions()));
     const overlay = this.econ.overlay(f.w, f.h);
     if (overlay) this.view.addChild(overlay);
+    const board = this.boards.overlay(f.w, f.h);
+    if (board) this.view.addChild(board);
     if (this.settingsOpen) {
       const set = this.actions.settings;
       this.view.addChild(settingsPanel(f.w, f.h, {
@@ -320,6 +327,11 @@ export class LobbyScreen implements Screen {
       48, open ? COLORS.dim : COLORS.danger,
     );
     status.y = -145;
+    const ranks = open ? this.boards.button(n, hard) : null;
+    if (ranks) {
+      ranks.position.set(340, -145);
+      card.addChild(ranks);
+    }
     const chests = this.chests(n);
     chests.y = -95 + shift;
     const relics = this.relics();

@@ -12,6 +12,7 @@ import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEve
 //    is installed so the adapter's own offscreen probes never become the main canvas.
 //  - No WebGPU, no resizeTo/autoDensity: size explicitly and set the resolution.
 export class WeChatPlatform implements Platform {
+  readonly host = 'wechat';
   private bridge: WeChatEventBridge | null = null;
   // Ads and the wx.login cloud save come with the WeChat release (docs/design.md).
   readonly storage: KeyValueStore = new SafeStore({

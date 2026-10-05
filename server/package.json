@@ -1,0 +1,20 @@
+{
+  "name": "@hk/server",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Holy Kicker backend: analytics and leaderboards on the shared VPS (see README.md)",
+  "scripts": {
+    "build": "node build.mjs",
+    "dev": "node build.mjs && node dist/server.mjs",
+    "deploy": "node build.mjs && sh deploy/deploy.sh",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "mongodb": "^7.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0"
+  }
+}

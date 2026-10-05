@@ -1,3 +1,4 @@
+import type { Host } from '@hk/protocol';
 import { Application } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
@@ -28,6 +29,7 @@ export function browserStorage(): KeyValueStore | null {
 // Browser host: a window-sized canvas, pointer drags for the stick, WASD/arrows as well.
 // No portal and no ads; ?ads=fake stands in for an ad host during development.
 export class WebPlatform implements Platform {
+  readonly host: Host = 'web';
   private held = new Set<string>();
   readonly storage: KeyValueStore = new SafeStore(browserStorage());
   readonly portal: Portal = NO_PORTAL;

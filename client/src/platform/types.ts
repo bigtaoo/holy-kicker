@@ -1,4 +1,5 @@
 import type { Application } from 'pixi.js';
+import type { Host } from '@hk/protocol';
 import type { MusicDeck } from '../audio/music';
 import type { DragStick, Vec2 } from '../game/dragStick';
 import type { DeviceInfo } from '../game/quality';
@@ -7,6 +8,8 @@ import type { KeyValueStore } from '../meta/saveStore';
 // What the game needs from each host (web browser, CrazyGames, WeChat mini-game).
 // Screen coordinates everywhere are logical pixels, the same units as app.screen.
 export interface Platform {
+  /** Which host this is, as the backend names it (analytics, leaderboard runs). */
+  readonly host: Host;
   /** What the host says about the device before any GL context exists (gpu stays ''). */
   probe(): Promise<DeviceInfo>;
   /** MSAA is fixed for the context's lifetime, so it is chosen here. */

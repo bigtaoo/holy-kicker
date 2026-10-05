@@ -1,0 +1,10 @@
+{
+  "extends": "../tsconfig.base.json",
+  // Node only: the protocol module stays free of Node APIs, since the client imports it too.
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["src", "build.mjs"]
+}

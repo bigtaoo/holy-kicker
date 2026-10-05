@@ -14,7 +14,8 @@
     "baseUrl": ".",
     "paths": {
       "@hk/engine": ["engine/index.ts"],
-      "@hk/engine/*": ["engine/*"]
+      "@hk/engine/*": ["engine/*"],
+      "@hk/protocol": ["server/src/protocol.ts"]
     }
   }
 }

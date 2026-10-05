@@ -1,0 +1,32 @@
+# Holy Kicker's API on the box daydayup ("blightbloom") owns (server/README.md). Its own compose
+# project, so the two deploy separately; it joins blightbloom's network only so blightbloom's
+# Caddy, the box's one public entry, can reach it as `hk-api` for hk.gamestao.com. It publishes
+# no port: the box's rule is that only Caddy does.
+name: holykicker
+
+services:
+  api:
+    build: .
+    image: holykicker-api
+    container_name: hk-api
+    restart: unless-stopped
+    env_file: .env
+    networks:
+      - bb
+    mem_limit: 128m
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  bb:
+    external: true
+    name: blightbloom_bb

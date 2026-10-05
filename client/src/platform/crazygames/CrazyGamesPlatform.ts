@@ -11,6 +11,7 @@ import { CrazyGamesSdk } from './sdk';
 // Built with `create()`, which waits (bounded) for the SDK before anything else, because the
 // data module only exists after init: reading the save before that would read the wrong store.
 export class CrazyGamesPlatform extends WebPlatform {
+  override readonly host = 'crazygames';
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
   override readonly ads: Ads;

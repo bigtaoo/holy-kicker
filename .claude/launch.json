@@ -27,6 +27,17 @@
         "preview:crazygames"
       ],
       "port": 4174
+    },
+    {
+      "name": "api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "-w",
+        "server"
+      ],
+      "port": 8080
     }
   ]
 }

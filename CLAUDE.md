@@ -54,6 +54,10 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode;
   `?monk=fat` (or `novice`) plays as that monk whatever the save says.
   `?autoplay` lets the balance bot play; `?record=SECONDS` records the run to a 1080x1920 video (`src/dev/recorder.ts`).
+- `server/` — the backend (`@hk/server`, server/README.md): analytics and leaderboards at
+  hk.gamestao.com on daydayup's box; `src/protocol.ts` is the wire format, imported by the client
+  as `@hk/protocol`. `npm run deploy:server` ships it. Dev: `?api=http://localhost:8080` with
+  `npm run dev -w server` (the client stays offline in development otherwise).
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).

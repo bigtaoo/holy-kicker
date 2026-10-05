@@ -1,10 +1,10 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, isEliteWave, SUTRA_IDS, xpToNext, type Card } from '@hk/engine';
+import { isBossWave, isEliteWave, SUTRA_IDS, TICK_RATE, xpToNext, type Card } from '@hk/engine';
 import { setLocale, t, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
-import type { SceneOptions } from '../game/scene';
+import { rankedRun, type SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
 import { BALANCE } from '../meta/balance';
 import { evolvedIn } from '../meta/codex';
@@ -18,6 +18,7 @@ import { loadSettings, updateSettings } from '../meta/settings';
 import { bracketed } from '../platform/brackets';
 import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
+import type { Backend } from '../net/backend';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
 import { cardText } from './cardText';
@@ -79,6 +80,8 @@ export class Shell {
     private readonly art: Art,
     private readonly scene: SceneOptions,
     private readonly store: SaveStore,
+    /** Analytics and the leaderboard (net/backend.ts). */
+    private readonly net: Backend,
     /** A desktop: the first run's move hint also names the keyboard. */
     private readonly keys = false,
   ) {
@@ -93,6 +96,7 @@ export class Shell {
     platform.onHide(() => this.hud?.pauseForHost());
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
+    net.track('session', { runs: this.save.runs, level: this.save.level });
   }
 
   /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
@@ -172,7 +176,8 @@ export class Shell {
       },
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
-      rewarded: () => this.ads.rewarded(),
+      rewarded: () => this.rewarded('lobby'),
+      board: this.net.online ? (id) => this.net.board(id) : null,
     }, this.art.icons, this.app.renderer);
     if (settings) lobby.openSettings();
     this.setScreen(lobby);
@@ -245,6 +250,14 @@ export class Shell {
     }, this.art.icons, this.keys);
     this.setScreen(this.hud);
     this.portal.gameplayStart();
+    this.net.track('run_start', { chapter, hard: this.hard, monk: this.scene.monk ?? this.save.monk, relic: this.scene.relic ?? this.save.relic });
+  }
+
+  /** A rewarded ad, counted when it paid (`at` says where it was offered). */
+  private async rewarded(at: string): Promise<boolean> {
+    const paid = await this.ads.rewarded();
+    if (paid) this.net.track('ad', { at });
+    return paid;
   }
 
   private setPaused(paused: boolean): void {
@@ -260,7 +273,7 @@ export class Shell {
       this.game.revive();
       return true;
     }
-    const paid = await this.ads.rewarded();
+    const paid = await this.rewarded('revive');
     if (!paid || !this.game) return false;
     // the engine stands the hero up on its next tick; watchRun then resumes the portal
     this.game.revive();
@@ -280,6 +293,7 @@ export class Shell {
     const p = this.game.engine.state.players[0];
     const { offerings } = p;
     const evolved = evolvedIn(p);
+    this.report(this.game.engine.state, p.level);
     this.game.destroy();
     this.game = null;
     this.hud = null;
@@ -295,11 +309,23 @@ export class Shell {
     this.showResults(reward, waves);
   }
 
+  /** Tells the backend how the run went, and enters it on its board when no dev switch bent the rules. */
+  private report(s: Game['engine']['state'], level: number): void {
+    const p = s.players[0];
+    const run = {
+      chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
+      level, kills: this.kills, monk: p.monk, relic: p.relicId,
+    };
+    this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
+    if (rankedRun(this.scene)) void this.net.submitRun(run);
+    void this.net.flush();
+  }
+
   private showResults(reward: Reward, waves: number): void {
     let leaving = false;
     this.setScreen(new ResultsScreen(reward, waves, {
       double: async () => {
-        const paid = await this.ads.rewarded();
+        const paid = await this.rewarded('double');
         if (paid) this.commit(doubleCopper(this.save, reward));
         return paid;
       },
@@ -346,8 +372,10 @@ export class Shell {
     }
     const p = s.players[0];
     if (this.tutorial && !game.paused && p.offer.length === 0) {
+      const step = this.tutorial.step;
       this.tutorial = stepTutorial(this.tutorial, this.app.ticker.deltaMS / 1000, p.moving);
       hud.setTutorial(this.tutorial.step);
+      if (step !== 'done' && this.tutorial.step === 'done') this.net.track('tutorial');
     }
     hud.setXp(p.level, p.xp / xpToNext(p.level));
     hud.setBuild(buildSlots(p));

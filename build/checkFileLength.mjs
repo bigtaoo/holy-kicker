@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const MAX_LINES = 500;
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
-const DIRS = ['client/src', 'engine', 'build', 'tools'];
+const DIRS = ['client/src', 'engine', 'server/src', 'build', 'tools'];
 const EXTS = ['.ts', '.mjs', '.js', '.py', '.sh'];
 
 function* walk(dir) {

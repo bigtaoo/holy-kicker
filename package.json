@@ -6,7 +6,8 @@
   "description": "Holy Kicker — portrait horde-survivor roguelite (PixiJS). See README.md",
   "workspaces": [
     "engine",
-    "client"
+    "client",
+    "server"
   ],
   "scripts": {
     "dev": "npm run dev -w client",
@@ -21,7 +22,8 @@
     "balance": "node build/balance.mjs",
     "journey": "node build/journey.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
-    "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build:wechat && npm run build:crazygames && npm run check:wechatpackage"
+    "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run check:wechatpackage",
+    "deploy:server": "npm run deploy -w server"
   },
   "devDependencies": {
     "typescript": "^5.7.2",
