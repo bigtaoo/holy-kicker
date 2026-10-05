@@ -173,6 +173,7 @@ export class Shell {
           updateSettings(this.platform.storage, { quality });
           this.onQualityMode(quality);
         },
+        online: this.net.online,
       },
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),

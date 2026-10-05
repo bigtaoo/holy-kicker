@@ -293,8 +293,8 @@ is stopped at death and the player opts in, so it should be fine; confirm during
 - **Balance data** (merge costs, copper rates, drop tables, ad caps) lives in data files, never
   in code, so it can move to remote config later without a rewrite.
 - **Analytics:** the CrazyGames developer dashboard first. Our own events (death wave per
-  chapter, runs per day, time between merges, ad view rate) need a server and a one-line data
-  notice in the lobby.
+  chapter, runs per day, time between merges, ad view rate) go to our server (server/), and the
+  lobby's settings panel says so in a short data notice whenever the game is online.
 
 A small server on the existing VPS comes with WeChat: `code2session` login (the app secret
 must not ship), cloud save, server time, remote config, analytics. Leaderboards later can

@@ -359,6 +359,7 @@ export const en = {
     autoHint: 'Adjusts itself to keep the game smooth',
     highHint: 'Best effects; phones may get warm',
     saverHint: '30 fps and fewer effects, saves battery',
+    dataNotice: 'The game sends anonymous play data (no account, no personal info) to balance levels and run the leaderboards.',
   },
   currency: {
     copper: 'Copper',

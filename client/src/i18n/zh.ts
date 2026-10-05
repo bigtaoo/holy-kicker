@@ -361,6 +361,7 @@ export const zh: Table<typeof en> = {
     autoHint: '根据流畅度自动调整',
     highHint: '特效最全，手机可能发热',
     saverHint: '30 帧、特效减少，更省电',
+    dataNotice: '游戏会发送匿名数据，不含账号和个人信息，\n用于调整关卡平衡和排行榜。',
   },
   currency: {
     copper: '铜钱',

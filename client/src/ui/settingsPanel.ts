@@ -5,7 +5,7 @@ import { VOLUME_STEPS } from '../meta/settings';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
 
 // The settings panel, opened from the lobby's gear: language, the sound effects' and the
-// music's volume in steps (0 is off) and the graphics quality. Every change goes straight to the shell, which
+// music's volume in steps (0 is off), the graphics quality and, online, the data notice. Every change goes straight to the shell, which
 // stores it and redraws the lobby, so the panel just shows the current values.
 
 export interface SettingsActions {
@@ -16,6 +16,8 @@ export interface SettingsActions {
   setMusic(volume: number): void;
   quality(): QualityMode;
   setQuality(mode: QualityMode): void;
+  /** Whether the game talks to its backend: the panel then says what it sends. */
+  online: boolean;
   close(): void;
 }
 
@@ -76,7 +78,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   view.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const boxH = 1370;
+  const boxH = a.online ? 1530 : 1370;
   let y = -boxH / 2;
   box.addChild(panel(W, boxH));
   const add = (c: Container, step: number) => {
@@ -102,6 +104,8 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   heading(t('settings.quality'));
   add(choices(QUALITY_MODES, (m) => t(`settings.${m}`), mode, (m) => a.setQuality(m)), 140);
   add(fit(label(t(HINT[mode]), 40, COLORS.dim), W - 80), 90);
+
+  if (a.online) add(label(t('settings.dataNotice'), 36, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 100, breakWords: true }), 160);
 
   y += 40;
   add(button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked }), 110);
