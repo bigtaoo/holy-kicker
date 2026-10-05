@@ -10,9 +10,9 @@ from PIL import Image
 # name: store size, crop focus (fraction of width, height kept in view), logo (centre x, centre y,
 # width), all as fractions of the final picture
 COVERS = {
-    "landscape": ((1920, 1080), (0.5, 0.5), (0.505, 0.14, 0.30)),
+    "landscape": ((1920, 1080), (0.5, 0.5), (0.497, 0.125, 0.27)),
     "portrait": ((800, 1200), (0.5, 0.5), (0.5, 0.13, 0.74)),
-    "square": ((800, 800), (0.5, 0.5), (0.5, 0.88, 0.44)),
+    "square": ((800, 800), (0.5, 0.5), (0.5, 0.895, 0.40)),
 }
 
 
