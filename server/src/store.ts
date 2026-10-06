@@ -1,4 +1,5 @@
-import { boardId, runScore, type BoardReply, type BoardRow, type EventBatch, type RunEntry } from './protocol';
+import { randomBytes } from 'node:crypto';
+import { boardId, runScore, type BoardReply, type BoardRow, type EventBatch, type Report, type ReportSummary, type RunEntry } from './protocol';
 
 // Where the backend keeps things. The routes only see this interface: mongoStore.ts is the real
 // one, MemoryStore below serves the tests and a local run without a database.
@@ -20,6 +21,12 @@ export interface Store {
   board(board: string, limit: number, tag: string | null): Promise<BoardReply>;
   /** The last `days` days of numbers for the operator. */
   stats(days: number, now: number): Promise<Stats>;
+  /** Keeps a problem report received at `now`; returns its id. */
+  addReport(report: Report, now: number): Promise<string>;
+  /** The newest `limit` reports, without their replays' commands. */
+  reports(limit: number): Promise<ReportSummary[]>;
+  /** One report whole, replay and all. */
+  report(id: string): Promise<(Report & { id: string; at: number }) | null>;
   close(): Promise<void>;
 }
 
@@ -31,6 +38,16 @@ interface Best {
   at: number;
 }
 
+/** A report's id: 16 hex digits, unguessable (the reports are only for the operator anyway). */
+export function reportId(): string {
+  return randomBytes(8).toString('hex');
+}
+
+export function summaryOf(r: Report, id: string, at: number): ReportSummary {
+  const { replay, ...rest } = r;
+  return { ...rest, id, at, ticks: replay?.tick ?? 0 };
+}
+
 export function rowOf(b: Best, rank: number): BoardRow {
   const r = b.run;
   return { rank, tag: b.tag, won: r.won, wave: r.wave, tenths: r.tenths, level: r.level, monk: r.monk, relic: r.relic };
@@ -39,6 +56,7 @@ export function rowOf(b: Best, rank: number): BoardRow {
 /** In memory, for the tests and `npm run dev -w server` without HK_MONGO_URI. Stats are left empty. */
 export class MemoryStore implements Store {
   readonly events: (EventBatch & { at: number })[] = [];
+  readonly reportList: (Report & { id: string; at: number })[] = [];
   private readonly best = new Map<string, Best>();
 
   async addEvents(batch: EventBatch, now: number): Promise<void> {
@@ -68,6 +86,20 @@ export class MemoryStore implements Store {
 
   async stats(): Promise<Stats> {
     return { days: [], boards: [], retention: [] };
+  }
+
+  async addReport(report: Report, now: number): Promise<string> {
+    const id = reportId();
+    this.reportList.push({ ...report, id, at: now });
+    return id;
+  }
+
+  async reports(limit: number): Promise<ReportSummary[]> {
+    return [...this.reportList].reverse().slice(0, limit).map((r) => summaryOf(r, r.id, r.at));
+  }
+
+  async report(id: string) {
+    return this.reportList.find((r) => r.id === id) ?? null;
   }
 
   async close(): Promise<void> {}

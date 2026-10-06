@@ -1,5 +1,5 @@
-// The wire format between the game and its backend (server/README.md): analytics batches and
-// leaderboard runs. Shared as source by the client (`@hk/protocol`) and the server, so both
+// The wire format between the game and its backend (server/README.md): analytics batches,
+// leaderboard runs and problem reports. Shared as source by the client (`@hk/protocol`) and the server, so both
 // sides agree on names and limits. Pure: no Node or browser APIs.
 
 /** Hosts the game ships on. */
@@ -61,6 +61,14 @@ export const LIMITS = {
   maxSeconds: 4 * 3600,
   maxLevel: 200,
   maxKills: 1_000_000,
+  /** A problem report: the player's note, the device line, and the replay. */
+  reportText: 2000,
+  device: 300,
+  /** Numbers in a replay's packed commands (5 per kept command), and its config as JSON. */
+  replayNumbers: 500_000,
+  replayConfig: 8 * 1024,
+  /** A report's whole body; every other request stays under 32 kB. */
+  reportBytes: 3 * 1024 * 1024,
 } as const;
 
 /** A finished chapter run sent to the leaderboard. */
@@ -113,4 +121,41 @@ export interface BoardReply {
   rows: BoardRow[];
   /** The asking install's own row, when it has one. */
   mine: BoardRow | null;
+}
+
+/**
+ * A replay as it goes over the wire: @hk/engine's Replay (engine/replay.ts), with the config
+ * left opaque so the server does not depend on the engine.
+ */
+export interface ReplayWire {
+  engine: number;
+  config: Record<string, unknown>;
+  wave: number;
+  cmds: number[];
+  tick: number;
+  hash: number;
+}
+
+/** A problem the player reported from the pause panel, with the run so far. */
+export interface Report {
+  install: string;
+  host: Host;
+  build: string;
+  locale: string;
+  /** What the player wrote (may be empty: the replay alone says something). */
+  text: string;
+  /** The browser's user agent or the phone's model and system. */
+  device: string;
+  /** Where the run was: chapter, wave, hard, monk, relic. */
+  chapter: number;
+  wave: number;
+  replay: ReplayWire | null;
+}
+
+/** A report as the operator lists it: everything but the replay's commands. */
+export interface ReportSummary extends Omit<Report, 'replay'> {
+  id: string;
+  at: number;
+  /** Ticks the replay covers, 0 without one. */
+  ticks: number;
 }

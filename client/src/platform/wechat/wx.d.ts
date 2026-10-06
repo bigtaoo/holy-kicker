@@ -29,6 +29,10 @@ interface WxDeviceInfo {
   platform: string;
   /** Device memory in MB (newer base libraries only). */
   memorySize?: number;
+  brand?: string;
+  model?: string;
+  /** The OS and its version, e.g. 'iOS 17.4'. */
+  system?: string;
 }
 
 interface WxBenchmarkInfo {
@@ -241,6 +245,17 @@ interface Wx {
   onAudioInterruptionEnd?: (cb: () => void) => void;
   /** Turns on the capsule menu's forward items (platform/wechat/weChatShare.ts). */
   showShareMenu?: (opts: { withShareTicket?: boolean; menus?: ('shareAppMessage' | 'shareTimeline')[] }) => void;
+  /** A system dialog; `editable` (base library 2.17.1+) adds a text box, its text in `content`. */
+  showModal?: (opts: {
+    title?: string;
+    content?: string;
+    editable?: boolean;
+    placeholderText?: string;
+    confirmText?: string;
+    cancelText?: string;
+    success?: (r: { confirm: boolean; cancel: boolean; content?: string }) => void;
+    fail?: () => void;
+  }) => void;
   /** What a forward to a chat shows; `imageUrl` is a package path, 5:4 reads best. */
   onShareAppMessage?: (cb: () => { title?: string; imageUrl?: string; query?: string }) => void;
   /** Base library 2.11.3+: what a share to Moments shows (the icon unless `imageUrl`). */

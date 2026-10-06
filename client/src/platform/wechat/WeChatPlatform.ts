@@ -2,7 +2,7 @@ import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal } from '../types';
+import { NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type TextAsk } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
 import { WeChatMusicDeck } from './weChatMusicDeck';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
@@ -65,6 +65,27 @@ export class WeChatPlatform implements Platform {
 
   onHide(cb: () => void): void {
     wx.onHide?.(cb);
+  }
+
+  /** WeChat's own dialog with a text box; it has room for the title and the box only. */
+  askText(o: TextAsk): Promise<string | null> {
+    return new Promise((resolve) => {
+      if (!wx.showModal) return resolve(null);
+      wx.showModal({
+        title: o.title,
+        editable: true,
+        placeholderText: o.placeholder,
+        confirmText: o.send,
+        cancelText: o.cancel,
+        success: (r) => resolve(r.confirm ? (r.content ?? '').trim().slice(0, o.max) : null),
+        fail: () => resolve(null),
+      });
+    });
+  }
+
+  device(): string {
+    const d = wx.getDeviceInfo?.();
+    return d ? [d.brand, d.model, d.system, `base ${wx.getAppBaseInfo?.().SDKVersion ?? '?'}`].filter(Boolean).join(' · ').slice(0, 300) : 'wechat';
   }
 
   languages(): string[] {

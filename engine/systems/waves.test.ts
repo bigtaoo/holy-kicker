@@ -3,7 +3,7 @@ import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, SHRINE, WAVES, type RunCon
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
-import { hordeSize, isBossWave, isEliteWave, isShrineWave, mobHp } from './waves';
+import { hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, mobHp, twinHp, waveFoeHp } from './waves';
 
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, waves: 50 };
 
@@ -41,13 +41,13 @@ describe('wave plan', () => {
     expect(gain(40)).toBeGreaterThan(gain(1) * 3);
   });
 
-  it('puts elites on every tenth wave and bosses on the mid and last waves', () => {
+  it('puts elites on every fifth wave and bosses on the mid and last waves', () => {
     const elites = Array.from({ length: 50 }, (_, i) => i + 1).filter((w) => isEliteWave(w, 50));
     const bosses = Array.from({ length: 50 }, (_, i) => i + 1).filter((w) => isBossWave(w, 50));
-    expect(elites).toEqual([10, 20, 30, 40]);
-    expect(bosses).toEqual([WAVES.midBoss, 50]);
+    expect(elites).toEqual([5, 10, 15, 25, 30, 40, 45]);
+    expect(bosses).toEqual([...WAVES.midBosses, 50]);
     // a short chapter ends on its boss and has no mid-boss
-    expect(isBossWave(WAVES.midBoss, 20)).toBe(false);
+    expect(isMidBoss(WAVES.midBosses[0], WAVES.midBosses[0])).toBe(false);
     expect(isEliteWave(20, 20)).toBe(false);
   });
 });
@@ -87,29 +87,29 @@ describe('chapter run', () => {
     const s = e.state;
     const p = s.players[0];
     p.hurtCd = 1e6;
-    s.wave = WAVES.midBoss - 1;
+    s.wave = WAVES.midBosses[0] - 1;
     s.waveT = WAVES.ticks - 1;
     expect(idle(e, 1)).toContain('wave');
     expect(s.boss).toBeNull();
     expect(s.elites).toHaveLength(2);
     const [a, b] = s.elites;
-    expect(a).toMatchObject({ hp: WAVES.twinHp });
+    expect(a).toMatchObject({ hp: twinHp(1, WAVES.midBosses[0], false) });
     expect(b.cd - a.cd).toBe(WAVES.twinDelay);
     expect(a.id).not.toBe(b.id);
     // from opposite sides of the hero
     expect(Math.sign(a.x - p.x) * Math.sign(b.x - p.x) + Math.sign(a.y - p.y) * Math.sign(b.y - p.y)).toBeLessThan(0);
     s.waveT = WAVES.ticks * 3;
     idle(e, 1);
-    expect(s.wave).toBe(WAVES.midBoss);
+    expect(s.wave).toBe(WAVES.midBosses[0]);
     s.elites.splice(0, 1);
     idle(e, 1);
-    expect(s.wave).toBe(WAVES.midBoss);
+    expect(s.wave).toBe(WAVES.midBosses[0]);
     s.elites.length = 0;
     expect(idle(e, 1)).toContain('wave');
-    expect(s.wave).toBe(WAVES.midBoss + 1);
+    expect(s.wave).toBe(WAVES.midBosses[0] + 1);
   });
 
-  it('brings an elite that can fall on every tenth wave', () => {
+  it('brings an elite that can fall on every fifth wave', () => {
     const e = new Engine(CHAPTER);
     const s = e.state;
     s.players[0].hurtCd = 1e6;
@@ -117,7 +117,7 @@ describe('chapter run', () => {
     s.waveT = WAVES.ticks - 1;
     idle(e, 1);
     expect(s.elites).toHaveLength(1);
-    expect(s.elites[0]).toMatchObject({ hp: ELITE.hp });
+    expect(s.elites[0]).toMatchObject({ hp: waveFoeHp(ELITE.hp, 1, 10, false) });
   });
 
   it('loses health on contact, goes down at 0 and comes back once with a revive', () => {

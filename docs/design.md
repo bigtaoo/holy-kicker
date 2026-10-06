@@ -316,13 +316,15 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
 
 - Every player-facing string comes from a string table keyed by id; no literal text in game
   code. Numbers and plurals go through one formatter.
-- Launch languages: **English** (default) and **Simplified Chinese**. Add more from
-  CrazyGames traffic data (daydayup already ships de, es, fr, it, pl, ru); the tables and
-  layouts must not assume a language count.
+- Languages: **English** (default), **Simplified Chinese**, and since 2026-10-06 German,
+  French, Spanish, Italian, Portuguese (BR), Polish, Russian, Japanese and Korean
+  (`client/src/i18n/more.ts`; the WeChat build ships en and zh only, for its 4 MB main
+  package). Picked in the lobby's settings or on the pause panel (`ui/languagePanel.ts`); the
+  tables and layouts must not assume a language count.
 - Language order: saved setting → platform / browser language → English.
 - Layouts leave room for about 30 % longer text (German, Russian). Damage numbers are digits
   only and need no localization.
-- Glyphs: system fonts on web; check CJK coverage and size on the WeChat build.
+- Glyphs: system fonts on web (Japanese and Korean put their own fonts first, `ui/widgets.ts`); check CJK coverage and size on the WeChat build.
 
 ## Lobby layout (portrait, 5 bottom tabs)
 
@@ -359,6 +361,15 @@ pushing the highest open chapter; no revives; 6 seeds). Days to clear, median (r
 |---|---|---|---|---|---|
 | 2 sessions × 2 runs a day, every ad | 1 (1–2) | 2 (2–4) | 4.5 (4–6) | 7.5 (6–9) | 12 (8–15) |
 | 2 sessions × 1 run a day, no ads | 2 (1–3) | 5 (4–7) | 9 (7–11) | 16 (12–19) | 26.5 (15–30) |
+
+**Measured again** (2026-10-06, ENGINE_VERSION 31: spawns ahead of a running hero, crowd
+blows, an elite every 5th wave and mid-bosses on 20 and 35, `hpSquare` 85; content.md
+"Pressure"), same setup and seeds:
+
+| Player | Ch 1 | Ch 2 | Ch 3 | Ch 4 | Ch 5 |
+|---|---|---|---|---|---|
+| 2 sessions × 2 runs a day, every ad | 1 (1–2) | 3.5 (2–4) | 7 (5–10) | 10.5 (8–15) | 15 (12–20) |
+| 2 sessions × 1 run a day, no ads | 1 (1–2) | 4 (2–5) | 8.5 (6–12) | 11 (9–17) | 15.5 (12–26) |
 
 ENGINE_VERSION 30 made the curve harder: at 26–29 the casual bot won chapter 1 on its first
 try and took next to no damage, and the clears came on days 1/1/2/4/8 with ads and 1/2/4/8/16.5

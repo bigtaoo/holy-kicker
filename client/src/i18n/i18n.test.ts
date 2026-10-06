@@ -1,7 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { en } from './en';
+import { MORE } from './more';
 import { zh } from './zh';
-import { detectLocale, formatAmount, setLocale, t } from './index';
+import { detectLocale, formatAmount, LOCALES, localeName, setLocale, t } from './index';
+
+const TABLES = { en, zh, ...MORE };
 
 function leaves(node: object, prefix = ''): string[] {
   return Object.entries(node).flatMap(([k, v]) => (typeof v === 'string' ? [`${prefix}${k}`] : leaves(v, `${prefix}${k}.`)));
@@ -10,10 +13,16 @@ function leaves(node: object, prefix = ''): string[] {
 describe('i18n', () => {
   afterEach(() => setLocale('en'));
 
+  it('ships eleven languages, each named in itself', () => {
+    expect(LOCALES).toEqual(['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko']);
+    expect(new Set(LOCALES.map(localeName)).size).toBe(LOCALES.length);
+  });
+
   it('every table has the same keys and no empty strings', () => {
-    expect(leaves(zh).sort()).toEqual(leaves(en).sort());
-    for (const table of [en, zh]) {
-      for (const key of leaves(table)) expect(t(key as never)).not.toBe('');
+    for (const l of LOCALES) {
+      expect(leaves(TABLES[l]!).sort(), l).toEqual(leaves(en).sort());
+      setLocale(l);
+      for (const key of leaves(en)) expect(t(key as never), `${l} ${key}`).not.toBe('');
     }
   });
 
@@ -21,8 +30,18 @@ describe('i18n', () => {
     const holes = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
     setLocale('en');
     const english = leaves(en).map((k) => holes(t(k as never)));
-    setLocale('zh');
-    expect(leaves(en).map((k) => holes(t(k as never)))).toEqual(english);
+    for (const l of LOCALES) {
+      setLocale(l);
+      expect(leaves(en).map((k) => `${k} ${holes(t(k as never))}`), l).toEqual(leaves(en).map((k, i) => `${k} ${english[i]}`));
+    }
+  });
+
+  it('keeps sixteen words a side for the board names', () => {
+    for (const l of LOCALES) {
+      setLocale(l);
+      expect(t('board.adjs').split('|'), l).toHaveLength(16);
+      expect(t('board.nouns').split('|'), l).toHaveLength(16);
+    }
   });
 
   it('fills placeholders and switches language', () => {
@@ -33,9 +52,11 @@ describe('i18n', () => {
   });
 
   it('detects the language from a preference list', () => {
-    expect(detectLocale(['de-DE', 'zh-CN'])).toBe('zh');
+    expect(detectLocale(['nl-NL', 'zh-CN'])).toBe('zh');
     expect(detectLocale(['zh_CN'])).toBe('zh');
-    expect(detectLocale(['fr'])).toBe('en');
+    expect(detectLocale(['de-DE', 'en'])).toBe('de');
+    expect(detectLocale(['pt-BR'])).toBe('pt');
+    expect(detectLocale(['nl'])).toBe('en');
     expect(detectLocale([])).toBe('en');
   });
 
@@ -47,5 +68,8 @@ describe('i18n', () => {
     expect(formatAmount(9999, 'zh')).toBe('9999');
     expect(formatAmount(12345, 'zh')).toBe('1.2万');
     expect(formatAmount(340_000_000, 'zh')).toBe('3.4亿');
+    expect(formatAmount(12345, 'ja')).toBe('1.2万');
+    expect(formatAmount(12345, 'ko')).toBe('1.2만');
+    expect(formatAmount(12345, 'de')).toBe('12k');
   });
 });

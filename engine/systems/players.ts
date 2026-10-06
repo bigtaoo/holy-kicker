@@ -3,7 +3,7 @@ import type { SimEvent } from '../events';
 import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
-import type { Player, SimState } from '../state';
+import { underground, type Player, type SimState } from '../state';
 import { bowlLevel, pickCard, relicCooldown, relicLevel, relicPct, stat } from './build';
 import { bowlInAir, throwBowl } from './bowl';
 import { bigTarget, bossIndex, kickTarget, launchBall, markOf, nearestTarget, targetAt } from './combat';
@@ -156,7 +156,11 @@ function strike(s: SimState, p: Player): void {
   );
 }
 
-/** Anything touching a player hurts them, by what it is; the horde hits harder in later waves. */
+/**
+ * Anything touching a player hurts them, by what it is; the horde hits harder in later waves,
+ * and a mob's blow harder for every other mob pressing in on him (HURT.crowdPercent), so
+ * standing in the middle of the horde costs more than brushing past it.
+ */
 export function contactSystem(s: SimState, events: SimEvent[]): void {
   for (const p of s.players) {
     if (p.dead) continue;
@@ -165,6 +169,16 @@ export function contactSystem(s: SimState, events: SimEvent[]): void {
     const value = t < s.mobs.length
       ? s.mobs[t].kind === 'swarm' || s.mobs[t].kind === 'shard' ? HURT.swarm : HURT.mob + Math.trunc(s.wave / 10) * HURT.mobPerTenWaves
       : t < bossIndex(s) ? HURT.elite : HURT.boss;
-    hurtPlayer(s, events, p.owner, value);
+    hurtPlayer(s, events, p.owner, t < s.mobs.length ? Math.trunc((value * (100 + HURT.crowdPercent * pressing(s, p))) / 100) : value);
   }
+}
+
+/** Mobs pressing in on p (within HURT.crowdDist) besides the one that hits, up to HURT.crowdMax. */
+function pressing(s: SimState, p: Player): number {
+  const r2 = HURT.crowdDist * HURT.crowdDist;
+  let n = -1;
+  for (const m of s.mobs) {
+    if (m.hp > 0 && !underground(m) && dist2(m.x - p.x, m.y - p.y) < r2 && ++n === HURT.crowdMax) break;
+  }
+  return Math.max(0, n);
 }

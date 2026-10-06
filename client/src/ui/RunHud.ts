@@ -1,8 +1,9 @@
 import { Container, Graphics, Sprite, Texture, type Text } from 'pixi.js';
-import { t } from '../i18n';
+import { getLocale, localeName, t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot } from './buildSlots';
 import { cardPanel } from './cardPanel';
+import { languagePanel } from './languagePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
 import type { TutorialStep } from './tutorial';
@@ -10,7 +11,7 @@ import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The in-run overlay: the experience bar and level, the build strip, the wave counter, a pause button and the
-// pause panel, a banner when a wave starts, the level-up cards, and the death panel (revive
+// pause panel (resume, language, report a problem, give up), a banner when a wave starts, the level-up cards, and the death panel (revive
 // free from training or with an ad, or give up).
 
 export interface RunActions {
@@ -21,7 +22,15 @@ export interface RunActions {
   revive(): Promise<boolean>;
   /** Takes card `index` of the level-up offer. */
   pick(index: number): void;
+  /** Switches the language and keeps it; the HUD redraws itself in it. */
+  setLanguage(locale: Locale): void;
+  /** Asks what went wrong and sends it with the run's replay; null where a report could go nowhere. */
+  report: (() => Promise<ReportOutcome>) | null;
 }
+
+export type ReportOutcome = 'sent' | 'failed' | 'cancelled';
+/** The pause panel's report button: ready, waiting for the text box or the server, or done. */
+type Reporting = 'idle' | 'busy' | 'sent' | 'failed';
 
 /** Death panel: no revive to offer, a free one (training), the ad offered, or the ad playing. */
 type Down = 'none' | 'free' | 'offered' | 'playing';
@@ -42,6 +51,9 @@ export class RunHud implements Screen {
   private bannerView: Container | null = null;
   private wave = 0;
   private paused = false;
+  /** The language picker over the pause panel. */
+  private languages = false;
+  private reporting: Reporting = 'idle';
   private down: Down | null = null;
   private banner: { lines: [string, number][]; story: StoryLine | null; t: number } | null = null;
   /** Rebuilt with every layout, like the rest of the HUD. */
@@ -211,6 +223,8 @@ export class RunHud implements Screen {
 
   private setPaused(paused: boolean): void {
     this.paused = paused;
+    this.languages = false;
+    if (this.reporting !== 'busy') this.reporting = 'idle';
     if (paused) this.actions.pause();
     else this.actions.resume();
     this.relayout();
@@ -300,13 +314,57 @@ export class RunHud implements Screen {
     this.view.addChild(backdrop(f.w, f.h));
     const box = new Container();
     box.position.set(f.w / 2, f.h / 2);
-    const title = label(t('run.paused'), 72);
-    title.y = -200;
-    const resume = button(t('run.resume'), 560, 150, () => this.setPaused(false));
-    const giveUp = button(t('run.giveUp'), 560, 130, () => this.actions.giveUp(), { fill: COLORS.panelLocked });
-    giveUp.y = 190;
-    box.addChild(panel(760, 640), title, resume, giveUp);
+    // stacked top down: [view, height it takes]
+    const items: [Container, number][] = [[label(t('run.paused'), 72), 150]];
+    items.push([button(t('run.resume'), 560, 150, () => this.setPaused(false)), 190]);
+    const lang = button(`${t('run.language')} · ${localeName(getLocale())}`, 560, 120, () => {
+      this.languages = true;
+      this.relayout();
+    }, { fill: COLORS.panelLocked, size: 48 });
+    items.push([lang, 150]);
+    if (this.actions.report) {
+      const busy = this.reporting === 'busy';
+      const report = button(busy ? t('report.sending') : t('run.report'), 560, 120, () => void this.sendReport(), { fill: COLORS.panelLocked, size: 48 });
+      if (busy) report.eventMode = 'none';
+      items.push([report, 150]);
+      if (this.reporting === 'sent' || this.reporting === 'failed') {
+        const note = label(t(this.reporting === 'sent' ? 'report.sent' : 'report.failed'), 40, this.reporting === 'sent' ? COLORS.jade : COLORS.dim, {
+          wordWrap: true, wordWrapWidth: 640, breakWords: true,
+        });
+        items.push([note, 110]);
+      }
+    }
+    items.push([button(t('run.giveUp'), 560, 120, () => this.actions.giveUp(), { fill: COLORS.panelLocked }), 150]);
+    const h = items.reduce((sum, [, step]) => sum + step, 0) + 80;
+    box.addChild(panel(760, h));
+    let y = -h / 2 + 40;
+    for (const [view, step] of items) {
+      view.y = y + step / 2;
+      box.addChild(view);
+      y += step;
+    }
     this.view.addChild(box);
+    if (this.languages) {
+      this.view.addChild(languagePanel(f.w, f.h, (l) => {
+        this.languages = false;
+        this.actions.setLanguage(l);
+        this.relayout();
+      }, () => {
+        this.languages = false;
+        this.relayout();
+      }));
+    }
+  }
+
+  /** The text box, then the send; the panel says how it went. */
+  private async sendReport(): Promise<void> {
+    if (!this.actions.report || this.reporting === 'busy') return;
+    this.reporting = 'busy';
+    this.relayout();
+    const outcome = await this.actions.report();
+    if (this.view.destroyed) return;
+    this.reporting = outcome === 'cancelled' ? 'idle' : outcome;
+    this.relayout();
   }
 
   private downPanel(f: UiFrame, down: Down): void {

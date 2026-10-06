@@ -27,4 +27,18 @@ describe('eventCue', () => {
       expect(eventCue({ type: 'cast', kind, x: 0, y: 0, radius: 1 }, 0)).not.toBeNull();
     }
   });
+
+  it('plays the world\'s sounds whoever caused them, and mutes another player\'s pickups', () => {
+    expect(eventCue({ type: 'mobDown', index: 0, x: 0, y: 0, dx: 0, dy: 0 }, 1)).toBe('pop');
+    expect(eventCue({ type: 'bossWindup' }, 1)).toBe('windup');
+    expect(eventCue({ type: 'bossDown' }, 1)).toBe('bossDown');
+    expect(eventCue({ type: 'emerge', index: 0, x: 0, y: 0 }, 1)).toBe('splash');
+    expect(eventCue({ type: 'bossBack' }, 1)).toBe('splash');
+    expect(eventCue({ type: 'wave', wave: 2 }, 1)).toBe('wave');
+    expect(eventCue({ type: 'cleared' }, 1)).toBe('cleared');
+    expect(eventCue({ type: 'pickup', owner: 0, tier: 1 }, 0)).toBe('gem');
+    expect(eventCue({ type: 'pickup', owner: 0, tier: 1 }, 1)).toBeNull();
+    expect(eventCue({ type: 'dodge', owner: 0 }, 1)).toBeNull();
+    expect(eventCue({ type: 'bellUp', owner: 1 }, 1)).toBe('bell');
+  });
 });

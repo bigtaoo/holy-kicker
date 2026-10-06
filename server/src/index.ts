@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { ipOf, maxBody, readBody } from './http';
 import { MongoStore } from './mongoStore';
 import { Limiter, RATES, route } from './routes';
 import { MemoryStore, type Store } from './store';
@@ -9,9 +10,7 @@ import { MemoryStore, type Store } from './store';
 //   HK_MONGO_URI    Atlas connection string; without it the store is in memory (development)
 //   HK_MONGO_DB     database name (default holykicker)
 //   HK_TAG_SALT     secret for the board tags (required with HK_MONGO_URI)
-//   HK_ADMIN_KEY    bearer key for GET /v1/stats (unset: the route answers 401)
-
-const MAX_BODY = 32 * 1024;
+//   HK_ADMIN_KEY    bearer key for GET /v1/stats and /v1/reports (unset: they answer 401)
 
 const env = process.env;
 const port = Number(env.PORT) || 8080;
@@ -30,41 +29,6 @@ const CORS = {
   'access-control-max-age': '86400',
 };
 
-function readBody(req: IncomingMessage): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    let size = 0;
-    const chunks: Buffer[] = [];
-    req.on('data', (c: Buffer) => {
-      size += c.length;
-      if (size > MAX_BODY) {
-        reject(new Error('too large'));
-        req.destroy();
-      } else chunks.push(c);
-    });
-    req.on('end', () => {
-      if (chunks.length === 0) return resolve(undefined);
-      try {
-        resolve(JSON.parse(Buffer.concat(chunks).toString('utf8')));
-      } catch {
-        resolve(undefined);
-      }
-    });
-    req.on('error', reject);
-  });
-}
-
-/**
- * The caller: the Cloudflare tunnel is the only way in and names the client in CF-Connecting-IP
- * (X-Forwarded-For first, as a fallback for other proxies).
- */
-function ipOf(req: IncomingMessage): string {
-  const cf = req.headers['cf-connecting-ip'];
-  if (typeof cf === 'string' && cf) return cf;
-  const fwd = req.headers['x-forwarded-for'];
-  const first = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(',')[0]?.trim();
-  return first || req.socket.remoteAddress || '?';
-}
-
 async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? '/', 'http://local');
   if (req.method === 'OPTIONS') {
@@ -73,7 +37,7 @@ async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
   }
   let body: unknown;
   try {
-    body = req.method === 'POST' ? await readBody(req) : undefined;
+    body = req.method === 'POST' ? await readBody(req, maxBody(url.pathname)) : undefined;
   } catch {
     res.writeHead(413, CORS).end();
     return;

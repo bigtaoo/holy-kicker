@@ -49,12 +49,12 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   subpackage); sources and licenses in `art/audio/SOURCES.md`.
   Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host (and a grey box for the lobby banner), `?waves=0` (or any
   `?mobs=`) runs the engine sandbox: a fixed horde and a hero who cannot die, for stress tests.
-  `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; mid-boss 25), `?chapter=N` plays chapter N; `?relic=staff` (or `fish`, `beads`, `bowl`) plays
+  `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; elites every 5th; mid-bosses 20 and 35), `?chapter=N` plays chapter N; `?relic=staff` (or `fish`, `beads`, `bowl`) plays
   the run with that relic whatever the save says; `?sutras` gives every run all four sutras;
   `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode;
   `?monk=fat` (or `novice`) plays as that monk whatever the save says.
   `?autoplay` lets the balance bot play; `?record=SECONDS` records the run to a 1080x1920 video (`src/dev/recorder.ts`).
-- `server/` — the backend (`@hk/server`, server/README.md): analytics and leaderboards at
+- `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay) at
   hk.gamestao.com on daydayup's box; `src/protocol.ts` is the wire format, imported by the client
   as `@hk/protocol`. `npm run deploy:server` ships it. Dev: `?api=http://localhost:8080` with
   `npm run dev -w server` (the client stays offline in development otherwise).

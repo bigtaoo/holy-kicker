@@ -1,7 +1,7 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
-import { boardId, runScore, type BoardReply, type EventBatch, type PropValue, type RunEntry } from './protocol';
+import { boardId, runScore, type BoardReply, type EventBatch, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
-import { rowOf, type Stats, type Store } from './store';
+import { reportId, rowOf, summaryOf, type Stats, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
 // Collections:
@@ -9,8 +9,10 @@ import { rowOf, type Stats, type Store } from './store';
 //   installs one per install: the day it was first seen (for new players and retention)
 //   active   one per install per day it sent anything
 //   best     one per install per board: its best run
+//   reports  problem reports with their replays, dropped after REPORTS_DAYS
 
 const EVENTS_DAYS = 90;
+const REPORTS_DAYS = 180;
 const DAY_MS = 86_400_000;
 
 interface EventDoc {
@@ -24,6 +26,11 @@ interface EventDoc {
   e: string;
   t: Date;
   p: Record<string, PropValue>;
+}
+
+interface ReportDoc extends Report {
+  _id: string;
+  at: Date;
 }
 
 interface BestDoc {
@@ -42,19 +49,21 @@ export class MongoStore implements Store {
     private readonly installs: Collection<{ _id: string; first: string; host: string }>,
     private readonly active: Collection<{ _id: string; day: string; install: string }>,
     private readonly best: Collection<BestDoc>,
+    private readonly reportDocs: Collection<ReportDoc>,
   ) {}
 
   static async open(uri: string, dbName: string): Promise<MongoStore> {
     const client = new MongoClient(uri, { maxPoolSize: 10, appName: 'holykicker' });
     await client.connect();
     const db: Db = client.db(dbName);
-    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'));
+    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'));
     await Promise.all([
       s.events.createIndex({ at: 1 }, { expireAfterSeconds: EVENTS_DAYS * 86_400 }),
       s.events.createIndex({ e: 1, day: 1 }),
       s.installs.createIndex({ first: 1 }),
       s.active.createIndex({ day: 1 }),
       s.best.createIndex({ board: 1, score: -1, at: 1 }),
+      s.reportDocs.createIndex({ at: 1 }, { expireAfterSeconds: REPORTS_DAYS * 86_400 }),
     ]);
     return s;
   }
@@ -134,6 +143,24 @@ export class MongoStore implements Store {
       const share = (n: number) => (ids.length ? Math.round((100 * ids.filter((id) => back.has(`${later(day, n)}/${id}`)).length) / ids.length) : 0);
       return { day, fresh: ids.length, d1: share(1), d7: share(7) };
     });
+  }
+
+  async addReport(report: Report, now: number): Promise<string> {
+    const _id = reportId();
+    await this.reportDocs.insertOne({ ...report, _id, at: new Date(now) });
+    return _id;
+  }
+
+  async reports(limit: number): Promise<ReportSummary[]> {
+    const docs = await this.reportDocs.find({}, { projection: { 'replay.cmds': 0, 'replay.config': 0 } }).sort({ at: -1 }).limit(limit).toArray();
+    return docs.map(({ _id, at, ...r }) => summaryOf(r, _id, at.getTime()));
+  }
+
+  async report(id: string) {
+    const doc = await this.reportDocs.findOne({ _id: id });
+    if (!doc) return null;
+    const { _id, at, ...r } = doc;
+    return { ...r, id: _id, at: at.getTime() };
   }
 
   async close(): Promise<void> {

@@ -1,4 +1,4 @@
-import { isMidBoss } from '@hk/engine';
+import { isMidBoss, WAVES } from '@hk/engine';
 import type { Key } from '../i18n';
 
 // The light story (docs/content.md "Story"): one line before each boss and one after it. The
@@ -36,8 +36,10 @@ function say(c: number, moment: Moment): Key {
 export function waveLine(chapter: number, wave: number, last: number): StoryLine | null {
   const c = chapterOf(chapter);
   if (wave === last) return { who: BOSS_SPEAKER[c - 1], say: say(c, 'bossBefore') };
-  if (isMidBoss(wave, last)) return { who: MID_SPEAKER[c - 1], say: say(c, 'midBefore') };
-  if (isMidBoss(wave - 1, last)) return { who: MONK, say: say(c, 'midAfter') };
+  // the first mid-boss has the story's lines
+  const mid = WAVES.midBosses[0];
+  if (wave === mid && isMidBoss(wave, last)) return { who: MID_SPEAKER[c - 1], say: say(c, 'midBefore') };
+  if (wave === mid + 1 && isMidBoss(mid, last)) return { who: MONK, say: say(c, 'midAfter') };
   return null;
 }
 

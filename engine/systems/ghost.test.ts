@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAPTER_PACKS, DEFAULT_RUN, DOOR_GOD, EFFIGY, EMPOWERED_WITCH, HURT, JUDGE, THREATS, type RunConfig } from '../config';
+import { CHAPTER_PACKS, DEFAULT_RUN, DOOR_GOD, EFFIGY, EMPOWERED_WITCH, HURT, JUDGE, THREATS, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import type { SimEvent } from '../events';
 import type { PlayerCommand } from '../input';
@@ -11,7 +11,7 @@ import { damage, downMob, eliteIndex } from './combat';
 import { shielded } from './ghost';
 import { enraged } from './judge';
 import { chapterHurt } from './players';
-import { beginWave, chapterBoss, eliteKinds, hordeSize } from './waves';
+import { beginWave, chapterBoss, eliteKinds, hordeSize, waveFoeHp } from './waves';
 
 // Chapter 4, the Ghost Market (docs/content.md "Chapters"): lantern ghosts (shooters),
 // long-tongue ghosts (emergers) and paper effigies that tear into scraps, wisp packs, the
@@ -74,12 +74,13 @@ describe('ghost market horde', () => {
 });
 
 describe('door god (elite)', () => {
-  it("is chapter 4's elite, with the wolf leader along on wave 40", () => {
+  it("is chapter 4's elite, with the wolf leader along on the last elite wave", () => {
     expect(eliteKinds(4, 10, 50)).toEqual(['doorGod']);
-    expect(eliteKinds(4, 40, 50)).toEqual(['doorGod', 'wolfLeader']);
+    expect(eliteKinds(4, 40, 50)).toEqual(['doorGod']);
+    expect(eliteKinds(4, 45, 50)).toEqual(['doorGod', 'wolfLeader']);
     const e = new Engine(GHOST);
     beginWave(e.state, 10);
-    expect(e.state.elites[0]).toMatchObject({ kind: 'doorGod', hp: DOOR_GOD.hp });
+    expect(e.state.elites[0]).toMatchObject({ kind: 'doorGod', hp: waveFoeHp(DOOR_GOD.hp, 4, 10, false) });
   });
 
   it('its shield takes relic hits from the front, not from behind, and never spells', () => {
@@ -141,11 +142,11 @@ describe('door god (elite)', () => {
 });
 
 describe('mid-boss and boss', () => {
-  it('brings the empowered witch on wave 25 and the Underworld Judge on wave 50', () => {
+  it('brings the empowered witch on the mid-boss waves and the Underworld Judge on wave 50', () => {
     expect(chapterBoss(4)).toBe('judge');
     const e = new Engine(GHOST);
-    beginWave(e.state, 25);
-    expect(e.state.boss).toMatchObject({ kind: 'witch', empowered: true, hp: EMPOWERED_WITCH.hp });
+    beginWave(e.state, WAVES.midBosses[0]);
+    expect(e.state.boss).toMatchObject({ kind: 'witch', empowered: true, hp: waveFoeHp(EMPOWERED_WITCH.hp, 4, WAVES.midBosses[0], false) });
     e.state.boss = null;
     beginWave(e.state, 50);
     expect(e.state.boss).toMatchObject({ kind: 'judge', empowered: false, hp: JUDGE.hp });

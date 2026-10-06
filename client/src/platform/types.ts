@@ -42,6 +42,20 @@ export interface Platform {
   readonly banner: Banner;
   /** Sound output; null where the host has none (the game then runs silent). */
   readonly audio: AudioHost | null;
+  /** Asks the player to write something (a problem report) in the host's own text box; null when cancelled. */
+  askText(o: TextAsk): Promise<string | null>;
+  /** One line naming the device for a problem report: the user agent, or the phone's model and system. */
+  device(): string;
+}
+
+/** The text box's wording, already translated, and the longest text it takes. */
+export interface TextAsk {
+  title: string;
+  prompt: string;
+  placeholder: string;
+  send: string;
+  cancel: string;
+  max: number;
 }
 
 export interface Insets {

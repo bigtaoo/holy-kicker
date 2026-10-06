@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAPTER_PACKS, DEFAULT_RUN, DEMON, EMPOWERED_JUDGE, MONK, THREATS, type RunConfig } from '../config';
+import { CHAPTER_PACKS, DEFAULT_RUN, DEMON, EMPOWERED_JUDGE, MONK, THREATS, WAVES, type RunConfig } from '../config';
 import type { RelicId } from '../content';
 import { Engine } from '../Engine';
 import type { SimEvent } from '../events';
@@ -10,7 +10,7 @@ import { newBoss } from './boss';
 import { damage } from './combat';
 import { demonRage } from './demon';
 import { resetMob } from './marsh';
-import { beginWave, eliteKinds, hordeSize } from './waves';
+import { beginWave, eliteKinds, hordeSize, waveFoeHp } from './waves';
 
 // Chapter 5, Demon Peak (docs/content.md "Chapters"): fallen monks behind gongs (shielders),
 // shadows (runners) and every earlier kind, wolf packs, two elites at once, the empowered
@@ -77,19 +77,20 @@ describe('demon peak horde', () => {
 
 describe('two elites at once', () => {
   it('the first elite wave brings one earlier elite, the later ones a pair, in turn', () => {
-    expect(eliteKinds(5, 10, 50)).toEqual(['charger']);
-    expect(eliteKinds(5, 20, 50)).toEqual(['wolfLeader', 'toadKing']);
+    expect(eliteKinds(5, 5, 50)).toEqual(['charger']);
+    expect(eliteKinds(5, 10, 50)).toEqual(['wolfLeader', 'toadKing']);
+    expect(eliteKinds(5, 15, 50)).toEqual(['doorGod', 'charger']);
+    expect(eliteKinds(5, 25, 50)).toEqual(['wolfLeader', 'toadKing']);
     expect(eliteKinds(5, 30, 50)).toEqual(['doorGod', 'charger']);
-    expect(eliteKinds(5, 40, 50)).toEqual(['doorGod', 'wolfLeader']);
     const e = new Engine(PEAK);
-    beginWave(e.state, 20);
+    beginWave(e.state, 10);
     expect(e.state.elites.map((x) => x.kind)).toEqual(['wolfLeader', 'toadKing']);
   });
 
   it('the mid-boss is the empowered judge, the last boss the Inner Demon', () => {
     const e = new Engine(PEAK);
-    beginWave(e.state, 25);
-    expect(e.state.boss).toMatchObject({ kind: 'judge', empowered: true, hp: EMPOWERED_JUDGE.hp });
+    beginWave(e.state, WAVES.midBosses[0]);
+    expect(e.state.boss).toMatchObject({ kind: 'judge', empowered: true, hp: waveFoeHp(EMPOWERED_JUDGE.hp, 5, WAVES.midBosses[0], false) });
     e.state.boss = null;
     beginWave(e.state, 50);
     expect(e.state.boss).toMatchObject({ kind: 'demon', empowered: false, hp: DEMON.hp });

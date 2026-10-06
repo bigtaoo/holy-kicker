@@ -25,6 +25,20 @@ const stripWebGPU = {
   },
 };
 
+// WeChat's players read Chinese and the main package is capped at 4 MB, so the languages past
+// en and zh (src/i18n/more.ts) are left out: the module becomes an empty table.
+const onlyEnZh = {
+  name: 'only-en-zh',
+  enforce: 'pre',
+  resolveId(source, importer) {
+    if (source === './more' && importer && /[\\/]i18n[\\/]index\.ts$/.test(importer)) return '\0i18n-more-stub';
+    return null;
+  },
+  load(id) {
+    return id === '\0i18n-more-stub' ? 'export const MORE = {};' : null;
+  },
+};
+
 // A mini-game reads art from its own package by path, so public/art is mirrored next to
 // the bundle rather than bundled. Mirror, not merge: a deleted texture leaves the package.
 // The main package is capped at 4 MB, so each later chapter's art (public/art/ch<n>) is a
@@ -60,7 +74,7 @@ const copyArt = {
 };
 
 export default defineConfig(({ mode }) => ({
-  plugins: [stripWebGPU, copyArt],
+  plugins: [stripWebGPU, onlyEnZh, copyArt],
   resolve: { alias: engineAlias },
   // public/ is mirrored by copyArt; Vite must not also copy it into wechat/js.
   publicDir: false,

@@ -233,9 +233,9 @@ export const MONK = {
 };
 
 /**
- * Chapter 5's elite waves (10, 20, 30, 40) bring the earlier chapters' elites, in turn: one on
- * the first, so the step into the chapter is not a wall, then two at once; the empowered ones
- * in between are the bosses.
+ * Chapter 5's elite waves (every WAVES.eliteEvery) bring the earlier chapters' elites: one on
+ * the first, so the step into the chapter is not a wall, then two at once, the pairs in turn;
+ * the empowered ones in between are the bosses.
  */
 export const ELITE_PAIRS: readonly (readonly EliteKind[])[] = [
   ['charger'],

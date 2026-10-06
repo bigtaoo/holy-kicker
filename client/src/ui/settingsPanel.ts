@@ -1,10 +1,12 @@
 import { Container, Graphics } from 'pixi.js';
-import { LOCALES, getLocale, localeName, t, type Key, type Locale } from '../i18n';
+import { getLocale, localeName, t, type Key, type Locale } from '../i18n';
 import { QUALITY_MODES, type QualityMode } from '../game/quality';
 import { VOLUME_STEPS } from '../meta/settings';
+import { languagePanel } from './languagePanel';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
 
-// The settings panel, opened from the lobby's gear: language, the sound effects' and the
+// The settings panel, opened from the lobby's gear: language (a button to the picker,
+// languagePanel.ts), the sound effects' and the
 // music's volume in steps (0 is off), the graphics quality and, online, the data notice. Every change goes straight to the shell, which
 // stores it and redraws the lobby, so the panel just shows the current values.
 
@@ -91,7 +93,10 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   y += 30;
   add(label(t('settings.title'), 64), 110);
   heading(t('settings.language'));
-  add(choices(LOCALES, localeName, getLocale(), (l) => a.setLanguage(l)), 150);
+  add(button(localeName(getLocale()), ROW + 160, 110, () => {
+    const picker = languagePanel(w, h, (l) => a.setLanguage(l), () => picker.destroy({ children: true }));
+    view.addChild(picker);
+  }, { fill: COLORS.panelLocked, size: 48 }), 150);
 
   const volume = a.volume();
   heading(volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }));

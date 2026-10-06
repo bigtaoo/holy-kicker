@@ -22,6 +22,8 @@ export interface RunStats {
   hurt: number;
   blocked: number;
   kills: number;
+  /** Damage dealt to the horde, the elites and the boss, per second of the run. */
+  dps: number;
   /** Seconds each elite, the mid-boss and the boss lived (null if it never fell). */
   elites: (number | null)[];
   bosses: (number | null)[];
@@ -38,7 +40,7 @@ export function playChapter(
   const s = e.state;
   const bot = new Bot(0, style, seed);
   const stats: RunStats = {
-    seed, style, outcome: 'timeout', wave: 1, seconds: 0, level: 1, hpAt: [100], hurt: 0, blocked: 0, kills: 0,
+    seed, style, outcome: 'timeout', wave: 1, seconds: 0, level: 1, hpAt: [100], hurt: 0, blocked: 0, kills: 0, dps: 0,
     elites: [], bosses: [], build: '',
   };
   // the mid-boss twins count as one mid-boss: from the wave's start until the second falls
@@ -56,6 +58,7 @@ export function playChapter(
       if (ev.type === 'hurt') stats.hurt += ev.value;
       else if (ev.type === 'bellBreak') stats.blocked++;
       else if (ev.type === 'mobDown') stats.kills++;
+      else if (ev.type === 'hit') stats.dps += ev.value;
       else if (ev.type === 'eliteDown' && s.elites.length === 0) {
         (mid ? stats.bosses : stats.elites).push(secs(s.tick - eliteFrom));
         eliteFrom = -1;
@@ -75,6 +78,7 @@ export function playChapter(
   stats.outcome = s.outcome === 'playing' ? 'timeout' : s.outcome;
   stats.wave = s.wave;
   stats.seconds = secs(s.tick);
+  stats.dps = Math.trunc(stats.dps / Math.max(1, stats.seconds));
   stats.level = p.level;
   stats.build = [
     `${p.relicId}${p.relic}${p.awakened ? '*' : ''}`,
@@ -111,13 +115,13 @@ export function balanceReport(
       out.push(
         `seed ${String(seed).padStart(2)}  ${r.outcome.padEnd(7)} wave ${String(r.wave).padStart(2)}  ` +
           `${Math.trunc(r.seconds / 60)}:${String(r.seconds % 60).padStart(2, '0')}  lv ${String(r.level).padStart(2)}  ` +
-          `hp ${r.hpAt.join('/')}  hurt ${r.hurt} bell ${r.blocked}  elites ${t(r.elites)}  bosses ${t(r.bosses)}  | ${r.build}`,
+          `hp ${r.hpAt.join('/')}  dps ${r.dps}  hurt ${r.hurt} bell ${r.blocked}  elites ${t(r.elites)}  bosses ${t(r.bosses)}  | ${r.build}`,
       );
     }
     const won = all.filter((r) => r.outcome === 'won').length;
     out.push(
       `-- won ${won}/${all.length}, median wave ${median(all.map((r) => r.wave))}, ` +
-        `median level ${median(all.map((r) => r.level))}, median time ${median(all.map((r) => r.seconds))}s`,
+        `median level ${median(all.map((r) => r.level))}, median dps ${median(all.map((r) => r.dps))}, median time ${median(all.map((r) => r.seconds))}s`,
     );
   }
   return out;

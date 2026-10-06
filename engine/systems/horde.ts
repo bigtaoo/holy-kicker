@@ -112,6 +112,21 @@ export function ringPoint(rand: Prng, cx: number, cy: number, b: Body): void {
   teleport(b, cx + Math.trunc((cosB(a) * r) / TRIG_ONE), cy + Math.trunc((sinB(a) * r) / TRIG_ONE));
 }
 
+/**
+ * Puts mob `m` on the respawn ring around player `p` (ringPoint); while he runs, on the half
+ * of it ahead of him (HORDE.aheadArc either side of his heading), so the horde he leaves
+ * behind comes back in his way and running off is no escape.
+ */
+export function respawnPoint(rand: Prng, p: Player, m: Body): void {
+  if (!p.moving) {
+    ringPoint(rand, p.x, p.y, m);
+    return;
+  }
+  const a = (p.moveBrad + rand.range(-HORDE.aheadArc, HORDE.aheadArc)) & 65535;
+  const r = rand.range(HORDE.ringMin, HORDE.ringMax);
+  teleport(m, p.x + Math.trunc((cosB(a) * r) / TRIG_ONE), p.y + Math.trunc((sinB(a) * r) / TRIG_ONE));
+}
+
 /** Mobs inside a pinning field (the Mountain Palm's print) stay where they were. */
 function pin(s: SimState): void {
   for (const f of s.fields) {
@@ -139,7 +154,8 @@ function stunned(s: SimState): void {
 
 /**
  * The horde step (each kind at its own speed, shooters and casters stopping at their range,
- * those under the ground staying put), then mobs left far behind come back around their player.
+ * those under the ground staying put), then mobs left far behind come back around their player
+ * (ahead of him while he runs, respawnPoint).
  */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
@@ -156,6 +172,6 @@ export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   for (const m of s.mobs) {
     if (underground(m)) continue;
     const t = nearestPlayer(s.players, m.x, m.y);
-    if (dist2(m.x - t.x, m.y - t.y) > far) ringPoint(s.ai, t.x, t.y, m);
+    if (dist2(m.x - t.x, m.y - t.y) > far) respawnPoint(s.ai, t, m);
   }
 }

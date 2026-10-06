@@ -1,10 +1,16 @@
 import { Container, Graphics, Text, type TextStyleOptions } from 'pixi.js';
+import { getLocale, type Locale } from '../i18n';
 
 // Small UI building blocks in logical units (the 1080-wide design). Placeholder look: flat
 // rounded panels with a thick dark outline, matching the sticker style until real UI art.
 
 /** System fonts with CJK fallbacks (docs/design.md "Localization": system fonts on web). */
 export const FONT = 'Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
+/** Japanese and Korean put their own fonts first, so shared Han characters take their forms. */
+const LOCAL_FONT: Partial<Record<Locale, string>> = {
+  ja: 'Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, "Noto Sans CJK JP", sans-serif',
+  ko: 'Arial, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", sans-serif',
+};
 
 export const COLORS = {
   bg: 0x1d2420,
@@ -22,7 +28,7 @@ export const COLORS = {
 export function label(text: string, size = 48, fill = COLORS.text, extra: TextStyleOptions = {}): Text {
   const t = new Text({
     text,
-    style: { fontFamily: FONT, fontSize: size, fill, fontWeight: 'bold', align: 'center', ...extra },
+    style: { fontFamily: LOCAL_FONT[getLocale()] ?? FONT, fontSize: size, fill, fontWeight: 'bold', align: 'center', ...extra },
   });
   t.anchor.set(0.5);
   return t;

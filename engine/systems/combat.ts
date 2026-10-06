@@ -8,7 +8,7 @@ import { stat } from './build';
 import { dropGem } from './drops';
 import { gonged } from './demon';
 import { shielded, tear } from './ghost';
-import { ringPoint } from './horde';
+import { respawnPoint } from './horde';
 import { resetMob } from './marsh';
 import { split } from './snow';
 import { bossThins, mobHp } from './waves';
@@ -178,7 +178,7 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
   }
   m.hp = mobHp(s.wave, m.kind, s.config.chapter, s.config.hard);
   resetMob(s, m);
-  ringPoint(s.ai, by.x, by.y, m);
+  respawnPoint(s.ai, by, m);
 }
 
 function aim(b: Ball, tx: number, ty: number): void {

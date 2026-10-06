@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { LIMITS, runScore, type RunEntry } from './protocol';
 import { Limiter, route, tagOf, type Deps, type Req } from './routes';
-import { checkBatch, checkRun } from './rules';
+import { checkBatch, checkReport, checkRun } from './rules';
 import { MemoryStore } from './store';
 
 const NOW = Date.parse('2026-10-05T12:00:00Z');
@@ -24,6 +24,11 @@ const batch = (over: object = {}) => ({
 const run = (over: Partial<RunEntry> = {}): RunEntry => ({
   install: INSTALL, host: 'crazygames', build: '0.0.1', chapter: 1, hard: false, won: false, wave: 20,
   tenths: 3000, level: 12, kills: 900, monk: 'kicker', relic: 'ball', ...over,
+});
+
+const replay = { engine: 31, config: { seed: 5, waves: 50 }, wave: 1, cmds: [1, 0, 16384, 255, 0, 31, 0, 0, 0, 6], tick: 900, hash: 123456 };
+const report = (over: object = {}) => ({
+  install: INSTALL, host: 'web', build: '0.0.1', locale: 'de', text: 'The boss got stuck', device: 'Mozilla/5.0', chapter: 1, wave: 12, replay, ...over,
 });
 
 describe('checks', () => {
@@ -89,6 +94,63 @@ describe('routes', () => {
     expect((await route(req('GET', '/v1/stats', undefined, { authorization: 'Bearer key' }), deps({ adminKey: '' }))).status).toBe(401);
     expect((await route(req('POST', '/v1/runs', run()), deps({ allow: () => false }))).status).toBe(429);
     expect((await route(req('GET', '/nope'), deps())).status).toBe(404);
+  });
+
+  it('keeps a problem report with its replay, for the operator only', async () => {
+    const d = deps();
+    const sent = await route(req('POST', '/v1/reports', report()), d);
+    expect(sent.status).toBe(200);
+    const id = (sent.body as { id: string }).id;
+    expect(id).toMatch(/^[0-9a-f]{16}$/);
+    expect((await route(req('GET', '/v1/reports'), d)).status).toBe(401);
+    const list = await route(req('GET', '/v1/reports', undefined, { authorization: 'Bearer key' }), d);
+    expect(list.body).toEqual([expect.objectContaining({ id, text: 'The boss got stuck', ticks: 900 })]);
+    expect((list.body as object[])[0]).not.toHaveProperty('replay');
+    const one = await route(req('GET', `/v1/reports/${id}`, undefined, { authorization: 'Bearer key' }), d);
+    expect((one.body as { replay: { cmds: number[] } }).replay.cmds).toEqual(replay.cmds);
+    expect((await route(req('GET', '/v1/reports/0123456789abcdef', undefined, { authorization: 'Bearer key' }), d)).status).toBe(404);
+    expect((await route(req('POST', '/v1/reports', report()), deps({ allow: () => false }))).status).toBe(429);
+  });
+
+  it('refuses a broken report', () => {
+    expect(checkReport(report()).ok).toBe(true);
+    expect(checkReport(report({ replay: null, text: '' })).ok).toBe(true);
+    expect(checkReport(report({ text: 'x'.repeat(LIMITS.reportText + 1) })).ok).toBe(false);
+    expect(checkReport(report({ replay: { ...replay, cmds: [1, 2, 3] } })).ok).toBe(false);
+    expect(checkReport(report({ replay: { ...replay, cmds: [1, 0, 0.5, 0, 0] } })).ok).toBe(false);
+    expect(checkReport(report({ replay: { ...replay, config: 'x' } })).ok).toBe(false);
+  });
+
+  it('lists the newest reports first, as many as asked for', async () => {
+    let t = NOW;
+    const d = deps({ now: () => t++ });
+    for (const text of ['a', 'b', 'c']) await route(req('POST', '/v1/reports', report({ text })), d);
+    const admin = { authorization: 'Bearer key' };
+    const list = async (q: string) => ((await route(req('GET', `/v1/reports${q}`, undefined, admin), d)).body as { text: string; at: number }[]);
+    expect((await list('')).map((r) => r.text)).toEqual(['c', 'b', 'a']);
+    expect((await list('?limit=2')).map((r) => r.text)).toEqual(['c', 'b']);
+    // a nonsense limit falls back to the default rather than to nothing
+    expect(await list('?limit=0')).toHaveLength(3);
+    expect((await list(''))[0].at).toBe(NOW + 2);
+  });
+
+  it('takes the longest replay a client sends inside the body limit', () => {
+    // the client drops a replay past replayNumbers; four hours of a stick turning every tick
+    const cmds: number[] = [];
+    for (let i = 0; cmds.length < LIMITS.replayNumbers; i++) cmds.push(LIMITS.maxSeconds * 30 - i, 0, 65535 - (i % 9), 255, 2 + 4 * 3);
+    const big = report({ text: 'x'.repeat(LIMITS.reportText), device: 'd'.repeat(LIMITS.device), replay: { ...replay, cmds } });
+    expect(checkReport(big).ok).toBe(true);
+    expect(Buffer.byteLength(JSON.stringify(big))).toBeLessThan(LIMITS.reportBytes);
+    expect(checkReport(report({ replay: { ...replay, cmds: [...cmds, 1, 0, 0, 0, 0] } })).ok).toBe(false);
+  });
+
+  it('refuses a report missing what an operator needs to read it', () => {
+    expect(checkReport(report({ device: 'd'.repeat(LIMITS.device + 1) })).ok).toBe(false);
+    expect(checkReport(report({ chapter: LIMITS.chapters + 1 })).ok).toBe(false);
+    expect(checkReport(report({ wave: LIMITS.waves + 1 })).ok).toBe(false);
+    expect(checkReport(report({ install: 'short' })).ok).toBe(false);
+    expect(checkReport(report({ replay: { ...replay, tick: -1 } })).ok).toBe(false);
+    expect(checkReport(report({ replay: { ...replay, config: { pad: 'x'.repeat(LIMITS.replayConfig) } } })).ok).toBe(false);
   });
 
   it('refills each caller\'s bucket over time', () => {

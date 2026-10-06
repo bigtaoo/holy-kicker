@@ -1,4 +1,4 @@
-# @hk/server: analytics and leaderboards
+# @hk/server: analytics, leaderboards and problem reports
 
 A small Node HTTP service, `hk-api`, at **https://hk.gamestao.com**. The game sends it
 analytics batches and finished chapter runs, and reads leaderboards from it. Everything is
@@ -15,13 +15,23 @@ so nobody types a name and nothing needs moderating.
 | `POST /v1/events` | an `EventBatch` (src/protocol.ts): up to 50 events, names from `EVENT_NAMES` → 204 |
 | `POST /v1/runs` | a `RunEntry`: kept if it is the install's best on its board → `{ board, rank, best, tag }` |
 | `GET /v1/boards/c<N>[h]` | top 50 of chapter N (h: hard), plus the caller's own row (header `x-hk-install`) |
+| `POST /v1/reports` | a `Report`: the player's note, device, chapter and wave, and a replay of the run (up to 3 MB) → `{ id }` |
+| `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
+| `GET /v1/reports/<id>` | one report whole, replay included (same key) |
 | `GET /v1/stats?days=14` | operator numbers (daily active, new installs, runs, clear rate and median lost wave per board, D1/D7 retention); `Authorization: Bearer $HK_ADMIN_KEY` |
 
 A run ranks by: a win over any loss, then more waves, then less time (`runScore`). Every request
 is checked whole (`src/rules.ts`) and refused on anything unexpected; a run that could not have
 happened (a win short of the last wave, under 4 s per wave) is refused too. Each caller IP has a
-token bucket per route (`RATES` in `src/routes.ts`). Runs are not replayed yet: the engine is
-deterministic, so a later step can send seed and commands and replay them here.
+token bucket per route (`RATES` in `src/routes.ts`). Runs on the boards are not replayed yet.
+
+**Problem reports** come from the pause panel's "Report a problem" (`client/src/ui/problemReport.ts`):
+the host's text box (a DOM dialog on the web, `wx.showModal` on WeChat), then the note with an
+`engine/replay.ts` Replay: the RunConfig, the start wave, the commands that changed something
+(5 numbers each) and the tick and `hashState` at the moment of the report. `checkReplay` plays it
+back and says whether it lands on the same hash (it needs the same `ENGINE_VERSION`), and
+`replayEngine` gives an engine to step through it. Offline development builds save the report as
+a JSON file instead.
 
 The client side is `client/src/net/` (`Backend`: queue, flush every 20 s and on hide, best
 effort) and `client/src/ui/boardPanel.ts` (the Ranks button on the lobby's chapter card). A run
@@ -33,7 +43,7 @@ until the backend has an ICP-filed domain on the mini-game's request whitelist.
 
 MongoDB Atlas, a cluster of its own (`cluster0.qcp0r96`, not daydayup's), database `holykicker` (`HK_MONGO_DB`):
 `events` (TTL 90 days), `installs` (first day seen), `active` (install per day), `best` (one
-per install per board). Without `HK_MONGO_URI` the server keeps everything in memory
+per install per board), `reports` (TTL 180 days). Without `HK_MONGO_URI` the server keeps everything in memory
 (development, tests).
 
 ## Running

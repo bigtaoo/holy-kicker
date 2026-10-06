@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { LIMITS } from './protocol';
-import { checkBatch, checkRun } from './rules';
+import { checkBatch, checkReport, checkRun } from './rules';
 import type { Store } from './store';
 
 // The HTTP API (server/README.md), as a function from a parsed request to a reply so the tests
@@ -35,6 +35,7 @@ export interface Deps {
 
 export const BOARD_ROWS = 50;
 const BOARD = /^c[1-9]h?$/;
+const REPORT = /^\/v1\/reports\/[0-9a-f]{16}$/;
 
 export function tagOf(install: string, salt: string): string {
   return createHmac('sha256', salt).update(install).digest('base64url').slice(0, 10);
@@ -79,6 +80,21 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     return { status: 200, body: await d.store.board(board, BOARD_ROWS, tag) };
   }
 
+  if (method === 'POST' && path === '/v1/reports') {
+    if (!d.allow('reports', req.ip)) return { status: 429 };
+    const c = checkReport(req.body);
+    if (!c.ok) return bad(c.reason);
+    return { status: 200, body: { id: await d.store.addReport(c.value, d.now()) } };
+  }
+
+  // the operator's: the newest reports, and one whole (replay included)
+  if (method === 'GET' && (path === '/v1/reports' || REPORT.test(path))) {
+    if (!keyMatches(req.headers.authorization, d.adminKey)) return { status: 401 };
+    if (path === '/v1/reports') return { status: 200, body: await d.store.reports(Math.min(200, Math.max(1, Number(req.query.get('limit')) || 50))) };
+    const r = await d.store.report(path.slice('/v1/reports/'.length));
+    return r ? { status: 200, body: r } : { status: 404 };
+  }
+
   if (method === 'GET' && path === '/v1/stats') {
     if (!keyMatches(req.headers.authorization, d.adminKey)) return { status: 401 };
     const days = Math.min(90, Math.max(1, Number(req.query.get('days')) || 14));
@@ -118,4 +134,5 @@ export const RATES = {
   events: { burst: 20, perMinute: 30 },
   runs: { burst: 5, perMinute: 6 },
   boards: { burst: 20, perMinute: 30 },
+  reports: { burst: 3, perMinute: 2 },
 };

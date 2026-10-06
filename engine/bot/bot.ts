@@ -17,12 +17,14 @@ import { laneDistance } from '../systems/elite';
 // the wooden fish or the prayer beads it goes after the elite and the boss and lets them into the relic's reach
 // (it still runs from a slam).
 // `skilled` re-decides every tenth of a second, `casual` every 0.4 s and holds the stick in
-// between; `still` never moves: the floor of what a build alone survives.
+// between; `still` never moves: the floor of what a build alone survives; `straight` holds
+// on one way the whole run (swerving at most 60 degrees round what is in the way), the player
+// who outruns the horde instead of fighting it.
 
-export type BotStyle = 'skilled' | 'casual' | 'still';
+export type BotStyle = 'skilled' | 'casual' | 'still' | 'straight';
 
 /** Ticks between a style's decisions: a skilled player reacts at once, a casual one late. */
-const REACTION: Record<BotStyle, number> = { skilled: 3, casual: 12, still: 0 };
+const REACTION: Record<BotStyle, number> = { skilled: 3, casual: 12, still: 0, straight: 3 };
 
 /** How far ahead a step is judged, and the reach of each kind of danger. */
 const LOOK = toFp(260);
@@ -136,6 +138,7 @@ export class Bot {
    */
   private heading(s: SimState, p: Player): [number, number] {
     const close = CLOSE_IN[p.relicId];
+    if (this.style === 'straight') return this.onward(s, p, close);
     const here = danger(s, p.x, p.y, close);
     if (here < CALM) return this.toGem(s, p);
     let best = here * 2;
@@ -156,6 +159,25 @@ export class Bot {
     }
     this.lastDir = bx === 0 && by === 0 ? -1 : this.nextDir;
     return [bx, by];
+  }
+
+  /** The `straight` style: of the steps within 60 degrees of its one way, the least dangerous. */
+  private onward(s: SimState, p: Player, close: CloseIn | null): [number, number] {
+    const way = 2 + (this.owner << 2);
+    let best = -1;
+    let out: [number, number] = [0, 0];
+    for (let k = way - 2; k <= way + 2; k++) {
+      const a = (((k + DIRS) % DIRS) * BRAD_FULL) / DIRS;
+      const dx = Math.trunc((cosB(a) * LOOK) / TRIG_ONE);
+      const dy = Math.trunc((sinB(a) * LOOK) / TRIG_ONE);
+      // the straight way wins a tie, and a little more
+      const d = danger(s, p.x + dx, p.y + dy, close) + danger(s, p.x + (dx >> 1), p.y + (dy >> 1), close) + Math.abs(k - way) * CALM;
+      if (best < 0 || d < best) {
+        best = d;
+        out = [dx, dy];
+      }
+    }
+    return out;
   }
 
   private toGem(s: SimState, p: Player): [number, number] {

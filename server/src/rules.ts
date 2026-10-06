@@ -1,4 +1,4 @@
-import { EVENT_NAMES, HOSTS, LIMITS, type ClientEvent, type EventBatch, type Host, type PropValue, type RunEntry } from './protocol';
+import { EVENT_NAMES, HOSTS, LIMITS, type ClientEvent, type EventBatch, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
 
 // Checks what clients send before anything is stored. Pure: each check takes the parsed JSON
 // (unknown) and returns the clean value or the reason it was refused. Anything unexpected is
@@ -82,6 +82,31 @@ export function checkRun(v: unknown): Checked<RunEntry> {
       install: v.install, host: v.host, build: v.build, chapter: v.chapter, hard: v.hard, won: v.won, wave: v.wave,
       tenths: v.tenths, level: v.level, kills: v.kills, monk: v.monk, relic: v.relic,
     },
+  };
+}
+
+function checkReplay(v: unknown): ReplayWire | null | undefined {
+  if (v === null || v === undefined) return null;
+  if (!isObj(v) || !isObj(v.config) || !Array.isArray(v.cmds)) return undefined;
+  if (!isInt(v.engine, 0, 1e6) || !isInt(v.wave, 0, LIMITS.waves) || !isInt(v.tick, 0, LIMITS.maxSeconds * 30) || !isInt(v.hash, 0, 0xffffffff)) return undefined;
+  const cmds = v.cmds as unknown[];
+  if (cmds.length > LIMITS.replayNumbers || cmds.length % 5 !== 0 || !cmds.every((n) => isInt(n, -1, 1e9))) return undefined;
+  if (JSON.stringify(v.config).length > LIMITS.replayConfig) return undefined;
+  return { engine: v.engine, config: v.config, wave: v.wave, cmds: cmds as number[], tick: v.tick, hash: v.hash };
+}
+
+/** A problem report: free text kept as written (the operator reads it, nothing renders it). */
+export function checkReport(v: unknown): Checked<Report> {
+  if (!isObj(v)) return { ok: false, reason: 'not an object' };
+  if (!isId(v.install) || !isHost(v.host) || !isShort(v.build, LIMITS.build) || !isShort(v.locale, LIMITS.locale)) return { ok: false, reason: 'bad id' };
+  if (typeof v.text !== 'string' || v.text.length > LIMITS.reportText) return { ok: false, reason: 'bad text' };
+  if (typeof v.device !== 'string' || v.device.length > LIMITS.device) return { ok: false, reason: 'bad device' };
+  if (!isInt(v.chapter, 0, LIMITS.chapters) || !isInt(v.wave, 0, LIMITS.waves)) return { ok: false, reason: 'bad run' };
+  const replay = checkReplay(v.replay);
+  if (replay === undefined) return { ok: false, reason: 'bad replay' };
+  return {
+    ok: true,
+    value: { install: v.install, host: v.host, build: v.build, locale: v.locale, text: v.text, device: v.device, chapter: v.chapter, wave: v.wave, replay },
   };
 }
 

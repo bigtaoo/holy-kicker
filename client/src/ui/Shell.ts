@@ -25,6 +25,7 @@ import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
+import { canReport, reportProblem } from './problemReport';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
 import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
 import { buildSlots } from './buildSlots';
@@ -205,9 +206,13 @@ export class Shell {
   }
 
   private setLanguage(locale: Locale): void {
+    this.keepLanguage(locale);
+    this.showLobby(true);
+  }
+
+  private keepLanguage(locale: Locale): void {
     setLocale(locale);
     updateSettings(this.platform.storage, { locale });
-    this.showLobby(true);
   }
 
   /** Starts a run of `chapter` once its art is in (a later chapter's pack or a monk's rig may need fetching). */
@@ -268,6 +273,8 @@ export class Shell {
       giveUp: () => this.endRun(),
       revive: () => this.revive(),
       pick: (index) => this.game?.pick(index),
+      setLanguage: (locale) => this.keepLanguage(locale),
+      report: canReport(this.net, import.meta.env.DEV) ? () => reportProblem(this.platform, this.net, () => this.game, this.scene) : null,
     }, this.art.icons, this.keys);
     this.setScreen(this.hud);
     this.portal.gameplayStart();

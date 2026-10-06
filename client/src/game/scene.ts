@@ -85,7 +85,7 @@ export interface SceneOptions {
    * stress tests (a fixed horde of `mobs`, no death): ?waves=0, and the default once ?mobs= is set.
    */
   waves: boolean;
-  /** Dev: a chapter run starts at the end of the wave before this one (?wave=25 for the mid-boss). */
+  /** Dev: a chapter run starts at the end of the wave before this one (?wave=20 for the first mid-boss). */
   wave: number;
   /** Dev: a run started with ?direct plays this chapter (?chapter=2); 0 keeps the save's. */
   chapter: number;

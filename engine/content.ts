@@ -185,7 +185,7 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
   // lightning from the hero through `count` targets (cast shape 'chain')
   bolt: [lv(2.4, 5, 350, 0, 100), lv(2.4, 6, 350, 0, 100), lv(2, 7, 350, 0, 100), lv(2, 8, 350, 0, 130), lv(1.6, 10, 350, 0, 130)],
   // a burning ring left at the hero's feet (cast shape 'field')
-  incense: [lv(4, 0, 300, 3, 100), lv(4, 0, 340, 3, 100), lv(3.4, 0, 340, 3.5, 100), lv(3.4, 0, 380, 3.5, 100), lv(2.8, 0, 380, 4, 150)],
+  incense: [lv(4, 0, 300, 3, 80), lv(4, 0, 340, 3, 80), lv(3.4, 0, 340, 3.5, 80), lv(3.4, 0, 380, 3.5, 80), lv(2.8, 0, 380, 4, 120)],
   // a golden dome that takes one blow for the hero, then breaks in a blast (cast shape 'nova')
   bell: [lv(8, 0, 300, 0, 150), lv(7, 0, 320, 0, 150), lv(7, 0, 360, 0, 200), lv(6, 0, 360, 0, 200), lv(5, 0, 420, 0, 250)],
   // cymbals thrown out in a star, the first at the nearest enemy, piercing all they pass
@@ -315,7 +315,7 @@ export const SPELL_EVOLVED: Readonly<Record<SpellId, SpellLevel>> = {
   // Endless Chain: every jump also forks to the nearest other enemy
   bolt: lv(1.6, 10, 350, 0, 130),
   // Healing Incense: the hero heals while standing in the ring
-  incense: lv(2.8, 0, 380, 4, 150),
+  incense: lv(2.8, 0, 380, 4, 120),
   // Golden Body: a bigger blast, then EVOLVE.bellGuard of immunity
   bell: lv(5, 0, 520, 0, 250),
   // Cymbal Wheel: `count` cymbals circle the hero for good, `radius` each

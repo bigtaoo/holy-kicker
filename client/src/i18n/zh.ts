@@ -63,6 +63,18 @@ export const zh: Table<typeof en> = {
     down: '你倒下了',
     revive: '复活',
     reviveFree: '复活（修炼所得）',
+    language: '语言',
+    report: '报告问题',
+  },
+  report: {
+    title: '报告问题',
+    prompt: '遇到了什么问题？本局的录像会和你的描述一起发送。',
+    placeholder: '描述一下发生了什么…',
+    send: '发送',
+    cancel: '取消',
+    sending: '发送中…',
+    sent: '谢谢！报告已发送。',
+    failed: '报告发送失败，请稍后再试。',
   },
   board: {
     button: '排行',
@@ -138,7 +150,7 @@ export const zh: Table<typeof en> = {
     cymbal: { name: '飞钹', desc: '飞出 {n} 片铜钹，穿透敌人', count: '铜钹 {a} → {b} 片' },
     lotus: { name: '莲步', desc: '行走时播下莲子，敌人踩中即绽放' },
     halo: { name: '佛光', desc: '一道光束绕身旋转，站定时更长', count: '光束 {a} → {b} 道' },
-    roar: { name: '狮子吼', desc: '朝行进方向怒吼，击退敌人' },
+    roar: { name: '狮子吼', desc: '朝最近的敌人怒吼，击退敌人' },
   },
   passive: {
     calm: { name: '禅心', desc: '法术冷却 −{n}%' },

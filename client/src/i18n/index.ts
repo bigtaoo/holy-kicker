@@ -1,12 +1,13 @@
 import { en } from './en';
+import { MORE } from './more';
 import { zh } from './zh';
 
 // String tables (docs/design.md "Localization"). English is the source: every other table is
 // typed as Table<typeof en>, so a missing or extra key is a compile error. Keys are dotted
 // paths checked at compile time: t('lobby.play').
 
-export type Locale = 'en' | 'zh';
-export const LOCALES: readonly Locale[] = ['en', 'zh'];
+export type Locale = 'en' | 'zh' | 'de' | 'fr' | 'es' | 'it' | 'pt' | 'pl' | 'ru' | 'ja' | 'ko';
+const ALL: readonly Locale[] = ['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko'];
 export const DEFAULT_LOCALE: Locale = 'en';
 
 export type Table<T> = { [K in keyof T]: T[K] extends string ? string : Table<T[K]> };
@@ -17,7 +18,9 @@ type Paths<T> = {
 
 export type Key = Paths<typeof en>;
 
-const TABLES: Record<Locale, Table<typeof en>> = { en, zh };
+const TABLES: Partial<Record<Locale, Table<typeof en>>> = { en, zh, ...MORE };
+/** The languages this build ships (WeChat: en and zh only, i18n/more.ts), in the picker's order. */
+export const LOCALES: readonly Locale[] = ALL.filter((l) => TABLES[l]);
 
 let current: Locale = DEFAULT_LOCALE;
 
@@ -46,7 +49,7 @@ export function detectLocale(languages: readonly string[]): Locale {
 }
 
 function lookup(key: string, locale: Locale): string {
-  let node: unknown = TABLES[locale];
+  let node: unknown = TABLES[locale] ?? en;
   for (const part of key.split('.')) {
     if (node === null || typeof node !== 'object') return key;
     node = (node as Record<string, unknown>)[part];
@@ -63,16 +66,23 @@ export function t(key: Key, vars?: Record<string, string | number>): string {
 
 /** A language's own name for itself, for the language picker. */
 export function localeName(locale: Locale): string {
-  return TABLES[locale].lang.name;
+  return (TABLES[locale] ?? en).lang.name;
 }
 
 /**
- * A compact amount for the top bar: 950, 12.3k, 4.5M in English; 950, 1.2万, 3.4亿 in
- * Chinese. Below the first step the number is exact.
+ * A compact amount for the top bar: 950, 12.3k, 4.5M in English (and the other European
+ * languages); 950, 1.2万, 3.4亿 in Chinese, the same in Japanese (万, 億) and Korean (만, 억).
+ * Below the first step the number is exact.
  */
+const STEPS: Partial<Record<Locale, [number, string][]>> = {
+  zh: [[1e8, '亿'], [1e4, '万']],
+  ja: [[1e8, '億'], [1e4, '万']],
+  ko: [[1e8, '억'], [1e4, '만']],
+};
+
 export function formatAmount(n: number, locale: Locale = current): string {
   const v = Math.floor(n);
-  const steps: [number, string][] = locale === 'zh' ? [[1e8, '亿'], [1e4, '万']] : [[1e6, 'M'], [1e3, 'k']];
+  const steps = STEPS[locale] ?? [[1e6, 'M'], [1e3, 'k']];
   for (const [size, suffix] of steps) {
     if (v >= size * 10) return `${Math.floor(v / size)}${suffix}`;
     if (v >= size) return `${Math.floor((v / size) * 10) / 10}${suffix}`;

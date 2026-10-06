@@ -82,7 +82,7 @@ export const HERO = {
  */
 export const ZEN = {
   enter: ticks(0.5),
-  damage: 150,
+  damage: 125,
 };
 
 /**
@@ -102,6 +102,13 @@ export const HURT = {
   mob: 6,
   /** Mob contact hurts this much more every 10 waves. */
   mobPerTenWaves: 3,
+  /**
+   * A mob's blow hurts crowdPercent more for every other mob within crowdDist of the hero, up
+   * to crowdMax of them (systems/players.ts contactSystem).
+   */
+  crowdPercent: 25,
+  crowdDist: toFp(140),
+  crowdMax: 4,
   swarm: 3,
   elite: 12,
   charge: 22,
@@ -129,18 +136,20 @@ export const HURT = {
 };
 
 export const HORDE = {
-  speed: perTick(110),
+  speed: perTick(125),
   stopDist: toFp(70),
   respawnDist: toFp(2200),
   ringMin: toFp(900),
   ringMax: toFp(1400),
+  /** While the hero runs, mobs come back on the ring within this angle either side of his heading (systems/horde.ts respawnPoint). */
+  aheadArc: degToBrad(75),
   /**
    * Mob health on wave w: hp + (hpStep * n + hpSquare * n^2) / 1000 with n = w - 1, steeper
    * late so a finished build still meets a threat (the sandbox horde dies in one hit).
    */
   hp: 10,
   hpStep: 300,
-  hpSquare: 140,
+  hpSquare: 85,
   /**
    * Mob health by chapter, percent (later chapters play the last): the hero comes in with
    * gear and training (RunConfig.bonus), and the meta game's pacing (`npm run journey`,
@@ -320,9 +329,18 @@ export const WAVES = {
   hordeStep: 3,
   hordeMax: 160,
   /** Every this many waves an elite comes (not on boss waves). */
-  eliteEvery: 10,
-  /** The mid-boss wave; the last wave always has the chapter boss. Boss waves last until it falls. */
-  midBoss: 25,
+  eliteEvery: 5,
+  /**
+   * The mid-boss waves, the first with the story's lines; the last wave always has the chapter
+   * boss. Boss waves last until it falls.
+   */
+  midBosses: [20, 35] as readonly number[],
+  /**
+   * Elites and mid-bosses (not the chapter boss) have foeHpPerWave percent more health per wave
+   * past foeHpWave, less before it, so the first comes soft and the late ones meet a grown build.
+   */
+  foeHpPerWave: 2,
+  foeHpWave: 25,
   /**
    * The mid-boss is the elite's twins (docs/content.md): two big jiangshi from opposite sides,
    * each with twinHp; the second's first charge waits twinDelay longer, and they take turns.

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CASTER, CHAPTER_PACKS, DEFAULT_RUN, ELITE, EMPOWERED_CARP, HURT, MOB_KINDS, THREATS, WITCH, WOLF_LEADER, type RunConfig } from '../config';
+import { CASTER, CHAPTER_PACKS, DEFAULT_RUN, ELITE, EMPOWERED_CARP, EMPOWERED_WITCH, HURT, MOB_KINDS, THREATS, WITCH, WOLF_LEADER, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import type { PlayerCommand } from '../input';
 import { dist } from '../math/fixed';
@@ -7,7 +7,7 @@ import { newElite, newMob, underground, type Mob } from '../state';
 import { downMob, targetAt } from './combat';
 import { newBoss } from './boss';
 import { chapterHurt } from './players';
-import { beginWave, chapterBoss, eliteKinds, hordeSize, isPackWave } from './waves';
+import { beginWave, chapterBoss, eliteKinds, hordeSize, isPackWave, waveFoeHp } from './waves';
 
 // Chapter 3, the Snow Pass (docs/content.md "Chapters"): ice wraiths that mark frost circles,
 // wolf packs, the howling wolf leader, the empowered carp as mid-boss and the Bone Witch, whose
@@ -84,12 +84,12 @@ describe('ice wraith (caster)', () => {
 });
 
 describe('wolf leader (elite)', () => {
-  it("is chapter 3's elite, with the toad king along on wave 40", () => {
+  it("is chapter 3's elite, with the toad king along on the last elite wave", () => {
     expect(eliteKinds(3, 10, 50)).toEqual(['wolfLeader']);
-    expect(eliteKinds(3, 40, 50)).toEqual(['wolfLeader', 'toadKing']);
+    expect(eliteKinds(3, 45, 50)).toEqual(['wolfLeader', 'toadKing']);
     const e = new Engine(SNOW);
     beginWave(e.state, 10);
-    expect(e.state.elites[0]).toMatchObject({ kind: 'wolfLeader', hp: WOLF_LEADER.hp });
+    expect(e.state.elites[0]).toMatchObject({ kind: 'wolfLeader', hp: waveFoeHp(WOLF_LEADER.hp, 3, 10, false) });
   });
 
   it('charges, then howls: the mobs near it run fast for a while', () => {
@@ -123,11 +123,11 @@ describe('wolf leader (elite)', () => {
 });
 
 describe('mid-boss and boss', () => {
-  it('brings the empowered carp on wave 25 and the Bone Witch on wave 50', () => {
+  it('brings the empowered carp on the mid-boss waves and the Bone Witch on wave 50', () => {
     expect(chapterBoss(3)).toBe('witch');
     const e = new Engine(SNOW);
-    beginWave(e.state, 25);
-    expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: true, hp: EMPOWERED_CARP.hp });
+    beginWave(e.state, WAVES.midBosses[0]);
+    expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: true, hp: waveFoeHp(EMPOWERED_CARP.hp, 3, WAVES.midBosses[0], false) });
     e.state.boss = null;
     beginWave(e.state, 50);
     expect(e.state.boss).toMatchObject({ kind: 'witch', empowered: false, hp: WITCH.hp });
@@ -191,6 +191,32 @@ describe('bone witch (boss)', () => {
     e.step([still(e)]);
     expect(s.mobs).toHaveLength(1 + WITCH.shards);
     expect(underground(s.mobs[0])).toBe(false);
+  });
+
+  it('walks up to her distance, waits for the hero in range, and rests her cooldown after a cast', () => {
+    for (const empowered of [false, true]) {
+      const e = alone();
+      const s = e.state;
+      const p = s.players[0];
+      s.boss = newBoss(p.x + WITCH.range * 2, p.y, WITCH.hp, empowered, 'witch');
+      const b = s.boss;
+      b.cooldown = 1;
+      // out of range she closes in without raising her staff
+      let ticks = 0;
+      while (!steps(e, 1).includes('bossWindup')) {
+        expect(++ticks).toBeLessThan(30 * 20);
+      }
+      expect(ticks).toBeGreaterThan(0);
+      expect(b.x - p.x).toBeLessThanOrEqual(WITCH.range);
+      // the cast done, she rests her own cooldown before the next
+      while (b.phase !== 'walk') steps(e, 1);
+      expect(b.cooldown).toBe(empowered ? EMPOWERED_WITCH.cooldown : WITCH.cooldown);
+      // and keeps her distance from a hero who stands still
+      for (let i = 0; i < 30 * 8; i++) {
+        steps(e, 1);
+        expect(dist(b.x - p.x, b.y - p.y)).toBeGreaterThanOrEqual(WITCH.stopDist - 1);
+      }
+    }
   });
 
   it('stops summoning at her cap and throws instead', () => {

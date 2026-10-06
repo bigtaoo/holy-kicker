@@ -7,7 +7,7 @@ import { newElite, newMob, underground, type Mob } from '../state';
 import { bossIndex, downMob, targetAt } from './combat';
 import { laneDistance } from './elite';
 import { newBoss } from './boss';
-import { beginWave, chapterBoss, eliteKinds, newcomer } from './waves';
+import { beginWave, chapterBoss, eliteKinds, newcomer, waveFoeHp } from './waves';
 
 // Chapter 2's mobs (docs/content.md "Chapters"): water ghosts that rise from a mark next to
 // the hero, and toads that stop at range and spit bullet fans.
@@ -130,7 +130,8 @@ describe('toad king (elite)', () => {
   it('comes on the marsh elite waves, with a big jiangshi along on the last one', () => {
     expect(eliteKinds(1, 10, 50)).toEqual(['charger']);
     expect(eliteKinds(2, 10, 50)).toEqual(['toadKing']);
-    expect(eliteKinds(2, 40, 50)).toEqual(['toadKing', 'charger']);
+    expect(eliteKinds(2, 40, 50)).toEqual(['toadKing']);
+    expect(eliteKinds(2, 45, 50)).toEqual(['toadKing', 'charger']);
     const e = new Engine(MARSH);
     beginWave(e.state, WAVES.eliteEvery);
     expect(e.state.elites.map((x) => x.kind)).toEqual(['toadKing']);
@@ -177,16 +178,16 @@ describe('empowered abbot (mid-boss)', () => {
     const e = new Engine(MARSH);
     const s = e.state;
     s.elites.length = 0;
-    beginWave(s, WAVES.midBoss);
+    beginWave(s, WAVES.midBosses[0]);
     expect(s.elites.length).toBe(0);
-    expect(s.boss).toMatchObject({ empowered: true, hp: EMPOWERED.hp });
+    expect(s.boss).toMatchObject({ empowered: true, hp: waveFoeHp(EMPOWERED.hp, 2, WAVES.midBosses[0], false) });
     s.waveT = WAVES.ticks;
     e.step([still(e)]);
-    expect(s.wave).toBe(WAVES.midBoss);
+    expect(s.wave).toBe(WAVES.midBosses[0]);
     s.boss!.phase = 'down';
     s.boss!.t = 0;
     e.step([still(e)]);
-    expect(s.wave).toBe(WAVES.midBoss + 1);
+    expect(s.wave).toBe(WAVES.midBosses[0] + 1);
     for (let i = 0; i < BOSS.respawnAfter + 1; i++) e.step([still(e)]);
     expect(s.boss).toBeNull();
   });

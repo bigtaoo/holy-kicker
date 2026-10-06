@@ -61,6 +61,18 @@ export const en = {
     down: 'You fell',
     revive: 'Revive',
     reviveFree: 'Revive (training)',
+    language: 'Language',
+    report: 'Report a problem',
+  },
+  report: {
+    title: 'Report a problem',
+    prompt: 'What went wrong? A replay of this run is sent along with your note.',
+    placeholder: 'Describe what happened…',
+    send: 'Send',
+    cancel: 'Cancel',
+    sending: 'Sending…',
+    sent: 'Thank you! Your report was sent.',
+    failed: 'The report could not be sent. Please try again later.',
   },
   board: {
     button: 'Ranks',
@@ -136,7 +148,7 @@ export const en = {
     cymbal: { name: 'Flying Cymbals', desc: '{n} cymbals fly out and pierce', count: 'Cymbals {a} → {b}' },
     lotus: { name: 'Lotus Steps', desc: 'Walking sows lotus seeds that bloom under enemies' },
     halo: { name: 'Halo Beam', desc: 'A beam turns around you, longer standing still', count: 'Beams {a} → {b}' },
-    roar: { name: "Lion's Roar", desc: 'A shout the way you walk pushes enemies back' },
+    roar: { name: "Lion's Roar", desc: 'A shout at the nearest enemy pushes foes back' },
   },
   passive: {
     calm: { name: 'Calm Mind', desc: 'Spell cooldown −{n}%' },

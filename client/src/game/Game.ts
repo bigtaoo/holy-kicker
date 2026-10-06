@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
-  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, inZen, isMidBoss, TICK_RATE, WAVES, quantizeMove,
+  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, inZen, isMidBoss, TICK_RATE, twinHp, WAVES, quantizeMove,
   type MonkId, type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
@@ -485,7 +485,7 @@ Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
 
   private drawHorde(s: SimState, alpha: number, dt: number, hx: number, hy: number): void {
     this.horde.draw(s.mobs, alpha, dt, hx, hy);
-    this.elites?.draw(s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), WAVES.twinHp * 2);
+    this.elites?.draw(s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), 2 * twinHp(s.config.chapter, s.wave, s.config.hard));
   }
 
   private drawStick(): void {

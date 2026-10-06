@@ -8,7 +8,7 @@ Names are working names; every name ships through the string table (en / zh-CN s
 - **Relic = the weapon.** Auto-fires, prefers elites and the boss, high single-target damage.
   It is the only way to kill elites quickly, so they force the player to position.
 - **Spells clear the horde.** Area damage, deals **50 %** to elites and bosses *(tune)*.
-- **Stillness**: standing still for 0.5 s enters *Zen*: relic attacks charge up (+50 % damage)
+- **Stillness**: standing still for 0.5 s enters *Zen*: relic attacks charge up (+25 % damage; +50 % before ENGINE_VERSION 31)
   while spells keep their normal timing. Moving drops it at once: a "move to dodge, stop to
   burst" rhythm. **Implemented** (`ZEN` in `engine/config.ts`, `relicPct` in
   `engine/systems/build.ts`, ENGINE_VERSION 29): an attack is charged when it starts (the ball
@@ -398,13 +398,40 @@ or a new single image is cheap; elites and bosses cost a rig each.
   waves 20–38 (median time 7:49), the skilled bot wins 6 of 12, the still bot dies on waves 10–27.
   Hard mode's horde got the same steeper base, so `HARD.hp` is halved (8000–20000 %) and
   `HARD.hurt` is 240–300 % (was 300–380). Journeys: docs/design.md "Pacing targets".
+- **Pressure** (ENGINE_VERSION 31). Three holes in the pacing, measured with a new `straight`
+  bot (holds one way, swerving at most 60 degrees round what is in its path) and a controlled
+  run (`skilled` to 2 or 4 minutes, then each style for a minute from the same state):
+  - *Running one way was safe*: mobs came back on a ring all round the hero, so most of them
+    landed behind him and the 420/s hero outran the 110/s horde for good; the straight bot had
+    1–3.5 mobs within 400 against 4–8 for the skilled bot and took next to no damage. Now a mob
+    that falls, is left behind or joins the horde comes back ahead of a running hero
+    (`HORDE.aheadArc`, 75 degrees either side of his heading, `respawnPoint` in
+    systems/horde.ts), and the jiangshi walk at 125/s. The straight bot now takes more damage than
+    the skilled one and dies on wave 13 (3 minutes).
+  - *Standing still dealt the most damage*: with the same build it dealt 20–55 % more than
+    moving. Zen was only a small part of that; the horde piled up inside the area spells,
+    the Incense Ring at the hero's feet most of all, at no extra risk, since one blow a second
+    lands however many mobs press in. Now a mob's blow hurts 25 % more for every other mob within
+    140 of the hero, up to 4 (`HURT.crowdPercent`, `crowdDist`, `crowdMax`), Zen gives +25 %,
+    and the Incense Ring burns at 80 % per tick (120 % at level 5 and evolved; was 100/150).
+    Standing still now deals 0–20 % more than moving and takes several times the damage.
+  - *Elites and mid-bosses were rare*: an elite every 10 waves (2.5 minutes) and one mid-boss.
+    Now an elite comes every 5th wave and there are two mid-bosses, on waves 20 and 35 (the
+    story's lines go with the first), so something big comes every 75 s. Elites and
+    mid-bosses grow 2 % tougher per wave from wave 25's health (`WAVES.foeHpPerWave`,
+    `foeHpWave`, `waveFoeHp`): the wave 5 elite has 60 %, the wave 45 one 140 %. Chapter 5's elite
+    waves bring one earlier elite on the first, then the pairs in turn.
+  - To keep the chapter 1 target, mob health grows less late (`HORDE.hpSquare` 140 → 85: 66
+    health on wave 25, 228 on wave 50). Chapter 1 from a new save (`npm run balance -- 12`):
+    skilled 5 of 12 won, casual 2 of 12 (median 7:01), still 1 of 12 (median wave 18),
+    straight 0 of 12 (median wave 13).
 
 ## Chapters (5)
 
 Cold palette everywhere (teal, purple, grey; red eyes); grounds must not swallow the cyan
 mobs (lesson from the readability test: grass works best).
 
-| # | Ground | Mobs | Elites | Mid-boss (25) | Boss (50) |
+| # | Ground | Mobs | Elites | Mid-boss (20, 35) | Boss (50) |
 |---|---|---|---|---|---|
 | 1 | **Ruined Temple** / 荒寺: grass and broken stones | Jiangshi, the hopping vampire (chaser), fox spirit (runner), ghost wisp (swarm) | Big jiangshi (charger, implemented) | Two big jiangshi (implemented) | **Fallen Abbot** / 堕落方丈 (implemented): slam |
 | 2 | **Misty Marsh** / 雾沼: reeds, shallow water (implemented: tile, props and drifting low mist) | Water ghost (emerger), toad (shooter), wisp | Toad king (shooter + zone, implemented) | Fallen Abbot, empowered (implemented) | **Black Carp King** / 黑鱼精 (implemented): dives, surfaces with a shockwave |
@@ -414,8 +441,8 @@ mobs (lesson from the readability test: grass works best).
 
 - The Inner Demon reuses the hero rig with a cold recolour, which saves a full boss rig and
   is the story beat: the last enemy is yourself.
-- Elite waves (10/20/30/40) use the chapter's elites; wave 40 adds one from the previous
-  chapter (implemented).
+- Elite waves (every 5th that is not a boss wave: 5/10/15/25/30/40/45) use the chapter's
+  elites; wave 45 adds one from the previous chapter (implemented).
 - Art budget at launch: about 12 new mob images, 5 elites, 4 new boss rigs.
 
 ## Story (light)
@@ -425,8 +452,8 @@ fallen to darkness. One line of text before each boss, one after; no cut-scenes.
 funny outside, serious threat (as agreed for the art).
 
 - **Implemented** (`client/src/ui/story.ts`, lines under `story` in the string tables): the boss
-  wave's banner carries the boss's line (on wave 25 of chapter 1 the monk's, facing the mute
-  twins); the mid-boss's line after rides wave 26's banner, which only starts once it fell; after
+  wave's banner carries the boss's line (on wave 20 of chapter 1 the monk's, facing the mute
+  twins; the second mid-boss, on wave 35, has none); the mid-boss's line after rides wave 21's banner, which only starts once it fell; after
   the chapter boss the won run stands still 3.5 s on the monk's line, then the results. The
   thread: the abbot fell, the darkness leads from the marsh up the snow pass and through the
   ghost market (the judge's book names Demon Peak), and the last boss is the monk himself.
