@@ -2,11 +2,11 @@ import type { SimState } from './state';
 
 // State hashing, for desync detection between clients (exchanged every few seconds once there
 // is online play) and for the golden replay test. Walks the state in a fixed field order and
-// folds every number into a 32-bit FNV-1a; derived lookups (gemCells, overflow) are skipped
-// because they are rebuilt from the gem list. A non-integer anywhere in the state is a bug
+// folds every number into a 32-bit FNV-1a; derived lookups (gemCells) are skipped because
+// they are rebuilt from the gem list. A non-integer anywhere in the state is a bug
 // (the sim is integer-only) and throws, so tests catch a float creeping in.
 
-const SKIP = new Set(['config', 'gemCells', 'overflow']);
+const SKIP = new Set(['config', 'gemCells']);
 
 export function hashState(s: SimState): number {
   let h = 0x811c9dc5;

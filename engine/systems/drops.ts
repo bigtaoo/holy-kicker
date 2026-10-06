@@ -1,16 +1,16 @@
-import { DROPS, OVERFLOW_TIER } from '../config';
+import { DROPS } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2, isqrt } from '../math/fixed';
-import { teleport, type Gem, type Player, type SimState } from '../state';
+import type { Gem, Player, SimState } from '../state';
 import { gainXp, magnetOf } from './build';
 
 // Experience gems. A horde survivor drops a gem per kill, so two rules keep a long run bounded
 // without losing experience:
 // - one gem per merge cell: a drop on a cell holding a resting gem adds its value to it (the
 //   gem looks bigger as its value grows);
-// - a cap on resting gems: past it, drops feed one overflow gem that collects everything the
-//   map could not hold. It moves to each drop that feeds it, so it stays where the fighting
-//   is (around the hero) instead of rotting where the map filled up.
+// - a cap on resting gems: past it, the oldest resting gem moves to the new drop and adds its
+//   value to it. The oldest gems lie where the hero has long left, so the experience follows
+//   the fight and fresh kills keep dropping gems in sight.
 // Gems within the magnet radius of a player fly to them and are collected on contact. Resting
 // gems are found by looking up the cells around each player, never by scanning them all.
 
@@ -31,33 +31,30 @@ function spawn(s: SimState, x: number, y: number, value: number, cell: number): 
   return g;
 }
 
-function add(g: Gem, value: number): void {
-  g.value += value;
-  if (g.tier !== OVERFLOW_TIER) g.tier = tierOf(g.value);
-}
-
 export function dropGem(s: SimState, x: number, y: number, value: number): void {
   const cell = cellOf(Math.floor(x / DROPS.cell), Math.floor(y / DROPS.cell));
   const here = s.gemCells.get(cell);
-  if (here) return add(here, value);
-  if (s.resting >= DROPS.max) {
-    if (s.overflow) {
-      teleport(s.overflow, x, y);
-      return add(s.overflow, value);
-    }
-    s.overflow = spawn(s, x, y, value, -1);
-    s.overflow.tier = OVERFLOW_TIER;
+  if (here) {
+    here.value += value;
+    here.tier = tierOf(here.value);
     return;
+  }
+  if (s.resting >= DROPS.max) {
+    // gems keep their drop order, so the first resting one is the oldest
+    const i = s.gems.findIndex((g) => !g.flying);
+    const old = s.gems[i];
+    s.gems.splice(i, 1);
+    s.gemCells.delete(old.cell);
+    s.resting--;
+    value += old.value;
   }
   s.gemCells.set(cell, spawn(s, x, y, value, cell));
   s.resting++;
 }
 
 function launch(s: SimState, g: Gem, p: Player): void {
-  if (g.cell >= 0) {
-    s.gemCells.delete(g.cell);
-    s.resting--;
-  } else s.overflow = null;
+  s.gemCells.delete(g.cell);
+  s.resting--;
   g.flying = true;
   g.age = 0;
   const d = dist(g.x - p.x, g.y - p.y) || 1;
@@ -91,8 +88,6 @@ function attractNear(s: SimState, p: Player): void {
       if (g && dist2(g.x - p.x, g.y - p.y) < m2) launch(s, g, p);
     }
   }
-  const o = s.overflow;
-  if (o && dist2(o.x - p.x, o.y - p.y) < m2) launch(s, o, p);
 }
 
 /** Flying gems steer to their nearest player, speeding up; collected on contact. */

@@ -3,7 +3,7 @@ import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import { teleport, type Elite, type Mob, type SimState } from '../state';
-import { nearestPlayer, stepHorde } from './horde';
+import { nearestPlayer, stepHorde, walkSpeed } from './horde';
 import { fan } from './threats';
 
 // Chapter 2's mob mechanics (docs/content.md "Enemies"): the water ghost, an emerger, waits
@@ -84,7 +84,7 @@ export function stepToadKing(s: SimState, e: Elite): void {
     e.phase = 'aim';
     e.t = 0;
   } else {
-    stepHorde([e], s.players, { speed: k.speed, stopDist: k.stopDist, sep: 0, queue: false });
+    stepHorde([e], s.players, { speed: walkSpeed(s.players, e, k.speed), stopDist: k.stopDist, sep: 0, queue: false });
   }
 }
 

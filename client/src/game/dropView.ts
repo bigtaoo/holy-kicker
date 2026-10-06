@@ -1,6 +1,6 @@
 import { Container, Graphics, Particle, ParticleContainer, Rectangle, Texture, type Renderer } from 'pixi.js';
 import { bakeTexture } from './bake';
-import { OVERFLOW_TIER, TICK_RATE, type Gem } from '@hk/engine';
+import { TICK_RATE, type Gem } from '@hk/engine';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { SHADOW_Z } from './shadow';
@@ -14,16 +14,15 @@ export const GEM_PALETTES: readonly GemPalette[] = ['ice', 'pink', 'lime'];
 // one ParticleContainer; flying gems pass over the horde in a second one.
 
 /**
- * Fill colours per tier; the last is the overflow gem, a big white one. Violet belongs to enemy
- * attacks and red does not read on grass for red-blind players, so gems use neither.
+ * Fill colours per tier. Violet belongs to enemy attacks and red does not read on grass for red-blind players, so gems use neither.
  */
 const COLORS: Record<GemPalette, number[]> = {
-  ice: [0x8fe6ff, 0x5fa8ff, 0x3f6bff, 0xfff4fb],
-  pink: [0xff8ad8, 0xff4fa3, 0xff2fd0, 0xfff4fb],
-  lime: [0xc6ff5a, 0x6cf07a, 0x2fd6b0, 0xfff4fb],
+  ice: [0x8fe6ff, 0x5fa8ff, 0x3f6bff],
+  pink: [0xff8ad8, 0xff4fa3, 0xff2fd0],
+  lime: [0xc6ff5a, 0x6cf07a, 0x2fd6b0],
 };
 /** Gem height in world units per tier. */
-const SIZES = [34, 44, 58, 72];
+const SIZES = [34, 44, 58];
 const OUTLINE = 0x1a1424;
 const BAKE_RES = 2;
 const PAD = 6;
@@ -34,8 +33,8 @@ const POP_HOP = 40;
 const FLYING_Z = 5e6 - 3;
 
 /** Gem outline in a box of the gem's own size plus padding. */
-function gemShape(g: Graphics, ox: number, color: number, h: number, overflow: boolean): number {
-  const w = h * (overflow ? 0.9 : 0.7);
+function gemShape(g: Graphics, ox: number, color: number, h: number): number {
+  const w = h * 0.7;
   const cx = ox + w / 2 + PAD;
   const top = PAD;
   const mid = PAD + h * 0.38;
@@ -57,7 +56,7 @@ function drawGems(renderer: Renderer, colors: number[]): Texture[] {
   const boxes: Rectangle[] = [];
   let x = 0;
   colors.forEach((c, i) => {
-    const w = gemShape(g, x, c, SIZES[i], i === OVERFLOW_TIER);
+    const w = gemShape(g, x, c, SIZES[i]);
     boxes.push(new Rectangle(x, 0, w, SIZES[i] + PAD * 2));
     x += Math.ceil(w) + 2;
   });

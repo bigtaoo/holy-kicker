@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CHAPTER_PACKS, DEFAULT_RUN, ELITE, HURT, MOB_KINDS, type RunConfig } from '../config';
+import { CHAPTER_PACKS, DEFAULT_RUN, ELITE, HURT, MOB_KINDS, VIEW, type RunConfig } from '../config';
 import { Engine } from '../Engine';
 import type { PlayerCommand } from '../input';
 import { dist } from '../math/fixed';
@@ -57,6 +57,21 @@ describe('horde mix', () => {
 });
 
 describe('charging elite', () => {
+  it('comes into view fast, then walks at its own speed', () => {
+    const e = duel(0);
+    const s = e.state;
+    const p = s.players[0];
+    s.elites[0].cd = ELITE.cooldown;
+    s.elites[0].y = p.y - VIEW.halfH - 1_000_000;
+    let y0 = s.elites[0].y;
+    e.step([still(e)]);
+    expect(s.elites[0].y - y0).toBe(ELITE.enterSpeed);
+    s.elites[0].y = p.y - VIEW.halfH + 100_000;
+    y0 = s.elites[0].y;
+    e.step([still(e)]);
+    expect(s.elites[0].y - y0).toBe(ELITE.speed);
+  });
+
   it('marks a lane at the hero, dashes along it and hurts him if he stays', () => {
     const e = duel(600_000);
     const s = e.state;

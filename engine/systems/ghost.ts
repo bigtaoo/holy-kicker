@@ -2,7 +2,7 @@ import { DOOR_GOD, EFFIGY, HURT, THREATS, type MobKind } from '../config';
 import { dist } from '../math/fixed';
 import { atan2B, BRAD_FULL, BRAD_HALF, cosB, sinB, TRIG_ONE } from '../math/trig';
 import { underground, type Elite, type SimState } from '../state';
-import { nearestPlayer, stepHorde } from './horde';
+import { nearestPlayer, stepHorde, walkSpeed } from './horde';
 
 // Chapter 4's mechanics (docs/content.md "Chapters", the Ghost Market): the paper effigy, a
 // splitter, tears into paper scraps when it falls (they fall for good, like the witch's
@@ -85,7 +85,7 @@ export function stepDoorGod(s: SimState, e: Elite): void {
       const y = e.y + Math.trunc((e.vy * k.reach) / TRIG_ONE);
       s.zones.push({ x, y, radius: k.radius, age: 0, hurt: HURT.smash });
     } else {
-      stepHorde([e], s.players, { speed: k.speed, stopDist: k.stopDist, sep: 0, queue: false });
+      stepHorde([e], s.players, { speed: walkSpeed(s.players, e, k.speed), stopDist: k.stopDist, sep: 0, queue: false });
     }
   }
 }

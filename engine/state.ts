@@ -201,12 +201,12 @@ export interface Gem extends Body {
   vx: number;
   vy: number;
   value: number;
-  /** 0.. by value, OVERFLOW_TIER for the overflow gem. */
+  /** Look by value: 0..DROPS.tiers.length. */
   tier: number;
   /** Ticks since dropped, or since it started flying. */
   age: number;
   flying: boolean;
-  /** Merge cell it rests in; -1 for the overflow gem. */
+  /** Merge cell it rests in (left behind once it flies). */
   cell: number;
 }
 
@@ -344,8 +344,6 @@ export interface SimState {
   /** Resting gems by merge cell; derived from `gems`, so not hashed. */
   gemCells: Map<number, Gem>;
   resting: number;
-  /** The overflow gem (also in `gems`); derived, not hashed. */
-  overflow: Gem | null;
   fields: Field[];
   palms: Palm[];
   cymbals: Cymbal[];
@@ -384,7 +382,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [], spawns: [],
-    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], palms: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
+    gems: [], gemCells: new Map(), resting: 0, fields: [], palms: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),

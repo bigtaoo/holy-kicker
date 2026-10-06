@@ -2,7 +2,7 @@ import { ELITE, HURT, WOLF_LEADER } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Elite, SimState } from '../state';
-import { nearestPlayer, stepHorde } from './horde';
+import { nearestPlayer, stepHorde, walkSpeed } from './horde';
 import { stepToadKing } from './marsh';
 import { stepDoorGod } from './ghost';
 import { howl } from './snow';
@@ -72,7 +72,7 @@ function stepElite(s: SimState, e: Elite, events: SimEvent[], hurt: HurtFn): voi
       e.vx = Math.trunc(((p.x - e.x) * ELITE.dashSpeed) / d);
       e.vy = Math.trunc(((p.y - e.y) * ELITE.dashSpeed) / d);
     } else {
-      stepHorde([e], s.players, { speed: wolf ? WOLF_LEADER.speed : ELITE.speed, stopDist: ELITE.stopDist, sep: 0, queue: false });
+      stepHorde([e], s.players, { speed: walkSpeed(s.players, e, wolf ? WOLF_LEADER.speed : ELITE.speed), stopDist: ELITE.stopDist, sep: 0, queue: false });
     }
   }
 }

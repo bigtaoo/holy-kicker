@@ -8,7 +8,7 @@ import { stat } from './build';
 import { dropGem } from './drops';
 import { gonged } from './demon';
 import { shielded, tear } from './ghost';
-import { respawnPoint } from './horde';
+import { inView, respawnPoint } from './horde';
 import { resetMob } from './marsh';
 import { split } from './snow';
 import { bossThins, mobHp } from './waves';
@@ -58,16 +58,16 @@ export function nearestTarget(s: SimState, x: number, y: number, maxDist: number
   return best;
 }
 
-/** The boss, else the nearest elite, within `range` of p; -1 if none. */
+/** The boss, else the nearest elite, within `range` of p and on p's screen (inView); -1 if none. */
 export function bigTarget(s: SimState, p: Player, range: number): number {
   const boss = targetAt(s, bossIndex(s));
-  if (boss && dist2(boss.x - p.x, boss.y - p.y) <= range * range) return bossIndex(s);
+  if (boss && dist2(boss.x - p.x, boss.y - p.y) <= range * range && inView(p, boss.x, boss.y)) return bossIndex(s);
   let best = -1;
   let bestD = range * range;
   for (let i = eliteIndex(s); i < bossIndex(s); i++) {
     const t = targetAt(s, i)!;
     const d = dist2(t.x - p.x, t.y - p.y);
-    if (d <= bestD) {
+    if (d <= bestD && inView(p, t.x, t.y)) {
       bestD = d;
       best = i;
     }

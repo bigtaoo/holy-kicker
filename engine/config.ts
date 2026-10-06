@@ -301,8 +301,21 @@ export type BossKind = 'abbot' | 'carp' | 'witch' | 'judge' | 'demon';
  */
 export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp', 'witch', 'judge', 'demon'];
 
+/**
+ * The box around a hero that every screen shows (phones 1080 wide, desktop 3:4 zoomed 1.3x:
+ * about 1108x1477), less a margin so a big one inside it is on screen. A big one outside every
+ * hero's box comes in at ELITE.enterSpeed, and the relic locks only onto one inside its box,
+ * so the elites and bosses are never killed out of sight.
+ */
+export const VIEW = {
+  halfW: toFp(480),
+  halfH: toFp(680),
+};
+
 export const ELITE = {
   speed: perTick(160),
+  /** Walking speed of any elite outside every hero's view (VIEW), faster than the hero. */
+  enterSpeed: perTick(900),
   stopDist: toFp(220),
   knockback: toFp(160),
   hp: 400,
@@ -372,8 +385,8 @@ export const BALL = {
   seekRange: toFp(600),
   maxTravel: toFp(900),
   /**
-   * The relic locks onto the boss or an elite this far away, and the ball flies at it through
-   * the horde (the relic is the weapon against the big ones; spells clear the horde).
+   * The relic locks onto the boss or an elite this far away and on screen (VIEW), and the ball
+   * flies at it through the horde (the relic is the weapon against the big ones; spells clear the horde).
    */
   lockRange: toFp(1100),
 };
@@ -431,7 +444,6 @@ export const DROPS = {
   /** Share of the velocity turned toward the hero per tick, per mille. */
   turn: 333,
 };
-export const OVERFLOW_TIER = DROPS.tiers.length + 1;
 
 export const SPELLS = {
   novaRadius: toFp(700),

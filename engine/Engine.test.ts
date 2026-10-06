@@ -93,8 +93,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-06 for ENGINE_VERSION 32 (palms fall a moment after their cast). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(32);
+    // Recorded 2026-10-06 for ENGINE_VERSION 34 (elites come into view fast; the relic locks only onto big ones on screen). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(34);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -119,12 +119,12 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 3603872741;
+const GOLDEN = 4143830346;
 const GOLDEN_CHAPTER = 434161438;
-const GOLDEN_MARSH = 2238649661;
-const GOLDEN_SNOW = 1093721378;
-const GOLDEN_GHOST = 325197410;
-const GOLDEN_PEAK = 1206540070;
-const GOLDEN_HARD = 3873937462;
-const GOLDEN_FAT = 817374805;
-const GOLDEN_NOVICE = 3092652412;
+const GOLDEN_MARSH = 1126674854;
+const GOLDEN_SNOW = 1970393783;
+const GOLDEN_GHOST = 610948421;
+const GOLDEN_PEAK = 772260302;
+const GOLDEN_HARD = 282521457;
+const GOLDEN_FAT = 1348692420;
+const GOLDEN_NOVICE = 3915898128;

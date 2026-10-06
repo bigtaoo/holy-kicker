@@ -1,4 +1,4 @@
-import { CASTER, HORDE, SHOOTER } from '../config';
+import { CASTER, ELITE, HORDE, SHOOTER, VIEW } from '../config';
 import { SpatialGrid } from '../grid';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -33,6 +33,16 @@ export interface MoveParams {
   /** 0 turns separation off. */
   sep: number;
   queue: boolean;
+}
+
+/** Whether (x, y) is on p's screen (VIEW). */
+export function inView(p: Player, x: number, y: number): boolean {
+  return Math.abs(x - p.x) <= VIEW.halfW && Math.abs(y - p.y) <= VIEW.halfH;
+}
+
+/** A big one's walking speed: `speed` once a living hero sees it, else ELITE.enterSpeed to come into sight. */
+export function walkSpeed(players: readonly Player[], b: Body, speed: number): number {
+  return players.some((p) => !p.dead && inView(p, b.x, b.y)) ? speed : ELITE.enterSpeed;
 }
 
 /** The player nearest to (x, y); the first one on a tie. */

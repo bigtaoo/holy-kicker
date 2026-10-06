@@ -142,7 +142,7 @@ function attackRange(p: Player): number {
 
 /**
  * The foot meets the ball: launch it from the foot at the target, or straight ahead; a boss or
- * an elite within BALL.lockRange comes first, and the ball flies at it through the horde.
+ * an elite within BALL.lockRange and on screen comes first, and the ball flies at it through the horde.
  */
 function strike(s: SimState, p: Player): void {
   const big = bigTarget(s, p, BALL.lockRange);

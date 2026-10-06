@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { BOSS, DEFAULT_RUN, DROPS, OVERFLOW_TIER, THREATS, type RunConfig } from '../config';
+import { BALL, BOSS, DEFAULT_RUN, DROPS, THREATS, VIEW, type RunConfig } from '../config';
 import type { SimEvent } from '../events';
 import { toFp } from '../math/fixed';
 import { body, createState, newMob, newElite, newPlayer, type SimState } from '../state';
 import { bossSystem, newBoss } from './boss';
-import { ballSystem, damage, kickTarget, launchBall, nearestTarget } from './combat';
+import { ballSystem, bigTarget, damage, kickTarget, launchBall, nearestTarget } from './combat';
 import { attractAll, dropGem, dropSystem, tierOf } from './drops';
 import { stepHorde } from './horde';
 import { bulletSystem, threatSystem, zoneSystem } from './threats';
@@ -87,11 +87,20 @@ describe('balls', () => {
     const p = s.players[0];
     s.mobs.push(newMob(u(50), 0));
     s.elites = [newElite(u(400), 0)];
-    s.boss = newBoss(u(600), 0);
+    s.boss = newBoss(0, u(600));
     expect(kickTarget(s, p, u(650))).toBe(2);
     expect(kickTarget(s, p, u(500))).toBe(1);
     s.elites.length = 0;
     expect(kickTarget(s, p, u(500))).toBe(0);
+  });
+
+  it('locks onto a big one only on screen', () => {
+    const s = bare();
+    const p = s.players[0];
+    s.elites = [newElite(VIEW.halfW + u(100), 0)];
+    expect(bigTarget(s, p, BALL.lockRange)).toBe(-1);
+    s.elites[0].x = VIEW.halfW - u(100);
+    expect(bigTarget(s, p, BALL.lockRange)).toBe(0);
   });
 
   it('wears a mob down, and one that falls comes back with the wave health', () => {
@@ -157,16 +166,20 @@ describe('drops', () => {
     expect([1, 9, 10, 49, 50, 500].map(tierOf)).toEqual([0, 0, 1, 1, 2, 2]);
   });
 
-  it('merges drops on one cell, and sends drops past the cap to one overflow gem', () => {
+  it('merges drops on one cell, and past the cap moves the oldest gem to the new drop', () => {
     const s = bare();
     for (let i = 0; i < 12; i++) dropGem(s, u(1205 + i * 5), u(1000), 1);
     expect(s.gems.length).toBe(1);
     expect(s.gems[0]).toMatchObject({ value: 12, tier: 1 });
-    for (let i = 0; i < DROPS.max + 3; i++) dropGem(s, u(100 * i), u(5000), 2);
+    for (let i = 0; i < DROPS.max + 1; i++) dropGem(s, u(100 * i), u(5000), 2);
     expect(s.resting).toBe(DROPS.max);
-    const o = s.gems.filter((g) => g.tier === OVERFLOW_TIER);
-    expect(o.length).toBe(1);
-    expect(o[0].value).toBe(8);
+    expect(s.gems.length).toBe(DROPS.max);
+    expect(s.gemCells.size).toBe(DROPS.max);
+    expect(s.gems.reduce((n, g) => n + g.value, 0)).toBe(12 + (DROPS.max + 1) * 2);
+    // the 12-gem went first, then the first 2-gem; both now lie on the newest drops
+    expect(s.gems[s.gems.length - 2]).toMatchObject({ x: u(100 * (DROPS.max - 1)), value: 14 });
+    expect(s.gems[s.gems.length - 1]).toMatchObject({ x: u(100 * DROPS.max), value: 4 });
+    expect(s.gems[0].x).toBe(u(100));
   });
 
   it('pulls gems in the magnet radius to the player and collects them', () => {
