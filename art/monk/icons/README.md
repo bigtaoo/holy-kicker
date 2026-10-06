@@ -59,3 +59,6 @@ peach), `train_xp.jpg` (a scroll), `train_copper.jpg` (a cash coin), `train_magn
 (`client/src/ui/trainTab.ts`). The first attack, "a stone lock" (`r1/train_attack_v1.jpg`), came
 out as a padlock; the first coin had no hole and the first magnet was a ring, so their prompts
 spell the shape out. The coin's square hole is seeded as background (`HOLES`).
+The second magnet (`r1/train_magnet_v2.jpg`) had no visible silver tips; the third asks for
+square-cut ends capped by big silver blocks (`r1/train_magnet_a.jpg`, the one used;
+`r1/train_magnet_b.*` came out as a ring again).
