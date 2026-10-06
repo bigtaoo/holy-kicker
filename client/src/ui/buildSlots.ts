@@ -1,9 +1,12 @@
-import { EVOLVE_PAIR, MAX_LEVEL, MAX_PASSIVES, MAX_SPELLS, type PassiveId, type Player, type RelicId, type SpellId } from '@hk/engine';
+import {
+  EVOLVE_PAIR, MAX_LEVEL, MAX_PASSIVES, MAX_SPELLS, spellCooldown, TICK_RATE, type PassiveId, type Player, type RelicId, type SpellId,
+} from '@hk/engine';
 
 // The build strip on the HUD (docs/content.md "Portrait readability": 9 icons at most): the
 // relic, then the spell slots, then the passive slots, empty ones included so the player sees
 // what is still open. A maxed item that waits for its paired passive names it, so the player
-// knows which card completes the evolution. Pure, so it is tested without Pixi.
+// knows which card completes the evolution. Spell badges also show their recharge. Pure, so it
+// is tested without Pixi.
 
 export type IconId = RelicId | SpellId | PassiveId;
 
@@ -55,5 +58,34 @@ export function pairsOf(p: Player, id: IconId): IconId[] {
   const out: IconId[] = [];
   if (EVOLVE_PAIR[p.relicId] === id && !p.awakened) out.push(p.relicId);
   for (const sp of p.spells) if (EVOLVE_PAIR[sp.id] === id && !sp.evolved) out.push(sp.id);
+  return out;
+}
+
+/** A spell badge's recharge: the share of the wait still to go (1 just cast, 0 ready) and the whole seconds left, or 0 for no count. */
+export interface Charge {
+  share: number;
+  secs: number;
+}
+
+/** Spells that count their seconds down: the shield and the healing ring, whose wait the player plans around. */
+const COUNTED: readonly SpellId[] = ['bell', 'incense'];
+
+/**
+ * The recharge of each spell slot, in slot order; null for an empty slot, the halo (it never
+ * waits) and spells quicker than a second, whose sweep would only flicker. A bell that is up
+ * is ready: its recharge starts when a blow breaks it.
+ */
+export function spellCharges(p: Player): (Charge | null)[] {
+  const out: (Charge | null)[] = [];
+  for (let i = 0; i < MAX_SPELLS; i++) {
+    const sp = p.spells[i];
+    const total = sp ? spellCooldown(p, sp) : 0;
+    if (!sp || sp.id === 'halo' || total < TICK_RATE) {
+      out.push(null);
+      continue;
+    }
+    const left = sp.id === 'bell' && p.bell ? 0 : Math.max(0, sp.cd);
+    out.push({ share: Math.min(1, left / total), secs: COUNTED.includes(sp.id) ? Math.ceil(left / TICK_RATE) : 0 });
+  }
   return out;
 }

@@ -28,7 +28,7 @@ import { RunHud } from './RunHud';
 import { canReport, reportProblem } from './problemReport';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
 import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
-import { buildSlots } from './buildSlots';
+import { buildSlots, spellCharges } from './buildSlots';
 import { uiFrame, type Screen } from './uiLayout';
 import { onButtonTap } from './widgets';
 
@@ -270,6 +270,10 @@ export class Shell {
     this.hud = new RunHud(BALANCE.waves, this.hard, {
       pause: () => this.setPaused(true),
       resume: () => this.setPaused(false),
+      setFast: (fast) => {
+        if (this.game) this.game.speed = fast ? 2 : 1;
+        updateSettings(this.platform.storage, { fast });
+      },
       giveUp: () => this.endRun(),
       revive: () => this.revive(),
       pick: (index) => this.game?.pick(index),
@@ -277,6 +281,8 @@ export class Shell {
       report: canReport(this.net, import.meta.env.DEV) ? () => reportProblem(this.platform, this.net, () => this.game, this.scene) : null,
     }, this.art.icons, this.keys);
     this.setScreen(this.hud);
+    // the fast-forward choice carries over from the last run
+    this.hud.setFast(loadSettings(this.platform.storage).fast);
     this.portal.gameplayStart();
     this.net.track('run_start', { chapter, hard: this.hard, monk: this.scene.monk ?? this.save.monk, relic: this.scene.relic ?? this.save.relic });
   }
@@ -413,6 +419,7 @@ export class Shell {
     }
     hud.setXp(p.level, p.xp / xpToNext(p.level));
     hud.setBuild(buildSlots(p));
+    hud.setCharges(spellCharges(p));
     // offers come one after another (several levels at once, a shrine's insight), each a new list
     if (p.offer.length > 0 && this.shownOffer !== p.offer) {
       this.shownOffer = p.offer;

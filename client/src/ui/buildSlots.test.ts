@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MAX_LEVEL, newPlayer } from '@hk/engine';
-import { buildKey, buildSlots, pairsOf } from './buildSlots';
+import { MAX_LEVEL, newPlayer, TICK_RATE } from '@hk/engine';
+import { buildKey, buildSlots, pairsOf, spellCharges } from './buildSlots';
 
 describe('build slots', () => {
   it('lists the relic, four spell and four passive slots, empty ones included', () => {
@@ -49,5 +49,30 @@ describe('build slots', () => {
     p.spells.push({ id: 'cymbal', level: 1, cd: 0, evolved: false });
     expect(pairsOf(p, 'legs')).toEqual(['ball', 'cymbal']);
     expect(pairsOf(p, 'calm')).toEqual([]);
+  });
+
+  it('counts down a broken bell and the incense, and sweeps the other spells silently', () => {
+    const p = newPlayer(0, 0, 0);
+    p.spells.push(
+      { id: 'bell', level: 1, cd: 4 * TICK_RATE, evolved: false },
+      { id: 'incense', level: 1, cd: TICK_RATE + 1, evolved: true },
+      { id: 'bolt', level: 1, cd: 0, evolved: false },
+    );
+    const [bell, incense, bolt, empty] = spellCharges(p);
+    // the bell recharges in 8 s at level 1, the evolved incense every 2.8 s
+    expect(bell).toEqual({ share: 0.5, secs: 4 });
+    expect(incense!.secs).toBe(2);
+    expect(incense!.share).toBeCloseTo((TICK_RATE + 1) / Math.trunc(2.8 * TICK_RATE));
+    expect(bolt).toEqual({ share: 0, secs: 0 });
+    expect(empty).toBeNull();
+    // a raised bell waits for its blow, whatever its counter says
+    p.bell = true;
+    expect(spellCharges(p)[0]).toEqual({ share: 0, secs: 0 });
+  });
+
+  it('leaves out the halo and spells quicker than a second', () => {
+    const p = newPlayer(0, 0, 0);
+    p.spells.push({ id: 'halo', level: 1, cd: 0, evolved: false }, { id: 'lotus', level: 1, cd: 5, evolved: false });
+    expect(spellCharges(p).slice(0, 2)).toEqual([null, null]);
   });
 });

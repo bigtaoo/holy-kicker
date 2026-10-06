@@ -1,7 +1,7 @@
 import { Container, Graphics, Sprite, Texture, type Text } from 'pixi.js';
 import { getLocale, localeName, t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
-import { buildKey, type BuildSlot } from './buildSlots';
+import { buildKey, type BuildSlot, type Charge } from './buildSlots';
 import { cardPanel } from './cardPanel';
 import { languagePanel } from './languagePanel';
 import type { CardText } from './cardText';
@@ -10,13 +10,15 @@ import type { TutorialStep } from './tutorial';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
-// The in-run overlay: the experience bar and level, the build strip, the wave counter, a pause button and the
-// pause panel (resume, language, report a problem, give up), a banner when a wave starts, the level-up cards, and the death panel (revive
+// The in-run overlay: the experience bar and level, the build strip with the spells' recharge, the wave counter,
+// the fast-forward toggle, a pause button and the pause panel (resume, language, report a problem, give up), a banner when a wave starts, the level-up cards, and the death panel (revive
 // free from training or with an ad, or give up).
 
 export interface RunActions {
   pause(): void;
   resume(): void;
+  /** Runs the sim at double speed, or back at normal. */
+  setFast(fast: boolean): void;
   giveUp(): void;
   /** Revives, free or after the rewarded ad; resolves whether it did. */
   revive(): Promise<boolean>;
@@ -51,6 +53,8 @@ export class RunHud implements Screen {
   private bannerView: Container | null = null;
   private wave = 0;
   private paused = false;
+  /** The run plays at double speed. */
+  private fast = false;
   /** The language picker over the pause panel. */
   private languages = false;
   private reporting: Reporting = 'idle';
@@ -104,7 +108,7 @@ export class RunHud implements Screen {
     if (!this.down && !this.offer) {
       const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52 });
       pause.position.set(f.w - 90, 300);
-      this.view.addChild(pause);
+      this.view.addChild(pause, this.fastButton(f));
     }
     this.hand = null;
     if (this.tutorial !== 'done' && !this.paused && !this.down && !this.offer) this.drawTutorial(f);
@@ -133,6 +137,18 @@ export class RunHud implements Screen {
     this.slotsKey = key;
     this.slots = slots;
     this.build?.draw(slots);
+  }
+
+  /** Each spell's recharge on the build strip (spellCharges), every frame. */
+  setCharges(charges: readonly (Charge | null)[]): void {
+    this.build?.setCharges(charges);
+  }
+
+  /** Starts the run fast or not (the last run's choice); the toggle then keeps it. */
+  setFast(fast: boolean): void {
+    this.fast = fast;
+    this.actions.setFast(fast);
+    this.relayout();
   }
 
   /** The level and how far the experience is toward the next one, 0..1. */
@@ -228,6 +244,17 @@ export class RunHud implements Screen {
     if (paused) this.actions.pause();
     else this.actions.resume();
     this.relayout();
+  }
+
+  /** The fast-forward toggle left of the pause button: two arrows, lit while the run plays fast. */
+  private fastButton(f: UiFrame): Container {
+    const b = button('', 120, 120, () => this.setFast(!this.fast), { fill: this.fast ? COLORS.saffron : COLORS.panel });
+    const ink = this.fast ? COLORS.outline : COLORS.text;
+    const arrows = new Graphics();
+    for (const x of [-26, 4]) arrows.poly([x, -24, x + 30, 0, x, 24]).fill(ink);
+    b.addChild(arrows);
+    b.position.set(f.w - 230, 300);
+    return b;
   }
 
   private xpBar(f: UiFrame): void {

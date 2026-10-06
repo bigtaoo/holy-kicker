@@ -193,17 +193,19 @@ function cast(s: SimState, events: SimEvent[], p: Player, slot: SpellSlot): bool
   return true;
 }
 
+/** Ticks from a cast of `slot` to the next one (the bell's recharge after it breaks), shrunk by the cooldown stat. */
+export function spellCooldown(p: Player, slot: SpellSlot): number {
+  return Math.max(1, Math.trunc((slotStats(slot).cooldown * (100 - stat(p, 'cooldown'))) / 100));
+}
+
 /** The players' own spells, each on its cooldown. */
 function buildSpells(s: SimState, events: SimEvent[]): void {
   for (const p of s.players) {
     if (p.dead) continue;
-    const faster = 100 - stat(p, 'cooldown');
     for (const sp of p.spells) {
       // a bell that is up waits for its blow; the halo always turns (haloSystem)
       if ((sp.id === 'bell' && p.bell) || sp.id === 'halo' || --sp.cd > 0) continue;
-      sp.cd = cast(s, events, p, sp)
-        ? Math.max(1, Math.trunc((slotStats(sp).cooldown * faster) / 100))
-        : SPELL_CAST.retry;
+      sp.cd = cast(s, events, p, sp) ? spellCooldown(p, sp) : SPELL_CAST.retry;
     }
   }
 }

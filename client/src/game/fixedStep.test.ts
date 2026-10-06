@@ -24,4 +24,14 @@ describe('FixedStep', () => {
     expect(f.alpha).toBe(0);
     expect(f.advance(TICK_MS)).toBe(1);
   });
+
+  it('runs 60 steps a second on fast forward, still dropping a long backlog', () => {
+    for (const fps of [30, 60, 144]) {
+      const f = new FixedStep();
+      let steps = 0;
+      for (let i = 0; i < fps * 10; i++) steps += f.advance(1000 / fps, 2);
+      expect(Math.abs(steps - 600)).toBeLessThanOrEqual(1);
+    }
+    expect(new FixedStep().advance(2000, 2)).toBe(MAX_STEPS * 2);
+  });
 });

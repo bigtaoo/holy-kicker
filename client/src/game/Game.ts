@@ -1,7 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
-  beadsRings, Engine, EVOLVE, FP, HERO_EASE_LOCKED, HERO_EASE_SMOOTH, inZen, isMidBoss, TICK_RATE, twinHp, WAVES, quantizeMove,
-  type MonkId, type RelicId, type RunConfig, type SimEvent, type SimState, type StatBonus, type SutraId,
+  beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, TICK_RATE, twinHp, WAVES, quantizeMove, type MonkId, type SimEvent, type SimState,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
@@ -36,6 +35,7 @@ import { Autoplay } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
 import { releaseBaked } from './bake';
+import { runConfig, type RunSetup } from './runSetup';
 import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
@@ -66,30 +66,6 @@ const DOWN_TINT = 0x8a8a8a;
 const ELITE_KEY = 1e6;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
-
-/** What the shell sets a run up with: the chapter, hard mode and its length (0 for the sandbox), revives, the relic, the sutras and the stats from gear and training. */
-export interface RunSetup {
-  chapter: number;
-  waves: number;
-  revives: number;
-  relic: RelicId;
-  sutras: readonly SutraId[];
-  bonus?: StatBonus;
-  hard?: boolean;
-  /** The monk played as (the kicker by default); his rig must be loaded (art.ts loadMonkArt). */
-  monk?: MonkId;
-}
-
-/** The run a scene sets up: what the engine simulates. */
-export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): RunConfig {
-  return {
-    seed, players: 1, mobs: scene.mobs, sep: scene.sep, queue: scene.queue,
-    heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
-    elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
-    waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras, chapter: setup.chapter,
-    bonus: setup.bonus ?? {}, hard: setup.hard ?? false, monk: setup.monk ?? 'kicker',
-  };
-}
 
 export class Game {
   readonly engine: Engine;
@@ -136,6 +112,8 @@ export class Game {
   private levelName = '';
   /** A paused run neither simulates nor animates; it is still drawn. */
   paused = false;
+  /** Sim time per real time: 2 fast-forwards the run (ticks and animations), 1 is normal. */
+  speed = 1;
   private readonly onTick = (t: { deltaMS: number }) => this.frame(t.deltaMS);
   /** Dev: the bot playing instead of the stick (?autoplay). */
   private readonly autoplay: Autoplay | null;
@@ -274,7 +252,7 @@ export class Game {
       this.draw(this.loop.alpha, 0);
       return;
     }
-    const steps = this.loop.advance(frameMs);
+    const steps = this.loop.advance(frameMs, this.speed);
     for (let i = 0; i < steps; i++) {
       this.engine.submit(this.command());
       const events = this.engine.advance();
@@ -283,7 +261,7 @@ export class Game {
       this.react(events);
       this.onEvents(events);
     }
-    this.draw(this.loop.alpha, Math.min(frameMs / 1000, 0.05));
+    this.draw(this.loop.alpha, Math.min(frameMs / 1000, 0.05) * this.speed);
   }
 
   /** The local stick (and keys) for the next tick, quantized at the input edge. */

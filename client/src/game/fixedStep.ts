@@ -2,21 +2,22 @@ import { FP, TICK_RATE, type Body } from '@hk/engine';
 
 // The bridge between the screen's frame rate and the sim's fixed 30 Hz: frame time builds up
 // in an accumulator, each whole tick of it runs one sim step, and what is left over is how
-// far the view interpolates between the last two sim states. Pure, tested without Pixi.
+// far the view interpolates between the last two sim states. A speed above 1 feeds the
+// accumulator faster (fast forward: twice the ticks per second). Pure, tested without Pixi.
 
 export const TICK_MS = 1000 / TICK_RATE;
-/** At most this many steps per frame; past it the backlog is dropped (a hitch, a hidden tab). */
+/** At most this many steps per frame at normal speed; past it the backlog is dropped (a hitch, a hidden tab). */
 export const MAX_STEPS = 5;
 
 export class FixedStep {
   private acc = 0;
 
-  /** Adds a frame's time; returns how many sim steps to run now. */
-  advance(frameMs: number): number {
-    this.acc += Math.max(0, frameMs);
+  /** Adds a frame's time, `speed` times over; returns how many sim steps to run now. */
+  advance(frameMs: number, speed = 1): number {
+    this.acc += Math.max(0, frameMs) * speed;
     let steps = Math.floor(this.acc / TICK_MS);
-    if (steps > MAX_STEPS) {
-      steps = MAX_STEPS;
+    if (steps > MAX_STEPS * speed) {
+      steps = MAX_STEPS * speed;
       this.acc = 0;
     } else {
       this.acc -= steps * TICK_MS;

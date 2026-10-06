@@ -12,6 +12,7 @@ export { checkReplay, packCommands, replayEngine, takeReplay, unpackCommands, ty
 export { FP, TICK_RATE, fromFp } from './math/fixed';
 export { beadsRings, bowlLevel, cardPool, evolutions, inZen, magnetOf, maxHpOf, slotStats, stat } from './systems/build';
 export { tierOf } from './systems/drops';
+export { spellCooldown } from './systems/spells';
 export { DASH_TICKS } from './systems/elite';
 export { haloLength, haloSpin } from './systems/sutras';
 export { chapterBoss, chapterElite, eliteKinds, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, twinHp, waveFoeHp, chapterPack, isPackWave, mobHp } from './systems/waves';

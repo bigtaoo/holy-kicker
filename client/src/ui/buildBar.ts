@@ -1,12 +1,13 @@
-import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { Container, Graphics, Sprite, type Text, type Texture } from 'pixi.js';
 import { MAX_LEVEL } from '@hk/engine';
-import type { BuildSlot } from './buildSlots';
-import { COLORS } from './widgets';
+import type { BuildSlot, Charge } from './buildSlots';
+import { COLORS, label } from './widgets';
 
 // The build strip under the experience bar: one round badge per slot with the item icon and
 // its level as pips. An evolved item gets a gold rim and gold pips; a ready one pulses gold
 // (its evolution comes on the next level-up); a maxed one still missing its passive shows that
-// passive small on its corner.
+// passive small on its corner. A spell recharging is darkened by a clock sweep that opens from
+// twelve o'clock, with the seconds left on the bell and the incense.
 
 export type IconSheet = ReadonlyMap<string, Texture>;
 
@@ -30,10 +31,19 @@ export function iconSprite(icons: IconSheet, id: string, size: number): Sprite |
   return s;
 }
 
+/** A spell badge's recharge overlay, redrawn only when its numbers change. */
+interface Sweep {
+  dark: Graphics;
+  secs: Text;
+  share: number;
+}
+
 export class BuildBar {
   readonly view = new Container();
   /** Gold rings of the slots whose evolution is ready, pulsed by update. */
   private glows: Graphics[] = [];
+  /** The spell badges' recharge overlays, in spell slot order (null for an empty slot). */
+  private sweeps: (Sweep | null)[] = [];
   private t = 0;
 
   constructor(private readonly icons: IconSheet) {
@@ -48,6 +58,7 @@ export class BuildBar {
   draw(slots: readonly BuildSlot[]): void {
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.glows = [];
+    this.sweeps = [];
     let x = -BuildBar.width(slots.length) / 2 + R;
     slots.forEach((slot, i) => {
       if (i > 0) x += slots[i - 1].kind === slot.kind ? R * 2 + GAP : R * 2 + GROUP_GAP;
@@ -63,6 +74,23 @@ export class BuildBar {
     for (const g of this.glows) g.alpha = a;
   }
 
+  /** Each spell's recharge, in spell slot order (spellCharges). */
+  setCharges(charges: readonly (Charge | null)[]): void {
+    this.sweeps.forEach((w, i) => {
+      if (!w) return;
+      const c = charges[i];
+      const share = c ? Math.round(c.share * 120) / 120 : 0;
+      if (share !== w.share) {
+        w.share = share;
+        w.dark.clear();
+        // the dark part is what is still to wait; the bright part grows clockwise from the top
+        if (share > 0) w.dark.moveTo(0, 0).arc(0, 0, R - 6, -Math.PI / 2 + (1 - share) * Math.PI * 2, Math.PI * 1.5).closePath().fill({ color: COLORS.outline, alpha: 0.62 });
+      }
+      const secs = c && c.secs > 0 ? String(c.secs) : '';
+      if (w.secs.text !== secs) w.secs.text = secs;
+    });
+  }
+
   private badge(slot: BuildSlot): Container {
     const c = new Container();
     const empty = slot.state === 'empty';
@@ -70,6 +98,7 @@ export class BuildBar {
     c.addChild(new Graphics().circle(0, 0, R).fill(empty ? COLORS.panelLocked : COLORS.panel)
       .stroke({ color: COLORS.outline, width: 10 }).circle(0, 0, R - 4).stroke({ color: rim, width: slot.state === 'evolved' ? 6 : 4 }));
     if (empty) {
+      if (slot.kind === 'spell') this.sweeps.push(null);
       c.alpha = 0.6;
       return c;
     }
@@ -80,6 +109,11 @@ export class BuildBar {
     }
     const icon = slot.icon && iconSprite(this.icons, slot.icon, R * 1.6);
     if (icon) c.addChild(icon);
+    const sweep = slot.kind === 'spell' ? { dark: new Graphics(), secs: label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }), share: 0 } : null;
+    if (sweep) {
+      this.sweeps.push(sweep);
+      c.addChild(sweep.dark);
+    }
     const pips = new Graphics();
     const left = -((MAX_LEVEL - 1) * PIP_STEP) / 2;
     for (let i = 0; i < MAX_LEVEL; i++) {
@@ -101,6 +135,7 @@ export class BuildBar {
       }
       c.addChild(hint);
     }
+    if (sweep) c.addChild(sweep.secs);
     return c;
   }
 }
