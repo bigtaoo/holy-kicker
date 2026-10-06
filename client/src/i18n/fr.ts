@@ -114,6 +114,18 @@ export const fr: Table<typeof en> = {
     shrine: 'Autel',
     evolve: 'Évolution !',
     awaken: 'Éveil !',
+    step: {
+      cooldown: 'Recharge des sorts {a} → {b}',
+      maxHp: 'Santé {a} → {b}',
+      speed: 'Vitesse {a} → {b}',
+      area: 'Zone des sorts {a} → {b}',
+      regen: 'Soigne {a} → {b} de santé/s',
+      crit: 'Chance de critique {a} → {b}',
+      xp: 'XP {a} → {b}',
+      magnet: 'Portée de ramassage {a} → {b}',
+      duration: 'Durée des sorts {a} → {b}',
+      guard: 'Protection après un coup {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: 'Balle météore', desc: 'Se divise en {n} à chaque rebond' },

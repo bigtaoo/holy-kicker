@@ -229,7 +229,7 @@ export class LobbyScreen implements Screen {
   }
 
   private trainTab(w: number, midY: number): void {
-    const tab = trainTab(this.save, this.trainPick, {
+    const tab = trainTab(this.save, this.icons, this.trainPick, {
       train: () => {
         const next = train(this.save);
         if (next !== this.save) this.actions.track('buy', { item: 'train', node: next.trained, spent: this.save.copper - next.copper });

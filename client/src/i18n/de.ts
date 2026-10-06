@@ -114,6 +114,18 @@ export const de: Table<typeof en> = {
     shrine: 'Schrein',
     evolve: 'Entwickeln!',
     awaken: 'Erwecken!',
+    step: {
+      cooldown: 'Zauber-Abklingzeit {a} → {b}',
+      maxHp: 'Leben {a} → {b}',
+      speed: 'Lauftempo {a} → {b}',
+      area: 'Zauberfläche {a} → {b}',
+      regen: 'Heilt {a} → {b} Leben/s',
+      crit: 'Krit-Chance {a} → {b}',
+      xp: 'EP {a} → {b}',
+      magnet: 'Sammelradius {a} → {b}',
+      duration: 'Zauberdauer {a} → {b}',
+      guard: 'Schutz nach Treffer {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: 'Meteorball', desc: 'Teilt sich bei jedem Abprall in {n}' },

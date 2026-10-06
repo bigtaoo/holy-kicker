@@ -114,6 +114,18 @@ export const zh: Table<typeof en> = {
     shrine: '神龛',
     evolve: '进化！',
     awaken: '觉醒！',
+    step: {
+      cooldown: '法术冷却 {a} → {b}',
+      maxHp: '生命上限 {a} → {b}',
+      speed: '移速 {a} → {b}',
+      area: '法术范围 {a} → {b}',
+      regen: '每秒回复 {a} → {b} 生命',
+      crit: '暴击率 {a} → {b}',
+      xp: '经验 {a} → {b}',
+      magnet: '拾取范围 {a} → {b}',
+      duration: '法术持续 {a} → {b}',
+      guard: '受击后无敌 {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: '流星鞠', desc: '每次弹射分裂成 {n} 个球' },

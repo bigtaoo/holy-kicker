@@ -112,6 +112,18 @@ export const en = {
     shrine: 'Shrine',
     evolve: 'Evolve!',
     awaken: 'Awaken!',
+    step: {
+      cooldown: 'Spell cooldown {a} → {b}',
+      maxHp: 'Health {a} → {b}',
+      speed: 'Move speed {a} → {b}',
+      area: 'Spell area {a} → {b}',
+      regen: 'Heal {a} → {b} health/s',
+      crit: 'Crit chance {a} → {b}',
+      xp: 'XP {a} → {b}',
+      magnet: 'Pickup range {a} → {b}',
+      duration: 'Spell duration {a} → {b}',
+      guard: 'Guard after a hit {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: 'Meteor Ball', desc: 'Splits into {n} at every bounce' },

@@ -114,6 +114,18 @@ export const pt: Table<typeof en> = {
     shrine: 'Santuário',
     evolve: 'Evoluir!',
     awaken: 'Despertar!',
+    step: {
+      cooldown: 'Recarga de magias {a} → {b}',
+      maxHp: 'Vida {a} → {b}',
+      speed: 'Velocidade de movimento {a} → {b}',
+      area: 'Área de magias {a} → {b}',
+      regen: 'Cura {a} → {b} da vida/s',
+      crit: 'Chance de crítico {a} → {b}',
+      xp: 'XP {a} → {b}',
+      magnet: 'Alcance de coleta {a} → {b}',
+      duration: 'Duração de magias {a} → {b}',
+      guard: 'Proteção após um golpe {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: 'Bola Meteoro', desc: 'Divide-se em {n} a cada quique' },

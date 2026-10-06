@@ -52,3 +52,10 @@ closed shapes, so `tools/pack_icons.py` seeds them as background (`HOLES`).
 The shop's chests (2026-10-05): `chest_free.jpg`, `chest_ad.png` and `chest_jade.jpg`, packed after
 `sandals.jpg`. The first wooden chest (`r1/chest_ad_shadow.jpg`) stood on a black ground slab;
 `chest_ad.png` is that image edited with `chest_ad_fix.txt`.
+
+The training stats (2026-10-06): `train_attack.jpg` (a dumbbell), `train_hp.jpg` (a longevity
+peach), `train_xp.jpg` (a scroll), `train_copper.jpg` (a cash coin), `train_magnet.jpg` and
+`train_revive.jpg` (a lotus lamp), packed after `chest_jade.jpg`, for the lobby's Train tab
+(`client/src/ui/trainTab.ts`). The first attack, "a stone lock" (`r1/train_attack_v1.jpg`), came
+out as a padlock; the first coin had no hole and the first magnet was a ring, so their prompts
+spell the shape out. The coin's square hole is seeded as background (`HOLES`).

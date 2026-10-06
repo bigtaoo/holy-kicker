@@ -114,6 +114,18 @@ export const ja: Table<typeof en> = {
     shrine: '祠',
     evolve: '進化！',
     awaken: '覚醒！',
+    step: {
+      cooldown: '術のクールダウン {a} → {b}',
+      maxHp: 'HP {a} → {b}',
+      speed: '移動速度 {a} → {b}',
+      area: '術の範囲 {a} → {b}',
+      regen: '毎秒HP回復 {a} → {b}',
+      crit: '会心率 {a} → {b}',
+      xp: '経験値 {a} → {b}',
+      magnet: '回収範囲 {a} → {b}',
+      duration: '術の持続 {a} → {b}',
+      guard: '被弾後の無敵 {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: '流星鞠', desc: 'バウンドのたびに{n}個に分裂' },

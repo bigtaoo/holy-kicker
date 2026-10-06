@@ -114,6 +114,18 @@ export const ko: Table<typeof en> = {
     shrine: '사당',
     evolve: '진화!',
     awaken: '각성!',
+    step: {
+      cooldown: '술법 재사용 대기 {a} → {b}',
+      maxHp: '체력 {a} → {b}',
+      speed: '이동 속도 {a} → {b}',
+      area: '술법 범위 {a} → {b}',
+      regen: '초당 체력 {a} → {b} 회복',
+      crit: '치명타 확률 {a} → {b}',
+      xp: '경험치 {a} → {b}',
+      magnet: '획득 범위 {a} → {b}',
+      duration: '술법 지속 {a} → {b}',
+      guard: '피격 후 무적 {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: '유성 축국', desc: '튕길 때마다 {n}개로 분열' },

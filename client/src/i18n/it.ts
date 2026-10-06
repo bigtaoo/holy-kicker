@@ -114,6 +114,18 @@ export const it: Table<typeof en> = {
     shrine: 'Santuario',
     evolve: 'Evoluzione!',
     awaken: 'Risveglio!',
+    step: {
+      cooldown: 'Ricarica incantesimi {a} → {b}',
+      maxHp: 'Salute {a} → {b}',
+      speed: 'Velocità di movimento {a} → {b}',
+      area: 'Area incantesimi {a} → {b}',
+      regen: 'Cura il {a} → {b} di salute/s',
+      crit: 'Probabilità critico {a} → {b}',
+      xp: 'EXP {a} → {b}',
+      magnet: 'Raggio di raccolta {a} → {b}',
+      duration: 'Durata incantesimi {a} → {b}',
+      guard: 'Protezione dopo un colpo {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: 'Palla Meteora', desc: 'Si divide in {n} a ogni rimbalzo' },

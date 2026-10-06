@@ -114,6 +114,18 @@ export const pl: Table<typeof en> = {
     shrine: 'Kapliczka',
     evolve: 'Ewolucja!',
     awaken: 'Przebudzenie!',
+    step: {
+      cooldown: 'Odnowienie zaklęć {a} → {b}',
+      maxHp: 'Zdrowie {a} → {b}',
+      speed: 'Szybkość ruchu {a} → {b}',
+      area: 'Obszar zaklęć {a} → {b}',
+      regen: 'Leczy {a} → {b} zdrowia/s',
+      crit: 'Szansa na trafienie krytyczne {a} → {b}',
+      xp: 'XP {a} → {b}',
+      magnet: 'Zasięg zbierania {a} → {b}',
+      duration: 'Czas trwania zaklęć {a} → {b}',
+      guard: 'Ochrona po trafieniu {a} → {b}',
+    },
   },
   evolve: {
     ball: { name: 'Piłka Meteor', desc: 'Dzieli się na {n} przy każdym odbiciu' },

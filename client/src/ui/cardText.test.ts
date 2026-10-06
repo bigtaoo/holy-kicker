@@ -30,6 +30,16 @@ describe('card text', () => {
     expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ name: '罗汉腿', tag: '新！', lines: ['移动速度 +8%'] });
   });
 
+  it('shows a passive\'s step as what it gives now and what it will give', () => {
+    const p = newPlayer(0, 0, 0);
+    p.passives = [{ id: 'rice', level: 3 }, { id: 'calm', level: 2 }, { id: 'karma', level: 1 }];
+    expect(cardText({ kind: 'passive', id: 'rice' }, p)).toMatchObject({ tag: 'Lv 3 → 4', fresh: false, lines: ['Heal 1.2% → 1.6% health/s'] });
+    expect(cardText({ kind: 'passive', id: 'calm' }, p).lines).toEqual(['Spell cooldown −16% → −24%']);
+    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['XP +8% → +16%', 'Pickup range +15% → +30%']);
+    setLocale('zh');
+    expect(cardText({ kind: 'passive', id: 'rice' }, p).lines).toEqual(['每秒回复 1.2% → 1.6% 生命']);
+  });
+
   it('describes the shrine cards', () => {
     const p = newPlayer(0, 0, 0);
     expect(cardText({ kind: 'shrine', id: 'heal' }, p)).toMatchObject({ name: 'Heal', lines: ['Restore 50% health'] });

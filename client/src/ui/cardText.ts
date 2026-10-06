@@ -1,6 +1,6 @@
 import {
   BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE, FISH, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, PASSIVES, RELIC_IDS, RELIC_LEVELS, SHRINE, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, STAFF_AWAKENED, STAFF_LEVELS, TICK_RATE,
-  type Card, type CardKind, type PassiveId, type Player, type RelicId, type SpellId, type SutraId,
+  type Card, type CardKind, type PassiveId, type Stat, type Player, type RelicId, type SpellId, type SutraId,
 } from '@hk/engine';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
@@ -23,6 +23,9 @@ export interface CardText {
   /** What the item evolves with (shown small on the icon), see pairsOf. */
   pairs: IconId[];
 }
+
+/** The stats a passive can raise (every stat but attack, which only gear and training give). */
+type StepStat = Exclude<Stat, 'attack'>;
 
 function seconds(ticks: number): string {
   return String(Math.round((ticks / TICK_RATE) * 10) / 10);
@@ -104,6 +107,21 @@ function passiveDesc(id: PassiveId): string {
   return t(`passive.${id}.desc`, { n: id === 'rice' ? def.perLevel / 10 : def.perLevel });
 }
 
+/** A passive's stat at `level`, as the card shows it: "−16%", "+30%", or "1.2%" for regen. */
+function statValue(stat: Stat, perLevel: number, level: number): string {
+  const n = perLevel * level;
+  if (stat === 'regen') return `${n / 10}%`;
+  return `${stat === 'cooldown' ? '−' : '+'}${n}%`;
+}
+
+/** A passive's step: what it gives now and what it will give, per stat (Karma and Focus raise two). */
+function passiveLines(id: PassiveId, level: number): string[] {
+  const def = PASSIVES[id];
+  return [def, ...(def.also ? [def.also] : [])].map(({ stat, perLevel }) =>
+    t(`card.step.${stat as StepStat}`, { a: statValue(stat, perLevel, level), b: statValue(stat, perLevel, level + 1) }),
+  );
+}
+
 function isRelic(id: string): id is RelicId {
   return RELIC_IDS.includes(id as RelicId);
 }
@@ -178,7 +196,7 @@ export function cardText(card: Card, p: Player): CardText {
   const id = card.id as PassiveId;
   const slot = p.passives.find((s) => s.id === id);
   return {
-    kind: 'passive', name: t(`passive.${id}.name`), tag: slot ? levelTag(slot.level) : t('card.new'), fresh: !slot, lines: [passiveDesc(id)], ...item,
+    kind: 'passive', name: t(`passive.${id}.name`), tag: slot ? levelTag(slot.level) : t('card.new'), fresh: !slot, lines: slot ? passiveLines(id, slot.level) : [passiveDesc(id)], ...item,
   };
 }
 
