@@ -56,12 +56,13 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   `?autoplay` lets the balance bot play; `?record=SECONDS` records the run to a 1080x1920 video (`src/dev/recorder.ts`).
 - `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay) at
   hk.gamestao.com on daydayup's box; `src/protocol.ts` is the wire format, imported by the client
-  as `@hk/protocol`. `npm run deploy:server` ships it. Dev: `?api=http://localhost:8080` with
+  as `@hk/protocol`. CI deploys it on every green push to `main` (`npm run deploy:server` by hand). Dev: `?api=http://localhost:8080` with
   `npm run dev -w server` (the client stays offline in development otherwise).
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).
 - `art/` — source art and style exploration; `tools/` — art scripts.
 - `build/` — check scripts.
-- `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` publishes
-  the web build to h.gamestao.com (Cloudflare, `wrangler/web.jsonc`) once `WEB_DEPLOY_ENABLED` is set.
+- `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` ships
+  the backend to hk.gamestao.com (`SERVER_DEPLOY_ENABLED`), then publishes the web build to
+  h.gamestao.com (Cloudflare, `wrangler/web.jsonc`, `WEB_DEPLOY_ENABLED`).

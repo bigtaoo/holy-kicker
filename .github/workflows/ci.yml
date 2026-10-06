@@ -2,15 +2,19 @@ name: ci
 
 # Every push and pull request runs `npm run check` (typecheck, file length, tests, the server,
 # WeChat and CrazyGames builds, the WeChat package gate). A push to main that passes then
-# publishes the web build to Cloudflare at h.gamestao.com (wrangler/web.jsonc), the way
-# daydayup's client-deploy.yml publishes b.gamestao.com.
+# ships the backend to blightbloom (hk.gamestao.com) and, after it, publishes the web build to
+# Cloudflare at h.gamestao.com (wrangler/web.jsonc). Backend first, so a client never goes
+# live talking to routes the server does not have yet. A push that leaves the server bundle
+# unchanged restarts nothing (server/deploy/ci-deploy.sh compares the files).
 #
-# The deploy needs, in Settings -> Secrets and variables -> Actions:
+# The deploys need, in Settings -> Secrets and variables -> Actions:
 #   Secrets    CLOUDFLARE_API_TOKEN   gamestao.com account, at least Workers Scripts:Edit
 #              CLOUDFLARE_ACCOUNT_ID
-#   Variables  WEB_DEPLOY_ENABLED = true   (unset: the deploy job is skipped, so CI stays
-#                                           green before the secrets are in)
-# The backend (server/) is not deployed here: `npm run deploy:server` ships it by hand.
+#              SERVER_DEPLOY_KEY      ssh key that can only run ci-deploy.sh on the box
+#                                     (local copy D:\cloud\holykicker_ci_ed25519; server/README.md)
+#   Variables  WEB_DEPLOY_ENABLED = true, SERVER_DEPLOY_ENABLED = true   (unset: that deploy
+#                                     is skipped, so CI stays green before the secrets are in)
+#              SERVER_SSH_KNOWN_HOSTS   the box's pinned host key line
 
 on:
   push:
@@ -18,9 +22,10 @@ on:
   pull_request:
   workflow_dispatch: {}
 
+# a newer push cancels an older run, except on main, where a deploy may be halfway through
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   check:
@@ -34,10 +39,52 @@ jobs:
       - run: npm ci
       - run: npm run check
 
-  deploy-web:
+  deploy-server:
     needs: check
     runs-on: ubuntu-latest
-    if: ${{ vars.WEB_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    if: ${{ vars.SERVER_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    concurrency:
+      group: server-deploy
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: build server
+        run: node server/build.mjs
+      - name: deploy over ssh
+        env:
+          DEPLOY_KEY: ${{ secrets.SERVER_DEPLOY_KEY }}
+          SSH_KNOWN_HOSTS: ${{ vars.SERVER_SSH_KNOWN_HOSTS }}
+        run: |
+          set -eu
+          install -m 700 -d ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # pinned, never StrictHostKeyChecking=no: the key and payload go only to this box
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          cp server/deploy/Dockerfile server/deploy/docker-compose.yml server/deploy/package.json server/dist/
+          # the forced command on the box reads this tar.gz from stdin (server/deploy/ci-deploy.sh)
+          tar czf - -C server/dist server.mjs Dockerfile docker-compose.yml package.json |
+            ssh -T -i ~/.ssh/deploy_key -o IdentitiesOnly=yes deploy@62.238.1.182
+      - name: verify from the outside
+        run: |
+          set -eu
+          for i in $(seq 1 10); do
+            if curl -fsS --max-time 10 https://hk.gamestao.com/health; then echo; exit 0; fi
+            sleep 3
+          done
+          echo "hk.gamestao.com/health did not answer" >&2
+          exit 1
+
+  deploy-web:
+    needs: [check, deploy-server]
+    runs-on: ubuntu-latest
+    # runs when the server deploy succeeded or was switched off, never after it failed
+    if: ${{ !cancelled() && needs.check.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.deploy-server.result) && vars.WEB_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     concurrency:
       group: web-deploy
       cancel-in-progress: true

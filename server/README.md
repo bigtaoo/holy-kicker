@@ -63,8 +63,28 @@ box's ports 80/443 are daydayup's Caddy, so the way in is a Cloudflare Tunnel: `
 dials out to Cloudflare, which serves https://hk.gamestao.com and passes the requests down to
 `http://api:8080`. The client's address arrives in `CF-Connecting-IP`.
 
+Every green push to `main` deploys it (`.github/workflows/ci.yml`, job `deploy-server`, before
+the web build goes out); a push that leaves the bundle unchanged restarts nothing. By hand:
+
 ```bash
 npm run deploy:server        # build, ship, docker compose up, wait for both containers
+```
+
+### Deploy from CI
+
+CI holds an ssh key (`D:\cloud\holykicker_ci_ed25519`, the only readable copy; the private
+half is the repo Secret `SERVER_DEPLOY_KEY`) that can do one thing on the box: it is registered
+in `/home/deploy/.ssh/authorized_keys` as
+`command="/home/deploy/holykicker-ci-deploy.sh",restrict ssh-ed25519 AAAA... holykicker-ci`, so
+whatever it asks for, sshd runs `server/deploy/ci-deploy.sh` as `deploy`, with no pty and no
+forwarding. Repo Variables: `SERVER_DEPLOY_ENABLED=true`, `SERVER_SSH_KNOWN_HOSTS` (the box's
+ed25519 host key line, checked against `/etc/ssh/ssh_host_ed25519_key.pub`).
+
+The live script sits outside the deploy target so a deploy cannot replace it; after editing
+`ci-deploy.sh`, install it again:
+
+```bash
+tr -d '' < server/deploy/ci-deploy.sh | ssh blightbloom 'install -o deploy -g deploy -m 700 /dev/stdin /home/deploy/holykicker-ci-deploy.sh'
 ```
 
 Secrets live in `D:secrets` (`secrets/holykicker/prod.yaml`); the box keeps them in
