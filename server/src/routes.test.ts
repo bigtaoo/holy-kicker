@@ -91,6 +91,8 @@ describe('routes', () => {
     expect((await route(req('GET', '/v1/stats'), deps())).status).toBe(401);
     expect((await route(req('GET', '/v1/stats', undefined, { authorization: 'Bearer nope' }), deps())).status).toBe(401);
     expect((await route(req('GET', '/v1/stats?days=7', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(200);
+    expect((await route(req('GET', '/v1/stats?host=poki', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(200);
+    expect((await route(req('GET', '/v1/stats?host=steam', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(400);
     expect((await route(req('GET', '/v1/stats', undefined, { authorization: 'Bearer key' }), deps({ adminKey: '' }))).status).toBe(401);
     expect((await route(req('POST', '/v1/runs', run()), deps({ allow: () => false }))).status).toBe(429);
     expect((await route(req('GET', '/nope'), deps())).status).toBe(404);

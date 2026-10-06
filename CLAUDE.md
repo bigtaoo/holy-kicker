@@ -57,7 +57,8 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 - `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay) at
   hk.gamestao.com on daydayup's box; `src/protocol.ts` is the wire format, imported by the client
   as `@hk/protocol`. CI deploys it on every green push to `main` (`npm run deploy:server` by hand). Dev: `?api=http://localhost:8080` with
-  `npm run dev -w server` (the client stays offline in development otherwise).
+  `npm run dev -w server` (the client stays offline in development otherwise). The operator's dashboard
+  is https://hk.gamestao.com/dash; how to read it and which levers move retention: `docs/retention.md`.
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).

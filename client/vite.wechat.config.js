@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { engineAlias } from '../build/hkAlias.mjs';
+import { buildDefine } from '../build/buildId.mjs';
 
 // WeChat mini-game bundle: one self-contained IIFE at wechat/js/game.js, which
 // wechat/game.js requires. Open client/wechat in WeChat DevTools after building.
@@ -76,6 +77,7 @@ const copyArt = {
 export default defineConfig(({ mode }) => ({
   plugins: [stripWebGPU, onlyEnZh, copyArt],
   resolve: { alias: engineAlias },
+  define: buildDefine(),
   // public/ is mirrored by copyArt; Vite must not also copy it into wechat/js.
   publicDir: false,
   build: {

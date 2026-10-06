@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { LIMITS } from './protocol';
+import { HOSTS, LIMITS, type Host } from './protocol';
 import { checkBatch, checkReport, checkRun } from './rules';
 import type { Store } from './store';
 
@@ -98,7 +98,9 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
   if (method === 'GET' && path === '/v1/stats') {
     if (!keyMatches(req.headers.authorization, d.adminKey)) return { status: 401 };
     const days = Math.min(90, Math.max(1, Number(req.query.get('days')) || 14));
-    return { status: 200, body: await d.store.stats(days, d.now()) };
+    const host = req.query.get('host') || null;
+    if (host !== null && !(HOSTS as readonly string[]).includes(host)) return bad('bad host');
+    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null) };
   }
 
   return { status: 404 };

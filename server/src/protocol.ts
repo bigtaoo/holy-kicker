@@ -10,15 +10,18 @@ export type Host = (typeof HOSTS)[number];
  * Analytics event names. `session` opens a play session; `run_start` / `run_end` bracket a
  * chapter run; `tutorial` marks the first run's hints done; `buy` a lobby purchase; `ad` a
  * rewarded ad watched to the end; `claim` a daily task, achievement or patrol paid out; `share`
- * the host's share sheet answered (WeChat: the player picked a forward).
+ * the host's share sheet answered (WeChat: the player picked a forward); `leave` the game going to
+ * the background (tab hidden, app switched), the last one of a day being where the player stopped.
  *
  * `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `claim` has `what` (`task` with
  * `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours` and
  * `double`). Chests and patrols also carry their haul: `copper`, `jade` and `drops`. `share` has
  * `to` (`chat` or `moments`) and `from` (`lobby`, `run` or `results`, where the player was).
+ * `leave` has `place` (`lobby`, `run`, `results` or `other`), `secs` (seconds on screen since
+ * the previous `leave`) and, in a run, `chapter` and `wave`.
  */
-export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share'] as const;
+export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave'] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
 export type PropValue = string | number | boolean;

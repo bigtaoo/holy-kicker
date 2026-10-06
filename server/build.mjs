@@ -11,5 +11,7 @@ await build({
   format: 'esm',
   target: 'node22',
   external: ['mongodb'],
+  // the /dash page goes into the bundle as a string
+  loader: { '.html': 'text' },
   logLevel: 'info',
 });

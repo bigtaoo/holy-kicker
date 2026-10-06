@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
+import { buildDefine } from '../build/buildId.mjs';
 
 // The CrazyGames build: `npm run build:crazygames` writes client/dist-crazygames/, the folder
 // to zip and upload. Adapted from D:\daydayup\client\vite.crazygames.config.js. It differs
@@ -46,6 +47,7 @@ const portalHtml = () => {
 export default defineConfig({
   base: './',
   resolve: { alias: engineAlias },
+  define: buildDefine(),
   plugins: [portalHtml()],
   server: { port: 5175, host: true },
   build: { target: 'es2020', outDir: 'dist-crazygames', emptyOutDir: true },

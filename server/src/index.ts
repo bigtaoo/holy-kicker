@@ -1,4 +1,5 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import DASH from './dash.html';
 import { ipOf, maxBody, readBody } from './http';
 import { MongoStore } from './mongoStore';
 import { Limiter, RATES, route } from './routes';
@@ -33,6 +34,11 @@ async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const url = new URL(req.url ?? '/', 'http://local');
   if (req.method === 'OPTIONS') {
     res.writeHead(204, CORS).end();
+    return;
+  }
+  // the operator's numbers page: it holds no data, it asks for the admin key and reads /v1/stats
+  if (req.method === 'GET' && url.pathname === '/dash') {
+    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer' }).end(DASH);
     return;
   }
   let body: unknown;

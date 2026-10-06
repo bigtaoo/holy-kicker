@@ -1,19 +1,21 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
-import { boardId, runScore, type BoardReply, type EventBatch, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { counted, dayOffset, emptyDayZero, foldDayZero, type Player } from './players';
+import { boardId, runScore, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
-import { reportId, rowOf, summaryOf, type Stats, type Store } from './store';
+import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from './stats';
+import { reportId, rowOf, summaryOf, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
 // Collections:
 //   events   every analytics event, dropped after EVENTS_DAYS by a TTL index
-//   installs one per install: the day it was first seen (for new players and retention)
-//   active   one per install per day it sent anything
+//   installs one per install (players.ts): the day it was first seen, the days it came back and
+//            what it did on day 0 (new players, retention and its drivers)
+//   active   one per install per day it sent anything (daily actives)
 //   best     one per install per board: its best run
 //   reports  problem reports with their replays, dropped after REPORTS_DAYS
 
 const EVENTS_DAYS = 90;
 const REPORTS_DAYS = 180;
-const DAY_MS = 86_400_000;
 
 interface EventDoc {
   at: Date;
@@ -46,8 +48,8 @@ export class MongoStore implements Store {
   private constructor(
     private readonly client: MongoClient,
     private readonly events: Collection<EventDoc>,
-    private readonly installs: Collection<{ _id: string; first: string; host: string }>,
-    private readonly active: Collection<{ _id: string; day: string; install: string }>,
+    private readonly installs: Collection<Player>,
+    private readonly active: Collection<{ _id: string; day: string; install: string; host: Host }>,
     private readonly best: Collection<BestDoc>,
     private readonly reportDocs: Collection<ReportDoc>,
   ) {}
@@ -62,10 +64,22 @@ export class MongoStore implements Store {
       s.events.createIndex({ e: 1, day: 1 }),
       s.installs.createIndex({ first: 1 }),
       s.active.createIndex({ day: 1 }),
+      s.active.createIndex({ install: 1 }),
       s.best.createIndex({ board: 1, score: -1, at: 1 }),
       s.reportDocs.createIndex({ at: 1 }, { expireAfterSeconds: REPORTS_DAYS * 86_400 }),
     ]);
+    await s.upgrade();
     return s;
+  }
+
+  /** Brings installs from before players.ts (no `back`) up to date, with their active days' host. */
+  private async upgrade(): Promise<void> {
+    for await (const p of this.installs.find({ back: { $exists: false } })) {
+      const days = await this.active.find({ install: p._id }, { projection: { day: 1 } }).toArray();
+      const back = [...new Set(days.map((a) => dayOffset(p.first, a.day)).filter(counted))];
+      await this.installs.updateOne({ _id: p._id }, { $set: { back, d0: p.d0 ?? emptyDayZero(), host: p.host ?? 'web' } });
+      await this.active.updateMany({ install: p._id, host: { $exists: false } }, { $set: { host: p.host ?? 'web' } });
+    }
   }
 
   async addEvents(b: EventBatch, now: number): Promise<void> {
@@ -75,10 +89,18 @@ export class MongoStore implements Store {
       b.events.map((e) => ({ at, day, install: b.install, session: b.session, host: b.host, build: b.build, locale: b.locale, e: e.e, t: new Date(e.t), p: e.p ?? {} })),
       { ordered: false },
     );
-    await Promise.all([
-      this.installs.updateOne({ _id: b.install }, { $setOnInsert: { first: day, host: b.host } }, { upsert: true }),
-      this.active.updateOne({ _id: `${day}/${b.install}` }, { $setOnInsert: { day, install: b.install } }, { upsert: true }),
+    const [p, seen] = await Promise.all([
+      this.installs.findOneAndUpdate({ _id: b.install }, { $setOnInsert: { first: day, host: b.host, build: b.build, back: [], d0: emptyDayZero() } }, { upsert: true, returnDocument: 'after' }),
+      this.active.updateOne({ _id: `${day}/${b.install}` }, { $setOnInsert: { day, install: b.install, host: b.host } }, { upsert: true }),
     ]);
+    if (!p) return;
+    const offset = dayOffset(p.first, day);
+    const fresh = seen.upsertedCount === 1 && counted(offset);
+    if (p.first !== day && !fresh) return;
+    await this.installs.updateOne(
+      { _id: b.install },
+      { ...(p.first === day ? { $set: { d0: foldDayZero(p.d0, b.events) } } : {}), ...(fresh ? { $addToSet: { back: offset } } : {}) },
+    );
   }
 
   private async rankOf(doc: BestDoc): Promise<number> {
@@ -106,43 +128,33 @@ export class MongoStore implements Store {
     return { board, total, rows: top.map((b, k) => rowOf(b, k + 1)), mine: own ? rowOf(own, await this.rankOf(own)) : null };
   }
 
-  async stats(days: number, now: number): Promise<Stats> {
-    const list = Array.from({ length: days }, (_, i) => dayOf(now - (days - 1 - i) * DAY_MS));
+  async stats(days: number, now: number, host: Host | null): Promise<Stats> {
+    const today = dayOf(now);
+    const list = windowOf(days, today);
     const from = list[0];
-    const [active, fresh, runs, ends] = await Promise.all([
-      this.active.aggregate<{ _id: string; n: number }>([{ $match: { day: { $gte: from } } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
-      this.installs.aggregate<{ _id: string; n: number }>([{ $match: { first: { $gte: from } } }, { $group: { _id: '$first', n: { $sum: 1 } } }]).toArray(),
-      this.events.aggregate<{ _id: string; n: number }>([{ $match: { e: 'run_start', day: { $gte: from } } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
-      this.events.find({ e: 'run_end', day: { $gte: from } }, { projection: { day: 1, p: 1 } }).toArray(),
+    const mine = host ? { host } : {};
+    const fold = new StatsFold(list, today);
+    // one small document per new install, streamed: memory stays flat however many there are
+    for await (const p of this.installs.find({ first: { $gte: from }, ...mine }, { projection: { first: 1, build: 1, back: 1, d0: 1 } })) fold.add(p);
+    type Count = { _id: string; n: number };
+    type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; wave: unknown }; n: number };
+    const [active, runs, [ends]] = await Promise.all([
+      this.active.aggregate<Count>([{ $match: { day: { $gte: from }, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
+      this.events.aggregate<Count>([{ $match: { e: 'run_start', day: { $gte: from }, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
+      this.events.aggregate<{ days: Count[]; outcomes: Outcome[] }>([
+        { $match: { e: 'run_end', day: { $gte: from }, ...mine } },
+        {
+          $facet: {
+            days: [{ $group: { _id: '$day', n: { $sum: 1 } } }],
+            outcomes: [{ $group: { _id: { chapter: '$p.chapter', hard: '$p.hard', won: '$p.won', wave: '$p.wave' }, n: { $sum: 1 } } }],
+          },
+        },
+      ]).toArray(),
     ]);
-    const count = (rows: { _id: string; n: number }[], day: string) => rows.find((r) => r._id === day)?.n ?? 0;
-    const boards = new Map<string, { runs: number; won: number; lost: number[] }>();
-    for (const e of ends) {
-      const b = boardId(Number(e.p.chapter) || 0, e.p.hard === true);
-      const row = boards.get(b) ?? { runs: 0, won: 0, lost: [] };
-      row.runs++;
-      if (e.p.won === true) row.won++;
-      else row.lost.push(Number(e.p.wave) || 0);
-      boards.set(b, row);
-    }
-    return {
-      days: list.map((day) => ({ day, active: count(active, day), fresh: count(fresh, day), runs: count(runs, day), ended: ends.filter((e) => e.day === day).length })),
-      boards: [...boards].sort(([a], [b]) => a.localeCompare(b)).map(([board, r]) => ({ board, runs: r.runs, won: r.won, medianLostWave: median(r.lost) })),
-      retention: await this.retention(list),
-    };
-  }
-
-  /** For each day, the installs first seen then and how many came back a day and a week later. */
-  private async retention(list: string[]): Promise<Stats['retention']> {
-    const newcomers = await this.installs.find({ first: { $gte: list[0] } }, { projection: { first: 1 } }).toArray();
-    const seen = await this.active.find({ day: { $gte: list[0] } }, { projection: { _id: 1 } }).toArray();
-    const back = new Set(seen.map((a) => a._id));
-    const later = (day: string, n: number) => dayOf(Date.parse(`${day}T00:00:00Z`) + n * DAY_MS);
-    return list.map((day) => {
-      const ids = newcomers.filter((i) => i.first === day).map((i) => i._id);
-      const share = (n: number) => (ids.length ? Math.round((100 * ids.filter((id) => back.has(`${later(day, n)}/${id}`)).length) / ids.length) : 0);
-      return { day, fresh: ids.length, d1: share(1), d7: share(7) };
-    });
+    const map = (rows: Count[]) => new Map(rows.map((r) => [r._id, r.n]));
+    const counts: DayCounts = { active: map(active), runs: map(runs), ended: map(ends?.days ?? []) };
+    const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, wave: Number(o.wave) || 0, n }));
+    return fold.result(host, counts, outcomes);
   }
 
   async addReport(report: Report, now: number): Promise<string> {
@@ -166,10 +178,4 @@ export class MongoStore implements Store {
   async close(): Promise<void> {
     await this.client.close();
   }
-}
-
-function median(xs: number[]): number {
-  if (xs.length === 0) return 0;
-  const s = [...xs].sort((a, b) => a - b);
-  return s[Math.floor(s.length / 2)];
 }

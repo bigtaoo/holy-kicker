@@ -18,7 +18,8 @@ so nobody types a name and nothing needs moderating.
 | `POST /v1/reports` | a `Report`: the player's note, device, chapter and wave, and a replay of the run (up to 3 MB) → `{ id }` |
 | `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /v1/reports/<id>` | one report whole, replay included (same key) |
-| `GET /v1/stats?days=14` | operator numbers (daily active, new installs, runs, clear rate and median lost wave per board, D1/D7 retention); `Authorization: Bearer $HK_ADMIN_KEY` |
+| `GET /v1/stats?days=14&host=crazygames` | operator numbers (src/stats.ts): daily actives, new installs, runs, boards, retention cohorts (D1/3/7/14/30, null until the day is over), the new-player funnel and D1 by what day 0 looked like; `host` optional; `Authorization: Bearer $HK_ADMIN_KEY` |
+| `GET /dash` | the operator's dashboard over `/v1/stats` (src/dash.html; asks for the admin key, keeps it in the browser). How to read it and what to change: docs/retention.md |
 
 A run ranks by: a win over any loss, then more waves, then less time (`runScore`). Every request
 is checked whole (`src/rules.ts`) and refused on anything unexpected; a run that could not have
@@ -42,7 +43,7 @@ until the backend has an ICP-filed domain on the mini-game's request whitelist.
 ## Storage
 
 MongoDB Atlas, a cluster of its own (`cluster0.qcp0r96`, not daydayup's), database `holykicker` (`HK_MONGO_DB`):
-`events` (TTL 90 days), `installs` (first day seen), `active` (install per day), `best` (one
+`events` (TTL 90 days), `installs` (one per install, src/players.ts: first day, host, first build, the days it came back and its day 0, folded as batches arrive), `active` (install per day), `best` (one
 per install per board), `reports` (TTL 180 days). Without `HK_MONGO_URI` the server keeps everything in memory
 (development, tests).
 
@@ -84,7 +85,8 @@ The live script sits outside the deploy target so a deploy cannot replace it; af
 `ci-deploy.sh`, install it again:
 
 ```bash
-tr -d '' < server/deploy/ci-deploy.sh | ssh blightbloom 'install -o deploy -g deploy -m 700 /dev/stdin /home/deploy/holykicker-ci-deploy.sh'
+tr -d '
+' < server/deploy/ci-deploy.sh | ssh blightbloom 'install -o deploy -g deploy -m 700 /dev/stdin /home/deploy/holykicker-ci-deploy.sh'
 ```
 
 Secrets live in `D:secrets` (`secrets/holykicker/prod.yaml`); the box keeps them in

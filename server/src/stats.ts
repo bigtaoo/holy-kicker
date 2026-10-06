@@ -1,0 +1,159 @@
+import { boardId, type Host } from './protocol';
+import { RETURN_DAYS, counted, dayAfter, emptyDayZero, type DayZero, type Player } from './players';
+
+// The operator's numbers (GET /v1/stats, the /dash page): daily actives, retention cohorts, the
+// new-player funnel and what day 0 says about coming back. Pure: a store streams its players
+// through StatsFold and hands over its own per-day counts, so the memory store and MongoDB
+// share every rule and the memory store's tests cover them.
+
+export interface Stats {
+  /** The day the numbers were made (UTC); its counts are still growing. */
+  today: string;
+  /** The host the numbers are for, or null for all of them. */
+  host: Host | null;
+  days: { day: string; active: number; fresh: number; runs: number; ended: number }[];
+  /** Per board: runs ended, won, and the median wave of the lost ones. */
+  boards: { board: string; runs: number; won: number; medianLostWave: number }[];
+  returnDays: number[];
+  /** Per first day: new installs and how many came back returnDays later (null until that day is over). */
+  cohorts: { day: string; fresh: number; back: (number | null)[] }[];
+  /** How many of the window's new installs got this far on their first day. */
+  funnel: { step: string; n: number }[];
+  /** Of the new installs whose next day is over: how many came back then, by what they did on day 0. */
+  drivers: { name: string; groups: { label: string; n: number; back: number }[] }[];
+  /** The wave new installs' first finished run ended on, and how many of them came back the next day (D1 known only). */
+  firstRun: { wave: number; n: number; back: number }[];
+}
+
+/** Finished runs with the same outcome, as a store counts them. */
+export interface EndCount {
+  chapter: number;
+  hard: boolean;
+  won: boolean;
+  wave: number;
+  n: number;
+}
+
+/** What a store counts per day itself: installs active, runs started and runs ended. */
+export interface DayCounts {
+  active: Map<string, number>;
+  runs: Map<string, number>;
+  ended: Map<string, number>;
+}
+
+const FUNNEL: [string, (z: DayZero) => boolean][] = [
+  ['opened the game', () => true],
+  ['started a run', (z) => z.starts > 0],
+  ['finished the tutorial', (z) => z.tutorial],
+  ['finished a run', (z) => z.ends > 0],
+  ['reached wave 10', (z) => z.best >= 10],
+  ['reached wave 20', (z) => z.best >= 20],
+  ['cleared a chapter', (z) => z.wins > 0],
+  ['finished 3+ runs', (z) => z.ends >= 3],
+  ['launched twice', (z) => z.sessions >= 2],
+];
+
+/** Picks the label of the first bucket whose bound the value is under (the last one catches the rest). */
+const band = (v: number, bounds: [number, string][], rest: string) => bounds.find(([b]) => v < b)?.[1] ?? rest;
+
+const DRIVERS: [string, (z: DayZero, build: string) => string][] = [
+  ['first build played', (_, build) => build || 'unknown'],
+  ['runs finished on day 0', (z) => band(z.ends, [[1, '0'], [2, '1'], [4, '2-3'], [7, '4-6']], '7+')],
+  ['furthest wave on day 0', (z) => (z.wins > 0 ? 'cleared' : band(z.best, [[1, 'none'], [10, '1-9'], [20, '10-19'], [30, '20-29']], '30+'))],
+  ['first run ended on wave', (z) => (z.ends === 0 ? 'no run' : band(z.firstWave, [[5, '1-4'], [10, '5-9'], [20, '10-19'], [30, '20-29']], '30+'))],
+  ['minutes on screen on day 0', (z) => (z.left === '' ? 'unknown' : band(z.secs / 60, [[2, '<2'], [5, '2-5'], [15, '5-15'], [30, '15-30']], '30+'))],
+  ['launches on day 0', (z) => band(z.sessions, [[2, '1'], [3, '2']], '3+')],
+  ['finished the tutorial', (z) => (z.tutorial ? 'yes' : 'no')],
+  ['bought in the lobby', (z) => (z.buys > 0 ? 'yes' : 'no')],
+  ['watched an ad', (z) => (z.ads > 0 ? 'yes' : 'no')],
+  ['gave up a run', (z) => (z.quits > 0 ? 'yes' : 'no')],
+  ['last left the game from', (z) => (z.left === '' ? 'unknown' : z.left === 'run' ? `run, wave ${band(z.leftWave, [[5, '1-4'], [10, '5-9'], [20, '10-19']], '20+')}` : z.left)],
+];
+
+export class StatsFold {
+  private readonly fresh = new Map<string, number>();
+  private readonly back = new Map<string, number[]>();
+  private readonly funnel = FUNNEL.map(() => 0);
+  private readonly drivers = DRIVERS.map(() => new Map<string, { n: number; back: number }>());
+  private readonly firstRun = new Map<number, { n: number; back: number }>();
+
+  /** `days` is the window, oldest first, ending on `today`. */
+  constructor(
+    private readonly days: string[],
+    private readonly today: string,
+  ) {}
+
+  /** One install first seen inside the window. */
+  add(p: Pick<Player, 'first' | 'back' | 'build'> & { d0?: DayZero }): void {
+    if (p.first < this.days[0] || p.first > this.today) return;
+    const z = { ...emptyDayZero(), ...p.d0 };
+    const seen = new Set(p.back.filter(counted));
+    this.fresh.set(p.first, (this.fresh.get(p.first) ?? 0) + 1);
+    const back = this.back.get(p.first) ?? RETURN_DAYS.map(() => 0);
+    RETURN_DAYS.forEach((n, i) => seen.has(n) && back[i]++);
+    this.back.set(p.first, back);
+    FUNNEL.forEach(([, reached], i) => reached(z) && this.funnel[i]++);
+    // the drivers only count installs whose next day is over: a D1 still to come is not a no
+    if (dayAfter(p.first, 1) >= this.today) return;
+    const d1 = seen.has(1) ? 1 : 0;
+    DRIVERS.forEach(([, label], i) => bump(this.drivers[i], label(z, p.build ?? ''), d1));
+    if (z.ends > 0) bump(this.firstRun, z.firstWave, d1);
+  }
+
+  result(host: Host | null, counts: DayCounts, ends: EndCount[]): Stats {
+    const at = (m: Map<string, number>, day: string) => m.get(day) ?? 0;
+    return {
+      today: this.today,
+      host,
+      days: this.days.map((day) => ({ day, active: at(counts.active, day), fresh: at(this.fresh, day), runs: at(counts.runs, day), ended: at(counts.ended, day) })),
+      boards: boardsOf(ends),
+      returnDays: [...RETURN_DAYS],
+      cohorts: this.days.map((day) => {
+        const back = this.back.get(day) ?? RETURN_DAYS.map(() => 0);
+        return { day, fresh: at(this.fresh, day), back: RETURN_DAYS.map((n, i) => (dayAfter(day, n) < this.today ? back[i] : null)) };
+      }),
+      funnel: FUNNEL.map(([step], i) => ({ step, n: this.funnel[i] })),
+      drivers: DRIVERS.map(([name], i) => ({ name, groups: [...this.drivers[i]].map(([label, g]) => ({ label, ...g })) })),
+      firstRun: [...this.firstRun].sort(([a], [b]) => a - b).map(([wave, g]) => ({ wave, ...g })),
+    };
+  }
+}
+
+function bump<K>(m: Map<K, { n: number; back: number }>, key: K, back: number): void {
+  const g = m.get(key) ?? { n: 0, back: 0 };
+  g.n++;
+  g.back += back;
+  m.set(key, g);
+}
+
+/** Per board: runs, wins, and the median wave of the losses, from counted outcomes. */
+export function boardsOf(ends: EndCount[]): Stats['boards'] {
+  const boards = new Map<string, { runs: number; won: number; lost: [number, number][] }>();
+  for (const e of ends) {
+    const b = boardId(e.chapter, e.hard);
+    const row = boards.get(b) ?? { runs: 0, won: 0, lost: [] };
+    row.runs += e.n;
+    if (e.won) row.won += e.n;
+    else row.lost.push([e.wave, e.n]);
+    boards.set(b, row);
+  }
+  return [...boards].sort(([a], [b]) => a.localeCompare(b)).map(([board, r]) => ({ board, runs: r.runs, won: r.won, medianLostWave: median(r.lost) }));
+}
+
+/** The median of weighted values [value, count]: the middle one, the upper of two. */
+function median(xs: [number, number][]): number {
+  const total = xs.reduce((s, [, n]) => s + n, 0);
+  if (total === 0) return 0;
+  const sorted = [...xs].sort(([a], [b]) => a - b);
+  let seen = 0;
+  for (const [v, n] of sorted) {
+    seen += n;
+    if (seen > Math.floor(total / 2)) return v;
+  }
+  return sorted[sorted.length - 1][0];
+}
+
+/** The window: `days` days ending on the day of `now`, oldest first. */
+export function windowOf(days: number, today: string): string[] {
+  return Array.from({ length: days }, (_, i) => dayAfter(today, i - (days - 1)));
+}

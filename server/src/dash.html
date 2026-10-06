@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Holy Kicker Numbers</title>
+<style>
+:root {
+  --bg: #f6f3ee; --panel: #fff; --ink: #1f1b16; --dim: #6f675c; --line: #e4ddd2;
+  --accent: #d98a1c; --good: #2f8f5b; --warn: #c9851a; --bad: #c0412f; --bar: #e9b25c; --bar2: #7aa6c2;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16140f; --panel: #211e18; --ink: #efe8dc; --dim: #a39a8c; --line: #3a352c; --bar: #c98f3a; --bar2: #4f7f9c; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { position: sticky; top: 0; z-index: 2; background: var(--bg); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+header h1 { font-size: 16px; margin: 0 8px 0 0; }
+select, input, button { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+button { cursor: pointer; background: var(--accent); color: #fff; border: 0; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+section { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; overflow-x: auto; }
+section h2 { font-size: 15px; margin: 0 0 4px; }
+.hint { color: var(--dim); font-size: 12.5px; margin: 0 0 10px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.kpi { border: 1px solid var(--line); border-radius: 8px; padding: 10px; }
+.kpi b { display: block; font-size: 24px; }
+.kpi span { color: var(--dim); font-size: 12px; }
+table { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+th, td { padding: 4px 8px; text-align: right; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th:first-child, td:first-child { text-align: left; }
+th { color: var(--dim); font-weight: 600; font-size: 12px; }
+.cell { border-radius: 4px; padding: 2px 6px; }
+.row { display: grid; grid-template-columns: minmax(120px, 190px) 1fr 110px; gap: 8px; align-items: center; margin: 3px 0; }
+.track { background: var(--line); border-radius: 4px; height: 16px; position: relative; overflow: hidden; }
+.fill { background: var(--bar); height: 100%; }
+.avg { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .55; }
+.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--dim); font-size: 12.5px; }
+.drivers { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px 24px; }
+.drivers h3 { font-size: 13px; margin: 6px 0 4px; }
+.diag li { margin: 6px 0; }
+.tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 6px; margin-right: 6px; color: #fff; }
+.tag.bad { background: var(--bad); } .tag.warn { background: var(--warn); } .tag.good { background: var(--good); } .tag.info { background: var(--bar2); }
+#msg { color: var(--bad); }
+svg text { fill: var(--dim); font-size: 10px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Holy Kicker</h1>
+  <select id="host"><option value="">all hosts</option><option>crazygames</option><option>poki</option><option>web</option><option>wechat</option></select>
+  <select id="days"><option>14</option><option selected>30</option><option>60</option><option>90</option></select>
+  <input id="key" type="password" placeholder="admin key" size="14">
+  <button id="go">Load</button>
+  <span id="msg"></span>
+</header>
+<main id="out"><section><p class="hint">Enter the admin key (HK_ADMIN_KEY) and load. The key stays in this browser.</p></section></main>
+<script>
+'use strict';
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+const pct = (a, b) => (b > 0 ? (100 * a) / b : null);
+const fmt = (p) => (p === null ? '–' : `${p.toFixed(p < 10 ? 1 : 0)}%`);
+/** Rough bars for a casual web game; portals report their own medians in their developer consoles. */
+const GOAL = { 1: [20, 30], 3: [10, 18], 7: [5, 10], 14: [3, 6], 30: [1.5, 3] };
+const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
+
+$('key').value = store.get('hk.dash.key') || '';
+$('host').value = store.get('hk.dash.host') || '';
+$('days').value = store.get('hk.dash.days') || '30';
+$('go').onclick = load;
+$('host').onchange = $('days').onchange = load;
+if ($('key').value) load();
+
+async function load() {
+  const key = $('key').value.trim();
+  if (!key) return;
+  store.set('hk.dash.key', key); store.set('hk.dash.host', $('host').value); store.set('hk.dash.days', $('days').value);
+  $('msg').textContent = 'loading…';
+  const q = new URLSearchParams({ days: $('days').value });
+  if ($('host').value) q.set('host', $('host').value);
+  try {
+    const res = await fetch(`/v1/stats?${q}`, { headers: { authorization: `Bearer ${key}` } });
+    if (!res.ok) throw new Error(res.status === 401 ? 'wrong key' : `HTTP ${res.status}`);
+    render(await res.json());
+    $('msg').textContent = '';
+  } catch (e) {
+    $('msg').textContent = e.message;
+  }
+}
+
+/** Retention over the cohorts whose return day is over: returned / installs, all days pooled. */
+function pooled(s, i) {
+  let fresh = 0, back = 0;
+  for (const c of s.cohorts) if (c.back[i] !== null) { fresh += c.fresh; back += c.back[i]; }
+  return { fresh, back, p: pct(back, fresh) };
+}
+
+function shade(p, n) {
+  const g = GOAL[n];
+  if (p === null || !g) return '';
+  const c = p >= g[1] ? 'var(--good)' : p >= g[0] ? 'var(--warn)' : 'var(--bad)';
+  return `background: color-mix(in srgb, ${c} 28%, transparent)`;
+}
+
+function render(s) {
+  const ret = s.returnDays.map((n, i) => ({ n, ...pooled(s, i) }));
+  const fresh = s.days.reduce((a, d) => a + d.fresh, 0);
+  const today = s.days[s.days.length - 1], yday = s.days[s.days.length - 2] || today;
+  $('out').innerHTML = [
+    section(`Overview · ${esc(s.host || 'all hosts')} · up to ${esc(s.today)} (UTC)`, 'Retention pools every cohort whose return day is over. Colours: green beats a good casual web game, amber is average, red is below.',
+      `<div class="kpis">${kpi(fresh, 'new installs in the window')}${kpi(yday.active, `active on ${yday.day}`)}${kpi(today.active, 'active today so far')}
+      ${ret.map((r) => kpi(fmt(r.p), `D${r.n} of ${r.fresh} installs`, shade(r.p, r.n))).join('')}</div>`),
+    section('What to look at', 'Rules of thumb from the numbers below; each points at the lever most likely to move retention.', diagnose(s, ret)),
+    section('Retention by first day', 'Each row is the installs first seen that day; the cells are the share seen again exactly N days later. A dash: that day is not over yet.', cohortTable(s)),
+    section('Daily', 'Bars: active installs; the darker part is new ones. Hover for numbers.', dailyChart(s)),
+    section('New-player funnel (day 0)', 'Of the installs first seen in the window, how many got this far on their first day. A big drop between two steps is where new players give up.', funnel(s)),
+    section('Who comes back the next day', 'Installs whose next day is over, split by what they did on day 0. The bar is the share back on day 1, the line the average. Groups with fewer than 20 installs are noise.', drivers(s, ret[0].p)),
+    section('Where the first run ended', 'The wave new players\' first finished run ended on, and the share of them back the next day. A pile-up at one wave is a difficulty wall.', firstRun(s)),
+    section('Boards', 'All finished runs in the window.', boards(s)),
+  ].join('');
+}
+
+const section = (title, hint, body) => `<section><h2>${esc(title)}</h2><p class="hint">${esc(hint)}</p>${body}</section>`;
+const kpi = (v, label, style = '') => `<div class="kpi" style="${style}"><b>${esc(v)}</b><span>${esc(label)}</span></div>`;
+
+function cohortTable(s) {
+  const rows = [...s.cohorts].reverse().filter((c) => c.fresh > 0);
+  if (!rows.length) return '<p class="hint">No new installs in the window.</p>';
+  return `<table><tr><th>first day</th><th>installs</th>${s.returnDays.map((n) => `<th>D${n}</th>`).join('')}</tr>${rows.map((c) => `<tr><td>${esc(c.day)}</td><td>${c.fresh}</td>${c.back.map((b, i) => {
+    if (b === null) return '<td>–</td>';
+    const p = pct(b, c.fresh);
+    return `<td><span class="cell" style="${shade(p, s.returnDays[i])}" title="${b} of ${c.fresh}">${fmt(p)}</span></td>`;
+  }).join('')}</tr>`).join('')}</table>`;
+}
+
+function dailyChart(s) {
+  const W = 1000, H = 160, max = Math.max(1, ...s.days.map((d) => d.active)), bw = W / s.days.length;
+  const bars = s.days.map((d, i) => {
+    const x = i * bw + 1, h = (d.active / max) * (H - 20), hf = (Math.min(d.fresh, d.active) / max) * (H - 20);
+    return `<g><title>${esc(d.day)}: ${d.active} active, ${d.fresh} new, ${d.runs} runs started, ${d.ended} ended</title>
+      <rect x="${x}" y="${H - 14 - h}" width="${bw - 2}" height="${h}" fill="var(--bar)"/><rect x="${x}" y="${H - 14 - hf}" width="${bw - 2}" height="${hf}" fill="var(--bar2)"/>
+      ${i % Math.ceil(s.days.length / 10) === 0 ? `<text x="${x}" y="${H - 2}">${esc(d.day.slice(5))}</text>` : ''}</g>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="none" style="height:160px">${bars}<text x="2" y="10">${max}</text></svg>`;
+}
+
+function bar(label, share, right, avg = null) {
+  const w = share === null ? 0 : Math.max(0, Math.min(100, share));
+  return `<div class="row"><div>${esc(label)}</div><div class="track"><div class="fill" style="width:${w}%"></div>${avg === null ? '' : `<div class="avg" style="left:${Math.min(100, avg)}%"></div>`}</div><div class="num">${right}</div></div>`;
+}
+
+/** Steps measured against an earlier one (the rest only against everyone who opened the game). */
+const AFTER = { 'started a run': 'opened the game', 'finished the tutorial': 'started a run', 'finished a run': 'started a run' };
+
+function funnel(s) {
+  const all = s.funnel[0]?.n || 0;
+  if (!all) return '<p class="hint">No new installs in the window.</p>';
+  const n = Object.fromEntries(s.funnel.map((f) => [f.step, f.n]));
+  return s.funnel.map((f) => {
+    const of = AFTER[f.step];
+    return bar(f.step, pct(f.n, all), `${f.n} · ${fmt(pct(f.n, all))}${of ? ` <small>(${fmt(pct(f.n, n[of]))} of ${esc(of.split(' ')[0])})</small>` : ''}`);
+  }).join('');
+}
+
+function drivers(s, avg) {
+  const known = s.drivers[0]?.groups.reduce((a, g) => a + g.n, 0) || 0;
+  if (!known) return '<p class="hint">No install has had its next day yet.</p>';
+  return `<div class="drivers">${s.drivers.map((d) => `<div><h3>${esc(d.name)}</h3>${[...d.groups].sort(order).map((g) => {
+    const p = pct(g.back, g.n);
+    return bar(g.label, p, `${fmt(p)} <small>of ${g.n}</small>`, avg);
+  }).join('')}</div>`).join('')}</div>`;
+}
+
+/** Bucket labels in reading order: numbers by their first figure, words after. */
+function order(a, b) {
+  const v = (l) => {
+    const m = /(\d+)/.exec(l);
+    if (m) return Number(m[1]) + (l.startsWith('<') ? -0.5 : 0) + (l.startsWith('run') ? 1e3 : 0);
+    return ({ 'no run': -3, no: -2, none: -1, yes: 1e2, cleared: 1e2, lobby: 500, results: 600, other: 2e3, unknown: 1e4 })[l] ?? 900;
+  };
+  return v(a.label) - v(b.label) || a.label.localeCompare(b.label);
+}
+
+function firstRun(s) {
+  if (!s.firstRun.length) return '<p class="hint">No first runs finished yet among installs whose next day is over.</p>';
+  const max = Math.max(...s.firstRun.map((r) => r.n));
+  return s.firstRun.map((r) => bar(`wave ${r.wave}`, (100 * r.n) / max, `${r.n} · back ${fmt(pct(r.back, r.n))}`)).join('');
+}
+
+function boards(s) {
+  if (!s.boards.length) return '<p class="hint">No runs finished in the window.</p>';
+  return `<table><tr><th>board</th><th>runs</th><th>won</th><th>clear rate</th><th>median lost wave</th></tr>${s.boards.map((b) => `<tr><td>${esc(b.board)}</td><td>${b.runs}</td><td>${b.won}</td><td>${fmt(pct(b.won, b.runs))}</td><td>${b.medianLostWave}</td></tr>`).join('')}</table>`;
+}
+
+/** Plain-language flags: what looks off and which lever to try first (docs/retention.md has the long form). */
+function diagnose(s, ret) {
+  const out = [];
+  const flag = (level, text) => out.push(`<li><span class="tag ${level}">${level === 'bad' ? 'fix' : level === 'warn' ? 'watch' : level === 'good' ? 'ok' : 'note'}</span>${esc(text)}</li>`);
+  const f = Object.fromEntries(s.funnel.map((x) => [x.step, x.n]));
+  const opened = f['opened the game'] || 0;
+  if (opened < 100) flag('info', `Only ${opened} new installs in the window: below ~100 per cohort every share here can swing by 10 points. Read trends, not single days.`);
+  const d1 = ret[0], d7 = ret[2];
+  if (d1.p !== null) {
+    if (d1.p < GOAL[1][0]) flag('bad', `D1 is ${fmt(d1.p)}. The first session is not giving a reason to come back: look at the funnel and the day-0 groups below before touching late-game content.`);
+    else if (d1.p >= GOAL[1][1]) flag('good', `D1 is ${fmt(d1.p)}: the first session works. The next lever is D7 (goals that span days).`);
+  }
+  if (d7.p !== null && d1.p !== null && d1.p > 0 && d7.p / d1.p < 0.3) flag('warn', `D7 keeps only ${fmt(100 * d7.p / d1.p)} of D1: players who return run out of reasons by day 3–7. Daily tasks, chapter unlock pacing, patrol rewards and training costs are the levers.`);
+  const step = (a, b, limit, text) => { if (f[a] > 20 && pct(f[b], f[a]) < limit) flag('bad', `Only ${fmt(pct(f[b], f[a]))} of new players who ${a} also ${b}. ${text}`); };
+  step('opened the game', 'started a run', 85, 'New players drop before playing: loading time, a blank screen on some devices, or a lobby that hides the Play button.');
+  step('started a run', 'finished the tutorial', 75, 'The first run\'s hints lose people: shorten them or make the first waves easier to read.');
+  step('started a run', 'finished a run', 80, 'Runs get abandoned before they end: the first run may be too long or too hard; check where the first run ends below.');
+  const back = (name) => { const d = s.drivers.find((x) => x.name === name); return d ? d.groups.filter((g) => g.n >= 20).map((g) => ({ ...g, p: pct(g.back, g.n) })) : []; };
+  const runs = back('runs finished on day 0');
+  const best = runs.reduce((a, g) => (g.p > (a?.p ?? -1) ? g : a), null), worst = runs.reduce((a, g) => (g.p < (a?.p ?? 1e9) ? g : a), null);
+  if (best && worst && best !== worst && best.p > 1.5 * worst.p) flag('info', `Players who finished ${best.label} runs on day 0 come back ${fmt(best.p)} vs ${fmt(worst.p)} for ${worst.label}. Getting more players to that point (faster first runs, a reason to play one more) is the lever.`);
+  const left = back('last left the game from').filter((g) => g.label.startsWith('run'));
+  for (const g of left) if (g.p !== null && d1.p !== null && g.p < d1.p * 0.6) flag('warn', `${g.n} players last left mid-run (${g.label}) and only ${fmt(g.p)} came back: something in those waves pushes them out.`);
+  if (s.firstRun.length) {
+    const total = s.firstRun.reduce((a, r) => a + r.n, 0);
+    const peak = s.firstRun.reduce((a, r) => (r.n > a.n ? r : a));
+    if (total >= 30 && peak.n / total > 0.25) flag('warn', `${fmt(pct(peak.n, total))} of first runs end on wave ${peak.wave}: a difficulty wall for new players. Check what spawns there.`);
+  }
+  for (const b of s.boards) if (b.board === 'c1' && b.runs >= 30 && pct(b.won, b.runs) < 10) flag('warn', `Chapter 1 is cleared in only ${fmt(pct(b.won, b.runs))} of runs (median loss at wave ${b.medianLostWave}). A first clear early is a strong reason to return.`);
+  if (!out.length) flag('info', 'Nothing stands out yet.');
+  return `<ul class="diag">${out.join('')}</ul>`;
+}
+</script>
+</body>
+</html>

@@ -19,6 +19,7 @@ import { bracketed } from '../platform/brackets';
 import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import type { Backend, RunRank } from '../net/backend';
+import type { PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
 import { cardText } from './cardText';
@@ -46,6 +47,8 @@ export class Shell {
   /** Screens draw over the run. */
   private readonly ui = new Container();
   private screen: Screen | null = null;
+  /** Milliseconds on screen since the last `leave` event. */
+  private shownMs = 0;
   private game: Game | null = null;
   private hud: RunHud | null = null;
   private chapter = 1;
@@ -100,6 +103,18 @@ export class Shell {
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
     net.track('session', { runs: this.save.runs, level: this.save.level });
+    net.onLeave(() => this.leaving());
+  }
+
+  /** Where the player is as the game goes to the background, and for how long it was on screen. */
+  private leaving(): Record<string, PropValue> {
+    const secs = Math.round(this.shownMs / 1000);
+    this.shownMs = 0;
+    const s = this.screen;
+    if (s instanceof LobbyScreen) return { place: 'lobby', secs };
+    if (s instanceof ResultsScreen) return { place: 'results', secs };
+    if (this.game) return { place: 'run', secs, chapter: this.chapter, wave: Math.max(1, this.game.engine.state.wave) };
+    return { place: 'other', secs };
   }
 
   /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
@@ -379,6 +394,8 @@ export class Shell {
   }
 
   private tick(): void {
+    // frames only come while the game is on screen; a long stall (a breakpoint, a suspended tab) counts as one second
+    this.shownMs += Math.min(this.app.ticker.deltaMS, 1000);
     const { width, height } = this.app.screen;
     const key = `${width}x${height}`;
     if (this.screen && key !== this.screenKey) {

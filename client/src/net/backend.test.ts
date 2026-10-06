@@ -116,6 +116,17 @@ describe('Backend', () => {
     expect(calls).toHaveLength(2);
   });
 
+  it('says where the player was as the game goes to the background, in the same send', async () => {
+    const calls = server({ ok: true, status: 204 });
+    const host = platform();
+    const net = new Backend(host, 'https://api.test', '1.0.0', () => 'en');
+    net.onLeave(() => ({ place: 'run', secs: 42, wave: 7 }));
+    host.hide();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(calls).toHaveLength(1);
+    expect(sent(calls[0]).events).toEqual([{ e: 'leave', t: expect.any(Number), p: { place: 'run', secs: 42, wave: 7 } }]);
+  });
+
   it('enters a run and reads back its rank, null for an answer without one', async () => {
     const calls = server({ ok: true, body: { board: 'c2h', rank: 4, best: true } }, { ok: true, body: { rank: 0 } }, { ok: false, status: 429 });
     const net = new Backend(platform(), 'https://api.test', '1.0.0', () => 'en');
