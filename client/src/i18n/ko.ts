@@ -65,6 +65,8 @@ export const ko: Table<typeof en> = {
     reviveFree: '부활 (수련)',
     language: '언어',
     report: '문제 신고',
+    unfinished: '끝나지 않은 플레이',
+    unfinishedAsk: '멈춘 곳에서 이어서 할까요?',
   },
   report: {
     title: '문제 신고',

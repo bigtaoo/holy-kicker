@@ -69,6 +69,8 @@ const LOCAL = 0;
 
 export class Game {
   readonly engine: Engine;
+  /** Goes on from a restored state, so the input history lacks the ticks before it (no replay). */
+  readonly resumed: boolean;
   private readonly loop = new FixedStep();
   private readonly root = new Container();
   private readonly world = new Container();
@@ -126,14 +128,17 @@ export class Game {
     /** Bound to the host's input once, by the shell, and shared by every run. */
     private readonly stick: DragStick,
     setup: RunSetup,
+    /** A run left unfinished, to go on with (meta/resume.ts); `setup` must match its config. */
+    restored?: SimState,
   ) {
-    const seed = scene.seed || 1 + Math.floor(Math.random() * 0x7ffffffe);
-    this.engine = new Engine(runConfig(scene, seed, setup));
+    const seed = restored?.config.seed ?? (scene.seed || 1 + Math.floor(Math.random() * 0x7ffffffe));
+    this.engine = new Engine(restored?.config ?? runConfig(scene, seed, setup), undefined, restored);
+    this.resumed = !!restored;
     this.autoplay = scene.autoplay ? new Autoplay(LOCAL, seed) : null;
     const chapter = setup.waves > 0;
     const s = this.engine.state;
     // dev: skip ahead, so the next tick begins the asked-for wave
-    if (chapter && scene.wave > 1) {
+    if (chapter && scene.wave > 1 && !restored) {
       s.wave = Math.min(scene.wave, setup.waves) - 1;
       s.waveT = WAVES.ticks - 1;
     }

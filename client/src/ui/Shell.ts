@@ -1,17 +1,19 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, isEliteWave, SUTRA_IDS, TICK_RATE, xpToNext, type Card } from '@hk/engine';
+import { isBossWave, isEliteWave, SUTRA_IDS, TICK_RATE, xpToNext, type Card, type SimState } from '@hk/engine';
 import { setLocale, t, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
 import { rankedRun, type SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
+import { setupOf } from '../game/runSetup';
 import { BALANCE } from '../meta/balance';
 import { evolvedIn } from '../meta/codex';
 import { loadout } from '../meta/loadout';
 import { bump, rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
 import { chooseTrack, doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
+import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, updateSettings } from '../meta/settings';
@@ -25,7 +27,9 @@ import { loadChapterArt, loadMonkArt } from '../art';
 import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
+import { ResumeScreen } from './ResumeScreen';
 import { RunHud } from './RunHud';
+import { storedSettings } from './settingsPanel';
 import { canReport, reportProblem } from './problemReport';
 import { PlayerName } from './playerName';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
@@ -102,8 +106,12 @@ export class Shell {
     this.portal = bracketed(platform.portal);
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
-    // coming back to a run mid-fight is unfair; it waits on the pause panel instead
-    platform.onHide(() => this.hud?.pauseForHost());
+    // coming back to a run mid-fight is unfair; it waits on the pause panel instead, and is kept
+    // in case the game is closed for good
+    platform.onHide(() => {
+      this.hud?.pauseForHost();
+      this.keepRun();
+    });
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
     net.track('session', { runs: this.save.runs, level: this.save.level });
@@ -123,7 +131,9 @@ export class Shell {
 
   /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
   start(direct = false): void {
-    if (direct || !this.save.firstRunDone) this.play(this.scene.chapter || this.save.chapter);
+    const left = direct ? null : loadRun(this.platform.storage);
+    if (left) this.offerResume(left);
+    else if (direct || !this.save.firstRunDone) this.play(this.scene.chapter || this.save.chapter);
     else this.showLobby();
     this.portal.loaded();
   }
@@ -199,25 +209,11 @@ export class Shell {
         this.commit({ ...this.save, relic });
         this.showLobby();
       },
-      settings: {
+      settings: storedSettings(this.platform.storage, this.sound, {
         setLanguage: (locale) => this.setLanguage(locale),
-        volume: () => this.sound.level,
-        setVolume: (volume) => {
-          this.sound.setVolume(volume);
-          updateSettings(this.platform.storage, { volume });
-        },
-        music: () => this.sound.musicLevel,
-        setMusic: (music) => {
-          this.sound.setMusicVolume(music);
-          updateSettings(this.platform.storage, { music });
-        },
-        quality: () => loadSettings(this.platform.storage).quality,
-        setQuality: (quality) => {
-          updateSettings(this.platform.storage, { quality });
-          this.onQualityMode(quality);
-        },
+        setQuality: (quality) => this.onQualityMode(quality),
         online: this.net.online,
-      },
+      }),
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
       rewarded: () => this.rewarded('lobby'),
@@ -238,15 +234,27 @@ export class Shell {
     updateSettings(this.platform.storage, { locale });
   }
 
-  /** Starts a run of `chapter` once its art is in (a later chapter's pack or a monk's rig may need fetching). */
-  private play(chapter: number): void {
+  /** The last run was left unfinished: go on with it, or give it up (settled like a give-up in the run). */
+  private offerResume(left: SavedRun): void {
+    const { config: c, outcome, players } = left.state;
+    const giveUp = () => {
+      [this.chapter, this.hard, this.kills] = [c.chapter, c.hard, left.kills];
+      this.settle(left.state);
+    };
+    // fallen with no revive left, there is nothing to go on with
+    if (outcome === 'lost' && players[0].revives === 0) return giveUp();
+    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => this.play(c.chapter, left), giveUp }));
+  }
+
+  /** Starts a run of `chapter` (or goes on with `left`) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
+  private play(chapter: number, left?: SavedRun): void {
     if (this.loading) return;
     this.loading = true;
-    const monk = this.scene.monk ?? this.save.monk;
+    const monk = left?.state.config.monk ?? this.scene.monk ?? this.save.monk;
     Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)]).then(
       () => {
         this.loading = false;
-        this.startRun(chapter);
+        this.startRun(chapter, left);
       },
       (err: unknown) => {
         // stay in (or go back to) the lobby; the next tap tries again
@@ -257,13 +265,13 @@ export class Shell {
     );
   }
 
-  private startRun(chapter: number): void {
+  private startRun(chapter: number, left?: SavedRun): void {
     this.chapter = chapter;
-    this.hard = this.scene.hard || this.save.hard;
+    this.hard = left ? left.state.config.hard : this.scene.hard || this.save.hard;
     this.setScreen(null);
     const { bonus, freeRevives } = loadout(this.save, chapter, this.hard);
-    this.freeRevives = freeRevives;
-    this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, {
+    this.freeRevives = left ? left.freeRevives : freeRevives;
+    this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, left ? setupOf(left.state.config) : {
       chapter,
       waves: this.scene.waves ? BALANCE.waves : 0,
       revives: BALANCE.revives + freeRevives,
@@ -272,14 +280,14 @@ export class Shell {
       bonus: this.scene.bare ? {} : bonus,
       hard: this.hard,
       monk: this.scene.monk ?? this.save.monk,
-    });
+    }, left?.state);
     this.shownWave = -1;
     this.downShown = false;
     this.clearWait = null;
     this.shownOffer = null;
-    this.kills = 0;
-    // the first run teaches moving; a replayed first chapter does not
-    this.tutorial = this.save.firstRunDone || !this.scene.waves ? null : newTutorial();
+    this.kills = left?.kills ?? 0;
+    // the first run teaches moving; a replayed first chapter (or a resumed run) does not
+    this.tutorial = this.save.firstRunDone || !this.scene.waves || left ? null : newTutorial();
     if (this.quality) this.game.applyQuality(this.quality);
     this.game.onEvents = (events) => {
       for (const e of events) {
@@ -307,7 +315,17 @@ export class Shell {
     // the fast-forward choice carries over from the last run
     this.hud.setFast(loadSettings(this.platform.storage).fast);
     this.portal.gameplayStart();
-    this.net.track('run_start', { chapter, hard: this.hard, monk: this.scene.monk ?? this.save.monk, relic: this.scene.relic ?? this.save.relic });
+    // a resumed fight waits on the pause panel until the player looks (a card choice or the death panel holds it anyway)
+    const s = this.game.engine.state;
+    if (!left) this.net.track('run_start', { chapter, hard: this.hard, monk: this.scene.monk ?? this.save.monk, relic: this.scene.relic ?? this.save.relic });
+    else if (s.outcome === 'playing' && s.players[0].offer.length === 0) this.hud.pauseForHost();
+  }
+
+  /** Keeps the run in play for the next launch (meta/resume.ts); not the sandbox or a dev bot's run. */
+  private keepRun(): void {
+    const s = this.game?.engine.state;
+    if (!s || s.config.waves === 0 || this.scene.autoplay || this.scene.record) return;
+    keepRun(this.platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills });
   }
 
   /** A rewarded ad, counted when it paid (`at` says where it was offered). */
@@ -337,26 +355,35 @@ export class Shell {
     return true;
   }
 
-  /** Waves fully cleared: all of them for a won run, else the ones before the current wave. */
-  private wavesCleared(): number {
-    if (!this.game) return 0;
-    const s = this.game.engine.state;
-    return s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
-  }
-
   private endRun(): void {
     if (!this.game) return;
-    const waves = this.wavesCleared();
-    const p = this.game.engine.state.players[0];
-    const { offerings } = p;
-    const evolved = evolvedIn(p);
-    const rank = this.report(this.game.engine.state, p.level);
+    const s = this.game.engine.state;
     this.game.destroy();
     this.game = null;
     this.hud = null;
     // the death panel already told the portal
     if (!this.downShown) this.portal.gameplayStop();
-    const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings, evolved, kills: this.kills });
+    this.settle(s);
+  }
+
+  /**
+   * Pays out the run that ended in `s` (won, lost or given up) and shows the results. Tells the
+   * backend how it went, and enters it on its board when no dev switch bent the rules; the
+   * results show the install's rank there once it comes (none offline, unranked or failed).
+   */
+  private settle(s: SimState): void {
+    dropRun(this.platform.storage);
+    // waves fully cleared: all of them for a won run, else the ones before the current wave
+    const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
+    const p = s.players[0];
+    const run = {
+      chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
+      level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
+    };
+    this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
+    const rank = rankedRun(this.scene) ? this.net.submitRun({ ...run, ...this.names.board(this.save) }) : Promise.resolve(null);
+    void this.net.flush();
+    const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills });
     const { reward } = settled;
     const now = Date.now();
     const save = bump(bump(bump(settled.save, now, 'runs', 1), now, 'waves', waves), now, 'kills', this.kills);
@@ -364,22 +391,6 @@ export class Shell {
     this.commit(save);
     if (reward.firstClear) this.portal.celebrate();
     this.showResults(reward, waves, rank);
-  }
-
-  /**
-   * Tells the backend how the run went, and enters it on its board when no dev switch bent the
-   * rules; resolves to the install's rank there, or null (offline, unranked, failed).
-   */
-  private report(s: Game['engine']['state'], level: number): Promise<RunRank | null> {
-    const p = s.players[0];
-    const run = {
-      chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
-      level, kills: this.kills, monk: p.monk, relic: p.relicId,
-    };
-    this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
-    const rank = rankedRun(this.scene) ? this.net.submitRun({ ...run, ...this.names.board(this.save) }) : Promise.resolve(null);
-    void this.net.flush();
-    return rank;
   }
 
   private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>): void {
@@ -433,7 +444,11 @@ export class Shell {
       hud.setWave(s.wave);
       const last = s.config.waves;
       const warning = isBossWave(s.wave, last) ? t('run.boss') : isEliteWave(s.wave, last) ? t('run.elite') : null;
-      if (s.wave > 0) hud.announce(s.wave, warning, waveLine(this.chapter, s.wave, last));
+      if (s.wave > 0) {
+        hud.announce(s.wave, warning, waveLine(this.chapter, s.wave, last));
+        // kept at each wave too, in case the game dies without going to the background first
+        this.keepRun();
+      }
     }
     const p = s.players[0];
     if (this.tutorial && !game.paused && p.offer.length === 0) {

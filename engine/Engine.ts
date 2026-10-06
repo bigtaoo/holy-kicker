@@ -37,10 +37,11 @@ export class Engine {
   private readonly grid: SpatialGrid;
   private events: SimEvent[] = [];
 
-  constructor(config: RunConfig, readonly input: InputSource = new LocalInputSource()) {
-    this.state = createState(config);
+  /** A new run of `config`, or with `restored` (snapshot.ts) one that goes on from that state. */
+  constructor(config: RunConfig, readonly input: InputSource = new LocalInputSource(), restored?: SimState) {
+    this.state = restored ?? createState(config);
     this.grid = new SpatialGrid(toFp(config.sep));
-    setup(this.state);
+    if (!restored) setup(this.state);
   }
 
   /** The next tick to be stepped; commands for it are submitted ahead of advance(). */

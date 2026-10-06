@@ -1,7 +1,9 @@
 import { Container, Graphics } from 'pixi.js';
 import { getLocale, localeName, t, type Key, type Locale } from '../i18n';
 import { QUALITY_MODES, type QualityMode } from '../game/quality';
-import { VOLUME_STEPS } from '../meta/settings';
+import type { Sound } from '../audio/Sound';
+import type { KeyValueStore } from '../meta/saveStore';
+import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
 import { languagePanel } from './languagePanel';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
 
@@ -21,6 +23,33 @@ export interface SettingsActions {
   /** Whether the game talks to its backend: the panel then says what it sends. */
   online: boolean;
   close(): void;
+}
+
+/** The panel's actions over the stored settings and the sound; a new language or quality mode also goes to `o`. */
+export function storedSettings(
+  kv: KeyValueStore,
+  sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'online'>,
+): Omit<SettingsActions, 'close'> {
+  return {
+    setLanguage: o.setLanguage,
+    volume: () => sound.level,
+    setVolume: (volume) => {
+      sound.setVolume(volume);
+      updateSettings(kv, { volume });
+    },
+    music: () => sound.musicLevel,
+    setMusic: (music) => {
+      sound.setMusicVolume(music);
+      updateSettings(kv, { music });
+    },
+    quality: () => loadSettings(kv).quality,
+    setQuality: (quality) => {
+      updateSettings(kv, { quality });
+      o.setQuality(quality);
+    },
+    online: o.online,
+  };
 }
 
 const W = 860;

@@ -11,6 +11,8 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
   `FrameBroadcast`), not state. Single player runs the same `Engine.step` with a
   `LocalInputSource`.
 - **Replays and bug reports** are a seed, a config and a command list.
+- **Runs survive a restart.** `snapshot.ts` freezes the state as plain data and restores an
+  engine that steps on exactly as before, so a player who left mid-run can go on next launch.
 - **Frame-rate independent.** A 120 Hz phone and a 30 fps saver mode run the same game.
 
 ## Shape

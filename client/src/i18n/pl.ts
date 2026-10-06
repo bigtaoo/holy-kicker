@@ -65,6 +65,8 @@ export const pl: Table<typeof en> = {
     reviveFree: 'Wskrześ (trening)',
     language: 'Język',
     report: 'Zgłoś problem',
+    unfinished: 'Niedokończona rozgrywka',
+    unfinishedAsk: 'Kontynuować od miejsca, w którym skończyłeś?',
   },
   report: {
     title: 'Zgłoś problem',

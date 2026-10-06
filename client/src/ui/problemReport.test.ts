@@ -82,6 +82,12 @@ describe('draftReport', () => {
     expect(d.replay).toBeNull();
     expect(d.text).toBe('long run');
   });
+
+  it('sends the note alone for a resumed run, whose first ticks are not in the history', () => {
+    const d = draftReport({ ...played(60), resumed: true } as Game, DEFAULT_SCENE, 'after a restart', '');
+    expect(d.replay).toBeNull();
+    expect(d.wave).toBeGreaterThanOrEqual(1);
+  });
 });
 
 describe('reportProblem', () => {

@@ -65,6 +65,8 @@ export const es: Table<typeof en> = {
     reviveFree: 'Revivir (entrenamiento)',
     language: 'Idioma',
     report: 'Informar de un problema',
+    unfinished: 'Partida sin terminar',
+    unfinishedAsk: '¿Seguir donde lo dejaste?',
   },
   report: {
     title: 'Informar de un problema',

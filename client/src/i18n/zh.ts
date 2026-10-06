@@ -65,6 +65,8 @@ export const zh: Table<typeof en> = {
     reviveFree: '复活（修炼所得）',
     language: '语言',
     report: '报告问题',
+    unfinished: '未完成的战斗',
+    unfinishedAsk: '要从上次离开的地方继续吗？',
   },
   report: {
     title: '报告问题',

@@ -65,6 +65,8 @@ export const ru: Table<typeof en> = {
     reviveFree: 'Воскреснуть (тренировка)',
     language: 'Язык',
     report: 'Сообщить о проблеме',
+    unfinished: 'Незавершённый забег',
+    unfinishedAsk: 'Продолжить с того места, где остановились?',
   },
   report: {
     title: 'Сообщить о проблеме',

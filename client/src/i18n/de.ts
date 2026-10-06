@@ -65,6 +65,8 @@ export const de: Table<typeof en> = {
     reviveFree: 'Wiederbeleben (Training)',
     language: 'Sprache',
     report: 'Problem melden',
+    unfinished: 'Unbeendeter Lauf',
+    unfinishedAsk: 'Dort weitermachen, wo du aufgehört hast?',
   },
   report: {
     title: 'Problem melden',

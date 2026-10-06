@@ -26,3 +26,8 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     bonus: setup.bonus ?? {}, hard: setup.hard ?? false, monk: setup.monk ?? 'kicker',
   };
 }
+
+/** The setup a run's config was made from (a resumed run's, meta/resume.ts). */
+export function setupOf(c: RunConfig): RunSetup {
+  return { chapter: c.chapter, waves: c.waves, revives: c.revives, relic: c.relic, sutras: c.sutras, bonus: c.bonus, hard: c.hard, monk: c.monk };
+}

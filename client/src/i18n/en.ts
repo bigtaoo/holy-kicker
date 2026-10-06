@@ -63,6 +63,8 @@ export const en = {
     reviveFree: 'Revive (training)',
     language: 'Language',
     report: 'Report a problem',
+    unfinished: 'Unfinished run',
+    unfinishedAsk: 'Pick up where you left off?',
   },
   report: {
     title: 'Report a problem',

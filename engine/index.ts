@@ -9,6 +9,7 @@ export * from './state';
 export { Engine, ENGINE_VERSION, STEP_ORDER } from './Engine';
 export { hashState } from './hash';
 export { checkReplay, packCommands, replayEngine, takeReplay, unpackCommands, type Replay } from './replay';
+export { restoreState, resumeEngine, takeSnapshot, type Snapshot } from './snapshot';
 export { FP, TICK_RATE, fromFp } from './math/fixed';
 export { beadsRings, bowlLevel, cardPool, evolutions, inZen, magnetOf, maxHpOf, slotStats, stat } from './systems/build';
 export { tierOf } from './systems/drops';

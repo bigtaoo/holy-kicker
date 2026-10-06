@@ -17,8 +17,9 @@ export function draftReport(game: Game, scene: SceneOptions, text: string, devic
   const history = (game.engine.input as LocalInputSource).history;
   const startWave = s.config.waves > 0 && scene.wave > 1 ? Math.min(scene.wave, s.config.waves) : 1;
   const replay = takeReplay(game.engine, history, startWave);
-  // a run too long for the wire still sends its note
-  const fits = replay.cmds.length <= LIMITS.replayNumbers;
+  // a run too long for the wire, or one resumed from a snapshot (its first ticks are not in the
+  // history), still sends its note
+  const fits = replay.cmds.length <= LIMITS.replayNumbers && !game.resumed;
   return {
     text, device, chapter: s.config.chapter, wave: s.wave,
     replay: fits ? { ...replay, config: { ...replay.config } } : null,

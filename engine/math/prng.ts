@@ -11,7 +11,14 @@ export class Prng {
     this.state = mix32(seed >>> 0) || 1;
   }
 
-  /** The raw state, for hashing; does not advance the stream. */
+  /** A stream that goes on from a raw state taken with peek() (a restored snapshot). */
+  static resume(raw: number): Prng {
+    const p = new Prng(0);
+    p.state = raw >>> 0;
+    return p;
+  }
+
+  /** The raw state, for hashing and snapshots; does not advance the stream. */
   peek(): number {
     return this.state >>> 0;
   }

@@ -65,6 +65,8 @@ export const ja: Table<typeof en> = {
     reviveFree: '復活（修行）',
     language: '言語',
     report: '問題を報告',
+    unfinished: '中断したプレイ',
+    unfinishedAsk: '前回の続きから再開しますか？',
   },
   report: {
     title: '問題を報告',
