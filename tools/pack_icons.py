@@ -16,7 +16,10 @@ sys.path.insert(0, str(Path(__file__).parent))
 from cutout import cutout  # noqa: E402
 
 # background showing through a closed shape, seeded by points as fractions of the source image
-HOLES = {"pendant": [(0.52, 0.56)], "sash": [(0.5, 0.2)], "train_copper": [(0.5, 0.5)]}
+HOLES = {
+    "pendant": [(0.52, 0.56)], "sash": [(0.5, 0.2)], "train_copper": [(0.5, 0.5)],
+    "settings": [(0.5, 0.5)], "lock": [(0.5, 0.28)], "copper": [(0.42, 0.345)],
+}
 
 CELL = 128
 COLS = 4

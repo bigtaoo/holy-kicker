@@ -1,25 +1,28 @@
-import { Container, Graphics, type Renderer, type Text } from 'pixi.js';
+import { Container, Graphics, type Renderer, type Text, type Texture } from 'pixi.js';
 import { RELIC_IDS, type RelicId } from '@hk/engine';
-import { formatAmount, t } from '../i18n';
+import { rollDice } from '@hk/protocol';
+import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { earnedSutras, hardOpen, playableChapters, seeTab, TABS, tabLock, tabNew, track, unlockedRelics, type Lock, type Tab } from '../meta/progress';
+import { earnedSutras, hardOpen, playableChapters, track, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
 import { gritBonus } from '../meta/loadout';
-import { buyMonk, chooseMonk, monkAffordable, monkPrice } from '../meta/monks';
+import { buyMonk, chooseMonk, monkPrice } from '../meta/monks';
 import { train } from '../meta/training';
-import { iconSprite, type IconSheet } from './buildBar';
+import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
-import { EconomyUi, shopHeight, shopWaiting, type LobbyTrack } from './lobbyEconomy';
+import { EconomyUi, shopHeight, type LobbyTrack } from './lobbyEconomy';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
+import { scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
 import { monkPanel } from './monkPanel';
+import type { PlayerName } from './playerName';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
 import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
 import { BoardUi, type FetchBoard } from './boardPanel';
-import { COLORS, button, dot, fit, label, panel } from './widgets';
+import { COLORS, button, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
 // chests and the relic to play with, PLAY with the patrol and daily tasks under it, and five
@@ -42,13 +45,10 @@ export interface LobbyActions {
   rewarded(): Promise<boolean>;
   /** Fetches a leaderboard; null offline (no Ranks button then). */
   board: FetchBoard | null;
+
   track: LobbyTrack;
 }
 
-const TOP_H = 150;
-const TAB_H = 190;
-/** How far the bars reach past the frame, over the safe-area bands (more than any inset). */
-const BLEED = 800;
 const RELIC_R = 60;
 
 function lockText(lock: Lock): string {
@@ -78,10 +78,12 @@ export class LobbyScreen implements Screen {
 
   constructor(
     private save: SaveData,
-    private readonly userName: string | null,
+    /** The player's name (ui/playerName.ts). */
+    private readonly names: PlayerName,
     private readonly actions: LobbyActions,
     private readonly icons: IconSheet,
     private readonly renderer: Renderer,
+    private readonly backdrop: Texture,
   ) {
     const ads = actions.adAvailable();
     void ads.then((ok) => (this.adOk = ok));
@@ -108,15 +110,38 @@ export class LobbyScreen implements Screen {
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
     this.econ.reset();
-    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg));
-    this.topBar(f.w);
+    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg), scenery(f, this.backdrop));
+    // a portal account names the player; everyone else gets a die to roll a new name with
+    const reroll = this.names.portal() ? null : () => {
+      this.change({ ...this.save, dice: rollDice(Math.random) });
+      this.relayout();
+    };
+    this.view.addChild(topBar(f.w, this.save, this.names.shown(this.save), this.icons, {
+      reroll,
+      monks: () => {
+        this.monksOpen = true;
+        this.relayout();
+      },
+      settings: () => {
+        this.settingsOpen = true;
+        this.relayout();
+      },
+    }));
     const midY = TOP_H + (f.h - TOP_H - TAB_H) / 2;
     if (this.tab === 'play') this.playTab(f.w, midY, f.h);
     else if (this.tab === 'codex') this.codexTab(f.w, midY);
     else if (this.tab === 'gear') this.gearTab(f.w, midY);
     else if (this.tab === 'train') this.trainTab(f.w, midY);
     else this.shopTab(f.w, midY);
-    this.tabBar(f.w, f.h);
+    this.view.addChild(tabBar(f.w, f.h, this.save, this.tab, this.icons, {
+      locked: (lock) => this.showToast(lockText(lock)),
+      select: (tab, save) => {
+        if (save !== this.save) this.change(save);
+        this.tab = tab;
+        this.gearOpen = null;
+        this.relayout();
+      },
+    }));
     if (this.tab === 'gear' && this.gearOpen) this.view.addChild(gearDetail(this.save, this.gearOpen, this.icons, f.w, f.h, this.gearActions()));
     const overlay = this.econ.overlay(f.w, f.h);
     if (overlay) this.view.addChild(overlay);
@@ -257,54 +282,6 @@ export class LobbyScreen implements Screen {
     if (this.frame && !this.view.destroyed) this.layout(this.frame);
   }
 
-  private topBar(w: number): void {
-    // the bars run on into the safe-area bands above and below the frame
-    const bar = new Graphics().rect(0, -BLEED, w, TOP_H + BLEED).fill(COLORS.panel);
-    // the avatar is the monk played as; it opens the monk panel
-    const avatar = new Container();
-    avatar.position.set(90, TOP_H / 2);
-    avatar.addChild(new Graphics().circle(0, 0, 58).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 }));
-    // the portrait's head and shoulders, cut to the circle
-    const face = iconSprite(this.icons, `monk_${this.save.monk}`, 230);
-    if (face) {
-      face.y = 62;
-      const mask = new Graphics().circle(0, 0, 53).fill(0xffffff);
-      face.mask = mask;
-      avatar.addChild(face, mask);
-    }
-    if (monkAffordable(this.save)) avatar.addChild(dot(44, -44));
-    avatar.eventMode = 'static';
-    avatar.cursor = 'pointer';
-    avatar.on('pointertap', () => {
-      this.monksOpen = true;
-      this.relayout();
-    });
-    const name = fit(label(this.userName ?? t('lobby.guest'), 44, COLORS.text, { align: 'left' }), 300);
-    name.anchor.set(0, 0.5);
-    name.position.set(160, TOP_H / 2 - 24);
-    const level = label(t('lobby.level', { level: this.save.level }), 40, COLORS.dim);
-    level.anchor.set(0, 0.5);
-    level.position.set(160, TOP_H / 2 + 26);
-    this.view.addChild(bar, avatar, name, level);
-
-    const gear = button('⚙', 100, 100, () => {
-      this.settingsOpen = true;
-      this.relayout();
-    }, { fill: COLORS.panelLocked, size: 56 });
-    gear.position.set(w - 80, TOP_H / 2);
-    this.view.addChild(gear);
-    // currencies right-aligned, left of the settings button
-    let x = w - 160;
-    for (const [amount, color] of [[this.save.jade, COLORS.jade], [this.save.copper, COLORS.copper]] as const) {
-      const text = label(formatAmount(amount), 48);
-      text.anchor.set(1, 0.5);
-      text.position.set(x, TOP_H / 2);
-      const coin = new Graphics().circle(x - text.width - 36, TOP_H / 2, 24).fill(color).stroke({ color: COLORS.outline, width: 5 });
-      this.view.addChild(coin, text);
-      x -= text.width + 110;
-    }
-  }
-
   private playTab(w: number, midY: number, h: number): void {
     const n = this.save.chapter;
     const open = n <= playableChapters(this.save);
@@ -403,7 +380,7 @@ export class LobbyScreen implements Screen {
         c.addChild(icon);
       }
       if (!unlocked) {
-        const l = label('🔒', 40);
+        const l = lockIcon(this.icons, 48);
         l.position.set(RELIC_R * 0.6, RELIC_R * 0.6);
         c.addChild(l);
       }
@@ -418,18 +395,30 @@ export class LobbyScreen implements Screen {
     return row;
   }
 
-  /** The five progress chests of a chapter: gold once claimed, outlined until then. */
+  /** The five progress chests of a chapter over their waves: dimmed with a tick once claimed. */
   private chests(chapter: number): Container {
     const row = new Container();
     const claimed = track(this.save, this.save.hard).chests[chapter - 1];
     BALANCE.chests.forEach((c, i) => {
       const x = (i - 2) * 160;
       const got = (claimed & (1 << i)) !== 0;
-      const box = new Graphics().roundRect(x - 55, 20, 110, 100, 18)
-        .fill(got ? COLORS.saffron : COLORS.panelLocked).stroke({ color: COLORS.outline, width: 6 });
-      const wave = label(String(c.wave), 48, got ? COLORS.outline : COLORS.dim);
-      wave.position.set(x, 70);
-      row.addChild(box, wave);
+      const chest = iconSprite(this.icons, 'chest', 96);
+      if (chest) {
+        chest.position.set(x, 50);
+        if (got) chest.alpha = 0.4;
+        row.addChild(chest);
+      } else {
+        row.addChild(new Graphics().roundRect(x - 45, 10, 90, 80, 16).fill(got ? COLORS.saffron : COLORS.panelLocked).stroke({ color: COLORS.outline, width: 6 }));
+      }
+      if (got) {
+        row.addChild(new Graphics().moveTo(x - 22, 50).lineTo(x - 4, 68).lineTo(x + 28, 30)
+          .stroke({ color: COLORS.outline, width: 22, cap: 'round', join: 'round' })
+          .moveTo(x - 22, 50).lineTo(x - 4, 68).lineTo(x + 28, 30)
+          .stroke({ color: COLORS.jade, width: 12, cap: 'round', join: 'round' }));
+      }
+      const wave = label(String(c.wave), 40, got ? COLORS.dim : COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
+      wave.position.set(x, 112);
+      row.addChild(wave);
     });
     return row;
   }
@@ -447,38 +436,6 @@ export class LobbyScreen implements Screen {
     const tab = this.econ.shopTab();
     tab.position.set(w / 2, midY - shopHeight(this.adOk) / 2);
     this.view.addChild(tab);
-  }
-
-  private tabBar(w: number, h: number): void {
-    const tw = w / TABS.length;
-    this.view.addChild(new Graphics().rect(0, h - TAB_H, w, TAB_H + BLEED).fill(COLORS.panel));
-    TABS.forEach((tab, i) => {
-      const lock = tabLock(this.save, tab);
-      const active = tab === this.tab;
-      const c = new Container();
-      c.position.set(tw * (i + 0.5), h - TAB_H / 2);
-      const bg = new Graphics().roundRect(-tw / 2 + 8, -TAB_H / 2 + 12, tw - 16, TAB_H - 24, 24)
-        .fill(active ? COLORS.saffron : lock ? COLORS.panelLocked : COLORS.panel);
-      const name = fit(label(t(`tab.${tab}` as never), 48, active ? COLORS.outline : lock ? COLORS.dim : COLORS.text), tw - 30);
-      c.addChild(bg, name);
-      if (lock) {
-        const l = label('🔒', 36);
-        l.y = -55;
-        c.addChild(l);
-      } else if (tabNew(this.save, tab) || (tab === 'shop' && shopWaiting(this.save, Date.now()))) {
-        c.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
-      }
-      c.eventMode = 'static';
-      c.cursor = 'pointer';
-      c.on('pointertap', () => {
-        if (lock) return this.showToast(lockText(lock));
-        if (tabNew(this.save, tab)) this.change(seeTab(this.save, tab));
-        this.tab = tab;
-        this.gearOpen = null;
-        this.relayout();
-      });
-      this.view.addChild(c);
-    });
   }
 
   private showToast(text: string): void {

@@ -3,9 +3,18 @@
 A small Node HTTP service, `hk-api`, at **https://hk.gamestao.com**. The game sends it
 analytics batches and finished chapter runs, and reads leaderboards from it. Everything is
 anonymous: an install keeps a random id (`hk.install` in the host's storage), and boards show
-a tag the server derives from that id (HMAC with `HK_TAG_SALT`), never the id itself. The
-client turns the tag into a friendly name from the string table (`board.adjs` / `board.nouns`),
-so nobody types a name and nothing needs moderating.
+a tag the server derives from that id (HMAC with `HK_TAG_SALT`), never the id itself.
+
+**Names.** Nobody types a name, so the boards carry no player-made text to moderate (no
+`msgSecCheck` on WeChat, no approval for user content on Poki). A player signed in to a portal
+account goes by its name: CrazyGames asks for it, and moderates its names itself. Everyone
+else goes by a dice name, an adjective, a noun and a number from the string tables' lists
+(`board.adjs` / `board.nouns`), rolled on the first launch and rolled again with the die next
+to the name in the lobby (`client/src/ui/playerName.ts`). The server keeps the dice name as one
+integer (`packDice` in `src/protocol.ts`), so each viewer reads it in their own language. It
+takes a text name from `crazygames` only, checked by `checkName` (length, letters, a blocklist)
+as a guard against a client that sends something else as one. A row without either (runs from
+before names) goes by a dice name made from its tag.
 
 ## API
 
@@ -13,7 +22,8 @@ so nobody types a name and nothing needs moderating.
 |---|---|
 | `GET /health` | `{ ok: true }` |
 | `POST /v1/events` | an `EventBatch` (src/protocol.ts): up to 50 events, names from `EVENT_NAMES` → 204 |
-| `POST /v1/runs` | a `RunEntry`: kept if it is the install's best on its board → `{ board, rank, best, tag }` |
+| `POST /v1/runs` | a `RunEntry`: kept if it is the install's best on its board → `{ board, rank, best, tag }`; its `name` or `dice`, if the rules take it, becomes the install's name |
+| `POST /v1/name` | a `NameEntry` `{ install, host, name \| dice }`: the install's name on every board → `{ ok: true }`, or 400 `bad name` |
 | `GET /v1/boards/c<N>[h]` | top 50 of chapter N (h: hard), plus the caller's own row (header `x-hk-install`) |
 | `POST /v1/reports` | a `Report`: the player's note, device, chapter and wave, and a replay of the run (up to 3 MB) → `{ id }` |
 | `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
@@ -44,7 +54,7 @@ until the backend has an ICP-filed domain on the mini-game's request whitelist.
 
 MongoDB Atlas, a cluster of its own (`cluster0.qcp0r96`, not daydayup's), database `holykicker` (`HK_MONGO_DB`):
 `events` (TTL 90 days), `installs` (one per install, src/players.ts: first day, host, first build, the days it came back and its day 0, folded as batches arrive), `active` (install per day), `best` (one
-per install per board), `reports` (TTL 180 days). Without `HK_MONGO_URI` the server keeps everything in memory
+per install per board), `names` (one per named install, by tag: a portal name or a dice name), `reports` (TTL 180 days). Without `HK_MONGO_URI` the server keeps everything in memory
 (development, tests).
 
 ## Running

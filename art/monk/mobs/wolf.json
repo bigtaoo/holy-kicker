@@ -1,6 +1,6 @@
 {
  "source": "snow/wolf_v2.png",
- "out": "../../../client/public/art/mobs/wolf",
+ "out": "../../../client/public/art/ch3/mobs/wolf",
  "frames": 10,
  "fps": 16,
  "height": 180,

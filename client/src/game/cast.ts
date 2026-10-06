@@ -65,10 +65,11 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
     swarm: [look(wispSheet(renderer), 'swarm', [18, 6])],
     emerger: [look(ghost, 'emerger', [27, 9])],
     shooter: [market && chapter >= 4 ? look(market.lantern, 'shooter', [26, 8], true, undefined, LANTERN_HEIGHT) : look(art.marsh.toad, 'shooter', [34, 10])],
-    wolf: [look(snow.wolf, 'wolf', [38, 10])],
-    caster: [look(snow.wraith, 'caster', [26, 8])],
-    skeleton: [look(snow.skeleton, 'skeleton', [28, 9])],
-    shard: [look(snow.shard, 'shard', [26, 8])],
+    // chapter 3's kinds only spawn once its pack is loaded; the fox stands in before that
+    wolf: [look(snow?.wolf ?? art.fox, 'wolf', [38, 10])],
+    caster: [look(snow?.wraith ?? art.jiangshi, 'caster', [26, 8])],
+    skeleton: [look(snow?.skeleton ?? art.jiangshi, 'skeleton', [28, 9])],
+    shard: [look(snow?.shard ?? art.jiangshi, 'shard', [26, 8])],
     effigy: [look(effigy, 'effigy', [28, 9])],
     scrap: [look(effigy, 'scrap', [18, 6])],
     monk: [look(art.peak?.monk ?? art.jiangshi, 'monk', [30, 9])],
@@ -80,7 +81,7 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
   const looks: Record<EliteKind, MobLook> = {
     charger: { sheet: art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14], shadowTex },
     toadKing: { sheet: art.marsh.toadKing, height: TOAD_KING_HEIGHT, facesLeft: true, shadow: [70, 20], shadowTex },
-    wolfLeader: { sheet: art.snow.wolfLeader, height: WOLF_LEADER_HEIGHT, facesLeft: true, shadow: [64, 16], shadowTex },
+    wolfLeader: { sheet: art.snow?.wolfLeader ?? art.jiangshi, height: WOLF_LEADER_HEIGHT, facesLeft: true, shadow: [64, 16], shadowTex },
     doorGod: { sheet: art.ghost?.doorGod ?? art.jiangshi, height: DOOR_GOD_HEIGHT, facesLeft: true, shadow: [60, 18], shadowTex },
   };
   const ring = () => makeRing(renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
@@ -105,7 +106,7 @@ export function makeBosses(renderer: Renderer, world: Container, art: Art, scene
   const views: BossViews = {};
   if (kinds.has('abbot') && art.boss) views.abbot = new Boss(renderer, world, art.boss, shadowTex, scene.bossSize, fx);
   if (kinds.has('carp')) views.carp = new CarpView(renderer, art.marsh.carp, world, shadowTex, scene.bossSize, fx);
-  if (kinds.has('witch')) views.witch = new StaffBossView(renderer, art.snow.witch, world, shadowTex, scene.bossSize * WITCH_SCALE, fx, WITCH_STYLE);
+  if (kinds.has('witch') && art.snow) views.witch = new StaffBossView(renderer, art.snow.witch, world, shadowTex, scene.bossSize * WITCH_SCALE, fx, WITCH_STYLE);
   if (kinds.has('judge') && art.ghost) views.judge = new StaffBossView(renderer, art.ghost.judge, world, shadowTex, scene.bossSize * JUDGE_SCALE, fx, JUDGE_STYLE);
   if (kinds.has('demon') && art.peak) views.demon = new DemonView(renderer, world, art.peak.demon, shadowTex, scene.bossSize * DEMON_SCALE, fx);
   return Object.keys(views).length > 0 ? new BossStage(views) : null;

@@ -1,6 +1,6 @@
 {
  "source": "snow/shard_v2.png",
- "out": "../../../client/public/art/mobs/shard",
+ "out": "../../../client/public/art/ch3/mobs/shard",
  "frames": 8,
  "fps": 18,
  "height": 120,

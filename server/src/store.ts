@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { counted, dayOffset, emptyDayZero, foldDayZero, type Player } from './players';
-import { boardId, runScore, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { boardId, runScore, type BoardName, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from './stats';
 
@@ -12,6 +12,8 @@ export interface Store {
   addEvents(batch: EventBatch, now: number): Promise<void>;
   /** Keeps the run if it is the install's best on its board; returns the run's board and the install's rank there. */
   submitRun(run: RunEntry, tag: string, now: number): Promise<{ board: string; rank: number; best: boolean }>;
+  /** Keeps the name the boards show for `tag`: a portal account's or a dice name. */
+  setName(tag: string, name: BoardName, now: number): Promise<void>;
   /** The top `limit` rows of a board, and the row of `tag` (may be null). */
   board(board: string, limit: number, tag: string | null): Promise<BoardReply>;
   /** The last `days` days of numbers for the operator, for one host or (null) all of them. */
@@ -43,9 +45,15 @@ export function summaryOf(r: Report, id: string, at: number): ReportSummary {
   return { ...rest, id, at, ticks: replay?.tick ?? 0 };
 }
 
-export function rowOf(b: Best, rank: number): BoardRow {
+/** A run's name, if it carried one. */
+export function runName(run: RunEntry): BoardName | null {
+  return run.name ? { name: run.name } : run.dice ? { dice: run.dice } : null;
+}
+
+export function rowOf(b: Best, rank: number, names: Map<string, BoardName>): BoardRow {
   const r = b.run;
-  return { rank, tag: b.tag, won: r.won, wave: r.wave, tenths: r.tenths, level: r.level, monk: r.monk, relic: r.relic };
+  const n = names.get(b.tag);
+  return { rank, tag: b.tag, name: n && 'name' in n ? n.name : '', dice: n && 'dice' in n ? n.dice : 0, won: r.won, wave: r.wave, tenths: r.tenths, level: r.level, monk: r.monk, relic: r.relic };
 }
 
 /** In memory, for the tests and `npm run dev -w server` without HK_MONGO_URI. */
@@ -56,6 +64,8 @@ export class MemoryStore implements Store {
   /** `day/install` of every day an install sent anything. */
   private readonly active = new Set<string>();
   private readonly best = new Map<string, Best>();
+  /** The boards' names by tag. */
+  readonly names = new Map<string, BoardName>();
 
   async addEvents(batch: EventBatch, now: number): Promise<void> {
     this.events.push({ ...batch, at: now });
@@ -81,13 +91,20 @@ export class MemoryStore implements Store {
     const old = this.best.get(key);
     const best = !old || score > old.score;
     if (best) this.best.set(key, { board, tag, score, run, at: now });
+    const name = runName(run);
+    if (name) await this.setName(tag, name);
     return { board, rank: this.sorted(board).findIndex((b) => b.tag === tag) + 1, best };
   }
 
   async board(board: string, limit: number, tag: string | null): Promise<BoardReply> {
     const all = this.sorted(board);
     const i = tag ? all.findIndex((b) => b.tag === tag) : -1;
-    return { board, total: all.length, rows: all.slice(0, limit).map((b, k) => rowOf(b, k + 1)), mine: i >= 0 ? rowOf(all[i], i + 1) : null };
+    const rows = all.slice(0, limit).map((b, k) => rowOf(b, k + 1, this.names));
+    return { board, total: all.length, rows, mine: i >= 0 ? rowOf(all[i], i + 1, this.names) : null };
+  }
+
+  async setName(tag: string, name: BoardName): Promise<void> {
+    this.names.set(tag, name);
   }
 
   async stats(days: number, now: number, host: Host | null): Promise<Stats> {

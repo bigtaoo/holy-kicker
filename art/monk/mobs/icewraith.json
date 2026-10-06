@@ -1,6 +1,6 @@
 {
  "source": "snow/icewraith_v2.png",
- "out": "../../../client/public/art/mobs/icewraith",
+ "out": "../../../client/public/art/ch3/mobs/icewraith",
  "frames": 10,
  "fps": 9,
  "height": 190,

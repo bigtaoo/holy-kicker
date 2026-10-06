@@ -1,12 +1,13 @@
 import { Container } from 'pixi.js';
-import { boardId, type BoardReply, type BoardRow } from '@hk/protocol';
+import { boardId, DICE, packDice, unpackDice, type BoardReply, type BoardRow } from '@hk/protocol';
 import { t } from '../i18n';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The leaderboard (server/README.md): a button on the lobby's chapter card opens the board of
-// that chapter and mode, fetched from the backend each time. Players are anonymous: each row
-// carries a tag the server made from the install, and the name shown is built from it here, so
-// nobody types a name and nothing needs moderating. Offline (no backend) there is no button.
+// that chapter and mode, fetched from the backend each time. Each row carries a tag the server
+// made from the install and the player's name (ui/playerName.ts): a portal account's, else a
+// dice name read here in the viewer's language; a row without either goes by a dice name made
+// from the tag. Offline (no backend) there is no button.
 
 export type FetchBoard = (id: string) => Promise<BoardReply | null>;
 
@@ -15,13 +16,19 @@ const BOX_H = 1640;
 const ROWS = 20;
 const ROW_H = 58;
 
-/** A friendly name for a tag, the same on every screen: "{adj} {noun} {n}" from the string table. */
+/** A dice name (protocol.ts packDice) in the player's language: "{adj} {noun} {n}" from the string table; '' for none. */
+export function diceName(dice: number): string {
+  const d = unpackDice(dice);
+  if (!d) return '';
+  return t('board.name', { adj: t('board.adjs').split('|')[d.adj], noun: t('board.nouns').split('|')[d.noun], n: d.num });
+}
+
+/** The dice name of a row that came without a name, made from its tag (the same on every screen). */
 export function nameOf(tag: string): string {
   let h = 0;
   for (let i = 0; i < tag.length; i++) h = (h * 31 + tag.charCodeAt(i)) >>> 0;
-  const adjs = t('board.adjs').split('|');
-  const nouns = t('board.nouns').split('|');
-  return t('board.name', { adj: adjs[h % adjs.length], noun: nouns[Math.floor(h / adjs.length) % nouns.length], n: 10 + (Math.floor(h / 1000) % 90) });
+  const w = DICE.words;
+  return diceName(packDice(h % w, Math.floor(h / w) % w, DICE.numMin + (Math.floor(h / 1000) % (DICE.numMax - DICE.numMin + 1))));
 }
 
 /** What a row reached: a won run's time, else the wave it fell on. */
@@ -116,7 +123,8 @@ function rowView(r: BoardRow, mine: boolean, y: number): Container {
   const rank = label(String(r.rank), 44, fill);
   rank.anchor.set(1, 0.5);
   rank.x = -330;
-  const who = fit(label(mine ? t('board.you', { name: nameOf(r.tag) }) : nameOf(r.tag), 44, fill, { align: 'left' }), 470);
+  const name = r.name || diceName(r.dice) || nameOf(r.tag);
+  const who = fit(label(mine ? t('board.you', { name }) : name, 44, fill, { align: 'left' }), 470);
   who.anchor.set(0, 0.5);
   who.x = -300;
   const result = label(resultOf(r), 44, r.won ? COLORS.jade : fill);

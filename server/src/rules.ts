@@ -1,4 +1,4 @@
-import { EVENT_NAMES, HOSTS, LIMITS, type ClientEvent, type EventBatch, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
+import { EVENT_NAMES, HOSTS, LIMITS, checkName, isDice, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
 
 // Checks what clients send before anything is stored. Pure: each check takes the parsed JSON
 // (unknown) and returns the clean value or the reason it was refused. Anything unexpected is
@@ -76,13 +76,31 @@ export function checkRun(v: unknown): Checked<RunEntry> {
   if (!isInt(v.tenths, v.wave * LIMITS.minSecondsPerWave * 10, LIMITS.maxSeconds * 10)) return { ok: false, reason: 'bad time' };
   if (!isInt(v.level, 1, LIMITS.maxLevel) || !isInt(v.kills, 0, LIMITS.maxKills)) return { ok: false, reason: 'bad stats' };
   if (!isShort(v.monk, 16) || !isShort(v.relic, 16)) return { ok: false, reason: 'bad build' };
+  // a name the rules refuse costs the run nothing: the board just keeps the name it had
+  const name = nameOf(v.host, v.name, v.dice);
   return {
     ok: true,
     value: {
       install: v.install, host: v.host, build: v.build, chapter: v.chapter, hard: v.hard, won: v.won, wave: v.wave,
-      tenths: v.tenths, level: v.level, kills: v.kills, monk: v.monk, relic: v.relic,
+      tenths: v.tenths, level: v.level, kills: v.kills, monk: v.monk, relic: v.relic, ...(name ?? {}),
     },
   };
+}
+
+/** A name as NameEntry allows it: a portal account's (CrazyGames only), else a dice name; null for neither. */
+function nameOf(host: Host, name: unknown, dice: unknown): BoardName | null {
+  if (typeof name === 'string') {
+    const c = host === 'crazygames' && name.length <= 4 * LIMITS.nameMax ? checkName(name) : null;
+    return c?.ok ? { name: c.name } : null;
+  }
+  return isDice(dice) ? { dice } : null;
+}
+
+/** A player's name for the boards (a NameEntry). */
+export function checkNameEntry(v: unknown): Checked<{ install: string; name: BoardName }> {
+  if (!isObj(v) || !isId(v.install) || !isHost(v.host)) return { ok: false, reason: 'bad id' };
+  const name = nameOf(v.host, v.name, v.dice);
+  return name ? { ok: true, value: { install: v.install, name } } : { ok: false, reason: 'bad name' };
 }
 
 function checkReplay(v: unknown): ReplayWire | null | undefined {

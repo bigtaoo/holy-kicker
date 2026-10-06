@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { LIMITS, runScore, type RunEntry } from './protocol';
+import { DICE, LIMITS, checkName, packDice, rollDice, runScore, unpackDice, type RunEntry } from './protocol';
 import { Limiter, route, tagOf, type Deps, type Req } from './routes';
 import { checkBatch, checkReport, checkRun } from './rules';
 import { MemoryStore } from './store';
@@ -85,6 +85,44 @@ describe('routes', () => {
     expect(JSON.stringify(b.body)).not.toContain(INSTALL);
     expect(((await route(req('GET', '/v1/boards/c1h'), d)).body as { total: number }).total).toBe(1);
     expect((await route(req('GET', '/v1/boards/c9'), d)).status).toBe(400);
+  });
+
+  it('shows portal names from CrazyGames and dice names from everyone', async () => {
+    const d = deps();
+    const dice = packDice(3, 7, 42);
+    await route(req('POST', '/v1/runs', run()), d);
+    await route(req('POST', '/v1/runs', run({ install: 'zzzzzzzz9999', wave: 30, tenths: 5000, name: 'kicker42' })), d);
+    expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', dice }), d)).body).toEqual({ ok: true });
+    // only a portal with accounts names players in text, and a dice name has to be one
+    expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', name: 'Iron Head' }), d)).status).toBe(400);
+    expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', dice: 0 }), d)).status).toBe(400);
+    expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'crazygames', name: 'Sh1t head' }), d)).status).toBe(400);
+    // a run whose name is refused still counts, under the name kept before
+    expect((await route(req('POST', '/v1/runs', run({ wave: 25, tenths: 4000, host: 'poki', name: 'Iron Head' })), d)).status).toBe(200);
+    const b = (await route(req('GET', '/v1/boards/c1', undefined, { 'x-hk-install': INSTALL }), d)).body as { rows: { name: string; dice: number }[]; mine: { dice: number } };
+    expect(b.rows.map((r) => [r.name, r.dice])).toEqual([['kicker42', 0], ['', dice]]);
+    expect(b.mine.dice).toBe(dice);
+    // signing in to the portal later swaps the dice name for the account's
+    await route(req('POST', '/v1/name', { install: INSTALL, host: 'crazygames', name: 'IronHead' }), d);
+    expect(((await route(req('GET', '/v1/boards/c1'), d)).body as { rows: { name: string; dice: number }[] }).rows[1]).toMatchObject({ name: 'IronHead', dice: 0 });
+    expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', dice }), deps({ allow: () => false }))).status).toBe(429);
+  });
+
+  it('packs every dice name into one integer and back', () => {
+    expect(unpackDice(packDice(15, 15, DICE.numMax))).toEqual({ adj: 15, noun: 15, num: DICE.numMax });
+    expect(unpackDice(packDice(0, 0, DICE.numMin))).toEqual({ adj: 0, noun: 0, num: DICE.numMin });
+    expect(unpackDice(packDice(15, 15, DICE.numMax) + 1)).toBeNull();
+    expect(unpackDice(rollDice(() => 0.9999999))).toEqual({ adj: 15, noun: 15, num: DICE.numMax });
+    expect(unpackDice(rollDice(() => 0))).toEqual({ adj: 0, noun: 0, num: DICE.numMin });
+  });
+
+  it('takes portal names in any script and refuses rude or staff ones however spelt', () => {
+    for (const ok of ['小和尚', 'Kicker Monk', 'Сергей_7', '김민수', 'glass', 'Computer', 'Rick Tracy', 'Shotgun', 'Slot 2024', 'Bob 1987']) expect(checkName(ok)).toMatchObject({ ok: true });
+    expect(checkName('a')).toEqual({ ok: false, why: 'length' });
+    expect(checkName('x'.repeat(LIMITS.nameMax + 1))).toEqual({ ok: false, why: 'length' });
+    expect(checkName('<b>hi</b>')).toEqual({ ok: false, why: 'chars' });
+    expect(checkName('😀😀')).toEqual({ ok: false, why: 'chars' });
+    for (const rude of ['F u c k', 'F4ck off', 'sh1t', 'b1tch', '5lut', 'f4ggot', 'a55', 'D1ck', 'big ass', '傻逼玩家', 'Admin', 'ＡＤＭＩＮ', 'kurwa_mac']) expect(checkName(rude)).toEqual({ ok: false, why: 'rude' });
   });
 
   it('guards the stats with the admin key and limits each caller', async () => {

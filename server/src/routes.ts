@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { HOSTS, LIMITS, type Host } from './protocol';
-import { checkBatch, checkReport, checkRun } from './rules';
+import { checkBatch, checkNameEntry, checkReport, checkRun } from './rules';
 import type { Store } from './store';
 
 // The HTTP API (server/README.md), as a function from a parsed request to a reply so the tests
@@ -71,6 +71,14 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     return { status: 200, body: { ...r, tag } };
   }
 
+  if (method === 'POST' && path === '/v1/name') {
+    if (!d.allow('names', req.ip)) return { status: 429 };
+    const c = checkNameEntry(req.body);
+    if (!c.ok) return bad(c.reason);
+    await d.store.setName(tagOf(c.value.install, d.tagSalt), c.value.name, d.now());
+    return { status: 200, body: { ok: true } };
+  }
+
   const board = path.startsWith('/v1/boards/') ? path.slice('/v1/boards/'.length) : null;
   if (method === 'GET' && board !== null) {
     if (!d.allow('boards', req.ip)) return { status: 429 };
@@ -136,5 +144,6 @@ export const RATES = {
   events: { burst: 20, perMinute: 30 },
   runs: { burst: 5, perMinute: 6 },
   boards: { burst: 20, perMinute: 30 },
+  names: { burst: 5, perMinute: 4 },
   reports: { burst: 3, perMinute: 2 },
 };

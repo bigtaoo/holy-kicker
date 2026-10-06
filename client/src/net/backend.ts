@@ -1,4 +1,4 @@
-import type { BoardReply, EventBatch, EventName, Host, PropValue, Report, RunEntry } from '@hk/protocol';
+import type { BoardName, BoardReply, EventBatch, EventName, Host, NameEntry, PropValue, Report, RunEntry } from '@hk/protocol';
 import type { Platform } from '../platform/types';
 import { EventQueue, newId } from './events';
 
@@ -102,6 +102,12 @@ export class Backend {
     const entry: RunEntry = { ...run, install: this.install, host: this.platform.host, build: this.build };
     const r = (await this.send('POST', '/v1/runs', entry)) as Partial<RunRank> | null;
     return r && typeof r.rank === 'number' && r.rank > 0 ? (r as RunRank) : null;
+  }
+
+  /** Gives the install its name on the boards; whether the server took it. */
+  async sendName(name: BoardName): Promise<boolean> {
+    const entry: NameEntry = { install: this.install, host: this.platform.host, ...name };
+    return (await this.send('POST', '/v1/name', entry)) !== null;
   }
 
   /** Sends a problem report with its replay; whether the server kept it. */

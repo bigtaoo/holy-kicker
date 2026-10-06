@@ -7,6 +7,10 @@
   },
   "subpackages": [
     {
+      "name": "ch3",
+      "root": "art/ch3/"
+    },
+    {
       "name": "ch4",
       "root": "art/ch4/"
     },

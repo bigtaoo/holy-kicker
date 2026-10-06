@@ -1,6 +1,6 @@
 {
  "source": "snow/witch_v2.png",
- "out": "../../../client/public/art/mobs/witch",
+ "out": "../../../client/public/art/ch3/mobs/witch",
  "frames": 12,
  "fps": 9,
  "height": 380,

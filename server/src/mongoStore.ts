@@ -1,9 +1,9 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
 import { counted, dayOffset, emptyDayZero, foldDayZero, type Player } from './players';
-import { boardId, runScore, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { boardId, runScore, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from './stats';
-import { reportId, rowOf, summaryOf, type Store } from './store';
+import { reportId, rowOf, runName, summaryOf, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
 // Collections:
@@ -12,6 +12,7 @@ import { reportId, rowOf, summaryOf, type Store } from './store';
 //            what it did on day 0 (new players, retention and its drivers)
 //   active   one per install per day it sent anything (daily actives)
 //   best     one per install per board: its best run
+//   names    one per install that has a name, by its tag: a portal account's name or a dice name
 //   reports  problem reports with their replays, dropped after REPORTS_DAYS
 
 const EVENTS_DAYS = 90;
@@ -52,13 +53,14 @@ export class MongoStore implements Store {
     private readonly active: Collection<{ _id: string; day: string; install: string; host: Host }>,
     private readonly best: Collection<BestDoc>,
     private readonly reportDocs: Collection<ReportDoc>,
+    private readonly names: Collection<{ _id: string; name?: string; dice?: number; at: Date }>,
   ) {}
 
   static async open(uri: string, dbName: string): Promise<MongoStore> {
     const client = new MongoClient(uri, { maxPoolSize: 10, appName: 'holykicker' });
     await client.connect();
     const db: Db = client.db(dbName);
-    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'));
+    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'), db.collection('names'));
     await Promise.all([
       s.events.createIndex({ at: 1 }, { expireAfterSeconds: EVENTS_DAYS * 86_400 }),
       s.events.createIndex({ e: 1, day: 1 }),
@@ -116,6 +118,8 @@ export class MongoStore implements Store {
     const best = !old || score > old.score;
     const doc: BestDoc = best ? { _id, board, tag, score, run, at: now } : old!;
     if (best) await this.best.replaceOne({ _id }, doc, { upsert: true });
+    const name = runName(run);
+    if (name) await this.setName(tag, name, now);
     return { board, rank: await this.rankOf(doc), best };
   }
 
@@ -125,7 +129,15 @@ export class MongoStore implements Store {
       this.best.countDocuments({ board }),
       tag ? this.best.findOne({ _id: `${board}/${tag}` }) : null,
     ]);
-    return { board, total, rows: top.map((b, k) => rowOf(b, k + 1)), mine: own ? rowOf(own, await this.rankOf(own)) : null };
+    const tags = [...new Set([...top.map((b) => b.tag), ...(own ? [own.tag] : [])])];
+    const docs = await this.names.find({ _id: { $in: tags } }).toArray();
+    const names = new Map(docs.map((n): [string, BoardName] => [n._id, n.name ? { name: n.name } : { dice: n.dice ?? 0 }]));
+    return { board, total, rows: top.map((b, k) => rowOf(b, k + 1, names)), mine: own ? rowOf(own, await this.rankOf(own), names) : null };
+  }
+
+  async setName(tag: string, name: BoardName, now: number): Promise<void> {
+    // replaced whole, so a dice name drops a portal name kept before and the other way round
+    await this.names.replaceOne({ _id: tag }, { ...name, at: new Date(now) }, { upsert: true });
   }
 
   async stats(days: number, now: number, host: Host | null): Promise<Stats> {

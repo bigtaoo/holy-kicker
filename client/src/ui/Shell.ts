@@ -27,6 +27,7 @@ import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
 import { canReport, reportProblem } from './problemReport';
+import { PlayerName } from './playerName';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
 import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
 import { buildSlots, spellCharges } from './buildSlots';
@@ -79,6 +80,7 @@ export class Shell {
   private readonly ads: Ads;
   /** The host's session hooks, each gameplay start or stop sent once. */
   private readonly portal: Portal;
+  private readonly names: PlayerName;
 
   constructor(
     private readonly app: Application,
@@ -91,7 +93,9 @@ export class Shell {
     /** A desktop: the first run's move hint also names the keyboard. */
     private readonly keys = false,
   ) {
-    this.save = store.load();
+    this.names = new PlayerName(net, platform.storage, () => this.portal.userName());
+    this.save = this.names.withDice(store.load());
+    store.save(this.save);
     const settings = loadSettings(platform.storage);
     this.sound = new Sound(platform, settings.volume, settings.music);
     this.ads = this.sound.muteDuring(platform.ads);
@@ -142,7 +146,7 @@ export class Shell {
 
   /** Re-reads the save after the portal account changed (a guest signed in). */
   reloadSave(): void {
-    this.save = this.store.load();
+    this.save = this.names.withDice(this.store.load());
     if (this.screen instanceof LobbyScreen) this.showLobby();
   }
 
@@ -169,6 +173,8 @@ export class Shell {
   private commit(save: SaveData): void {
     this.save = save;
     this.store.save(save);
+    // a rolled name reaches the boards from here
+    this.names.sync(save);
   }
 
   /** `settings` opens the lobby on its settings panel (after a language change). */
@@ -177,7 +183,9 @@ export class Shell {
     const now = Date.now();
     const save = startPatrol(fixPatrolClock(rollDay(this.save, now), now), now);
     if (save !== this.save) this.commit(save);
-    const lobby = new LobbyScreen(this.save, this.portal.userName(), {
+    // a renamed or newly signed-in portal account reaches the boards from here
+    this.names.sync(this.save);
+    const lobby = new LobbyScreen(this.save, this.names, {
       play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => {
         this.commit({ ...this.save, chapter });
@@ -215,7 +223,7 @@ export class Shell {
       rewarded: () => this.rewarded('lobby'),
       board: this.net.online ? (id) => this.net.board(id) : null,
       track: (e, p) => this.net.track(e, p),
-    }, this.art.icons, this.app.renderer);
+    }, this.art.icons, this.app.renderer, this.art.lobby);
     if (settings) lobby.openSettings();
     this.setScreen(lobby);
   }
@@ -369,7 +377,7 @@ export class Shell {
       level, kills: this.kills, monk: p.monk, relic: p.relicId,
     };
     this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
-    const rank = rankedRun(this.scene) ? this.net.submitRun(run) : Promise.resolve(null);
+    const rank = rankedRun(this.scene) ? this.net.submitRun({ ...run, ...this.names.board(this.save) }) : Promise.resolve(null);
     void this.net.flush();
     return rank;
   }

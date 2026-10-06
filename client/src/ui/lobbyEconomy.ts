@@ -1,5 +1,5 @@
 import type { PropValue } from '@hk/protocol';
-import { Container, Graphics, type Text } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
@@ -9,9 +9,9 @@ import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } fr
 import type { SaveData } from '../meta/save';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
 import type { TasksView } from './achievePanel';
-import { iconSprite, type IconSheet } from './buildBar';
+import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live } from './economyPanels';
-import { COLORS, button, dot, fit, label, panel } from './widgets';
+import { COLORS, button, buttonLabel, dot, fit, label, panel } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
 // chests, the patrol and daily-task buttons under PLAY, and their panels. Holds what is open
@@ -88,17 +88,17 @@ export class EconomyUi {
     const row = new Container();
     const save = this.host.save();
     const open = patrolOpen(save);
-    const patrol = button('', 460, 130, () => {
+    const patrol = button(' ', 460, 130, () => {
       if (!open) return this.host.toast(t('tab.unlockChapter', { n: BALANCE.unlocks.shopChapter }));
       this.show('patrol');
-    }, { fill: open ? COLORS.panel : COLORS.panelLocked, size: 46 });
+    }, { fill: open ? COLORS.panel : COLORS.panelLocked, size: 46, icon: open ? iconSprite(this.host.icons, 'patrol', 84) : lockIcon(this.host.icons, 64) });
     patrol.x = -250;
-    const text = patrol.children[1] as Text;
+    const text = buttonLabel(patrol);
     const full = dot(205, -50);
     const refresh = () => {
       const hours = patrolHours(this.host.save(), this.now());
-      text.text = open ? `${t('patrol.title')} ${hours >= BALANCE.patrol.capHours ? t('patrol.full') : hoursText(hours)}` : `🔒 ${t('patrol.title')}`;
-      fit(text, 420);
+      text.text = open ? `${t('patrol.title')} ${hours >= BALANCE.patrol.capHours ? t('patrol.full') : hoursText(hours)}` : t('patrol.title');
+      fit(text, 320);
       full.visible = open && hours >= BALANCE.patrol.capHours;
     };
     refresh();
@@ -112,7 +112,7 @@ export class EconomyUi {
         this.tasksView = achieve && !daily ? 'achieve' : 'daily';
         this.achievePage = 0;
         this.show('tasks');
-      }, { fill: COLORS.panel, size: 46 });
+      }, { fill: COLORS.panel, size: 46, icon: iconSprite(this.host.icons, 'tasks', 84) });
       tasks.x = 250;
       if (daily || achieve) tasks.addChild(dot(205, -50));
       row.addChild(tasks);

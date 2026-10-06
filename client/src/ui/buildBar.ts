@@ -31,6 +31,14 @@ export function iconSprite(icons: IconSheet, id: string, size: number): Sprite |
   return s;
 }
 
+/** The padlock on locked things, `size` across; a drawn one when the sheet has none. */
+export function lockIcon(icons: IconSheet, size: number): Container {
+  const icon = iconSprite(icons, 'lock', size);
+  if (icon) return icon;
+  const g = new Graphics().roundRect(-size * 0.3, -size * 0.05, size * 0.6, size * 0.45, 6).fill(COLORS.trim).stroke({ color: COLORS.outline, width: 4 });
+  return g.arc(0, -size * 0.05, size * 0.2, Math.PI, 0).stroke({ color: COLORS.outline, width: 6 });
+}
+
 /** A spell badge's recharge overlay, redrawn only when its numbers change. */
 interface Sweep {
   dark: Graphics;

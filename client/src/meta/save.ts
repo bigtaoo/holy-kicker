@@ -1,4 +1,5 @@
 import { MONK_IDS, RELIC_IDS, type MonkId, type RelicId } from '@hk/engine';
+import { isDice } from '@hk/protocol';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { newDaily, parseDaily, type Daily } from './daily';
@@ -57,6 +58,8 @@ export interface SaveData {
   kills: number;
   /** Claimed achievements, bit i for BALANCE.achievements[i]. */
   achieved: number;
+  /** The dice name on the boards (protocol.ts packDice), 0 until the first launch rolls one (ui/playerName.ts). */
+  dice: number;
 }
 
 export function newSave(): SaveData {
@@ -66,7 +69,7 @@ export function newSave(): SaveData {
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), monk: 'kicker', monks: 1,
-    kills: 0, achieved: 0,
+    kills: 0, achieved: 0, dice: 0,
   };
 }
 
@@ -153,5 +156,6 @@ export function parseSave(text: string | null): SaveData {
     monks,
     kills: int(raw.kills, 0, max, 0),
     achieved: int(raw.achieved, 0, (2 ** BALANCE.achievements.length) - 1, 0),
+    dice: isDice(raw.dice) ? raw.dice : 0,
   };
 }

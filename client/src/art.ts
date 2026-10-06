@@ -14,10 +14,12 @@ import { GHOST_DECO, MARSH_DECO, PEAK_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, t
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, monkIcons, jiangshi, fox, cuju, staff, fish, palm, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp, snowTex, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([
+  const [hero, monkIcons, lobby, jiangshi, fox, cuju, staff, fish, palm, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
     loadTao(platform, 'art/hero'),
     // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
     loadDeco(platform, 'art/icons/monks'),
+    // the lobby's painted backdrop (art/monk/ui)
+    Assets.load<Texture>('art/ui/lobby.jpg'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
@@ -36,30 +38,37 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     loadSheet(platform, 'art/mobs/toad'),
     loadSheet(platform, 'art/mobs/toad_king'),
     loadSheet(platform, 'art/mobs/carp'),
-    // chapter 3's snow pass: wolves, the wolf leader, ice wraiths and the Bone Witch's own
-    ground === 'flat' ? null : Assets.load<Texture>('art/ground/snow.png'),
-    deco === 'none' ? null : loadDeco(platform, 'art/ground/snow_deco'),
-    loadSheet(platform, 'art/mobs/wolf'),
-    loadSheet(platform, 'art/mobs/wolf_leader'),
-    loadSheet(platform, 'art/mobs/icewraith'),
-    loadSheet(platform, 'art/mobs/skeleton'),
-    loadSheet(platform, 'art/mobs/shard'),
-    loadSheet(platform, 'art/mobs/witch'),
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, palm, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
-    { ground: snowTex, deco: snowDeco, style: SNOW_DECO, mist: null },
-  ], monks: {}, boss, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: { ghost, toad, toadKing, carp }, snow: { wolf, wolfLeader, wraith, skeleton, shard, witch }, ghost: null, peak: null };
+  ], monks: {}, boss, lobby, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: { ghost, toad, toadKing, carp }, snow: null, ghost: null, peak: null };
 }
 
 /**
  * Loads the art packs (art/ch<n>/, WeChat subpackages) chapter `chapter` needs into `art`, those
- * not loaded yet: chapter 4's ghost market (its ground, props and mobs), which chapter 5 plays
- * too (its lantern ghosts, effigies, door god and the empowered Judge), and chapter 5's Demon Peak.
+ * not loaded yet: chapter 3's snow pass (its ground, props, wolves, ice wraiths and the Bone
+ * Witch's own), which the later chapters play too (wolf packs, the empowered Witch), chapter 4's
+ * ghost market, which chapter 5 plays too (its lantern ghosts, effigies, door god and the
+ * empowered Judge), and chapter 5's Demon Peak.
  */
 export async function loadChapterArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco'>, art: Art, chapter: number): Promise<void> {
   const { ground, deco } = scene;
+  if (chapter >= 3 && !art.snow) {
+    await platform.loadPack('ch3');
+    const [snow, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([
+      ground === 'flat' ? null : Assets.load<Texture>('art/ch3/ground/snow.png'),
+      deco === 'none' ? null : loadDeco(platform, 'art/ch3/ground/snow_deco'),
+      loadSheet(platform, 'art/ch3/mobs/wolf'),
+      loadSheet(platform, 'art/ch3/mobs/wolf_leader'),
+      loadSheet(platform, 'art/ch3/mobs/icewraith'),
+      loadSheet(platform, 'art/ch3/mobs/skeleton'),
+      loadSheet(platform, 'art/ch3/mobs/shard'),
+      loadSheet(platform, 'art/ch3/mobs/witch'),
+    ]);
+    art.stages[2] = { ground: snow, deco: snowDeco, style: SNOW_DECO, mist: null };
+    art.snow = { wolf, wolfLeader, wraith, skeleton, shard, witch };
+  }
   if (chapter >= 4 && !art.ghost) {
     await platform.loadPack('ch4');
     const [street, streetDeco, tongue, lantern, effigy, doorGod, judge] = await Promise.all([
