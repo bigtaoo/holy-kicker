@@ -200,7 +200,7 @@ export class Game {
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
-    this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx);
+    this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, z: HERO_TOP_Z - 2 });
     this.aura = new AuraStack(scene.stack);
     this.zen = new ZenRing(this.world);
 
@@ -396,7 +396,8 @@ export class Game {
           break;
         }
         case 'cast':
-          this.spells.cast(e.kind, e.x / FP, e.y / FP, e.radius / FP);
+        case 'palm':
+          this.spells.cast(e);
           break;
         case 'bolt':
           this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP);
@@ -453,8 +454,7 @@ export class Game {
     this.staff.update(dt, hx, hy, this.hero.view.zIndex);
     this.fish.update(dt, hx, hy, this.hero.view.zIndex);
     this.beads.draw(s.beads, p.relicId === 'beads' && !p.dead ? beadsRings(p) : [], alpha, hx, hy, this.hero.view.zIndex);
-    this.spells.drawFields(s.fields, alpha, dt);
-    this.spells.drawCymbals(s.cymbals, alpha, dt);
+    this.spells.draw(s.fields, s.cymbals, alpha, dt);
     this.sutras.draw(s.lotuses, p, alpha, dt, hx, hy);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
     this.zen.update(dt, inZen(p) && !p.dead, hx, hy);

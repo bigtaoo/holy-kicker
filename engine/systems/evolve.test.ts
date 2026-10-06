@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_RUN, type RunConfig } from '../config';
-import { EVOLVE, MAX_LEVEL, RELIC_AWAKENED, SPELL_EVOLVED, SPELL_LEVELS, xpToNext } from '../content';
+import { EVOLVE, MAX_LEVEL, RELIC_AWAKENED, SPELL_CAST, SPELL_EVOLVED, SPELL_LEVELS, xpToNext } from '../content';
 import { Engine } from '../Engine';
 import type { PlayerCommand } from '../input';
 import { newMob, type Player } from '../state';
@@ -73,6 +73,8 @@ describe('evolved spells', () => {
     for (let i = 0; i < 6; i++) s.mobs.push(newMob(p.x + 500_000 + i * 30_000, p.y, 1e9));
     evolved(p, 'palm');
     steps(e, 1);
+    expect(s.fields.filter((f) => f.pin)).toHaveLength(0);
+    steps(e, SPELL_CAST.palmFall);
     const prints = s.fields.filter((f) => f.pin);
     expect(prints.length).toBeGreaterThan(0);
     expect(prints[0].life).toBe(SPELL_EVOLVED.palm.life);

@@ -17,6 +17,8 @@ export interface Art {
   cuju: Texture;
   staff: Texture;
   fish: Texture;
+  /** The Rulai Palm's golden hand. */
+  palm: Texture;
   /**
    * Grounds by chapter from chapter 1; a chapter without its own takes the last one. Chapters
    * in an art pack (chapter 4 on) add theirs when the pack is loaded (loadChapterArt).

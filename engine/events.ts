@@ -50,6 +50,8 @@ export type SimEvent =
   /** Gems reached a player this tick; `tier` is the biggest of them. */
   | { type: 'pickup'; owner: number; tier: number }
   | { type: 'cast'; kind: SpellKind; x: number; y: number; radius: number }
+  /** A palm was cast at (x, y): it lands in `fall` ticks (as a 'meteor' cast), leaving a pinning print for `print` ticks (0 for none). */
+  | { type: 'palm'; owner: number; x: number; y: number; radius: number; fall: number; print: number }
   /** A player's Golden Bell came up, or broke on a blow it took for them. */
   | { type: 'bellUp'; owner: number }
   | { type: 'bellBreak'; owner: number }

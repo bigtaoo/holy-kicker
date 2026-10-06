@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_RUN, HERO, type RunConfig } from '../config';
-import { MAX_LEVEL, MAX_PASSIVES, OFFER_SIZE, PASSIVES, RELIC_LEVELS, SPELL_LEVELS, xpToNext } from '../content';
+import { MAX_LEVEL, MAX_PASSIVES, OFFER_SIZE, PASSIVES, RELIC_LEVELS, SPELL_CAST, SPELL_LEVELS, xpToNext } from '../content';
+import type { SimEvent } from '../events';
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
@@ -139,11 +140,17 @@ describe('build effects', () => {
     p.spells = [{ id: 'bolt', level: 1, cd: 1, evolved: false }, { id: 'palm', level: 1, cd: 1, evolved: false }, { id: 'incense', level: 1, cd: 1, evolved: false }];
     const ev = e.step([cmd(e)]);
     const casts = ev.filter((v) => v.type === 'cast').map((v) => v.type === 'cast' && v.kind);
-    expect(casts).toEqual(['meteor', 'field']);
+    expect(casts).toEqual(['field']);
     expect(ev.filter((v) => v.type === 'bolt').length).toBeGreaterThan(0);
     expect(ev.filter((v) => v.type === 'mobDown').length).toBeGreaterThan(0);
+    // the palm falls first and lands its blast after SPELL_CAST.palmFall
+    const palm = ev.find((v) => v.type === 'palm');
+    expect(palm).toMatchObject({ fall: SPELL_CAST.palmFall, print: 0 });
+    let landed: SimEvent[] = [];
+    for (let i = 0; i < SPELL_CAST.palmFall; i++) landed = e.step([cmd(e)]);
+    expect(landed.some((v) => v.type === 'cast' && v.kind === 'meteor')).toBe(true);
     expect(s.fields[0]).toMatchObject({ radius: SPELL_LEVELS.incense[0].radius, life: SPELL_LEVELS.incense[0].life });
-    expect(p.spells[1].cd).toBe(SPELL_LEVELS.palm[0].cooldown);
+    expect(p.spells[1].cd).toBe(SPELL_LEVELS.palm[0].cooldown - SPELL_CAST.palmFall);
   });
 
   it('shortens cooldowns with Calm Mind and waits briefly when nothing is in reach', () => {

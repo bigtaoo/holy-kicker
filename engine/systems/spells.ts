@@ -2,7 +2,7 @@ import { SPELLS } from '../config';
 import { EVOLVE, SPELL_CAST } from '../content';
 import type { SimEvent } from '../events';
 import { dist2, TICK_RATE, toFp } from '../math/fixed';
-import type { Player, SimState, SpellSlot } from '../state';
+import type { Palm, Player, SimState, SpellSlot } from '../state';
 import { lasting, slotStats, stat } from './build';
 import { bossIndex, damage, eliteIndex, targetAt } from './combat';
 import { cymbalSystem, spinWheel, throwCymbals } from './cymbals';
@@ -14,7 +14,8 @@ import { dropLotus, haloSystem, lotusSystem, roar } from './sutras';
 // deal SPELL_CAST.bigPercent of their damage to the elite and the boss. The Golden Bell is a
 // shield rather than a cast: its cooldown raises it, and it only recharges once a blow breaks
 // it (breakBell, from hurtPlayer). Evolved spells (docs/content.md) cast from their own row:
-// the Mountain Palm leaves a print that pins mobs, the Endless Chain forks at every jump,
+// palms fall a moment after the cast (their shadow warns the crowd) and the Mountain Palm
+// leaves a print that pins mobs, the Endless Chain forks at every jump,
 // Healing Incense heals the hero standing in it, the Golden Body guards longer after it breaks
 // and the Cymbal Wheel keeps its cymbals circling the hero. The sutra spells (Lotus Steps,
 // Halo Beam, Lion's Roar) are in systems/sutras.ts.
@@ -113,7 +114,7 @@ function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range:
  * The centre for a palm: of a few mobs sampled within reach, the one with most mobs inside
  * the blast; the elite or boss when no mob is near. Null when nothing is in reach.
  */
-function crowd(s: SimState, p: Player, r: number): [number, number] | null {
+function crowd(s: SimState, p: Player, r: number, taken: readonly Palm[]): [number, number] | null {
   const reach2 = SPELL_CAST.palmReach * SPELL_CAST.palmReach;
   const r2 = r * r;
   let best: [number, number] | null = null;
@@ -121,6 +122,8 @@ function crowd(s: SimState, p: Player, r: number): [number, number] | null {
   for (let k = 0; k < SPELL_CAST.palmPicks && s.mobs.length > 0; k++) {
     const m = s.mobs[s.spell.int(s.mobs.length)];
     if (dist2(m.x - p.x, m.y - p.y) >= reach2) continue;
+    // another palm of this cast already falls here
+    if (taken.some((q) => dist2(q.x - m.x, q.y - m.y) < r2)) continue;
     let n = 0;
     for (const o of s.mobs) if (dist2(o.x - m.x, o.y - m.y) < r2) n++;
     if (n > bestN) {
@@ -168,15 +171,16 @@ function cast(s: SimState, events: SimEvent[], p: Player, slot: SpellSlot): bool
   if (id === 'lotus') return dropLotus(s, p, l.radius, l.life, l.damage, slot.evolved);
   if (id === 'roar') return roar(s, events, p, l.radius, l.damage, slot.evolved);
   if (id === 'palm') {
-    let any = false;
+    const cast: Palm[] = [];
     for (let i = 0; i < l.count; i++) {
-      const at = crowd(s, p, r);
+      const at = crowd(s, p, r, cast);
       if (!at) break;
-      blast(s, events, p, at[0], at[1], r, l.damage);
-      if (slot.evolved) placeField(s, events, p, at[0], at[1], r, life, Math.trunc((l.damage * EVOLVE.palmBurnPercent) / 100), { pin: true });
-      any = true;
+      const palm = { owner: p.owner, x: at[0], y: at[1], radius: r, damage: l.damage, t: SPELL_CAST.palmFall + i * SPELL_CAST.palmStagger, print: slot.evolved ? life : 0 };
+      cast.push(palm);
+      s.palms.push(palm);
+      events.push({ type: 'palm', owner: p.owner, x: palm.x, y: palm.y, radius: r, fall: palm.t, print: palm.print });
     }
-    return any;
+    return cast.length > 0;
   }
   if (id === 'bolt') return chain(s, events, p, l.count, r, l.damage, slot.evolved);
   if (id === 'cymbal') return slot.evolved ? spinWheel(s, p, l.count, r, l.damage) : throwCymbals(s, p, l.count, r, life, l.damage);
@@ -227,7 +231,24 @@ function stressSpells(s: SimState, events: SimEvent[]): void {
   }
 }
 
+/** Palms land: the blast, then the Mountain Palm's print. */
+function palmSystem(s: SimState, events: SimEvent[]): void {
+  let w = 0;
+  for (const q of s.palms) {
+    if (--q.t > 0) {
+      s.palms[w++] = q;
+      continue;
+    }
+    const by = s.players.find((o) => o.owner === q.owner) ?? s.players[0];
+    blast(s, events, by, q.x, q.y, q.radius, q.damage);
+    if (q.print > 0) placeField(s, events, by, q.x, q.y, q.radius, q.print, Math.trunc((q.damage * EVOLVE.palmBurnPercent) / 100), { pin: true });
+  }
+  s.palms.length = w;
+}
+
 export function spellSystem(s: SimState, events: SimEvent[]): void {
+  // before the casts, so a palm lands exactly `fall` ticks after its cast
+  palmSystem(s, events);
   stressSpells(s, events);
   buildSpells(s, events);
   let w = 0;

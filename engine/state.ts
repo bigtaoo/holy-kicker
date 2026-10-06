@@ -226,6 +226,19 @@ export interface Field {
   heal: number;
 }
 
+/** A palm on its way down: it lands on (x, y) when `t` runs out. */
+export interface Palm {
+  owner: number;
+  x: number;
+  y: number;
+  radius: number;
+  damage: number;
+  /** Ticks until it lands. */
+  t: number;
+  /** Mountain Palm: the pinning print's life once it lands; 0 for a plain palm. */
+  print: number;
+}
+
 /** A thrown cymbal: flies straight and hits everything it passes, each target once. */
 export interface Cymbal extends Body {
   id: number;
@@ -334,6 +347,7 @@ export interface SimState {
   /** The overflow gem (also in `gems`); derived, not hashed. */
   overflow: Gem | null;
   fields: Field[];
+  palms: Palm[];
   cymbals: Cymbal[];
   rings: Ring[];
   beads: Bead[];
@@ -370,7 +384,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [], spawns: [],
-    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
+    gems: [], gemCells: new Map(), resting: 0, overflow: null, fields: [], palms: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),

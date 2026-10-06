@@ -1,8 +1,9 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
-import { FP, TICK_RATE, type Cymbal, type Field } from '@hk/engine';
+import { FP, TICK_RATE, type Cymbal, type Field, type SimEvent } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 import type { FxPool } from './fx';
+import { PalmFalls } from './palmView';
 import { bolt, explosion, fieldMotes, nova, type RingMode } from './spells';
 import { SHADOW_Z } from './shadow';
 
@@ -89,14 +90,18 @@ export class SpellView {
   private bellT = BELL_POP;
   /** Golden Body: seconds the hero stays untouchable after the bell broke. */
   private guardT = 0;
+  private readonly palms: PalmFalls;
 
   constructor(
     renderer: Renderer,
     private readonly layer: Container,
     private readonly pool: FxPool,
     private readonly ring: RingMode,
+    /** The falling palm's art, drawn at this zIndex (over the horde). */
+    palm: { tex: Texture; z: number },
     private readonly rand: () => number = Math.random,
   ) {
+    this.palms = new PalmFalls(layer, palm.tex, palm.z);
     this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0);
     this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8);
     this.printTex = printTexture(renderer);
@@ -135,7 +140,7 @@ export class SpellView {
   }
 
   /** The sim's flying cymbals: spinning discs, interpolated between ticks. */
-  drawCymbals(cymbals: readonly Cymbal[], alpha: number, dt: number): void {
+  private drawCymbals(cymbals: readonly Cymbal[], alpha: number, dt: number): void {
     for (const c of this.cymbals.values()) c.seen = false;
     for (const c of cymbals) {
       let v = this.cymbals.get(c.id);
@@ -161,10 +166,21 @@ export class SpellView {
     }
   }
 
-  /** A cast at (x, y) with radius r, world units. */
-  cast(kind: string, x: number, y: number, r: number): void {
-    if (kind === 'nova') nova(this.pool, x, y, 60, r, NOVA_LIFE, 0xfff0b8, this.ring);
-    else if (kind === 'meteor') explosion(this.pool, this.rand, x, y, r, this.ring);
+  /** A cast, or a palm on its way down (positions in FP). */
+  cast(e: Extract<SimEvent, { type: 'cast' | 'palm' }>): void {
+    const x = e.x / FP;
+    const y = e.y / FP;
+    const r = e.radius / FP;
+    if (e.type === 'palm') this.palms.drop(x, y, r, e.fall / TICK_RATE);
+    else if (e.kind === 'nova') nova(this.pool, x, y, 60, r, NOVA_LIFE, 0xfff0b8, this.ring);
+    else if (e.kind === 'meteor') explosion(this.pool, this.rand, x, y, r, this.ring);
+  }
+
+  /** The sim's fields and cymbals, and the falling palms. */
+  draw(fields: readonly Field[], cymbals: readonly Cymbal[], alpha: number, dt: number): void {
+    this.drawFields(fields, alpha, dt);
+    this.drawCymbals(cymbals, alpha, dt);
+    this.palms.update(dt);
   }
 
   bolt(x0: number, y0: number, x1: number, y1: number): void {
@@ -172,7 +188,7 @@ export class SpellView {
   }
 
   /** The sim's lingering fields: a ground disc each, fading in and out, with rising motes. */
-  drawFields(fields: readonly Field[], alpha: number, dt: number): void {
+  private drawFields(fields: readonly Field[], alpha: number, dt: number): void {
     for (const f of this.sprites.values()) f.seen = false;
     for (const f of fields) {
       const r = f.radius / FP;

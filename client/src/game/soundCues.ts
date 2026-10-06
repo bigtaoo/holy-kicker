@@ -55,6 +55,9 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
       return SPELL_CUES[e.kind];
     case 'bolt':
       return 'zap';
+    // the palm sounds when it lands, as its 'meteor' cast
+    case 'palm':
+      return null;
     case 'bloom':
       return 'bloom';
     case 'roar':

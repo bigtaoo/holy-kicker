@@ -246,6 +246,9 @@ export const SPELL_CAST = {
   palmReach: toFp(800),
   /** Mobs sampled as the centre of a palm; the one with most neighbours wins. */
   palmPicks: 8,
+  /** A palm lands this long after it is cast (its shadow warns the crowd), each next one of a cast a little later. */
+  palmFall: ticks(0.3),
+  palmStagger: ticks(0.1),
   fieldTick: ticks(0.5),
   /** A spell that found nothing to hit tries again after this long. */
   retry: ticks(0.3),

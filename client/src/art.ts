@@ -14,7 +14,7 @@ import { GHOST_DECO, MARSH_DECO, PEAK_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, t
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, monkIcons, jiangshi, fox, cuju, staff, fish, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp, snowTex, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([
+  const [hero, monkIcons, jiangshi, fox, cuju, staff, fish, palm, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp, snowTex, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([
     loadTao(platform, 'art/hero'),
     // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
     loadDeco(platform, 'art/icons/monks'),
@@ -23,6 +23,7 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     Assets.load<Texture>('art/cuju.png'),
     Assets.load<Texture>('art/staff.png'),
     Assets.load<Texture>('art/fish.png'),
+    Assets.load<Texture>('art/palm.png'),
     ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
     deco === 'none' ? null : loadDeco(platform, 'art/ground/deco'),
     // chapter 2's misty marsh; ?ground picks chapter 1's only
@@ -45,7 +46,7 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     loadSheet(platform, 'art/mobs/shard'),
     loadSheet(platform, 'art/mobs/witch'),
   ]);
-  return { hero, jiangshi, fox, cuju, staff, fish, stages: [
+  return { hero, jiangshi, fox, cuju, staff, fish, palm, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
     { ground: snowTex, deco: snowDeco, style: SNOW_DECO, mist: null },
