@@ -1,12 +1,12 @@
-import { Container, FillGradient, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
 import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Lotus, type Player } from '@hk/engine';
 import { SHADOW_Z } from './shadow';
 
 // The sutra spells (engine systems/sutras.ts). Lotus Steps: the sim's seeds as small lotus buds
 // on the ground (gold for the Lotus Path) and a ring of petals opening where one blooms. Halo
-// Beam: the hero's beams as cones of light from a small halo at his chest, widening and fading
-// out to their length, over the horde, turning with the sim's angle. Lion's Roar: three sound waves rolling out through the cone (all the
+// Beam: the hero's beams drawn from his chest out to their length, over the horde, turning
+// with the sim's angle. Lion's Roar: three sound waves rolling out through the cone (all the
 // way round for the Thunder Roar). The monks' passives (engine systems/monks.ts) use the same
 // bursts: the fat monk's Belly Bounce rolls saffron rings out over the ground, and the
 // novice's dodge leaves white speed streaks either side of him.
@@ -25,10 +25,6 @@ const ROAR_LIFE = 0.4;
 const BOUNCE = 0xffb030;
 const BOUNCE_LIFE = 0.35;
 const DODGE_LIFE = 0.3;
-/** The baked light cone: its length and height, texture pixels; drawn this many times as tall. */
-const CONE_W = 512;
-const CONE_H = 128;
-const CONE_SPREAD = 1.5;
 /** Ground effects are drawn squashed like the spell fields (spellView.ts). */
 const GROUND = 0.45;
 
@@ -46,21 +42,6 @@ function budTexture(renderer: Renderer, fill: number): Texture {
   return tex;
 }
 
-/** One beam pointing right from its root at (0, CONE_H / 2): a wide soft glow round a bright core, both fading out. */
-function coneTexture(renderer: Renderer): Texture {
-  const h = CONE_H / 2;
-  const fade = (color: string, stops: [number, number][]) => new FillGradient({
-    type: 'linear', start: { x: 0, y: 0 }, end: { x: 1, y: 0 }, textureSpace: 'local',
-    colorStops: stops.map(([offset, a]) => ({ offset, color: `rgba(${color},${a})` })),
-  });
-  const g = new Graphics()
-    .poly([0, h - 10, CONE_W, 2, CONE_W, CONE_H - 2, 0, h + 10]).fill(fade('255,216,96', [[0, 0.55], [0.55, 0.28], [1, 0]]))
-    .poly([0, h - 6, CONE_W, h - 20, CONE_W, h + 20, 0, h + 6]).fill(fade('255,248,220', [[0, 1], [0.7, 0.6], [1, 0]]));
-  const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, CONE_W, CONE_H), resolution: 1, antialias: true });
-  g.destroy();
-  return tex;
-}
-
 interface Burst {
   g: Graphics;
   t: number;
@@ -72,13 +53,10 @@ export class SutraView {
   private readonly buds: Texture[];
   private readonly seeds = new Map<number, { sprite: Sprite; seen: boolean }>();
   private readonly beams = new Graphics();
-  private readonly cone: Texture;
-  private readonly cones: Sprite[] = [];
   private readonly bursts: Burst[] = [];
 
   constructor(renderer: Renderer, private readonly world: Container, private readonly overZ: number) {
     this.buds = [budTexture(renderer, PETAL), budTexture(renderer, GOLD)];
-    this.cone = coneTexture(renderer);
     this.beams.visible = false;
     world.addChild(this.beams);
   }
@@ -188,16 +166,8 @@ export class SutraView {
 
   private drawHalo(p: Player, alpha: number, hx: number, hy: number): void {
     const slot = p.spells.find((sp) => sp.id === 'halo');
-    const on = !!slot && !p.dead;
-    this.beams.visible = on;
-    const count = on ? slotStats(slot).count : 0;
-    while (this.cones.length < count) {
-      const c = new Sprite({ texture: this.cone, anchor: { x: 0, y: 0.5 } });
-      this.beams.addChild(c);
-      this.cones.push(c);
-    }
-    this.cones.forEach((c, k) => (c.visible = k < count));
-    if (!slot || !on) return;
+    this.beams.visible = !!slot && !p.dead;
+    if (!slot || p.dead) return;
     const l = slotStats(slot);
     const spin = haloSpin(p, l.life);
     // the sim's angle is after its last tick: draw it `alpha` of the way from the one before
@@ -206,16 +176,16 @@ export class SutraView {
     const g = this.beams.clear();
     g.position.set(hx, hy - CHEST);
     g.zIndex = this.overZ;
-    const trail = (spin / BRADS) * TAU * 4;
-    for (let k = 0; k < count; k++) {
-      const a = a0 + (k / count) * TAU;
-      // a faint wedge where it just swept, under the cone
-      g.moveTo(0, 0).arc(0, 0, len, a - trail, a).lineTo(0, 0).fill({ color: GOLD, alpha: 0.12 });
-      const c = this.cones[k];
-      c.rotation = a;
-      c.scale.set(len / CONE_W, CONE_SPREAD);
+    for (let k = 0; k < l.count; k++) {
+      const a = a0 + (k / l.count) * TAU;
+      const c = Math.cos(a);
+      const s = Math.sin(a);
+      // a soft wide glow, then the bright core, trailing a faint wedge where it just swept
+      const trail = (spin / BRADS) * TAU * 4;
+      g.moveTo(0, 0).arc(0, 0, len, a - trail, a).lineTo(0, 0).fill({ color: GOLD, alpha: 0.18 });
+      g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: GOLD, width: 34, alpha: 0.35, cap: 'round' });
+      g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: BEAM, width: 12, alpha: 0.95, cap: 'round' });
     }
-    // the small halo the light pours from
-    g.circle(0, 0, 30).fill({ color: BEAM, alpha: 0.55 }).circle(0, 0, 42).stroke({ color: GOLD, width: 6, alpha: 0.8 });
+    g.circle(0, 0, 34).fill({ color: BEAM, alpha: 0.45 });
   }
 }
