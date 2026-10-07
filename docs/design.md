@@ -371,6 +371,22 @@ blows, an elite every 5th wave and mid-bosses on 20 and 35, `hpSquare` 85; conte
 | 2 sessions × 2 runs a day, every ad | 1 (1–2) | 3.5 (2–4) | 7 (5–10) | 10.5 (8–15) | 15 (12–20) |
 | 2 sessions × 1 run a day, no ads | 1 (1–2) | 4 (2–5) | 8.5 (6–12) | 11 (9–17) | 15.5 (12–26) |
 
+**Measured again** (2026-10-07, ENGINE_VERSION 34, same setup and seeds):
+
+| Player | Ch 1 | Ch 2 | Ch 3 | Ch 4 | Ch 5 |
+|---|---|---|---|---|---|
+| 2 sessions × 2 runs a day, every ad | 1 | 3.5 | 8.5 | 13.5 | 18 (13–24) |
+| 2 sessions × 1 run a day, no ads | 2 | 7.5 | 17.5 | 26.5 | 44 (36–54) |
+
+The no-ads row of the 2026-10-06 table does not reproduce: the ENGINE_VERSION 31 commit run again
+the same way clears chapter 5 on days 26–42 (median 36, 1 of 6 not by day 45), so most of the gap
+was already there. Of the later changes, elites that only become targets once on screen
+(13a30ac) cut a chapter 4 try's damage by about 14%. The walls are the last chapters' bosses: the
+Judge ends chapter 4's lost tries on wave 49, and chapter 5's on the wave 20 mid-boss or the
+Inner Demon. Both players are slower than the targets above; this is kept for launch on purpose,
+and the last two chapters get tuned from the players' numbers (docs/retention.md) rather than
+the bots'.
+
 ENGINE_VERSION 30 made the curve harder: at 26–29 the casual bot won chapter 1 on its first
 try and took next to no damage, and the clears came on days 1/1/2/4/8 with ads and 1/2/4/8/16.5
 without (docs/content.md "A harder curve").
