@@ -14,7 +14,10 @@ training icons into the one icon sheet:
   (`r1/jade_drop.jpg`), reads a little like a water drop; the second, a cushion cut with a vein
   (`r1/jade_cracked.jpg`), came out cracked; the third, from `jade.txt`'s classic brilliant cut
   (`r1/jade_brilliant.jpg`, 2026-10-07), is a mosaic of tiny gradient facets with a thin outline
-  that turns to mush at top-bar size. `jade.jpg` stays a copy of the teardrop.
+  that turns to mush at top-bar size. Two more from `r1/*.txt` the same day: an oval cabochon
+  (`r1/jade_oval.jpg`) is a wide pale lozenge, like soap, and a bi disc with a hole
+  (`r1/jade_bi.jpg`) reads as a tyre or washer and, round with a hole, too close to the copper
+  coin. `jade.jpg` stays a copy of the teardrop.
 - `shop` (a red money pouch) and `codex` (a stitched book) are the Shop and Codex tabs; the
   others reuse the build icons: Gear the robe, Play the cuju, Train the dumbbell.
 - `lock` replaces the 🔒 emoji, which every platform draws differently. `settings` replaces the ⚙
