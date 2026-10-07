@@ -1,20 +1,25 @@
 import { Container } from 'pixi.js';
+import type { RelicId } from '@hk/engine';
 import { TaoActor, type TaoAsset } from './tao/TaoActor';
 
-// The hero's animation: idle/run from movement, with one-shot kick, swing and hurt clips
-// layered on top. The sim decides when he kicks, gets hurt and which way he faces; this only
+// The hero's animation: idle/run from movement, with one-shot attack and hurt clips layered
+// on top. The sim decides when he kicks, gets hurt and which way he faces; this only
 // plays it. While the staff is out his front arm follows it, so he holds it in his hand.
 
 const HURT_FACE = 0.45;
 /** Seconds the front arm takes to fall back into the clip once the staff is put away. */
 const LET_GO = 0.12;
+/** The clip each relic's attack plays when it starts; the staff's lunge waits for the sweep. */
+const ATTACK: Partial<Record<RelicId, string>> = { ball: 'kick', fish: 'knock', bowl: 'throw' };
 
 export class Hero {
   /** Positioned in the world; the actor inside it is scaled and mirrored. */
   readonly view = new Container();
   private readonly actor: TaoActor;
   private readonly body = new Container();
-  private action: 'kick' | 'swing' | 'hurt' | null = null;
+  /** What he holds out (the wooden fish): over the glow behind him, under his body and hands. */
+  readonly held = new Container();
+  private action: string | null = null;
   private faceTimer = 0;
   private staffAngle: number | null = null;
   private heldAngle = 0;
@@ -25,15 +30,16 @@ export class Hero {
     this.actor.view.scale.set(height / this.actor.height);
     this.actor.play('idle');
     this.body.addChild(this.actor.view);
-    this.view.addChild(this.body);
+    this.view.addChild(this.held, this.body);
   }
 
-  /** A kick, or with another relic only the strain on his face (staffView, fishView draw it). */
-  kick(faceOnly = false): void {
+  /** An attack starts: a kick, a knock on the wooden fish or a bowl throw, and the strain on his face. */
+  attack(relic: RelicId): void {
     this.setFace('face_strain', 0.4);
-    if (faceOnly) return;
-    this.action = 'kick';
-    this.actor.play('kick', true);
+    const clip = ATTACK[relic];
+    if (!clip) return;
+    this.action = clip;
+    this.actor.play(clip, true);
   }
 
   /** A staff sweep: he lunges into it (staffView draws the staff, holdStaff() aims his arm). */
@@ -48,9 +54,9 @@ export class Hero {
     this.staffAngle = angle;
   }
 
-  /** His front hand, in the view's space, as of the last update. */
-  hand(): { x: number; y: number } {
-    const p = this.actor.point('hand_f');
+  /** A hand (hand_f holds the staff, hand_b knocks the fish), in the view's space, as of the last update. */
+  hand(bone = 'hand_f'): { x: number; y: number } {
+    const p = this.actor.point(bone);
     const s = this.actor.view.scale.y;
     return { x: this.body.scale.x * s * p.x, y: s * p.y };
   }

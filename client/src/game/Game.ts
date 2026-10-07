@@ -163,7 +163,7 @@ export class Game {
     this.balls = new Balls(this.world, art.cuju, shadowTex);
     // the crescent draws over the horde, under the elite
     this.staff = new StaffSwing(this.world, art.staff, HERO_TOP_Z - 3);
-    this.fish = new FishTaps(this.world, art.fish, HERO_TOP_Z - 3);
+    this.fish = new FishTaps(this.world, this.hero.held, art.fish, HERO_TOP_Z - 3);
     this.beads = new BeadsView(app.renderer, this.world);
     this.bowls = new BowlView(app.renderer, this.world, shadowTex);
     this.sutras = new SutraView(app.renderer, this.world, HERO_TOP_Z - 3);
@@ -287,7 +287,7 @@ export class Game {
     for (const e of events) {
       switch (e.type) {
         case 'kick':
-          if (e.owner === LOCAL) this.hero.kick(s.players[0].relicId !== 'ball');
+          if (e.owner === LOCAL) this.hero.attack(s.players[0].relicId);
           break;
         case 'sweep': {
           const p = s.players.find((q) => q.owner === e.owner);
@@ -298,7 +298,7 @@ export class Game {
         }
         case 'ring': {
           const p = s.players.find((q) => q.owner === e.owner);
-          if (e.owner === LOCAL && p) this.fish.tap(e.x / FP, e.y / FP, e.reach / FP, e.stun, p.facing);
+          if (e.owner === LOCAL && p) this.fish.tap(e.x / FP, e.y / FP, e.reach / FP, e.stun, p.facing, this.hero.hand('hand_b'));
           break;
         }
         case 'hurt':
@@ -436,10 +436,10 @@ export class Game {
     this.corpses.update(dt);
     this.mist?.update(dt);
     this.balls.sync(s.balls, alpha, dt);
-    this.bowls.sync(s.bowls, alpha, dt);
+    this.bowls.sync(s.bowls, alpha, dt, this.hero.hand());
     const hand = this.hero.hand();
     this.staff.draw(hx, hy, hx + hand.x, hy + hand.y, this.hero.view.zIndex);
-    this.fish.update(dt, hx, hy, this.hero.view.zIndex);
+    this.fish.update(dt);
     this.beads.draw(s.beads, p.relicId === 'beads' && !p.dead ? beadsRings(p) : [], alpha, hx, hy, this.hero.view.zIndex);
     this.spells.draw(s.fields, s.cymbals, alpha, dt);
     this.sutras.draw(s.lotuses, p, alpha, dt, hx, hy);

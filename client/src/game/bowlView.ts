@@ -11,6 +11,8 @@ import { makeShadow } from './shadow';
 /** Drawn this far above its ground point. */
 const LIFT = 45;
 const SIZE = 120;
+/** Seconds a new bowl takes to come from the throwing hand onto its flight line, growing from half size. */
+const FROM_HAND = 0.15;
 const OUTLINE = 0x3a2410;
 const LOOKS = [
   { body: 0x9a5a2a, shade: 0x6e3c1a, inside: 0x4a2812 },
@@ -38,6 +40,10 @@ interface Flight {
   sprite: Sprite;
   shadow: Sprite;
   seen: boolean;
+  /** Where it left the hand, from its drawn point, and how much of that is left (1 → 0). */
+  fromX: number;
+  fromY: number;
+  from: number;
 }
 
 export class BowlView {
@@ -48,20 +54,23 @@ export class BowlView {
     this.textures = LOOKS.map((l) => bowlTexture(renderer, l));
   }
 
-  sync(bowls: readonly Bowl[], alpha: number, dt: number): void {
+  /** `hand` is the thrower's hand from his feet, where a new bowl starts out. */
+  sync(bowls: readonly Bowl[], alpha: number, dt: number, hand: { x: number; y: number }): void {
     for (const f of this.live.values()) f.seen = false;
     for (const b of bowls) {
       let f = this.live.get(b.id);
       if (!f) {
         const sprite = new Sprite({ texture: this.textures[b.swallow ? 1 : 0], anchor: 0.5 });
-        f = { sprite, shadow: makeShadow(this.shadowTex, SIZE * 0.4, SIZE * 0.14), seen: false };
+        f = { sprite, shadow: makeShadow(this.shadowTex, SIZE * 0.4, SIZE * 0.14), seen: false, fromX: hand.x, fromY: hand.y + LIFT, from: 1 };
         this.layer.addChild(f.shadow, sprite);
         this.live.set(b.id, f);
       }
       f.seen = true;
       const x = lerpX(b, alpha);
       const y = lerpY(b, alpha);
-      f.sprite.position.set(x, y - LIFT);
+      f.from = Math.max(0, f.from - dt / FROM_HAND);
+      f.sprite.position.set(x + f.fromX * f.from, y - LIFT + f.fromY * f.from);
+      f.sprite.scale.set(1 - f.from / 2);
       f.sprite.rotation += dt * 9;
       // over the mobs it carries
       f.sprite.zIndex = y + 60;

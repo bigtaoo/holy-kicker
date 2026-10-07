@@ -500,6 +500,254 @@
      }
     }
    ]
+  },
+  "knock": {
+   "duration": 0.4,
+   "ease": "ease-out",
+   "keys": [
+    {
+     "t": 0,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_f_upper": 0,
+      "arm_f_lower": 0,
+      "arm_b_upper": 0,
+      "arm_b_lower": 0,
+      "leg_f_thigh": 0,
+      "leg_f_shin": 0,
+      "leg_b_thigh": 0,
+      "leg_b_shin": 0,
+      "skirt": 0,
+      "skirt_tail": 0,
+      "knot": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "t": 0.1,
+     "ease": "ease-in",
+     "rotate": {
+      "torso": 8,
+      "head": -6,
+      "arm_b_upper": 110,
+      "arm_b_lower": 10,
+      "arm_f_upper": -30,
+      "arm_f_lower": 10,
+      "skirt": 2,
+      "skirt_tail": -6,
+      "knot": 4
+     },
+     "translate": {
+      "root": [
+       0,
+       -4
+      ]
+     }
+    },
+    {
+     "t": 0.18,
+     "rotate": {
+      "torso": -10,
+      "head": 8,
+      "arm_b_upper": 45,
+      "arm_b_lower": 8,
+      "arm_f_upper": -40,
+      "arm_f_lower": -10,
+      "leg_f_thigh": 10,
+      "leg_f_shin": -10,
+      "leg_b_thigh": -8,
+      "leg_b_shin": 10,
+      "skirt": -3,
+      "skirt_tail": 10,
+      "knot": -6
+     },
+     "translate": {
+      "root": [
+       0,
+       10
+      ]
+     }
+    },
+    {
+     "t": 0.26,
+     "rotate": {
+      "torso": -10,
+      "head": 8,
+      "arm_b_upper": 45,
+      "arm_b_lower": 8,
+      "arm_f_upper": -40,
+      "arm_f_lower": -10,
+      "leg_f_thigh": 10,
+      "leg_f_shin": -10,
+      "leg_b_thigh": -8,
+      "leg_b_shin": 10,
+      "skirt": -3,
+      "skirt_tail": 10,
+      "knot": -6
+     },
+     "translate": {
+      "root": [
+       0,
+       10
+      ]
+     },
+     "ease": "ease-in-out"
+    },
+    {
+     "t": 0.4,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_f_upper": 0,
+      "arm_f_lower": 0,
+      "arm_b_upper": 0,
+      "arm_b_lower": 0,
+      "leg_f_thigh": 0,
+      "leg_f_shin": 0,
+      "leg_b_thigh": 0,
+      "leg_b_shin": 0,
+      "skirt": 0,
+      "skirt_tail": 0,
+      "knot": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
+  },
+  "throw": {
+   "duration": 0.4,
+   "ease": "ease-out",
+   "keys": [
+    {
+     "t": 0,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_f_upper": 0,
+      "arm_f_lower": 0,
+      "arm_b_upper": 0,
+      "arm_b_lower": 0,
+      "leg_f_thigh": 0,
+      "leg_f_shin": 0,
+      "leg_b_thigh": 0,
+      "leg_b_shin": 0,
+      "skirt": 0,
+      "skirt_tail": 0,
+      "knot": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "t": 0.1,
+     "ease": "ease-in",
+     "rotate": {
+      "torso": 10,
+      "head": -4,
+      "arm_f_upper": -70,
+      "arm_f_lower": -30,
+      "arm_b_upper": 30,
+      "arm_b_lower": 10,
+      "leg_b_thigh": -6,
+      "skirt": 3,
+      "skirt_tail": -8
+     },
+     "translate": {
+      "root": [
+       0,
+       4
+      ]
+     }
+    },
+    {
+     "t": 0.18,
+     "rotate": {
+      "torso": -12,
+      "head": 6,
+      "arm_f_upper": 110,
+      "arm_f_lower": 15,
+      "arm_b_upper": -40,
+      "arm_b_lower": -20,
+      "leg_f_thigh": 22,
+      "leg_f_shin": -14,
+      "leg_b_thigh": -18,
+      "leg_b_shin": 12,
+      "skirt": -4,
+      "skirt_tail": 18,
+      "knot": -8
+     },
+     "translate": {
+      "root": [
+       0,
+       16
+      ]
+     }
+    },
+    {
+     "t": 0.26,
+     "rotate": {
+      "torso": -12,
+      "head": 6,
+      "arm_f_upper": 110,
+      "arm_f_lower": 15,
+      "arm_b_upper": -40,
+      "arm_b_lower": -20,
+      "leg_f_thigh": 22,
+      "leg_f_shin": -14,
+      "leg_b_thigh": -18,
+      "leg_b_shin": 12,
+      "skirt": -4,
+      "skirt_tail": 18,
+      "knot": -8
+     },
+     "translate": {
+      "root": [
+       0,
+       16
+      ]
+     },
+     "ease": "ease-in-out"
+    },
+    {
+     "t": 0.4,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_f_upper": 0,
+      "arm_f_lower": 0,
+      "arm_b_upper": 0,
+      "arm_b_lower": 0,
+      "leg_f_thigh": 0,
+      "leg_f_shin": 0,
+      "leg_b_thigh": 0,
+      "leg_b_shin": 0,
+      "skirt": 0,
+      "skirt_tail": 0,
+      "knot": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
   }
  }
 }
