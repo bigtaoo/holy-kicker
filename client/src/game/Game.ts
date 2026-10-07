@@ -291,7 +291,9 @@ export class Game {
           break;
         case 'sweep': {
           const p = s.players.find((q) => q.owner === e.owner);
-          if (e.owner === LOCAL && p) this.staff.swing(e.brad, e.reach / FP, e.full, p.facing);
+          if (e.owner !== LOCAL || !p) break;
+          this.staff.swing(e.brad, e.reach / FP, e.full, p.facing);
+          this.hero.swing();
           break;
         }
         case 'ring': {
@@ -417,6 +419,7 @@ export class Game {
     const p = s.players[0];
     const hx = lerpX(p, alpha);
     const hy = lerpY(p, alpha);
+    this.hero.holdStaff(this.staff.advance(dt));
     this.hero.update(dt, p.facing, p.moving);
     this.hero.view.position.set(hx, hy);
     this.hero.view.zIndex = this.scene.heroOnTop ? (this.scene.heroOverFx ? HERO_OVER_FX_Z : HERO_TOP_Z) : hy;
@@ -434,7 +437,8 @@ export class Game {
     this.mist?.update(dt);
     this.balls.sync(s.balls, alpha, dt);
     this.bowls.sync(s.bowls, alpha, dt);
-    this.staff.update(dt, hx, hy, this.hero.view.zIndex);
+    const hand = this.hero.hand();
+    this.staff.draw(hx, hy, hx + hand.x, hy + hand.y, this.hero.view.zIndex);
     this.fish.update(dt, hx, hy, this.hero.view.zIndex);
     this.beads.draw(s.beads, p.relicId === 'beads' && !p.dead ? beadsRings(p) : [], alpha, hx, hy, this.hero.view.zIndex);
     this.spells.draw(s.fields, s.cymbals, alpha, dt);

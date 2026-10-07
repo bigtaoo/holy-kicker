@@ -1,5 +1,5 @@
 import { Container, Matrix, Rectangle, Sprite, Texture } from 'pixi.js';
-import { computeWorld, restPoses, type Affine } from './pose';
+import { aimChain, chainOf, computeWorld, restPoses, type Affine, type Chain } from './pose';
 import { blendPoses, clipTime, samplePose } from './sample';
 import type { BonePose, TaoSkeleton } from './types';
 
@@ -38,6 +38,7 @@ export class TaoActor {
   private prevClip = '';
   private prevTime = 0;
   private fade = 0;
+  private aimed: { chain: Chain; angle: number; weight: number } | null = null;
 
   constructor(asset: TaoAsset) {
     this.sk = asset.skeleton;
@@ -93,6 +94,27 @@ export class TaoActor {
     sprite.texture = this.texture(image ?? def.image);
   }
 
+  /**
+   * Holds the limb from `bone` to `tip` pointed along `angle` (radians, skeleton space) over
+   * whatever the clip does, e.g. an arm swinging a staff; a `weight` under 1 mixes toward the
+   * clip's pose, and null hands the limb back to the clip.
+   */
+  aim(bone: string, tip: string, angle: number | null, weight = 1): void {
+    if (angle === null || weight <= 0) {
+      this.aimed = null;
+      return;
+    }
+    const chain = this.aimed?.chain.bone === bone ? this.aimed.chain : chainOf(this.sk, bone, tip);
+    this.aimed = { chain, angle, weight: Math.min(1, weight) };
+  }
+
+  /** A bone's pivot in the view's space, as of the last update. */
+  point(bone: string): { x: number; y: number } {
+    const w = this.world.get(bone);
+    if (!w) throw new Error(`${this.sk.name} has no bone ${bone}`);
+    return { x: w.tx, y: w.ty };
+  }
+
   update(dt: number): void {
     const anim = this.sk.animations[this.clip];
     if (anim) {
@@ -106,7 +128,8 @@ export class TaoActor {
         blendPoses(this.fromPoses, this.poses, 1 - this.fade / FADE);
       }
     }
-    computeWorld(this.sk, this.poses, this.world);
+    if (this.aimed) aimChain(this.sk, this.poses, this.world, this.aimed.chain, this.aimed.angle, this.aimed.weight);
+    else computeWorld(this.sk, this.poses, this.world);
     for (const s of this.sprites) {
       const w = this.world.get(s.bone)!;
       // the sprite's top-left sits at (x, y) in bone space

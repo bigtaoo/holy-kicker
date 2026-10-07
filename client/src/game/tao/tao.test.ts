@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { apply, computeWorld, restPoses, type Affine } from './pose';
+import { aimChain, apply, chainOf, computeWorld, restPoses, type Affine } from './pose';
 import { blendPoses, clipTime, ease, samplePose, sampleTrack } from './sample';
 import type { TaoAnimation, TaoSkeleton } from './types';
 
@@ -78,5 +78,41 @@ describe('computeWorld', () => {
     b.get('arm')!.rotate = 40;
     blendPoses(a, b, 0.25);
     expect(b.get('arm')!.rotate).toBeCloseTo(10);
+  });
+});
+
+describe('aimChain', () => {
+  it('points the limb along the angle, bends straightened, whatever its parent does', () => {
+    const chain = chainOf(sk, 'arm', 'hand');
+    expect(chain).toMatchObject({ parent: 'root', bends: [], rest: 0 });
+    const poses = restPoses(sk);
+    poses.get('root')!.rotate = 30;
+    const world = new Map<string, Affine>();
+    aimChain(sk, poses, world, chain, Math.PI / 2);
+    const arm = world.get('arm')!;
+    const hand = world.get('hand')!;
+    expect(hand.tx - arm.tx).toBeCloseTo(0);
+    expect(hand.ty - arm.ty).toBeCloseTo(10);
+  });
+
+  it('straightens the bones between bone and tip', () => {
+    const chain = chainOf(sk, 'root', 'hand');
+    expect(chain.bends).toEqual(['arm']);
+    const poses = restPoses(sk);
+    poses.get('arm')!.rotate = 45;
+    const world = new Map<string, Affine>();
+    aimChain(sk, poses, world, chain, Math.PI);
+    expect(world.get('hand')!.tx).toBeCloseTo(-20);
+    expect(world.get('hand')!.ty).toBeCloseTo(0);
+  });
+});
+
+describe('aimChain weight', () => {
+  it('half weight turns halfway from the clip pose, the short way round', () => {
+    const chain = chainOf(sk, 'arm', 'hand');
+    const poses = restPoses(sk);
+    poses.get('arm')!.rotate = 170;
+    aimChain(sk, poses, new Map(), chain, (-170 * Math.PI) / 180, 0.5);
+    expect(poses.get('arm')!.rotate).toBeCloseTo(180);
   });
 });

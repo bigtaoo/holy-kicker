@@ -65,3 +65,47 @@ export function computeWorld(sk: TaoSkeleton, poses: Map<string, BonePose>, out:
 export function apply(m: Affine, x: number, y: number): { x: number; y: number } {
   return { x: m.a * x + m.c * y + m.tx, y: m.b * x + m.d * y + m.ty };
 }
+
+/** A limb from `bone` down to its descendant `tip`, as aimChain() turns it. */
+export interface Chain {
+  bone: string;
+  /** The bone's parent, whose world rotation the aim is relative to. */
+  parent: string | null;
+  /** The bones between the two, straightened while aimed. */
+  bends: string[];
+  /** Angle of bone pivot -> tip pivot with the chain straight and unturned, in radians. */
+  rest: number;
+}
+
+export function chainOf(sk: TaoSkeleton, bone: string, tip: string): Chain {
+  const byId = new Map(sk.bones.map((b) => [b.id, b]));
+  const bends: string[] = [];
+  let dx = 0;
+  let dy = 0;
+  let b = byId.get(tip);
+  while (b && b.id !== bone) {
+    dx += b.x;
+    dy += b.y;
+    if (b.parent && b.parent !== bone) bends.push(b.parent);
+    b = b.parent ? byId.get(b.parent) : undefined;
+  }
+  if (!b) throw new Error(`${sk.name}: ${tip} does not hang from ${bone}`);
+  return { bone, parent: b.parent, bends, rest: Math.atan2(dy, dx) };
+}
+
+/**
+ * Turns a chain so its bone -> tip line points along `angle` (radians, skeleton space, y down),
+ * whatever the clip did to it and its parents, and recomputes `world` to match. `weight` below 1
+ * mixes back toward the clip's pose, to let go of the aim without a snap.
+ */
+export function aimChain(sk: TaoSkeleton, poses: Map<string, BonePose>, world: Map<string, Affine>, chain: Chain, angle: number, weight = 1): void {
+  for (const id of chain.bends) poses.get(id)!.rotate *= 1 - weight;
+  computeWorld(sk, poses, world);
+  const par = chain.parent ? world.get(chain.parent)! : identity();
+  const pose = poses.get(chain.bone)!;
+  const aimed = ((angle - Math.atan2(par.b, par.a) - chain.rest) * 180) / Math.PI;
+  // the short way round from the clip's rotation
+  const delta = ((((aimed - pose.rotate) % 360) + 540) % 360) - 180;
+  pose.rotate += delta * weight;
+  computeWorld(sk, poses, world);
+}

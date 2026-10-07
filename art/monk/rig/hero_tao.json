@@ -387,6 +387,133 @@
      }
     }
    ]
+  },
+  "swing": {
+   "duration": 0.4,
+   "ease": "ease-out",
+   "keys": [
+    {
+     "t": 0,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_f_upper": 0,
+      "arm_f_lower": 0,
+      "arm_b_upper": 0,
+      "arm_b_lower": 0,
+      "leg_f_thigh": 0,
+      "leg_f_shin": 0,
+      "leg_b_thigh": 0,
+      "leg_b_shin": 0,
+      "skirt": 0,
+      "skirt_tail": 0,
+      "beads": 0,
+      "knot": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     }
+    },
+    {
+     "t": 0.06,
+     "ease": "ease-in",
+     "rotate": {
+      "torso": 6,
+      "head": -3,
+      "arm_f_upper": 30,
+      "arm_b_upper": 20,
+      "arm_b_lower": 10,
+      "leg_f_thigh": 6,
+      "skirt": 2,
+      "skirt_tail": -6
+     },
+     "translate": {
+      "root": [
+       0,
+       6
+      ]
+     }
+    },
+    {
+     "t": 0.14,
+     "rotate": {
+      "torso": -10,
+      "head": 5,
+      "arm_f_upper": -60,
+      "arm_f_lower": -10,
+      "arm_b_upper": -45,
+      "arm_b_lower": -25,
+      "leg_f_thigh": 22,
+      "leg_f_shin": -14,
+      "leg_b_thigh": -18,
+      "leg_b_shin": 12,
+      "skirt": -4,
+      "skirt_tail": 18,
+      "beads": 6,
+      "knot": -8
+     },
+     "translate": {
+      "root": [
+       0,
+       20
+      ]
+     }
+    },
+    {
+     "t": 0.24,
+     "ease": "ease-in-out",
+     "rotate": {
+      "torso": -10,
+      "head": 5,
+      "arm_f_upper": -60,
+      "arm_f_lower": -10,
+      "arm_b_upper": -45,
+      "arm_b_lower": -25,
+      "leg_f_thigh": 22,
+      "leg_f_shin": -14,
+      "leg_b_thigh": -18,
+      "leg_b_shin": 12,
+      "skirt": -4,
+      "skirt_tail": 18,
+      "beads": 6,
+      "knot": -8
+     },
+     "translate": {
+      "root": [
+       0,
+       20
+      ]
+     }
+    },
+    {
+     "t": 0.4,
+     "rotate": {
+      "torso": 0,
+      "head": 0,
+      "arm_f_upper": 0,
+      "arm_f_lower": 0,
+      "arm_b_upper": 0,
+      "arm_b_lower": 0,
+      "leg_f_thigh": 0,
+      "leg_f_shin": 0,
+      "leg_b_thigh": 0,
+      "leg_b_shin": 0,
+      "skirt": 0,
+      "skirt_tail": 0,
+      "beads": 0,
+      "knot": 0
+     },
+     "translate": {
+      "root": [
+       0,
+       0
+      ]
+     }
+    }
+   ]
   }
  }
 }
