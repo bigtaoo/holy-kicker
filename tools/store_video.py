@@ -1,6 +1,6 @@
 """Cuts a CrazyGames preview video from a raw recording (tools/record_video.mjs).
 usage: python store_video.py <landscape|portrait> <raw video> <start seconds> [en|zh]
-Writes art/monk/store/video/<lang>_<shape>.mp4: the store cover as a still for the first second
+Writes art/store/video/<lang>_<shape>.mp4: the store cover as a still for the first second
 (the portal asks for the cover as the opening frame), then a hard cut to the recording from
 <start> on, 20 s in all, no sound, H.264 (CRF 23) at 60 fps with the index up front (docs/store.md "Video").
 The cover is drawn at the video's size by cover_final.py, so it matches the static cover."""
@@ -13,7 +13,7 @@ from PIL import Image
 
 from cover_final import COVERS, cover
 
-STORE = Path(__file__).resolve().parent.parent / "art" / "monk" / "store"
+STORE = Path(__file__).resolve().parent.parent / "art" / "store"
 SIZES = {"landscape": (1920, 1080), "portrait": (1080, 1620)}
 STILL = 1.0
 LENGTH = 20.0

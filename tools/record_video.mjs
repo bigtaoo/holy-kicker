@@ -1,6 +1,6 @@
 // Records a store gameplay video with the dev server's ?autoplay&record switches (client/src/dev/recorder.ts).
 // usage: node tools/record_video.mjs <landscape|portrait|phone> [--from 25] [--seconds 30] [--seed 7]
-//        [--chapter 1] [--extra "&relic=staff"] [--out art/monk/store/video/raw]
+//        [--chapter 1] [--extra "&relic=staff"] [--out art/store/video/raw]
 // Needs `npm run dev` on port 5174. It opens the system Chrome in a window of its own (a hidden
 // or throttled page stops drawing, so not the in-app browser and not a background tab), lets
 // the bot rush to the --from wave, records --seconds of play at the shape's exact size and saves
@@ -23,7 +23,7 @@ const from = Number(opt('from', '25'));
 const seconds = Number(opt('seconds', '30'));
 const seed = opt('seed', '7');
 const chapter = opt('chapter', '1');
-const out = opt('out', 'art/monk/store/video/raw');
+const out = opt('out', 'art/store/video/raw');
 const url =
   `http://localhost:5174/?direct&autoplay&record=${seconds}&shape=${shape}&from=${from}` +
   `&chapter=${chapter}&seed=${seed}&quality=high${opt('extra', '')}`;

@@ -86,10 +86,10 @@ They are recorded from the game's own canvas, so there is no pointer, browser fr
    is drawn at the video's exact size (`shape`: `landscape` 1920×1080, `portrait` 1080×1620,
    `phone` 1080×1920), the balance bot plays, rushes at 6x to wave `from` taking its cards at
    once (so the hero has a real build), then plays at normal speed while 40 s are recorded. The
-   file lands in `art/monk/store/video/raw/` (not committed). Keep the window visible: a hidden page
+   file lands in `art/store/video/raw/` (not committed). Keep the window visible: a hidden page
    stops drawing, which is why this is not done in the in-app browser.
 2. Pick the best 19 s and cut: `python tools/store_video.py landscape <raw.mp4> <start s>`
-   writes `art/monk/store/video/en_landscape.mp4`: 1 s of the cover drawn at the video's size by
+   writes `art/store/video/en_landscape.mp4`: 1 s of the cover drawn at the video's size by
    `cover_final.py`, a hard cut to the fight, H.264 CRF 23, 60 fps, no audio track, faststart.
 
 The landscape video widens the view past the game's 3:4 cap (the recorder's `wide` viewport): it
