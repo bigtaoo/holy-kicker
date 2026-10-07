@@ -89,6 +89,8 @@ export interface Portal {
   celebrate(): void;
   /** The signed-in portal user's name, null for a guest or a host without accounts. */
   userName(): string | null;
+  /** Whether players here have portal accounts: then a guest stays off the boards. */
+  accounts(): boolean;
 }
 
 /**
@@ -134,6 +136,7 @@ export const NO_PORTAL: Portal = {
   gameplayStop() {},
   celebrate() {},
   userName: () => null,
+  accounts: () => false,
 };
 
 /** For hosts without ads: rewarded offers are hidden. */

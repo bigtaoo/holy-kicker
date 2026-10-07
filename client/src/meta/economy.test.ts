@@ -33,7 +33,7 @@ describe('daily', () => {
     expect(claimable(s, NOON)).toBe(tasks.length);
     const before = s.jade;
     s = claimTask(s, NOON, 0);
-    expect(taskState(s.daily, 0)).toBe('claimed');
+    expect(taskState(s, s.daily, 0)).toBe('claimed');
     expect(s.jade).toBe(before + BALANCE.daily.jade);
     expect(claimTask(s, NOON, 0)).toBe(s);
     expect(claimBonus(s, NOON)).toBe(s);
@@ -41,6 +41,23 @@ describe('daily', () => {
     const all = claimBonus(s, NOON);
     expect(all.jade).toBe(s.jade + BALANCE.daily.bonusJade);
     expect(claimBonus(all, NOON)).toBe(all);
+  });
+
+  it('locks the shop and patrol tasks until the shop opens, and pays the bonus without them', () => {
+    const tasks = BALANCE.daily.tasks;
+    const later = tasks.map((g, i) => (g.kind === 'chests' || g.kind === 'patrol' ? i : -1)).filter((i) => i >= 0);
+    expect(later.length).toBeGreaterThan(0);
+    let s = cleared(BALANCE.unlocks.shopChapter - 1);
+    tasks.forEach((g) => (s = bump(s, NOON, g.kind, g.n)));
+    later.forEach((i) => expect(taskState(s, today(s, NOON), i)).toBe('locked'));
+    expect(claimable(s, NOON)).toBe(tasks.length - later.length);
+    expect(claimTask(s, NOON, later[0])).toBe(s);
+    for (let i = 0; i < tasks.length; i++) s = claimTask(s, NOON, i);
+    expect(claimable(s, NOON)).toBe(1);
+    expect(claimBonus(s, NOON).jade).toBe(s.jade + BALANCE.daily.bonusJade);
+    // once the shop opens the same day, its tasks count again
+    const open = { ...s, cleared: BALANCE.unlocks.shopChapter };
+    later.forEach((i) => expect(taskState(open, open.daily, i)).toBe('ready'));
   });
 
   it('survives a round trip and repairs a broken daily', () => {

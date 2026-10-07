@@ -3,12 +3,14 @@ import { t } from '../i18n';
 import type { SaveData } from '../meta/save';
 import type { KeyValueStore } from '../meta/saveStore';
 import type { Backend } from '../net/backend';
+import type { Portal } from '../platform/types';
 import { diceName } from './boardPanel';
 
 // The player's name on the boards (server/README.md "Names"). Nobody types one: a player
-// signed in to a portal account (CrazyGames) goes by its name; everyone else by a dice name,
-// rolled on the first launch and rolled again with the die next to it in the lobby. The server
-// hears the name whenever it changes (a roll, a sign-in, a renamed account) and with every run.
+// signed in to a portal account (CrazyGames) goes by its name; a guest on a host with accounts
+// stays off the boards; everyone else goes by a dice name, rolled on the first launch and rolled
+// again with the die next to it in the lobby. The server hears the name whenever it changes (a
+// roll, a sign-in, a renamed account) and with every run.
 
 /** The last name the server took, so an unchanged one is not sent again. */
 const SENT_KEY = 'hk.named';
@@ -21,8 +23,7 @@ export class PlayerName {
   constructor(
     private readonly net: Pick<Backend, 'online' | 'sendName'>,
     private readonly storage: KeyValueStore,
-    /** The signed-in portal account's name, null for a guest or a host without accounts. */
-    private readonly portalName: () => string | null,
+    private readonly account: Pick<Portal, 'userName' | 'accounts'>,
   ) {}
 
   /** The save with a dice name, rolled now if it has none yet. */
@@ -32,19 +33,31 @@ export class PlayerName {
 
   /** The portal account's name as the boards take it, or null (then the die is offered). */
   portal(): string | null {
-    const name = this.portalName();
+    const name = this.account.userName();
     const c = name ? checkName(name) : null;
     return c?.ok ? c.name : null;
   }
 
-  /** The name the player's runs go out with. */
+  /** Whether the player is on the boards: everywhere but as a guest on a host with accounts. */
+  ranked(): boolean {
+    return !this.account.accounts() || this.account.userName() !== null;
+  }
+
+  /** Whether the lobby offers the die: the player goes by a dice name. */
+  rolls(): boolean {
+    return this.ranked() && this.portal() === null;
+  }
+
+  /** The name the player's runs go out with; null keeps them off the boards. */
   board(save: SaveData): BoardName | null {
+    if (!this.ranked()) return null;
     const portal = this.portal();
     return portal ? { name: portal } : save.dice ? { dice: save.dice } : null;
   }
 
   /** What the lobby shows. */
   shown(save: SaveData): string {
+    if (!this.ranked()) return t('lobby.guest');
     return this.portal() ?? (save.dice ? diceName(save.dice) : t('lobby.guest'));
   }
 

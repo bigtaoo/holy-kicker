@@ -97,7 +97,7 @@ export class Shell {
     /** A desktop: the first run's move hint also names the keyboard. */
     private readonly keys = false,
   ) {
-    this.names = new PlayerName(net, platform.storage, () => this.portal.userName());
+    this.names = new PlayerName(net, platform.storage, platform.portal);
     this.save = this.names.withDice(store.load());
     store.save(this.save);
     const settings = loadSettings(platform.storage);
@@ -217,7 +217,7 @@ export class Shell {
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
       rewarded: () => this.rewarded('lobby'),
-      board: this.net.online ? (id) => this.net.board(id) : null,
+      board: this.net.online && this.names.ranked() ? (id) => this.net.board(id) : null, // no guests on account hosts
       track: (e, p) => this.net.track(e, p),
     }, this.art.icons, this.app.renderer, this.art.lobby);
     if (settings) lobby.openSettings();
@@ -367,13 +367,12 @@ export class Shell {
   }
 
   /**
-   * Pays out the run that ended in `s` (won, lost or given up) and shows the results. Tells the
-   * backend how it went, and enters it on its board when no dev switch bent the rules; the
-   * results show the install's rank there once it comes (none offline, unranked or failed).
+   * Pays out the run that ended in `s` (won, lost or given up; `waves` are the ones fully cleared)
+   * and shows the results. Tells the backend how it went, and enters it on its board when no dev
+   * switch bent the rules; the results show its rank there once it comes (none offline, unranked or failed).
    */
   private settle(s: SimState): void {
     dropRun(this.platform.storage);
-    // waves fully cleared: all of them for a won run, else the ones before the current wave
     const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
     const p = s.players[0];
     const run = {
@@ -381,7 +380,8 @@ export class Shell {
       level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
     };
     this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
-    const rank = rankedRun(this.scene) ? this.net.submitRun({ ...run, ...this.names.board(this.save) }) : Promise.resolve(null);
+    const name = rankedRun(this.scene) ? this.names.board(this.save) : null;
+    const rank = name ? this.net.submitRun({ ...run, ...name }) : Promise.resolve(null);
     void this.net.flush();
     const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills });
     const { reward } = settled;

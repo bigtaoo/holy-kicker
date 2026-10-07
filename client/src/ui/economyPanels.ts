@@ -151,10 +151,19 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
   D.tasks.forEach((goal, i) => {
     const row = new Container();
     row.y = top + ROWS_TOP + i * ROW_H;
-    const state = taskState(d, i);
-    const name = fit(label(t(`tasks.${goal.kind}`, { n: goal.n }), 46, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
+    const state = taskState(save, d, i);
+    const name = fit(label(t(`tasks.${goal.kind}`, { n: goal.n }), 46, state === 'claimed' || state === 'locked' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
+    if (state === 'locked') {
+      // the shop and the patrol open later; until then the task says when, and the bonus skips it
+      const when = fit(label(t('tab.unlockChapter', { n: BALANCE.unlocks.shopChapter }), 40, COLORS.danger, { align: 'left' }), 860);
+      when.anchor.set(0, 0.5);
+      when.position.set(-430, 40);
+      row.addChild(name, when);
+      c.addChild(row);
+      return;
+    }
     const done = Math.min(goal.n, d.progress[i]);
     const gauge = meter(380, done / goal.n, state === 'open' ? COLORS.copper : COLORS.jade);
     gauge.view.position.set(-240, 40);
@@ -172,7 +181,7 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
     }
     c.addChild(row);
   });
-  const ready = bonusReady(d);
+  const ready = bonusReady(save, d);
   const bonus = button(t('tasks.bonus', { jade: D.bonusJade }), 760, 130, () => ready && a.bonus(), {
     fill: ready ? COLORS.jade : COLORS.panelLocked, textFill: ready ? COLORS.outline : COLORS.dim, size: 48,
   });

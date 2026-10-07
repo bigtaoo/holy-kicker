@@ -91,28 +91,36 @@ export function bump(save: SaveData, now: number, kind: TaskKind, n: number): Sa
   return { ...save, daily: { ...d, progress } };
 }
 
-export type TaskState = 'open' | 'ready' | 'claimed';
+export type TaskState = 'locked' | 'open' | 'ready' | 'claimed';
 
-export function taskState(d: Daily, i: number): TaskState {
+/** Tasks about the shop's chests and the patrol wait for them (BALANCE.unlocks.shopChapter). */
+export function taskLocked(save: SaveData, i: number): boolean {
+  const kind = DAILY.tasks[i].kind;
+  return (kind === 'chests' || kind === 'patrol') && save.cleared < BALANCE.unlocks.shopChapter;
+}
+
+export function taskState(save: SaveData, d: Daily, i: number): TaskState {
   if (d.claimed & (1 << i)) return 'claimed';
+  if (taskLocked(save, i)) return 'locked';
   return d.progress[i] >= DAILY.tasks[i].n ? 'ready' : 'open';
 }
 
 /** Tasks that can be claimed now, plus the bonus once it is ready. */
 export function claimable(save: SaveData, now: number): number {
   const d = today(save, now);
-  const ready = DAILY.tasks.filter((_, i) => taskState(d, i) === 'ready').length;
-  return ready + (bonusReady(d) ? 1 : 0);
+  const ready = DAILY.tasks.filter((_, i) => taskState(save, d, i) === 'ready').length;
+  return ready + (bonusReady(save, d) ? 1 : 0);
 }
 
-export function bonusReady(d: Daily): boolean {
-  return !d.bonus && d.claimed === (1 << DAILY.tasks.length) - 1;
+/** The bonus waits for every task the player can do yet: locked ones do not hold it back. */
+export function bonusReady(save: SaveData, d: Daily): boolean {
+  return !d.bonus && DAILY.tasks.every((_, i) => taskState(save, d, i) === 'claimed' || taskState(save, d, i) === 'locked');
 }
 
 /** Pays task `i` when it is done and not yet claimed. */
 export function claimTask(save: SaveData, now: number, i: number): SaveData {
   const d = today(save, now);
-  if (taskState(d, i) !== 'ready') return save;
+  if (taskState(save, d, i) !== 'ready') return save;
   return {
     ...save,
     copper: save.copper + DAILY.copper,
@@ -124,7 +132,7 @@ export function claimTask(save: SaveData, now: number, i: number): SaveData {
 /** Pays the bonus for claiming every task. */
 export function claimBonus(save: SaveData, now: number): SaveData {
   const d = today(save, now);
-  if (!bonusReady(d)) return save;
+  if (!bonusReady(save, d)) return save;
   return { ...save, jade: save.jade + DAILY.bonusJade, daily: { ...d, bonus: true } };
 }
 

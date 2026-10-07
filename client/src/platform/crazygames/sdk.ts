@@ -45,6 +45,8 @@ export interface CgSdkShape {
   user?: {
     /** e.g. { locale: 'en-US', device: { type: 'desktop' } } */
     systemInfo?: { locale?: unknown; device?: { type?: unknown } };
+    /** False where the portal has no accounts (some partner sites). */
+    isUserAccountAvailable?: unknown;
     getUser?: () => unknown;
     addAuthListener?: (listener: (user: unknown) => void) => unknown;
   };
@@ -215,6 +217,11 @@ export class CrazyGamesSdk {
 
   clearBanner(id: string): void {
     void settle(() => this.sdk?.banner?.clearBanner?.(id));
+  }
+
+  /** Whether the page offers CrazyGames accounts; false without the SDK. */
+  accountsAvailable(): boolean {
+    return this.isEnabled() && this.sdk?.user?.isUserAccountAvailable === true;
   }
 
   /** The signed-in user's name, null for a guest or on any failure. */

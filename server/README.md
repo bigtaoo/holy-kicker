@@ -7,8 +7,10 @@ a tag the server derives from that id (HMAC with `HK_TAG_SALT`), never the id it
 
 **Names.** Nobody types a name, so the boards carry no player-made text to moderate (no
 `msgSecCheck` on WeChat, no approval for user content on Poki). A player signed in to a portal
-account goes by its name: CrazyGames asks for it, and moderates its names itself. Everyone
-else goes by a dice name, an adjective, a noun and a number from the string tables' lists
+account goes by its name: CrazyGames asks for it, and moderates its names itself. A guest on
+a host with accounts (CrazyGames where the page offers them) stays off the boards: the client
+neither shows them nor enters its runs. Everyone else (the web, WeChat, hosts without accounts)
+goes by a dice name, an adjective, a noun and a number from the string tables' lists
 (`board.adjs` / `board.nouns`), rolled on the first launch and rolled again with the die next
 to the name in the lobby (`client/src/ui/playerName.ts`). The server keeps the dice name as one
 integer (`packDice` in `src/protocol.ts`), so each viewer reads it in their own language. It

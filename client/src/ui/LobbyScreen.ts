@@ -111,8 +111,9 @@ export class LobbyScreen implements Screen {
     this.view.scale.set(f.scale);
     this.econ.reset();
     this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg), scenery(f, this.backdrop));
-    // a portal account names the player; everyone else gets a die to roll a new name with
-    const reroll = this.names.portal() ? null : () => {
+    // a portal account names the player and a guest on its host has none; everyone else gets a
+    // die to roll a new name with
+    const reroll = !this.names.rolls() ? null : () => {
       this.change({ ...this.save, dice: rollDice(Math.random) });
       this.relayout();
     };
@@ -301,11 +302,13 @@ export class LobbyScreen implements Screen {
     const name = t(`chapter.${n}` as never);
     const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text), 640);
     title.y = -235;
+    // the save keeps waves cleared (the chests count those); the lobby names the wave the best run
+    // reached, as the leaderboard and the run's HUD do
     const best = progress.best[n - 1];
     const status = label(
       !open ? t('lobby.unlockAtChapter', { n: n - 1 })
         : progress.cleared >= n ? t('lobby.cleared')
-        : best > 0 ? t('lobby.best', { wave: best }) : t('lobby.notPlayed'),
+        : best > 0 ? t('lobby.best', { wave: best + 1 }) : t('lobby.notPlayed'),
       48, open ? COLORS.dim : COLORS.danger,
     );
     status.y = -145;

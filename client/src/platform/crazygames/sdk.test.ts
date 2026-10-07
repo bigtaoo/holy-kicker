@@ -79,6 +79,18 @@ describe('CrazyGamesSdk', () => {
     expect(await cg.userName()).toBeNull();
   });
 
+  it('says whether the page offers accounts, and no without the SDK', async () => {
+    const on = make({ environment: 'crazygames', user: { isUserAccountAvailable: true } }).cg;
+    await on.init();
+    expect(on.accountsAvailable()).toBe(true);
+    const partner = make({ environment: 'crazygames', user: { isUserAccountAvailable: false } }).cg;
+    await partner.init();
+    expect(partner.accountsAvailable()).toBe(false);
+    const off = make({ environment: 'disabled', user: { isUserAccountAvailable: true } }).cg;
+    await off.init();
+    expect(off.accountsAvailable()).toBe(false);
+  });
+
   it('reads the portal locale and device, and nothing without the SDK', async () => {
     const { cg } = make({ environment: 'crazygames', user: { systemInfo: { locale: 'de-DE', device: { type: 'tablet' } } } });
     await cg.init();
