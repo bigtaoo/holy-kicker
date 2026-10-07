@@ -105,7 +105,8 @@ gameplay, ads, quality and SDK game-module pages). It was served from a sub-path
 | No custom fullscreen button, no Escape, AZERTY-safe keys | None; movement reads physical key codes, so ZQSD works on AZERTY |
 | No page scroll or selection, safe areas | Arrow keys are cancelled; `user-select` and `touch-action` are set in `index.html`; safe-area insets are respected |
 | No external links; no personal data collected | None; the save is the SDK data module |
-| Username shown, no login screen | The lobby header shows the SDK username |
+| Username shown, no login screen | The lobby header shows the SDK username; a guest on a page with accounts sees "Guest" and no leaderboard |
 
 Still to check on the portal itself: upload the zip to the developer portal's QA preview, then
-watch a real ad fill and a signed-in save carry over between devices.
+watch a real ad fill, a signed-in save carry over between devices, and the leaderboard button
+hidden for a guest (read from the SDK's `user.isUserAccountAvailable`).
