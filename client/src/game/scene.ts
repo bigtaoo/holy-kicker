@@ -103,6 +103,8 @@ export interface SceneOptions {
   autoplay: boolean;
   /** Dev: records this many seconds of the first run to a video file (?record=20); 0 off. */
   record: number;
+  /** Dev: with ?autoplay the bot rushes to this wave before a recording starts (?from=25); 0 off. */
+  from: number;
 }
 
 export type DecoMode = 'none' | 'patches' | 'props';
@@ -142,6 +144,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   monk: null,
   autoplay: false,
   record: 0,
+  from: 0,
 };
 
 /** No dev switch changes the rules of a run, so it may go on the leaderboard. */
@@ -206,6 +209,7 @@ export function parseScene(query: string): SceneOptions {
     monk: MONK_IDS.find((m) => m === q.get('monk')) ?? DEFAULT_SCENE.monk,
     autoplay: q.has('autoplay'),
     record: num(q.get('record'), 1, 120, DEFAULT_SCENE.record),
+    from: Math.min(50, intAtLeast(q.get('from'), 1, DEFAULT_SCENE.from)),
   };
 }
 

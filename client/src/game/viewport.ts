@@ -4,6 +4,8 @@
 // - Wider screens (desktop web) may widen the play area up to 3:4, and the camera zooms in
 //   up to ZOOM_AT_WIDEST so characters stay readable in a small 16:9 portal iframe.
 // - Beyond 3:4 the play area is pillarboxed; beyond MIN_ASPECT it is letterboxed.
+// - `wide` (only the dev recorder's landscape store video) lifts the 3:4 cap: a wider screen
+//   then shows the same world area as 3:4 does, spread across the screen's shape.
 
 export const DESIGN_W = 1080;
 export const DESIGN_H = 1920;
@@ -25,9 +27,9 @@ export interface Viewport {
   playH: number;
 }
 
-export function computeViewport(screenW: number, screenH: number): Viewport {
+export function computeViewport(screenW: number, screenH: number, wide = false): Viewport {
   const aspect = screenW / screenH;
-  const playAspect = Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, aspect));
+  const playAspect = Math.min(wide ? Infinity : MAX_ASPECT, Math.max(MIN_ASPECT, aspect));
   const playW = aspect > playAspect ? screenH * playAspect : screenW;
   const playH = aspect < playAspect ? screenW / playAspect : screenH;
 
@@ -36,6 +38,11 @@ export function computeViewport(screenW: number, screenH: number): Viewport {
   if (playAspect <= PHONE_ASPECT) {
     viewW = DESIGN_W;
     viewH = DESIGN_W / playAspect;
+  } else if (playAspect > MAX_ASPECT) {
+    // the widest play area's world area, at this shape
+    const area = (DESIGN_H / ZOOM_AT_WIDEST) ** 2 * MAX_ASPECT;
+    viewH = Math.sqrt(area / playAspect);
+    viewW = viewH * playAspect;
   } else {
     const t = (playAspect - PHONE_ASPECT) / (MAX_ASPECT - PHONE_ASPECT);
     const zoom = 1 + (ZOOM_AT_WIDEST - 1) * t;

@@ -1,5 +1,6 @@
 import type { Host } from '@hk/protocol';
 import { Application } from 'pixi.js';
+import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
@@ -81,17 +82,17 @@ export class WebPlatform implements Platform {
   async createApp(msaa: boolean): Promise<Application> {
     installTextCanvasFix();
     const app = new Application();
-    // dev ?record: a fixed phone-sized canvas, scaled to the window by CSS (dev/recorder.ts)
-    const record = new URLSearchParams(location.search).has('record');
+    // dev ?record: a fixed canvas at the video's size, scaled to the window by CSS (dev/recorder.ts)
+    const record = recordSize(location.search);
     await app.init({
       background: '#141816',
-      ...(record ? { width: 1080, height: 1920, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, 2) }),
+      ...(record ? { ...record, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, 2) }),
       antialias: msaa,
       autoDensity: !record,
       // WeChat has no WebGPU; use WebGL everywhere so both hosts behave the same.
       preference: 'webgl',
     });
-    if (record) app.canvas.style.cssText = 'display:block;height:100vh;width:auto;margin:0 auto';
+    if (record) app.canvas.style.cssText = 'display:block;max-width:100vw;max-height:100vh;margin:0 auto';
     document.body.appendChild(app.canvas);
     // a right-click or long press is a game input, never the browser's menu
     app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());

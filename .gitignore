@@ -32,3 +32,6 @@ art/audio/audition.html
 
 # Tool run logs (art generation and the like)
 *.log
+
+# Raw store video recordings (tools/record_video.mjs); only the cut videos are kept
+art/monk/store/video/raw/

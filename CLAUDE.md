@@ -53,7 +53,8 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
   the run with that relic whatever the save says; `?sutras` gives every run all four sutras;
   `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode;
   `?monk=fat` (or `novice`) plays as that monk whatever the save says.
-  `?autoplay` lets the balance bot play; `?record=SECONDS` records the run to a 1080x1920 video (`src/dev/recorder.ts`).
+  `?autoplay` lets the balance bot play (`&from=N` rushes it to wave N first); `?record=SECONDS` records the run to a
+  video (`&shape=landscape|portrait|phone`, `src/dev/recorder.ts`); store videos: `tools/record_video.mjs` → `tools/store_video.py` (`docs/store.md`).
 - `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay) at
   hk.gamestao.com on daydayup's box; `src/protocol.ts` is the wire format, imported by the client
   as `@hk/protocol`. CI deploys it on every green push to `main` (`npm run deploy:server` by hand). Dev: `?api=http://localhost:8080` with

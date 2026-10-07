@@ -421,7 +421,7 @@ export class Shell {
       this.screenKey = key;
       const insets = this.platform.safeInsets();
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
-      this.screen.layout(uiFrame(computeViewport(width, height), insets));
+      this.screen.layout(uiFrame(computeViewport(width, height, this.scene.record > 0), insets));
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);

@@ -63,17 +63,44 @@ thumbnail size.
 | Landscape cover | 1920×1080 | The monk mid-kick on the left third, the ball flying right into a crowd of jiangshi and wisps, the Fallen Abbot looming behind; logo top centre |
 | Portrait cover | 800×1200 | The monk mid-kick in the lower half, horde above; logo on top |
 | Square cover | 800×800 | Monk and ball only, close up; logo at the bottom |
-| Gameplay video (optional) | 1080×1920, 15–20 s | A late-wave screen full of mobs, an evolution card, the boss |
-
-**Recording the video**: run the dev server (`npm run dev`) and open, in Chrome,
-`http://localhost:5174/?direct&autoplay&record=20&chapter=1&wave=38&sutras&quality=high&seed=7`.
-`autoplay` lets the balance bot play (the level-up cards stay up 1.3 s, so they show),
-`record=20` draws a fixed 1080×1920 canvas and saves 20 s of the run as MP4 (WebM where the
-browser has no H.264); R stops early. Keep the tab in front: a hidden tab stops drawing. Try
-other `seed`, `wave`, `chapter` and `relic` values for a fuller screen or a boss (wave 50).
+| Preview video, landscape | 1920×1080 (16:9), 15–20 s, ≤50 MB | Required. The cover still, then a mid-run fight (see "Video") |
+| Preview video, portrait | 1080×1620 (2:3), 15–20 s, ≤50 MB | Required. The same, at the portrait cover's shape |
 
 Covers are painted key art in the game's sticker style (see `docs/content.md` and
 `art/monk/`), not cropped gameplay: a portrait game screen does not fill a 16:9 cover.
+
+## Video
+
+CrazyGames' rules ([game covers](https://docs.crazygames.com/requirements/game-covers/), checked
+2026-10-07): both a 16:9 and a 2:3 video, 15–20 s (longer is cut at 20 s), at most 50 MB; **the
+static cover as the opening frame**; no sound; no black screen or logo transition, no black bars,
+no mouse pointer, no "Play now" or other promotional text, no app or social icons; no fast-forward
+(the portal speeds the video up a little itself).
+
+They are recorded from the game's own canvas, so there is no pointer, browser frame or sound:
+
+1. `npm run dev`, then for each shape
+   `node tools/record_video.mjs landscape --from 35 --seconds 40` (and `portrait`). It opens
+   the system Chrome in a window of its own and loads
+   `?direct&autoplay&record=40&shape=landscape&from=35&chapter=1&seed=7&quality=high`: the canvas
+   is drawn at the video's exact size (`shape`: `landscape` 1920×1080, `portrait` 1080×1620,
+   `phone` 1080×1920), the balance bot plays, rushes at 6x to wave `from` taking its cards at
+   once (so the hero has a real build), then plays at normal speed while 40 s are recorded. The
+   file lands in `art/monk/store/video/raw/` (not committed). Keep the window visible: a hidden page
+   stops drawing, which is why this is not done in the in-app browser.
+2. Pick the best 19 s and cut: `python tools/store_video.py landscape <raw.mp4> <start s>`
+   writes `art/monk/store/video/en_landscape.mp4`: 1 s of the cover drawn at the video's size by
+   `cover_final.py`, a hard cut to the fight, H.264 CRF 23, 60 fps, no audio track, faststart.
+
+The landscape video widens the view past the game's 3:4 cap (the recorder's `wide` viewport): it
+shows the same world area as the widest real play area, spread to 16:9, rather than side bars.
+The boss bar keeps its portrait height there and lands across the hero, so the landscape video
+avoids boss waves (20, 35, 50); the portrait one can show the mid-boss. The bot can fall during
+the rush (the runs are not repeatable frame for frame); the script then fails the take, and
+another `--seed` usually gets through. Don't edit client code while a take records: Vite reloads
+the page.
+The covers and videos are uploaded by hand on the developer portal (funny found a scripted file
+drop rejected with `UploadType is not properly set`).
 
 ## Title and logo
 

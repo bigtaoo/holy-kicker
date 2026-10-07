@@ -26,6 +26,7 @@
     "deploy:server": "npm run deploy -w server"
   },
   "devDependencies": {
+    "playwright-core": "^1.63.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
     "vitest": "^4.1.10"

@@ -31,7 +31,7 @@ import { Mist } from './mistView';
 import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
-import { Autoplay } from './autoplay';
+import { Autoplay, RUSH_SPEED } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
 import { releaseBaked } from './bake';
@@ -134,7 +134,7 @@ export class Game {
     const seed = restored?.config.seed ?? (scene.seed || 1 + Math.floor(Math.random() * 0x7ffffffe));
     this.engine = new Engine(restored?.config ?? runConfig(scene, seed, setup), undefined, restored);
     this.resumed = !!restored;
-    this.autoplay = scene.autoplay ? new Autoplay(LOCAL, seed) : null;
+    this.autoplay = scene.autoplay ? new Autoplay(LOCAL, seed, scene.from) : null;
     const chapter = setup.waves > 0;
     const s = this.engine.state;
     // dev: skip ahead, so the next tick begins the asked-for wave
@@ -222,7 +222,7 @@ export class Game {
     const key = `${width}x${height}`;
     if (key === this.screenKey) return;
     this.screenKey = key;
-    const vp = (this.vp = computeViewport(width, height));
+    const vp = (this.vp = computeViewport(width, height, this.scene.record > 0));
     this.root.position.set(vp.playX, vp.playY);
     this.playMask.clear().rect(vp.playX, vp.playY, vp.playW, vp.playH).fill(0xffffff);
     this.world.scale.set(vp.scale);
@@ -257,7 +257,8 @@ export class Game {
       this.draw(this.loop.alpha, 0);
       return;
     }
-    const steps = this.loop.advance(frameMs, this.speed);
+    const speed = this.rushing ? RUSH_SPEED : this.speed;
+    const steps = this.loop.advance(frameMs, speed);
     for (let i = 0; i < steps; i++) {
       this.engine.submit(this.command());
       const events = this.engine.advance();
@@ -266,7 +267,12 @@ export class Game {
       this.react(events);
       this.onEvents(events);
     }
-    this.draw(this.loop.alpha, Math.min(frameMs / 1000, 0.05) * this.speed);
+    this.draw(this.loop.alpha, Math.min(frameMs / 1000, 0.05) * speed);
+  }
+
+  /** Dev: the bot is still rushing to the ?from wave, so a recording waits. */
+  get rushing(): boolean {
+    return this.autoplay?.rushing(this.engine.state) ?? false;
   }
 
   /** The local stick (and keys) for the next tick, quantized at the input edge. */

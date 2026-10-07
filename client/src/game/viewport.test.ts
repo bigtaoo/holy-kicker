@@ -27,6 +27,16 @@ describe('computeViewport', () => {
     expect(120 * v.scale).toBeGreaterThan(35);
   });
 
+  it('fills a 16:9 recording when wide, with the 3:4 world area', () => {
+    const v = computeViewport(1920, 1080, true);
+    const narrow = computeViewport(810, 1080);
+    expect([v.playX, v.playY, v.playW, v.playH]).toEqual([0, 0, 1920, 1080]);
+    expect(v.viewW / v.viewH).toBeCloseTo(16 / 9);
+    expect(v.viewW * v.viewH).toBeCloseTo(narrow.viewW * narrow.viewH);
+    // continuous where the cap used to be
+    expect(Math.abs(computeViewport(1081, 1440, true).viewH - narrow.viewH)).toBeLessThan(2);
+  });
+
   it('is continuous at the phone aspect', () => {
     const a = computeViewport(1080, 1920);
     const b = computeViewport(1081, 1920);
