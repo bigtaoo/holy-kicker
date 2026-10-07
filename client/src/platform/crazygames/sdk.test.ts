@@ -59,6 +59,26 @@ describe('CrazyGamesSdk', () => {
     expect(await cg.requestAd('rewarded')).toBe(false);
   });
 
+  it('knows Basic Launch serves no ads, asking only once', async () => {
+    let asked = 0;
+    const prefetchAd = () => {
+      asked++;
+      throw Object.assign(new Error('ads disabled'), { code: 'adsDisabledBasicLaunch' });
+    };
+    const basic = make({ environment: 'crazygames', ad: { prefetchAd } }).cg;
+    await basic.init();
+    expect(basic.adsAllowed()).toBe(false);
+    expect(basic.adsAllowed()).toBe(false);
+    expect(asked).toBe(1);
+    // any other failure, or an SDK without prefetchAd, still offers ads and lets them fail
+    const odd = make({ environment: 'crazygames', ad: { prefetchAd: () => { throw new Error('x'); } } }).cg;
+    await odd.init();
+    expect(odd.adsAllowed()).toBe(true);
+    const full = make({ environment: 'crazygames', ad: {} }).cg;
+    await full.init();
+    expect(full.adsAllowed()).toBe(true);
+  });
+
   it('exposes the data module and the username', async () => {
     const map = new Map<string, string>();
     const { cg } = make({

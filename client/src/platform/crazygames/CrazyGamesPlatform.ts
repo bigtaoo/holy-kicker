@@ -44,7 +44,8 @@ export class CrazyGamesPlatform extends WebPlatform {
     // the browser's audio, plus the portal's own mute button
     const web = webAudioHost();
     this.audio = web && { ...web, onHostMute: (cb) => sdk.onMuteChange(cb) };
-    const adsOk = async () => sdk.isEnabled() && !(await sdk.hasAdblock());
+    // no offer, banner or break ad where none can play: Basic Launch or an adblocker
+    const adsOk = async () => sdk.isEnabled() && sdk.adsAllowed() && !(await sdk.hasAdblock());
     this.banner = new BannerHost({
       available: adsOk,
       request: (id, width, height) => sdk.requestBanner(id, width, height),
@@ -54,7 +55,7 @@ export class CrazyGamesPlatform extends WebPlatform {
       rewardedAvailable: adsOk,
       rewarded: (started) => sdk.requestAd('rewarded', { adStarted: started }),
       midgame: async (started) => {
-        await sdk.requestAd('midgame', { adStarted: started });
+        if (sdk.adsAllowed()) await sdk.requestAd('midgame', { adStarted: started });
       },
     };
   }

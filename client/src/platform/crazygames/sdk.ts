@@ -41,6 +41,8 @@ export interface CgSdkShape {
   ad?: {
     requestAd?: (type: CgAdType, callbacks: CgAdCallbacks) => unknown;
     hasAdblock?: () => unknown;
+    /** Throws an error with code 'adsDisabledBasicLaunch' while the game is in Basic Launch. */
+    prefetchAd?: (type: CgAdType) => unknown;
   };
   user?: {
     /** e.g. { locale: 'en-US', device: { type: 'desktop' } } */
@@ -94,6 +96,7 @@ export class CrazyGamesSdk {
   private sdk: CgSdkShape | null = null;
   private env: CgEnvironment = 'disabled';
   private adblock: boolean | null = null;
+  private basicLaunch: boolean | null = null;
 
   constructor(
     private readonly global: CgGlobal = globalThis as CgGlobal,
@@ -207,6 +210,21 @@ export class CrazyGamesSdk {
     if (typeof fn !== 'function') return false;
     this.adblock = (await settle(() => fn.call(this.sdk?.ad))) === true;
     return this.adblock;
+  }
+
+  /** Whether the portal serves this game ads at all: none in Basic Launch, where every request
+   *  ends in adError. prefetchAd is the one call that says so at once, and it only warms the
+   *  next midgame ad (funny's live finding). Asked once. */
+  adsAllowed(): boolean {
+    if (this.basicLaunch === null) {
+      try {
+        this.sdk?.ad?.prefetchAd?.call(this.sdk.ad, 'midgame');
+        this.basicLaunch = false;
+      } catch (e) {
+        this.basicLaunch = (e as { code?: unknown } | null)?.code === 'adsDisabledBasicLaunch';
+      }
+    }
+    return !this.basicLaunch;
   }
 
   /** Fills a container with a banner of an explicit size: the responsive request found no
