@@ -3,13 +3,15 @@ import { getLocale, localeName, t, type Key, type Locale } from '../i18n';
 import { QUALITY_MODES, type QualityMode } from '../game/quality';
 import type { Sound } from '../audio/Sound';
 import type { KeyValueStore } from '../meta/saveStore';
+import type { PrivacyUi } from '../net/privacyChoice';
 import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
 import { languagePanel } from './languagePanel';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
 
 // The settings panel, opened from the lobby's gear: language (a button to the picker,
 // languagePanel.ts), the sound effects' and the
-// music's volume in steps (0 is off), the graphics quality and, online, the data notice. Every change goes straight to the shell, which
+// music's volume in steps (0 is off), the graphics quality and, online, play data: sharing on or off,
+// the privacy policy and the install's id. Every change goes straight to the shell, which
 // stores it and redraws the lobby, so the panel just shows the current values.
 
 export interface SettingsActions {
@@ -20,8 +22,8 @@ export interface SettingsActions {
   setMusic(volume: number): void;
   quality(): QualityMode;
   setQuality(mode: QualityMode): void;
-  /** Whether the game talks to its backend: the panel then says what it sends. */
-  online: boolean;
+  /** Where the game talks to its backend, the player's privacy answer (net/privacyChoice.ts); null offline. */
+  privacy: PrivacyUi | null;
   close(): void;
 }
 
@@ -29,7 +31,7 @@ export interface SettingsActions {
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'online'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy'>,
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: o.setLanguage,
@@ -48,7 +50,7 @@ export function storedSettings(
       updateSettings(kv, { quality });
       o.setQuality(quality);
     },
-    online: o.online,
+    privacy: o.privacy,
   };
 }
 
@@ -104,12 +106,33 @@ function volumeRow(volume: number, set: (v: number) => void): Container {
   return row;
 }
 
+/** Sharing on or off and the policy side by side, then what is sent and the install's id. */
+function dataRows(p: PrivacyUi, add: (c: Container, step: number) => void, heading: (text: string) => void): void {
+  heading(t('settings.data'));
+  const row = new Container();
+  const bw = (ROW + 160 - 24) / 2;
+  const on = p.sharing();
+  const share = button(on ? t('settings.shareOn') : t('settings.shareOff'), bw, 110, () => p.set(!on), {
+    fill: on ? COLORS.saffron : COLORS.panelLocked,
+    textFill: on ? COLORS.outline : COLORS.text,
+    size: 44,
+  });
+  const policy = button(t('settings.policy'), bw, 110, () => p.openPolicy(), { fill: COLORS.panelLocked, size: 44 });
+  share.x = -(bw + 24) / 2;
+  policy.x = (bw + 24) / 2;
+  row.addChild(share, policy);
+  add(row, 140);
+  const id = p.id();
+  const text = t('settings.dataNotice') + (id ? '\n' + t('settings.playId', { id }) : '');
+  add(label(text, 36, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 100, breakWords: true }), 190);
+}
+
 export function settingsPanel(w: number, h: number, a: SettingsActions): Container {
   const view = new Container();
   view.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const boxH = a.online ? 1530 : 1370;
+  const boxH = a.privacy ? 1790 : 1370;
   let y = -boxH / 2;
   box.addChild(panel(W, boxH));
   const add = (c: Container, step: number) => {
@@ -139,7 +162,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   add(choices(QUALITY_MODES, (m) => t(`settings.${m}`), mode, (m) => a.setQuality(m)), 140);
   add(fit(label(t(HINT[mode]), 40, COLORS.dim), W - 80), 90);
 
-  if (a.online) add(label(t('settings.dataNotice'), 36, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 100, breakWords: true }), 160);
+  if (a.privacy) dataRows(a.privacy, add, heading);
 
   y += 40;
   add(button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked }), 110);

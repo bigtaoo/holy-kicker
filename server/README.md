@@ -31,6 +31,7 @@ before names) goes by a dice name made from its tag.
 | `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /v1/reports/<id>` | one report whole, replay included (same key) |
 | `GET /v1/stats?days=14&host=crazygames` | operator numbers (src/stats.ts): daily actives, new installs, runs, boards (with the waves lost runs ended on), the first clears of each board (days and runs it took the window's new installs), retention cohorts (D1/3/7/14/30, null until the day is over), the new-player funnel and D1 by what day 0 looked like; `host` optional; `Authorization: Bearer $HK_ADMIN_KEY` |
+| `GET /privacy` | the game's privacy policy (src/privacy.en.html; `?lang=zh` or a Chinese browser gets src/privacy.zh.html), linked from the game's settings and its consent card |
 | `GET /dash` | the operator's dashboard over `/v1/stats` (src/dash.html; asks for the admin key, keeps it in the browser). How to read it and what to change: docs/retention.md |
 
 A run ranks by: a win over any loss, then more waves, then less time (`runScore`). Every request

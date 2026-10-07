@@ -88,6 +88,13 @@ export class WeChatPlatform implements Platform {
     return d ? [d.brand, d.model, d.system, `base ${wx.getAppBaseInfo?.().SDKVersion ?? '?'}`].filter(Boolean).join(' · ').slice(0, 300) : 'wechat';
   }
 
+  /** WeChat stays offline (net/backend.ts), so nothing asks about privacy here. */
+  country(): string | null {
+    return null;
+  }
+
+  openUrl(_url: string): void {}
+
   languages(): string[] {
     const lang = wx.getAppBaseInfo?.().language;
     return lang ? [lang] : [];

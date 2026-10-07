@@ -32,6 +32,10 @@ export class EventQueue {
     return this.items.splice(0, LIMITS.batchEvents);
   }
 
+  clear(): void {
+    this.items = [];
+  }
+
   restore(batch: ClientEvent[]): void {
     this.items = [...batch, ...this.items].slice(-QUEUE_CAP);
   }

@@ -45,8 +45,8 @@ export interface CgSdkShape {
     prefetchAd?: (type: CgAdType) => unknown;
   };
   user?: {
-    /** e.g. { locale: 'en-US', device: { type: 'desktop' } } */
-    systemInfo?: { locale?: unknown; device?: { type?: unknown } };
+    /** e.g. { countryCode: 'DE', locale: 'en-US', device: { type: 'desktop' } } */
+    systemInfo?: { countryCode?: unknown; locale?: unknown; device?: { type?: unknown } };
     /** False where the portal has no accounts (some partner sites). */
     isUserAccountAvailable?: unknown;
     getUser?: () => unknown;
@@ -253,6 +253,13 @@ export class CrazyGamesSdk {
     if (!this.isEnabled()) return null;
     const v = this.sdk?.user?.systemInfo?.locale;
     return typeof v === 'string' && v !== '' ? v : null;
+  }
+
+  /** The player's country as the portal sees it (e.g. 'DE'), null without the SDK. */
+  countryCode(): string | null {
+    if (!this.isEnabled()) return null;
+    const v = this.sdk?.user?.systemInfo?.countryCode;
+    return typeof v === 'string' && /^[A-Za-z]{2}$/.test(v) ? v.toUpperCase() : null;
   }
 
   /** 'desktop', 'tablet' or 'mobile' as the portal sees it, null without the SDK. */

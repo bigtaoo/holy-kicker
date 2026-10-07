@@ -1,17 +1,21 @@
 import type { BoardName, BoardReply, EventBatch, EventName, Host, NameEntry, PropValue, Report, RunEntry } from '@hk/protocol';
+import type { Sharing } from '../meta/privacy';
 import type { Platform } from '../platform/types';
 import { EventQueue, newId } from './events';
 
 // The game's link to its backend (server/README.md): analytics batches, leaderboard runs and
 // problem reports. Everything here is best effort: a failed send is retried later or dropped,
-// never in the way of the game (only a report says whether it went through).
+// never in the way of the game (only a report says whether it went through). The player's privacy
+// answer (meta/privacy.ts) sets what may go out: with sharing held, events wait on the device; off,
+// they are dropped; either way no run, name or install id leaves it. A problem report, sent only
+// when the player asks for it, always goes.
 
 /** Seconds between two analytics sends while the game runs. */
 const FLUSH_EVERY = 20;
 const TIMEOUT_MS = 8000;
 /** A report carries a replay of up to a few MB, so it gets longer on a slow phone. */
 const REPORT_TIMEOUT_MS = 45_000;
-const INSTALL_KEY = 'hk.install';
+export const INSTALL_KEY = 'hk.install';
 export const DEFAULT_API = 'https://hk.gamestao.com';
 
 /**
@@ -38,7 +42,8 @@ export interface RunRank {
 }
 
 export class Backend {
-  readonly install: string;
+  private id: string | null = null;
+  private sharing: Sharing = 'send';
   private readonly session = newId(Math.random);
   private readonly queue = new EventQueue();
   private sending = false;
@@ -51,18 +56,31 @@ export class Backend {
     private readonly build: string,
     private readonly locale: () => string,
   ) {
-    let install = platform.storage.getItem(INSTALL_KEY);
-    if (!install) {
-      install = newId(Math.random);
-      platform.storage.setItem(INSTALL_KEY, install);
-    }
-    this.install = install;
     if (!base) return;
     setInterval(() => void this.flush(), FLUSH_EVERY * 1000);
     platform.onHide(() => {
       if (this.leave) this.track('leave', this.leave());
       void this.flush();
     });
+  }
+
+  /** The install's random id, made and kept the first time something needs it: a player who
+   *  never shares has none stored. */
+  get install(): string {
+    if (this.id) return this.id;
+    let id = this.platform.storage.getItem(INSTALL_KEY);
+    if (!id) {
+      id = newId(Math.random);
+      this.platform.storage.setItem(INSTALL_KEY, id);
+    }
+    return (this.id = id);
+  }
+
+  /** What may go out from now on: held events go once sharing is on, and are dropped once it is off. */
+  setSharing(s: Sharing): void {
+    this.sharing = s;
+    if (s === 'off') this.queue.clear();
+    if (s === 'send') void this.flush();
   }
 
   /** Says where the player is each time the game goes to the background (the `leave` event, sent at once). */
@@ -75,12 +93,12 @@ export class Backend {
   }
 
   track(e: EventName, p?: Record<string, PropValue>): void {
-    if (this.base) this.queue.push(e, Date.now(), p);
+    if (this.base && this.sharing !== 'off') this.queue.push(e, Date.now(), p);
   }
 
   /** Sends what waits, one batch at a time; a failed batch goes back for the next try. */
   async flush(): Promise<void> {
-    if (!this.base || this.sending || this.queue.size === 0) return;
+    if (!this.base || this.sharing !== 'send' || this.sending || this.queue.size === 0) return;
     this.sending = true;
     try {
       while (this.queue.size > 0) {
@@ -99,6 +117,7 @@ export class Backend {
 
   /** Enters a finished run on its board; the reply has the install's rank there, or null offline. */
   async submitRun(run: RunResult): Promise<RunRank | null> {
+    if (this.sharing !== 'send') return null;
     const entry: RunEntry = { ...run, install: this.install, host: this.platform.host, build: this.build };
     const r = (await this.send('POST', '/v1/runs', entry)) as Partial<RunRank> | null;
     return r && typeof r.rank === 'number' && r.rank > 0 ? (r as RunRank) : null;
@@ -106,6 +125,7 @@ export class Backend {
 
   /** Gives the install its name on the boards; whether the server took it. */
   async sendName(name: BoardName): Promise<boolean> {
+    if (this.sharing !== 'send') return false;
     const entry: NameEntry = { install: this.install, host: this.platform.host, ...name };
     return (await this.send('POST', '/v1/name', entry)) !== null;
   }
@@ -116,6 +136,7 @@ export class Backend {
     return (await this.send('POST', '/v1/reports', report, REPORT_TIMEOUT_MS)) !== null;
   }
 
+  /** Read as this install (with its own row) only while sharing; the top rows are anyone's. */
   async board(id: string): Promise<BoardReply | null> {
     return (await this.send('GET', `/v1/boards/${id}`)) as BoardReply | null;
   }
@@ -128,7 +149,7 @@ export class Backend {
     try {
       const res = await fetch(this.base + path, {
         method,
-        headers: { 'x-hk-install': this.install, ...(body ? { 'content-type': 'application/json' } : {}) },
+        headers: { ...(this.sharing === 'send' ? { 'x-hk-install': this.install } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
         body: body ? JSON.stringify(body) : undefined,
         signal: abort.signal,
         // a batch sent as the tab goes away still arrives (browsers cap keepalive bodies at 64 kB)

@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { IncomingMessage } from 'node:http';
 import { describe, expect, it } from 'vitest';
-import { ipOf, MAX_BODY, maxBody, readBody } from './http';
+import { ipOf, MAX_BODY, maxBody, pageLang, readBody } from './http';
 import { LIMITS } from './protocol';
 
 /** A request that delivers `chunks` once read; `destroyed` tells whether it was cut off. */
@@ -51,5 +51,15 @@ describe('ipOf', () => {
     expect(ipOf(request([], { 'x-forwarded-for': ['4.4.4.4, 5.5.5.5'] }))).toBe('4.4.4.4');
     expect(ipOf(request([], {}))).toBe('9.9.9.9');
     expect(ipOf(request([], {}, ''))).toBe('?');
+  });
+});
+
+describe('pageLang', () => {
+  it('takes ?lang= first, then a Chinese browser, else English', () => {
+    expect(pageLang(new URLSearchParams('lang=zh'), 'de-DE')).toBe('zh');
+    expect(pageLang(new URLSearchParams('lang=en'), 'zh-CN,zh')).toBe('en');
+    expect(pageLang(new URLSearchParams('lang=xx'), 'zh-TW')).toBe('zh');
+    expect(pageLang(new URLSearchParams(), 'fr-FR,zh;q=0.5')).toBe('en');
+    expect(pageLang(new URLSearchParams(), undefined)).toBe('en');
   });
 });

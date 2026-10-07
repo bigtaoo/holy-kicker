@@ -29,7 +29,7 @@ import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { ResumeScreen } from './ResumeScreen';
 import { RunHud } from './RunHud';
-import { storedSettings } from './settingsPanel';
+import { storedSettings, type SettingsActions } from './settingsPanel';
 import { canReport, reportProblem } from './problemReport';
 import { PlayerName } from './playerName';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
@@ -96,6 +96,7 @@ export class Shell {
     private readonly net: Backend,
     /** A desktop: the first run's move hint also names the keyboard. */
     private readonly keys = false,
+    private readonly privacy: SettingsActions['privacy'] = null, // the player's privacy answer (net/privacyChoice.ts); null offline
   ) {
     this.names = new PlayerName(net, platform.storage, platform.portal);
     this.save = this.names.withDice(store.load());
@@ -212,7 +213,7 @@ export class Shell {
       settings: storedSettings(this.platform.storage, this.sound, {
         setLanguage: (locale) => this.setLanguage(locale),
         setQuality: (quality) => this.onQualityMode(quality),
-        online: this.net.online,
+        privacy: this.privacy,
       }),
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
@@ -425,15 +426,10 @@ export class Shell {
     }
     if (this.game && this.hud) this.watchRun(this.game, this.hud);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);
-    // the run has the battle music (the boss's on the mid-boss and boss waves), every screen
-    // around it the lobby's
-    this.sound.flush(this.game ? (this.bossFight(this.game) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS);
-  }
-
-  /** The run is on a mid-boss or boss wave (the boss music plays through to the results). */
-  private bossFight(game: Game): boolean {
-    const s = game.engine.state;
-    return s.config.waves > 0 && isBossWave(s.wave, s.config.waves);
+    // the run has the battle music (the boss's on the mid-boss and boss waves, through to the
+    // results), every screen around it the lobby's
+    const s = this.game?.engine.state;
+    this.sound.flush(s ? (s.config.waves > 0 && isBossWave(s.wave, s.config.waves) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS);
   }
 
   private watchRun(game: Game, hud: RunHud): void {

@@ -41,3 +41,10 @@ export function ipOf(req: IncomingMessage): string {
   const first = (Array.isArray(fwd) ? fwd[0] : fwd)?.split(',')[0]?.trim();
   return first || req.socket.remoteAddress || '?';
 }
+
+/** The privacy policy's language: `?lang=` first, then the browser's first language, English otherwise. */
+export function pageLang(query: URLSearchParams, accept: string | undefined): 'en' | 'zh' {
+  const q = query.get('lang');
+  if (q === 'en' || q === 'zh') return q;
+  return accept?.trim().toLowerCase().startsWith('zh') ? 'zh' : 'en';
+}

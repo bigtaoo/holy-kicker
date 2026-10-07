@@ -67,6 +67,11 @@ export class CrazyGamesPlatform extends WebPlatform {
     return portal ? [portal] : super.languages();
   }
 
+  /** The portal's country, which decides whether the game asks before sending play data. */
+  override country(): string | null {
+    return this.sdk.countryCode();
+  }
+
   /** The portal's device type when it has one: it knows tablets the user agent hides. */
   override async probe(): Promise<DeviceInfo> {
     const info = await super.probe();

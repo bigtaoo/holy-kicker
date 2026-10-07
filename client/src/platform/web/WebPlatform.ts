@@ -49,6 +49,15 @@ export class WebPlatform implements Platform {
     return navigator.userAgent.slice(0, 300);
   }
 
+  /** A plain page does not know; the privacy region falls back to the time zone. */
+  country(): string | null {
+    return null;
+  }
+
+  openUrl(url: string): void {
+    window.open(url, '_blank', 'noopener');
+  }
+
   languages(): string[] {
     return [...(navigator.languages ?? [navigator.language])];
   }

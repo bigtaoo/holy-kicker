@@ -137,6 +137,31 @@ describe('Backend', () => {
     expect(await net.submitRun(run)).toBeNull();
   });
 
+  it('holds events until sharing is on, drops them once it is off, and keeps the install id home meanwhile', async () => {
+    const calls = server({ ok: true, status: 204, body: { rows: [] } });
+    const kept = new Map<string, string>();
+    const net = new Backend(platform(kept), 'https://api.test', '1.0.0', () => 'en');
+    net.setSharing('hold');
+    net.track('run_start');
+    await net.flush();
+    expect(await net.submitRun({ chapter: 1, hard: false, won: false, wave: 3, tenths: 900, level: 2, kills: 40, monk: 'kicker', relic: 'ball' })).toBeNull();
+    expect(await net.sendName({ dice: 7 })).toBe(false);
+    await net.board('c1');
+    expect(calls.map((c) => c.url)).toEqual(['https://api.test/v1/boards/c1']);
+    expect(calls[0].init.headers).toEqual({});
+    expect(kept.size).toBe(0);
+    net.setSharing('send');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(calls).toHaveLength(2);
+    expect(sent(calls[1]).events).toEqual([{ e: 'run_start', t: expect.any(Number) }]);
+    net.setSharing('off');
+    net.track('run_end');
+    net.setSharing('hold');
+    net.setSharing('send');
+    await vi.advanceTimersByTimeAsync(0);
+    expect(calls).toHaveLength(2);
+  });
+
   it('reads a board as this install', async () => {
     const rows = { total: 0, rows: [], mine: null };
     const calls = server({ ok: true, body: rows });

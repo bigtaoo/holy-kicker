@@ -132,8 +132,25 @@ gameplay, ads, quality and SDK game-module pages). It was served from a sub-path
 | Legible from 800×450 to 1920×1080; desktop landscape | Portrait 3:4 play area with side bars; HUD and lobby text are readable at 800×450 |
 | No custom fullscreen button, no Escape, AZERTY-safe keys | None; movement reads physical key codes, so ZQSD works on AZERTY |
 | No page scroll or selection, safe areas | Arrow keys are cancelled; `user-select` and `touch-action` are set in `index.html`; safe-area insets are respected |
-| No external links; no personal data collected | None; the save is the SDK data module |
+| External links only in a new tab; a privacy notice for data beyond the SDK | The only link is the privacy policy (settings and the consent card), opened in a new tab; see "Privacy" below |
 | Username shown, no login screen | The lobby header shows the SDK username; a guest on a page with accounts sees "Guest" and no leaderboard |
+
+## Privacy
+
+The game sends its own analytics, leaderboard runs (with the CrazyGames username) and problem
+reports to hk.gamestao.com (server/README.md), so CrazyGames asks for a privacy notice. The policy
+is served by the backend at https://hk.gamestao.com/privacy (`?lang=zh` for Chinese;
+`server/src/privacy.{en,zh}.html`). The rules are in `client/src/meta/privacy.ts`, with as few taps
+as the law allows:
+
+| Where | What the player sees | What is sent |
+|---|---|---|
+| EEA, UK, Switzerland (the portal's `countryCode`, else a `Europe/*` time zone) | Nothing during the first run; then a card at the foot of the lobby: Allow / No thanks / Privacy. It blocks nothing and stays until answered | Nothing until Allow: events wait on the device, no run, name or install id goes out, and no install id is even stored. No thanks drops them |
+| Everywhere else | A toast over the first run, once (no tap): data is sent, turn it off in Settings | Everything, until switched off |
+
+Settings → Play data has the sharing switch, the policy link and the install's play ID (what a
+deletion request names). A problem report is sent only when the player asks, so it always goes.
+Offline builds and WeChat (no backend yet) show none of this.
 
 Still to check on the portal itself: upload the zip to the developer portal's QA preview, then
 watch a real ad fill, a signed-in save carry over between devices, and the leaderboard button

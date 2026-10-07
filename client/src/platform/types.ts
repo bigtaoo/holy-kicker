@@ -46,6 +46,10 @@ export interface Platform {
   askText(o: TextAsk): Promise<string | null>;
   /** One line naming the device for a problem report: the user agent, or the phone's model and system. */
   device(): string;
+  /** The player's country (ISO 3166 alpha-2, e.g. 'DE') where the host knows it, else null. */
+  country(): string | null;
+  /** Opens a web page (the privacy policy) in a new tab; a no-op where the host has no browser. */
+  openUrl(url: string): void;
 }
 
 /** The text box's wording, already translated, and the longest text it takes. */
