@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { counted, dayOffset, emptyDayZero, foldDayZero, type Player } from './players';
+import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { boardId, runScore, type BoardName, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from './stats';
@@ -74,6 +74,7 @@ export class MemoryStore implements Store {
     if (p.first === day) p.d0 = foldDayZero(p.d0, batch.events);
     const key = `${day}/${batch.install}`;
     const offset = dayOffset(p.first, day);
+    if (batch.events.some((e) => e.e === 'run_end')) p.progress = foldProgress(p.progress, batch.events, offset);
     if (!this.active.has(key) && counted(offset)) p.back = [...p.back, offset];
     this.active.add(key);
     this.players.set(batch.install, p);
@@ -127,7 +128,7 @@ export class MemoryStore implements Store {
         if (e.e !== 'run_end') continue;
         inc(counts.ended, day);
         const p = e.p ?? {};
-        ends.push({ chapter: Number(p.chapter) || 0, hard: p.hard === true, won: p.won === true, wave: Number(p.wave) || 0, n: 1 });
+        ends.push({ chapter: Number(p.chapter) || 0, hard: p.hard === true, won: p.won === true, gaveUp: p.gaveUp === true, wave: Number(p.wave) || 0, n: 1 });
       }
     }
     return fold.result(host, counts, ends);

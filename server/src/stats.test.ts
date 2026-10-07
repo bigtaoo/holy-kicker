@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayAfter, dayOffset, foldDayZero } from './players';
+import { dayAfter, dayOffset, foldDayZero, foldProgress } from './players';
 import type { ClientEvent, EventBatch, Host } from './protocol';
 import { boardsOf } from './stats';
 import { MemoryStore } from './store';
@@ -12,7 +12,7 @@ function batch(install: string, events: ClientEvent[], host: Host = 'crazygames'
 }
 
 const session: ClientEvent = { e: 'session', t: DAY0 };
-const end = (wave: number, won = false): ClientEvent => ({ e: 'run_end', t: DAY0, p: { chapter: 1, hard: false, won, wave, gaveUp: false } });
+const end = (wave: number, won = false, chapter = 1, gaveUp = false): ClientEvent => ({ e: 'run_end', t: DAY0, p: { chapter, hard: false, won, wave, gaveUp } });
 
 describe('day 0', () => {
   it('folds the first day into a profile', () => {
@@ -71,7 +71,8 @@ describe('stats', () => {
     );
     expect(r.drivers.find((d) => d.name === 'first build played')!.groups).toEqual([{ label: '1', n: 3, back: 2 }]);
     expect(r.firstRun).toEqual([{ wave: 3, n: 1, back: 0 }, { wave: 8, n: 1, back: 1 }]);
-    expect(r.boards).toEqual([{ board: 'c1', runs: 4, won: 1, medianLostWave: 8 }]);
+    expect(r.boards).toEqual([{ board: 'c1', runs: 4, won: 1, medianLostWave: 8, lost: [{ wave: 3, died: 1, quit: 0 }, { wave: 8, died: 1, quit: 0 }, { wave: 15, died: 1, quit: 0 }] }]);
+    expect(r.clears).toEqual([{ board: 'c1', tried: 2, cleared: 1, medianDays: 0, medianTries: 3 }]);
   });
 
   it('leaves installs whose next day is not over out of the drivers', async () => {
@@ -84,10 +85,32 @@ describe('stats', () => {
 
   it('takes the median lost wave from counted outcomes', () => {
     const rows = boardsOf([
-      { chapter: 2, hard: true, won: false, wave: 10, n: 3 },
-      { chapter: 2, hard: true, won: false, wave: 30, n: 1 },
-      { chapter: 2, hard: true, won: true, wave: 50, n: 2 },
+      { chapter: 2, hard: true, won: false, gaveUp: false, wave: 10, n: 3 },
+      { chapter: 2, hard: true, won: false, gaveUp: true, wave: 10, n: 1 },
+      { chapter: 2, hard: true, won: false, gaveUp: false, wave: 30, n: 1 },
+      { chapter: 2, hard: true, won: true, gaveUp: false, wave: 50, n: 2 },
     ]);
-    expect(rows).toEqual([{ board: 'c2h', runs: 6, won: 2, medianLostWave: 10 }]);
+    expect(rows).toEqual([{ board: 'c2h', runs: 7, won: 2, medianLostWave: 10, lost: [{ wave: 10, died: 3, quit: 1 }, { wave: 30, died: 1, quit: 0 }] }]);
+  });
+
+  it('counts the days and runs to the first clear of each board', async () => {
+    const s = new MemoryStore();
+    // d: loses chapter 4 twice on day 0, gives one up on day 2 and clears it on day 3, then
+    // loses on chapter 5; e: never clears chapter 4
+    await s.addEvents(batch('d', [session, end(50, false, 4), end(20, false, 4)]), at(0));
+    await s.addEvents(batch('e', [session, end(50, false, 4)]), at(0));
+    await s.addEvents(batch('d', [end(12, false, 4, true)]), at(2));
+    await s.addEvents(batch('d', [end(50, true, 4), end(20, false, 5), end(30, false, 4)]), at(3));
+    const r = await s.stats(10, at(4), null);
+    expect(r.clears).toEqual([
+      { board: 'c4', tried: 2, cleared: 1, medianDays: 3, medianTries: 4 },
+      { board: 'c5', tried: 1, cleared: 0, medianDays: 0, medianTries: 0 },
+    ]);
+    expect(r.boards.find((b) => b.board === 'c4')!.lost).toEqual([{ wave: 12, died: 0, quit: 1 }, { wave: 20, died: 1, quit: 0 }, { wave: 30, died: 1, quit: 0 }, { wave: 50, died: 2, quit: 0 }]);
+  });
+
+  it('keeps progress only for real chapters', () => {
+    const odd: ClientEvent[] = [{ e: 'run_end', t: DAY0, p: { chapter: 9, won: true } }, { e: 'run_end', t: DAY0, p: { chapter: '$x' } }, { e: 'run_end', t: DAY0, p: { chapter: 2, hard: true, won: true } }];
+    expect(foldProgress(undefined, odd, 5)).toEqual({ c2h: { tries: 1, day: 5 } });
   });
 });

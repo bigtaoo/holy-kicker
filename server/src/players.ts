@@ -1,9 +1,9 @@
-import type { ClientEvent, Host } from './protocol';
+import { LIMITS, boardId, type ClientEvent, type Host } from './protocol';
 
 // What the backend remembers about each install for retention: the day it was first seen, the
-// later days it came back, and what it did on its first day (day 0). Kept on the install's own
-// document and folded as batches arrive, so the stats read one small document per new player
-// instead of their events. Pure: the stores call it, the tests drive it.
+// later days it came back, what it did on its first day (day 0) and how it got through each board.
+// Kept on the install's own document and folded as batches arrive, so the stats read one small
+// document per new player instead of their events. Pure: the stores call it, the tests drive it.
 
 /** Days after the first on which coming back is counted (D1, D3, ...). */
 export const RETURN_DAYS = [1, 3, 7, 14, 30] as const;
@@ -43,6 +43,14 @@ export interface Player {
   /** Days after `first`, up to the last of RETURN_DAYS, on which the install was seen again. */
   back: number[];
   d0: DayZero;
+  /** Per board (`c4`, `c4h`): how the install got to its first clear. Missing before it was kept. */
+  progress?: Record<string, Progress>;
+}
+
+/** Runs finished on a board up to and including the first won one, and the day of that win after `first` (-1: not yet). */
+export interface Progress {
+  tries: number;
+  day: number;
 }
 
 export function emptyDayZero(): DayZero {
@@ -104,4 +112,20 @@ export function foldDayZero(d: DayZero | undefined, events: readonly ClientEvent
     }
   }
   return z;
+}
+
+/** The boards' progress after a batch that arrived `offset` days after the install's first. */
+export function foldProgress(progress: Record<string, Progress> | undefined, events: readonly ClientEvent[], offset: number): Record<string, Progress> {
+  const out = { ...progress };
+  for (const ev of events) {
+    if (ev.e !== 'run_end') continue;
+    const p = ev.p ?? {};
+    const chapter = num(p.chapter);
+    if (chapter < 1 || chapter > LIMITS.chapters) continue;
+    const board = boardId(chapter, p.hard === true);
+    const g = out[board] ?? { tries: 0, day: -1 };
+    if (g.day >= 0) continue;
+    out[board] = { tries: g.tries + 1, day: p.won === true ? Math.max(0, offset) : -1 };
+  }
+  return out;
 }

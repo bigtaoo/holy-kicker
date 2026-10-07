@@ -19,6 +19,11 @@ installs land on `web`.
   furthest wave, the wave its first run ended on, the tutorial, lobby purchases, ads, minutes on
   screen (`leave` events), and where it was when it last left (lobby, results, or mid-run and on
   which wave).
+- **Boards**: every finished run in the window by chapter and mode, with the wave each lost one
+  ended on (died or gave up there); the boss waves (20, 35, 50) are marked.
+- **First clears**: of the window's new installs, how many tried each board and cleared it, and
+  the median days since their first day and runs it took. Only runs from 2026-10-07 on are
+  counted, and installs still stuck are left out of the medians.
 - **Build**: the version and commit (`0.0.1+61b33eb`), kept per install as the first build it
   played. "first build played" is the before/after comparison for a change.
 
@@ -47,6 +52,8 @@ before believing a change, and never read a single day.
 | left mid-run, early waves, and not back | Boredom or frustration before the build comes together | A strong card in the first two level-ups; faster early waves (the 2x toggle helps players who know it is there) |
 | one run finished on day 0, D1 low | Nothing pulled them into a second run | A result screen that shows progress (new card unlocked, training now affordable, "next time: wave 20"), a short and obvious "again" button |
 | D1 fine, D3/D7 drops below ~30% of D1 | Nothing to come back for | Daily tasks and their rewards, patrols that finish overnight, chapter unlocks spaced over days, a training goal just out of reach |
+| a boss wave spikes in a board's lost runs | That boss is a wall | Its health, or grit (`BALANCE.grit`) for the players stuck there; docs/design.md "Pacing targets" |
+| first clears of chapters 4–5 take far longer than the 2 / 3–4 weeks the design aims for | The last chapters are too hard for the gear players have by then | `HORDE.chapterHp`, `HURT.chapterPercent`, grit; compare with the bots' numbers in docs/design.md |
 | chapter 1 clear rate very low | The first win comes too late | Ease chapter 1's last waves, or make the first clear reachable within the first 3–4 runs with training |
 | bought in the lobby: big D1 gap | Meta progress is the hook | Make the first purchase happen on day 0 (start with enough copper for one training node) |
 

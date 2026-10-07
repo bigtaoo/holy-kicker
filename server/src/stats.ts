@@ -1,5 +1,5 @@
 import { boardId, type Host } from './protocol';
-import { RETURN_DAYS, counted, dayAfter, emptyDayZero, type DayZero, type Player } from './players';
+import { RETURN_DAYS, counted, dayAfter, emptyDayZero, type DayZero, type Player, type Progress } from './players';
 
 // The operator's numbers (GET /v1/stats, the /dash page): daily actives, retention cohorts, the
 // new-player funnel and what day 0 says about coming back. Pure: a store streams its players
@@ -12,8 +12,17 @@ export interface Stats {
   /** The host the numbers are for, or null for all of them. */
   host: Host | null;
   days: { day: string; active: number; fresh: number; runs: number; ended: number }[];
-  /** Per board: runs ended, won, and the median wave of the lost ones. */
-  boards: { board: string; runs: number; won: number; medianLostWave: number }[];
+  /**
+   * Per board: runs ended, won, the median wave of the lost ones, and the waves they ended on
+   * (died there, or gave up there), so a boss wave that stops many tries shows as a spike.
+   */
+  boards: { board: string; runs: number; won: number; medianLostWave: number; lost: { wave: number; died: number; quit: number }[] }[];
+  /**
+   * Per board, over the window's new installs: how many finished a run there and how many have
+   * cleared it, with the median days from the first day and the median runs (the won one too)
+   * it took them. Installs still trying are not in the medians.
+   */
+  clears: { board: string; tried: number; cleared: number; medianDays: number; medianTries: number }[];
   returnDays: number[];
   /** Per first day: new installs and how many came back returnDays later (null until that day is over). */
   cohorts: { day: string; fresh: number; back: (number | null)[] }[];
@@ -30,6 +39,7 @@ export interface EndCount {
   chapter: number;
   hard: boolean;
   won: boolean;
+  gaveUp: boolean;
   wave: number;
   n: number;
 }
@@ -76,6 +86,8 @@ export class StatsFold {
   private readonly funnel = FUNNEL.map(() => 0);
   private readonly drivers = DRIVERS.map(() => new Map<string, { n: number; back: number }>());
   private readonly firstRun = new Map<number, { n: number; back: number }>();
+  /** Per board: installs that tried it, and [days, tries] of those that cleared it. */
+  private readonly clears = new Map<string, { tried: number; days: [number, number][]; tries: [number, number][] }>();
 
   /** `days` is the window, oldest first, ending on `today`. */
   constructor(
@@ -84,8 +96,17 @@ export class StatsFold {
   ) {}
 
   /** One install first seen inside the window. */
-  add(p: Pick<Player, 'first' | 'back' | 'build'> & { d0?: DayZero }): void {
+  add(p: Pick<Player, 'first' | 'back' | 'build'> & { d0?: DayZero; progress?: Record<string, Progress> }): void {
     if (p.first < this.days[0] || p.first > this.today) return;
+    for (const [board, g] of Object.entries(p.progress ?? {})) {
+      const row = this.clears.get(board) ?? { tried: 0, days: [], tries: [] };
+      row.tried++;
+      if (g.day >= 0) {
+        row.days.push([g.day, 1]);
+        row.tries.push([g.tries, 1]);
+      }
+      this.clears.set(board, row);
+    }
     const z = { ...emptyDayZero(), ...p.d0 };
     const seen = new Set(p.back.filter(counted));
     this.fresh.set(p.first, (this.fresh.get(p.first) ?? 0) + 1);
@@ -115,6 +136,9 @@ export class StatsFold {
       funnel: FUNNEL.map(([step], i) => ({ step, n: this.funnel[i] })),
       drivers: DRIVERS.map(([name], i) => ({ name, groups: [...this.drivers[i]].map(([label, g]) => ({ label, ...g })) })),
       firstRun: [...this.firstRun].sort(([a], [b]) => a - b).map(([wave, g]) => ({ wave, ...g })),
+      clears: [...this.clears]
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([board, r]) => ({ board, tried: r.tried, cleared: r.days.length, medianDays: median(r.days), medianTries: median(r.tries) })),
     };
   }
 }
@@ -126,18 +150,30 @@ function bump<K>(m: Map<K, { n: number; back: number }>, key: K, back: number): 
   m.set(key, g);
 }
 
-/** Per board: runs, wins, and the median wave of the losses, from counted outcomes. */
+/** Per board: runs, wins, the median wave of the losses and where they ended, from counted outcomes. */
 export function boardsOf(ends: EndCount[]): Stats['boards'] {
-  const boards = new Map<string, { runs: number; won: number; lost: [number, number][] }>();
+  type Row = { runs: number; won: number; lost: [number, number][]; at: Map<number, { died: number; quit: number }> };
+  const boards = new Map<string, Row>();
   for (const e of ends) {
     const b = boardId(e.chapter, e.hard);
-    const row = boards.get(b) ?? { runs: 0, won: 0, lost: [] };
+    const row: Row = boards.get(b) ?? { runs: 0, won: 0, lost: [], at: new Map() };
     row.runs += e.n;
     if (e.won) row.won += e.n;
-    else row.lost.push([e.wave, e.n]);
+    else {
+      row.lost.push([e.wave, e.n]);
+      const w = row.at.get(e.wave) ?? { died: 0, quit: 0 };
+      if (e.gaveUp) w.quit += e.n;
+      else w.died += e.n;
+      row.at.set(e.wave, w);
+    }
     boards.set(b, row);
   }
-  return [...boards].sort(([a], [b]) => a.localeCompare(b)).map(([board, r]) => ({ board, runs: r.runs, won: r.won, medianLostWave: median(r.lost) }));
+  return [...boards]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([board, r]) => ({
+      board, runs: r.runs, won: r.won, medianLostWave: median(r.lost),
+      lost: [...r.at].sort(([a], [b]) => a - b).map(([wave, w]) => ({ wave, ...w })),
+    }));
 }
 
 /** The median of weighted values [value, count]: the middle one, the upper of two. */

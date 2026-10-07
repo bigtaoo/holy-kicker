@@ -118,7 +118,8 @@ function render(s) {
     section('New-player funnel (day 0)', 'Of the installs first seen in the window, how many got this far on their first day. A big drop between two steps is where new players give up.', funnel(s)),
     section('Who comes back the next day', 'Installs whose next day is over, split by what they did on day 0. The bar is the share back on day 1, the line the average. Groups with fewer than 20 installs are noise.', drivers(s, ret[0].p)),
     section('Where the first run ended', 'The wave new players\' first finished run ended on, and the share of them back the next day. A pile-up at one wave is a difficulty wall.', firstRun(s)),
-    section('Boards', 'All finished runs in the window.', boards(s)),
+    section('Boards', 'All finished runs in the window, and the waves the lost ones ended on: light for died, blue for given up. Labelled waves are bosses (mid-bosses on 20 and 35, the chapter boss on 50); a spike there is a boss wall.', boards(s)),
+    section('First clears', 'Of the new installs in the window: how many finished a run on a board, how many have cleared it, and the median days since their first day and runs (the won one too) it took them. Players still stuck are not in the medians, so read them with the clear share. Choose a long window for the last chapters.', clears(s)),
   ].join('');
 }
 
@@ -189,9 +190,33 @@ function firstRun(s) {
   return s.firstRun.map((r) => bar(`wave ${r.wave}`, (100 * r.n) / max, `${r.n} · back ${fmt(pct(r.back, r.n))}`)).join('');
 }
 
+/** A chapter's waves and its boss waves (engine/config.ts WAVES; protocol LIMITS.waves). */
+const WAVES = 50, BOSSES = [20, 35, 50];
+
 function boards(s) {
   if (!s.boards.length) return '<p class="hint">No runs finished in the window.</p>';
-  return `<table><tr><th>board</th><th>runs</th><th>won</th><th>clear rate</th><th>median lost wave</th></tr>${s.boards.map((b) => `<tr><td>${esc(b.board)}</td><td>${b.runs}</td><td>${b.won}</td><td>${fmt(pct(b.won, b.runs))}</td><td>${b.medianLostWave}</td></tr>`).join('')}</table>`;
+  const table = `<table><tr><th>board</th><th>runs</th><th>won</th><th>clear rate</th><th>median lost wave</th></tr>${s.boards.map((b) => `<tr><td>${esc(b.board)}</td><td>${b.runs}</td><td>${b.won}</td><td>${fmt(pct(b.won, b.runs))}</td><td>${b.medianLostWave}</td></tr>`).join('')}</table>`;
+  return table + s.boards.filter((b) => b.lost.length).map(lostChart).join('');
+}
+
+/** One bar per wave: the board's lost runs that ended there, died below and given up on top. */
+function lostChart(b) {
+  const W = 1000, H = 90, bw = W / WAVES, at = new Map(b.lost.map((l) => [l.wave, l]));
+  const max = Math.max(1, ...b.lost.map((l) => l.died + l.quit));
+  const lost = b.lost.reduce((a, l) => a + l.died + l.quit, 0);
+  const bars = Array.from({ length: WAVES }, (_, i) => {
+    const w = i + 1, l = at.get(w) || { died: 0, quit: 0 }, x = i * bw + 1;
+    const hd = (l.died / max) * (H - 24), hq = (l.quit / max) * (H - 24), boss = BOSSES.includes(w);
+    return `<g><title>wave ${w}${boss ? ' (boss)' : ''}: ${l.died} died, ${l.quit} gave up · ${fmt(pct(l.died + l.quit, lost))} of lost runs</title>
+      <rect x="${x}" y="${H - 14 - hd}" width="${bw - 2}" height="${hd}" fill="var(--bar)"/><rect x="${x}" y="${H - 14 - hd - hq}" width="${bw - 2}" height="${hq}" fill="var(--bar2)"/>
+      ${boss || w % 10 === 0 || w === 1 ? `<text x="${x}" y="${H - 2}"${boss ? ' style="fill:var(--bad);font-weight:700"' : ''}>${w}</text>` : ''}</g>`;
+  }).join('');
+  return `<h3 style="font-size:13px;margin:12px 0 2px">${esc(b.board)} · ${lost} lost</h3><svg viewBox="0 0 ${W} ${H}" width="100%" preserveAspectRatio="none" style="height:90px">${bars}<text x="2" y="10">${max}</text></svg>`;
+}
+
+function clears(s) {
+  if (!s.clears.length) return '<p class="hint">No new install in the window has finished a run yet.</p>';
+  return `<table><tr><th>board</th><th>tried</th><th>cleared</th><th>clear share</th><th>median days</th><th>median runs</th></tr>${s.clears.map((c) => `<tr><td>${esc(c.board)}</td><td>${c.tried}</td><td>${c.cleared}</td><td>${fmt(pct(c.cleared, c.tried))}</td><td>${c.cleared ? c.medianDays : '–'}</td><td>${c.cleared ? c.medianTries : '–'}</td></tr>`).join('')}</table>`;
 }
 
 /** Plain-language flags: what looks off and which lever to try first (docs/retention.md has the long form). */
@@ -221,6 +246,11 @@ function diagnose(s, ret) {
     const total = s.firstRun.reduce((a, r) => a + r.n, 0);
     const peak = s.firstRun.reduce((a, r) => (r.n > a.n ? r : a));
     if (total >= 30 && peak.n / total > 0.25) flag('warn', `${fmt(pct(peak.n, total))} of first runs end on wave ${peak.wave}: a difficulty wall for new players. Check what spawns there.`);
+  }
+  for (const b of s.boards) {
+    const lost = b.lost.reduce((a, l) => a + l.died + l.quit, 0);
+    const wall = b.lost.filter((l) => BOSSES.includes(l.wave)).reduce((a, l) => (!a || l.died > a.died ? l : a), null);
+    if (lost >= 30 && wall && wall.died / lost > 0.25) flag('warn', `${fmt(pct(wall.died, lost))} of lost ${b.board} runs die on wave ${wall.wave}, a boss wave: that boss is the wall. Its health, or grit for the players stuck there, are the levers (docs/design.md).`);
   }
   for (const b of s.boards) if (b.board === 'c1' && b.runs >= 30 && pct(b.won, b.runs) < 10) flag('warn', `Chapter 1 is cleared in only ${fmt(pct(b.won, b.runs))} of runs (median loss at wave ${b.medianLostWave}). A first clear early is a strong reason to return.`);
   if (!out.length) flag('info', 'Nothing stands out yet.');

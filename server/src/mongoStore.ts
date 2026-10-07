@@ -1,5 +1,5 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
-import { counted, dayOffset, emptyDayZero, foldDayZero, type Player } from './players';
+import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { boardId, runScore, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from './stats';
@@ -8,8 +8,9 @@ import { reportId, rowOf, runName, summaryOf, type Store } from './store';
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
 // Collections:
 //   events   every analytics event, dropped after EVENTS_DAYS by a TTL index
-//   installs one per install (players.ts): the day it was first seen, the days it came back and
-//            what it did on day 0 (new players, retention and its drivers)
+//   installs one per install (players.ts): the day it was first seen, the days it came back,
+//            what it did on day 0 (new players, retention and its drivers) and its way to each
+//            board's first clear
 //   active   one per install per day it sent anything (daily actives)
 //   best     one per install per board: its best run
 //   names    one per install that has a name, by its tag: a portal account's name or a dice name
@@ -98,11 +99,10 @@ export class MongoStore implements Store {
     if (!p) return;
     const offset = dayOffset(p.first, day);
     const fresh = seen.upsertedCount === 1 && counted(offset);
-    if (p.first !== day && !fresh) return;
-    await this.installs.updateOne(
-      { _id: b.install },
-      { ...(p.first === day ? { $set: { d0: foldDayZero(p.d0, b.events) } } : {}), ...(fresh ? { $addToSet: { back: offset } } : {}) },
-    );
+    const ran = b.events.some((e) => e.e === 'run_end');
+    if (p.first !== day && !fresh && !ran) return;
+    const set = { ...(p.first === day ? { d0: foldDayZero(p.d0, b.events) } : {}), ...(ran ? { progress: foldProgress(p.progress, b.events, offset) } : {}) };
+    await this.installs.updateOne({ _id: b.install }, { ...(Object.keys(set).length ? { $set: set } : {}), ...(fresh ? { $addToSet: { back: offset } } : {}) });
   }
 
   private async rankOf(doc: BestDoc): Promise<number> {
@@ -147,9 +147,9 @@ export class MongoStore implements Store {
     const mine = host ? { host } : {};
     const fold = new StatsFold(list, today);
     // one small document per new install, streamed: memory stays flat however many there are
-    for await (const p of this.installs.find({ first: { $gte: from }, ...mine }, { projection: { first: 1, build: 1, back: 1, d0: 1 } })) fold.add(p);
+    for await (const p of this.installs.find({ first: { $gte: from }, ...mine }, { projection: { first: 1, build: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
     type Count = { _id: string; n: number };
-    type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; wave: unknown }; n: number };
+    type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown }; n: number };
     const [active, runs, [ends]] = await Promise.all([
       this.active.aggregate<Count>([{ $match: { day: { $gte: from }, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
       this.events.aggregate<Count>([{ $match: { e: 'run_start', day: { $gte: from }, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
@@ -158,14 +158,14 @@ export class MongoStore implements Store {
         {
           $facet: {
             days: [{ $group: { _id: '$day', n: { $sum: 1 } } }],
-            outcomes: [{ $group: { _id: { chapter: '$p.chapter', hard: '$p.hard', won: '$p.won', wave: '$p.wave' }, n: { $sum: 1 } } }],
+            outcomes: [{ $group: { _id: { chapter: '$p.chapter', hard: '$p.hard', won: '$p.won', gaveUp: '$p.gaveUp', wave: '$p.wave' }, n: { $sum: 1 } } }],
           },
         },
       ]).toArray(),
     ]);
     const map = (rows: Count[]) => new Map(rows.map((r) => [r._id, r.n]));
     const counts: DayCounts = { active: map(active), runs: map(runs), ended: map(ends?.days ?? []) };
-    const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, wave: Number(o.wave) || 0, n }));
+    const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, n }));
     return fold.result(host, counts, outcomes);
   }
 

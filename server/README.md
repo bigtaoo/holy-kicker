@@ -28,7 +28,7 @@ before names) goes by a dice name made from its tag.
 | `POST /v1/reports` | a `Report`: the player's note, device, chapter and wave, and a replay of the run (up to 3 MB) → `{ id }` |
 | `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /v1/reports/<id>` | one report whole, replay included (same key) |
-| `GET /v1/stats?days=14&host=crazygames` | operator numbers (src/stats.ts): daily actives, new installs, runs, boards, retention cohorts (D1/3/7/14/30, null until the day is over), the new-player funnel and D1 by what day 0 looked like; `host` optional; `Authorization: Bearer $HK_ADMIN_KEY` |
+| `GET /v1/stats?days=14&host=crazygames` | operator numbers (src/stats.ts): daily actives, new installs, runs, boards (with the waves lost runs ended on), the first clears of each board (days and runs it took the window's new installs), retention cohorts (D1/3/7/14/30, null until the day is over), the new-player funnel and D1 by what day 0 looked like; `host` optional; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /dash` | the operator's dashboard over `/v1/stats` (src/dash.html; asks for the admin key, keeps it in the browser). How to read it and what to change: docs/retention.md |
 
 A run ranks by: a win over any loss, then more waves, then less time (`runScore`). Every request
@@ -53,7 +53,7 @@ until the backend has an ICP-filed domain on the mini-game's request whitelist.
 ## Storage
 
 MongoDB Atlas, a cluster of its own (`cluster0.qcp0r96`, not daydayup's), database `holykicker` (`HK_MONGO_DB`):
-`events` (TTL 90 days), `installs` (one per install, src/players.ts: first day, host, first build, the days it came back and its day 0, folded as batches arrive), `active` (install per day), `best` (one
+`events` (TTL 90 days), `installs` (one per install, src/players.ts: first day, host, first build, the days it came back, its day 0 and its way to each board's first clear, folded as batches arrive), `active` (install per day), `best` (one
 per install per board), `names` (one per named install, by tag: a portal name or a dice name), `reports` (TTL 180 days). Without `HK_MONGO_URI` the server keeps everything in memory
 (development, tests).
 
