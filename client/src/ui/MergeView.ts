@@ -44,7 +44,7 @@ export class MergeView {
   private landed = 0;
   private burst = false;
   private counted = -1;
-  private readonly counters: { stat: Stat; from: number; to: number; text: ReturnType<typeof label>; star: boolean }[] = [];
+  private readonly counters: { stat: Stat; from: number; to: number; text: ReturnType<typeof label>; star: Graphics | null }[] = [];
 
   constructor(
     renderer: Renderer,
@@ -150,7 +150,10 @@ export class MergeView {
     this.card.y = this.cy + 560 + (1 - f.card) * 120;
     if (f.count !== this.counted) {
       this.counted = f.count;
-      for (const c of this.counters) c.text.text = `${c.star ? '★ ' : ''}${statText(c.stat, Math.round(c.from + (c.to - c.from) * f.count))}`;
+      for (const c of this.counters) {
+        c.text.text = statText(c.stat, Math.round(c.from + (c.to - c.from) * f.count));
+        if (c.star) c.star.x = -c.text.width / 2 - 40;
+      }
     }
     this.shake = Math.max(0, this.shake - dt);
     const s = this.shake * 120;
@@ -213,13 +216,22 @@ export class MergeView {
     }
     // every stat counts up from the old tier; the one the new affix raises is starred
     for (const [stat, to] of statRows) {
-      const star = affix?.[0] === stat;
-      const text = label(statText(stat, before[stat] ?? 0), 48, star ? COLORS.saffron : COLORS.text);
+      const raised = affix?.[0] === stat;
+      const text = label(statText(stat, before[stat] ?? 0), 48, raised ? COLORS.saffron : COLORS.text);
       text.y = y;
       this.card.addChild(text);
+      const star = raised ? starMark() : null;
+      if (star) {
+        star.position.set(-text.width / 2 - 40, y);
+        this.card.addChild(star);
+      }
       this.counters.push({ stat, from: before[stat] ?? 0, to, text, star });
       y += 66;
     }
   }
 }
 
+/** The star beside the stat the new affix raises (a glyph would look different on every platform). */
+function starMark(): Graphics {
+  return new Graphics().star(0, 0, 5, 24, 11).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 4 });
+}
