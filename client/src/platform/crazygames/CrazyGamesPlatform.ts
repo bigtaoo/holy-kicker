@@ -1,10 +1,11 @@
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
+import type { Host } from '@hk/protocol';
 import type { Ads, AudioHost, Banner, Portal } from '../types';
 import { BannerHost } from '../web/banner';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { webAudioHost } from '../web/webAudio';
-import { CrazyGamesSdk } from './sdk';
+import { CrazyGamesSdk, type CgEnvironment } from './sdk';
 
 // The CrazyGames host: the browser host plus the SDK for saves, ads (the lobby banner too), the
 // gameplay brackets and the signed-in username (docs/design.md "Platforms, saves and server").
@@ -12,7 +13,7 @@ import { CrazyGamesSdk } from './sdk';
 // Built with `create()`, which waits (bounded) for the SDK before anything else, because the
 // data module only exists after init: reading the save before that would read the wrong store.
 export class CrazyGamesPlatform extends WebPlatform {
-  override readonly host = 'crazygames';
+  override readonly host: Host;
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
   override readonly ads: Ads;
@@ -22,8 +23,12 @@ export class CrazyGamesPlatform extends WebPlatform {
   onAccountChange: () => void = () => {};
   private name: string | null = null;
 
-  private constructor(readonly sdk: CrazyGamesSdk) {
+  private constructor(readonly sdk: CrazyGamesSdk, env: CgEnvironment) {
     super();
+    // the SDK's local environment is a developer's own preview (npm run preview:crazygames): it
+    // reports to the backend as web, like every other test install, so the crazygames numbers
+    // are players only
+    this.host = env === 'local' ? 'web' : 'crazygames';
     // guests and blocked third-party storage are the data module's job; without the SDK
     // (local dev, an adblocker) it falls back to localStorage
     const data = sdk.dataStore();
@@ -70,7 +75,7 @@ export class CrazyGamesPlatform extends WebPlatform {
   static async create(sdk = new CrazyGamesSdk()): Promise<CrazyGamesPlatform> {
     const env = await sdk.init();
     sdk.loadingStart();
-    const platform = new CrazyGamesPlatform(sdk);
+    const platform = new CrazyGamesPlatform(sdk, env);
     platform.name = await sdk.userName();
     sdk.onAuthChange(() => {
       void sdk.userName().then((name) => {

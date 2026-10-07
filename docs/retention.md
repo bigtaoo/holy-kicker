@@ -10,7 +10,8 @@ installs land on `web`.
 - **Install**: a random id kept in the host's storage (CrazyGames: its data module, so it follows
   a signed-in player across devices). Clearing site data or a private window makes a new install,
   so new installs run a little high and retention a little low. Portals' own consoles count the same
-  players their way; compare trends, not absolute numbers.
+  players their way; compare trends, not absolute numbers. A local preview of the CrazyGames build
+  (the SDK's `local` environment) reports as `web`, so the `crazygames` numbers are players only.
 - **Day**: UTC calendar day of the batch's arrival. **D*N***: share of the installs first seen on a
   day that sent anything again exactly *N* days later (classic retention, not rolling). A cell
   stays empty until its day is over.
