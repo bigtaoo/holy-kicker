@@ -1,5 +1,5 @@
 import type { PropValue } from '@hk/protocol';
-import { Container, Graphics } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
@@ -229,9 +229,11 @@ export class EconomyUi {
     const now = this.now();
     const card = new Container();
     card.addChild(panel(CARD_W, CARD_H));
-    const icon = iconSprite(this.host.icons, `chest_${kind}`, 200) ?? chestIcon(kind);
-    icon.x = -380;
-    card.addChild(icon);
+    const icon = iconSprite(this.host.icons, `chest_${kind}`, 200);
+    if (icon) {
+      icon.x = -380;
+      card.addChild(icon);
+    }
     const c = chestContents(save, kind);
     const left = chestsLeft(save, now, kind);
     const info = kind === 'free' ? t('shop.freeInfo', { copper: formatAmount(c.copper), n: c.drops })
@@ -259,15 +261,4 @@ export class EconomyUi {
     if (kind === 'free' && !block) card.addChild(dot(CARD_W / 2 - 20, -CARD_H / 2 + 20));
     return card;
   }
-}
-
-/** A placeholder chest for a sheet without the chest icons: a box, its lid line and a latch. */
-function chestIcon(kind: ChestKind): Graphics {
-  const tint = kind === 'free' ? COLORS.saffron : kind === 'ad' ? COLORS.jade : 0x4f9df0;
-  const x = 0;
-  const y = 0;
-  return new Graphics()
-    .roundRect(x - 80, y - 60, 160, 130, 18).fill(tint).stroke({ color: COLORS.outline, width: 8 })
-    .rect(x - 80, y - 14, 160, 8).fill(COLORS.outline)
-    .roundRect(x - 18, y - 24, 36, 44, 8).fill(COLORS.text).stroke({ color: COLORS.outline, width: 6 });
 }

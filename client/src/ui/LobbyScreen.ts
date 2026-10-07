@@ -407,8 +407,6 @@ export class LobbyScreen implements Screen {
         chest.position.set(x, 50);
         if (got) chest.alpha = 0.4;
         row.addChild(chest);
-      } else {
-        row.addChild(new Graphics().roundRect(x - 45, 10, 90, 80, 16).fill(got ? COLORS.saffron : COLORS.panelLocked).stroke({ color: COLORS.outline, width: 6 }));
       }
       if (got) {
         row.addChild(new Graphics().moveTo(x - 22, 50).lineTo(x - 4, 68).lineTo(x + 28, 30)

@@ -12,18 +12,19 @@ training icons into the one icon sheet:
 
 - `jade`, `copper`: the currencies in the lobby's top bar. The first jade, a rounded teardrop
   (`r1/jade_drop.jpg`), reads a little like a water drop; the second, a cushion cut with a vein
-  (`r1/jade_cracked.jpg`), came out cracked. `jade.jpg` is a copy of the teardrop for now;
-  `jade.txt` asks for a classic brilliant cut, still to generate (delete `jade.jpg` first).
+  (`r1/jade_cracked.jpg`), came out cracked; the third, from `jade.txt`'s classic brilliant cut
+  (`r1/jade_brilliant.jpg`, 2026-10-07), is a mosaic of tiny gradient facets with a thin outline
+  that turns to mush at top-bar size. `jade.jpg` stays a copy of the teardrop.
 - `shop` (a red money pouch) and `codex` (a stitched book) are the Shop and Codex tabs; the
   others reuse the build icons: Gear the robe, Play the cuju, Train the dumbbell.
 - `lock` replaces the 🔒 emoji, which every platform draws differently. `settings` replaces the ⚙
   glyph.
-- `patrol` (a straw hat) and `tasks` (a ticked list) sit on the lobby's two buttons under PLAY.
-- `chest`: the chapter card's five progress chests.
+- `patrol` (a straw hat) and `tasks` (a ticked list on a notice board) sit on the lobby's two
+  buttons under PLAY.
+- `chest` (red lacquer, gold bands): the chapter card's five progress chests. It came with a
+  white sticker border, which the cutout removes along with the background.
 
-Not generated yet (every key was rate-limited, 2026-10-06): `tasks` and `chest`. The code
-falls back without them (the Tasks button has no picture, the chests are drawn boxes); run
-`gen_all.sh` and repack.
+`tasks` and `chest` were rate-limited on every key on 2026-10-06 and generated on 2026-10-07.
 
 Closed shapes seeded as background in `tools/pack_icons.py` (`HOLES`): the coins' square hole,
 the padlock's shackle and the cog's middle.
