@@ -10,8 +10,8 @@ name: ios
 #            App Store Connect (TestFlight). destination 'none' stops after the IPA, spending no
 #            build number. The build number is the run number.
 #
-# Release needs, in Settings -> Secrets and variables -> Actions (the same team as funny, so the
-# certificate and API key are funny's; the profile is this app's own, docs/ios.md "Owner setup"):
+# Release needs, in Settings -> Secrets and variables -> Actions (the account's certificate and
+# API key from D:\cloud\ios; the profile is this app's own, docs/ios.md "Owner setup"):
 #   BUILD_CERTIFICATE_BASE64        Apple Distribution certificate (.p12), base64
 #   P12_PASSWORD                    its export password
 #   KEYCHAIN_PASSWORD               any string; the runner's temporary keychain
@@ -144,7 +144,7 @@ jobs:
             -archivePath $RUNNER_TEMP/App.xcarchive \
             archive \
             CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            CODE_SIGN_IDENTITY="Apple Distribution" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_NAME }}"
           xcodebuild \

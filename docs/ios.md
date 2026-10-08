@@ -267,22 +267,29 @@ Steps 2–4 are independent once step 1 is in.
 
 1. Bundle id **`com.gamestao.holykicker`** (decided; permanent once live). The App Store name
    is unique store-wide: check it is free when creating the record.
-2. Same Apple developer team as funny, so its distribution certificate (`.p12`) and App Store
-   Connect API key (`.p8`) are reused. New: an App ID `com.gamestao.holykicker` with **Game
-   Center** and **In-App Purchase** ticked, and an **App Store** provisioning profile for it
-   signed by that certificate. GitHub secrets cannot be read back out of funny's repo, so the
-   nine below come from the original files (funny IOS_RELEASE §2–3):
+2. Signing. The account-level material (one Apple Distribution certificate for every app, the
+   App Store Connect API key) lives in `D:\cloud\ios` with its ledger (`apple-account.md`,
+   `new-app-checklist.md`); funny's repo secrets cannot be read back, and funny's old
+   `iPhone Distribution` certificate is not the one in use, so the workflow signs as
+   **`Apple Distribution`** (`Apple Distribution: Tao Wang (C677KJH544)`, valid to
+   2027-09-01). Per app: an App ID `com.gamestao.holykicker` with **Game Center** and
+   **In-App Purchase** ticked, and an **App Store** provisioning profile for it on that
+   certificate, named exactly `Holy Kicker App Store`, saved as
+   `D:\cloud\ios\material\holykicker.mobileprovision`.
 
-   | Secret | Value | Same as funny? |
+   | Secret | Value | Set |
    |---|---|---|
-   | `BUILD_CERTIFICATE_BASE64` | the `.p12`, base64 | yes |
-   | `P12_PASSWORD` | its export password | yes |
-   | `KEYCHAIN_PASSWORD` | any string | any |
-   | `BUILD_PROVISION_PROFILE_BASE64` | the **new** `.mobileprovision`, base64 | no |
-   | `PROVISIONING_PROFILE_NAME` | the new profile's name | no |
-   | `APPLE_TEAM_ID` | 10-character team id | yes |
-   | `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID` | the API key's ids | yes |
-   | `ASC_API_KEY_CONTENT_BASE64` | the `.p8`, base64 | yes |
+   | `BUILD_CERTIFICATE_BASE64` | `material/apple-dist.p12`, base64 | 2026-10-08 |
+   | `P12_PASSWORD` | its export password (KeePass `apple-p12`) | **owner types it** |
+   | `KEYCHAIN_PASSWORD` | random; the runner's temporary keychain | 2026-10-08 |
+   | `BUILD_PROVISION_PROFILE_BASE64` | `material/holykicker.mobileprovision`, base64 | after the profile exists |
+   | `PROVISIONING_PROFILE_NAME` | `Holy Kicker App Store` | 2026-10-08 |
+   | `APPLE_TEAM_ID` | `C677KJH544` | 2026-10-08 |
+   | `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID` | key `deutsch-ci` (`K4Q4TH8MV2`) | 2026-10-08 |
+   | `ASC_API_KEY_CONTENT_BASE64` | `material/AuthKey_K4Q4TH8MV2.p8`, base64 | 2026-10-08 |
+
+   The API key is shared with deutsch for now; the account's habit is one key per app, so a
+   `holykicker-ci` key only means swapping the last three.
 
 3. App Store Connect: the app record, the `.adfree` product, the **Paid Apps agreement active**
    (else products stay "missing metadata"), Game Center enabled, sandbox testers,

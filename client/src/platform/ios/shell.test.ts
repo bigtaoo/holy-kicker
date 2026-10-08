@@ -24,6 +24,8 @@ describe('iOS shell', () => {
       `PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE};`,
     ]);
     expect(workflow).toContain(`BUNDLE_ID: ${BUNDLE}`);
+    // the account's certificate (D:\cloud\ios): funny's workflow names the retired iPhone one
+    expect(workflow).toContain('CODE_SIGN_IDENTITY="Apple Distribution"');
   });
 
   it('compiles every Swift file and ships the privacy manifest', () => {
