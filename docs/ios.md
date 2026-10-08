@@ -263,26 +263,31 @@ interface HKNative {
 
 Steps 2–4 are independent once step 1 is in.
 
+Progress: step 0 done 2026-10-08; step 1's first signed build, 1.0 (4), reached App Store
+Connect the same day, not yet played on a phone.
+
 ## Owner setup
 
 1. Bundle id **`com.gamestao.holykicker`** (decided; permanent once live). The App Store name
-   is unique store-wide: check it is free when creating the record.
+   is unique store-wide: the record took `HolyKicker`.
 2. Signing. The account-level material (one Apple Distribution certificate for every app, the
    App Store Connect API key) lives in `D:\cloud\ios` with its ledger (`apple-account.md`,
    `new-app-checklist.md`); funny's repo secrets cannot be read back, and funny's old
    `iPhone Distribution` certificate is not the one in use, so the workflow signs as
    **`Apple Distribution`** (`Apple Distribution: Tao Wang (C677KJH544)`, valid to
-   2027-09-01). Per app: an App ID `com.gamestao.holykicker` with **Game Center** and
-   **In-App Purchase** ticked, and an **App Store** provisioning profile for it on that
-   certificate, named exactly `Holy Kicker App Store`, saved as
-   `D:\cloud\ios\material\holykicker.mobileprovision`.
+   2027-09-01). Per app: an App ID `com.gamestao.holykicker` with **Game Center** (In-App
+   Purchase comes with every explicit App ID, a greyed-out tick), and an **App Store**
+   provisioning profile for it on that certificate, named exactly `Holy Kicker App Store`, saved
+   as `D:\cloud\ios\material\holykicker.mobileprovision`. Done 2026-10-08, with the app record
+   (store name `HolyKicker`); the profile carries the Game Center entitlement and expires with
+   the certificate.
 
    | Secret | Value | Set |
    |---|---|---|
    | `BUILD_CERTIFICATE_BASE64` | `material/apple-dist.p12`, base64 | 2026-10-08 |
-   | `P12_PASSWORD` | its export password (KeePass `apple-p12`) | **owner types it** |
+   | `P12_PASSWORD` | its export password (KeePass `apple-p12`) | 2026-10-08, typed by the owner |
    | `KEYCHAIN_PASSWORD` | random; the runner's temporary keychain | 2026-10-08 |
-   | `BUILD_PROVISION_PROFILE_BASE64` | `material/holykicker.mobileprovision`, base64 | after the profile exists |
+   | `BUILD_PROVISION_PROFILE_BASE64` | `material/holykicker.mobileprovision`, base64 | 2026-10-08 |
    | `PROVISIONING_PROFILE_NAME` | `Holy Kicker App Store` | 2026-10-08 |
    | `APPLE_TEAM_ID` | `C677KJH544` | 2026-10-08 |
    | `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID` | key `deutsch-ci` (`K4Q4TH8MV2`) | 2026-10-08 |
