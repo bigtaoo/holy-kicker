@@ -217,7 +217,7 @@ export class Shell {
         setLanguage: (locale) => this.setLanguage(locale),
         setQuality: (quality) => this.onQualityMode(quality),
         privacy: this.privacy,
-        account: this.platform.portal,
+        account: this.platform.portal, adPrivacy: this.platform.adPrivacy,
       }),
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),

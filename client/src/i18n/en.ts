@@ -391,6 +391,8 @@ export const en = {
     policy: 'Privacy policy',
     // Apple's own name for it, the same in every language
     gameCenter: 'Game Center',
+    // Google's consent options for its ads (EEA/UK), beside the privacy policy
+    adPrivacy: 'Ad privacy',
     dataNotice: 'Play stats and leaderboard runs go to our server, to balance the game and run the boards.',
     playId: 'Your play ID: {id}',
   },

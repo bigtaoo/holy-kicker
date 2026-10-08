@@ -8,17 +8,19 @@ import WebKit
 // D:\funny's NWBridgeViewController. SceneDelegate makes this the window's root.
 //
 // Calls from JS are messages `{ op, ... }`. Answers are pushed back into the page rather than
-// settled by id: Game Center's state goes to `HKNative._gameCenter` whenever it changes and when
-// the page asks (a reloaded page asks again). Every member the page reads is feature-detected
+// settled by id: Game Center's and AdMob's states go to `HKNative._gameCenter` and `_adState`
+// whenever they change and when the page asks (a reloaded page asks again); an ad's progress goes
+// to `_adEvent`. Every member the page reads is feature-detected
 // there, so a newer web bundle on an older shell falls back to the browser's behaviour.
 final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHandler {
 
     static let handlerName = "hk"
     /// Raised whenever the contract gains calls (HKNative.v in bridge.ts).
-    static let bridgeVersion = 2
+    static let bridgeVersion = 3
 
     private let keyStore = KeyStore()
     private let gameCenter = GameCenter()
+    private let adMob = AdMob()
 
     override func capacitorDidLoad() {
         guard let webView = webView else { return }
@@ -27,12 +29,27 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
         ucc.addUserScript(WKUserScript(source: bridgeScript(), injectionTime: .atDocumentStart, forMainFrameOnly: true))
         webView.scrollView.bounces = false
         gameCenter.presenter = self
-        gameCenter.onChange = { [weak self] state in self?.push(state) }
+        gameCenter.onChange = { [weak self] state in self?.push("_gameCenter", state.json) }
         gameCenter.start()
+        adMob.presenter = self
+        adMob.onChange = { [weak self] state in self?.push("_adState", state.json) }
+        adMob.onEvent = { [weak self] kind, event, ok in
+            self?.push("_adEvent", ["kind": kind.rawValue, "event": event, "ok": ok])
+        }
         #if DEBUG
         // Safari's Web Inspector, for the day a Mac is at hand (release builds stay closed)
         if #available(iOS 16.4, *) { webView.isInspectable = true }
         #endif
+    }
+
+    private var adsStarted = false
+
+    // Google's consent form needs a presenter that is in the window, so ads start here, once
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !adsStarted else { return }
+        adsStarted = true
+        adMob.start()
     }
 
     // A drag on the stick that reaches the bottom edge must not send the game home: the first
@@ -54,19 +71,26 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
                   url.scheme == "https" || url.scheme == "http" else { return }
             UIApplication.shared.open(url)
         case "gameCenter":
-            if let state = gameCenter.state { push(state) }
+            if let state = gameCenter.state { push("_gameCenter", state.json) }
         case "gameCenterSignIn":
             gameCenter.signIn()
+        case "adState":
+            push("_adState", adMob.state.json)
+        case "showAd":
+            guard let kind = (body["kind"] as? String).flatMap(AdMob.Kind.init(rawValue:)) else { return }
+            adMob.show(kind)
+        case "adPrivacy":
+            adMob.showPrivacyOptions()
         default:
             return
         }
     }
 
-    /// Hands Game Center's state to the page (HKNative._gameCenter in the injected script).
-    private func push(_ state: GameCenter.State) {
-        guard let data = try? JSONSerialization.data(withJSONObject: state.json),
+    /// Hands a state or an event to the page: `HKNative[receiver](value)` in the injected script.
+    private func push(_ receiver: String, _ value: [String: Any]) {
+        guard let data = try? JSONSerialization.data(withJSONObject: value),
               let json = String(data: data, encoding: .utf8) else { return }
-        webView?.evaluateJavaScript("window.HKNative && window.HKNative._gameCenter && window.HKNative._gameCenter(\(json))")
+        webView?.evaluateJavaScript("window.HKNative && window.HKNative.\(receiver) && window.HKNative.\(receiver)(\(json))")
     }
 
     // MARK: The injected script
@@ -84,20 +108,34 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
           if (window.HKNative) return;
           var c = \(json);
           function post(m){ try { window.webkit.messageHandlers.\(Self.handlerName).postMessage(m); } catch (e) {} }
-          var gc = null, gcs = [];
+          // a value the shell pushes, kept for late readers, and who to tell
+          function feed(){
+            var last = null, cbs = [];
+            return {
+              get: function(){ return last; },
+              on: function(cb){ cbs.push(cb); },
+              push: function(v){ last = v; for (var i = 0; i < cbs.length; i++) { try { cbs[i](v); } catch (e) {} } }
+            };
+          }
+          var gc = feed(), ad = feed(), adEvent = feed();
           window.HKNative = {
             v: c.v, saved: c.saved || {}, languages: c.languages || [], device: c.device || '',
             save: function(k, v){ post({ op: 'save', key: String(k), value: String(v) }); },
             openUrl: function(u){ post({ op: 'openUrl', url: String(u) }); },
-            gameCenter: function(){ return gc; },
-            onGameCenter: function(cb){ gcs.push(cb); },
+            gameCenter: gc.get,
+            onGameCenter: gc.on,
             gameCenterSignIn: function(){ post({ op: 'gameCenterSignIn' }); },
-            _gameCenter: function(s){
-              gc = s;
-              for (var i = 0; i < gcs.length; i++) { try { gcs[i](s); } catch (e) {} }
-            }
+            adState: ad.get,
+            onAdState: ad.on,
+            onAdEvent: adEvent.on,
+            showAd: function(kind){ post({ op: 'showAd', kind: String(kind) }); },
+            adPrivacy: function(){ post({ op: 'adPrivacy' }); },
+            _gameCenter: gc.push,
+            _adState: ad.push,
+            _adEvent: adEvent.push
           };
           post({ op: 'gameCenter' });
+          post({ op: 'adState' });
         })();
         """
     }

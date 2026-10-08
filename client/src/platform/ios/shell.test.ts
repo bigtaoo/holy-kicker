@@ -6,6 +6,7 @@ import podfile from '../../../ios/App/Podfile?raw';
 import pbx from '../../../ios/App/App.xcodeproj/project.pbxproj?raw';
 import plist from '../../../ios/App/App/Info.plist?raw';
 import bridge from '../../../ios/App/App/HKBridgeViewController.swift?raw';
+import adMob from '../../../ios/App/App/AdMob.swift?raw';
 import entitlements from '../../../ios/App/App/App.entitlements?raw';
 import gameCenter from '../../../ios/App/App/GameCenter.swift?raw';
 import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
@@ -31,7 +32,7 @@ describe('iOS shell', () => {
   });
 
   it('compiles every Swift file and ships the privacy manifest', () => {
-    for (const file of ['AppDelegate.swift', 'SceneDelegate.swift', 'HKBridgeViewController.swift', 'KeyStore.swift', 'GameCenter.swift']) {
+    for (const file of ['AppDelegate.swift', 'SceneDelegate.swift', 'HKBridgeViewController.swift', 'KeyStore.swift', 'GameCenter.swift', 'AdMob.swift']) {
       expect(pbx).toContain(`/* ${file} in Sources */,`);
     }
     expect(pbx).toContain('/* PrivacyInfo.xcprivacy in Resources */,');
@@ -47,13 +48,27 @@ describe('iOS shell', () => {
     expect(bridge).toContain('static let handlerName = "hk"');
     expect(bridge).toContain('window.HKNative = {');
     for (const member of ['saved:', 'languages:', 'device:', 'save: function', 'openUrl: function']) expect(bridge).toContain(member);
-    for (const member of ['gameCenter: function', 'onGameCenter: function', 'gameCenterSignIn: function', '_gameCenter: function']) {
+    for (const member of [
+      'gameCenter: gc.get', 'onGameCenter: gc.on', 'gameCenterSignIn: function', '_gameCenter: gc.push',
+      'adState: ad.get', 'onAdState: ad.on', 'onAdEvent: adEvent.on', 'showAd: function', 'adPrivacy: function',
+      '_adState: ad.push', '_adEvent: adEvent.push',
+    ]) {
       expect(bridge).toContain(member);
     }
-    // the page asks for Game Center's state as it loads, and the shell pushes it back by name
+    // the page asks for the states as it loads, and the shell pushes them back by name
     expect(bridge).toContain("post({ op: 'gameCenter' });");
-    expect(bridge).toContain('window.HKNative._gameCenter(');
+    expect(bridge).toContain("post({ op: 'adState' });");
+    for (const op of ['"gameCenter"', '"gameCenterSignIn"', '"adState"', '"showAd"', '"adPrivacy"']) expect(bridge).toContain(`case ${op}:`);
+    for (const receiver of ['_gameCenter', '_adState', '_adEvent']) expect(bridge).toContain(`push("${receiver}"`);
+    expect(bridge).toContain('window.HKNative.\\(receiver)(');
     expect(gameCenter).toContain('"alias": alias ?? NSNull(), "canSignIn": canSignIn');
+    // admob.ts reads these keys and these values
+    for (const key of ['"status": status', '"rewarded": rewarded', '"interstitial": interstitial', '"privacyOptions": privacyOptions', '"error": error']) {
+      expect(adMob).toContain(key);
+    }
+    expect(adMob).toContain('enum Kind: String { case rewarded, interstitial }');
+    for (const event of ['"started"', '"done"']) expect(adMob).toContain(event);
+    expect(bridge).toContain('"kind": kind.rawValue, "event": event, "ok": ok');
   });
 
   it('signs in to Game Center with the entitlement, and never shows the sheet unasked', () => {
@@ -66,6 +81,19 @@ describe('iOS shell', () => {
     // the one present() is signIn()'s, which only a tap reaches
     expect(gameCenter.match(/\.present\(/g)).toHaveLength(1);
     expect(gameCenter.split('func signIn()')[1]).toContain('.present(');
+  });
+
+  it("serves AdMob non-personalised, without asking to track, after Google's consent", () => {
+    expect(podfile).toMatch(/pod 'Google-Mobile-Ads-SDK', '~> \d+\.\d+'/);
+    expect(podfile).toMatch(/pod 'GoogleUserMessagingPlatform', '~> \d+\.\d+'/);
+    expect(plist).toMatch(/<key>GADApplicationIdentifier<\/key>\s*<string>ca-app-pub-\d+~\d+<\/string>/);
+    expect(plist.match(/<key>SKAdNetworkIdentifier<\/key>/g)?.length).toBeGreaterThan(40);
+    expect(plist).not.toContain('<key>NSUserTrackingUsageDescription</key>');
+    expect(adMob).not.toContain('ATTrackingManager');
+    expect(adMob).toContain('extras.additionalParameters = ["npa": "1"]');
+    // no ad is requested before Google's consent allows it
+    expect(adMob.split('private func load(')[1].split('Task')[0]).toContain('ConsentInformation.shared.canRequestAds');
+    expect(bridge.split('override func viewDidAppear')[1]).toContain('adMob.start()');
   });
 
   it('is an iPhone game in portrait, full screen, without the status bar', () => {

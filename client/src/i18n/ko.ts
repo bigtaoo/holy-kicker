@@ -392,6 +392,7 @@ export const ko: Table<typeof en> = {
     shareOff: '전송: 꺼짐',
     policy: '개인정보 처리방침',
     gameCenter: 'Game Center',
+    adPrivacy: '광고 개인정보',
     dataNotice: '플레이 통계와 순위 기록을 서버로 보내\n밸런스 조정과 순위표에 사용해요.',
     playId: '내 플레이 ID: {id}',
   },

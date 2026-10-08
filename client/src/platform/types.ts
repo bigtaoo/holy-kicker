@@ -40,6 +40,8 @@ export interface Platform {
   readonly ads: Ads;
   /** The lobby's banner ad; NO_BANNER where the host has none. */
   readonly banner: Banner;
+  /** The ad network's own privacy choices; NO_AD_PRIVACY where the host has none. */
+  readonly adPrivacy: AdPrivacy;
   /** Sound output; null where the host has none (the game then runs silent). */
   readonly audio: AudioHost | null;
   /** Asks the player to write something (a problem report) in the host's own text box; null when cancelled. */
@@ -116,6 +118,18 @@ export interface Ads {
   /** An interstitial at a natural break; resolves when it is over or was not shown. */
   midgame(started?: () => void): Promise<void>;
 }
+
+/**
+ * The ad network's consent form, offered again from settings where the law asks for it (Google's
+ * privacy options in the EEA/UK, on iOS). Separate from our own play-data choice (net/privacyChoice.ts).
+ */
+export interface AdPrivacy {
+  /** Whether settings should show the button. */
+  offered(): boolean;
+  open(): void;
+}
+
+export const NO_AD_PRIVACY: AdPrivacy = { offered: () => false, open() {} };
 
 /**
  * A banner ad in a band along the bottom of the screen, under the UI rather than over it: the

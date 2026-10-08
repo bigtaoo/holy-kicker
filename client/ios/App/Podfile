@@ -17,7 +17,10 @@ end
 
 target 'App' do
   capacitor_pods
-  # Add your Pods here
+  # AdMob.swift. Pinned to the majors known to build (funny shipped 13.9.0 with UMP 3.1.0): a new
+  # major renames Swift symbols, and only CI can compile Swift here, so bump them deliberately.
+  pod 'Google-Mobile-Ads-SDK', '~> 13.9'
+  pod 'GoogleUserMessagingPlatform', '~> 3.1'
 end
 
 post_install do |installer|

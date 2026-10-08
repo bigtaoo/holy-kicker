@@ -2,7 +2,7 @@ import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type TextAsk } from '../types';
+import { NO_ADS, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type TextAsk } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
 import { WeChatMusicDeck } from './weChatMusicDeck';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
@@ -26,6 +26,7 @@ export class WeChatPlatform implements Platform {
   readonly portal: Portal = NO_PORTAL;
   readonly ads: Ads = NO_ADS;
   readonly banner: Banner = NO_BANNER;
+  readonly adPrivacy: AdPrivacy = NO_AD_PRIVACY;
   // wx.createWebAudioContext implements the Web Audio API; it is missing on old base
   // libraries, so it is feature-detected. No autoplay gate here, but a touch still resumes
   // a context the system suspended.

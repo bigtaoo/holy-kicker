@@ -392,6 +392,7 @@ export const zh: Table<typeof en> = {
     shareOff: '数据共享：关',
     policy: '隐私政策',
     gameCenter: 'Game Center',
+    adPrivacy: '广告隐私',
     dataNotice: '游戏数据和排行榜成绩会发送到我们的服务器，\n用于调整平衡和运行排行榜。',
     playId: '你的游戏 ID：{id}',
   },

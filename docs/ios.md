@@ -1,7 +1,7 @@
 # iOS release plan
 
 Status, 2026-10-08: step 1 (the shell) plays on a phone from TestFlight; step 2 (Game Center's
-nickname) is written and waits for its first build; steps 3–5 are plans.
+nickname) shows the alias on a phone (build 1.0 (6)); steps 3–5 are plans.
 
 The iOS app is the web build inside a Capacitor shell (WKWebView), like the other hosts it is
 one more `Platform` (`client/src/platform/types.ts`). Most of the native plumbing already
@@ -50,6 +50,7 @@ client/
     IosPlatform.ts           extends WebPlatform: storage, openUrl, languages, device, keyboard
     bridge.ts                typed access to window.HKNative, feature-detected
     gameCenter.ts            (step 2) the nickname and the sign-in offer (tested)
+    admob.ts                 (step 3) Ads and AdPrivacy over the shell's AdMob (tested)
     mirrorStore.ts           localStorage + the UserDefaults copy (tested)
     shell.test.ts            pins the native project to the web side as text
     adFree.ts                (step 4) the Ads decorator used once the card is owned
@@ -61,9 +62,10 @@ client/
     App/HKBridgeViewController.swift   the bridge, bottom-edge gestures
     App/KeyStore.swift       the UserDefaults copy of the key store
     App/GameCenter.swift     (step 2) GameKit's sign-in, the alias, the kept sheet
+    App/AdMob.swift          (step 3) UMP consent, a rewarded and an interstitial kept loaded
     App/App.entitlements     Game Center
-    App/PrivacyInfo.xcprivacy  App/Info.plist
-    (later) App/AdMob.swift  App/Store.swift
+    App/PrivacyInfo.xcprivacy  App/Info.plist (GADApplicationIdentifier, SKAdNetworkItems)
+    (later) App/Store.swift
 ```
 
 - **CocoaPods, not Swift Package Manager** (Capacitor 8's default): the AdMob pod is one line in a
@@ -90,11 +92,11 @@ client/
 ### The bridge contract (`window.HKNative`, injected at document start)
 
 Every member is feature-detected so a newer JS bundle on an older shell degrades instead of
-throwing; `v` is raised when the shell gains calls (2 with Game Center). Game Center's state is
-pushed, not asked for by id: the shell calls `_gameCenter(state)` whenever it changes and when
-the page posts `gameCenter` as it loads (a reloaded page asks again). The promise-returning ads
-and store calls (settled by the native side through a registry of ids, as in funny) arrive with
-steps 3–4.
+throwing; `v` is raised when the shell gains calls (2 with Game Center, 3 with AdMob). Answers
+are pushed, not settled by id: the shell calls `_gameCenter(state)` and `_adState(state)`
+whenever a state changes and when the page posts `gameCenter` / `adState` as it loads (a reloaded
+page asks again), and `_adEvent(e)` as an ad the page asked for comes and goes. The store calls
+(step 4) are still a sketch.
 
 ```ts
 interface HKNative {
@@ -102,12 +104,14 @@ interface HKNative {
   gameCenter(): { alias: string | null; canSignIn: boolean } | null; // null until GameKit answers
   onGameCenter(cb: (s: { alias: string | null; canSignIn: boolean }) => void): void;
   gameCenterSignIn(): void; // presents Apple's kept sheet, only from a tap
-  // ads
-  adsReady(): Promise<{ canRequestAds: boolean; privacyOptions: boolean }>;
-  rewarded(): Promise<'rewarded' | 'skipped' | 'nofill'>; // emits 'shown' when on screen
-  interstitial(): Promise<void>;
-  privacyOptions(): Promise<void>; // UMP's form again, from settings
-  onAdShown(cb: () => void): void;
+  // ads (step 3, built)
+  adState(): AdState | null; // null before the shell has sent one
+  onAdState(cb: (s: AdState) => void): void;
+  // AdState: { status: 'pending' | 'on' | 'off', rewarded: boolean, interstitial: boolean
+  //            (loaded now), privacyOptions: boolean, error: string | null (last load failure) }
+  onAdEvent(cb: (e: { kind: AdKind; event: 'started' | 'done'; ok: boolean }) => void): void;
+  showAd(kind: 'rewarded' | 'interstitial'): void; // 'done' alone when it could not be shown
+  adPrivacy(): void; // UMP's privacy options form, from settings
   // store
   products(): Promise<{ id: string; displayPrice: string }[]>;
   buy(id: string): Promise<'owned' | 'cancelled' | 'pending' | 'failed'>;
@@ -187,23 +191,36 @@ interface HKNative {
 
 ## Ads: AdMob
 
-- App id and three ad units in AdMob (rewarded, interstitial, banner for later); Google's test
-  units in Debug builds. `Google-Mobile-Ads-SDK` pinned to a major in the Podfile (funny pins
-  `~> 13.9`), its `SKAdNetworkItems` list in `Info.plist` (copy funny's 47).
-- **Consent**: at launch, before `MobileAds.shared.start`, UMP
-  `requestConsentInfoUpdate` → `loadAndPresentIfRequired`. Google shows its form only in the
-  EEA/UK (configure the GDPR message in AdMob → Privacy & messaging). Where
-  `privacyOptionsRequirementStatus` is `required`, the settings panel shows "Ad privacy
-  options". Our own analytics consent card (`net/privacyChoice.ts`) stays: it is about our
-  play data, UMP about Google's ads.
+Built (step 3) in `App/AdMob.swift` and `platform/ios/admob.ts`.
+
+- **Ids.** `GADApplicationIdentifier` in `Info.plist` is Google's sample app id until HolyKicker's
+  own is in (owner setup 4). The ad units are Google's demo units (rewarded
+  `…/1712485313`, interstitial `…/4411468910`) in every build, TestFlight included: they serve
+  test ads under any app id, while real units have no fill before the app is live (funny's first
+  device test had none). Step 5 puts in HolyKicker's units. `Google-Mobile-Ads-SDK ~> 13.9` and
+  `GoogleUserMessagingPlatform ~> 3.1` are pinned to the majors funny shipped; the
+  `SKAdNetworkItems` list is funny's (Google's 50).
+- **Consent.** Once the view is on screen (`viewDidAppear`, so the form has a presenter), UMP
+  `requestConsentInfoUpdate` → `loadAndPresentIfRequired`; Google shows its form only in the
+  EEA/UK, as configured under AdMob → Privacy & messaging. The SDK starts and loads only when
+  `canRequestAds` (at once when an earlier launch already answered). Where
+  `privacyOptionsRequirementStatus` is `required`, the settings panel's play-data row gains a
+  third button, "Ad privacy", beside sharing and the policy (`Platform.adPrivacy`, `NO_AD_PRIVACY`
+  elsewhere). Our own analytics consent card (`net/privacyChoice.ts`) stays: it is about our play
+  data, UMP about Google's ads. Withdrawing consent there drops the loaded ads.
 - **No ATT**, every request non-personalised (`npa=1`), as funny decided: no tracking prompt,
   "Data used to track you: none" on the privacy label. Revisit once there is fill data.
-- Mapping onto `Ads` (`platform/types.ts`): `rewardedAvailable` → a rewarded ad is loaded
-  (preload after each show), `rewarded` → `'rewarded'` only, `midgame` → interstitial,
-  `started` ← `onAdShown` (the shell mutes the sound, as on CrazyGames). `banner` is
+- **Mapping onto `Ads`.** The shell keeps one rewarded and one interstitial loaded, loading the
+  next as one closes and retrying a failed load with a backoff (15 s doubling to 5 min).
+  `rewardedAvailable` is true once a rewarded ad is loaded: it waits up to 20 s for the first
+  (the lobby and the results lay themselves out again when it resolves), and is false at once
+  when ads may not be requested. `rewarded` → true only when the reward was earned, resolved
+  after the ad is closed; `midgame` → the interstitial if one is loaded, otherwise nothing (never
+  waited for). `started` ← the ad's `adWillPresentFullScreenContent`, so the shell mutes the
+  sound as on CrazyGames. An ad that has not started 10 s after the ask is given up. `banner` is
   `NO_BANNER` for now. Rewards are paid on the device, so no server-side reward check.
-- No fill is normal until the app is live and `app-ads.txt` is crawled (funny's first device
-  test had none).
+- **Why a load failed** ("GADErrorDomain 3: …", 3 is no fill) rides on the device line of a
+  problem report (`IosPlatform.device`), since a TestFlight build has no readable console.
 
 ## The ad-free card (StoreKit 2)
 
@@ -269,12 +286,14 @@ interface HKNative {
 | 2 | Game Center name, `ios` host on the server | The alias shows in the lobby and on the boards |
 | 3 | AdMob: UMP, rewarded, interstitial | Test ads play; consent form in an EEA sandbox |
 | 4 | Ad-free card: StoreKit, shop card, Restore, decorator, analytics | Sandbox purchase, restore on a second device, refund revokes |
-| 5 | Listing: privacy label, policy, app-ads.txt, screenshots, rating; submit | In review |
+| 5 | Listing: our own ad units, privacy label, policy, app-ads.txt, screenshots, rating; submit | In review |
 
 Steps 2–4 are independent once step 1 is in.
 
 Progress: step 0 done 2026-10-08; step 1 done the same day (build 1.0 (4) from TestFlight plays
-on a phone); step 2 written, waiting for a build.
+on a phone); step 2 done the same day (1.0 (6): a player already signed in to Game Center gets
+the alias with no sheet; the settings button for a signed-out player is still unseen on a phone);
+step 3 written with Google's sample app id and demo units, waiting for a build.
 
 ## Owner setup
 
@@ -309,8 +328,10 @@ on a phone); step 2 written, waiting for a build.
 3. App Store Connect: the app record, the `.adfree` product, the **Paid Apps agreement active**
    (else products stay "missing metadata"), Game Center enabled, sandbox testers,
    storefronts without mainland China.
-4. AdMob: a new app (iOS) and the ad units; GDPR message; the developer website for
-   `app-ads.txt`.
+4. AdMob: a new app (iOS, not yet on the store) and two ad units, rewarded and interstitial;
+   HolyKicker added to the GDPR message (Privacy & messaging); the developer website for
+   `app-ads.txt`. The app id goes into `Info.plist` with step 3, the units into `AdMob.swift`
+   with step 5.
 
 ## Later
 

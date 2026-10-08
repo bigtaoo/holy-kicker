@@ -4,7 +4,7 @@ import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { FAKE_ADS, NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type TextAsk } from '../types';
+import { FAKE_ADS, NO_ADS, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type TextAsk } from '../types';
 import { BannerHost, FAKE_BANNER_FILL } from './banner';
 import { askTextDom } from './textAsk';
 import { webAudioHost } from './webAudio';
@@ -39,6 +39,7 @@ export class WebPlatform implements Platform {
   readonly portal: Portal = NO_PORTAL;
   readonly ads: Ads = new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
   readonly banner: Banner = this.ads === FAKE_ADS ? new BannerHost(FAKE_BANNER_FILL) : NO_BANNER;
+  readonly adPrivacy: AdPrivacy = NO_AD_PRIVACY;
   readonly audio: AudioHost | null = webAudioHost();
 
   askText(o: TextAsk): Promise<string | null> {

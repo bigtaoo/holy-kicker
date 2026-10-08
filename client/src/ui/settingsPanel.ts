@@ -4,7 +4,7 @@ import { QUALITY_MODES, type QualityMode } from '../game/quality';
 import type { Sound } from '../audio/Sound';
 import type { KeyValueStore } from '../meta/saveStore';
 import type { PrivacyUi } from '../net/privacyChoice';
-import type { Portal } from '../platform/types';
+import type { AdPrivacy, Portal } from '../platform/types';
 import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
 import { languagePanel } from './languagePanel';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
@@ -12,8 +12,9 @@ import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets'
 // The settings panel, opened from the lobby's gear: language (a button to the picker,
 // languagePanel.ts), the sound effects' and the
 // music's volume in steps (0 is off), the graphics quality and, online, play data: sharing on or off,
-// the privacy policy and the install's id, and beside Back a Game Center button while Apple's
-// sign-in waits for a tap (iOS). Every change goes straight to the shell, which stores it and
+// the privacy policy (and beside it the ad network's privacy options where they are due, iOS in
+// the EEA/UK) and the install's id, and beside Back a Game Center button while Apple's sign-in
+// waits for a tap (iOS). Every change goes straight to the shell, which stores it and
 // redraws the lobby, so the panel just shows the current values.
 
 export interface SettingsActions {
@@ -28,6 +29,8 @@ export interface SettingsActions {
   privacy: PrivacyUi | null;
   /** Signing in to the host's account from here (Game Center); never offered elsewhere. */
   account: Pick<Portal, 'canSignIn' | 'signIn'>;
+  /** The ad network's own privacy options; shown with the play-data rows. */
+  adPrivacy: AdPrivacy;
   close(): void;
 }
 
@@ -35,7 +38,7 @@ export interface SettingsActions {
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy'>,
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: o.setLanguage,
@@ -56,6 +59,7 @@ export function storedSettings(
     },
     privacy: o.privacy,
     account: o.account,
+    adPrivacy: o.adPrivacy,
   };
 }
 
@@ -111,11 +115,13 @@ function volumeRow(volume: number, set: (v: number) => void): Container {
   return row;
 }
 
-/** Sharing on or off and the policy side by side, then what is sent and the install's id. */
-function dataRows(p: PrivacyUi, add: (c: Container, step: number) => void, heading: (text: string) => void): void {
+/** Sharing on or off and the policy side by side (and the ad network's options, when due), then
+ *  what is sent and the install's id. */
+function dataRows(p: PrivacyUi, ads: AdPrivacy, add: (c: Container, step: number) => void, heading: (text: string) => void): void {
   heading(t('settings.data'));
   const row = new Container();
-  const bw = (ROW + 160 - 24) / 2;
+  const n = ads.offered() ? 3 : 2;
+  const bw = (ROW + 160 - 24 * (n - 1)) / n;
   const on = p.sharing();
   const share = button(on ? t('settings.shareOn') : t('settings.shareOff'), bw, 110, () => p.set(!on), {
     fill: on ? COLORS.saffron : COLORS.panelLocked,
@@ -123,9 +129,9 @@ function dataRows(p: PrivacyUi, add: (c: Container, step: number) => void, headi
     size: 44,
   });
   const policy = button(t('settings.policy'), bw, 110, () => p.openPolicy(), { fill: COLORS.panelLocked, size: 44 });
-  share.x = -(bw + 24) / 2;
-  policy.x = (bw + 24) / 2;
   row.addChild(share, policy);
+  if (n === 3) row.addChild(button(t('settings.adPrivacy'), bw, 110, () => ads.open(), { fill: COLORS.panelLocked, size: 44 }));
+  row.children.forEach((b, i) => (b.x = (i - (n - 1) / 2) * (bw + 24)));
   add(row, 140);
   const id = p.id();
   const text = t('settings.dataNotice') + (id ? '\n' + t('settings.playId', { id }) : '');
@@ -167,7 +173,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   add(choices(QUALITY_MODES, (m) => t(`settings.${m}`), mode, (m) => a.setQuality(m)), 140);
   add(fit(label(t(HINT[mode]), 40, COLORS.dim), W - 80), 90);
 
-  if (a.privacy) dataRows(a.privacy, add, heading);
+  if (a.privacy) dataRows(a.privacy, a.adPrivacy, add, heading);
 
   y += 40;
   const back = button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked });

@@ -1,7 +1,8 @@
 import type { Host } from '@hk/protocol';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_PORTAL, type Portal, type TextAsk } from '../types';
+import { NO_PORTAL, type AdPrivacy, type Ads, type Portal, type TextAsk } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
+import { AdMob } from './admob';
 import { hkNative, type HKNative } from './bridge';
 import { GameCenterAccount } from './gameCenter';
 import { MirrorStore } from './mirrorStore';
@@ -11,14 +12,18 @@ import { MirrorStore } from './mirrorStore';
 // (the page opened in Safari) it behaves exactly like the browser host, reporting as ios.
 //
 // Game Center names the player on the boards, but it is not an account the boards require
-// (`accounts()` is false): a player without it goes by a dice name, as on the web.
+// (`accounts()` is false): a player without it goes by a dice name, as on the web. Ads are AdMob's,
+// through the shell (admob.ts); in Safari, without the shell, there are none.
 export class IosPlatform extends WebPlatform {
   override readonly host: Host = 'ios';
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
+  override readonly ads: Ads;
+  override readonly adPrivacy: AdPrivacy;
   /** main.ios.ts redraws the lobby on its `onChange`. */
   readonly gameCenter: GameCenterAccount;
   private readonly native: Partial<HKNative> | null;
+  private readonly admob: AdMob;
 
   constructor(native = hkNative()) {
     super();
@@ -35,6 +40,9 @@ export class IosPlatform extends WebPlatform {
       canSignIn: () => gc.canSignIn(),
       signIn: () => gc.signIn(),
     };
+    this.admob = new AdMob(native);
+    this.ads = this.admob;
+    this.adPrivacy = this.admob;
     // game sound obeys the silent switch and mixes with the player's music (iOS 17+; the shell
     // sets the same AVAudioSession category for older systems)
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
@@ -52,8 +60,11 @@ export class IosPlatform extends WebPlatform {
     return Array.isArray(langs) && langs.length ? [...langs] : super.languages();
   }
 
+  /** With why ads last failed to load, if they did: no fill and a wrong unit look alike otherwise. */
   override device(): string {
-    return this.native?.device || super.device();
+    const device = this.native?.device || super.device();
+    const error = this.admob.error();
+    return error ? `${device}; ads: ${error}` : device;
   }
 
   /** The keyboard can leave the page scrolled up after it closes, which offsets every later tap

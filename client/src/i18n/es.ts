@@ -392,6 +392,7 @@ export const es: Table<typeof en> = {
     shareOff: 'Compartir: no',
     policy: 'Privacidad',
     gameCenter: 'Game Center',
+    adPrivacy: 'Privacidad de anuncios',
     dataNotice: 'Las estadísticas de juego y las partidas clasificadas van a nuestro servidor, para equilibrar el juego y gestionar las clasificaciones.',
     playId: 'Tu ID de juego: {id}',
   },

@@ -392,6 +392,7 @@ export const ja: Table<typeof en> = {
     shareOff: '送信：オフ',
     policy: 'プライバシー',
     gameCenter: 'Game Center',
+    adPrivacy: '広告のプライバシー',
     dataNotice: 'プレイ統計とランキングの記録をサーバーに送り、\nバランス調整とランキングに使います。',
     playId: 'あなたのプレイID：{id}',
   },
