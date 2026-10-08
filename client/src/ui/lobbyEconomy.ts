@@ -10,7 +10,7 @@ import type { SaveData } from '../meta/save';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
 import type { TasksView } from './achievePanel';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
-import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live } from './economyPanels';
+import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
 import { COLORS, button, buttonLabel, dot, fit, label, panel } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
@@ -31,6 +31,8 @@ export interface EconomyHost {
   rewarded(): Promise<boolean>;
   /** The icon sheet, with the chests as chest_free, chest_ad and chest_jade. */
   icons: IconSheet;
+  /** What the patrol panel's scene is drawn with. */
+  patrolLook(): PatrolLook;
   track: LobbyTrack;
 }
 
@@ -59,6 +61,7 @@ export class EconomyUi {
   private adOk = false;
   private playing = false;
   private live: Live[] = [];
+  private ticks: Tick[] = [];
   private clock = 0;
   /** The tasks panel's page: today's tasks first, unless only an achievement waits. */
   private tasksView: TasksView = 'daily';
@@ -74,9 +77,11 @@ export class EconomyUi {
   /** Called at the start of every lobby layout: the live numbers are rebuilt with it. */
   reset(): void {
     this.live = [];
+    this.ticks = [];
   }
 
   update(dt: number): void {
+    for (const f of this.ticks) f(dt);
     this.clock += dt;
     if (this.clock < 1) return;
     this.clock = 0;
@@ -143,7 +148,7 @@ export class EconomyUi {
         quick: (pay) => void this.quick(pay),
         close: () => this.show(null),
         toast: (text) => this.host.toast(text),
-      }, this.live));
+      }, this.host.patrolLook(), this.live, this.ticks));
     } else if (this.modal === 'tasks') {
       c.addChild(tasksPanel(save, this.now(), w, h, this.tasksView, this.achievePage, {
         claimTask: (i) => this.claim(claimTask(this.host.save(), this.now(), i), [{ what: 'task', task: i }]),

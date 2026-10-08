@@ -13,6 +13,7 @@ import { train } from '../meta/training';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { codexHeight, codexTab } from './codexTab';
 import { EconomyUi, shopHeight, type LobbyTrack } from './lobbyEconomy';
+import type { PatrolLook } from './economyPanels';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
 import { scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
@@ -85,6 +86,8 @@ export class LobbyScreen implements Screen {
     private readonly icons: IconSheet,
     private readonly renderer: Renderer,
     private readonly backdrop: Texture,
+    /** What the patrol panel's scene is drawn with (the chosen monk's rig). */
+    patrolLook: () => PatrolLook,
   ) {
     const ads = actions.adAvailable();
     void ads.then((ok) => (this.adOk = ok));
@@ -98,6 +101,7 @@ export class LobbyScreen implements Screen {
       toast: (text) => this.showToast(text),
       rewarded: () => actions.rewarded(),
       icons: this.icons,
+      patrolLook,
       track: actions.track,
     }, ads);
     this.boards = new BoardUi(actions.board, () => this.relayout());

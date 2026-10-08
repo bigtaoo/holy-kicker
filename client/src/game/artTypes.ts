@@ -3,6 +3,7 @@ import type { MobSheet } from './mobView';
 import type { StageArt } from './stageArt';
 import type { MonkId } from '@hk/engine';
 import type { TaoAsset } from './tao/TaoActor';
+import type { PatrolArt } from '../ui/patrolScene';
 
 // The art a run is drawn with (loaded by art.ts): what every chapter shares, and the chapters'
 // own, chapters 3 to 5 from their art packs once a run of theirs has loaded them.
@@ -28,6 +29,8 @@ export interface Art {
   boss: TaoAsset | null;
   /** The lobby's painted backdrop. */
   lobby: Texture;
+  /** The patrol panel's far hills and roadside props (art/monk/ui/patrol). */
+  patrol: PatrolArt;
   /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
   icons: ReadonlyMap<string, Texture>;
   /** Chapter 2's mobs, elite and boss (tools/bake_mob.py, specs in art/monk/mobs). */

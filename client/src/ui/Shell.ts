@@ -24,6 +24,7 @@ import type { Backend, RunRank } from '../net/backend';
 import type { PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
+import { monkRig } from '../game/artTypes';
 import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
@@ -196,6 +197,8 @@ export class Shell {
     if (save !== this.save) this.commit(save);
     // a renamed or newly signed-in portal account reaches the boards from here
     this.names.sync(this.save);
+    // the patrol panel shows the chosen monk
+    loadMonkArt(this.platform, this.art, this.save.monk).catch(() => undefined);
     const lobby = new LobbyScreen(this.save, this.names, {
       play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => {
@@ -220,7 +223,7 @@ export class Shell {
       rewarded: () => this.rewarded('lobby'),
       board: this.net.online && this.names.ranked() ? (id) => this.net.board(id) : null, // no guests on account hosts
       track: (e, p) => this.net.track(e, p),
-    }, this.art.icons, this.app.renderer, this.art.lobby);
+    }, this.art.icons, this.app.renderer, this.art.lobby, () => ({ rig: monkRig(this.art, this.save.monk), art: this.art.patrol, icons: this.art.icons }));
     if (settings) lobby.openSettings();
     this.setScreen(lobby);
   }
