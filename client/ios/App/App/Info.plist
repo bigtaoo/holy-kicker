@@ -75,12 +75,11 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<!-- AdMob (AdMob.swift). The app id is Google's sample until HolyKicker's own is in (docs/ios.md
-	     step 3). No NSUserTrackingUsageDescription on purpose: every request is non-personalised
+	<!-- AdMob (AdMob.swift): HolyKicker's app id on the account's publisher (funny's too). No NSUserTrackingUsageDescription on purpose: every request is non-personalised
 	     (npa=1) and the app never asks to track, as in funny. SKAdNetwork is not tracking in Apple's
 	     terms (aggregate install attribution); the list is Google's, copied from funny. -->
 	<key>GADApplicationIdentifier</key>
-	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<string>ca-app-pub-5437693117291100~7644915595</string>
 	<key>SKAdNetworkItems</key>
 	<array>
 		<dict>

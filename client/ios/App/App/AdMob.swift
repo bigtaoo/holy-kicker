@@ -27,12 +27,13 @@ final class AdMob: NSObject, FullScreenContentDelegate {
         }
     }
 
-    /// Google's demo units, which serve test ads under any app id. TestFlight builds keep them until
-    /// the listing (step 5) puts in HolyKicker's own: real units have no fill before the app is live.
+    /// Google's demo units serve test ads under any app id, and every build uses them until the
+    /// listing (step 5) turns `live` on: our own units have no fill before the app is on the store.
+    private static let live = false
     private static func unit(_ kind: Kind) -> String {
         switch kind {
-        case .rewarded: return "ca-app-pub-3940256099942544/1712485313"
-        case .interstitial: return "ca-app-pub-3940256099942544/4411468910"
+        case .rewarded: return live ? "ca-app-pub-5437693117291100/1896010873" : "ca-app-pub-3940256099942544/1712485313"
+        case .interstitial: return live ? "ca-app-pub-5437693117291100/7607502555" : "ca-app-pub-3940256099942544/4411468910"
         }
     }
 

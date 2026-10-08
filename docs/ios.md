@@ -193,11 +193,12 @@ interface HKNative {
 
 Built (step 3) in `App/AdMob.swift` and `platform/ios/admob.ts`.
 
-- **Ids.** `GADApplicationIdentifier` in `Info.plist` is Google's sample app id until HolyKicker's
-  own is in (owner setup 4). The ad units are Google's demo units (rewarded
-  `…/1712485313`, interstitial `…/4411468910`) in every build, TestFlight included: they serve
-  test ads under any app id, while real units have no fill before the app is live (funny's first
-  device test had none). Step 5 puts in HolyKicker's units. `Google-Mobile-Ads-SDK ~> 13.9` and
+- **Ids.** `GADApplicationIdentifier` in `Info.plist` is HolyKicker's own app id
+  (`ca-app-pub-5437693117291100~7644915595`, the publisher funny uses too). Its two units
+  (rewarded `…/1896010873`, interstitial `…/7607502555`) sit in `AdMob.swift` behind `live`, off
+  until step 5: until then every build, TestFlight included, asks for Google's demo units, which
+  serve test ads under any app id, while real units have no fill before the app is live (funny's
+  first device test had none). `Google-Mobile-Ads-SDK ~> 13.9` and
   `GoogleUserMessagingPlatform ~> 3.1` are pinned to the majors funny shipped; the
   `SKAdNetworkItems` list is funny's (Google's 50).
 - **Consent.** Once the view is on screen (`viewDidAppear`, so the form has a presenter), UMP
@@ -286,14 +287,14 @@ Built (step 3) in `App/AdMob.swift` and `platform/ios/admob.ts`.
 | 2 | Game Center name, `ios` host on the server | The alias shows in the lobby and on the boards |
 | 3 | AdMob: UMP, rewarded, interstitial | Test ads play; consent form in an EEA sandbox |
 | 4 | Ad-free card: StoreKit, shop card, Restore, decorator, analytics | Sandbox purchase, restore on a second device, refund revokes |
-| 5 | Listing: our own ad units, privacy label, policy, app-ads.txt, screenshots, rating; submit | In review |
+| 5 | Listing: our own ad units (`live` in `AdMob.swift`), privacy label, policy, app-ads.txt, screenshots, rating; submit | In review |
 
 Steps 2–4 are independent once step 1 is in.
 
 Progress: step 0 done 2026-10-08; step 1 done the same day (build 1.0 (4) from TestFlight plays
 on a phone); step 2 done the same day (1.0 (6): a player already signed in to Game Center gets
 the alias with no sheet; the settings button for a signed-out player is still unseen on a phone);
-step 3 written with Google's sample app id and demo units, waiting for a build.
+step 3 written with HolyKicker's app id and Google's demo units, waiting for a build.
 
 ## Owner setup
 
@@ -330,8 +331,7 @@ step 3 written with Google's sample app id and demo units, waiting for a build.
    storefronts without mainland China.
 4. AdMob: a new app (iOS, not yet on the store) and two ad units, rewarded and interstitial;
    HolyKicker added to the GDPR message (Privacy & messaging); the developer website for
-   `app-ads.txt`. The app id goes into `Info.plist` with step 3, the units into `AdMob.swift`
-   with step 5.
+   `app-ads.txt`. App and units created 2026-10-08 (ids in `Info.plist` and `AdMob.swift`).
 
 ## Later
 
