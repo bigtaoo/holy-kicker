@@ -7,6 +7,9 @@ import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLe
 import type { SaveData } from '../meta/save';
 import { ROWS_TOP, ROW_H, TASKS_BOX_H, achieveRows, tasksSwitch, type AchievePanelActions, type TasksView } from './achievePanel';
 import { dropLines } from './gearText';
+import type { TaoAsset } from '../game/tao/TaoActor';
+import type { IconSheet } from './buildBar';
+import { PatrolScene, type PatrolArt } from './patrolScene';
 import { COLORS, backdrop, button, fit, label, meter, panel } from './widgets';
 
 // The lobby's modal panels for the patrol, the daily tasks (achievements: achievePanel.ts) and
@@ -16,6 +19,18 @@ import { COLORS, backdrop, button, fit, label, meter, panel } from './widgets';
 
 /** Something that redraws a live number in place. */
 export type Live = () => void;
+/** Something animated, advanced every frame by the seconds since the last. */
+export type Tick = (dt: number) => void;
+
+/** What the patrol panel's scene is drawn with: the chosen monk's rig, the road art, the icons. */
+export interface PatrolLook {
+  rig: TaoAsset;
+  art: PatrolArt | null;
+  icons: IconSheet;
+}
+
+const SCENE_W = 840;
+const SCENE_H = 300;
 
 const BAR_W = 760;
 
@@ -32,32 +47,40 @@ export interface PatrolPanelActions {
   toast(text: string): void;
 }
 
-/** The patrol: time piled up, what it pays so far, collect (and ×2 with an ad), quick patrols. */
-export function patrolPanel(save: SaveData, now: () => number, w: number, h: number, adOk: boolean, playing: boolean, a: PatrolPanelActions, live: Live[]): Container {
+/**
+ * The patrol: the monk on the road (patrolScene.ts), time piled up, what it pays so far,
+ * collect (and ×2 with an ad), quick patrols.
+ */
+export function patrolPanel(save: SaveData, now: () => number, w: number, h: number, adOk: boolean, playing: boolean, a: PatrolPanelActions, look: PatrolLook, live: Live[], ticks: Tick[]): Container {
   const P = BALANCE.patrol;
   const root = new Container();
   root.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const boxH = 1290;
+  const boxH = 1290 + SCENE_H + 40;
   const top = -boxH / 2;
   box.addChild(panel(920, boxH));
   const title = label(t('patrol.title'), 72);
   title.y = top + 80;
   const stored = label('', 48);
   stored.y = top + 180;
+  const scene = new PatrolScene(SCENE_W, SCENE_H, look.rig, look.art, look.icons);
+  scene.view.y = top + 240;
+  ticks.push((dt) => scene.update(dt));
+  const shift = SCENE_H + 40;
   const gauge = meter(BAR_W, 0, COLORS.saffron);
-  gauge.view.y = top + 260;
+  gauge.view.y = top + 260 + shift;
   const pays = label('', 44, COLORS.copper);
-  pays.y = top + 340;
+  pays.y = top + 340 + shift;
   const rate = fit(label(t('patrol.rate', { h: P.dropHours, cap: P.capHours }), 40, COLORS.dim), 840);
-  rate.y = top + 410;
-  box.addChild(title, stored, gauge.view, pays, rate);
+  rate.y = top + 410 + shift;
+  box.addChild(title, stored, scene.view, gauge.view, pays, rate);
   const refresh = () => {
     const hours = patrolHours(save, now());
     stored.text = t('patrol.stored', { time: hoursText(hours), cap: P.capHours });
     fit(stored, 840);
     gauge.set(hours / P.capHours);
+    scene.set(hours, P.capHours, patrolDrops(hours));
     pays.text = t('patrol.pays', { copper: formatAmount(Math.floor(copperPerHour(save) * hours)), n: patrolDrops(hours) });
     fit(pays, 840);
   };
@@ -65,7 +88,7 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   live.push(refresh);
 
   // collecting: the ×2 offer matches Collect in size, font and colour (CrazyGames' rewarded-ad rules)
-  let y = top + 520;
+  let y = top + 520 + shift;
   const ready = canCollect(save, now());
   if (adOk && canDouble(save, now())) {
     const twice = button(playing ? '…' : t('patrol.double'), 640, 140, () => a.collect(true), {
@@ -81,7 +104,7 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   collect.y = y;
   box.addChild(collect);
 
-  y = top + 960;
+  y = top + 960 + shift;
   const quick = label(t('patrol.quick'), 56);
   quick.y = y - 100;
   const info = fit(label(t('patrol.quickInfo', { copper: formatAmount(Math.floor(copperPerHour(save) * P.quickHours)), n: P.quickDrops }), 40, COLORS.dim), 840);

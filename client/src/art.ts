@@ -14,12 +14,15 @@ import { GHOST_DECO, MARSH_DECO, PEAK_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, t
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, monkIcons, lobby, jiangshi, fox, cuju, staff, fish, palm, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
+  const [hero, monkIcons, lobby, patrolFar, patrolProps, jiangshi, fox, cuju, staff, fish, palm, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
     loadTao(platform, 'art/hero'),
     // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
     loadDeco(platform, 'art/icons/monks'),
     // the lobby's painted backdrop (art/monk/ui)
     Assets.load<Texture>('art/ui/lobby.jpg'),
+    // the patrol panel's road (art/monk/ui/patrol)
+    Assets.load<Texture>('art/ui/patrol_far.jpg'),
+    loadDeco(platform, 'art/ui/patrol_props'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
@@ -42,7 +45,7 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
   return { hero, jiangshi, fox, cuju, staff, fish, palm, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
-  ], monks: {}, boss, lobby, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: { ghost, toad, toadKing, carp }, snow: null, ghost: null, peak: null };
+  ], monks: {}, boss, lobby, patrol: { far: patrolFar, props: patrolProps.frames }, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: { ghost, toad, toadKing, carp }, snow: null, ghost: null, peak: null };
 }
 
 /**
