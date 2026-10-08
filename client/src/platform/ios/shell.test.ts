@@ -52,6 +52,9 @@ describe('iOS shell', () => {
     expect(plist).not.toContain('UISupportedInterfaceOrientations~ipad');
     expect(plist).toMatch(/<key>UIRequiresFullScreen<\/key>\s*<true\/>/);
     expect(plist).toMatch(/<key>UIStatusBarHidden<\/key>\s*<true\/>/);
+    // SystemBars would show the status bar again at load, and it owns the home indicator
+    expect(capConfig).toContain('SystemBars: { hidden: true }');
+    expect(bridge).not.toContain('prefersHomeIndicatorAutoHidden');
     expect(plist).toMatch(/<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/);
   });
 

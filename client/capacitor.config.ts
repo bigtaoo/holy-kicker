@@ -4,8 +4,8 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // dist-ios/, `npx cap sync ios` copies it into ios/App/App/public and runs pod install (macOS
 // only; CI does both, .github/workflows/release-ios.yml).
 //
-// Everything native is ours, not Capacitor plugins: HKBridgeViewController injects
-// window.HKNative (src/platform/ios/bridge.ts). This file is compiled into the shell, so a change
+// Everything native is ours, not Capacitor plugins (bar SystemBars, built into the core):
+// HKBridgeViewController injects window.HKNative (src/platform/ios/bridge.ts). This file is compiled into the shell, so a change
 // here needs a new binary.
 const config: CapacitorConfig = {
   appId: 'com.gamestao.holykicker',
@@ -19,6 +19,12 @@ const config: CapacitorConfig = {
     // the game's own background, so there is no white flash before the first frame
     backgroundColor: '#141816',
     scrollEnabled: false,
+  },
+  plugins: {
+    // Core's SystemBars owns the status bar and the home indicator: at load it shows both unless
+    // `hidden`, undoing Info.plist's UIStatusBarHidden, and its extension on CAPBridgeViewController
+    // answers prefersHomeIndicatorAutoHidden (not open, so the bridge cannot override it).
+    SystemBars: { hidden: true },
   },
 };
 

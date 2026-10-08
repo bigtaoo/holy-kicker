@@ -57,7 +57,7 @@ client/
     Podfile                  pods signed with the app (CODE_SIGNING_ALLOWED NO), iOS 15
     App/AppDelegate.swift    stock, plus the .ambient audio session
     App/SceneDelegate.swift  stock, roots the window in HKBridgeViewController
-    App/HKBridgeViewController.swift   the bridge, edge gestures, home indicator
+    App/HKBridgeViewController.swift   the bridge, bottom-edge gestures
     App/KeyStore.swift       the UserDefaults copy of the key store
     App/PrivacyInfo.xcprivacy  App/Info.plist
     (later) App/GameCenter.swift  App/AdMob.swift  App/Store.swift  App/App.entitlements
@@ -123,9 +123,13 @@ interface HKNative {
 
 - **Portrait, iPhone only** (`TARGETED_DEVICE_FAMILY = 1`, `UIRequiresFullScreen`), status bar
   hidden, `ITSAppUsesNonExemptEncryption = false`.
+- **System bars**: Capacitor's core SystemBars plugin shows the status bar at load unless its
+  config says `hidden: true` (undoing `UIStatusBarHidden`), and it owns
+  `prefersHomeIndicatorAutoHidden` through a non-open extension the bridge cannot override.
+  So `capacitor.config.ts` sets `plugins.SystemBars.hidden`, which hides both.
 - **Home gesture vs. the drag stick**: the bridge view controller defers system gestures on
-  the bottom edge (`preferredScreenEdgesDeferringSystemGestures = .bottom`) and auto-hides the
-  home indicator, or a drag near the bottom sends the game home.
+  the bottom edge (`preferredScreenEdgesDeferringSystemGestures = .bottom`) and the home
+  indicator stays hidden, or a drag near the bottom sends the game home.
 - **Safe area**: `contentInset: 'never'` plus `viewport-fit=cover`, so
   `env(safe-area-inset-*)` reaches `WebPlatform.safeInsets()` (funny learnt `'always'` makes
   them read 0).

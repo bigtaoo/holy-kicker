@@ -31,9 +31,9 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
     }
 
     // A drag on the stick that reaches the bottom edge must not send the game home: the first
-    // swipe there only shows the home indicator, which stays hidden while playing.
+    // swipe there only shows the home indicator, which stays hidden while playing (that one is
+    // SystemBars' `hidden` in capacitor.config.ts; Capacitor's own extension answers it).
     override var preferredScreenEdgesDeferringSystemGestures: UIRectEdge { .bottom }
-    override var prefersHomeIndicatorAutoHidden: Bool { true }
 
     // MARK: WKScriptMessageHandler
 
