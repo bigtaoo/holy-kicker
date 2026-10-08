@@ -1,16 +1,23 @@
 import type { Host } from '@hk/protocol';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import type { TextAsk } from '../types';
+import { NO_PORTAL, type Portal, type TextAsk } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { hkNative, type HKNative } from './bridge';
+import { GameCenterAccount } from './gameCenter';
 import { MirrorStore } from './mirrorStore';
 
 // The iOS app (docs/ios.md): the browser host inside the Capacitor shell's WKWebView, with the
 // shell's bridge (window.HKNative) for what a web view cannot do on its own. Without the bridge
 // (the page opened in Safari) it behaves exactly like the browser host, reporting as ios.
+//
+// Game Center names the player on the boards, but it is not an account the boards require
+// (`accounts()` is false): a player without it goes by a dice name, as on the web.
 export class IosPlatform extends WebPlatform {
   override readonly host: Host = 'ios';
   override readonly storage: KeyValueStore;
+  override readonly portal: Portal;
+  /** main.ios.ts redraws the lobby on its `onChange`. */
+  readonly gameCenter: GameCenterAccount;
   private readonly native: Partial<HKNative> | null;
 
   constructor(native = hkNative()) {
@@ -20,6 +27,14 @@ export class IosPlatform extends WebPlatform {
     this.storage = new SafeStore(
       native?.saved && save ? new MirrorStore(native.saved, (k, v) => save.call(native, k, v), browserStorage()) : browserStorage(),
     );
+    const gc = new GameCenterAccount(native);
+    this.gameCenter = gc;
+    this.portal = {
+      ...NO_PORTAL,
+      userName: () => gc.alias(),
+      canSignIn: () => gc.canSignIn(),
+      signIn: () => gc.signIn(),
+    };
     // game sound obeys the silent switch and mixes with the player's music (iOS 17+; the shell
     // sets the same AVAudioSession category for older systems)
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;

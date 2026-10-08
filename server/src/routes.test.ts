@@ -105,6 +105,10 @@ describe('routes', () => {
     // signing in to the portal later swaps the dice name for the account's
     await route(req('POST', '/v1/name', { install: INSTALL, host: 'crazygames', name: 'IronHead' }), d);
     expect(((await route(req('GET', '/v1/boards/c1'), d)).body as { rows: { name: string; dice: number }[] }).rows[1]).toMatchObject({ name: 'IronHead', dice: 0 });
+    // and so does Game Center's nickname on iOS
+    expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'ios', name: 'Sh1t head' }), d)).status).toBe(400);
+    await route(req('POST', '/v1/name', { install: INSTALL, host: 'ios', name: 'KickerGC' }), d);
+    expect(((await route(req('GET', '/v1/boards/c1'), d)).body as { rows: { name: string }[] }).rows[1].name).toBe('KickerGC');
     expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', dice }), deps({ allow: () => false }))).status).toBe(429);
   });
 

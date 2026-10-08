@@ -1,7 +1,7 @@
 # iOS release plan
 
-Status, 2026-10-08: the owner's decisions are in. Step 1 (the shell) is written but has not yet
-compiled on the macOS runner or run on a phone; steps 2–5 are plans.
+Status, 2026-10-08: step 1 (the shell) plays on a phone from TestFlight; step 2 (Game Center's
+nickname) is written and waits for its first build; steps 3–5 are plans.
 
 The iOS app is the web build inside a Capacitor shell (WKWebView), like the other hosts it is
 one more `Platform` (`client/src/platform/types.ts`). Most of the native plumbing already
@@ -49,6 +49,7 @@ client/
   src/platform/ios/
     IosPlatform.ts           extends WebPlatform: storage, openUrl, languages, device, keyboard
     bridge.ts                typed access to window.HKNative, feature-detected
+    gameCenter.ts            (step 2) the nickname and the sign-in offer (tested)
     mirrorStore.ts           localStorage + the UserDefaults copy (tested)
     shell.test.ts            pins the native project to the web side as text
     adFree.ts                (step 4) the Ads decorator used once the card is owned
@@ -59,8 +60,10 @@ client/
     App/SceneDelegate.swift  stock, roots the window in HKBridgeViewController
     App/HKBridgeViewController.swift   the bridge, bottom-edge gestures
     App/KeyStore.swift       the UserDefaults copy of the key store
+    App/GameCenter.swift     (step 2) GameKit's sign-in, the alias, the kept sheet
+    App/App.entitlements     Game Center
     App/PrivacyInfo.xcprivacy  App/Info.plist
-    (later) App/GameCenter.swift  App/AdMob.swift  App/Store.swift  App/App.entitlements
+    (later) App/AdMob.swift  App/Store.swift
 ```
 
 - **CocoaPods, not Swift Package Manager** (Capacitor 8's default): the AdMob pod is one line in a
@@ -87,16 +90,18 @@ client/
 ### The bridge contract (`window.HKNative`, injected at document start)
 
 Every member is feature-detected so a newer JS bundle on an older shell degrades instead of
-throwing; `v` is raised when the shell gains calls. Step 1 has only the shell's part and posts
-messages without answers; the promise-returning calls (settled by the native side through a
-registry of ids, as in funny) arrive with steps 2–4.
+throwing; `v` is raised when the shell gains calls (2 with Game Center). Game Center's state is
+pushed, not asked for by id: the shell calls `_gameCenter(state)` whenever it changes and when
+the page posts `gameCenter` as it loads (a reloaded page asks again). The promise-returning ads
+and store calls (settled by the native side through a registry of ids, as in funny) arrive with
+steps 3–4.
 
 ```ts
 interface HKNative {
-  // Game Center
-  gameCenter(): Promise<{ alias: string; teamPlayerId: string } | null>; // null: not signed in
-  gameCenterSignIn(): Promise<boolean>; // presents Apple's sheet, only from a tap
-  onGameCenter(cb: (p: { alias: string; teamPlayerId: string } | null) => void): void;
+  // Game Center (step 2, built)
+  gameCenter(): { alias: string | null; canSignIn: boolean } | null; // null until GameKit answers
+  onGameCenter(cb: (s: { alias: string | null; canSignIn: boolean }) => void): void;
+  gameCenterSignIn(): void; // presents Apple's kept sheet, only from a tap
   // ads
   adsReady(): Promise<{ canRequestAds: boolean; privacyOptions: boolean }>;
   rewarded(): Promise<'rewarded' | 'skipped' | 'nofill'>; // emits 'shown' when on screen
@@ -157,23 +162,28 @@ interface HKNative {
 
 ## Game Center: the player's name
 
-- At launch the bridge sets `GKLocalPlayer.local.authenticateHandler`. A player already signed
-  in to Game Center in Settings is signed in silently (Apple shows its own "Welcome back"
-  banner). When Apple hands back a sign-in view controller, the bridge **keeps it and does not
-  present it at launch**: no sheet over the first run. The lobby's name line offers "Sign in
-  with Game Center" for those players (`gameCenterSignIn`, from a tap).
+- At launch `GameCenter.swift` sets `GKLocalPlayer.local.authenticateHandler`. A player already
+  signed in to Game Center in Settings is signed in silently (Apple shows its own "Welcome back"
+  banner). When Apple hands back a sign-in view controller, the shell **keeps it and does not
+  present it at launch**: no sheet over the first run. The settings panel then shows a
+  **Game Center** button beside Back (`Portal.canSignIn` / `signIn`, from a tap). Not the
+  lobby's name line, as first planned: the top bar has no room left between the name and the
+  currencies, the panel none for a row of its own on a 16:9 iPhone SE, and the button is
+  rarely there, since Game Center signs most players in by itself.
 - The name is `GKLocalPlayer.local.alias` (the nickname the player chose; `displayName` can be
-  a real name). `teamPlayerID` is kept on the device only, for a later cloud save.
-- `IosPlatform.portal.userName()` returns the alias; `accounts()` is **false**, so a player
-  without Game Center goes by a dice name instead of being kept off the boards
-  (`ui/playerName.ts`). An alias that fails `checkName` (length, characters, rude words) falls
-  back to the dice name, as on CrazyGames. A sign-in later in the session calls
-  `onAccountChange` as `main.crazygames.ts` does, and `PlayerName` sends the new name.
-- Server: `server/src/rules.ts:93` accepts a `name` only from `crazygames`; add `ios`. The
+  a real name). `teamPlayerID` stays in the shell until the cloud save needs it.
+- `IosPlatform.portal.userName()` returns the alias (`platform/ios/gameCenter.ts`); `accounts()`
+  is **false**, so a player without Game Center goes by a dice name instead of being kept off
+  the boards (`ui/playerName.ts`). An alias that fails `checkName` (length, characters, rude
+  words) falls back to the dice name, as on CrazyGames. GameKit answers some time after launch
+  and again after a sign-in; each new state redraws the lobby (`main.ios.ts`, as
+  `main.crazygames.ts` does), and `PlayerName` sends the new name.
+- Server: `rules.ts` takes a text `name` from `crazygames` and `ios` (`NAMING_HOSTS`). The
   server still trusts the client for the name, as it does on CrazyGames; verifying Game Center's
   identity signature comes with the cloud save, not before.
-- Capability: Game Center on the App ID and `com.apple.developer.game-center` in
-  `App.entitlements`; enable Game Center on the App Store Connect version.
+- Capability: Game Center on the App ID and in the profile (done), `com.apple.developer.game-center`
+  in `App.entitlements` (`CODE_SIGN_ENTITLEMENTS`); enable Game Center on the App Store Connect
+  version.
 
 ## Ads: AdMob
 
@@ -263,8 +273,8 @@ interface HKNative {
 
 Steps 2–4 are independent once step 1 is in.
 
-Progress: step 0 done 2026-10-08; step 1's first signed build, 1.0 (4), reached App Store
-Connect the same day, not yet played on a phone.
+Progress: step 0 done 2026-10-08; step 1 done the same day (build 1.0 (4) from TestFlight plays
+on a phone); step 2 written, waiting for a build.
 
 ## Owner setup
 

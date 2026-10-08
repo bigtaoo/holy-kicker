@@ -391,6 +391,7 @@ export const ru: Table<typeof en> = {
     shareOn: 'Отправка: вкл.',
     shareOff: 'Отправка: выкл.',
     policy: 'Конфиденциальность',
+    gameCenter: 'Game Center',
     dataNotice: 'Игровая статистика и результаты для рекордов отправляются на наш сервер — для баланса игры и таблиц рекордов.',
     playId: 'Ваш игровой ID: {id}',
   },

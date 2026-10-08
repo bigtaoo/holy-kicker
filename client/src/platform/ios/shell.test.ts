@@ -6,6 +6,8 @@ import podfile from '../../../ios/App/Podfile?raw';
 import pbx from '../../../ios/App/App.xcodeproj/project.pbxproj?raw';
 import plist from '../../../ios/App/App/Info.plist?raw';
 import bridge from '../../../ios/App/App/HKBridgeViewController.swift?raw';
+import entitlements from '../../../ios/App/App/App.entitlements?raw';
+import gameCenter from '../../../ios/App/App/GameCenter.swift?raw';
 import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
 import sceneDelegate from '../../../ios/App/App/SceneDelegate.swift?raw';
 import storyboard from '../../../ios/App/App/Base.lproj/Main.storyboard?raw';
@@ -29,7 +31,7 @@ describe('iOS shell', () => {
   });
 
   it('compiles every Swift file and ships the privacy manifest', () => {
-    for (const file of ['AppDelegate.swift', 'SceneDelegate.swift', 'HKBridgeViewController.swift', 'KeyStore.swift']) {
+    for (const file of ['AppDelegate.swift', 'SceneDelegate.swift', 'HKBridgeViewController.swift', 'KeyStore.swift', 'GameCenter.swift']) {
       expect(pbx).toContain(`/* ${file} in Sources */,`);
     }
     expect(pbx).toContain('/* PrivacyInfo.xcprivacy in Resources */,');
@@ -45,6 +47,25 @@ describe('iOS shell', () => {
     expect(bridge).toContain('static let handlerName = "hk"');
     expect(bridge).toContain('window.HKNative = {');
     for (const member of ['saved:', 'languages:', 'device:', 'save: function', 'openUrl: function']) expect(bridge).toContain(member);
+    for (const member of ['gameCenter: function', 'onGameCenter: function', 'gameCenterSignIn: function', '_gameCenter: function']) {
+      expect(bridge).toContain(member);
+    }
+    // the page asks for Game Center's state as it loads, and the shell pushes it back by name
+    expect(bridge).toContain("post({ op: 'gameCenter' });");
+    expect(bridge).toContain('window.HKNative._gameCenter(');
+    expect(gameCenter).toContain('"alias": alias ?? NSNull(), "canSignIn": canSignIn');
+  });
+
+  it('signs in to Game Center with the entitlement, and never shows the sheet unasked', () => {
+    expect(entitlements).toMatch(/<key>com\.apple\.developer\.game-center<\/key>\s*<true\/>/);
+    expect(pbx.match(/CODE_SIGN_ENTITLEMENTS = ([^;]+);/g)).toEqual([
+      'CODE_SIGN_ENTITLEMENTS = App/App.entitlements;',
+      'CODE_SIGN_ENTITLEMENTS = App/App.entitlements;',
+    ]);
+    expect(gameCenter).toContain('GKLocalPlayer.local.authenticateHandler');
+    // the one present() is signIn()'s, which only a tap reaches
+    expect(gameCenter.match(/\.present\(/g)).toHaveLength(1);
+    expect(gameCenter.split('func signIn()')[1]).toContain('.present(');
   });
 
   it('is an iPhone game in portrait, full screen, without the status bar', () => {

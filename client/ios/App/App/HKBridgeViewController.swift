@@ -7,16 +7,18 @@ import WebKit
 // bridge is one WKScriptMessageHandler named "hk" and one script injected at document start, as in
 // D:\funny's NWBridgeViewController. SceneDelegate makes this the window's root.
 //
-// Calls from JS are messages `{ op, ... }`; nothing in this version answers back, so there is no
-// promise registry yet. Every member the page reads is feature-detected there, so a newer web
-// bundle on an older shell falls back to the browser's behaviour.
+// Calls from JS are messages `{ op, ... }`. Answers are pushed back into the page rather than
+// settled by id: Game Center's state goes to `HKNative._gameCenter` whenever it changes and when
+// the page asks (a reloaded page asks again). Every member the page reads is feature-detected
+// there, so a newer web bundle on an older shell falls back to the browser's behaviour.
 final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHandler {
 
     static let handlerName = "hk"
     /// Raised whenever the contract gains calls (HKNative.v in bridge.ts).
-    static let bridgeVersion = 1
+    static let bridgeVersion = 2
 
     private let keyStore = KeyStore()
+    private let gameCenter = GameCenter()
 
     override func capacitorDidLoad() {
         guard let webView = webView else { return }
@@ -24,6 +26,9 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
         ucc.add(self, name: Self.handlerName)
         ucc.addUserScript(WKUserScript(source: bridgeScript(), injectionTime: .atDocumentStart, forMainFrameOnly: true))
         webView.scrollView.bounces = false
+        gameCenter.presenter = self
+        gameCenter.onChange = { [weak self] state in self?.push(state) }
+        gameCenter.start()
         #if DEBUG
         // Safari's Web Inspector, for the day a Mac is at hand (release builds stay closed)
         if #available(iOS 16.4, *) { webView.isInspectable = true }
@@ -48,9 +53,20 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             guard let text = body["url"] as? String, let url = URL(string: text),
                   url.scheme == "https" || url.scheme == "http" else { return }
             UIApplication.shared.open(url)
+        case "gameCenter":
+            if let state = gameCenter.state { push(state) }
+        case "gameCenterSignIn":
+            gameCenter.signIn()
         default:
             return
         }
+    }
+
+    /// Hands Game Center's state to the page (HKNative._gameCenter in the injected script).
+    private func push(_ state: GameCenter.State) {
+        guard let data = try? JSONSerialization.data(withJSONObject: state.json),
+              let json = String(data: data, encoding: .utf8) else { return }
+        webView?.evaluateJavaScript("window.HKNative && window.HKNative._gameCenter && window.HKNative._gameCenter(\(json))")
     }
 
     // MARK: The injected script
@@ -68,11 +84,20 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
           if (window.HKNative) return;
           var c = \(json);
           function post(m){ try { window.webkit.messageHandlers.\(Self.handlerName).postMessage(m); } catch (e) {} }
+          var gc = null, gcs = [];
           window.HKNative = {
             v: c.v, saved: c.saved || {}, languages: c.languages || [], device: c.device || '',
             save: function(k, v){ post({ op: 'save', key: String(k), value: String(v) }); },
-            openUrl: function(u){ post({ op: 'openUrl', url: String(u) }); }
+            openUrl: function(u){ post({ op: 'openUrl', url: String(u) }); },
+            gameCenter: function(){ return gc; },
+            onGameCenter: function(cb){ gcs.push(cb); },
+            gameCenterSignIn: function(){ post({ op: 'gameCenterSignIn' }); },
+            _gameCenter: function(s){
+              gc = s;
+              for (var i = 0; i < gcs.length; i++) { try { gcs[i](s); } catch (e) {} }
+            }
           };
+          post({ op: 'gameCenter' });
         })();
         """
     }

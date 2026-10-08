@@ -16,6 +16,20 @@ export interface HKNative {
   languages: string[];
   /** The phone's model identifier and system, e.g. 'iPhone15,2 iOS 18.1'. */
   device: string;
+  /** Game Center's last state, null until GameKit has answered (v2). */
+  gameCenter(): GameCenterState | null;
+  /** Called with every new Game Center state (v2). */
+  onGameCenter(cb: (state: GameCenterState) => void): void;
+  /** Shows Apple's sign-in sheet; only from a tap (v2). */
+  gameCenterSignIn(): void;
+}
+
+/** Game Center as the shell sees it (GameCenter.swift). */
+export interface GameCenterState {
+  /** The signed-in player's nickname, null when not signed in. */
+  alias: string | null;
+  /** Whether Apple's sign-in sheet is waiting to be shown. */
+  canSignIn: boolean;
 }
 
 /** The shell's bridge, or null in a browser. Members may be missing on an older shell. */

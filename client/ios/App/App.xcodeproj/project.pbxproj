@@ -19,6 +19,7 @@
 		4B4B00000000000000000011 /* HKBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000001 /* HKBridgeViewController.swift */; };
 		4B4B00000000000000000012 /* KeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000002 /* KeyStore.swift */; };
 		4B4B00000000000000000013 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000003 /* PrivacyInfo.xcprivacy */; };
+		4B4B00000000000000000014 /* GameCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000004 /* GameCenter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -38,6 +39,8 @@
 		4B4B00000000000000000001 /* HKBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HKBridgeViewController.swift; sourceTree = "<group>"; };
 		4B4B00000000000000000002 /* KeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyStore.swift; sourceTree = "<group>"; };
 		4B4B00000000000000000003 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		4B4B00000000000000000004 /* GameCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenter.swift; sourceTree = "<group>"; };
+		4B4B00000000000000000005 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,6 +90,8 @@
 				4B4B00000000000000000001 /* HKBridgeViewController.swift */,
 				4B4B00000000000000000002 /* KeyStore.swift */,
 				4B4B00000000000000000003 /* PrivacyInfo.xcprivacy */,
+				4B4B00000000000000000004 /* GameCenter.swift */,
+				4B4B00000000000000000005 /* App.entitlements */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
 				504EC3101FED79650016851F /* LaunchScreen.storyboard */,
@@ -226,6 +231,7 @@
 				9582B6852FE996820072D4E8 /* SceneDelegate.swift in Sources */,
 				4B4B00000000000000000011 /* HKBridgeViewController.swift in Sources */,
 				4B4B00000000000000000012 /* KeyStore.swift in Sources */,
+				4B4B00000000000000000014 /* GameCenter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -363,6 +369,7 @@
 			baseConfigurationReference = FC68EB0AF532CFC21C3344DD /* Pods-App.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;
@@ -383,6 +390,7 @@
 			baseConfigurationReference = AF51FD2D460BCFE21FA515B2 /* Pods-App.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = App/App.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				INFOPLIST_FILE = App/Info.plist;

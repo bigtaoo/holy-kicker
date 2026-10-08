@@ -95,6 +95,10 @@ export interface Portal {
   userName(): string | null;
   /** Whether players here have portal accounts: then a guest stays off the boards. */
   accounts(): boolean;
+  /** Whether a tap can sign the player in now (Game Center's sheet on iOS). */
+  canSignIn(): boolean;
+  /** Signs the player in; the new name arrives through the host's account change. */
+  signIn(): void;
 }
 
 /**
@@ -141,6 +145,8 @@ export const NO_PORTAL: Portal = {
   celebrate() {},
   userName: () => null,
   accounts: () => false,
+  canSignIn: () => false,
+  signIn() {},
 };
 
 /** For hosts without ads: rewarded offers are hidden. */

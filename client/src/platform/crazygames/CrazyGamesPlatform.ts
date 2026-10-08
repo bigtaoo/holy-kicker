@@ -40,6 +40,8 @@ export class CrazyGamesPlatform extends WebPlatform {
       celebrate: () => sdk.happytime(),
       userName: () => this.name,
       accounts: () => sdk.accountsAvailable(),
+      canSignIn: () => false,
+      signIn() {},
     };
     // the browser's audio, plus the portal's own mute button
     const web = webAudioHost();

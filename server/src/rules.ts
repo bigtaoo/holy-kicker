@@ -87,10 +87,13 @@ export function checkRun(v: unknown): Checked<RunEntry> {
   };
 }
 
-/** A name as NameEntry allows it: a portal account's (CrazyGames only), else a dice name; null for neither. */
+/** The hosts whose players can have an account name: CrazyGames' username, Game Center's nickname on iOS. */
+const NAMING_HOSTS: readonly Host[] = ['crazygames', 'ios'];
+
+/** A name as NameEntry allows it: an account's (NAMING_HOSTS only), else a dice name; null for neither. */
 function nameOf(host: Host, name: unknown, dice: unknown): BoardName | null {
   if (typeof name === 'string') {
-    const c = host === 'crazygames' && name.length <= 4 * LIMITS.nameMax ? checkName(name) : null;
+    const c = NAMING_HOSTS.includes(host) && name.length <= 4 * LIMITS.nameMax ? checkName(name) : null;
     return c?.ok ? { name: c.name } : null;
   }
   return isDice(dice) ? { dice } : null;

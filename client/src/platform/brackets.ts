@@ -22,5 +22,7 @@ export function bracketed(portal: Portal): Portal {
     celebrate: () => portal.celebrate(),
     userName: () => portal.userName(),
     accounts: () => portal.accounts(),
+    canSignIn: () => portal.canSignIn(),
+    signIn: () => portal.signIn(),
   };
 }

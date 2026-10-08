@@ -391,6 +391,7 @@ export const pt: Table<typeof en> = {
     shareOn: 'Compartilhar: sim',
     shareOff: 'Compartilhar: não',
     policy: 'Privacidade',
+    gameCenter: 'Game Center',
     dataNotice: 'As estatísticas de jogo e as partidas do ranking vão para o nosso servidor, para balancear o jogo e manter os rankings.',
     playId: 'Seu ID de jogo: {id}',
   },

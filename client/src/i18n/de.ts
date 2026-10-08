@@ -391,6 +391,7 @@ export const de: Table<typeof en> = {
     shareOn: 'Teilen: An',
     shareOff: 'Teilen: Aus',
     policy: 'Datenschutz',
+    gameCenter: 'Game Center',
     dataNotice: 'Spielstatistiken und Bestenlisten-Läufe gehen an unseren Server, um das Spiel auszubalancieren und die Bestenlisten zu betreiben.',
     playId: 'Deine Spiel-ID: {id}',
   },

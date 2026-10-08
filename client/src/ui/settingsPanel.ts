@@ -4,6 +4,7 @@ import { QUALITY_MODES, type QualityMode } from '../game/quality';
 import type { Sound } from '../audio/Sound';
 import type { KeyValueStore } from '../meta/saveStore';
 import type { PrivacyUi } from '../net/privacyChoice';
+import type { Portal } from '../platform/types';
 import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
 import { languagePanel } from './languagePanel';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
@@ -11,8 +12,9 @@ import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets'
 // The settings panel, opened from the lobby's gear: language (a button to the picker,
 // languagePanel.ts), the sound effects' and the
 // music's volume in steps (0 is off), the graphics quality and, online, play data: sharing on or off,
-// the privacy policy and the install's id. Every change goes straight to the shell, which
-// stores it and redraws the lobby, so the panel just shows the current values.
+// the privacy policy and the install's id, and beside Back a Game Center button while Apple's
+// sign-in waits for a tap (iOS). Every change goes straight to the shell, which stores it and
+// redraws the lobby, so the panel just shows the current values.
 
 export interface SettingsActions {
   setLanguage(locale: Locale): void;
@@ -24,6 +26,8 @@ export interface SettingsActions {
   setQuality(mode: QualityMode): void;
   /** Where the game talks to its backend, the player's privacy answer (net/privacyChoice.ts); null offline. */
   privacy: PrivacyUi | null;
+  /** Signing in to the host's account from here (Game Center); never offered elsewhere. */
+  account: Pick<Portal, 'canSignIn' | 'signIn'>;
   close(): void;
 }
 
@@ -31,7 +35,7 @@ export interface SettingsActions {
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account'>,
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: o.setLanguage,
@@ -51,6 +55,7 @@ export function storedSettings(
       o.setQuality(quality);
     },
     privacy: o.privacy,
+    account: o.account,
   };
 }
 
@@ -165,7 +170,17 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   if (a.privacy) dataRows(a.privacy, add, heading);
 
   y += 40;
-  add(button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked }), 110);
+  const back = button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked });
+  if (a.account.canSignIn()) {
+    // no room for a row of its own on a 16:9 phone, and it is rarely there: Game Center signs
+    // most players in by itself
+    const row = new Container();
+    const gc = button(t('settings.gameCenter'), 400, 110, () => a.account.signIn(), { fill: COLORS.panelLocked, size: 44 });
+    gc.x = -210;
+    back.x = 210;
+    row.addChild(gc, back);
+    add(row, 110);
+  } else add(back, 110);
   view.addChild(box);
   return view;
 }
