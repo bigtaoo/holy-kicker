@@ -12,8 +12,8 @@ not commitments.
 - Meta progression is a **mix**: a shallow stat line decides *how far* you get, a content line
   decides *how you play*. A skilled player can beat a chapter or two above their gear.
 - **CrazyGames first**, then WeChat. Poki is exclusive, so it is the fallback only if
-  CrazyGames does not work out. Ads only on every platform: **no IAP** in the
-  first version. **No stamina** anywhere. No gacha.
+  CrazyGames does not work out. Ads only on the web and WeChat: **no IAP** there. iOS adds
+  one purchase, the ad-free card (`docs/ios.md`). **No stamina** anywhere. No gacha.
 - **Localized from day one** (see Localization).
 - First version is single-player only.
 
@@ -257,8 +257,10 @@ Two currencies only:
 | Banner | Lobby, every tab | 320×50 in a band under the tab bar, which moves up to keep it clear; down in runs and on results; at most one request per 30 s (`platform/web/banner.ts`) |
 
 - No reroll ad on the in-run pick: it breaks the pace.
-- Ads only on all platforms. IAP (ad-free card, battle pass, jade packs) is a later option for
-  WeChat and needs a licence check first.
+- Ads only on the web and WeChat. iOS sells one thing, the **ad-free card** (US$3.99, once):
+  rewarded offers pay out without an ad and interstitials stop, but every daily cap stays, so
+  balance never prices in a paying player (`docs/ios.md`). Jade packs and a battle pass need a
+  server account and cloud save first; IAP on WeChat needs a licence check first.
 
 ## Platforms, saves and server
 

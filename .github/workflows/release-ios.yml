@@ -1,0 +1,171 @@
+name: ios
+
+# The iOS app (docs/ios.md): the Capacitor shell in client/ios wrapping client/dist-ios. Swift only
+# compiles on macOS, so this runner is the only place the native side is ever built. Adapted from
+# D:\funny's release-ios.yml (design/game/IOS_RELEASE.md there).
+#
+#   compile  every push to main that touches the shell: an unsigned simulator build, no secrets,
+#            to catch a Swift or project error the Windows machine cannot see.
+#   release  a tag ios-v* (e.g. ios-v1.0.0) or a manual run: archive, sign, export, upload to
+#            App Store Connect (TestFlight). destination 'none' stops after the IPA, spending no
+#            build number. The build number is the run number.
+#
+# Release needs, in Settings -> Secrets and variables -> Actions (the same team as funny, so the
+# certificate and API key are funny's; the profile is this app's own, docs/ios.md "Owner setup"):
+#   BUILD_CERTIFICATE_BASE64        Apple Distribution certificate (.p12), base64
+#   P12_PASSWORD                    its export password
+#   KEYCHAIN_PASSWORD               any string; the runner's temporary keychain
+#   BUILD_PROVISION_PROFILE_BASE64  App Store profile for com.gamestao.holykicker, base64
+#   PROVISIONING_PROFILE_NAME       that profile's name
+#   APPLE_TEAM_ID                   10-character team id
+#   ASC_API_KEY_ID, ASC_API_ISSUER_ID, ASC_API_KEY_CONTENT_BASE64 (the .p8, base64)
+
+on:
+  push:
+    branches: [main]
+    tags: ['ios-v*']
+    paths:
+      - 'client/ios/**'
+      - 'client/capacitor.config.ts'
+      - 'client/src/platform/ios/**'
+      - 'client/package.json'
+      - '.github/workflows/release-ios.yml'
+  workflow_dispatch:
+    inputs:
+      destination:
+        description: 'testflight uploads; none builds and signs the IPA only'
+        required: true
+        default: 'testflight'
+        type: choice
+        options: [testflight, none]
+
+env:
+  BUNDLE_ID: com.gamestao.holykicker
+
+jobs:
+  compile:
+    if: github.event_name == 'push' && github.ref_type == 'branch'
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:ios
+      - name: Sync Capacitor (copies dist-ios, runs pod install)
+        working-directory: client
+        run: npx cap sync ios
+      - name: Build for the simulator, unsigned
+        run: |
+          xcodebuild \
+            -workspace client/ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            build \
+            CODE_SIGNING_ALLOWED=NO
+
+  release:
+    if: github.event_name == 'workflow_dispatch' || github.ref_type == 'tag'
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build:ios
+
+      - name: Sync Capacitor (copies dist-ios, runs pod install)
+        working-directory: client
+        run: npx cap sync ios
+
+      # Podfile.lock cannot be made on Windows, so the run records what it resolved
+      - name: Record resolved pod versions
+        working-directory: client/ios/App
+        run: |
+          echo '### Resolved CocoaPods versions' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+          sed -n '/^PODS:/,/^DEPENDENCIES:/p' Podfile.lock | sed '$d' >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Set build number
+        working-directory: client/ios/App
+        run: agvtool new-version -all ${{ github.run_number }}
+
+      - name: Import signing certificate
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          p12-password: ${{ secrets.P12_PASSWORD }}
+          keychain-password: ${{ secrets.KEYCHAIN_PASSWORD }}
+
+      - name: Install provisioning profile
+        run: |
+          PP_PATH=$RUNNER_TEMP/profile.mobileprovision
+          echo -n "${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}" | base64 --decode -o $PP_PATH
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      - name: Write ExportOptions.plist
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+              <key>method</key>
+              <string>app-store</string>
+              <key>teamID</key>
+              <string>${{ secrets.APPLE_TEAM_ID }}</string>
+              <key>uploadSymbols</key>
+              <true/>
+              <key>signingStyle</key>
+              <string>manual</string>
+              <key>provisioningProfiles</key>
+              <dict>
+                  <key>${BUNDLE_ID}</key>
+                  <string>${{ secrets.PROVISIONING_PROFILE_NAME }}</string>
+              </dict>
+          </dict>
+          </plist>
+          EOF
+
+      - name: Archive and export the IPA
+        run: |
+          xcodebuild \
+            -workspace client/ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            archive \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            PROVISIONING_PROFILE_SPECIFIER="${{ secrets.PROVISIONING_PROFILE_NAME }}"
+          xcodebuild \
+            -exportArchive \
+            -archivePath $RUNNER_TEMP/App.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/ipa
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: App.ipa
+          path: ${{ runner.temp }}/ipa/*.ipa
+
+      - name: Upload to App Store Connect
+        if: github.event_name != 'workflow_dispatch' || inputs.destination != 'none'
+        run: |
+          mkdir -p ~/private_keys
+          echo -n "${{ secrets.ASC_API_KEY_CONTENT_BASE64 }}" | base64 --decode > ~/private_keys/AuthKey_${{ secrets.ASC_API_KEY_ID }}.p8
+          xcrun altool \
+            --upload-app \
+            --type ios \
+            --file "$RUNNER_TEMP/ipa/App.ipa" \
+            --apiKey "${{ secrets.ASC_API_KEY_ID }}" \
+            --apiIssuer "${{ secrets.ASC_API_ISSUER_ID }}"

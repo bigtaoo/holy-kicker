@@ -1,17 +1,18 @@
 # Holy Kicker — working rules
 
 Portrait-only horde-survivor roguelite in PixiJS v8, shipping to CrazyGames / Poki (web)
-and the WeChat mini-game. The client setup is adapted from the sibling project
-`D:\daydayup`; look there first before inventing platform plumbing (WeChat adapter,
-CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
+and the WeChat mini-game; an iOS app (Capacitor, Game Center, AdMob, one ad-free purchase) is
+planned in `docs/ios.md`, reusing `D:\funny`'s native shell. The client setup is adapted
+from the sibling project `D:\daydayup`; look there first before inventing platform plumbing
+(WeChat adapter, CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 
 ## Rules
 
 - **English everywhere** in code, comments, docs and commit messages.
 - **Source files stay at or under 500 lines** (`npm run check:filelength`). Split by
   responsibility instead of raising the limit.
-- **`npm run check` must pass before every commit**: typecheck, file length, tests, WeChat
-  and CrazyGames builds and the 4 MB main-package gate.
+- **`npm run check` must pass before every commit**: typecheck, file length, tests, WeChat,
+  CrazyGames and iOS web builds and the 4 MB main-package gate.
 - **No literal player-facing text in code**: every string goes through `t()` and the tables
   in `client/src/i18n/` (en is the source, zh must match key for key). Balance numbers live
   in `client/src/meta/balance.json`, never in code.
@@ -40,8 +41,9 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 - `engine/` — the simulation (`@hk/engine`, consumed as source; see `engine/README.md`).
 - `client/` — the game's view and hosts (Vite). Entries `src/main.ts` (web dev),
   `src/main.crazygames.ts` (`npm run build:crazygames` → `client/dist-crazygames/`, the zip to
-  upload) and `src/main.wechat.ts`, all through `src/boot.ts`; `src/platform/{web,crazygames,wechat}`
-  host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,
+  upload), `src/main.wechat.ts` and `src/main.ios.ts` (`npm run build:ios` → `client/dist-ios/`,
+  which the Capacitor shell in `client/ios/` packages), all through `src/boot.ts`;
+  `src/platform/{web,crazygames,wechat,ios}` host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,
   results and HUD; `src/meta` save, progress and balance; `src/audio` sound effects (cue table, procedural
   voices, rate limits and voice cap) and music (two crossfading decks); `src/i18n` string tables.
   Recorded sounds: picks in `art/audio/audition.html` (`tools/audio_audition.py`) →
@@ -68,3 +70,6 @@ CrazyGames SDK, skeletal animation runtime and editor in `tools/animator`).
 - `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` ships
   the backend to hk.gamestao.com (`SERVER_DEPLOY_ENABLED`), then publishes the web build to
   h.gamestao.com (Cloudflare, `wrangler/web.jsonc`, `WEB_DEPLOY_ENABLED`).
+- `.github/workflows/release-ios.yml` — the iOS app, built only on the macOS runner (no Mac here):
+  an unsigned compile on pushes that touch the shell; a tag `ios-v*` or a manual run signs it and
+  uploads to TestFlight (`docs/ios.md`).

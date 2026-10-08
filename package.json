@@ -14,6 +14,7 @@
     "build": "npm run build -w client",
     "build:wechat": "npm run build:wechat -w client",
     "build:crazygames": "npm run build:crazygames -w client",
+    "build:ios": "npm run build:ios -w client",
     "dev:crazygames": "npm run dev:crazygames -w client",
     "preview:crazygames": "npm run preview:crazygames -w client",
     "test": "npm run test --workspaces",
@@ -22,7 +23,7 @@
     "balance": "node build/balance.mjs",
     "journey": "node build/journey.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
-    "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run check:wechatpackage",
+    "check": "npm run typecheck && npm run check:filelength && npm run test && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run build:ios && npm run check:wechatpackage",
     "deploy:server": "npm run deploy -w server"
   },
   "devDependencies": {

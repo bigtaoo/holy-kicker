@@ -12,10 +12,16 @@
     "dev:crazygames": "vite --config vite.crazygames.config.js",
     "preview:crazygames": "vite preview --config vite.crazygames.config.js --port 4174 --strictPort",
     "build:wechat": "tsc --noEmit && vite build --config vite.wechat.config.js",
+    "build:ios": "tsc --noEmit && vite build --config vite.ios.config.js",
     "build:wechat:debug": "tsc --noEmit && vite build --config vite.wechat.config.js --mode development",
     "preview": "vite preview --port 4173"
   },
   "dependencies": {
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
     "pixi.js": "^8.6.6"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^8.5.3"
   }
 }
