@@ -277,8 +277,8 @@ Built (step 4) in `App/Store.swift`, `platform/ios/storeKit.ts`, `adFree.ts` and
   google.com, pub-5437693117291100, DIRECT, f08c47fec0942fa0
   ```
 - Age rating questionnaire: cartoon violence, ads, no user chat.
-- Screenshots: 6.9" (1290×2796) portrait from the existing recorder (`src/dev/recorder.ts`,
-  `tools/record_video.mjs`, `docs/store.md`).
+- Screenshots: five per language from the dev build, scaled to App Store Connect's required
+  6.1"/6.3" size (1179×2556); how they were taken is in `docs/store.md`.
 
 ## Review risks
 
@@ -310,8 +310,9 @@ on a phone); step 2 done the same day (1.0 (6): a player already signed in to Ga
 the alias with no sheet; the settings button for a signed-out player is still unseen on a phone);
 step 3 done 2026-10-09 (1.0 (9), HolyKicker's app id with Google's demo units: Google's consent
 form at first launch once the GDPR message in AdMob lists the app, settings' "Ad privacy" opens
-it again, and the test ads play). Step 4 built 2026-10-09; waits for a TestFlight build, the
-`.adfree` product in App Store Connect and a sandbox purchase.
+it again, and the test ads play). Step 4 built 2026-10-09 (1.0 (12), the `.adfree` product in
+App Store Connect); waits for a sandbox purchase. Step 5's listing entered the same day on 1.0 (14)
+(our own ad units); submitting it is the owner's.
 
 ## Owner setup
 

@@ -226,5 +226,12 @@ Action and Casual, free, every storefront but mainland China.
 
 ### Screenshots
 
-6.9" (1290×2796), en and zh, taken from the dev build by the balance bot (`?autoplay&from=N`)
-with Playwright in a 430×932 viewport at 3×; they live in `art/store/ios/`.
+Five per language in `art/store/ios/` (`en_*`, `zh_*`): a chapter 1 horde at wave 30, the level-up
+cards, the wave 20 twin jiangshi, chapter 3's snow at wave 12, and the lobby of a save two
+chapters in. Each was taken from the dev build with Playwright (system Chrome, headless, 430×932
+at 3×, so 1290×2796): the balance bot plays (`?direct&autoplay&from=N&chapter=C&seed=S`) until a
+condition on `__shell.game.engine.state` holds, the dev fps readout (`game.label`) is hidden, and
+the page is captured; the lobby seeds `hk.save` before the page loads. A bot that falls on the
+way never reaches the wave, so a take that times out is retried with another seed. App Store
+Connect's required size is the 6.1"/6.3" iPhone (1179×2556, the same aspect), so the uploads are
+scaled to it.
