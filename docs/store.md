@@ -155,3 +155,76 @@ Offline builds and WeChat (no backend yet) show none of this.
 Still to check on the portal itself: upload the zip to the developer portal's QA preview, then
 watch a real ad fill, a signed-in save carry over between devices, and the leaderboard button
 hidden for a guest (read from the SDK's `user.isUserAccountAvailable`).
+
+## App Store (iOS)
+
+The listing for the iPhone app (`docs/ios.md`), entered in App Store Connect 2026-10-09. en-US is
+the primary language; zh-Hans is the second localisation (mainland China is not a storefront).
+
+| Field | en-US | zh-Hans |
+|---|---|---|
+| Name (30) | HolyKicker (the record's; "Holy Kicker" was taken) | 蹴鞠僧 |
+| Subtitle (30) | Kung-fu monk vs ghost hordes | 单手割草，踢穿妖魔大军 |
+| Keywords (100) | roguelite,horde,survivor,bullet heaven,kung fu,shaolin,monk,ghost,offline,one hand,action,rpg,idle | 割草,肉鸽,幸存者,弹幕,和尚,武僧,功夫,少林,妖怪,僵尸,单机,离线,单手,动作,休闲,蹴鞠 |
+| Promotional text (170) | One thumb, one monk, one magic ball, and a whole land of ghosts. Pick your upgrades, evolve your spells and survive 50 waves. | 一根手指、一个和尚、一颗蹴鞠，对上满山的妖魔鬼怪。三选一升级、进化法术，撑过 50 波！ |
+
+Shared: Support URL and Marketing URL `https://gamestao.com/` (support@gamestao.com is on it),
+privacy policy `https://hk.gamestao.com/privacy`, copyright `2026 Tao Wang`, category Games →
+Action and Casual, free, every storefront but mainland China.
+
+### Description
+
+**en**
+
+> Holy Kicker is a one-thumb horde survivor. A cheerful monk kicks a magic cuju ball through a
+> land overrun by ghosts, and every attack is automatic: you only steer.
+>
+> • Every level up, pick one of three upgrades: Buddha Palm, Vajra Bolt, Flying Cymbals and more.
+> • Max a spell and pair it with the right passive to evolve it into something much bigger.
+> • Survive 50 waves, elite monsters and two bosses to clear a chapter.
+> • Between runs, merge the gear you find, train your monk and unlock relics: a staff, a wooden
+>   fish, prayer beads and an alms bowl, each of which changes how you play.
+> • Five chapters lead from a ruined temple to Demon Peak, where the last enemy is yourself.
+> • Plays offline, with no account and no sign-up. Climb each chapter's leaderboard under your
+>   Game Center nickname.
+>
+> Ads are optional videos for bonuses, plus a short break between runs. The one-time Ad-free card
+> pays every ad reward at once and removes all ads; the daily limits stay the same.
+
+**zh**
+
+> 《蹴鞠僧》是一款单手操作的割草肉鸽游戏。一个乐呵呵的小和尚踢着蹴鞠，闯进妖魔横行的山野。
+> 攻击全是自动的，你只管走位。
+>
+> • 每次升级三选一：如来掌、金刚雷、飞钹……
+> • 把法术升满，再配上对应的心法，就能进化成更强的形态。
+> • 撑过 50 波怪、精英和两个 Boss，才算打通一章。
+> • 局外合成装备、修炼武僧、解锁新法器：禅杖、木鱼、念珠、钵盂，每件都会改变打法。
+> • 五个章节从荒寺一路打到魔窟，最后的敌人是你自己。
+> • 支持离线游玩，无需账号和注册。用 Game Center 昵称冲击每一章的排行榜。
+>
+> 广告都是可选的奖励视频，另有两局之间的短广告。一次性购买的去广告卡让所有广告奖励直接到账、
+> 不再播放任何广告；每日次数上限不变。
+
+### Review notes
+
+> No account or sign-in is needed. The first launch goes straight into a short first run of
+> chapter 1: drag anywhere to move, attacks are automatic. When the run ends (or Pause → Give up),
+> the lobby opens.
+>
+> In-app purchase: the Ad-free card (com.gamestao.holykicker.adfree, non-consumable) is on the
+> lobby's Shop tab, which is open from the first lobby, with Restore on the same card. It pays every
+> rewarded-ad bonus at once and stops all ads; it unlocks nothing else.
+>
+> Ads: Google AdMob, rewarded videos for optional bonuses (double copper after a run, a revive)
+> and an interstitial between runs from the second run on. Non-personalised ads only; the app does
+> not track, so there is no App Tracking Transparency prompt. Google's consent form appears in the
+> EEA, the UK and Switzerland.
+>
+> Game Center is optional: when signed in, the nickname shows in the lobby and on the chapter
+> leaderboards; otherwise the game rolls a random name.
+
+### Screenshots
+
+6.9" (1290×2796), en and zh, taken from the dev build by the balance bot (`?autoplay&from=N`)
+with Playwright in a 430×932 viewport at 3×; they live in `art/store/ios/`.

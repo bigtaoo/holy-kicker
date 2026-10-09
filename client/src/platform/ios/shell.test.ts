@@ -112,9 +112,10 @@ describe('iOS shell', () => {
     expect(podfile).toMatch(/pod 'Google-Mobile-Ads-SDK', '~> \d+\.\d+'/);
     expect(podfile).toMatch(/pod 'GoogleUserMessagingPlatform', '~> \d+\.\d+'/);
     expect(plist).toMatch(/<key>GADApplicationIdentifier<\/key>\s*<string>ca-app-pub-\d+~\d+<\/string>/);
-    // our own units belong to the app id's publisher; the demo units stay until step 5
+    // our own units belong to the app id's publisher, and the listing serves them
     const publisher = plist.match(/ca-app-pub-(\d+)~\d+/)?.[1];
     expect(adMob.match(/live \? "ca-app-pub-(\d+)\//g)).toEqual([`live ? "ca-app-pub-${publisher}/`, `live ? "ca-app-pub-${publisher}/`]);
+    expect(adMob).toContain('private static let live = true');
     expect(plist.match(/<key>SKAdNetworkIdentifier<\/key>/g)?.length).toBeGreaterThan(40);
     expect(plist).not.toContain('<key>NSUserTrackingUsageDescription</key>');
     expect(adMob).not.toContain('ATTrackingManager');

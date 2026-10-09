@@ -27,9 +27,9 @@ final class AdMob: NSObject, FullScreenContentDelegate {
         }
     }
 
-    /// Google's demo units serve test ads under any app id, and every build uses them until the
-    /// listing (step 5) turns `live` on: our own units have no fill before the app is on the store.
-    private static let live = false
+    /// Our own units since the listing (step 5); `false` asks for Google's demo units, which serve
+    /// test ads under any app id (ours have no fill before the app is on the store).
+    private static let live = true
     private static func unit(_ kind: Kind) -> String {
         switch kind {
         case .rewarded: return live ? "ca-app-pub-5437693117291100/1896010873" : "ca-app-pub-3940256099942544/1712485313"

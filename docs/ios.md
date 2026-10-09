@@ -75,8 +75,8 @@ client/
 - **A new Swift file needs four hand-written entries in `project.pbxproj`** (file reference,
   build file, group child, Sources phase); `shell.test.ts` fails when one is missing. funny put
   everything in `AppDelegate.swift` to avoid this; one file per concern reads better here.
-- The app icon is `art/store/cover_square.png` for now (1024×1024, no alpha): fine for TestFlight,
-  to be replaced by a real icon before review. The launch screen is the game's background
+- The app icon is `art/store/cover_square.png` (1024×1024, no alpha), the square cover's art
+  without the logo; a tighter crop cut the ghosts in half. The launch screen is the game's background
   colour, no image.
 
 - **Capacitor 8** (the version daydayup already depends on; funny's bridge pattern is the
@@ -199,10 +199,10 @@ Built (step 3) in `App/AdMob.swift` and `platform/ios/admob.ts`.
 
 - **Ids.** `GADApplicationIdentifier` in `Info.plist` is HolyKicker's own app id
   (`ca-app-pub-5437693117291100~7644915595`, the publisher funny uses too). Its two units
-  (rewarded `…/1896010873`, interstitial `…/7607502555`) sit in `AdMob.swift` behind `live`, off
-  until step 5: until then every build, TestFlight included, asks for Google's demo units, which
-  serve test ads under any app id, while real units have no fill before the app is live (funny's
-  first device test had none). `Google-Mobile-Ads-SDK ~> 13.9` and
+  (rewarded `…/1896010873`, interstitial `…/7607502555`) sit in `AdMob.swift` behind `live`, on
+  since the listing (step 5, build 1.0 (13)); builds before it asked for Google's demo units,
+  which serve test ads under any app id, while real units have no fill before the app is live
+  (funny's first device test had none). Don't tap ads on your own phone in a live build. `Google-Mobile-Ads-SDK ~> 13.9` and
   `GoogleUserMessagingPlatform ~> 3.1` are pinned to the majors funny shipped; the
   `SKAdNetworkItems` list is funny's (Google's 50).
 - **Consent.** Once the view is on screen (`viewDidAppear`, so the form has a presenter), UMP
@@ -260,8 +260,8 @@ Built (step 4) in `App/Store.swift`, `platform/ios/storeKit.ts`, `adFree.ts` and
 
 - `PrivacyInfo.xcprivacy`: `UserDefaults` (`CA92.1`); no tracking; the AdMob SDK and Capacitor
   ship their own manifests.
-- Privacy policy (served at `hk.gamestao.com/privacy`): add AdMob (non-personalised ads, UMP),
-  Game Center (the nickname shown on the boards) and Apple's purchases.
+- Privacy policy (served at `hk.gamestao.com/privacy`): AdMob (non-personalised ads, UMP),
+  Game Center (the nickname shown on the boards) and Apple's purchases, added 2026-10-09.
 - App privacy label, from what `docs/retention.md` says we collect: identifiers (install id;
   AdMob's device id), usage data, diagnostics (problem reports, with text the player writes),
   the Game Center nickname. Nothing linked to a person, nothing used for tracking.
