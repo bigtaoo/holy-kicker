@@ -189,13 +189,12 @@ export function tabLock(save: SaveData, tab: Tab): Lock | null {
   const u = BALANCE.unlocks;
   switch (tab) {
     case 'play':
+    case 'shop':
       return null;
     case 'gear':
       return save.firstRunDone ? null : { kind: 'firstRun' };
     case 'train':
       return save.level >= u.trainLevel ? null : { kind: 'level', level: u.trainLevel };
-    case 'shop':
-      return save.cleared >= u.shopChapter ? null : { kind: 'chapter', n: u.shopChapter };
     case 'codex':
       return save.cleared >= u.codexChapter ? null : { kind: 'chapter', n: u.codexChapter };
   }

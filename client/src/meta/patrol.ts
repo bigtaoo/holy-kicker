@@ -31,7 +31,7 @@ const PATROL = BALANCE.patrol;
 const HOUR = 3600 * 1000;
 
 export function patrolOpen(save: SaveData): boolean {
-  return save.cleared >= BALANCE.unlocks.shopChapter;
+  return save.cleared >= BALANCE.unlocks.patrolChapter;
 }
 
 /** Starts the patrol the first time the lobby sees it open. */

@@ -31,7 +31,7 @@ export interface Balance {
   xpPerWave: number;
   levelXpBase: number;
   levelXpStep: number;
-  unlocks: { trainLevel: number; shopChapter: number; codexChapter: number };
+  unlocks: { trainLevel: number; patrolChapter: number; codexChapter: number };
   /** What earns each sutra (progress.ts sutraGoal), in SUTRA_IDS order. */
   sutras: SutraGoal[];
   gear: GearBalance;

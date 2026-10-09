@@ -33,9 +33,9 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
 
 | Unlocks at | Feature |
 |---|---|
-| End of first run | Play, Gear (first run always drops one item) |
+| End of first run | Play, Gear (first run always drops one item), Shop |
 | Player level 2 | Training (talents) |
-| Chapter 1 cleared | Shop, Patrol (idle income), second relic |
+| Chapter 1 cleared | Patrol (idle income), second relic |
 | Chapter 2 cleared | Codex |
 
 ## Chapters (the run)

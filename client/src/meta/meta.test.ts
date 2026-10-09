@@ -61,12 +61,11 @@ describe('progress', () => {
     }
   });
 
-  it('a first clear unlocks the next chapter and the shop', () => {
+  it('a first clear unlocks the next chapter', () => {
     const { save, reward } = settleRun(newSave(), { chapter: 1, waves: 50 });
     expect(reward.firstClear).toBe(true);
     expect(save.cleared).toBe(1);
     expect(save.chapter).toBe(2);
-    expect(tabLock(save, 'shop')).toBeNull();
     expect(tabLock(save, 'codex')).toEqual({ kind: 'chapter', n: 2 });
     const replay = settleRun({ ...save, chapter: 1 }, { chapter: 1, waves: 50 });
     expect(replay.reward.firstClear).toBe(false);
@@ -143,6 +142,8 @@ describe('progress', () => {
   it('gates tabs as the design says', () => {
     const s = newSave();
     expect(tabLock(s, 'play')).toBeNull();
+    // open from the start, so App Review finds the iOS ad-free card without clearing a chapter
+    expect(tabLock(s, 'shop')).toBeNull();
     expect(tabLock(s, 'gear')).toEqual({ kind: 'firstRun' });
     expect(tabLock(s, 'train')).toEqual({ kind: 'level', level: 2 });
     expect(tabLock({ ...s, level: 2 }, 'train')).toBeNull();

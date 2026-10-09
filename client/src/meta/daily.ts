@@ -93,10 +93,9 @@ export function bump(save: SaveData, now: number, kind: TaskKind, n: number): Sa
 
 export type TaskState = 'locked' | 'open' | 'ready' | 'claimed';
 
-/** Tasks about the shop's chests and the patrol wait for them (BALANCE.unlocks.shopChapter). */
+/** The patrol's task waits for the patrol (BALANCE.unlocks.patrolChapter). */
 export function taskLocked(save: SaveData, i: number): boolean {
-  const kind = DAILY.tasks[i].kind;
-  return (kind === 'chests' || kind === 'patrol') && save.cleared < BALANCE.unlocks.shopChapter;
+  return DAILY.tasks[i].kind === 'patrol' && save.cleared < BALANCE.unlocks.patrolChapter;
 }
 
 export function taskState(save: SaveData, d: Daily, i: number): TaskState {

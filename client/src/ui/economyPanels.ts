@@ -179,8 +179,8 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
     if (state === 'locked') {
-      // the shop and the patrol open later; until then the task says when, and the bonus skips it
-      const when = fit(label(t('tab.unlockChapter', { n: BALANCE.unlocks.shopChapter }), 40, COLORS.danger, { align: 'left' }), 860);
+      // the patrol opens later; until then its task says when, and the bonus skips it
+      const when = fit(label(t('tab.unlockChapter', { n: BALANCE.unlocks.patrolChapter }), 40, COLORS.danger, { align: 'left' }), 860);
       when.anchor.set(0, 0.5);
       when.position.set(-430, 40);
       row.addChild(name, when);

@@ -251,8 +251,8 @@ Built (step 4) in `App/Store.swift`, `platform/ios/storeKit.ts`, `adFree.ts` and
   it, then "Owned" once bought. Restore sits on the card rather than in settings, which has no
   room left on a 16:9 phone. `Platform.store` is `null` on every other host, so nothing is drawn
   there (CrazyGames forbids IAP; App Review 3.1.1 forbids pointing anywhere else to pay).
-  `?store=fake` draws the card in the browser with a made-up price. The Shop tab opens after
-  chapter 1 is cleared, so the review notes must say where the purchase is.
+  `?store=fake` draws the card in the browser with a made-up price. The Shop tab is open from
+  the first lobby on, so a reviewer finds the card without clearing a chapter.
 - Analytics: a new `iap` event (`what`: buy or restore, `item`: adfree, `outcome`), and the `ad`
   event gets `free: true` when the card paid it; the dashboard's "watched an ad" leaves those out.
 
@@ -287,7 +287,7 @@ Built (step 4) in `App/Store.swift`, `platform/ios/storeKit.ts`, `adFree.ts` and
 | 3.1.1 | Any way to pay outside IAP | None exists; `Platform.store` null elsewhere; a text-gate test |
 | 1.2 | Game Center nicknames on the boards could read as user content | Names pass `checkName`'s filter; if a reviewer objects, show the alias only to its owner and dice names on the boards (one switch in `PlayerName`) |
 | 3.1.1 | Non-consumable without Restore | Restore on the card, beside the price |
-| 2.1 | The reviewer cannot find the purchase (the Shop tab opens after chapter 1) | Say so in the review notes, with the steps |
+| 2.1 | The reviewer cannot find the purchase | The Shop tab is open from the first lobby; the review notes still name it |
 | 4.2 | "Just a website" | A full offline game; no web navigation |
 | 2.1 | Something does not work on the reviewer's device | No sign-in needed, so no demo account; test ads and sandbox purchase on TestFlight first |
 | 5.1.1 | Privacy policy link dead | `openUrl` through the bridge (funny §10.3) |

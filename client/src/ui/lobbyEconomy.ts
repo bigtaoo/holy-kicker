@@ -108,7 +108,7 @@ export class EconomyUi {
     const save = this.host.save();
     const open = patrolOpen(save);
     const patrol = button(' ', 460, 130, () => {
-      if (!open) return this.host.toast(t('tab.unlockChapter', { n: BALANCE.unlocks.shopChapter }));
+      if (!open) return this.host.toast(t('tab.unlockChapter', { n: BALANCE.unlocks.patrolChapter }));
       this.show('patrol');
     }, { fill: open ? COLORS.panel : COLORS.panelLocked, size: 46, icon: open ? iconSprite(this.host.icons, 'patrol', 84) : lockIcon(this.host.icons, 64) });
     patrol.x = -250;
