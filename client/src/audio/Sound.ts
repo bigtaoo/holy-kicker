@@ -126,6 +126,7 @@ export class Sound {
       rewardedAvailable: () => ads.rewardedAvailable(),
       rewarded: (started) => around((s) => ads.rewarded(s), started),
       midgame: (started) => around((s) => ads.midgame(s), started),
+      adFree: () => ads.adFree(),
     };
   }
 

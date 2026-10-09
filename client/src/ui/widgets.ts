@@ -114,6 +114,13 @@ export function playTap(): void {
   tapSound();
 }
 
+let videoBadges = true;
+
+/** With the ad-free card (iOS) a rewarded offer pays at once with no ad, so it loses the badge. */
+export function showVideoBadges(on: boolean): void {
+  videoBadges = on;
+}
+
 /**
  * A tappable raised button with a centred label. It sinks onto its lip while pressed and fires
  * on release over it, so a drag that starts on a button and leaves it does nothing.
@@ -122,7 +129,8 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
   const c = new Container();
   const t = label(text, o.size ?? 56, o.textFill ?? COLORS.text);
   // long translations shrink to fit instead of overflowing (design: leave ~30 % room)
-  const badge = o.video ? videoBadge(h * 0.42, o.textFill ?? COLORS.text) : o.icon ?? null;
+  const video = o.video && videoBadges;
+  const badge = video ? videoBadge(h * 0.42, o.textFill ?? COLORS.text) : o.icon ?? null;
   const gap = badge && text ? badge.width + 20 : 0;
   const room = w - 48 - gap;
   if (t.width > room) t.scale.set(room / t.width);
@@ -131,7 +139,7 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
   const top = new Container();
   top.addChild(face, t);
   face.y = LIP / 2;
-  if (badge && o.video) {
+  if (badge && video) {
     t.x = gap / 2;
     badge.x = t.x - t.width / 2 - gap + badge.width / 2;
     top.addChild(badge);
@@ -171,7 +179,7 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
 }
 
 /** A video camera's play sign: a rounded frame with a triangle, `h` tall, centred. */
-function videoBadge(h: number, color: number): Graphics {
+export function videoBadge(h: number, color: number): Graphics {
   const w = h * 1.4;
   const g = new Graphics().roundRect(-w / 2, -h / 2, w, h, h * 0.22).stroke({ width: h * 0.13, color });
   const r = h * 0.26;

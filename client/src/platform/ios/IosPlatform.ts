@@ -1,11 +1,13 @@
 import type { Host } from '@hk/protocol';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_PORTAL, type AdPrivacy, type Ads, type Portal, type TextAsk } from '../types';
+import { NO_PORTAL, type AdPrivacy, type Ads, type Portal, type Store, type TextAsk } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
+import { adFree } from './adFree';
 import { AdMob } from './admob';
 import { hkNative, type HKNative } from './bridge';
 import { GameCenterAccount } from './gameCenter';
 import { MirrorStore } from './mirrorStore';
+import { StoreKit } from './storeKit';
 
 // The iOS app (docs/ios.md): the browser host inside the Capacitor shell's WKWebView, with the
 // shell's bridge (window.HKNative) for what a web view cannot do on its own. Without the bridge
@@ -13,15 +15,19 @@ import { MirrorStore } from './mirrorStore';
 //
 // Game Center names the player on the boards, but it is not an account the boards require
 // (`accounts()` is false): a player without it goes by a dice name, as on the web. Ads are AdMob's,
-// through the shell (admob.ts); in Safari, without the shell, there are none.
+// through the shell (admob.ts), until the ad-free card is bought through StoreKit (storeKit.ts,
+// adFree.ts); in Safari, without the shell, there are neither.
 export class IosPlatform extends WebPlatform {
   override readonly host: Host = 'ios';
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
   override readonly ads: Ads;
   override readonly adPrivacy: AdPrivacy;
+  override readonly store: Store | null;
   /** main.ios.ts redraws the lobby on its `onChange`. */
   readonly gameCenter: GameCenterAccount;
+  /** main.ios.ts redraws the lobby on its `onChange` too. */
+  readonly storeKit: StoreKit;
   private readonly native: Partial<HKNative> | null;
   private readonly admob: AdMob;
 
@@ -41,7 +47,10 @@ export class IosPlatform extends WebPlatform {
       signIn: () => gc.signIn(),
     };
     this.admob = new AdMob(native);
-    this.ads = this.admob;
+    const storeKit = new StoreKit(native, this.storage);
+    this.storeKit = storeKit;
+    this.store = storeKit.available() ? storeKit : null;
+    this.ads = adFree(this.admob, () => storeKit.owned());
     this.adPrivacy = this.admob;
     // game sound obeys the silent switch and mixes with the player's music (iOS 17+; the shell
     // sets the same AVAudioSession category for older systems)

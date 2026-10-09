@@ -32,6 +32,33 @@ export interface HKNative {
   showAd(kind: AdKind): void;
   /** Shows Google's privacy options form, from a tap (v3). */
   adPrivacy(): void;
+  /** The store's last state, null until StoreKit has answered (v4). */
+  store(): StoreState | null;
+  /** Called with every new store state (v4). */
+  onStore(cb: (state: StoreState) => void): void;
+  /** Called with how a buy or a restore the page asked for went (v4). */
+  onStoreResult(cb: (result: StoreResult) => void): void;
+  /** Shows Apple's purchase sheet for a product; only from a tap (v4). */
+  buy(id: string): void;
+  /** Restore purchases: AppStore.sync(), then the entitlements again; only from a tap (v4). */
+  restore(): void;
+}
+
+/** StoreKit as the shell sees it (Store.swift). */
+export interface StoreState {
+  /** The products StoreKit could load, with the price as the storefront writes it. */
+  products: { id: string; price: string }[];
+  /** The verified, unrevoked entitlements. */
+  owned: string[];
+  /** False where Screen Time blocks purchases. */
+  canPay: boolean;
+}
+
+/** How a buy or a restore went. A buy is 'pending' while Ask to Buy waits: the answer comes later,
+ *  through the state. A restore finds the card ('owned') or nothing ('none'). */
+export interface StoreResult {
+  op: 'buy' | 'restore';
+  outcome: 'owned' | 'cancelled' | 'pending' | 'failed' | 'none';
 }
 
 export type AdKind = 'rewarded' | 'interstitial';

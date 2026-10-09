@@ -11,7 +11,9 @@ import entitlements from '../../../ios/App/App/App.entitlements?raw';
 import gameCenter from '../../../ios/App/App/GameCenter.swift?raw';
 import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
 import sceneDelegate from '../../../ios/App/App/SceneDelegate.swift?raw';
+import storeSwift from '../../../ios/App/App/Store.swift?raw';
 import storyboard from '../../../ios/App/App/Base.lproj/Main.storyboard?raw';
+import { AD_FREE_ID } from './storeKit';
 
 // Nothing on the Windows machine compiles the Swift side (only the macOS CI runner does), so these
 // pin the native project to the web side as text: the names both sides must agree on, and the
@@ -32,7 +34,7 @@ describe('iOS shell', () => {
   });
 
   it('compiles every Swift file and ships the privacy manifest', () => {
-    for (const file of ['AppDelegate.swift', 'SceneDelegate.swift', 'HKBridgeViewController.swift', 'KeyStore.swift', 'GameCenter.swift', 'AdMob.swift']) {
+    for (const file of ['AppDelegate.swift', 'SceneDelegate.swift', 'HKBridgeViewController.swift', 'KeyStore.swift', 'GameCenter.swift', 'AdMob.swift', 'Store.swift']) {
       expect(pbx).toContain(`/* ${file} in Sources */,`);
     }
     expect(pbx).toContain('/* PrivacyInfo.xcprivacy in Resources */,');
@@ -52,14 +54,19 @@ describe('iOS shell', () => {
       'gameCenter: gc.get', 'onGameCenter: gc.on', 'gameCenterSignIn: function', '_gameCenter: gc.push',
       'adState: ad.get', 'onAdState: ad.on', 'onAdEvent: adEvent.on', 'showAd: function', 'adPrivacy: function',
       '_adState: ad.push', '_adEvent: adEvent.push',
+      'store: store.get', 'onStore: store.on', 'onStoreResult: storeResult.on', 'buy: function', 'restore: function',
+      '_store: store.push', '_storeResult: storeResult.push',
     ]) {
       expect(bridge).toContain(member);
     }
     // the page asks for the states as it loads, and the shell pushes them back by name
     expect(bridge).toContain("post({ op: 'gameCenter' });");
     expect(bridge).toContain("post({ op: 'adState' });");
-    for (const op of ['"gameCenter"', '"gameCenterSignIn"', '"adState"', '"showAd"', '"adPrivacy"']) expect(bridge).toContain(`case ${op}:`);
-    for (const receiver of ['_gameCenter', '_adState', '_adEvent']) expect(bridge).toContain(`push("${receiver}"`);
+    expect(bridge).toContain("post({ op: 'store' });");
+    for (const op of ['"gameCenter"', '"gameCenterSignIn"', '"adState"', '"showAd"', '"adPrivacy"', '"store"', '"buy"', '"restore"']) {
+      expect(bridge).toContain(`case ${op}:`);
+    }
+    for (const receiver of ['_gameCenter', '_adState', '_adEvent', '_store', '_storeResult']) expect(bridge).toContain(`push("${receiver}"`);
     expect(bridge).toContain('window.HKNative.\\(receiver)(');
     expect(gameCenter).toContain('"alias": alias ?? NSNull(), "canSignIn": canSignIn');
     // admob.ts reads these keys and these values
@@ -69,6 +76,24 @@ describe('iOS shell', () => {
     expect(adMob).toContain('enum Kind: String { case rewarded, interstitial }');
     for (const event of ['"started"', '"done"']) expect(adMob).toContain(event);
     expect(bridge).toContain('"kind": kind.rawValue, "event": event, "ok": ok');
+    // storeKit.ts reads these keys and these outcomes
+    expect(storeSwift).toContain('["id": $0, "price": prices[$0] ?? ""]');
+    expect(storeSwift).toContain('"owned": owned.sorted(), "canPay": canPay');
+    expect(bridge).toContain('["op": op, "outcome": outcome]');
+    for (const outcome of ['"owned"', '"cancelled"', '"pending"', '"failed"', '"none"']) expect(storeSwift).toContain(outcome);
+  });
+
+  it('sells the ad-free card with StoreKit 2, trusting only verified, unrevoked entitlements', () => {
+    expect(storeSwift).toContain(`static let productIds = ["${AD_FREE_ID}"]`);
+    expect(storeSwift).toContain('StoreKit.Transaction.currentEntitlements');
+    expect(storeSwift).toContain('tx.revocationDate == nil');
+    // refunds, Ask to Buy and purchases elsewhere arrive here, listened to from launch
+    expect(storeSwift).toContain('for await result in StoreKit.Transaction.updates');
+    expect(bridge.split('override func capacitorDidLoad')[1].split('override func')[0]).toContain('store.start()');
+    expect(storeSwift).toContain('try await AppStore.sync()');
+    // an unverified transaction never grants and is never finished
+    expect(storeSwift).not.toContain('.unverified');
+    expect(storeSwift.match(/await tx\.finish\(\)/g)?.length).toBe(3);
   });
 
   it('signs in to Game Center with the entitlement, and never shows the sheet unasked', () => {

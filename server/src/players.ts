@@ -102,7 +102,8 @@ export function foldDayZero(d: DayZero | undefined, events: readonly ClientEvent
         z.buys++;
         break;
       case 'ad':
-        z.ads++;
+        // one the ad-free card paid (iOS) was never watched
+        if (p.free !== true) z.ads++;
         break;
       case 'leave':
         z.secs += Math.min(num(p.secs), 4 * 3600);

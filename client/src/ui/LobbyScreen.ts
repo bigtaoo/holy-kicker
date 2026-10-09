@@ -5,6 +5,7 @@ import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { earnedSutras, hardOpen, playableChapters, track, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
+import type { Store } from '../platform/types';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
 import { gritBonus } from '../meta/loadout';
@@ -47,6 +48,8 @@ export interface LobbyActions {
   rewarded(): Promise<boolean>;
   /** Fetches a leaderboard; null offline (no Ranks button then). */
   board: FetchBoard | null;
+  /** The ad-free card's purchase, for the Shop tab; null on every host but iOS. */
+  store: Store | null;
 
   track: LobbyTrack;
 }
@@ -102,6 +105,7 @@ export class LobbyScreen implements Screen {
       rewarded: () => actions.rewarded(),
       icons: this.icons,
       patrolLook,
+      store: actions.store,
       track: actions.track,
     }, ads);
     this.boards = new BoardUi(actions.board, () => this.relayout());
@@ -444,7 +448,7 @@ export class LobbyScreen implements Screen {
 
   private shopTab(w: number, midY: number): void {
     const tab = this.econ.shopTab();
-    tab.position.set(w / 2, midY - shopHeight(this.adOk) / 2);
+    tab.position.set(w / 2, midY - shopHeight(this.adOk, !!this.actions.store) / 2);
     this.view.addChild(tab);
   }
 

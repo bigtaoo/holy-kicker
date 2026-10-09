@@ -4,7 +4,7 @@ import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { FAKE_ADS, NO_ADS, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type TextAsk } from '../types';
+import { FAKE_ADS, NO_ADS, fakeStore, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { BannerHost, FAKE_BANNER_FILL } from './banner';
 import { askTextDom } from './textAsk';
 import { webAudioHost } from './webAudio';
@@ -31,7 +31,8 @@ export function browserStorage(): KeyValueStore | null {
 }
 
 // Browser host: a window-sized canvas, pointer drags for the stick, WASD/arrows as well.
-// No portal and no ads; ?ads=fake stands in for an ad host during development.
+// No portal, no ads and no store; ?ads=fake stands in for an ad host and ?store=fake for the iOS
+// ad-free card during development.
 export class WebPlatform implements Platform {
   readonly host: Host = 'web';
   private held = new Set<string>();
@@ -40,6 +41,7 @@ export class WebPlatform implements Platform {
   readonly ads: Ads = new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
   readonly banner: Banner = this.ads === FAKE_ADS ? new BannerHost(FAKE_BANNER_FILL) : NO_BANNER;
   readonly adPrivacy: AdPrivacy = NO_AD_PRIVACY;
+  readonly store: Store | null = new URLSearchParams(location.search).get('store') === 'fake' ? fakeStore() : null;
   readonly audio: AudioHost | null = webAudioHost();
 
   askText(o: TextAsk): Promise<string | null> {

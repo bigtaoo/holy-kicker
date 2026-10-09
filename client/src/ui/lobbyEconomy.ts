@@ -1,23 +1,26 @@
 import type { PropValue } from '@hk/protocol';
 import { Container } from 'pixi.js';
-import { formatAmount, t } from '../i18n';
+import { formatAmount, t, type Key } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { claimable, claimBonus, claimTask, tasksOpen } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
+import type { Store } from '../platform/types';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
 import type { TasksView } from './achievePanel';
+import { adFreeCard } from './adFreeCard';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
 import { COLORS, button, buttonLabel, dot, fit, label, panel } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
-// chests, the patrol and daily-task buttons under PLAY, and their panels. Holds what is open
-// and whether an ad is playing; the save changes themselves are pure (meta/shop.ts,
-// meta/patrol.ts, meta/daily.ts) and go back to the lobby to store. Each one that went through
-// is reported to analytics: a chest or a quick patrol as `buy`, anything paid out as `claim`.
+// chests (and on iOS the ad-free card, adFreeCard.ts), the patrol and daily-task buttons under
+// PLAY, and their panels. Holds what is open and whether an ad or a purchase is under way; the save
+// changes themselves are pure (meta/shop.ts, meta/patrol.ts, meta/daily.ts) and go back to the
+// lobby to store. Each one that went through is reported to analytics: a chest or a quick patrol
+// as `buy`, anything paid out as `claim`, every ad-free buy or restore as `iap`.
 //
 // Rewarded offers are hidden, not shown disabled, when the host has no ad (CrazyGames' rule
 // for adblocked players).
@@ -33,13 +36,21 @@ export interface EconomyHost {
   icons: IconSheet;
   /** What the patrol panel's scene is drawn with. */
   patrolLook(): PatrolLook;
+  /** The ad-free card's purchase; null on every host but iOS. */
+  store: Store | null;
   track: LobbyTrack;
 }
 
 /** Reports a lobby purchase or payout to analytics (Backend.track). */
-export type LobbyTrack = (e: 'buy' | 'claim', p: Record<string, PropValue>) => void;
+export type LobbyTrack = (e: 'buy' | 'claim' | 'iap', p: Record<string, PropValue>) => void;
 
 type Modal = 'patrol' | 'tasks' | null;
+
+/** What the player is told after an ad-free buy or restore (nothing after a cancel). */
+const AD_FREE_TOASTS: Record<'buy' | 'restore', Record<string, Key>> = {
+  buy: { owned: 'shop.bought', pending: 'shop.waiting', failed: 'shop.buyFailed' },
+  restore: { owned: 'shop.restored', none: 'shop.nothingToRestore', failed: 'shop.storeOffline' },
+};
 
 const CARD_W = 1000;
 const CARD_H = 290;
@@ -50,8 +61,9 @@ export function shopWaiting(save: SaveData, now: number): boolean {
   return chestsLeft(save, now, 'free') === 1;
 }
 
-export function shopHeight(adOk: boolean): number {
-  const n = adOk ? CHEST_KINDS.length : CHEST_KINDS.length - 1;
+/** With `store`, the ad-free card under the chests. */
+export function shopHeight(adOk: boolean, store: boolean): number {
+  const n = (adOk ? CHEST_KINDS.length : CHEST_KINDS.length - 1) + (store ? 1 : 0);
   return n * CARD_H + (n - 1) * CARD_GAP;
 }
 
@@ -60,6 +72,8 @@ export class EconomyUi {
   private haul: Haul | null = null;
   private adOk = false;
   private playing = false;
+  /** An ad-free buy or restore is under way. */
+  private buying = false;
   private live: Live[] = [];
   private ticks: Tick[] = [];
   private clock = 0;
@@ -134,6 +148,16 @@ export class EconomyUi {
       card.y = i * (CARD_H + CARD_GAP) + CARD_H / 2;
       c.addChild(card);
     });
+    const store = this.host.store;
+    if (store) {
+      const card = adFreeCard(store, this.buying, CARD_W, CARD_H, {
+        buy: () => void this.adFree('buy', () => store.buy()),
+        restore: () => void this.adFree('restore', () => store.restore()),
+        toast: (text) => this.host.toast(text),
+      });
+      card.y = kinds.length * (CARD_H + CARD_GAP) + CARD_H / 2;
+      c.addChild(card);
+    }
     return c;
   }
 
@@ -209,6 +233,20 @@ export class EconomyUi {
     this.playing = false;
     if (!paid) this.host.relayout();
     return paid;
+  }
+
+  /** A buy or a restore of the ad-free card; ownership itself comes back through the store, which
+   *  redraws the lobby (main.ios.ts). */
+  private async adFree(what: 'buy' | 'restore', go: () => Promise<string>): Promise<void> {
+    if (this.buying) return;
+    this.buying = true;
+    this.host.relayout();
+    const outcome = await go();
+    this.buying = false;
+    this.host.relayout();
+    this.host.track('iap', { what, item: 'adfree', outcome });
+    const toast = AD_FREE_TOASTS[what][outcome];
+    if (toast) this.host.toast(t(toast));
   }
 
   private async collect(double: boolean): Promise<void> {

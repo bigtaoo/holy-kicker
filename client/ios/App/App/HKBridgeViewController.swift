@@ -8,19 +8,21 @@ import WebKit
 // D:\funny's NWBridgeViewController. SceneDelegate makes this the window's root.
 //
 // Calls from JS are messages `{ op, ... }`. Answers are pushed back into the page rather than
-// settled by id: Game Center's and AdMob's states go to `HKNative._gameCenter` and `_adState`
-// whenever they change and when the page asks (a reloaded page asks again); an ad's progress goes
-// to `_adEvent`. Every member the page reads is feature-detected
-// there, so a newer web bundle on an older shell falls back to the browser's behaviour.
+// settled by id: Game Center's, AdMob's and the store's states go to `HKNative._gameCenter`,
+// `_adState` and `_store` whenever they change and when the page asks (a reloaded page asks again);
+// an ad's progress goes to `_adEvent`, how a buy or a restore went to `_storeResult`. Every member
+// the page reads is feature-detected there, so a newer web bundle on an older shell falls back to
+// the browser's behaviour.
 final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHandler {
 
     static let handlerName = "hk"
     /// Raised whenever the contract gains calls (HKNative.v in bridge.ts).
-    static let bridgeVersion = 3
+    static let bridgeVersion = 4
 
     private let keyStore = KeyStore()
     private let gameCenter = GameCenter()
     private let adMob = AdMob()
+    private let store = Store()
 
     override func capacitorDidLoad() {
         guard let webView = webView else { return }
@@ -36,6 +38,9 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
         adMob.onEvent = { [weak self] kind, event, ok in
             self?.push("_adEvent", ["kind": kind.rawValue, "event": event, "ok": ok])
         }
+        store.onChange = { [weak self] state in self?.push("_store", state.json) }
+        store.onResult = { [weak self] op, outcome in self?.push("_storeResult", ["op": op, "outcome": outcome]) }
+        store.start()
         #if DEBUG
         // Safari's Web Inspector, for the day a Mac is at hand (release builds stay closed)
         if #available(iOS 16.4, *) { webView.isInspectable = true }
@@ -81,6 +86,13 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             adMob.show(kind)
         case "adPrivacy":
             adMob.showPrivacyOptions()
+        case "store":
+            if let state = store.state { push("_store", state.json) }
+        case "buy":
+            guard let id = body["id"] as? String else { return }
+            store.buy(id)
+        case "restore":
+            store.restore()
         default:
             return
         }
@@ -117,7 +129,7 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
               push: function(v){ last = v; for (var i = 0; i < cbs.length; i++) { try { cbs[i](v); } catch (e) {} } }
             };
           }
-          var gc = feed(), ad = feed(), adEvent = feed();
+          var gc = feed(), ad = feed(), adEvent = feed(), store = feed(), storeResult = feed();
           window.HKNative = {
             v: c.v, saved: c.saved || {}, languages: c.languages || [], device: c.device || '',
             save: function(k, v){ post({ op: 'save', key: String(k), value: String(v) }); },
@@ -130,12 +142,20 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             onAdEvent: adEvent.on,
             showAd: function(kind){ post({ op: 'showAd', kind: String(kind) }); },
             adPrivacy: function(){ post({ op: 'adPrivacy' }); },
+            store: store.get,
+            onStore: store.on,
+            onStoreResult: storeResult.on,
+            buy: function(id){ post({ op: 'buy', id: String(id) }); },
+            restore: function(){ post({ op: 'restore' }); },
             _gameCenter: gc.push,
             _adState: ad.push,
-            _adEvent: adEvent.push
+            _adEvent: adEvent.push,
+            _store: store.push,
+            _storeResult: storeResult.push
           };
           post({ op: 'gameCenter' });
           post({ op: 'adState' });
+          post({ op: 'store' });
         })();
         """
     }

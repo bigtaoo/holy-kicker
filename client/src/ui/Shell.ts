@@ -223,7 +223,7 @@ export class Shell {
       adAvailable: () => this.ads.rewardedAvailable(),
       rewarded: () => this.rewarded('lobby'),
       board: this.net.online && this.names.ranked() ? (id) => this.net.board(id) : null, // no guests on account hosts
-      track: (e, p) => this.net.track(e, p),
+      track: (e, p) => this.net.track(e, p), store: this.platform.store,
     }, this.art.icons, this.app.renderer, this.art.lobby, () => ({ rig: monkRig(this.art, this.save.monk), art: this.art.patrol, icons: this.art.icons }));
     if (settings) lobby.openSettings();
     this.setScreen(lobby);
@@ -336,7 +336,7 @@ export class Shell {
   /** A rewarded ad, counted when it paid (`at` says where it was offered). */
   private async rewarded(at: string): Promise<boolean> {
     const paid = await this.ads.rewarded();
-    if (paid) this.net.track('ad', { at });
+    if (paid) this.net.track('ad', this.ads.adFree() ? { at, free: true } : { at });
     return paid;
   }
 

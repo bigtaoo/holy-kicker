@@ -42,6 +42,9 @@ export interface Platform {
   readonly banner: Banner;
   /** The ad network's own privacy choices; NO_AD_PRIVACY where the host has none. */
   readonly adPrivacy: AdPrivacy;
+  /** The ad-free card's in-app purchase; null on every host but iOS (CrazyGames forbids in-app
+   *  purchases, and App Review forbids pointing anywhere else to pay). */
+  readonly store: Store | null;
   /** Sound output; null where the host has none (the game then runs silent). */
   readonly audio: AudioHost | null;
   /** Asks the player to write something (a problem report) in the host's own text box; null when cancelled. */
@@ -117,7 +120,27 @@ export interface Ads {
   rewarded(started?: () => void): Promise<boolean>;
   /** An interstitial at a natural break; resolves when it is over or was not shown. */
   midgame(started?: () => void): Promise<void>;
+  /** The ad-free card is owned (iOS): rewards pay at once with no ad, so offers lose the video badge. */
+  adFree(): boolean;
 }
+
+/**
+ * The one purchase, the ad-free card (docs/ios.md "The ad-free card"): StoreKit through the iOS
+ * shell. Ownership is the store's; the last answer is kept, so an offline launch already knows.
+ */
+export interface Store {
+  /** The card's price as the storefront writes it ('US$3.99', '3,99 €'); null while the store
+   *  has not answered, or cannot sell it (offline, purchases blocked). */
+  price(): string | null;
+  owned(): boolean;
+  /** Apple's purchase sheet, from a tap; 'pending' while Ask to Buy waits for a parent. */
+  buy(): Promise<BuyOutcome>;
+  /** Restore purchases, from a tap: whether the card was found. */
+  restore(): Promise<RestoreOutcome>;
+}
+
+export type BuyOutcome = 'owned' | 'cancelled' | 'pending' | 'failed';
+export type RestoreOutcome = 'owned' | 'none' | 'cancelled' | 'failed';
 
 /**
  * The ad network's consent form, offered again from settings where the law asks for it (Google's
@@ -168,7 +191,21 @@ export const NO_ADS: Ads = {
   rewardedAvailable: async () => false,
   rewarded: async () => false,
   midgame: async () => {},
+  adFree: () => false,
 };
+
+/** Dev stand-in (?store=fake): the ad-free card at a made-up price; a buy takes a moment and
+ *  always goes through (for this page load), a restore finds nothing. */
+export function fakeStore(): Store {
+  let owned = false;
+  const later = <T>(value: () => T) => new Promise<T>((r) => setTimeout(() => r(value()), 800));
+  return {
+    price: () => 'US$3.99',
+    owned: () => owned,
+    buy: () => later(() => ((owned = true), 'owned' as const)),
+    restore: () => later(() => (owned ? 'owned' : 'none')),
+  };
+}
 
 /** Dev stand-in (?ads=fake): every ad "plays" for a moment and succeeds, so the reward and
  *  interstitial flows can be exercised without a portal. */
@@ -182,4 +219,5 @@ export const FAKE_ADS: Ads = {
     started?.();
     return new Promise((r) => setTimeout(r, 400));
   },
+  adFree: () => false,
 };

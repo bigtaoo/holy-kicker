@@ -59,6 +59,7 @@ export class CrazyGamesPlatform extends WebPlatform {
       midgame: async (started) => {
         if (sdk.adsAllowed()) await sdk.requestAd('midgame', { adStarted: started });
       },
+      adFree: () => false,
     };
   }
 

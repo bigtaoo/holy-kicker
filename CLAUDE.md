@@ -49,7 +49,7 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   Recorded sounds: picks in `art/audio/audition.html` (`tools/audio_audition.py`) →
   `art/audio/picks.json` → `python tools/audio_build.py` writes `client/public/audio/` (a WeChat
   subpackage); sources and licenses in `art/audio/SOURCES.md`.
-  Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host (and a grey box for the lobby banner), `?waves=0` (or any
+  Dev URL switches: `?direct` skips the lobby, `?ads=fake` fakes an ad host (and a grey box for the lobby banner), `?store=fake` the iOS ad-free card, `?waves=0` (or any
   `?mobs=`) runs the engine sandbox: a fixed horde and a hero who cannot die, for stress tests.
   `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; elites every 5th; mid-bosses 20 and 35), `?chapter=N` plays chapter N; `?relic=staff` (or `fish`, `beads`, `bowl`) plays
   the run with that relic whatever the save says; `?sutras` gives every run all four sutras;

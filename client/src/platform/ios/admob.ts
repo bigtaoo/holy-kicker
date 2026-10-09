@@ -58,6 +58,11 @@ export class AdMob implements Ads, AdPrivacy {
     await this.show('interstitial', started);
   }
 
+  /** The card is adFree.ts's decorator, over this. */
+  adFree(): boolean {
+    return false;
+  }
+
   /** Google's privacy options, due where its consent form applies (EEA/UK). */
   offered(): boolean {
     return !!this.state?.privacyOptions && typeof this.native?.adPrivacy === 'function';
