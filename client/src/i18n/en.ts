@@ -393,7 +393,7 @@ export const en = {
     quality: 'Graphics',
     auto: 'Auto',
     high: 'High',
-    saver: 'Saver',
+    saver: 'Battery',
     autoHint: 'Keeps the game smooth; saves power on low battery',
     highHint: 'Best effects; phones may get warm',
     saverHint: '30 fps and fewer effects, saves battery',

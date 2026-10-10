@@ -395,7 +395,7 @@ export const fr: Table<typeof en> = {
     quality: 'Graphismes',
     auto: 'Auto',
     high: 'Élevé',
-    saver: 'Éco',
+    saver: 'Batterie',
     autoHint: 'Garde le jeu fluide ; économise si batterie faible',
     highHint: 'Meilleurs effets ; le téléphone peut chauffer',
     saverHint: '30 fps et moins d’effets, économise la batterie',
