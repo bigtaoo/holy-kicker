@@ -14,7 +14,7 @@ import { GHOST_DECO, MARSH_DECO, PEAK_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, t
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, monkIcons, lobby, patrolFar, patrolProps, jiangshi, fox, cuju, staff, fish, palm, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
+  const [hero, monkIcons, lobby, patrolFar, patrolProps, jiangshi, fox, cuju, staff, fish, meteor, ruyi, morningBell, lion, palm, mountain, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
     loadTao(platform, 'art/hero'),
     // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
     loadDeco(platform, 'art/icons/monks'),
@@ -28,7 +28,15 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     Assets.load<Texture>('art/cuju.png'),
     Assets.load<Texture>('art/staff.png'),
     Assets.load<Texture>('art/fish.png'),
+    // the awakened relics: Meteor Ball, Ruyi Staff, Morning Bell (art/monk/icons/evolved)
+    Assets.load<Texture>('art/cuju_meteor.png'),
+    Assets.load<Texture>('art/staff_ruyi.png'),
+    Assets.load<Texture>('art/bell_relic.png'),
+    // the Thunder Roar's lion head (art/monk/icons/evolved)
+    Assets.load<Texture>('art/lion.png'),
     Assets.load<Texture>('art/palm.png'),
+    // the Mountain Palm's stone hand (art/monk/fx/mountain.txt)
+    Assets.load<Texture>('art/mountain.png'),
     ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
     deco === 'none' ? null : loadDeco(platform, 'art/ground/deco'),
     // chapter 2's misty marsh; ?ground picks chapter 1's only
@@ -42,7 +50,7 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     loadSheet(platform, 'art/mobs/toad_king'),
     loadSheet(platform, 'art/mobs/carp'),
   ]);
-  return { hero, jiangshi, fox, cuju, staff, fish, palm, stages: [
+  return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
     { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
   ], monks: {}, boss, lobby, patrol: { far: patrolFar, props: patrolProps.frames }, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: { ghost, toad, toadKing, carp }, snow: null, ghost: null, peak: null };

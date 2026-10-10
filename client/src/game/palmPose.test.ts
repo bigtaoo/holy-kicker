@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PALM_DROP, PALM_FADE, PALM_HOLD, PALM_SQUASH, palmPose } from './palmPose';
+import { PALM_DROP, PALM_FADE, PALM_HOLD, PALM_SQUASH, palmHold, palmPose } from './palmPose';
 
 describe('palmPose', () => {
   it('drops from the sky, faster and faster, while its shadow grows', () => {
@@ -22,5 +22,16 @@ describe('palmPose', () => {
     expect(held).toMatchObject({ scaleY: 1, alpha: 1, shadowAlpha: 0, done: false });
     expect(palmPose(fall + PALM_SQUASH + PALM_HOLD + PALM_FADE / 2, fall).alpha).toBeCloseTo(0.5);
     expect(palmPose(fall + PALM_SQUASH + PALM_HOLD + PALM_FADE, fall)).toMatchObject({ alpha: 0, done: true });
+  });
+
+  it('holds the Mountain Palm for as long as its print pins, then sinks as it fades', () => {
+    const fall = 0.4;
+    expect(palmHold(0)).toBe(PALM_HOLD);
+    const hold = palmHold(2);
+    expect(PALM_SQUASH + hold + PALM_FADE).toBeCloseTo(2);
+    expect(palmPose(fall + 1.5, fall, hold)).toMatchObject({ scaleY: 1, alpha: 1, done: false });
+    const fading = palmPose(fall + PALM_SQUASH + hold + PALM_FADE / 2, fall, hold);
+    expect(fading.scaleY).toBeLessThan(1);
+    expect(palmPose(fall + 2, fall, hold).done).toBe(true);
   });
 });

@@ -54,8 +54,16 @@ export function explosion(pool: FxPool, rand: () => number, x: number, y: number
   }
 }
 
-/** A lightning bolt from (x0, y0) to (x1, y1): a few jagged bar segments and a spark at the end. */
-export function bolt(pool: FxPool, rand: () => number, x0: number, y0: number, x1: number, y1: number): void {
+/** The Endless Chain's bolts are gold and thicker. */
+const BOLT = { color: 0xc8f0ff, spark: 0xe0f8ff, width: 16 };
+const GOLD_BOLT = { color: 0xffe070, spark: 0xfff4c0, width: 24 };
+
+/**
+ * A lightning bolt from (x0, y0) to (x1, y1): a few jagged bar segments and a spark at the end;
+ * `gold` for the Endless Chain.
+ */
+export function bolt(pool: FxPool, rand: () => number, x0: number, y0: number, x1: number, y1: number, gold = false): void {
+  const look = gold ? GOLD_BOLT : BOLT;
   const n = 4;
   const nx = -(y1 - y0);
   const ny = x1 - x0;
@@ -69,12 +77,13 @@ export function bolt(pool: FxPool, rand: () => number, x0: number, y0: number, x
     const len = Math.hypot(qx - px, qy - py) * 1.08;
     pool.emit({
       shape: 'band', x: (px + qx) / 2, y: (py + qy) / 2, vx: 0, vy: 0, life: 0.16, size0: len, size1: len,
-      aspect: 16 / Math.max(1, len), rotation: Math.atan2(qy - py, qx - px), spin: 0, drag: 1, color: 0xc8f0ff, alpha: 1,
+      aspect: look.width / Math.max(1, len), rotation: Math.atan2(qy - py, qx - px), spin: 0, drag: 1, color: look.color, alpha: 1,
     });
     px = qx;
     py = qy;
   }
-  pool.emit({ shape: 'glow', x: x1, y: y1, vx: 0, vy: 0, life: 0.16, size0: 70, size1: 110, rotation: 0, spin: 0, drag: 1, color: 0xe0f8ff, alpha: 0.9 });
+  const spark = gold ? 1.3 : 1;
+  pool.emit({ shape: 'glow', x: x1, y: y1, vx: 0, vy: 0, life: 0.16, size0: 70 * spark, size1: 110 * spark, rotation: 0, spin: 0, drag: 1, color: look.spark, alpha: 0.9 });
 }
 
 /** Light motes rising from a ground field of radius r. */

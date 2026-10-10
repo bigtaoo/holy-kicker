@@ -10,9 +10,9 @@ import { SHADOW_Z } from './shadow';
 // Spell effects: the build's spells and the area-spell stress test. The engine casts the
 // spells and kills what they reach (systems/spells.ts); this draws the casts from its events,
 // the lingering fields and flying cymbals from its lists, and the Golden Bell over the hero.
-// Evolved forms: the Mountain Palm's print, a jade Healing Incense ring, the Golden Body's
-// guard (the dome flickers while the hero is untouchable) and the Cymbal Wheel's cymbals,
-// which never fade.
+// Evolved forms: the Mountain Palm's stone hand and its print, a jade Healing Incense ring, the Golden Body's
+// guard (the dome flickers while the hero is untouchable), the Endless Chain's gold bolts and
+// the Cymbal Wheel's cymbals, which never fade and run on a faint gold track.
 
 const NOVA_LIFE = 0.45;
 /** Cymbals fly at chest height. */
@@ -86,6 +86,8 @@ export class SpellView {
   private readonly printTex: Texture;
   private readonly cymbalTex: Texture;
   private readonly cymbals = new Map<number, FieldSprite>();
+  /** The Cymbal Wheel's track, round the middle of its cymbals. */
+  private readonly wheel = new Graphics();
   private readonly bell = bellDome();
   private bellT = BELL_POP;
   /** Golden Body: seconds the hero stays untouchable after the bell broke. */
@@ -97,17 +99,17 @@ export class SpellView {
     private readonly layer: Container,
     private readonly pool: FxPool,
     private readonly ring: RingMode,
-    /** The falling palm's art, drawn at this zIndex (over the horde). */
-    palm: { tex: Texture; z: number },
+    /** The falling palm's art and the Mountain Palm's, drawn at this zIndex (over the horde). */
+    palm: { tex: Texture; mountain: Texture; z: number },
     private readonly rand: () => number = Math.random,
   ) {
-    this.palms = new PalmFalls(layer, palm.tex, palm.z);
+    this.palms = new PalmFalls(layer, palm.tex, palm.mountain, palm.z);
     this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0);
     this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8);
     this.printTex = printTexture(renderer);
     this.cymbalTex = cymbalTexture(renderer);
     this.bell.visible = false;
-    layer.addChild(this.bell);
+    layer.addChild(this.bell, this.wheel);
   }
 
   /** The local hero's bell came up: it pops into place. */
@@ -142,6 +144,11 @@ export class SpellView {
   /** The sim's flying cymbals: spinning discs, interpolated between ticks. */
   private drawCymbals(cymbals: readonly Cymbal[], alpha: number, dt: number): void {
     for (const c of this.cymbals.values()) c.seen = false;
+    let wx = 0;
+    let wy = 0;
+    let wn = 0;
+    let orbit = 0;
+    const wheelOwner = cymbals.find((q) => q.orbit > 0)?.owner;
     for (const c of cymbals) {
       let v = this.cymbals.get(c.id);
       if (!v) {
@@ -154,6 +161,12 @@ export class SpellView {
       v.seen = true;
       const y = lerpY(c, alpha);
       v.sprite.position.set(lerpX(c, alpha), y - CYMBAL_LIFT);
+      if (c.orbit > 0 && c.owner === wheelOwner) {
+        wx += v.sprite.x;
+        wy += v.sprite.y;
+        wn++;
+        orbit = c.orbit / FP;
+      }
       v.sprite.rotation += dt * 18;
       v.sprite.zIndex = y + 1;
       // a thrown cymbal fades out over its last few ticks; the wheel's never do
@@ -164,6 +177,14 @@ export class SpellView {
       v.sprite.destroy();
       this.cymbals.delete(id);
     }
+    // the wheel's cymbals are spread evenly round their owner, so their middle is his
+    this.wheel.visible = wn > 1;
+    if (wn < 2) return;
+    this.wheel.clear().circle(wx / wn, wy / wn, orbit)
+      .stroke({ color: 0x3a2410, width: 20, alpha: 0.18 })
+      .circle(wx / wn, wy / wn, orbit).stroke({ color: 0xffd860, width: 10, alpha: 0.4 });
+    // under everything standing, like the fields
+    this.wheel.zIndex = SHADOW_Z + 1;
   }
 
   /** A cast, or a palm on its way down (positions in FP). */
@@ -171,7 +192,7 @@ export class SpellView {
     const x = e.x / FP;
     const y = e.y / FP;
     const r = e.radius / FP;
-    if (e.type === 'palm') this.palms.drop(x, y, r, e.fall / TICK_RATE);
+    if (e.type === 'palm') this.palms.drop(x, y, r, e.fall / TICK_RATE, e.print / TICK_RATE);
     else if (e.kind === 'nova') nova(this.pool, x, y, 60, r, NOVA_LIFE, 0xfff0b8, this.ring);
     else if (e.kind === 'meteor') explosion(this.pool, this.rand, x, y, r, this.ring);
   }
@@ -183,8 +204,8 @@ export class SpellView {
     this.palms.update(dt);
   }
 
-  bolt(x0: number, y0: number, x1: number, y1: number): void {
-    bolt(this.pool, this.rand, x0, y0, x1, y1);
+  bolt(x0: number, y0: number, x1: number, y1: number, gold: boolean): void {
+    bolt(this.pool, this.rand, x0, y0, x1, y1, gold);
   }
 
   /** The sim's lingering fields: a ground disc each, fading in and out, with rising motes. */

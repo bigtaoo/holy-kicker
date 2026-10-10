@@ -1,0 +1,10 @@
+The awakened relics' and evolved spells' in-game sprites. Made 2026-10-10 with tools/generate_image.sh
+from the *_p*.txt prompts here, cut out with tools/cutout.py (hole seeds for the white gaps inside the
+outline) and quantized to 256 colours.
+
+staff1.jpg (staff_p.txt) -> client/public/art/staff_ruyi.png, 400 px high: the Ruyi Staff (awakened staff).
+ball1.jpg  (ball_p.txt)  -> client/public/art/cuju_meteor.png, 160 px high: the Meteor Ball (awakened cuju ball).
+bell1.jpg  (bell_p.txt)  -> client/public/art/bell_relic.png, 200 px high: the Morning Bell (awakened fish).
+                            bell2.jpg (bell_p2.txt) read less clearly as a bell at hand size.
+lion1.jpg  (lion_p.txt)  -> client/public/art/lion.png, 256 px high: the lion head of the evolved Lion's Roar.
+                            lion2.jpg was the alternative draft.

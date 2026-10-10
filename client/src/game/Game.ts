@@ -160,13 +160,13 @@ export class Game {
     this.healthBar.view.visible = chapter;
     if (scene.ring) this.hero.view.addChildAt(makeRing(app.renderer, 0xffb030), 0);
     if (scene.heroBack) this.hero.view.addChildAt(heroBacking(app.renderer, HERO_HEIGHT), 0);
-    this.balls = new Balls(this.world, art.cuju, shadowTex);
+    this.balls = new Balls(this.world, art.cuju, art.awakened.meteor, shadowTex);
     // the crescent draws over the horde, under the elite
-    this.staff = new StaffSwing(this.world, art.staff, HERO_TOP_Z - 3);
-    this.fish = new FishTaps(this.world, this.hero.held, art.fish, HERO_TOP_Z - 3);
+    this.staff = new StaffSwing(this.world, art.staff, art.awakened.ruyi, HERO_TOP_Z - 3);
+    this.fish = new FishTaps(this.world, this.hero.held, art.fish, art.awakened.bell, HERO_TOP_Z - 3);
     this.beads = new BeadsView(app.renderer, this.world);
     this.bowls = new BowlView(app.renderer, this.world, shadowTex);
-    this.sutras = new SutraView(app.renderer, this.world, HERO_TOP_Z - 3);
+    this.sutras = new SutraView(app.renderer, this.world, HERO_TOP_Z - 3, art.awakened.lion);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
     this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
@@ -183,7 +183,7 @@ export class Game {
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
-    this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, z: HERO_TOP_Z - 2 });
+    this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, mountain: art.mountain, z: HERO_TOP_Z - 2 });
     this.aura = new AuraStack(scene.stack);
     this.zen = new ZenRing(this.world);
 
@@ -304,7 +304,7 @@ export class Game {
         }
         case 'ring': {
           const p = s.players.find((q) => q.owner === e.owner);
-          if (e.owner === LOCAL && p) this.fish.tap(e.x / FP, e.y / FP, e.reach / FP, e.stun, p.facing, this.hero.hand('hand_b'));
+          if (e.owner === LOCAL && p) this.fish.tap(e.x / FP, e.y / FP, e.reach / FP, e.stun, p.awakened, p.facing, this.hero.hand('hand_b'));
           break;
         }
         case 'hurt':
@@ -391,7 +391,7 @@ export class Game {
           this.spells.cast(e);
           break;
         case 'bolt':
-          this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP);
+          this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP, s.players[0].spells.some((sp) => sp.id === 'bolt' && sp.evolved));
           break;
         case 'bloom':
           this.sutras.bloom(e.x / FP, e.y / FP, e.radius / FP);

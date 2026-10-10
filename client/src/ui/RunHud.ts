@@ -2,7 +2,7 @@ import { Container, Graphics, Sprite, Texture, type Text } from 'pixi.js';
 import { getLocale, localeName, t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot, type Charge } from './buildSlots';
-import { cardPanel } from './cardPanel';
+import { cardPanel, type CardPanel } from './cardPanel';
 import { languagePanel } from './languagePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
@@ -69,6 +69,9 @@ export class RunHud implements Screen {
   /** The open level-up cards, and whether one was tapped (waiting for the engine). */
   private offer: CardText[] | null = null;
   private offerTitle = '';
+  /** Seconds since the cards opened (they rise in locked), and their panel in this layout. */
+  private offerAge = 0;
+  private cards: CardPanel | null = null;
   private picked = false;
   private build: BuildBar | null = null;
   private slots: readonly BuildSlot[] = [];
@@ -115,7 +118,12 @@ export class RunHud implements Screen {
     this.bannerView = null;
     // a panel covers the middle, so a banner then waits out its time unseen
     if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
-    if (this.offer) this.view.addChild(cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i)));
+    this.cards = null;
+    if (this.offer) {
+      this.cards = cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i));
+      this.cards.update(this.offerAge);
+      this.view.addChild(this.cards.view);
+    }
     if (this.paused) this.pausePanel(f);
     if (this.down) this.downPanel(f, this.down);
   }
@@ -162,6 +170,7 @@ export class RunHud implements Screen {
   showOffer(title: string, cards: CardText[]): void {
     this.offer = cards;
     this.offerTitle = title;
+    this.offerAge = 0;
     this.picked = false;
     this.paused = false;
     this.relayout();
@@ -211,6 +220,10 @@ export class RunHud implements Screen {
   update(dt: number): void {
     this.build?.update(dt);
     this.clock += dt;
+    if (this.cards) {
+      this.offerAge += dt;
+      this.cards.update(this.offerAge);
+    }
     if (this.hand) this.hand.x = Math.sin(this.clock * 4) * 120;
     // a banner waits out the card choice
     if (!this.banner || this.offer) return;

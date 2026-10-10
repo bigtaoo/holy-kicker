@@ -6,8 +6,9 @@ import { SHADOW_Z } from './shadow';
 // The sutra spells (engine systems/sutras.ts). Lotus Steps: the sim's seeds as small lotus buds
 // on the ground (gold for the Lotus Path) and a ring of petals opening where one blooms. Halo
 // Beam: the hero's beams drawn from his chest out to their length, over the horde, turning
-// with the sim's angle. Lion's Roar: three sound waves rolling out through the cone (all the
-// way round for the Thunder Roar). The monks' passives (engine systems/monks.ts) use the same
+// with the sim's angle; the Boundless Light also rings his head with a gold nimbus. Lion's Roar: three sound waves rolling out through the cone (all the
+// way round for the Thunder Roar, under a golden lion's head that rears up over the hero and
+// fades). The monks' passives (engine systems/monks.ts) use the same
 // bursts: the fat monk's Belly Bounce rolls saffron rings out over the ground, and the
 // novice's dodge leaves white speed streaks either side of him.
 
@@ -20,8 +21,15 @@ const GOLD = 0xffd860;
 const BEAM = 0xfff0b8;
 /** The beams leave the hero at chest height. */
 const CHEST = 60;
+/** The Boundless Light's nimbus round the hero's head, from his chest. */
+const NIMBUS_Y = 52;
+const NIMBUS_R = 50;
 const BLOOM_LIFE = 0.45;
 const ROAR_LIFE = 0.4;
+/** The Thunder Roar's lion head: its height at full size, how high over the hero's feet, seconds. */
+const LION_H = 230;
+const LION_Y = 250;
+const LION_LIFE = 0.6;
 const BOUNCE = 0xffb030;
 const BOUNCE_LIFE = 0.35;
 const DODGE_LIFE = 0.3;
@@ -54,8 +62,14 @@ export class SutraView {
   private readonly seeds = new Map<number, { sprite: Sprite; seen: boolean }>();
   private readonly beams = new Graphics();
   private readonly bursts: Burst[] = [];
+  private readonly lions: { sprite: Sprite; t: number }[] = [];
 
-  constructor(renderer: Renderer, private readonly world: Container, private readonly overZ: number) {
+  constructor(
+    renderer: Renderer,
+    private readonly world: Container,
+    private readonly overZ: number,
+    private readonly lionTex: Texture,
+  ) {
     this.buds = [budTexture(renderer, PETAL), budTexture(renderer, GOLD)];
     this.beams.visible = false;
     world.addChild(this.beams);
@@ -80,6 +94,7 @@ export class SutraView {
   roar(x: number, y: number, brad: number, r: number, full: boolean): void {
     const mid = (brad / BRADS) * TAU;
     const half = full ? Math.PI : 0.87;
+    if (full) this.lion(x, y);
     this.burst(x, y - CHEST * 0.5, ROAR_LIFE, (g, k) => {
       for (let w = 0; w < 3; w++) {
         const kk = k * 1.3 - w * 0.15;
@@ -118,6 +133,27 @@ export class SutraView {
     }, this.overZ);
   }
 
+  /** The Thunder Roar's lion head over the hero standing at (x, y). */
+  private lion(x: number, y: number): void {
+    const sprite = new Sprite({ texture: this.lionTex, anchor: 0.5 });
+    sprite.position.set(x, y - LION_Y);
+    sprite.zIndex = this.overZ + 1;
+    this.world.addChild(sprite);
+    this.lions.push({ sprite, t: 0 });
+    this.drawLion(this.lions[this.lions.length - 1]);
+  }
+
+  /** Rears up fast with a little overshoot, then hangs and fades; false once gone. */
+  private drawLion(l: { sprite: Sprite; t: number }): boolean {
+    const k = l.t / LION_LIFE;
+    if (k >= 1) return false;
+    const grow = Math.min(1, k / 0.25);
+    const size = 0.55 + 0.45 * grow + 0.12 * Math.sin(Math.PI * grow);
+    l.sprite.scale.set((LION_H * size) / this.lionTex.height);
+    l.sprite.alpha = k < 0.5 ? 0.95 : 0.95 * (1 - (k - 0.5) / 0.5);
+    return true;
+  }
+
   private burst(x: number, y: number, life: number, draw: (g: Graphics, k: number) => void, z: number): void {
     const g = new Graphics();
     g.position.set(x, y);
@@ -152,6 +188,13 @@ export class SutraView {
       this.seeds.delete(id);
     }
     this.drawHalo(p, alpha, hx, hy);
+    for (let i = this.lions.length - 1; i >= 0; i--) {
+      const l = this.lions[i];
+      l.t += dt;
+      if (this.drawLion(l)) continue;
+      l.sprite.destroy();
+      this.lions.splice(i, 1);
+    }
     for (let i = this.bursts.length - 1; i >= 0; i--) {
       const b = this.bursts[i];
       b.t += dt;
@@ -187,5 +230,9 @@ export class SutraView {
       g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: BEAM, width: 12, alpha: 0.95, cap: 'round' });
     }
     g.circle(0, 0, 34).fill({ color: BEAM, alpha: 0.45 });
+    if (!slot.evolved) return;
+    const breathe = 1 + 0.04 * Math.sin(performance.now() / 260);
+    g.circle(0, -NIMBUS_Y, NIMBUS_R * breathe).stroke({ color: GOLD, width: 14, alpha: 0.35 })
+      .circle(0, -NIMBUS_Y, NIMBUS_R * breathe).stroke({ color: BEAM, width: 5, alpha: 0.9 });
   }
 }

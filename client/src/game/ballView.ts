@@ -5,10 +5,13 @@ import { makeShadow } from './shadow';
 
 // Kicked cuju balls in flight, drawn from the sim's ball list: a spinning sprite over a ground
 // shadow per ball id. Spent sprites are hidden and kept for the next kick. The awakened
-// Meteor Ball glows hot, and its one-hit splinters are smaller.
+// Meteor Ball burns (its own art, the ball wrapped in flames), and its one-hit splinters are
+// smaller and glow hot.
 
 const SIZE = 48;
 const METEOR_TINT = 0xffb070;
+/** The burning ball's art is mostly flame: the ball inside it is this share of its height. */
+const METEOR_BALL = 0.62;
 const SPLINTER_SCALE = 0.7;
 /** Drawn this far above its ground point. */
 export const BALL_LIFT = 45;
@@ -26,6 +29,7 @@ export class Balls {
   constructor(
     private readonly layer: Container,
     private readonly tex: Texture,
+    private readonly meteorTex: Texture,
     private readonly shadowTex: Texture,
   ) {}
 
@@ -43,8 +47,10 @@ export class Balls {
       f.sprite.position.set(x, y - BALL_LIFT);
       f.sprite.rotation += dt * 14 * Math.sign(b.vx || 1);
       const splinter = !b.split && b.maxHits === 1;
-      f.sprite.tint = b.split || splinter ? METEOR_TINT : 0xffffff;
-      f.sprite.scale.set(((splinter ? SPLINTER_SCALE : 1) * SIZE) / this.tex.height);
+      const tex = b.split ? this.meteorTex : this.tex;
+      f.sprite.texture = tex;
+      f.sprite.tint = splinter ? METEOR_TINT : 0xffffff;
+      f.sprite.scale.set(((splinter ? SPLINTER_SCALE : 1) * SIZE) / (b.split ? tex.height * METEOR_BALL : tex.height));
       f.sprite.zIndex = y + 1;
       f.shadow.position.set(x, y);
     }

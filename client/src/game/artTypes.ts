@@ -18,8 +18,15 @@ export interface Art {
   cuju: Texture;
   staff: Texture;
   fish: Texture;
+  /**
+   * The evolved looks: the awakened relics' (the burning Meteor Ball, the Ruyi Staff, the
+   * Morning Bell) and the Thunder Roar's lion head.
+   */
+  awakened: { meteor: Texture; ruyi: Texture; bell: Texture; lion: Texture };
   /** The Rulai Palm's golden hand. */
   palm: Texture;
+  /** The Mountain Palm's (evolved) stone hand. */
+  mountain: Texture;
   /**
    * Grounds by chapter from chapter 1; a chapter without its own takes the last one. Chapters
    * in an art pack (chapter 3 on) add theirs when the pack is loaded (loadChapterArt).

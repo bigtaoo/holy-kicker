@@ -3,7 +3,8 @@ import { swingAngle, swingArc, type SwingArc } from './swing';
 
 // The staff relic's swing (engine systems/staff.ts): on a sweep the staff appears in the
 // hero's hand and turns through its arc, a half circle toward the target (all the way round
-// for the Ruyi Staff), leaving a gold crescent over the ground that fades. advance() gives the
+// for the Ruyi Staff, which swaps the ringed head for a gold ruyi cloud and leaves a brighter
+// ring), leaving a gold crescent over the ground that fades. advance() gives the
 // staff's angle, which the hero's front arm follows (hero.ts), and draw() puts the staff in
 // that hand. One swing at a time: a new sweep restarts it.
 
@@ -15,14 +16,23 @@ const TRAIL_Y = 18;
 /** The staff's length as a share of the sweep's reach (the hand is already out from his body). */
 const LENGTH = 0.82;
 const TRAIL_ALPHA = 0.45;
+/** The Ruyi Staff's ring: paler gold, a bright edge along its outside. */
+const RUYI_TRAIL = 0xffe9a0;
+const RUYI_EDGE = 0xfff8e0;
 
 export class StaffSwing {
   private readonly staff: Sprite;
   private readonly trail = new Graphics();
   private arc: SwingArc | null = null;
   private t = 0;
+  private ruyi = false;
 
-  constructor(world: Container, tex: Texture, private readonly trailZ: number) {
+  constructor(
+    world: Container,
+    private readonly tex: Texture,
+    private readonly ruyiTex: Texture,
+    private readonly trailZ: number,
+  ) {
     this.staff = new Sprite(tex);
     this.staff.anchor.set(0.5, GRIP);
     this.staff.visible = false;
@@ -31,10 +41,12 @@ export class StaffSwing {
     world.addChild(this.trail, this.staff);
   }
 
-  /** A sweep landed: `brad` the aim (65536 per turn), `reach` in world units. */
+  /** A sweep landed: `brad` the aim (65536 per turn), `reach` in world units; `full` for the Ruyi Staff. */
   swing(brad: number, reach: number, full: boolean, facing: number): void {
     this.arc = swingArc(brad, reach, full, facing);
     this.t = 0;
+    this.ruyi = full;
+    this.staff.texture = full ? this.ruyiTex : this.tex;
     this.staff.scale.set((reach * LENGTH) / this.staff.texture.height);
   }
 
@@ -70,6 +82,12 @@ export class StaffSwing {
     const to = Math.max(a.from, angle);
     this.trail.visible = true;
     this.trail.zIndex = this.trailZ;
-    this.trail.clear().arc(hx, hy - TRAIL_Y, r, from, to).stroke({ color: TRAIL, width: a.reach * 0.4, alpha: TRAIL_ALPHA * fade, cap: 'butt' });
+    const g = this.trail.clear();
+    if (!this.ruyi) {
+      g.arc(hx, hy - TRAIL_Y, r, from, to).stroke({ color: TRAIL, width: a.reach * 0.4, alpha: TRAIL_ALPHA * fade, cap: 'butt' });
+      return;
+    }
+    g.arc(hx, hy - TRAIL_Y, r, from, to).stroke({ color: RUYI_TRAIL, width: a.reach * 0.4, alpha: (TRAIL_ALPHA + 0.1) * fade, cap: 'butt' });
+    g.arc(hx, hy - TRAIL_Y, r + a.reach * 0.2, from, to).stroke({ color: RUYI_EDGE, width: 8, alpha: 0.9 * fade, cap: 'butt' });
   }
 }

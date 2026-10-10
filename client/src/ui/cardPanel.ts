@@ -2,6 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import type { CardKind } from '@hk/engine';
 import { t } from '../i18n';
 import { iconSprite, type IconSheet } from './buildBar';
+import { cardPose, cardsSettled, rimPoints } from './cardGate';
 import type { CardText } from './cardText';
 import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, fit, label, panel } from './widgets';
@@ -9,13 +10,17 @@ import { COLORS, backdrop, fit, label, panel } from './widgets';
 // The level-up or shrine choice: three large cards stacked down the middle of the portrait screen, one
 // thumb tap each. Each card shows the item's icon on a disc in its kind's colour (with what it
 // evolves with small on the corner), the name, "New!" or the level step, and its effect lines.
-// Shrine blessings have no item and keep a drawn shape.
+// Shrine blessings have no item and keep a drawn shape. The cards rise in grey and only take taps
+// once a gold line has run round their rims (cardGate.ts).
 
 const CARD_W = 960;
 const CARD_H = 330;
 const GAP = 44;
 const ICON_R = 92;
 const PAIR_R = 36;
+const CARD_RADIUS = 28;
+/** A locked card is drawn this grey. */
+const LOCKED_TINT = 0x8a8a8a;
 
 const KIND_COLOR: Record<CardKind, number> = {
   relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade, shrine: 0xe0607a, evolve: 0xffc83a,
@@ -77,7 +82,7 @@ function icon(text: CardText, icons: IconSheet): Container {
   return c;
 }
 
-function card(text: CardText, icons: IconSheet, onTap: () => void): Container {
+function card(text: CardText, icons: IconSheet, onTap: () => void, locked: () => boolean): Container {
   const c = new Container();
   const left = -CARD_W / 2;
   const gold = text.kind === 'evolve';
@@ -105,6 +110,8 @@ function card(text: CardText, icons: IconSheet, onTap: () => void): Container {
   c.cursor = 'pointer';
   let down = false;
   c.on('pointerdown', () => {
+    // a touch that starts while the card is locked never counts, even if it lifts later
+    if (locked()) return;
     down = true;
     c.scale.set(0.97);
   });
@@ -122,10 +129,16 @@ function card(text: CardText, icons: IconSheet, onTap: () => void): Container {
   return c;
 }
 
+export interface CardPanel {
+  view: Container;
+  /** Poses the cards `age` seconds after the choice opened. */
+  update(age: number): void;
+}
+
 /** The modal choice over the run under `title`; `onPick` gets the card's index. */
 export function cardPanel(
   f: UiFrame, title: string, texts: readonly CardText[], icons: IconSheet, onPick: (index: number) => void,
-): Container {
+): CardPanel {
   const view = new Container();
   view.addChild(backdrop(f.w, f.h, 0.7));
   const total = texts.length * CARD_H + (texts.length - 1) * GAP;
@@ -135,10 +148,33 @@ export function cardPanel(
   const hint = label(t('card.pickOne'), 52, COLORS.text);
   hint.position.set(f.w / 2, top - 90);
   view.addChild(heading, hint);
-  texts.forEach((text, i) => {
-    const c = card(text, icons, () => onPick(i));
-    c.position.set(f.w / 2, top + CARD_H / 2 + i * (CARD_H + GAP));
+  let locked = true;
+  const cards = texts.map((text, i) => {
+    const body = card(text, icons, () => onPick(i), () => locked);
+    const rim = new Graphics();
+    const c = new Container();
+    c.addChild(body, rim);
     view.addChild(c);
+    return { c, body, rim, y: top + CARD_H / 2 + i * (CARD_H + GAP) };
   });
-  return view;
+  let settled = false;
+  const update = (age: number) => {
+    if (settled) return;
+    settled = cardsSettled(age);
+    cards.forEach(({ c, body, rim, y }, i) => {
+      const pose = cardPose(age, i);
+      locked = pose.locked;
+      c.position.set(f.w / 2, y + pose.y);
+      c.alpha = pose.alpha;
+      c.scale.set(pose.scale);
+      body.tint = pose.locked ? LOCKED_TINT : 0xffffff;
+      rim.clear();
+      if (pose.rimAlpha > 0 && pose.rim > 0) {
+        rim.poly(rimPoints(CARD_W, CARD_H, CARD_RADIUS, pose.rim), false)
+          .stroke({ color: GOLD_RIM, width: 10, alpha: pose.rimAlpha, cap: 'round', join: 'round' });
+      }
+    });
+  };
+  update(0);
+  return { view, update };
 }
