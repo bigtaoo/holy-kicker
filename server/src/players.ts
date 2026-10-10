@@ -1,3 +1,4 @@
+import type { Audience } from './audience';
 import { LIMITS, boardId, type ClientEvent, type Host } from './protocol';
 
 // What the backend remembers about each install for retention: the day it was first seen, the
@@ -40,6 +41,8 @@ export interface Player {
   host: Host;
   /** The build the install first played (version+commit), to compare releases' new players. */
   build?: string;
+  /** Its device, browser, system and country, from the first batch (audience.ts). Missing before it was kept. */
+  aud?: Audience;
   /** Days after `first`, up to the last of RETURN_DAYS, on which the install was seen again. */
   back: number[];
   d0: DayZero;

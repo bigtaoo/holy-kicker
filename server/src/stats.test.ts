@@ -75,6 +75,25 @@ describe('stats', () => {
     expect(r.clears).toEqual([{ board: 'c1', tried: 2, cleared: 1, medianDays: 0, medianTries: 3 }]);
   });
 
+  it('splits new installs by device, browser, system and country', async () => {
+    const s = new MemoryStore();
+    const phone = { device: 'mobile', browser: 'Chrome', os: 'Android', country: 'IN' } as const;
+    await s.addEvents(batch('p', [session, end(12)]), at(0), phone);
+    await s.addEvents(batch('q', [session]), at(0), { ...phone, country: 'AR' });
+    await s.addEvents(batch('r', [session]), at(1), phone);
+    await s.addEvents(batch('o', [session]), at(1));
+    await s.addEvents(batch('p', [session]), at(1));
+    const r = await s.stats(3, at(2), null);
+    expect(r.audience.map((a) => a.name)).toEqual(['device', 'browser', 'os', 'country']);
+    // r and o's next day is still to come
+    expect(r.audience.find((a) => a.name === 'country')!.groups).toEqual([
+      { label: 'IN', n: 2, ran: 1, known: 1, back: 1 },
+      { label: 'AR', n: 1, ran: 0, known: 1, back: 0 },
+      { label: 'unknown', n: 1, ran: 0, known: 0, back: 0 },
+    ]);
+    expect(r.audience.find((a) => a.name === 'device')!.groups[0]).toEqual({ label: 'mobile', n: 3, ran: 1, known: 2, back: 1 });
+  });
+
   it('leaves installs whose next day is not over out of the drivers', async () => {
     const s = new MemoryStore();
     await s.addEvents(batch('n', [session]), at(0));

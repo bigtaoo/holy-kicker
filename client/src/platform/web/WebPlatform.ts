@@ -87,8 +87,10 @@ export class WebPlatform implements Platform {
     const nav = navigator as Navigator & { userAgentData?: { mobile: boolean }; deviceMemory?: number };
     const ua = nav.userAgent;
     // iPadOS reports a desktop Mac user agent; touch points give it away
-    const mobile = nav.userAgentData?.mobile ?? (/Android|iPhone|iPad|iPod|Mobile/i.test(ua) || (/Macintosh/.test(ua) && nav.maxTouchPoints > 1));
-    return { mobile, cores: nav.hardwareConcurrency || 0, memoryGB: nav.deviceMemory || 0, gpu: '', modelLevel: 0 };
+    const ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && nav.maxTouchPoints > 1);
+    const mobile = nav.userAgentData?.mobile ?? (/Android|iPhone|iPod|Mobile/i.test(ua) || ipad);
+    const tablet = ipad || /Tablet/i.test(ua) || (/Android/.test(ua) && !/Mobile/.test(ua));
+    return { mobile: mobile || tablet, tablet, cores: nav.hardwareConcurrency || 0, memoryGB: nav.deviceMemory || 0, gpu: '', modelLevel: 0 };
   }
 
   async createApp(msaa: boolean): Promise<Application> {

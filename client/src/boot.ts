@@ -28,7 +28,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   const net = new Backend(platform, base, __HK_BUILD__, getLocale);
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
   const privacy = base ? new PrivacyChoice(net, platform, base, deviceTimeZone()) : null;
-  const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), net, !device.mobile, privacy);
+  const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy);
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s));
   // a ?quality= dev switch pins the mode for the session
   if (!scene.quality) shell.onQualityMode = (m) => quality.setRange(levelRange(m, device));

@@ -26,6 +26,12 @@ installs land on `web`.
   counted, and installs still stuck are left out of the medians.
 - **Build**: the version and commit (`0.0.1+61b33eb`), kept per install as the first build it
   played. "first build played" is the before/after comparison for a change.
+- **Who**: device (desktop, mobile, tablet), browser, system and country, kept once per install
+  from its first batch (installs before 2026-10-10 are `unknown`). The device is the game's own
+  call (the CrazyGames SDK knows tablets; iPadOS Safari passes for a Mac otherwise), browser and
+  system come from the user agent, the country from Cloudflare by address (never kept). "Who the
+  new players are" shows each group's size, how many finished a run on day 0 and its D1: a device
+  or browser far below the rest is a bug or a performance problem there before it is a design one.
 
 Below ~100 new installs a day, any share swings by several points from noise alone. Pool a week
 before believing a change, and never read a single day.

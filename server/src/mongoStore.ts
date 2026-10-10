@@ -1,4 +1,5 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
+import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { boardId, runScore, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
@@ -85,7 +86,7 @@ export class MongoStore implements Store {
     }
   }
 
-  async addEvents(b: EventBatch, now: number): Promise<void> {
+  async addEvents(b: EventBatch, now: number, aud?: Audience): Promise<void> {
     const at = new Date(now);
     const day = dayOf(now);
     await this.events.insertMany(
@@ -93,7 +94,7 @@ export class MongoStore implements Store {
       { ordered: false },
     );
     const [p, seen] = await Promise.all([
-      this.installs.findOneAndUpdate({ _id: b.install }, { $setOnInsert: { first: day, host: b.host, build: b.build, back: [], d0: emptyDayZero() } }, { upsert: true, returnDocument: 'after' }),
+      this.installs.findOneAndUpdate({ _id: b.install }, { $setOnInsert: { first: day, host: b.host, build: b.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() } }, { upsert: true, returnDocument: 'after' }),
       this.active.updateOne({ _id: `${day}/${b.install}` }, { $setOnInsert: { day, install: b.install, host: b.host } }, { upsert: true }),
     ]);
     if (!p) return;
@@ -147,7 +148,7 @@ export class MongoStore implements Store {
     const mine = host ? { host } : {};
     const fold = new StatsFold(list, today);
     // one small document per new install, streamed: memory stays flat however many there are
-    for await (const p of this.installs.find({ first: { $gte: from }, ...mine }, { projection: { first: 1, build: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
+    for await (const p of this.installs.find({ first: { $gte: from }, ...mine }, { projection: { first: 1, build: 1, aud: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
     type Count = { _id: string; n: number };
     type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown }; n: number };
     const [active, runs, [ends]] = await Promise.all([

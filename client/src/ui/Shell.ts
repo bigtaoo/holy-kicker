@@ -21,7 +21,7 @@ import { bracketed } from '../platform/brackets';
 import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import type { Backend, RunRank } from '../net/backend';
-import type { PropValue } from '@hk/protocol';
+import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
 import { monkRig } from '../game/artTypes';
@@ -95,8 +95,8 @@ export class Shell {
     private readonly store: SaveStore,
     /** Analytics and the leaderboard (net/backend.ts). */
     private readonly net: Backend,
-    /** A desktop: the first run's move hint also names the keyboard. */
-    private readonly keys = false,
+    /** The kind of device (analytics); on a desktop the first run's move hint also names the keyboard. */
+    private readonly device: Device = 'mobile',
     private readonly privacy: SettingsActions['privacy'] = null, // the player's privacy answer (net/privacyChoice.ts); null offline
   ) {
     this.names = new PlayerName(net, platform.storage, platform.portal);
@@ -116,7 +116,7 @@ export class Shell {
     });
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
-    net.track('session', { runs: this.save.runs, level: this.save.level });
+    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device });
     net.onLeave(() => this.leaving());
   }
 
@@ -315,7 +315,7 @@ export class Shell {
       pick: (index) => this.game?.pick(index),
       setLanguage: (locale) => this.keepLanguage(locale),
       report: canReport(this.net, import.meta.env.DEV) ? () => reportProblem(this.platform, this.net, () => this.game, this.scene) : null,
-    }, this.art.icons, this.keys);
+    }, this.art.icons, this.device === 'desktop');
     this.setScreen(this.hud);
     // the fast-forward choice carries over from the last run
     this.hud.setFast(loadSettings(this.platform.storage).fast);

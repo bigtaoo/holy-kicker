@@ -79,7 +79,7 @@ export class CrazyGamesPlatform extends WebPlatform {
   override async probe(): Promise<DeviceInfo> {
     const info = await super.probe();
     const type = this.sdk.deviceType();
-    return type ? { ...info, mobile: type !== 'desktop' } : info;
+    return type ? { ...info, mobile: type !== 'desktop', tablet: type === 'tablet' } : info;
   }
 
   static async create(sdk = new CrazyGamesSdk()): Promise<CrazyGamesPlatform> {

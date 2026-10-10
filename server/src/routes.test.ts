@@ -68,6 +68,14 @@ describe('routes', () => {
     expect(d.store.events[0].at).toBe(NOW);
   });
 
+  it('keeps who a new install is from the request, once', async () => {
+    const d = deps();
+    const ua = 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Mobile Safari/537.36';
+    await route(req('POST', '/v1/events', batch(), { 'user-agent': ua, 'cf-ipcountry': 'EG' }), d);
+    await route(req('POST', '/v1/events', batch(), { 'cf-ipcountry': 'DE' }), d);
+    expect(d.store.players.get(INSTALL)!.aud).toEqual({ device: 'mobile', browser: 'Chrome', os: 'Android', country: 'EG' });
+  });
+
   it('keeps each install\'s best run per board and ranks it', async () => {
     const d = deps();
     const first = await route(req('POST', '/v1/runs', run()), d);

@@ -111,7 +111,7 @@ export class WeChatPlatform implements Platform {
       setTimeout(() => resolve(null), 500);
       wx.getDeviceBenchmarkInfo({ success: resolve, fail: () => resolve(null) });
     });
-    return { mobile, cores: 0, memoryGB: (info?.memorySize ?? 0) / 1024, gpu: '', modelLevel: bench?.modelLevel ?? 0 };
+    return { mobile, tablet: /pad|tablet/i.test(info?.model ?? ''), cores: 0, memoryGB: (info?.memorySize ?? 0) / 1024, gpu: '', modelLevel: bench?.modelLevel ?? 0 };
   }
 
   async createApp(msaa: boolean): Promise<Application> {

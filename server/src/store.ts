@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { boardId, runScore, type BoardName, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
@@ -8,8 +9,8 @@ import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from '
 // one, MemoryStore below serves the tests and a local run without a database.
 
 export interface Store {
-  /** Keeps a checked batch received at `now` (ms). */
-  addEvents(batch: EventBatch, now: number): Promise<void>;
+  /** Keeps a checked batch received at `now` (ms); `aud` is kept on a new install. */
+  addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void>;
   /** Keeps the run if it is the install's best on its board; returns the run's board and the install's rank there. */
   submitRun(run: RunEntry, tag: string, now: number): Promise<{ board: string; rank: number; best: boolean }>;
   /** Keeps the name the boards show for `tag`: a portal account's or a dice name. */
@@ -67,10 +68,10 @@ export class MemoryStore implements Store {
   /** The boards' names by tag. */
   readonly names = new Map<string, BoardName>();
 
-  async addEvents(batch: EventBatch, now: number): Promise<void> {
+  async addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void> {
     this.events.push({ ...batch, at: now });
     const day = dayOf(now);
-    const p = this.players.get(batch.install) ?? { _id: batch.install, first: day, host: batch.host, build: batch.build, back: [], d0: emptyDayZero() };
+    const p = this.players.get(batch.install) ?? { _id: batch.install, first: day, host: batch.host, build: batch.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() };
     if (p.first === day) p.d0 = foldDayZero(p.d0, batch.events);
     const key = `${day}/${batch.install}`;
     const offset = dayOffset(p.first, day);

@@ -1,4 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { audienceOf } from './audience';
 import { HOSTS, LIMITS, type Host } from './protocol';
 import { checkBatch, checkNameEntry, checkReport, checkRun } from './rules';
 import type { Store } from './store';
@@ -58,7 +59,7 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     if (!d.allow('events', req.ip)) return { status: 429 };
     const c = checkBatch(req.body, d.now());
     if (!c.ok) return bad(c.reason);
-    await d.store.addEvents(c.value, d.now());
+    await d.store.addEvents(c.value, d.now(), audienceOf(req.headers, c.value.events));
     return { status: 204 };
   }
 

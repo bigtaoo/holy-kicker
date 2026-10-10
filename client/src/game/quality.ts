@@ -35,6 +35,8 @@ const PHONE = 3;
 
 export interface DeviceInfo {
   mobile: boolean;
+  /** A tablet (also `mobile`), when the host can tell. */
+  tablet?: boolean;
   /** Logical CPU cores and memory in GB, 0 when the host does not say. */
   cores: number;
   memoryGB: number;

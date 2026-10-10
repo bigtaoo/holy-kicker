@@ -1,3 +1,4 @@
+import { AUDIENCE_KEYS, type Audience } from './audience';
 import { boardId, type Host } from './protocol';
 import { RETURN_DAYS, counted, dayAfter, emptyDayZero, type DayZero, type Player, type Progress } from './players';
 
@@ -30,6 +31,11 @@ export interface Stats {
   funnel: { step: string; n: number }[];
   /** Of the new installs whose next day is over: how many came back then, by what they did on day 0. */
   drivers: { name: string; groups: { label: string; n: number; back: number }[] }[];
+  /**
+   * The window's new installs by device, browser, system and country: how many, how many finished
+   * a run on day 0, and of those whose next day is over (`known`), how many came back then.
+   */
+  audience: { name: string; groups: { label: string; n: number; ran: number; known: number; back: number }[] }[];
   /** The wave new installs' first finished run ended on, and how many of them came back the next day (D1 known only). */
   firstRun: { wave: number; n: number; back: number }[];
 }
@@ -86,6 +92,7 @@ export class StatsFold {
   private readonly funnel = FUNNEL.map(() => 0);
   private readonly drivers = DRIVERS.map(() => new Map<string, { n: number; back: number }>());
   private readonly firstRun = new Map<number, { n: number; back: number }>();
+  private readonly audience = AUDIENCE_KEYS.map(() => new Map<string, { n: number; ran: number; known: number; back: number }>());
   /** Per board: installs that tried it, and [days, tries] of those that cleared it. */
   private readonly clears = new Map<string, { tried: number; days: [number, number][]; tries: [number, number][] }>();
 
@@ -96,7 +103,7 @@ export class StatsFold {
   ) {}
 
   /** One install first seen inside the window. */
-  add(p: Pick<Player, 'first' | 'back' | 'build'> & { d0?: DayZero; progress?: Record<string, Progress> }): void {
+  add(p: Pick<Player, 'first' | 'back' | 'build' | 'aud'> & { d0?: DayZero; progress?: Record<string, Progress> }): void {
     if (p.first < this.days[0] || p.first > this.today) return;
     for (const [board, g] of Object.entries(p.progress ?? {})) {
       const row = this.clears.get(board) ?? { tried: 0, days: [], tries: [] };
@@ -115,8 +122,18 @@ export class StatsFold {
     this.back.set(p.first, back);
     FUNNEL.forEach(([, reached], i) => reached(z) && this.funnel[i]++);
     // the drivers only count installs whose next day is over: a D1 still to come is not a no
-    if (dayAfter(p.first, 1) >= this.today) return;
-    const d1 = seen.has(1) ? 1 : 0;
+    const known = dayAfter(p.first, 1) < this.today;
+    const d1 = known && seen.has(1) ? 1 : 0;
+    AUDIENCE_KEYS.forEach((key, i) => {
+      const label = audienceLabel(p.aud, key);
+      const g = this.audience[i].get(label) ?? { n: 0, ran: 0, known: 0, back: 0 };
+      g.n++;
+      if (z.ends > 0) g.ran++;
+      if (known) g.known++;
+      g.back += d1;
+      this.audience[i].set(label, g);
+    });
+    if (!known) return;
     DRIVERS.forEach(([, label], i) => bump(this.drivers[i], label(z, p.build ?? ''), d1));
     if (z.ends > 0) bump(this.firstRun, z.firstWave, d1);
   }
@@ -135,6 +152,7 @@ export class StatsFold {
       }),
       funnel: FUNNEL.map(([step], i) => ({ step, n: this.funnel[i] })),
       drivers: DRIVERS.map(([name], i) => ({ name, groups: [...this.drivers[i]].map(([label, g]) => ({ label, ...g })) })),
+      audience: AUDIENCE_KEYS.map((name, i) => ({ name, groups: [...this.audience[i]].sort(([a, x], [b, y]) => y.n - x.n || a.localeCompare(b)).map(([label, g]) => ({ label, ...g })) })),
       firstRun: [...this.firstRun].sort(([a], [b]) => a - b).map(([wave, g]) => ({ wave, ...g })),
       clears: [...this.clears]
         .sort(([a], [b]) => a.localeCompare(b))
@@ -142,6 +160,9 @@ export class StatsFold {
     };
   }
 }
+
+/** An install kept before audiences were (or a field it lacks) counts as unknown. */
+const audienceLabel = (aud: Audience | undefined, key: (typeof AUDIENCE_KEYS)[number]): string => aud?.[key] || 'unknown';
 
 function bump<K>(m: Map<K, { n: number; back: number }>, key: K, back: number): void {
   const g = m.get(key) ?? { n: 0, back: 0 };

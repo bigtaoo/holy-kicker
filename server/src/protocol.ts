@@ -6,6 +6,10 @@
 export const HOSTS = ['web', 'crazygames', 'poki', 'wechat', 'ios'] as const;
 export type Host = (typeof HOSTS)[number];
 
+/** The kind of device a `session` event names in `device`. */
+export const DEVICES = ['desktop', 'mobile', 'tablet'] as const;
+export type Device = (typeof DEVICES)[number];
+
 /**
  * Analytics event names. `session` opens a play session; `run_start` / `run_end` bracket a
  * chapter run; `tutorial` marks the first run's hints done; `buy` a lobby purchase; `ad` a
@@ -14,7 +18,7 @@ export type Host = (typeof HOSTS)[number];
  * the background (tab hidden, app switched), the last one of a day being where the player stopped;
  * `iap` an in-app purchase or restore answered (iOS, the ad-free card).
  *
- * `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
+ * `session` has `runs`, `level` and `device` (DEVICES). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `ad` has `at` (`lobby`, `revive` or
  * `double`) and `free` when the ad-free card paid the reward with no ad. `claim` has `what` (`task`
  * with `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`

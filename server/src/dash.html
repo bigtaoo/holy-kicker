@@ -38,6 +38,7 @@ th { color: var(--dim); font-weight: 600; font-size: 12px; }
 .avg { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--ink); opacity: .55; }
 .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--dim); font-size: 12.5px; }
 .drivers { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px 24px; }
+.audience .row { grid-template-columns: minmax(70px, 110px) 1fr 175px; }
 .drivers h3 { font-size: 13px; margin: 6px 0 4px; }
 .diag li { margin: 6px 0; }
 .tag { display: inline-block; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 6px; margin-right: 6px; color: #fff; }
@@ -116,6 +117,7 @@ function render(s) {
     section('Retention by first day', 'Each row is the installs first seen that day; the cells are the share seen again exactly N days later. A dash: that day is not over yet.', cohortTable(s)),
     section('Daily', 'Bars: active installs; the darker part is new ones. Hover for numbers.', dailyChart(s)),
     section('New-player funnel (day 0)', 'Of the installs first seen in the window, how many got this far on their first day. A big drop between two steps is where new players give up.', funnel(s)),
+    section('Who the new players are', 'New installs in the window by device, browser, system and country (from Cloudflare, by address; the address is never kept). The bar is the share of new installs; then how many finished a run on day 0 and, of those whose next day is over, the share back on day 1. Installs from before 2026-10-10 are unknown.', audience(s)),
     section('Who comes back the next day', 'Installs whose next day is over, split by what they did on day 0. The bar is the share back on day 1, the line the average. Groups with fewer than 20 installs are noise.', drivers(s, ret[0].p)),
     section('Where the first run ended', 'The wave new players\' first finished run ended on, and the share of them back the next day. A pile-up at one wave is a difficulty wall.', firstRun(s)),
     section('Boards', 'All finished runs in the window, and the waves the lost ones ended on: light for died, blue for given up. Labelled waves are bosses (mid-bosses on 20 and 35, the chapter boss on 50); a spike there is a boss wall.', boards(s)),
@@ -172,6 +174,21 @@ function drivers(s, avg) {
     const p = pct(g.back, g.n);
     return bar(g.label, p, `${fmt(p)} <small>of ${g.n}</small>`, avg);
   }).join('')}</div>`).join('')}</div>`;
+}
+
+/** The biggest groups first; countries past the first 12 pooled into one row. */
+function audience(s) {
+  if (!s.audience?.length || !s.audience[0].groups.length) return '<p class="hint">No new installs in the window.</p>';
+  const NAMES = { device: 'device', browser: 'browser', os: 'system', country: 'country' };
+  return `<div class="drivers audience">${s.audience.map((a) => {
+    const total = a.groups.reduce((t, g) => t + g.n, 0);
+    let groups = a.groups;
+    if (groups.length > 13) {
+      const rest = groups.slice(12).reduce((t, g) => ({ label: `${groups.length - 12} others`, n: t.n + g.n, ran: t.ran + g.ran, known: t.known + g.known, back: t.back + g.back }), { n: 0, ran: 0, known: 0, back: 0 });
+      groups = [...groups.slice(0, 12), rest];
+    }
+    return `<div><h3>${esc(NAMES[a.name] || a.name)}</h3>${groups.map((g) => bar(g.label, pct(g.n, total), `${g.n} · ran ${fmt(pct(g.ran, g.n))} · D1 ${g.known ? fmt(pct(g.back, g.known)) : '–'}`)).join('')}</div>`;
+  }).join('')}</div>`;
 }
 
 /** Bucket labels in reading order: numbers by their first figure, words after. */
