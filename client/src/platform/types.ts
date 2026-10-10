@@ -120,7 +120,8 @@ export interface Ads {
   rewarded(started?: () => void): Promise<boolean>;
   /** An interstitial at a natural break; resolves when it is over or was not shown. */
   midgame(started?: () => void): Promise<void>;
-  /** The ad-free card is owned (iOS): rewards pay at once with no ad, so offers lose the video badge. */
+  /** Rewards pay at once with no ad (iOS's ad-free card, CrazyGames' Basic Launch), so offers
+   *  lose the video badge and a paid one is tracked as free. */
   adFree(): boolean;
 }
 

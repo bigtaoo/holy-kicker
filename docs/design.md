@@ -261,6 +261,8 @@ Two currencies only:
   rewarded offers pay out without an ad and interstitials stop, but every daily cap stays, so
   balance never prices in a paying player (`docs/ios.md`). Jade packs and a battle pass need a
   server account and cloud save first; IAP on WeChat needs a licence check first.
+- CrazyGames' Basic Launch serves no ads: there the rewarded offers pay out without one, like
+  the ad-free card, until Full Launch turns the ads on (`docs/store.md`).
 
 ## Platforms, saves and server
 

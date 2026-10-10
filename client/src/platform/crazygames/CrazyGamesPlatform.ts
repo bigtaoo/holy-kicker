@@ -2,6 +2,7 @@ import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import type { Host } from '@hk/protocol';
 import type { Ads, AudioHost, Banner, Portal } from '../types';
+import { adFree } from '../ios/adFree';
 import { BannerHost } from '../web/banner';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { webAudioHost } from '../web/webAudio';
@@ -53,14 +54,22 @@ export class CrazyGamesPlatform extends WebPlatform {
       request: (id, width, height) => sdk.requestBanner(id, width, height),
       clear: (id) => sdk.clearBanner(id),
     });
-    this.ads = {
+    // in Basic Launch the rewarded offers pay at once with no ad, as with iOS's ad-free card:
+    // the portal judges the game on those players, who would otherwise lose the revive and the
+    // doubled copper. In Full Launch an adblocker hides the offers again
+    this.ads = adFree({
       rewardedAvailable: adsOk,
       rewarded: (started) => sdk.requestAd('rewarded', { adStarted: started }),
       midgame: async (started) => {
         if (sdk.adsAllowed()) await sdk.requestAd('midgame', { adStarted: started });
       },
       adFree: () => false,
-    };
+    }, () => this.basicLaunch());
+  }
+
+  /** The game is in Basic Launch: the portal serves it no ads yet. */
+  basicLaunch(): boolean {
+    return this.sdk.isEnabled() && !this.sdk.adsAllowed();
   }
 
   /** The portal's locale alone when it has one: CrazyGames asks for that, falling back to

@@ -126,7 +126,7 @@ gameplay, ads, quality and SDK game-module pages). It was served from a sub-path
 | Mute during an ad, from when it starts until it ends; pause the game | Muted on `adStarted`; ads only play outside a run |
 | Rewarded: video icon, skip option the same size and colour, reward confirmed, none on `adError` | Double copper and revive both follow this; the copper line shows the doubled total |
 | Adblock: no penalty, no inert buttons | Rewarded offers are hidden when `hasAdblock` is true |
-| Basic Launch (the first submission) allows no ads | `prefetchAd` throws `adsDisabledBasicLaunch` there, so rewarded offers, the lobby banner and break ads are all left out; the same bundle shows them once the game moves to Full Launch |
+| Basic Launch (the first submission) allows no ads | `prefetchAd` throws `adsDisabledBasicLaunch` there, so the lobby banner and break ads are left out and rewarded offers pay at once with no ad (the iOS ad-free card's wrapper, tracked as `free`), so Basic Launch players get the game as designed; the same bundle plays the ads once the game moves to Full Launch |
 | Portal `muteAudio` takes priority | Holds every sound while set (`?muteAudio=true` checked) |
 | English, SDK locale first | en and zh; the SDK locale is read before the browser's |
 | Legible from 800×450 to 1920×1080; desktop landscape | Portrait 3:4 play area with side bars; HUD and lobby text are readable at 800×450 |

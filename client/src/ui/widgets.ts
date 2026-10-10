@@ -116,7 +116,8 @@ export function playTap(): void {
 
 let videoBadges = true;
 
-/** With the ad-free card (iOS) a rewarded offer pays at once with no ad, so it loses the badge. */
+/** With the ad-free card (iOS) or in Basic Launch (CrazyGames) a rewarded offer pays at once
+ *  with no ad, so it loses the badge. */
 export function showVideoBadges(on: boolean): void {
   videoBadges = on;
 }
