@@ -31,11 +31,14 @@ export function nameOf(tag: string): string {
   return diceName(packDice(h % w, Math.floor(h / w) % w, DICE.numMin + (Math.floor(h / 1000) % (DICE.numMax - DICE.numMin + 1))));
 }
 
-/** What a row reached: a won run's time, else the wave it fell on. */
+/**
+ * What a row reached: a won run's bare time to a tenth (the jade colour says it was a clear, and
+ * clears rank by time, so the tenth splits runs within a second), else the wave it fell on.
+ */
 export function resultOf(r: Pick<BoardRow, 'won' | 'wave' | 'tenths'>): string {
   if (!r.won) return t('board.wave', { wave: r.wave });
   const s = Math.floor(r.tenths / 10);
-  return t('board.time', { time: `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` });
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${r.tenths % 10}`;
 }
 
 export class BoardUi {

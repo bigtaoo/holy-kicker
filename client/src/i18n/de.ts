@@ -87,7 +87,6 @@ export const de: Table<typeof en> = {
     total: '{n} Spieler auf dieser Liste',
     you: '{name} (du)',
     wave: 'Welle {wave}',
-    time: 'Geschafft in {time}',
     name: '{adj} {noun} {n}',
     adjs: 'Ruhiger|Tapferer|Flinker|Fröhlicher|Stiller|Kühner|Sanfter|Glücklicher|Schläfriger|Mächtiger|Bescheidener|Wendiger|Lustiger|Geduldiger|Furchtloser|Schlauer',
     nouns: 'Mönch|Lotus|Kranich|Tiger|Ahorn|Gong|Lampion|Panda|Drache|Weidenbaum|Kiesel|Affe|Karpfen|Nebel|Trommler|Bambus',

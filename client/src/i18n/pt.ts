@@ -87,7 +87,6 @@ export const pt: Table<typeof en> = {
     total: '{n} jogadores neste ranking',
     you: '{name} (você)',
     wave: 'Onda {wave}',
-    time: 'Concluído em {time}',
     name: '{adj} {noun} {n}',
     adjs: 'Sereno|Valente|Veloz|Alegre|Quieto|Audaz|Gentil|Feliz|Sonolento|Poderoso|Humilde|Ágil|Risonho|Paciente|Destemido|Esperto',
     nouns: 'Monge|Lótus|Grou|Tigre|Pinheiro|Sino|Lampião|Panda|Dragão|Salgueiro|Seixo|Macaco|Peixe|Vento|Tambor|Bambu',

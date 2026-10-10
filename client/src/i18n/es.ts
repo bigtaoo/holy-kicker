@@ -87,7 +87,6 @@ export const es: Table<typeof en> = {
     total: '{n} jugadores en esta clasificación',
     you: '{name} (tú)',
     wave: 'Oleada {wave}',
-    time: 'Superado en {time}',
     name: '{noun} {adj} {n}',
     adjs: 'Tranquilo|Valiente|Veloz|Alegre|Callado|Audaz|Amable|Afortunado|Dormilón|Poderoso|Humilde|Ágil|Risueño|Paciente|Intrépido|Astuto',
     nouns: 'Monje|Loto|Halcón|Tigre|Pino|Gong|Farol|Panda|Dragón|Sauce|Guijarro|Mono|Koi|Viento|Tambor|Bambú',

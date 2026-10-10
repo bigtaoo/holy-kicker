@@ -87,7 +87,6 @@ export const pl: Table<typeof en> = {
     total: 'Graczy w rankingu: {n}',
     you: '{name} (ty)',
     wave: 'Fala {wave}',
-    time: 'Ukończono w {time}',
     name: '{adj} {noun} {n}',
     adjs: 'Spokojny|Dzielny|Szybki|Wesoły|Cichy|Śmiały|Łagodny|Szczęśliwy|Senny|Potężny|Skromny|Zwinny|Radosny|Cierpliwy|Nieustraszony|Sprytny',
     nouns: 'Mnich|Lotos|Żuraw|Tygrys|Dąb|Dzwon|Lampion|Miś|Smok|Wiatr|Kamyk|Makak|Karp|Obłok|Bęben|Bambus',

@@ -85,7 +85,6 @@ export const en = {
     total: '{n} players on this board',
     you: '{name} (you)',
     wave: 'Wave {wave}',
-    time: 'Cleared {time}',
     name: '{adj} {noun} {n}',
     adjs: 'Calm|Brave|Swift|Merry|Quiet|Bold|Gentle|Lucky|Sleepy|Mighty|Humble|Nimble|Jolly|Patient|Fearless|Clever',
     nouns: 'Monk|Lotus|Crane|Tiger|Pine|Bell|Lantern|Panda|Dragon|Willow|Pebble|Monkey|Carp|Cloud|Drum|Bamboo',
