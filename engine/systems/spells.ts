@@ -95,7 +95,7 @@ function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range:
     const t = targetAt(s, best)!;
     const tx = t.x;
     const ty = t.y - BODY;
-    events.push({ type: 'bolt', x0: x, y0: y, x1: tx, y1: ty });
+    events.push({ type: 'bolt', x0: x, y0: y, x1: tx, y1: ty, gold: fork });
     damage(s, events, best, p, null, pct(s, best, damagePct));
     x = tx;
     y = ty;
@@ -103,7 +103,7 @@ function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range:
     if (side >= 0) {
       hit.push(side);
       const f = targetAt(s, side)!;
-      events.push({ type: 'bolt', x0: x, y0: y, x1: f.x, y1: f.y - BODY });
+      events.push({ type: 'bolt', x0: x, y0: y, x1: f.x, y1: f.y - BODY, gold: fork });
       damage(s, events, side, p, null, pct(s, side, damagePct));
     }
   }

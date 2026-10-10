@@ -55,7 +55,8 @@ export type SimEvent =
   /** A player's Golden Bell came up, or broke on a blow it took for them. */
   | { type: 'bellUp'; owner: number }
   | { type: 'bellBreak'; owner: number }
-  | { type: 'bolt'; x0: number; y0: number; x1: number; y1: number }
+  /** A lightning bolt; `gold` for the evolved Endless Chain. */
+  | { type: 'bolt'; x0: number; y0: number; x1: number; y1: number; gold: boolean }
   /** A lotus seed bloomed at (x, y). */
   | { type: 'bloom'; x: number; y: number; radius: number }
   /** A player's Lion's Roar: a cone around `brad` from (x, y) to `radius`, all round if `full`. */

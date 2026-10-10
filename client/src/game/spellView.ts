@@ -86,8 +86,9 @@ export class SpellView {
   private readonly printTex: Texture;
   private readonly cymbalTex: Texture;
   private readonly cymbals = new Map<number, FieldSprite>();
-  /** The Cymbal Wheel's track, round the middle of its cymbals. */
+  /** The Cymbal Wheel's track, round the middle of its cymbals; redrawn only when its radius changes. */
   private readonly wheel = new Graphics();
+  private wheelR = 0;
   private readonly bell = bellDome();
   private bellT = BELL_POP;
   /** Golden Body: seconds the hero stays untouchable after the bell broke. */
@@ -109,6 +110,9 @@ export class SpellView {
     this.printTex = printTexture(renderer);
     this.cymbalTex = cymbalTexture(renderer);
     this.bell.visible = false;
+    this.wheel.visible = false;
+    // under everything standing, like the fields
+    this.wheel.zIndex = SHADOW_Z + 1;
     layer.addChild(this.bell, this.wheel);
   }
 
@@ -180,11 +184,11 @@ export class SpellView {
     // the wheel's cymbals are spread evenly round their owner, so their middle is his
     this.wheel.visible = wn > 1;
     if (wn < 2) return;
-    this.wheel.clear().circle(wx / wn, wy / wn, orbit)
-      .stroke({ color: 0x3a2410, width: 20, alpha: 0.18 })
-      .circle(wx / wn, wy / wn, orbit).stroke({ color: 0xffd860, width: 10, alpha: 0.4 });
-    // under everything standing, like the fields
-    this.wheel.zIndex = SHADOW_Z + 1;
+    this.wheel.position.set(wx / wn, wy / wn);
+    if (orbit === this.wheelR) return;
+    this.wheelR = orbit;
+    this.wheel.clear().circle(0, 0, orbit).stroke({ color: 0x3a2410, width: 20, alpha: 0.18 })
+      .circle(0, 0, orbit).stroke({ color: 0xffd860, width: 10, alpha: 0.4 });
   }
 
   /** A cast, or a palm on its way down (positions in FP). */

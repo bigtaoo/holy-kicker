@@ -391,7 +391,7 @@ export class Game {
           this.spells.cast(e);
           break;
         case 'bolt':
-          this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP, s.players[0].spells.some((sp) => sp.id === 'bolt' && sp.evolved));
+          this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP, e.gold);
           break;
         case 'bloom':
           this.sutras.bloom(e.x / FP, e.y / FP, e.radius / FP);
