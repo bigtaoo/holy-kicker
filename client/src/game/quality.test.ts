@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { FrameGate, FrameGovernor, LEVELS, levelRange, startLevel, useMsaa, type DeviceInfo } from './quality';
+import { CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
 
 const PC: DeviceInfo = { mobile: false, cores: 8, memoryGB: 8, gpu: 'ANGLE (Intel, Intel(R) Arc(TM) Graphics)', modelLevel: 0 };
 const PHONE: DeviceInfo = { mobile: true, cores: 8, memoryGB: 8, gpu: 'Adreno (TM) 740', modelLevel: 0 };
@@ -57,6 +57,23 @@ describe('FrameGate', () => {
     expect(gate.pass(5000)).toBe(true);
     expect(gate.pass(5000 + 8)).toBe(false);
     expect(gate.pass(5000 + 16.7)).toBe(true);
+  });
+});
+
+describe('targetFps', () => {
+  it('caps calm screens below the battle rate, never above the level', () => {
+    expect(targetFps(LEVELS[3], false)).toBe(60);
+    expect(targetFps(LEVELS[3], true)).toBe(CALM_FPS);
+    expect(targetFps(LEVELS[0], true)).toBe(Math.min(CALM_FPS, LEVELS[0].fps));
+  });
+
+  it('halves a 60 Hz screen once the gate drops to the calm rate', () => {
+    const gate = new FrameGate(60);
+    for (let i = 0; i < 60; i++) gate.pass(i * (1000 / 60));
+    gate.fps = CALM_FPS;
+    let ran = 0;
+    for (let i = 60; i < 120; i++) if (gate.pass(i * (1000 / 60))) ran++;
+    expect(ran).toBe(30);
   });
 });
 

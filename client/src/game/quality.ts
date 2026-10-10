@@ -31,6 +31,14 @@ export const LEVELS: readonly LevelSettings[] = [
   { name: 'high', resolution: 2, fxBudget: 1.5, numbers: 600, fps: 60 },
 ];
 const TOP = LEVELS.length - 1;
+
+/** Frame rate cap off the battlefield (lobby, results, pause, level-up cards): those screens
+ *  barely move, and a phone that never gets hot never steps its level down for the battery. */
+export const CALM_FPS = 30;
+
+export function targetFps(s: LevelSettings, calm: boolean): number {
+  return calm ? Math.min(CALM_FPS, s.fps) : s.fps;
+}
 const PHONE = 3;
 
 export interface DeviceInfo {

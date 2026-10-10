@@ -1,10 +1,11 @@
 import type { Application, Renderer } from 'pixi.js';
-import { FrameGate, FrameGovernor, LEVELS, type LevelRange, type LevelSettings } from './quality';
+import { FrameGate, FrameGovernor, LEVELS, targetFps, type LevelRange, type LevelSettings } from './quality';
 
 // Drives the frame loop and applies quality levels. Pixi's own ticker.maxFPS cannot be used:
 // it still measures each frame's delta from the last skipped animation frame, so a 60 fps cap
 // on a 120 Hz screen would run the game at half speed. Instead the ticker is stopped and
-// stepped from our own requestAnimationFrame loop behind a FrameGate.
+// stepped from our own requestAnimationFrame loop behind a FrameGate. Calm screens (no run
+// stepping) get a lower cap, and their frames are left out of the governor's measure.
 
 /** The WebGL renderer string, '' when the browser hides it. */
 export function gpuName(renderer: Renderer): string {
@@ -25,6 +26,8 @@ export class QualityRuntime {
     range: LevelRange,
     /** Applies the parts of a level that live in the game (effect budget, numbers). */
     private readonly onLevel: (s: LevelSettings, level: number) => void,
+    /** True while nothing fast is on screen: no run, or a run that is not stepping. */
+    private readonly calm: () => boolean = () => false,
   ) {
     this.governor = new FrameGovernor(range);
     this.maxResolution = app.renderer.resolution;
@@ -35,8 +38,11 @@ export class QualityRuntime {
     this.apply();
     const loop = (now: number) => {
       requestAnimationFrame(loop);
+      const calm = this.calm();
+      this.gate.fps = targetFps(this.settings, calm);
       if (!this.gate.pass(now)) return;
-      if (this.last > 0 && this.governor.sample((now - this.last) / 1000)) this.apply();
+      // calm frames come slower on purpose and say nothing about the load
+      if (this.last > 0 && !calm && this.governor.sample((now - this.last) / 1000)) this.apply();
       this.last = now;
       app.ticker.update(now);
     };
@@ -55,7 +61,6 @@ export class QualityRuntime {
 
   private apply(): void {
     const s = this.settings;
-    this.gate.fps = s.fps;
     const res = Math.min(this.maxResolution, s.resolution);
     const r = this.app.renderer;
     if (r.resolution !== res) r.resize(this.app.screen.width, this.app.screen.height, res);

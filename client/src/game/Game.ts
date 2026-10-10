@@ -114,6 +114,8 @@ export class Game {
   private levelName = '';
   /** A paused run neither simulates nor animates; it is still drawn. */
   paused = false;
+  /** Whether the last frame stepped the sim: false while paused, on an open offer or once over. */
+  stepping = false;
   /** Sim time per real time: 2 fast-forwards the run (ticks and animations), 1 is normal. */
   speed = 1;
   private readonly onTick = (t: { deltaMS: number }) => this.frame(t.deltaMS);
@@ -253,7 +255,8 @@ export class Game {
       this.picking = this.autoplay.pick(s, frameMs);
     }
     const over = (s.outcome !== 'playing' && !this.reviving) || (s.players[0].offer.length > 0 && this.picking === undefined);
-    if (this.paused || over) {
+    this.stepping = !this.paused && !over;
+    if (!this.stepping) {
       this.draw(this.loop.alpha, 0);
       return;
     }
