@@ -2,7 +2,7 @@ import type { Host } from '@hk/protocol';
 import { Application } from 'pixi.js';
 import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
-import type { DeviceInfo } from '../../game/quality';
+import type { Battery, DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { FAKE_ADS, NO_ADS, fakeStore, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { BannerHost, FAKE_BANNER_FILL } from './banner';
@@ -81,6 +81,18 @@ export class WebPlatform implements Platform {
     document.addEventListener('visibilitychange', () => {
       if (document.hidden) cb();
     });
+  }
+
+  onBattery(cb: (b: Battery) => void): void {
+    // Chromium only (Safari and Firefox have no Battery API), and a portal's iframe may block it
+    type Manager = Battery & EventTarget;
+    const nav = navigator as Navigator & { getBattery?: () => Promise<Manager> };
+    nav.getBattery?.().then((m) => {
+      const send = () => cb({ level: m.level, charging: m.charging });
+      send();
+      m.addEventListener('levelchange', send);
+      m.addEventListener('chargingchange', send);
+    }).catch(() => {});
   }
 
   async probe(): Promise<DeviceInfo> {

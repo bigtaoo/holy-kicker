@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
+import { CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, lowBattery, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
 
 const PC: DeviceInfo = { mobile: false, cores: 8, memoryGB: 8, gpu: 'ANGLE (Intel, Intel(R) Arc(TM) Graphics)', modelLevel: 0 };
 const PHONE: DeviceInfo = { mobile: true, cores: 8, memoryGB: 8, gpu: 'Adreno (TM) 740', modelLevel: 0 };
@@ -57,6 +57,23 @@ describe('FrameGate', () => {
     expect(gate.pass(5000)).toBe(true);
     expect(gate.pass(5000 + 8)).toBe(false);
     expect(gate.pass(5000 + 16.7)).toBe(true);
+  });
+});
+
+describe('lowBattery', () => {
+  it('turns on at 20% unplugged and off only over 30% or once charging', () => {
+    expect(lowBattery({ level: 0.25, charging: false }, false)).toBe(false);
+    expect(lowBattery({ level: 0.2, charging: false }, false)).toBe(true);
+    expect(lowBattery({ level: 0.25, charging: false }, true)).toBe(true);
+    expect(lowBattery({ level: 0.31, charging: false }, true)).toBe(false);
+    expect(lowBattery({ level: 0.1, charging: true }, true)).toBe(false);
+    expect(lowBattery({ level: NaN, charging: false }, false)).toBe(false);
+  });
+
+  it('pins auto to saver, leaves a forced mode alone', () => {
+    const phone: DeviceInfo = { mobile: true, cores: 8, memoryGB: 8, gpu: '', modelLevel: 0 };
+    expect(levelRange('auto', phone, true)).toEqual({ start: 0, min: 0, max: 0 });
+    expect(levelRange('high', phone, true).start).toBe(LEVELS.length - 1);
   });
 });
 

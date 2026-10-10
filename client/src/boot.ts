@@ -3,7 +3,7 @@ import { loadArt } from './art';
 import { getLocale, setLocale } from './i18n';
 import { apiBase, Backend } from './net/backend';
 import { deviceTimeZone, PrivacyChoice } from './net/privacyChoice';
-import { levelRange, useMsaa } from './game/quality';
+import { levelRange, lowBattery, useMsaa } from './game/quality';
 import { QualityRuntime, gpuName } from './game/qualityRuntime';
 import type { SceneOptions } from './game/scene';
 import { SaveStore } from './meta/saveStore';
@@ -18,7 +18,8 @@ import { Shell } from './ui/Shell';
 export async function boot(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean } = {}) {
   const settings = loadSettings(platform.storage);
   setLocale(pickLocale(settings, platform.languages()));
-  const mode = scene.quality ?? settings.quality;
+  let mode = scene.quality ?? settings.quality;
+  let low = false;
   const device = await platform.probe();
   const app = await platform.createApp(useMsaa(mode, device));
   device.gpu = gpuName(app.renderer);
@@ -31,7 +32,12 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy);
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
   // a ?quality= dev switch pins the mode for the session
-  if (!scene.quality) shell.onQualityMode = (m) => quality.setRange(levelRange(m, device));
+  if (!scene.quality) shell.onQualityMode = (m) => quality.setRange(levelRange((mode = m), device, low));
+  platform.onBattery((b) => {
+    if (lowBattery(b, low) === low) return;
+    low = !low;
+    quality.setRange(levelRange(mode, device, low));
+  });
   shell.start(opts.direct);
   if (privacy?.noticeDue()) {
     privacyToast(app, () => platform.safeInsets());

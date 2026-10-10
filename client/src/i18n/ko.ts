@@ -396,7 +396,7 @@ export const ko: Table<typeof en> = {
     auto: '자동',
     high: '높음',
     saver: '절전',
-    autoHint: '부드럽게 돌아가도록 자동 조절',
+    autoHint: '부드럽게 자동 조절, 배터리가 적으면 절전',
     highHint: '최고 효과, 폰이 뜨거워질 수 있어요',
     saverHint: '30fps, 효과 줄임, 배터리 절약',
     data: '플레이 데이터',

@@ -396,7 +396,7 @@ export const ja: Table<typeof en> = {
     auto: '自動',
     high: '高',
     saver: '省電力',
-    autoHint: 'なめらかに動くよう自動調整',
+    autoHint: 'なめらかさを自動調整、電池残量が少ないと省電力',
     highHint: '最高の演出。スマホが熱くなることも',
     saverHint: '30fps・演出控えめでバッテリー節約',
     data: 'プレイデータ',

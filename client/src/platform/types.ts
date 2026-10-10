@@ -2,7 +2,7 @@ import type { Application } from 'pixi.js';
 import type { Host } from '@hk/protocol';
 import type { MusicDeck } from '../audio/music';
 import type { DragStick, Vec2 } from '../game/dragStick';
-import type { DeviceInfo } from '../game/quality';
+import type { Battery, DeviceInfo } from '../game/quality';
 import type { KeyValueStore } from '../meta/saveStore';
 
 // What the game needs from each host (web browser, CrazyGames, WeChat mini-game).
@@ -36,6 +36,8 @@ export interface Platform {
   safeInsets(): Insets;
   /** The game went to the background (tab hidden, app switched, a call came in). */
   onHide(cb: () => void): void;
+  /** The battery now and whenever it changes; never called where the host cannot tell. */
+  onBattery(cb: (b: Battery) => void): void;
   readonly portal: Portal;
   readonly ads: Ads;
   /** The lobby's banner ad; NO_BANNER where the host has none. */

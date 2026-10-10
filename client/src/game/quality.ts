@@ -3,7 +3,8 @@
 // with the measured frame rate: down quickly when frames run slow for a few seconds, up
 // slowly after a long stable stretch. Neither host exposes the phone's temperature, but a
 // hot phone throttles its CPU and GPU and its frames slow down, so frame rate stands in for
-// heat. Phones start conservatively and auto never climbs above the start level.
+// heat. Phones start conservatively and auto never climbs above the start level. A cool phone
+// still drains its battery, so auto also drops to saver while the battery runs low.
 //
 // Levels only change looks, never gameplay: hit tests, damage and mob counts stay the same.
 
@@ -76,11 +77,27 @@ export function startLevel(d: DeviceInfo): number {
   return hints === 0 ? PHONE : hints === 1 ? PHONE - 1 : PHONE - 2;
 }
 
-export function levelRange(mode: QualityMode, d: DeviceInfo): LevelRange {
+export function levelRange(mode: QualityMode, d: DeviceInfo, lowBattery = false): LevelRange {
   if (mode === 'high') return { start: TOP, min: TOP, max: TOP };
-  if (mode === 'saver') return { start: 0, min: 0, max: 0 };
+  if (mode === 'saver' || lowBattery) return { start: 0, min: 0, max: 0 };
   const start = startLevel(d);
   return { start, min: 0, max: start };
+}
+
+/** What a host says about the battery: level 0 to 1. */
+export interface Battery {
+  level: number;
+  charging: boolean;
+}
+
+/** Low under this level while not charging; back up only over the second, so a battery at the
+ *  edge does not flip the level back and forth. */
+const LOW_BATTERY = 0.2;
+const BATTERY_OK = 0.3;
+
+export function lowBattery(b: Battery, wasLow: boolean): boolean {
+  if (b.charging || !(b.level >= 0)) return false;
+  return b.level <= (wasLow ? BATTERY_OK : LOW_BATTERY);
 }
 
 /** MSAA is fixed when the GL context is made: desktop auto and forced high get it. */

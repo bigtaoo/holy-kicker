@@ -1,6 +1,6 @@
 import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
-import type { DeviceInfo } from '../../game/quality';
+import type { Battery, DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { NO_ADS, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
@@ -67,6 +67,13 @@ export class WeChatPlatform implements Platform {
 
   onHide(cb: () => void): void {
     wx.onHide?.(cb);
+  }
+
+  onBattery(cb: (b: Battery) => void): void {
+    // no change event for mini-games: ask once a minute (the level moves slower than that)
+    const ask = () => wx.getBatteryInfo?.({ success: (r) => cb({ level: Number(r.level) / 100, charging: !!r.isCharging }) });
+    ask();
+    setInterval(ask, 60_000);
   }
 
   /** WeChat's own dialog with a text box; it has room for the title and the box only. */

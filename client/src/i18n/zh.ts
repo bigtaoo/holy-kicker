@@ -396,7 +396,7 @@ export const zh: Table<typeof en> = {
     auto: '自动',
     high: '高',
     saver: '省电',
-    autoHint: '根据流畅度自动调整',
+    autoHint: '根据流畅度自动调整，电量低时自动省电',
     highHint: '特效最全，手机可能发热',
     saverHint: '30 帧、特效减少，更省电',
     data: '游戏数据',

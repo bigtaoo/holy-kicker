@@ -211,6 +211,8 @@ interface Wx {
   onHide?: (cb: () => void) => void;
   /** The mini-game came back to the foreground. */
   onShow?: (cb: () => void) => void;
+  /** `level` is 1 to 100 (a string on some Android base libraries); missing on PC WeChat. */
+  getBatteryInfo?: (opts: { success: (r: { level: number | string; isCharging: boolean }) => void; fail?: () => void }) => void;
   getWindowInfo(): WxWindowInfo;
   /** The menu capsule (… and close) WeChat draws over the game's top-right corner. */
   getMenuButtonBoundingClientRect?: () => { top: number; bottom: number; left: number; right: number };

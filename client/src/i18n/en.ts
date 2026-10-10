@@ -394,7 +394,7 @@ export const en = {
     auto: 'Auto',
     high: 'High',
     saver: 'Saver',
-    autoHint: 'Adjusts itself to keep the game smooth',
+    autoHint: 'Keeps the game smooth; saves power on low battery',
     highHint: 'Best effects; phones may get warm',
     saverHint: '30 fps and fewer effects, saves battery',
     data: 'Play data',

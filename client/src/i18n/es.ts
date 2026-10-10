@@ -396,7 +396,7 @@ export const es: Table<typeof en> = {
     auto: 'Auto',
     high: 'Alto',
     saver: 'Ahorro',
-    autoHint: 'Se ajusta solo para que el juego vaya fluido',
+    autoHint: 'Mantiene el juego fluido; ahorra con poca batería',
     highHint: 'Mejores efectos; el móvil puede calentarse',
     saverHint: '30 fps y menos efectos, ahorra batería',
     data: 'Datos de juego',
