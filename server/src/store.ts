@@ -18,7 +18,8 @@ export interface Store {
   /** The top `limit` rows of a board, and the row of `tag` (may be null). */
   board(board: string, limit: number, tag: string | null): Promise<BoardReply>;
   /** The last `days` days of numbers for the operator, for one host or (null) all of them. */
-  stats(days: number, now: number, host: Host | null): Promise<Stats>;
+  /** The `days` days ending on `to` (a UTC day) or today, whichever is earlier. */
+  stats(days: number, now: number, host: Host | null, to?: string): Promise<Stats>;
   /** Keeps a problem report received at `now`; returns its id. */
   addReport(report: Report, now: number): Promise<string>;
   /** The newest `limit` reports, without their replays' commands. */
@@ -109,21 +110,23 @@ export class MemoryStore implements Store {
     this.names.set(tag, name);
   }
 
-  async stats(days: number, now: number, host: Host | null): Promise<Stats> {
+  async stats(days: number, now: number, host: Host | null, to?: string): Promise<Stats> {
     const today = dayOf(now);
-    const fold = new StatsFold(windowOf(days, today), today);
+    const list = windowOf(days, today, to);
+    const fold = new StatsFold(list, today);
+    const last = list[list.length - 1];
     const mine = (h: Host) => host === null || h === host;
     for (const p of this.players.values()) if (mine(p.host)) fold.add(p);
     const counts: DayCounts = { active: new Map(), runs: new Map(), ended: new Map() };
     const inc = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
     for (const key of this.active) {
       const [day, install] = key.split('/');
-      if (mine(this.players.get(install)!.host)) inc(counts.active, day);
+      if (day <= last && mine(this.players.get(install)!.host)) inc(counts.active, day);
     }
     const ends: EndCount[] = [];
     for (const b of this.events) {
-      if (!mine(b.host)) continue;
       const day = dayOf(b.at);
+      if (!mine(b.host) || day < list[0] || day > last) continue;
       for (const e of b.events) {
         if (e.e === 'run_start') inc(counts.runs, day);
         if (e.e !== 'run_end') continue;

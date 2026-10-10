@@ -51,7 +51,8 @@ svg text { fill: var(--dim); font-size: 10px; }
 <header>
   <h1>Holy Kicker</h1>
   <select id="host"><option value="">all hosts</option><option>crazygames</option><option>ios</option><option>poki</option><option>web</option><option>wechat</option></select>
-  <select id="days"><option>14</option><option selected>30</option><option>60</option><option>90</option></select>
+  <select id="days"><option value="1">1 day</option><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option><option value="60">60 days</option><option value="90">90 days</option></select>
+  <input id="to" type="date" title="Last day of the window (UTC); empty is today. Returns still count up to today.">
   <input id="key" type="password" placeholder="admin key" size="14">
   <button id="go">Load</button>
   <span id="msg"></span>
@@ -81,6 +82,7 @@ async function load() {
   $('msg').textContent = 'loading…';
   const q = new URLSearchParams({ days: $('days').value });
   if ($('host').value) q.set('host', $('host').value);
+  if ($('to').value) q.set('to', $('to').value);
   try {
     const res = await fetch(`/v1/stats?${q}`, { headers: { authorization: `Bearer ${key}` } });
     if (!res.ok) throw new Error(res.status === 401 ? 'wrong key' : `HTTP ${res.status}`);
@@ -109,9 +111,10 @@ function render(s) {
   const ret = s.returnDays.map((n, i) => ({ n, ...pooled(s, i) }));
   const fresh = s.days.reduce((a, d) => a + d.fresh, 0);
   const today = s.days[s.days.length - 1], yday = s.days[s.days.length - 2] || today;
+  const live = today.day === s.today;
   $('out').innerHTML = [
-    section(`Overview · ${esc(s.host || 'all hosts')} · up to ${esc(s.today)} (UTC)`, 'Retention pools every cohort whose return day is over. Colours: green beats a good casual web game, amber is average, red is below.',
-      `<div class="kpis">${kpi(fresh, 'new installs in the window')}${kpi(yday.active, `active on ${yday.day}`)}${kpi(today.active, 'active today so far')}
+    section(`Overview · ${esc(s.host || 'all hosts')} · ${esc(s.days[0].day)} to ${esc(today.day)} (UTC)`, 'Retention pools every cohort whose return day is over. Colours: green beats a good casual web game, amber is average, red is below.',
+      `<div class="kpis">${kpi(fresh, 'new installs in the window')}${s.days.length > 1 ? kpi(yday.active, `active on ${yday.day}`) : ''}${kpi(today.active, live ? 'active today so far' : `active on ${today.day}`)}
       ${ret.map((r) => kpi(fmt(r.p), `D${r.n} of ${r.fresh} installs`, shade(r.p, r.n))).join('')}</div>`),
     section('What to look at', 'Rules of thumb from the numbers below; each points at the lever most likely to move retention.', diagnose(s, ret)),
     section('Retention by first day', 'Each row is the installs first seen that day; the cells are the share seen again exactly N days later. A dash: that day is not over yet.', cohortTable(s)),

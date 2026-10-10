@@ -96,7 +96,8 @@ export class StatsFold {
   /** Per board: installs that tried it, and [days, tries] of those that cleared it. */
   private readonly clears = new Map<string, { tried: number; days: [number, number][]; tries: [number, number][] }>();
 
-  /** `days` is the window, oldest first, ending on `today`. */
+  /** `days` is the window, oldest first, ending on `today` or before it. Returns stay `today`'s:
+   *  a window that ended last week still shows how its installs have come back since. */
   constructor(
     private readonly days: string[],
     private readonly today: string,
@@ -104,7 +105,7 @@ export class StatsFold {
 
   /** One install first seen inside the window. */
   add(p: Pick<Player, 'first' | 'back' | 'build' | 'aud'> & { d0?: DayZero; progress?: Record<string, Progress> }): void {
-    if (p.first < this.days[0] || p.first > this.today) return;
+    if (p.first < this.days[0] || p.first > this.days[this.days.length - 1]) return;
     for (const [board, g] of Object.entries(p.progress ?? {})) {
       const row = this.clears.get(board) ?? { tried: 0, days: [], tries: [] };
       row.tried++;
@@ -210,7 +211,8 @@ function median(xs: [number, number][]): number {
   return sorted[sorted.length - 1][0];
 }
 
-/** The window: `days` days ending on the day of `now`, oldest first. */
-export function windowOf(days: number, today: string): string[] {
-  return Array.from({ length: days }, (_, i) => dayAfter(today, i - (days - 1)));
+/** The window: `days` days ending on `to` (`?to=`) or `today`, whichever is earlier, oldest first. */
+export function windowOf(days: number, today: string, to?: string): string[] {
+  const last = to && to < today ? to : today;
+  return Array.from({ length: days }, (_, i) => dayAfter(last, i - (days - 1)));
 }

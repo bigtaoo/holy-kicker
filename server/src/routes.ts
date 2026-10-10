@@ -109,7 +109,10 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     const days = Math.min(90, Math.max(1, Number(req.query.get('days')) || 14));
     const host = req.query.get('host') || null;
     if (host !== null && !(HOSTS as readonly string[]).includes(host)) return bad('bad host');
-    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null) };
+    // the window's last day (UTC), for a past week or a single finished day; later than today means today
+    const to = req.query.get('to') || undefined;
+    if (to !== undefined && !isDay(to)) return bad('bad to');
+    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null, to) };
   }
 
   return { status: 404 };
@@ -148,3 +151,9 @@ export const RATES = {
   names: { burst: 5, perMinute: 4 },
   reports: { burst: 3, perMinute: 2 },
 };
+
+/** A real calendar day written YYYY-MM-DD. */
+function isDay(s: string): boolean {
+  const t = Date.parse(`${s}T00:00:00Z`);
+  return /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(t) && new Date(t).toISOString().startsWith(s);
+}

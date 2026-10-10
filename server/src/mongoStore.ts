@@ -141,21 +141,21 @@ export class MongoStore implements Store {
     await this.names.replaceOne({ _id: tag }, { ...name, at: new Date(now) }, { upsert: true });
   }
 
-  async stats(days: number, now: number, host: Host | null): Promise<Stats> {
+  async stats(days: number, now: number, host: Host | null, to?: string): Promise<Stats> {
     const today = dayOf(now);
-    const list = windowOf(days, today);
-    const from = list[0];
+    const list = windowOf(days, today, to);
+    const window = { $gte: list[0], $lte: list[list.length - 1] };
     const mine = host ? { host } : {};
     const fold = new StatsFold(list, today);
     // one small document per new install, streamed: memory stays flat however many there are
-    for await (const p of this.installs.find({ first: { $gte: from }, ...mine }, { projection: { first: 1, build: 1, aud: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
+    for await (const p of this.installs.find({ first: window, ...mine }, { projection: { first: 1, build: 1, aud: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
     type Count = { _id: string; n: number };
     type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown }; n: number };
     const [active, runs, [ends]] = await Promise.all([
-      this.active.aggregate<Count>([{ $match: { day: { $gte: from }, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
-      this.events.aggregate<Count>([{ $match: { e: 'run_start', day: { $gte: from }, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
+      this.active.aggregate<Count>([{ $match: { day: window, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
+      this.events.aggregate<Count>([{ $match: { e: 'run_start', day: window, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
       this.events.aggregate<{ days: Count[]; outcomes: Outcome[] }>([
-        { $match: { e: 'run_end', day: { $gte: from }, ...mine } },
+        { $match: { e: 'run_end', day: window, ...mine } },
         {
           $facet: {
             days: [{ $group: { _id: '$day', n: { $sum: 1 } } }],

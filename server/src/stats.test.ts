@@ -60,6 +60,23 @@ describe('stats', () => {
     expect((await s.stats(10, at(8), 'web')).cohorts.find((c) => c.day === '2026-10-01')!.back[0]).toBe(0);
   });
 
+  it('ends the window on an earlier day, with returns counted up to today', async () => {
+    const s = await store();
+    // a single finished day: its installs, actives and runs only, and how they have come back since
+    const r = await s.stats(1, at(8), 'crazygames', '2026-10-01');
+    expect(r.today).toBe('2026-10-09');
+    expect(r.days).toEqual([{ day: '2026-10-01', active: 3, fresh: 3, runs: 3, ended: 4 }]);
+    expect(r.cohorts).toEqual([{ day: '2026-10-01', fresh: 3, back: [2, 0, 1, null, null] }]);
+    expect(r.boards[0].runs).toBe(4);
+    // a window ending on day 1 leaves day 0's installs out, and day 7's visit too
+    const later = await s.stats(1, at(8), 'crazygames', '2026-10-02');
+    expect(later.days).toEqual([{ day: '2026-10-02', active: 2, fresh: 0, runs: 0, ended: 0 }]);
+    expect(later.funnel[0].n).toBe(0);
+    expect(later.boards).toEqual([]);
+    // a day after today is today
+    expect((await s.stats(2, at(8), null, '2027-01-01')).days.map((d) => d.day)).toEqual(['2026-10-08', '2026-10-09']);
+  });
+
   it('says what day 0 looked like for who came back', async () => {
     const r = await (await store()).stats(10, at(8), 'crazygames');
     const funnel = Object.fromEntries(r.funnel.map((f) => [f.step, f.n]));
