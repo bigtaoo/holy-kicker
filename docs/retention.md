@@ -15,10 +15,15 @@ installs land on `web`.
 - **Day**: UTC calendar day of the batch's arrival. **D*N***: share of the installs first seen on a
   day that sent anything again exactly *N* days later (classic retention, not rolling). A cell
   stays empty until its day is over.
+- **Window**: the last 1 to 90 days, ending today, or on an earlier day picked in the dash (`?to=`
+  on `/v1/stats`). One finished day is `days=1` with that day; its installs' returns still count
+  up to today, so a past day's D1 is there once the day after it is over.
 - **Day 0**: everything an install did on its first day: launches, runs started and finished,
   furthest wave, the wave its first run ended on, the tutorial, lobby purchases, ads, minutes on
   screen (`leave` events), and where it was when it last left (lobby, results, or mid-run and on
-  which wave).
+  which wave). Ads are the ones watched: a reward paid with no ad (iOS's ad-free card, every
+  rewarded offer while CrazyGames keeps the game in Basic Launch) is tracked as `free` and left
+  out, so "watched an ad" stays "no" on CrazyGames until Full Launch.
 - **Boards**: every finished run in the window by chapter and mode, with the wave each lost one
   ended on (died or gave up there); the boss waves (20, 35, 50) are marked.
 - **First clears**: of the window's new installs, how many tried each board and cleared it, and
@@ -29,7 +34,9 @@ installs land on `web`.
 - **Who**: device (desktop, mobile, tablet), browser, system and country, kept once per install
   from its first batch (installs before 2026-10-10 are `unknown`). The device is the game's own
   call (the CrazyGames SDK knows tablets; iPadOS Safari passes for a Mac otherwise), browser and
-  system come from the user agent, the country from Cloudflare by address (never kept). "Who the
+  system come from the user agent, the country from Cloudflare by address (never kept; checked
+  live on 2026-10-10). CrazyGames builds uploaded before that day do not send the device, so
+  their iPads count as desktop (macOS, Safari) until the next upload. "Who the
   new players are" shows each group's size, how many finished a run on day 0 and its D1: a device
   or browser far below the rest is a bug or a performance problem there before it is a design one.
 
