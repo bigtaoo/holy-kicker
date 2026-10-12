@@ -93,7 +93,8 @@ export const pl: Table<typeof en> = {
   },
   tutorial: {
     move: 'Przeciągnij gdziekolwiek, by się ruszać',
-    keys: 'lub użyj WASD / strzałek',
+    keys: 'Ruszaj się WASD lub strzałkami',
+    drag: 'albo przeciągaj myszą',
     auto: 'Twoje kopnięcia są automatyczne',
     gems: 'Zbieraj klejnoty, by awansować',
   },

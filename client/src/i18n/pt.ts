@@ -93,7 +93,8 @@ export const pt: Table<typeof en> = {
   },
   tutorial: {
     move: 'Arraste em qualquer lugar para mover',
-    keys: 'ou use WASD / as setas',
+    keys: 'Mova-se com WASD ou as setas',
+    drag: 'ou arraste com o mouse',
     auto: 'Seus chutes são automáticos',
     gems: 'Pegue as gemas para subir de nível',
   },

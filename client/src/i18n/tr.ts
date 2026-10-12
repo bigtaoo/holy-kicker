@@ -93,7 +93,8 @@ export const tr: Table<typeof en> = {
   },
   tutorial: {
     move: 'Hareket için herhangi bir yeri sürükle',
-    keys: 'ya da WASD / ok tuşlarını kullan',
+    keys: 'WASD ya da ok tuşlarıyla yürü',
+    drag: 'ya da fareyle sürükle',
     auto: 'Tekmelerin otomatik',
     gems: 'Seviye atlamak için taşları topla',
   },

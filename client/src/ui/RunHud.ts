@@ -7,6 +7,7 @@ import { languagePanel } from './languagePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
 import type { TutorialStep } from './tutorial';
+import { tutorialHint, type TutorialHint } from './tutorialHint';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
@@ -76,9 +77,9 @@ export class RunHud implements Screen {
   private build: BuildBar | null = null;
   private slots: readonly BuildSlot[] = [];
   private slotsKey = '';
-  /** The first run's hint, and the hand that sways on the move hint. */
+  /** The first run's hint, and its animated view. */
   private tutorial: TutorialStep = 'done';
-  private hand: Container | null = null;
+  private hint: TutorialHint | null = null;
   private clock = 0;
 
   constructor(
@@ -87,7 +88,7 @@ export class RunHud implements Screen {
     private readonly hard: boolean,
     private readonly actions: RunActions,
     private readonly icons: IconSheet,
-    /** The move hint also names the keyboard. */
+    /** A desktop: the move hint shows the arrow keys. */
     private readonly keys = false,
   ) {}
 
@@ -113,7 +114,7 @@ export class RunHud implements Screen {
       pause.position.set(f.w - 90, 300);
       this.view.addChild(pause, this.fastButton(f));
     }
-    this.hand = null;
+    this.hint = null;
     if (this.tutorial !== 'done' && !this.paused && !this.down && !this.offer) this.drawTutorial(f);
     this.bannerView = null;
     // a panel covers the middle, so a banner then waits out its time unseen
@@ -224,7 +225,7 @@ export class RunHud implements Screen {
       this.offerAge += dt;
       this.cards.update(this.offerAge);
     }
-    if (this.hand) this.hand.x = Math.sin(this.clock * 4) * 120;
+    this.hint?.update(this.clock);
     // a banner waits out the card choice
     if (!this.banner || this.offer) return;
     this.banner.t -= dt;
@@ -298,28 +299,12 @@ export class RunHud implements Screen {
     this.actions.pick(index);
   }
 
-  /** The hint low on the screen, under the fight: a swaying finger to move, then one line at a time. */
+  /** The hint low on the screen, under the fight (tutorialHint.ts). */
   private drawTutorial(f: UiFrame): void {
-    const box = new Container();
-    const move = this.tutorial === 'move';
-    box.position.set(f.w / 2, f.h * (move ? 0.78 : 0.88));
-    box.eventMode = 'none';
-    const lines = move ? [t('tutorial.move'), ...(this.keys ? [t('tutorial.keys')] : [])] : [t(this.tutorial === 'auto' ? 'tutorial.auto' : 'tutorial.gems')];
-    lines.forEach((text, i) => {
-      const l = fit(label(text, i === 0 ? 60 : 48, i === 0 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), f.w - 80);
-      l.y = i * 80;
-      box.addChild(l);
-    });
-    if (move) {
-      const hand = (this.hand = new Container());
-      hand.y = -170;
-      hand.addChild(
-        new Graphics().roundRect(-150, -6, 300, 12, 6).fill({ color: COLORS.text, alpha: 0.35 }),
-        new Graphics().circle(0, 0, 46).fill({ color: COLORS.text, alpha: 0.85 }).stroke({ color: COLORS.outline, width: 8 }),
-      );
-      box.addChild(hand);
-    }
-    this.view.addChild(box);
+    const hint = (this.hint = tutorialHint(this.tutorial, f.w, this.keys));
+    hint.view.position.set(f.w / 2, f.h * (this.tutorial === 'move' ? 0.78 : 0.88));
+    hint.update(this.clock);
+    this.view.addChild(hint.view);
   }
 
   private drawBanner(f: UiFrame): void {

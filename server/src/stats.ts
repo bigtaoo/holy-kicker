@@ -35,7 +35,7 @@ export interface Stats {
    * The window's new installs by device, browser, system and country: how many, how many finished
    * a run on day 0, and of those whose next day is over (`known`), how many came back then.
    */
-  audience: { name: string; groups: { label: string; n: number; ran: number; known: number; back: number }[] }[];
+  audience: { name: string; groups: { label: string; n: number; tutorial: number; ran: number; known: number; back: number }[] }[];
   /** The wave new installs' first finished run ended on, and how many of them came back the next day (D1 known only). */
   firstRun: { wave: number; n: number; back: number }[];
 }
@@ -92,7 +92,7 @@ export class StatsFold {
   private readonly funnel = FUNNEL.map(() => 0);
   private readonly drivers = DRIVERS.map(() => new Map<string, { n: number; back: number }>());
   private readonly firstRun = new Map<number, { n: number; back: number }>();
-  private readonly audience = AUDIENCE_KEYS.map(() => new Map<string, { n: number; ran: number; known: number; back: number }>());
+  private readonly audience = AUDIENCE_KEYS.map(() => new Map<string, { n: number; tutorial: number; ran: number; known: number; back: number }>());
   /** Per board: installs that tried it, and [days, tries] of those that cleared it. */
   private readonly clears = new Map<string, { tried: number; days: [number, number][]; tries: [number, number][] }>();
 
@@ -127,8 +127,9 @@ export class StatsFold {
     const d1 = known && seen.has(1) ? 1 : 0;
     AUDIENCE_KEYS.forEach((key, i) => {
       const label = audienceLabel(p.aud, key);
-      const g = this.audience[i].get(label) ?? { n: 0, ran: 0, known: 0, back: 0 };
+      const g = this.audience[i].get(label) ?? { n: 0, tutorial: 0, ran: 0, known: 0, back: 0 };
       g.n++;
+      if (z.tutorial) g.tutorial++;
       if (z.ends > 0) g.ran++;
       if (known) g.known++;
       g.back += d1;

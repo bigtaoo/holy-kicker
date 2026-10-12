@@ -93,7 +93,8 @@ export const fr: Table<typeof en> = {
   },
   tutorial: {
     move: 'Fais glisser n’importe où pour bouger',
-    keys: 'ou utilise WASD / les flèches',
+    keys: 'Déplace-toi avec WASD ou les flèches',
+    drag: 'ou fais glisser avec la souris',
     auto: 'Tes coups de pied sont automatiques',
     gems: 'Ramasse les gemmes pour monter de niveau',
   },

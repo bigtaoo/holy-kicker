@@ -93,7 +93,8 @@ export const es: Table<typeof en> = {
   },
   tutorial: {
     move: 'Arrastra en cualquier parte para moverte',
-    keys: 'o usa WASD / las flechas',
+    keys: 'Muévete con WASD o las flechas',
+    drag: 'o arrastra con el ratón',
     auto: 'Tus patadas son automáticas',
     gems: 'Recoge las gemas para subir de nivel',
   },

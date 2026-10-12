@@ -93,7 +93,8 @@ export const vi: Table<typeof en> = {
   },
   tutorial: {
     move: 'Kéo ở bất kỳ đâu để di chuyển',
-    keys: 'hoặc dùng WASD / phím mũi tên',
+    keys: 'Di chuyển bằng WASD hoặc phím mũi tên',
+    drag: 'hoặc kéo bằng chuột',
     auto: 'Cú đá của bạn là tự động',
     gems: 'Nhặt đá quý để lên cấp',
   },

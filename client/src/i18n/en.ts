@@ -91,7 +91,8 @@ export const en = {
   },
   tutorial: {
     move: 'Drag anywhere to move',
-    keys: 'or use WASD / the arrow keys',
+    keys: 'Move with WASD or the arrow keys',
+    drag: 'or drag with the mouse',
     auto: 'Your kicks are automatic',
     gems: 'Grab the gems to level up',
   },

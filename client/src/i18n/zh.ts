@@ -93,7 +93,8 @@ export const zh: Table<typeof en> = {
   },
   tutorial: {
     move: '按住屏幕任意处拖动来移动',
-    keys: '也可以用 WASD 或方向键',
+    keys: '用 WASD 或方向键移动',
+    drag: '也可以按住鼠标拖动',
     auto: '踢球是自动的',
     gems: '捡起宝石来升级',
   },
