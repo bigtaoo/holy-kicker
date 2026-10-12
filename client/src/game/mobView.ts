@@ -48,6 +48,8 @@ export function sliceSheet(meta: SheetMeta, sheet: Texture, x0 = 0, y0 = 0): Mob
   return { meta, textures };
 }
 
+/** How fast a knocked-down body flies off along the blow, world units per second. */
+const KNOCK_SPEED = 640;
 const SQUASH_TIME = 0.15;
 const FLASH_TIME = 0.09;
 export class MobView {
@@ -204,7 +206,7 @@ export class Corpses {
     sprite.anchor.copyFrom(from.sprite.anchor);
     sprite.scale.copyFrom(from.sprite.scale);
     const { x, y } = from.sprite.position;
-    knockDown(x, y, dirX, dirY, 380, b.c);
+    knockDown(x, y, dirX, dirY, KNOCK_SPEED, b.c);
     b.plain = from.frameTexture(false);
     this.live.push(b);
   }

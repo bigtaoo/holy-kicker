@@ -298,18 +298,19 @@ export class RunHud implements Screen {
     this.actions.pick(index);
   }
 
-  /** The hint low on the screen, under the hero: a swaying finger to move, then a line. */
+  /** The hint low on the screen, under the fight: a swaying finger to move, then one line at a time. */
   private drawTutorial(f: UiFrame): void {
     const box = new Container();
-    box.position.set(f.w / 2, f.h * 0.7);
+    const move = this.tutorial === 'move';
+    box.position.set(f.w / 2, f.h * (move ? 0.78 : 0.88));
     box.eventMode = 'none';
-    const lines = this.tutorial === 'move' ? [t('tutorial.move'), ...(this.keys ? [t('tutorial.keys')] : [])] : [t('tutorial.auto'), t('tutorial.zen'), t('tutorial.gems')];
+    const lines = move ? [t('tutorial.move'), ...(this.keys ? [t('tutorial.keys')] : [])] : [t(this.tutorial === 'auto' ? 'tutorial.auto' : 'tutorial.gems')];
     lines.forEach((text, i) => {
       const l = fit(label(text, i === 0 ? 60 : 48, i === 0 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), f.w - 80);
       l.y = i * 80;
       box.addChild(l);
     });
-    if (this.tutorial === 'move') {
+    if (move) {
       const hand = (this.hand = new Container());
       hand.y = -170;
       hand.addChild(

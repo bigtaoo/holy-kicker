@@ -3,7 +3,7 @@ import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, SHRINE, WAVES, type RunCon
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
-import { hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, mobHp, twinHp, waveFoeHp } from './waves';
+import { gemPercent, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, mobHp, twinHp, waveFoeHp } from './waves';
 
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, waves: 50 };
 
@@ -28,9 +28,19 @@ function touch(e: Engine): void {
 
 describe('wave plan', () => {
   it('grows the horde every wave up to its cap', () => {
-    expect(hordeSize(1)).toBe(WAVES.hordeBase);
-    expect(hordeSize(2)).toBe(WAVES.hordeBase + WAVES.hordeStep);
-    expect(hordeSize(1000)).toBe(WAVES.hordeMax);
+    expect(hordeSize(1, 2)).toBe(WAVES.hordeBase);
+    expect(hordeSize(2, 2)).toBe(WAVES.hordeBase + WAVES.hordeStep);
+    expect(hordeSize(1000, 2)).toBe(WAVES.hordeMax);
+  });
+
+  it('opens chapter 1 with a bigger horde that drops gems only at the usual rate', () => {
+    expect(hordeSize(1)).toBe(WAVES.openingHorde);
+    expect(gemPercent(1, 1)).toBe(Math.trunc((WAVES.hordeBase * 100) / WAVES.openingHorde));
+    expect(gemPercent(1, 2)).toBe(100);
+    expect(gemPercent(0, 1)).toBe(100);
+    // past the opening the horde grows as in any chapter
+    expect(hordeSize(30)).toBe(hordeSize(30, 2));
+    expect(gemPercent(30, 1)).toBe(100);
   });
 
   it('toughens the horde faster in later waves; the sandbox horde dies in one hit', () => {
@@ -59,7 +69,8 @@ describe('chapter run', () => {
     expect(s).toMatchObject({ wave: 1, elites: [], boss: null, outcome: 'playing' });
     expect(s.mobs.length).toBe(hordeSize(1));
     expect(s.players[0]).toMatchObject({ hp: HERO.hp, revives: 1 });
-    const types = idle(e, WAVES.ticks);
+    // a level-up stands the sim still for the tick of its pick
+    const types = idle(e, WAVES.ticks + 10);
     expect(types.filter((t) => t === 'wave')).toEqual(['wave']);
     expect(s.wave).toBe(2);
     expect(s.mobs.length).toBe(hordeSize(2));

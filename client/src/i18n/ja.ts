@@ -96,7 +96,6 @@ export const ja: Table<typeof en> = {
     keys: 'WASD・矢印キーでもOK',
     auto: 'キックは自動で出る',
     gems: 'ジェムを拾ってレベルアップ',
-    zen: '立ち止まると攻撃がチャージされる',
   },
   card: {
     levelUp: 'レベルアップ！',

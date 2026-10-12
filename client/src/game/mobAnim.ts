@@ -43,7 +43,7 @@ const GRAVITY = 2600;
 /** Starts a corpse, reusing `out` if given. */
 export function knockDown(x: number, y: number, dirX: number, dirY: number, speed: number, out = {} as Corpse): Corpse {
   const d = Math.hypot(dirX, dirY) || 1;
-  return Object.assign(out, { x, y, vx: (dirX / d) * speed, vy: (dirY / d) * speed, z: 0, vz: 520, tilt: 0, age: 0 });
+  return Object.assign(out, { x, y, vx: (dirX / d) * speed, vy: (dirY / d) * speed, z: 0, vz: 680, tilt: 0, age: 0 });
 }
 
 /** Advances a corpse; false once it has faded out. */
@@ -85,7 +85,7 @@ export function holdsStill(meta: SheetMeta, frame: number, pace: number): boolea
 }
 
 /** Mobs fade toward this brightness with distance from the hero, between NEAR and FAR. */
-export const DEPTH_SHADE = { near: 300, far: 850, min: 0.72 };
+export const DEPTH_SHADE = { near: 300, far: 850, min: 0.84 };
 
 /**
  * Brightness (0..1) for a mob `d` away from the hero: the front ring stays bright and the

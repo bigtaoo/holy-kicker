@@ -116,9 +116,9 @@ function blocked(mobs: Body[], i: number, dx: number, dy: number, d: number, r: 
 }
 
 /** Puts `b` on a random point of the respawn ring around (cx, cy), just outside the phone view. */
-export function ringPoint(rand: Prng, cx: number, cy: number, b: Body): void {
+export function ringPoint(rand: Prng, cx: number, cy: number, b: Body, min = HORDE.ringMin, max = HORDE.ringMax): void {
   const a = rand.int(65536);
-  const r = rand.range(HORDE.ringMin, HORDE.ringMax);
+  const r = rand.range(min, max);
   teleport(b, cx + Math.trunc((cosB(a) * r) / TRIG_ONE), cy + Math.trunc((sinB(a) * r) / TRIG_ONE));
 }
 

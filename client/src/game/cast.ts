@@ -12,6 +12,7 @@ import type { Art } from './Game';
 import { MOB_HEIGHT } from './hordeView';
 import { fakeMobTypes } from './mobTypes';
 import type { MobLook, MobSheet } from './mobView';
+import { outlineSheet } from './outline';
 import type { EliteColor, SceneOptions } from './scene';
 import { makeRing } from './stageArt';
 import { JUDGE_STYLE, StaffBossView, WITCH_STYLE } from './witchView';
@@ -43,8 +44,11 @@ const LANTERN_HEIGHT = 80;
 
 /** The looks of every mob kind in chapter `chapter` (0 for the sandbox). */
 export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, chapter: number, shadowTex: Texture): Record<MobKind, MobLook[]> {
+  // every sheet gets its sticker rim once (outline.ts); the wisps glow and have none
+  const rimmed = new Map<MobSheet, MobSheet>();
+  const rim = (sheet: MobSheet) => rimmed.get(sheet) ?? rimmed.set(sheet, outlineSheet(renderer, sheet)).get(sheet)!;
   const look = (sheet: MobSheet, kind: MobKind, shadow: [number, number], facesLeft = true, tint?: number, height = MOB_HEIGHT[kind]): MobLook => (
-    { sheet, height, facesLeft, shadow, shadowTex, tint }
+    { sheet: kind === 'swarm' ? sheet : rim(sheet), height, facesLeft, shadow, shadowTex, tint }
   );
   const jiangshi = fakeMobTypes(renderer, art.jiangshi, scene.types, scene.page, scene.mobRes);
   // chapter 2's walkers are water ghosts, chapter 3's frosted jiangshi, chapter 4's long-tongue

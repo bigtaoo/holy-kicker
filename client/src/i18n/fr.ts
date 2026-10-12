@@ -96,7 +96,6 @@ export const fr: Table<typeof en> = {
     keys: 'ou utilise WASD / les flèches',
     auto: 'Tes coups de pied sont automatiques',
     gems: 'Ramasse les gemmes pour monter de niveau',
-    zen: 'Reste immobile pour les charger',
   },
   card: {
     levelUp: 'Niveau supérieur !',

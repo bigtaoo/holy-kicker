@@ -26,6 +26,17 @@ Names are working names; every name ships through the string table (en / zh-CN s
 | Passives | up to 4 | 1–5 each | Level-up cards |
 
 - Level-up: pick 1 of 3. Cards for full slots and maxed items stop appearing.
+- **The opening** (ENGINE_VERSION 35, 2026-10-11, from the CrazyGames numbers: two thirds of new
+  players left during their first run, most on waves 1–2). The first two level-ups deal only
+  attack spells (`OPENING_DEAL`: cymbals, bolt, palm, incense), so the first picks show on
+  screen. The first level costs 5 experience, the next ones at least 12 (`LEVELING.least`),
+  about one card every 8 s in the first minute instead of every 5. Chapter 1 opens with a horde
+  of at least 30 (`WAVES.openingHorde`, the usual size from wave 7 on), the first wave's mobs
+  starting 560–1200 from the hero, partly in view; while the opening horde is bigger than the
+  wave's own, only that share of the kills leaves a gem (`gemPercent`). Fox runners join once
+  the horde grows past 30, from wave 8. Bare chapter 1, 40 runs: casual 5/40 (4/40 before),
+  skilled 18/40 (14/40); a casual bot standing still now loses health in the first minute (it
+  never did) but lives.
 - About 30 level-ups plus 5 shrines per full run, against 45 picks to max everything, so
   not everything can be maxed and choices matter.
 - **Evolution:** spell at level 5 + its paired passive (any level) → the next level-up offers
@@ -234,7 +245,7 @@ or a new single image is cheap; elites and bosses cost a rig each.
 
 - **Chapter 1's kinds implemented** (`MOB_KINDS`, `MIX`, `ELITE` in `engine/config.ts`,
   `engine/systems/elite.ts`, ENGINE_VERSION 14). Every mob has a kind it keeps for the run
-  (respawns included). From wave 3 every 4th newcomer is a fox runner; from wave 6, every 4th
+  (respawns included). From wave 3 every 4th newcomer is a fox runner (since the opening, ENGINE_VERSION 35, the first only joins on wave 8); from wave 6, every 4th
   wave (not a boss wave) brings a bunched pack of 10 ghost wisps on top of the horde, up to 40.
   Wisps have 1 health, hurt for 3 and only a quarter of them leave a gem: without that cut the
   packs lifted the casual bot from level 30 to 38 at the end. The elite is now the big

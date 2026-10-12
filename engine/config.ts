@@ -341,6 +341,14 @@ export const WAVES = {
   hordeBase: 12,
   hordeStep: 3,
   hordeMax: 160,
+  /**
+   * Chapter 1's opening (a new player's first minute): the horde is at least openingHorde
+   * from the first wave, and the first wave's mobs start on the nearer openingRing, partly in view,
+   * so the first seconds already show a crowd closing in rather than a few stragglers.
+   */
+  openingHorde: 30,
+  openingRingMin: toFp(560),
+  openingRingMax: toFp(1200),
   /** Every this many waves an elite comes (not on boss waves). */
   eliteEvery: 5,
   /**

@@ -33,6 +33,7 @@ import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
 import { Autoplay, RUSH_SPEED } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
+import { Shake } from './shake';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
 import { releaseBaked } from './bake';
 import { runConfig, type RunSetup } from './runSetup';
@@ -80,6 +81,7 @@ export class Game {
   private readonly hero: Hero;
   /** World point the camera centres on; trails the hero under the smooth camera. */
   private readonly camPos = { x: 0, y: 0 };
+  private readonly shake = new Shake();
   private readonly elites: EliteCrowd | null;
   private readonly horde: HordeView;
   private readonly mist: Mist | null;
@@ -293,6 +295,7 @@ export class Game {
   /** One tick's events: animations, effects and numbers. Positions arrive in FP. */
   private react(events: readonly SimEvent[]): void {
     const s = this.engine.state;
+    let kills = 0;
     for (const e of events) {
       switch (e.type) {
         case 'kick':
@@ -333,21 +336,20 @@ export class Game {
           }
           break;
         }
-        case 'eliteDown':
-          {
-            const v = this.elites?.byId(e.id);
-            if (v) this.corpses.spawn(v.mob, 0, -1);
-          }
-          this.fx.puff(e.x / FP, e.y / FP);
+        case 'eliteDown': {
+          const v = this.elites?.byId(e.id);
+          if (v) this.corpses.spawn(v.mob, 0, -1);
+          this.fx.down(e.x / FP, e.y / FP);
           break;
-        case 'mobDown':
-          {
-            const v = this.horde.at(e.index);
-            if (v) this.corpses.spawn(v, e.dx, e.dy);
-          }
-          this.fx.puff(e.x / FP, e.y / FP);
+        }
+        case 'mobDown': {
+          const v = this.horde.at(e.index);
+          if (v) this.corpses.spawn(v, e.dx, e.dy);
+          this.fx.down(e.x / FP, e.y / FP);
+          kills++;
           if (s.mobs[e.index]?.kind === 'effigy') this.horde.tear(e.x / FP, e.y / FP);
           break;
+        }
         case 'block': {
           // a door god's shield, or a fallen monk's gong (held toward the hero)
           const g = e.index < s.mobs.length ? null : nearestElite(s.elites, e.x, e.y);
@@ -420,6 +422,7 @@ export class Game {
           break;
       }
     }
+    this.shake.kills(kills);
   }
 
   /** Draws the sim state `alpha` of the way through its last tick; dt is the frame time. */
@@ -465,9 +468,10 @@ export class Game {
     const vp = this.vp;
     ease(this.camPos, hx, hy, dt, (this.scene.cam === 'lock' ? LOCKED_CAMERA : SMOOTH_CAMERA).camEase);
     const res = this.app.renderer.resolution;
+    const sh = this.shake.step(dt);
     this.world.position.set(
-      snapToPixel(vp.playW / 2 - this.camPos.x * vp.scale, res),
-      snapToPixel(vp.playH / 2 - this.camPos.y * vp.scale, res),
+      snapToPixel(vp.playW / 2 - this.camPos.x * vp.scale + sh.x, res),
+      snapToPixel(vp.playH / 2 - this.camPos.y * vp.scale + sh.y, res),
     );
 
     this.drawStick();

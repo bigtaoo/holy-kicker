@@ -96,7 +96,6 @@ export const es: Table<typeof en> = {
     keys: 'o usa WASD / las flechas',
     auto: 'Tus patadas son automáticas',
     gems: 'Recoge las gemas para subir de nivel',
-    zen: 'Quédate quieto para cargarlas',
   },
   card: {
     levelUp: '¡Subes de nivel!',

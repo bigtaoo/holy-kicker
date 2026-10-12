@@ -41,6 +41,17 @@ describe('FxPool', () => {
   });
 });
 
+describe('mob down', () => {
+  it('pops a ring and chips over the smoke', () => {
+    const pool = new FxPool(100, () => 0.5);
+    pool.down(0, 0);
+    const shapes = pool.live.map((p) => p.shape);
+    expect(shapes).toContain('ring');
+    expect(shapes).toContain('spark');
+    expect(shapes).toContain('puff');
+  });
+});
+
 describe('fill budget', () => {
   it('tracks fill and drops optional particles over budget', () => {
     const pool = new FxPool(1000, () => 0.5, 20000);

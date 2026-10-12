@@ -96,7 +96,6 @@ export const ko: Table<typeof en> = {
     keys: '또는 WASD / 방향키',
     auto: '발차기는 자동이에요',
     gems: '보석을 주워 레벨 업',
-    zen: '가만히 서 있으면 공격이 충전돼요',
   },
   card: {
     levelUp: '레벨 업!',

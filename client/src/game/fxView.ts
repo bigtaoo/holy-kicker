@@ -46,6 +46,7 @@ export class FxLayer {
   readonly pool = new FxPool(MAX_PARTICLES);
   readonly hit = (x: number, y: number) => this.pool.hit(x, y);
   readonly puff = (x: number, y: number) => this.pool.puff(x, y);
+  readonly down = (x: number, y: number) => this.pool.down(x, y);
   readonly view = new ParticleContainer({
     dynamicProperties: { position: true, rotation: true, vertex: true, color: true, uvs: true },
   });

@@ -1,6 +1,6 @@
 import { DROPS, HERO, SHRINE, ZEN } from '../config';
 import {
-  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS, SUTRA_IDS,
+  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, OPENING_DEAL, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS, SUTRA_IDS,
   xpToNext, type BeadsRing, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat, type SutraId,
 } from '../content';
 import type { SimEvent } from '../events';
@@ -130,10 +130,13 @@ export function cardPool(p: Player, sutras: readonly SutraId[] = []): Card[] {
   return pool;
 }
 
-/** Ready evolutions first, then distinct cards from the pool (a partial shuffle), OFFER_SIZE in all. */
+/**
+ * Ready evolutions first, then distinct cards from the pool (a partial shuffle), OFFER_SIZE in
+ * all; the first level-ups deal from the opening spells only (OPENING_DEAL).
+ */
 function deal(s: SimState, p: Player): Card[] {
   const first = evolutions(p).slice(0, OFFER_SIZE);
-  const pool = cardPool(p, s.config.sutras);
+  const pool = p.level <= 1 + OPENING_DEAL.deals ? openingPool(s, p) : cardPool(p, s.config.sutras);
   const n = Math.min(OFFER_SIZE - first.length, pool.length);
   for (let i = 0; i < n; i++) {
     const j = i + s.cards.int(pool.length - i);
@@ -142,6 +145,12 @@ function deal(s: SimState, p: Player): Card[] {
     pool[j] = t;
   }
   return first.concat(pool.slice(0, n));
+}
+
+/** The opening spells not yet owned; the whole pool if they cannot fill an offer. */
+function openingPool(s: SimState, p: Player): Card[] {
+  const pool: Card[] = OPENING_DEAL.spells.filter((id) => !p.spells.some((sp) => sp.id === id)).map((id) => ({ kind: 'spell', id }));
+  return pool.length >= OFFER_SIZE && p.spells.length < MAX_SPELLS ? pool : cardPool(p, s.config.sutras);
 }
 
 /** Levels up while the experience allows and no offer is open; one offer at a time. */

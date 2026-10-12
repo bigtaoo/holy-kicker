@@ -19,8 +19,24 @@ import { resetMob } from './marsh';
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
 
-export function hordeSize(wave: number): number {
+/** Horde size on wave `wave` of chapter `chapter` (chapter 1 opens with WAVES.openingHorde). */
+export function hordeSize(wave: number, chapter = 1): number {
+  const n = waveHorde(wave);
+  return chapter === 1 ? Math.max(n, WAVES.openingHorde) : n;
+}
+
+/** The wave's own horde size: min(max, base + step * (wave - 1)). */
+function waveHorde(wave: number): number {
   return Math.min(WAVES.hordeMax, WAVES.hordeBase + WAVES.hordeStep * (wave - 1));
+}
+
+/**
+ * Percent of fallen mobs that leave a gem: while chapter 1's opening horde is bigger than the
+ * wave's own, only that share of it, so the crowd does not bring the levels faster.
+ */
+export function gemPercent(wave: number, chapter: number): number {
+  if (wave < 1) return 100;
+  return Math.trunc((waveHorde(wave) * 100) / hordeSize(wave, chapter));
 }
 
 /**
@@ -140,7 +156,7 @@ export function bossThins(s: SimState): boolean {
   if (!bossUp(s)) return false;
   let standing = 0;
   for (const m of s.mobs) if (!underground(m)) standing++;
-  return standing * 100 > hordeSize(s.wave) * WAVES.bossHordePercent;
+  return standing * 100 > hordeSize(s.wave, s.config.chapter) * WAVES.bossHordePercent;
 }
 
 /** Shrine waves open with the shrine cards (never the last wave). */
@@ -173,11 +189,13 @@ export function beginWave(s: SimState, wave: number): void {
       respawnPoint(s.ai, p, m);
     }
   }
-  for (let n = s.mobs.length - extra; n < hordeSize(wave); n++) {
+  for (let n = s.mobs.length - extra; n < hordeSize(wave, s.config.chapter); n++) {
     const kind = newcomer(s.config.chapter, wave, n);
     const m = newMob(0, 0, mobHp(wave, kind, s.config.chapter, s.config.hard), kind);
     resetMob(s, m);
-    respawnPoint(s.ai, p, m);
+    // the first wave's start in view (WAVES.openingRing), the rest from just outside it
+    if (wave === 1) ringPoint(s.ai, p.x, p.y, m, WAVES.openingRingMin, WAVES.openingRingMax);
+    else respawnPoint(s.ai, p, m);
     s.mobs.push(m);
   }
   // a pack comes bunched from one side

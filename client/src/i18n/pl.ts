@@ -96,7 +96,6 @@ export const pl: Table<typeof en> = {
     keys: 'lub użyj WASD / strzałek',
     auto: 'Twoje kopnięcia są automatyczne',
     gems: 'Zbieraj klejnoty, by awansować',
-    zen: 'Stój w miejscu, by je naładować',
   },
   card: {
     levelUp: 'Awans!',

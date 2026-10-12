@@ -114,6 +114,25 @@ export class FxPool {
     }
   }
 
+  /**
+   * A mob knocked down: a pale cold pop where it stood and a few chips flying off, over the
+   * smoke, so a kill reads at a glance even at the edge of the screen.
+   */
+  down(x: number, y: number): void {
+    const r = this.rand;
+    this.emit({ shape: 'ring', x, y: y - 40, vx: 0, vy: 0, life: 0.2, size0: 30, size1: 150, rotation: 0, spin: 0, drag: 1, color: 0xe2f2ee, alpha: 0.85 }, true);
+    for (let i = 0; i < 5; i++) {
+      const a = (i / 5) * Math.PI * 2 + r() * 0.6;
+      const v = 380 + r() * 320;
+      this.emit({
+        shape: 'spark', x, y: y - 40, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, life: 0.25 + r() * 0.1,
+        size0: 30 + r() * 12, size1: 4, rotation: r() * Math.PI, spin: (r() - 0.5) * 16, drag: 0.03,
+        color: i % 2 ? 0xbfe6ec : 0xffffff, alpha: 1,
+      }, true);
+    }
+    this.puff(x, y);
+  }
+
   step(dt: number): void {
     const live = this.live;
     for (let i = live.length - 1; i >= 0; i--) {

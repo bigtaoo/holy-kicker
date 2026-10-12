@@ -1,9 +1,10 @@
 // The first run's tutorial (docs/design.md "Flow": only moving is prompted, everything else is
-// automatic). A hint to move stays until the hero has walked for a moment; then a hint that the
-// kicks are automatic, standing still charges them (Stillness) and the gems level him up shows for a few seconds. Pure: the shell feeds
-// it the frame time and whether the hero moves, the HUD draws the step.
+// automatic). A hint to move stays until the hero has walked for a moment; then one short line
+// at a time, low on the screen and out of the fight: the kicks are automatic, then the gems
+// level him up. Pure: the shell feeds it the frame time and whether the hero moves, the HUD
+// draws the step.
 
-export type TutorialStep = 'move' | 'gems' | 'done';
+export type TutorialStep = 'move' | 'auto' | 'gems' | 'done';
 
 export interface Tutorial {
   step: TutorialStep;
@@ -11,9 +12,10 @@ export interface Tutorial {
   t: number;
 }
 
-/** Seconds of walking that count as learnt, and how long the second hint stays. */
+/** Seconds of walking that count as learnt, and how long each later line stays. */
 export const TUTORIAL_MOVE = 1.2;
-export const TUTORIAL_GEMS = 7;
+export const TUTORIAL_AUTO = 3;
+export const TUTORIAL_GEMS = 3.5;
 
 export function newTutorial(): Tutorial {
   return { step: 'move', t: 0 };
@@ -23,7 +25,11 @@ export function newTutorial(): Tutorial {
 export function stepTutorial(tu: Tutorial, dt: number, moving: boolean): Tutorial {
   if (tu.step === 'move') {
     const t = tu.t + (moving ? dt : 0);
-    return t >= TUTORIAL_MOVE ? { step: 'gems', t: 0 } : t === tu.t ? tu : { step: 'move', t };
+    return t >= TUTORIAL_MOVE ? { step: 'auto', t: 0 } : t === tu.t ? tu : { step: 'move', t };
+  }
+  if (tu.step === 'auto') {
+    const t = tu.t + dt;
+    return t >= TUTORIAL_AUTO ? { step: 'gems', t: 0 } : { step: 'auto', t };
   }
   if (tu.step === 'gems') {
     const t = tu.t + dt;

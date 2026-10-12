@@ -96,7 +96,6 @@ export const de: Table<typeof en> = {
     keys: 'oder nutze WASD / die Pfeiltasten',
     auto: 'Deine Tritte gehen automatisch',
     gems: 'Sammle die Edelsteine zum Aufsteigen',
-    zen: 'Steh still, um sie aufzuladen',
   },
   card: {
     levelUp: 'Stufe aufgestiegen!',

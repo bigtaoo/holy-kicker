@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_RUN, HERO, type RunConfig } from '../config';
-import { MAX_LEVEL, MAX_PASSIVES, OFFER_SIZE, PASSIVES, RELIC_LEVELS, SPELL_CAST, SPELL_LEVELS, xpToNext } from '../content';
+import { LEVELING, MAX_LEVEL, MAX_PASSIVES, OFFER_SIZE, OPENING_DEAL, PASSIVES, RELIC_LEVELS, SPELL_CAST, SPELL_LEVELS, xpToNext } from '../content';
 import type { SimEvent } from '../events';
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
@@ -25,8 +25,11 @@ function quiet(): Engine {
 
 describe('levelling', () => {
   it('follows the experience curve', () => {
-    expect(xpToNext(1)).toBe(5);
-    expect(xpToNext(3)).toBeGreaterThan(xpToNext(2));
+    expect(xpToNext(1)).toBe(LEVELING.first);
+    // the floor spaces out the next few, then the curve takes over
+    expect(xpToNext(2)).toBe(LEVELING.least);
+    expect(xpToNext(3)).toBe(LEVELING.least);
+    expect(xpToNext(10)).toBeGreaterThan(xpToNext(9));
   });
 
   it('opens an offer of distinct cards on a level-up and stands still until a pick', () => {
@@ -52,6 +55,20 @@ describe('levelling', () => {
     const x = p.x;
     e.step([cmd(e, { moveMag: 255 })]);
     expect(p.x).not.toBe(x);
+  });
+
+  it('deals only the opening spells on the first level-ups', () => {
+    const e = quiet();
+    const p = e.state.players[0];
+    for (let deal = 1; deal <= OPENING_DEAL.deals + 1; deal++) {
+      p.xp = xpToNext(p.level);
+      e.step([cmd(e)]);
+      const opening = p.offer.every((c) => c.kind === 'spell' && OPENING_DEAL.spells.includes(c.id as never));
+      expect(opening).toBe(deal <= OPENING_DEAL.deals);
+      if (deal > OPENING_DEAL.deals) break;
+      e.step([cmd(e, { pick: 0 })]);
+    }
+    expect(p.spells.length).toBe(OPENING_DEAL.deals);
   });
 
   it('offers the next level right after a pick when the experience covers it', () => {

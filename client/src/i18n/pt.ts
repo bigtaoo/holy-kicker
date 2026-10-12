@@ -96,7 +96,6 @@ export const pt: Table<typeof en> = {
     keys: 'ou use WASD / as setas',
     auto: 'Seus chutes são automáticos',
     gems: 'Pegue as gemas para subir de nível',
-    zen: 'Fique parado para carregá-los',
   },
   card: {
     levelUp: 'Subiu de nível!',

@@ -10,15 +10,17 @@ export const MAX_PASSIVES = 4;
 export const OFFER_SIZE = 3;
 
 /**
- * Experience from level L to L + 1: first + step * (L - 1) + square * (L - 1)^2. The square
- * keeps pace with the horde, which grows and dies faster as the build grows, for about 30
- * level-ups in a full chapter.
+ * Experience from level L to L + 1: first + step * (L - 1) + square * (L - 1)^2, and from the
+ * second on at least `least`. The square keeps pace with the horde, which grows and dies faster as the build
+ * grows, for about 30 level-ups in a full chapter. The first comes quick; the floor spaces the
+ * next few out, so the first minute is not a card every five seconds.
  */
-export const LEVELING = { first: 5, step: 0, square: 1 };
+export const LEVELING = { first: 5, step: 0, square: 1, least: 10 };
 
 export function xpToNext(level: number): number {
   const l = level - 1;
-  return LEVELING.first + LEVELING.step * l + LEVELING.square * l * l;
+  const xp = LEVELING.first + LEVELING.step * l + LEVELING.square * l * l;
+  return l > 0 ? Math.max(LEVELING.least, xp) : xp;
 }
 
 /** The relic a run is played with (docs/content.md "Relics"), chosen in the lobby. */
@@ -197,6 +199,12 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
   // a cone shout at the nearest enemy, pushing the horde back (sutra)
   roar: [lv(2, 0, 380, 0, 150), lv(2, 0, 420, 0, 150), lv(1.8, 0, 420, 0, 200), lv(1.8, 0, 470, 0, 200), lv(1.5, 0, 520, 0, 250)],
 };
+
+/**
+ * A new player's first level-ups show something on screen: the first `deals` offers are only
+ * these attack spells (the ones not yet owned), never a stat card.
+ */
+export const OPENING_DEAL = { deals: 2, spells: ['cymbal', 'bolt', 'palm', 'incense'] as readonly SpellId[] };
 
 /**
  * Spells and passives that start out of the level-up pool: each comes with a sutra
