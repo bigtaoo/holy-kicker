@@ -133,11 +133,11 @@ export class Shell {
 
   /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
   start(direct = false): void {
+    this.portal.loaded(); // before the first run's gameplayStart: CrazyGames ignores one sent while loading
     const left = direct ? null : loadRun(this.platform.storage);
     if (left) this.offerResume(left);
     else if (direct || !this.save.firstRunDone) this.play(this.scene.chapter || this.save.chapter);
     else this.showLobby();
-    this.portal.loaded();
   }
 
   /** The current run, for dev console hooks. */
