@@ -93,8 +93,8 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-11 for ENGINE_VERSION 35 (chapter 1 opens with a bigger, nearer horde; the first level-ups deal attack spells, spaced out). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(35);
+    // Recorded 2026-10-12 for ENGINE_VERSION 36 (chapter 1's opening crowd has the wave's share of health and contact blow). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(36);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -120,7 +120,7 @@ describe('Engine', () => {
 });
 
 const GOLDEN = 405462346;
-const GOLDEN_CHAPTER = 734790299;
+const GOLDEN_CHAPTER = 1006749619;
 const GOLDEN_MARSH = 1134109751;
 const GOLDEN_SNOW = 1645388717;
 const GOLDEN_GHOST = 1107240594;

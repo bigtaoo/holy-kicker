@@ -3,7 +3,7 @@ import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, SHRINE, WAVES, type RunCon
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
-import { gemPercent, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, mobHp, twinHp, waveFoeHp } from './waves';
+import { openingShare, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, mobHp, twinHp, waveFoeHp } from './waves';
 
 const CHAPTER: RunConfig = { ...DEFAULT_RUN, waves: 50 };
 
@@ -35,17 +35,19 @@ describe('wave plan', () => {
 
   it('opens chapter 1 with a bigger horde that drops gems only at the usual rate', () => {
     expect(hordeSize(1)).toBe(WAVES.openingHorde);
-    expect(gemPercent(1, 1)).toBe(Math.trunc((WAVES.hordeBase * 100) / WAVES.openingHorde));
-    expect(gemPercent(1, 2)).toBe(100);
-    expect(gemPercent(0, 1)).toBe(100);
+    expect(openingShare(1, 1)).toBe(Math.trunc((WAVES.hordeBase * 100) / WAVES.openingHorde));
+    expect(openingShare(1, 2)).toBe(100);
+    expect(openingShare(0, 1)).toBe(100);
     // past the opening the horde grows as in any chapter
     expect(hordeSize(30)).toBe(hordeSize(30, 2));
-    expect(gemPercent(30, 1)).toBe(100);
+    expect(openingShare(30, 1)).toBe(100);
   });
 
   it('toughens the horde faster in later waves; the sandbox horde dies in one hit', () => {
     expect(mobHp(0)).toBe(1);
-    expect(mobHp(1)).toBe(HORDE.hp);
+    expect(mobHp(1, 'chaser', 2)).toBe(HORDE.hp);
+    // chapter 1's bigger opening horde has the wave's own share of that health
+    expect(mobHp(1)).toBe(Math.trunc((HORDE.hp * openingShare(1, 1)) / 100));
     const gain = (w: number) => mobHp(w + 10) - mobHp(w);
     expect(gain(1)).toBeGreaterThan(0);
     expect(gain(40)).toBeGreaterThan(gain(1) * 3);
@@ -135,6 +137,12 @@ describe('chapter run', () => {
     const e = new Engine(CHAPTER);
     const s = e.state;
     const p = s.players[0];
+    touch(e);
+    // the opening crowd hits for its share (openingShare)
+    expect(e.step([still(e)])).toContainEqual({ type: 'hurt', owner: 0, value: Math.trunc((HURT.mob * openingShare(1, 1)) / 100) });
+    p.hp = HERO.hp;
+    p.hurtCd = 0;
+    s.wave = 9;
     touch(e);
     const ev = e.step([still(e)]);
     expect(ev).toContainEqual({ type: 'hurt', owner: 0, value: HURT.mob });

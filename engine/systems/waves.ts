@@ -31,10 +31,12 @@ function waveHorde(wave: number): number {
 }
 
 /**
- * Percent of fallen mobs that leave a gem: while chapter 1's opening horde is bigger than the
- * wave's own, only that share of it, so the crowd does not bring the levels faster.
+ * The wave's own horde as a percent of the horde on the field: below 100 while chapter 1's
+ * opening horde is bigger. The crowd is that much weaker per mob, so it is no harder than the
+ * wave's own horde and brings the levels no faster: its mobs have that share of their health
+ * (mobHp), of their contact blow (contactSystem) and of the gems (downMob).
  */
-export function gemPercent(wave: number, chapter: number): number {
+export function openingShare(wave: number, chapter: number): number {
   if (wave < 1) return 100;
   return Math.trunc((waveHorde(wave) * 100) / hordeSize(wave, chapter));
 }
@@ -46,7 +48,13 @@ export function gemPercent(wave: number, chapter: number): number {
 export function mobHp(wave: number, kind: MobKind = 'chaser', chapter = 1, hard = false): number {
   const n = wave - 1;
   const hp = wave > 0 ? HORDE.hp + Math.trunc((HORDE.hpStep * n + HORDE.hpSquare * n * n) / 1000) : 1;
-  return Math.max(1, Math.trunc((hp * MOB_KINDS[kind].hpPercent * chapterHp(chapter, wave, hard)) / 10000));
+  const share = fewKind(kind) ? 100 : openingShare(wave, chapter);
+  return Math.max(1, Math.trunc((hp * MOB_KINDS[kind].hpPercent * chapterHp(chapter, wave, hard) * share) / 1000000));
+}
+
+/** The small kinds that come many at once (wisps, ice shards, effigy scraps), outside the horde's count. */
+export function fewKind(kind: MobKind): boolean {
+  return kind === 'swarm' || kind === 'shard' || kind === 'scrap';
 }
 
 /** Mob health percent of chapter `chapter` on wave `wave` (HORDE.chapterHp or HARD.hp, ramped in over the run). */

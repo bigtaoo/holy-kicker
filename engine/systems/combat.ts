@@ -11,7 +11,7 @@ import { shielded, tear } from './ghost';
 import { inView, respawnPoint } from './horde';
 import { resetMob } from './marsh';
 import { split } from './snow';
-import { bossThins, gemPercent, mobHp } from './waves';
+import { bossThins, fewKind, mobHp, openingShare } from './waves';
 
 // Hit targets and damage. Targets are numbered: the horde mobs first (by index), then the
 // elites, then the boss, so a ball can remember "the one I hit last" as a plain integer.
@@ -161,8 +161,7 @@ export function damage(
 export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
   const m = s.mobs[i];
   events.push({ type: 'mobDown', index: i, x: m.x, y: m.y, dx: m.x - by.x, dy: m.y - by.y });
-  const few = m.kind === 'swarm' || m.kind === 'shard' || m.kind === 'scrap';
-  const pct = few ? MIX.swarmGemPercent : gemPercent(s.wave, s.config.chapter);
+  const pct = fewKind(m.kind) ? MIX.swarmGemPercent : openingShare(s.wave, s.config.chapter);
   if (gem && (pct >= 100 || s.drop.chance(pct, 100))) dropGem(s, m.x, m.y, MOB_GEM);
   m.stun = 0;
   if (tempKind(m.kind)) {

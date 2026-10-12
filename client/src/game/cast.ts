@@ -44,11 +44,8 @@ const LANTERN_HEIGHT = 80;
 
 /** The looks of every mob kind in chapter `chapter` (0 for the sandbox). */
 export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, chapter: number, shadowTex: Texture): Record<MobKind, MobLook[]> {
-  // every sheet gets its sticker rim once (outline.ts); the wisps glow and have none
-  const rimmed = new Map<MobSheet, MobSheet>();
-  const rim = (sheet: MobSheet) => rimmed.get(sheet) ?? rimmed.set(sheet, outlineSheet(renderer, sheet)).get(sheet)!;
   const look = (sheet: MobSheet, kind: MobKind, shadow: [number, number], facesLeft = true, tint?: number, height = MOB_HEIGHT[kind]): MobLook => (
-    { sheet: kind === 'swarm' ? sheet : rim(sheet), height, facesLeft, shadow, shadowTex, tint }
+    { sheet, height, facesLeft, shadow, shadowTex, tint }
   );
   const jiangshi = fakeMobTypes(renderer, art.jiangshi, scene.types, scene.page, scene.mobRes);
   // chapter 2's walkers are water ghosts, chapter 3's frosted jiangshi, chapter 4's long-tongue
@@ -88,11 +85,15 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
     wolfLeader: { sheet: art.snow?.wolfLeader ?? art.jiangshi, height: WOLF_LEADER_HEIGHT, facesLeft: true, shadow: [64, 16], shadowTex },
     doorGod: { sheet: art.ghost?.doorGod ?? art.jiangshi, height: DOOR_GOD_HEIGHT, facesLeft: true, shadow: [60, 18], shadowTex },
   };
+  // the elites alone get the sticker rim (outline.ts), baked when one of a kind first comes;
+  // on the plain horde it glared
+  const rimmed = new Map<EliteKind, MobLook>();
+  const rim = (kind: EliteKind) => rimmed.get(kind) ?? rimmed.set(kind, { ...looks[kind], sheet: outlineSheet(renderer, looks[kind].sheet) }).get(kind)!;
   const ring = () => makeRing(renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
   // only the big jiangshi is tinted; the others are drawn in their own colours
   const tint = (k: number, kind: EliteKind) => (kind === 'charger' ? ELITE_TINTS[k % ELITE_TINTS.length] : 0xffffff);
   return new EliteCrowd(
-    (k, kind) => new EliteView(kind, world, looks[kind], ring(), tint(k, kind), scene.eliteRing, topZ),
+    (k, kind) => new EliteView(kind, world, rim(kind), ring(), tint(k, kind), scene.eliteRing, topZ),
     chapter ? new BossBar(t('boss.twins')) : null,
   );
 }

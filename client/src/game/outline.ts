@@ -3,8 +3,8 @@ import { bakeTexture } from './bake';
 import type { SheetMeta } from './mobAnim';
 import { sliceSheet, type MobSheet } from './mobView';
 
-// The horde's sticker edge: a pale cold rim around every mob, so the dark jiangshi read
-// against the dark ground even at the edge of the screen. Baked once per sheet when a run
+// The elites' sticker edge: a pale cold rim around the big foes, so they stand out of the
+// dark horde on the dark ground (the plain mobs go without: on all of them it glared). Baked once per sheet when a run
 // starts, from the sheet's own white flash copies (stamped around the frame in a ring, tinted,
 // under the frame), into a sheet whose frames are padded so a rim never bleeds into the next.
 
@@ -17,7 +17,7 @@ export interface OutlineStyle {
 }
 
 /** Pale teal-white: cold like the enemies, and far from the hero's saffron. */
-export const MOB_OUTLINE: OutlineStyle = { px: 7, color: 0xe2f2ee, steps: 12 };
+export const ELITE_OUTLINE: OutlineStyle = { px: 7, color: 0xe2f2ee, steps: 12 };
 
 /** `meta` with every frame grown by `pad` on each side (the drawing stays where it was in it). */
 export function paddedMeta(meta: SheetMeta, pad: number): SheetMeta {
@@ -33,7 +33,7 @@ export function rimOffsets(px: number, steps: number): [number, number][] {
 }
 
 /** A copy of `sheet` with a rim round every frame; its flash copies flash rim and all. */
-export function outlineSheet(renderer: Renderer, sheet: MobSheet, style = MOB_OUTLINE): MobSheet {
+export function outlineSheet(renderer: Renderer, sheet: MobSheet, style = ELITE_OUTLINE): MobSheet {
   const { meta, textures } = sheet;
   const out = paddedMeta(meta, style.px);
   const rim = rimOffsets(style.px, style.steps);

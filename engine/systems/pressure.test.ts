@@ -43,6 +43,8 @@ describe('crowd blows', () => {
     const e = new Engine(CHAPTER);
     const s = e.state;
     const p = s.players[0];
+    // past chapter 1's opening, where the crowd hits for its share
+    s.wave = 9;
     s.mobs.forEach((m, i) => {
       m.x = p.x + 5_000_000 + i * 200_000;
       m.y = p.y;

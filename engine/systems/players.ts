@@ -11,6 +11,7 @@ import { ringPoint } from './horde';
 import { bellyBounce, dodged } from './monks';
 import { breakBell } from './spells';
 import { fishStart, tap } from './fish';
+import { openingShare } from './waves';
 import { staffStart, sweep } from './staff';
 
 // The hero: moves with the stick (easing into and out of a run), auto-kicks the cuju at the
@@ -166,8 +167,10 @@ export function contactSystem(s: SimState, events: SimEvent[]): void {
     if (p.dead) continue;
     const t = nearestTarget(s, p.x, p.y, HERO.hurtDist);
     if (t < 0) continue;
+    // a mob of chapter 1's bigger opening horde hits for its share (openingShare)
+    const mob = () => Math.max(1, Math.trunc(((HURT.mob + Math.trunc(s.wave / 10) * HURT.mobPerTenWaves) * openingShare(s.wave, s.config.chapter)) / 100));
     const value = t < s.mobs.length
-      ? s.mobs[t].kind === 'swarm' || s.mobs[t].kind === 'shard' ? HURT.swarm : HURT.mob + Math.trunc(s.wave / 10) * HURT.mobPerTenWaves
+      ? s.mobs[t].kind === 'swarm' || s.mobs[t].kind === 'shard' ? HURT.swarm : mob()
       : t < bossIndex(s) ? HURT.elite : HURT.boss;
     hurtPlayer(s, events, p.owner, t < s.mobs.length ? Math.trunc((value * (100 + HURT.crowdPercent * pressing(s, p))) / 100) : value);
   }
