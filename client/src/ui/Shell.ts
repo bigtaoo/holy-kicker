@@ -20,7 +20,7 @@ import { loadSettings, updateSettings } from '../meta/settings';
 import { bracketed } from '../platform/brackets';
 import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
-import type { Backend, RunRank } from '../net/backend';
+import { languageProps, type Backend, type RunRank } from '../net/backend';
 import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
@@ -116,7 +116,7 @@ export class Shell {
     });
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
-    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device });
+    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device, ...languageProps(platform, globalThis.navigator?.languages) });
     net.onLeave(() => this.leaving());
   }
 

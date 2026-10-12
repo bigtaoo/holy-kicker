@@ -164,3 +164,13 @@ export class Backend {
     }
   }
 }
+
+/**
+ * The languages the host reported (CrazyGames: the portal's locale alone) and the browser's own,
+ * for the `session` event: they show whether players from countries with a table of their own
+ * get it, or a portal set to English hides it from them.
+ */
+export function languageProps(platform: Pick<Platform, 'languages'>, browser: readonly string[] | undefined): Record<string, PropValue> {
+  const list = (langs: readonly string[]) => langs.slice(0, 4).join(',').slice(0, 64);
+  return { langs: list(platform.languages()), navLangs: list(browser ?? []) };
+}

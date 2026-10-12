@@ -18,7 +18,7 @@ export type Device = (typeof DEVICES)[number];
  * the background (tab hidden, app switched), the last one of a day being where the player stopped;
  * `iap` an in-app purchase or restore answered (iOS, the ad-free card).
  *
- * `session` has `runs`, `level` and `device` (DEVICES). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
+ * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list) and `navLangs` (the browser's). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `ad` has `at` (`lobby`, `revive` or
  * `double`) and `free` when the ad-free card paid the reward with no ad. `claim` has `what` (`task`
  * with `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`
