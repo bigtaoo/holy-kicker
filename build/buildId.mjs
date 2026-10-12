@@ -16,7 +16,7 @@ export function buildId() {
   const { version } = JSON.parse(readFileSync(new URL('../client/package.json', import.meta.url), 'utf8'));
   const sha = git('rev-parse --short=7 HEAD');
   if (!sha) return version;
-  return `${version}+${sha}${git('status --porcelain --untracked-files=no -- . ":(exclude)client/wechat/project.config.json"') ? '-dirty' : ''}`;
+  return `${version}+${sha}${git('status --porcelain --untracked-files=no -- ":/" ":(top,exclude)client/wechat/project.config.json"') ? '-dirty' : ''}`;
 }
 
 /** Vite's `define` for it: `__HK_BUILD__` in the client. */
