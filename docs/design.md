@@ -321,14 +321,17 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
 - Every player-facing string comes from a string table keyed by id; no literal text in game
   code. Numbers and plurals go through one formatter.
 - Languages: **English** (default), **Simplified Chinese**, and since 2026-10-06 German,
-  French, Spanish, Italian, Portuguese (BR), Polish, Russian, Japanese and Korean
-  (`client/src/i18n/more.ts`; the WeChat build ships en and zh only, for its 4 MB main
+  French, Spanish, Italian, Portuguese (BR), Polish, Russian, Japanese and Korean; since
+  2026-10-12 Vietnamese, Turkish, Thai and Indonesian, the untranslated countries that brought
+  a quarter of CrazyGames' first installs (`client/src/i18n/more.ts`; the WeChat build ships en and zh only, for its 4 MB main
   package). Picked in the lobby's settings or on the pause panel (`ui/languagePanel.ts`); the
   tables and layouts must not assume a language count.
 - Language order: saved setting → platform / browser language → English.
 - Layouts leave room for about 30 % longer text (German, Russian). Damage numbers are digits
   only and need no localization.
-- Glyphs: system fonts on web (Japanese and Korean put their own fonts first, `ui/widgets.ts`); check CJK coverage and size on the WeChat build.
+- Glyphs: system fonts on web (Japanese, Korean and Thai put their own fonts first, `ui/widgets.ts`); check CJK coverage and size on the WeChat build.
+- Wrapping breaks only at spaces (else between characters), so the Thai table leaves a space
+  between phrases where Thai writing allows one.
 
 ## Lobby layout (portrait, 5 bottom tabs)
 

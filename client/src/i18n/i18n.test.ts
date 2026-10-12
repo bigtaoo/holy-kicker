@@ -13,8 +13,8 @@ function leaves(node: object, prefix = ''): string[] {
 describe('i18n', () => {
   afterEach(() => setLocale('en'));
 
-  it('ships eleven languages, each named in itself', () => {
-    expect(LOCALES).toEqual(['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko']);
+  it('ships fifteen languages, each named in itself', () => {
+    expect(LOCALES).toEqual(['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko', 'vi', 'tr', 'th', 'id']);
     expect(new Set(LOCALES.map(localeName)).size).toBe(LOCALES.length);
   });
 
@@ -56,6 +56,8 @@ describe('i18n', () => {
     expect(detectLocale(['zh_CN'])).toBe('zh');
     expect(detectLocale(['de-DE', 'en'])).toBe('de');
     expect(detectLocale(['pt-BR'])).toBe('pt');
+    expect(detectLocale(['vi-VN'])).toBe('vi');
+    expect(detectLocale(['in-ID'])).toBe('id');
     expect(detectLocale(['nl'])).toBe('en');
     expect(detectLocale([])).toBe('en');
   });

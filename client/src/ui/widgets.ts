@@ -8,10 +8,12 @@ import { getLocale, type Locale } from '../i18n';
 
 /** System fonts with CJK fallbacks (docs/design.md "Localization": system fonts on web). */
 export const FONT = 'Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
-/** Japanese and Korean put their own fonts first, so shared Han characters take their forms. */
+/** Japanese and Korean put their own fonts first, so shared Han characters take their forms;
+ *  Arial has no Thai, so Thai names the system Thai fonts before the browser guesses one. */
 const LOCAL_FONT: Partial<Record<Locale, string>> = {
   ja: 'Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, "Noto Sans CJK JP", sans-serif',
   ko: 'Arial, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", sans-serif',
+  th: 'Tahoma, "Leelawadee UI", Thonburi, "Noto Sans Thai", Arial, sans-serif',
 };
 
 export const COLORS = {

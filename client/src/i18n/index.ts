@@ -6,8 +6,8 @@ import { zh } from './zh';
 // typed as Table<typeof en>, so a missing or extra key is a compile error. Keys are dotted
 // paths checked at compile time: t('lobby.play').
 
-export type Locale = 'en' | 'zh' | 'de' | 'fr' | 'es' | 'it' | 'pt' | 'pl' | 'ru' | 'ja' | 'ko';
-const ALL: readonly Locale[] = ['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko'];
+export type Locale = 'en' | 'zh' | 'de' | 'fr' | 'es' | 'it' | 'pt' | 'pl' | 'ru' | 'ja' | 'ko' | 'vi' | 'tr' | 'th' | 'id';
+const ALL: readonly Locale[] = ['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko', 'vi', 'tr', 'th', 'id'];
 export const DEFAULT_LOCALE: Locale = 'en';
 
 export type Table<T> = { [K in keyof T]: T[K] extends string ? string : Table<T[K]> };
@@ -38,11 +38,13 @@ export function isLocale(v: unknown): v is Locale {
 
 /**
  * The first supported language in a preference list (navigator.languages, the portal's
- * language, WeChat's 'zh_CN'); only the base subtag counts. English when nothing matches.
+ * language, WeChat's 'zh_CN'); only the base subtag counts ('in', Indonesian's old code, reads as
+ * 'id'). English when nothing matches.
  */
 export function detectLocale(languages: readonly string[]): Locale {
   for (const tag of languages) {
-    const base = tag.split(/[-_]/)[0]?.toLowerCase();
+    const raw = tag.split(/[-_]/)[0]?.toLowerCase();
+    const base = raw === 'in' ? 'id' : raw;
     if (isLocale(base)) return base;
   }
   return DEFAULT_LOCALE;
