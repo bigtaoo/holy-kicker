@@ -9,7 +9,7 @@ import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export interface SaveData {
   version: number;
@@ -60,6 +60,11 @@ export interface SaveData {
   achieved: number;
   /** The dice name on the boards (protocol.ts packDice), 0 until the first launch rolls one (ui/playerName.ts). */
   dice: number;
+  /** Welcome gifts claimed (welcome.ts), and the local date (yyyymmdd) of the last one. */
+  gifts: number;
+  giftDay: number;
+  /** The local date (yyyymmdd) the first run ended, 0 before; that day's tasks ask less (daily.ts). */
+  firstDay: number;
 }
 
 export function newSave(): SaveData {
@@ -69,7 +74,7 @@ export function newSave(): SaveData {
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), monk: 'kicker', monks: 1,
-    kills: 0, achieved: 0, dice: 0,
+    kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0,
   };
 }
 
@@ -107,6 +112,7 @@ function owned(monks: number, id: unknown): boolean {
  * Version 2 had no patrol or daily counters: the patrol starts in the lobby, the day afresh.
  * Version 3 had no achievements: the kills start at 0, and what the progress already reached
  * waits to be claimed.
+ * Version 4 had no welcome gifts: a player past the first run gets them from the next lobby.
  */
 export function parseSave(text: string | null): SaveData {
   const fresh = newSave();
@@ -157,5 +163,8 @@ export function parseSave(text: string | null): SaveData {
     kills: int(raw.kills, 0, max, 0),
     achieved: int(raw.achieved, 0, (2 ** BALANCE.achievements.length) - 1, 0),
     dice: isDice(raw.dice) ? raw.dice : 0,
+    gifts: int(raw.gifts, 0, BALANCE.welcome.length, 0),
+    giftDay: int(raw.giftDay, 0, 99999999, 0),
+    firstDay: int(raw.firstDay, 0, 99999999, 0),
   };
 }

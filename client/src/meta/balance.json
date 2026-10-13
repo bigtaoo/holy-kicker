@@ -17,8 +17,7 @@
   "levelXpBase": 40,
   "levelXpStep": 20,
   "unlocks": {
-    "trainLevel": 2,
-    "patrolChapter": 1,
+    "trainLevel": 1,
     "codexChapter": 2
   },
   "sutras": [
@@ -84,10 +83,16 @@
       { "kind": "chests", "n": 2 },
       { "kind": "patrol", "n": 1 }
     ],
+    "firstDay": [2, 20, 500, 1, 1],
     "copper": 100,
     "jade": 10,
     "bonusJade": 20
   },
+  "welcome": [
+    { "item": "robe", "tier": 1, "copper": 0, "jade": 0 },
+    { "item": "pendant", "tier": 2, "copper": 0, "jade": 30 },
+    { "item": "bracers", "tier": 2, "copper": 300, "jade": 0 }
+  ],
   "achievements": [
     { "kind": "runs", "n": 5, "jade": 10 },
     { "kind": "runs", "n": 25, "jade": 20 },

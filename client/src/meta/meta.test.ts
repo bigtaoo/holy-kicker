@@ -145,7 +145,8 @@ describe('progress', () => {
     // open from the start, so App Review finds the iOS ad-free card without clearing a chapter
     expect(tabLock(s, 'shop')).toBeNull();
     expect(tabLock(s, 'gear')).toEqual({ kind: 'firstRun' });
-    expect(tabLock(s, 'train')).toEqual({ kind: 'level', level: 2 });
-    expect(tabLock({ ...s, level: 2 }, 'train')).toBeNull();
+    // training opens with the first run, its first node bought with that run's copper
+    expect(tabLock(s, 'train')).toEqual({ kind: 'firstRun' });
+    expect(tabLock({ ...s, firstRunDone: true }, 'train')).toBeNull();
   });
 });

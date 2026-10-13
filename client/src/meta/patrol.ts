@@ -8,7 +8,7 @@ import type { SaveData } from './save';
 // Patrol (docs/design.md "Retention"): idle income that piles up while the player is away, up
 // to a cap, scaled by the highest cleared chapter. Mostly gear, a little copper. A rewarded ad
 // doubles a collection; a quick patrol pays a few hours at once for an ad or for jade, a few
-// times a day. Opens with the shop. Pure: takes a save and `now` (ms), returns a new save.
+// times a day. Opens after the first run. Pure: takes a save and `now` (ms), returns a new save.
 
 export interface PatrolBalance {
   capHours: number;
@@ -30,8 +30,9 @@ export interface PatrolBalance {
 const PATROL = BALANCE.patrol;
 const HOUR = 3600 * 1000;
 
+/** Opens after the first run, so a new player's first night already piles up a haul. */
 export function patrolOpen(save: SaveData): boolean {
-  return save.cleared >= BALANCE.unlocks.patrolChapter;
+  return save.firstRunDone;
 }
 
 /** Starts the patrol the first time the lobby sees it open. */

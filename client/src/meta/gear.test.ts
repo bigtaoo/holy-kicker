@@ -96,17 +96,18 @@ describe('gear', () => {
 describe('training', () => {
   it('lays out a fixed line: the cycle, free revives, rising cost, one node per level', () => {
     const t = BALANCE.training;
-    expect(trainNode(1)).toEqual({ n: 1, stat: t.cycle[0][0], value: t.cycle[0][1], cost: t.costBase, level: 2 });
+    expect(trainNode(1)).toEqual({ n: 1, stat: t.cycle[0][0], value: t.cycle[0][1], cost: t.costBase, level: 1 });
     expect(trainNode(t.reviveNodes[0]).stat).toBe('revive');
     expect(trainNode(3).cost).toBe(t.costBase + 2 * t.costStep);
   });
 
   it('buys nodes in order, gated by level and copper', () => {
+    // the first node opens at level 1, right after the first run
     let s = { ...newSave(), copper: 1000 };
-    expect(trainBlock(s)).toBe('level');
-    s = { ...s, level: 3 };
     expect(trainBlock(s)).toBeNull();
-    s = train(train(s));
+    s = train(s);
+    expect(trainBlock(s)).toBe('level');
+    s = train({ ...s, level: 2 });
     expect(s.trained).toBe(2);
     expect(trainBlock(s)).toBe('level');
     expect(nextNode(s)!.n).toBe(3);

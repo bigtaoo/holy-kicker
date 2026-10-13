@@ -254,6 +254,12 @@ export const zh: Table<typeof en> = {
     double: '铜钱翻倍',
     doubled: '铜钱已翻倍！',
     drops: '获得装备',
+    gift: '见面礼：{gift}！',
+    nextChest: '下一个宝箱在第 {wave} 波',
+  },
+  gift: {
+    claim: '领取今日礼物：{gift}',
+    tomorrow: '明日礼物：{gift}',
   },
   shop: {
     free: '每日礼包',

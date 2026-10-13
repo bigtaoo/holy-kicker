@@ -1,7 +1,7 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { bonusReady, taskState, today } from '../meta/daily';
+import { bonusReady, taskGoal, taskState, today } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLeft } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
@@ -175,22 +175,14 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
     const row = new Container();
     row.y = top + ROWS_TOP + i * ROW_H;
     const state = taskState(save, d, i);
-    const name = fit(label(t(`tasks.${goal.kind}`, { n: goal.n }), 46, state === 'claimed' || state === 'locked' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
+    const n = taskGoal(save, d, i);
+    const name = fit(label(t(`tasks.${goal.kind}`, { n }), 46, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
-    if (state === 'locked') {
-      // the patrol opens later; until then its task says when, and the bonus skips it
-      const when = fit(label(t('tab.unlockChapter', { n: BALANCE.unlocks.patrolChapter }), 40, COLORS.danger, { align: 'left' }), 860);
-      when.anchor.set(0, 0.5);
-      when.position.set(-430, 40);
-      row.addChild(name, when);
-      c.addChild(row);
-      return;
-    }
-    const done = Math.min(goal.n, d.progress[i]);
-    const gauge = meter(380, done / goal.n, state === 'open' ? COLORS.copper : COLORS.jade);
+    const done = Math.min(n, d.progress[i]);
+    const gauge = meter(380, done / n, state === 'open' ? COLORS.copper : COLORS.jade);
     gauge.view.position.set(-240, 40);
-    const count = label(`${done}/${goal.n}`, 42, COLORS.dim);
+    const count = label(`${done}/${n}`, 42, COLORS.dim);
     count.anchor.set(0, 0.5);
     count.position.set(-20, 40);
     row.addChild(name, gauge.view, count);

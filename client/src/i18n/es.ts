@@ -254,6 +254,12 @@ export const es: Table<typeof en> = {
     double: 'Duplicar cobre',
     doubled: '¡Cobre duplicado!',
     drops: 'Equipo encontrado',
+    gift: 'Regalo de bienvenida: ¡{gift}!',
+    nextChest: 'Próximo cofre en la oleada {wave}',
+  },
+  gift: {
+    claim: 'Recoge el regalo de hoy: {gift}',
+    tomorrow: 'Regalo de mañana: {gift}',
   },
   shop: {
     free: 'Regalo diario',

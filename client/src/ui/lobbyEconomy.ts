@@ -8,16 +8,18 @@ import type { Haul } from '../meta/haul';
 import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
+import { claimGift, giftReady, nextGift } from '../meta/welcome';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
 import type { TasksView } from './achievePanel';
 import { adFreeCard } from './adFreeCard';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
+import { dropName } from './gearText';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
 import { COLORS, button, buttonLabel, dot, fit, label, panel } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
 // chests (and on iOS the ad-free card, adFreeCard.ts), the patrol and daily-task buttons under
-// PLAY, and their panels. Holds what is open and whether an ad or a purchase is under way; the save
+// PLAY, a new player's welcome gift, and their panels. Holds what is open and whether an ad or a purchase is under way; the save
 // changes themselves are pure (meta/shop.ts, meta/patrol.ts, meta/daily.ts) and go back to the
 // lobby to store. Each one that went through is reported to analytics: a chest or a quick patrol
 // as `buy`, anything paid out as `claim`, every ad-free buy or restore as `iap`.
@@ -108,7 +110,7 @@ export class EconomyUi {
     const save = this.host.save();
     const open = patrolOpen(save);
     const patrol = button(' ', 460, 130, () => {
-      if (!open) return this.host.toast(t('tab.unlockChapter', { n: BALANCE.unlocks.patrolChapter }));
+      if (!open) return this.host.toast(t('tab.unlockFirstRun'));
       this.show('patrol');
     }, { fill: open ? COLORS.panel : COLORS.panelLocked, size: 46, icon: open ? iconSprite(this.host.icons, 'patrol', 84) : lockIcon(this.host.icons, 64) });
     patrol.x = -250;
@@ -137,6 +139,25 @@ export class EconomyUi {
       row.addChild(tasks);
     }
     return row;
+  }
+
+  /**
+   * The welcome gift (meta/welcome.ts) under the Patrol and Tasks row, centred on x = 0: lit with
+   * a dot when today's is waiting, dim with tomorrow's name once it is taken; null after the last.
+   */
+  giftRow(): Container | null {
+    const save = this.host.save();
+    const gift = nextGift(save);
+    if (!save.firstRunDone || !gift) return null;
+    const ready = giftReady(save, this.now());
+    const name = dropName(gift);
+    const b = button(ready ? t('gift.claim', { gift: name }) : t('gift.tomorrow', { gift: name }), 960, 110, () => {
+      const r = claimGift(this.host.save(), this.now());
+      if (!r) return this.host.toast(t('shop.tomorrow'));
+      this.pay(r, 'claim', { what: 'gift', n: r.n });
+    }, { fill: ready ? COLORS.saffron : COLORS.panelLocked, size: 44, icon: iconSprite(this.host.icons, 'chest_free', 76) });
+    if (ready) b.addChild(dot(465, -40));
+    return b;
   }
 
   /** The Shop tab, centred on x = 0 from y = 0 down (shopHeight tall). */

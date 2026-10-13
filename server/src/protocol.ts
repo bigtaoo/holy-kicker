@@ -25,7 +25,8 @@ export type Device = (typeof DEVICES)[number];
  * and `double`). Chests and patrols also carry their haul: `copper`, `jade` and `drops`. `share`
  * has `to` (`chat` or `moments`) and `from` (`lobby`, `run` or `results`, where the player was).
  * `leave` has `place` (`lobby`, `run`, `results` or `other`), `secs` (seconds on screen since
- * the previous `leave`) and, in a run, `chapter` and `wave`. `iap` has `what` (`buy` or
+ * the previous `leave`) and, in a run, `chapter`, `wave`, the hero's `level`, the run's `kills`,
+ * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached). `iap` has `what` (`buy` or
  * `restore`), `item` (`adfree`) and `outcome` (`owned`, `cancelled`, `pending` or `failed`, and
  * `none` for a restore that found nothing).
  */

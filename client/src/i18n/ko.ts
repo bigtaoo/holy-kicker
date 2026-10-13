@@ -254,6 +254,12 @@ export const ko: Table<typeof en> = {
     double: '동전 2배',
     doubled: '동전 2배 획득!',
     drops: '획득한 장비',
+    gift: '환영 선물: {gift}!',
+    nextChest: '다음 상자: {wave} 웨이브',
+  },
+  gift: {
+    claim: '오늘의 선물 받기: {gift}',
+    tomorrow: '내일의 선물: {gift}',
   },
   shop: {
     free: '매일 선물',

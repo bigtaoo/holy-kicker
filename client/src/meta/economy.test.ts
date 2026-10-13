@@ -43,21 +43,16 @@ describe('daily', () => {
     expect(claimBonus(all, NOON)).toBe(all);
   });
 
-  it('locks the patrol task until the patrol opens, and pays the bonus without it', () => {
+  it('asks less on the first day, and the full goals from the next', () => {
     const tasks = BALANCE.daily.tasks;
-    const later = tasks.map((g, i) => (g.kind === 'patrol' ? i : -1)).filter((i) => i >= 0);
-    expect(later.length).toBeGreaterThan(0);
-    let s = cleared(BALANCE.unlocks.patrolChapter - 1);
-    tasks.forEach((g) => (s = bump(s, NOON, g.kind, g.n)));
-    later.forEach((i) => expect(taskState(s, today(s, NOON), i)).toBe('locked'));
-    expect(claimable(s, NOON)).toBe(tasks.length - later.length);
-    expect(claimTask(s, NOON, later[0])).toBe(s);
-    for (let i = 0; i < tasks.length; i++) s = claimTask(s, NOON, i);
-    expect(claimable(s, NOON)).toBe(1);
-    expect(claimBonus(s, NOON).jade).toBe(s.jade + BALANCE.daily.bonusJade);
-    // once the patrol opens the same day, its task counts again
-    const open = { ...s, cleared: BALANCE.unlocks.patrolChapter };
-    later.forEach((i) => expect(taskState(open, open.daily, i)).toBe('ready'));
+    let s = cleared(0, { firstDay: dayKey(NOON) });
+    BALANCE.daily.firstDay.forEach((n, i) => {
+      expect(n).toBeLessThanOrEqual(tasks[i].n);
+      s = bump(s, NOON, tasks[i].kind, n);
+    });
+    expect(claimable(s, NOON)).toBe(tasks.length);
+    const next = bump(s, TOMORROW, 'runs', BALANCE.daily.firstDay[0]);
+    expect(taskState(next, today(next, TOMORROW), 0)).toBe(tasks[0].n > BALANCE.daily.firstDay[0] ? 'open' : 'ready');
   });
 
   it('survives a round trip and repairs a broken daily', () => {
@@ -68,9 +63,9 @@ describe('daily', () => {
 });
 
 describe('patrol', () => {
-  it('starts once the shop opens and piles up to the cap', () => {
+  it('starts after the first run and piles up to the cap', () => {
     expect(startPatrol(newSave(), NOON).patrol).toBe(0);
-    const s = startPatrol(cleared(), NOON);
+    const s = startPatrol(cleared(0), NOON);
     expect(s.patrol).toBe(NOON);
     expect(patrolHours(s, NOON + 3 * HOUR)).toBe(3);
     expect(patrolHours(s, NOON + 99 * HOUR)).toBe(BALANCE.patrol.capHours);

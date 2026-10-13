@@ -2,6 +2,7 @@ import { RELIC_IDS, SUTRA_IDS, type RelicId, type SutraId } from '@hk/engine';
 import { BALANCE, type Chest, type SutraGoal } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { addDrops, grantRelics, rollDrops, type Drop } from './gear';
+import type { Haul } from './haul';
 import type { SaveData } from './save';
 import { trainingStats } from './training';
 
@@ -52,6 +53,10 @@ export interface Reward {
   drops: Drop[];
   /** The grit this lost run added (the new count), 0 if none. */
   grit: number;
+  /** The wave of the chapter's next unclaimed progress chest, null with all of them claimed. */
+  nextChest: number | null;
+  /** The welcome gift the first run paid (welcome.ts afterRun), set after settling. */
+  gift?: Haul | null;
 }
 
 /** Copper multiplier of a stage (`stage`): 1, 1.5, 2, ... */
@@ -170,6 +175,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
     newBest: waves > was.best[i],
     drops,
     grit: tried ? grit : 0,
+    nextChest: BALANCE.chests.find((_, k) => !(claimed & (1 << k)))?.wave ?? null,
   };
   return { save: next, reward };
 }
@@ -194,6 +200,7 @@ export function tabLock(save: SaveData, tab: Tab): Lock | null {
     case 'gear':
       return save.firstRunDone ? null : { kind: 'firstRun' };
     case 'train':
+      if (!save.firstRunDone) return { kind: 'firstRun' };
       return save.level >= u.trainLevel ? null : { kind: 'level', level: u.trainLevel };
     case 'codex':
       return save.cleared >= u.codexChapter ? null : { kind: 'chapter', n: u.codexChapter };

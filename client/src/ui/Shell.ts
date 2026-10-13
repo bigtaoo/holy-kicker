@@ -10,17 +10,19 @@ import { setupOf } from '../game/runSetup';
 import { BALANCE } from '../meta/balance';
 import { evolvedIn } from '../meta/codex';
 import { loadout } from '../meta/loadout';
-import { bump, rollDay } from '../meta/daily';
+import { rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
 import { chooseTrack, doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
 import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
+import { afterRun } from '../meta/welcome';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, updateSettings } from '../meta/settings';
 import { bracketed } from '../platform/brackets';
 import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import { languageProps, type Backend, type RunRank } from '../net/backend';
+import { runLeave } from '../net/leaveProps';
 import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
@@ -124,10 +126,9 @@ export class Shell {
   private leaving(): Record<string, PropValue> {
     const secs = Math.round(this.shownMs / 1000);
     this.shownMs = 0;
-    const s = this.screen;
-    if (s instanceof LobbyScreen) return { place: 'lobby', secs };
-    if (s instanceof ResultsScreen) return { place: 'results', secs };
-    if (this.game) return { place: 'run', secs, chapter: this.chapter, wave: Math.max(1, this.game.engine.state.wave) };
+    if (this.screen instanceof LobbyScreen) return { place: 'lobby', secs };
+    if (this.screen instanceof ResultsScreen) return { place: 'results', secs };
+    if (this.game) return { place: 'run', secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.tutorial?.step ?? null) };
     return { place: 'other', secs };
   }
 
@@ -284,7 +285,7 @@ export class Shell {
       sutras: this.scene.sutras ? SUTRA_IDS : earnedSutras(this.save),
       bonus: this.scene.bare ? {} : bonus,
       hard: this.hard,
-      monk: this.scene.monk ?? this.save.monk,
+      monk: this.scene.monk ?? this.save.monk, firstRun: !this.save.firstRunDone && this.scene.waves,
     }, left?.state);
     this.shownWave = -1;
     this.downShown = false;
@@ -388,14 +389,13 @@ export class Shell {
     const name = rankedRun(this.scene) ? this.names.board(this.save) : null;
     const rank = name ? this.net.submitRun({ ...run, ...name }) : Promise.resolve(null);
     void this.net.flush();
-    const settled = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills });
-    const { reward } = settled;
-    const now = Date.now();
-    const save = bump(bump(bump(settled.save, now, 'runs', 1), now, 'waves', waves), now, 'kills', this.kills);
+    const { reward, save: played } = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills });
+    const { save, gift } = afterRun(played, Date.now(), waves, this.kills);
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);
+    if (gift) this.net.track('claim', { what: 'gift', n: 0, copper: gift.copper, jade: gift.jade, drops: gift.drops.length });
     if (reward.firstClear) this.portal.celebrate();
-    this.showResults(reward, waves, rank);
+    this.showResults({ ...reward, gift }, waves, rank);
   }
 
   private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>): void {

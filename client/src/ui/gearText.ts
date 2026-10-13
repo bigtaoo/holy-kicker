@@ -15,6 +15,11 @@ export function tierName(tier: Tier): string {
   return t(`tier.${tier}`);
 }
 
+/** One item, as "Refined Pendant". */
+export function dropName(d: Drop): string {
+  return `${tierName(d.tier)} ${itemName(d.item)}`;
+}
+
 /** One line per item and tier found, the best first, with its colour. */
 export function dropLines(drops: readonly Drop[]): [string, number][] {
   const seen = new Map<string, { d: Drop; n: number }>();
@@ -24,5 +29,5 @@ export function dropLines(drops: readonly Drop[]): [string, number][] {
     if (e) e.n++;
     else seen.set(key, { d, n: 1 });
   }
-  return [...seen.values()].map(({ d, n }) => [`${tierName(d.tier)} ${itemName(d.item)}${n > 1 ? ` ${t('gear.count', { n })}` : ''}`, TIER_COLORS[d.tier]]);
+  return [...seen.values()].map(({ d, n }) => [`${dropName(d)}${n > 1 ? ` ${t('gear.count', { n })}` : ''}`, TIER_COLORS[d.tier]]);
 }

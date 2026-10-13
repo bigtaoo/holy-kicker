@@ -14,6 +14,8 @@ export interface TaskGoal {
 
 export interface DailyBalance {
   tasks: TaskGoal[];
+  /** The goals on a new player's first day (SaveData.firstDay), in `tasks` order: easier to reach. */
+  firstDay: number[];
   /** What each task pays when claimed. */
   copper: number;
   jade: number;
@@ -91,17 +93,16 @@ export function bump(save: SaveData, now: number, kind: TaskKind, n: number): Sa
   return { ...save, daily: { ...d, progress } };
 }
 
-export type TaskState = 'locked' | 'open' | 'ready' | 'claimed';
+export type TaskState = 'open' | 'ready' | 'claimed';
 
-/** The patrol's task waits for the patrol (BALANCE.unlocks.patrolChapter). */
-export function taskLocked(save: SaveData, i: number): boolean {
-  return DAILY.tasks[i].kind === 'patrol' && save.cleared < BALANCE.unlocks.patrolChapter;
+/** What task `i` asks for on the day `d`: less on the player's first day. */
+export function taskGoal(save: SaveData, d: Daily, i: number): number {
+  return save.firstDay !== 0 && save.firstDay === d.day ? DAILY.firstDay[i] : DAILY.tasks[i].n;
 }
 
 export function taskState(save: SaveData, d: Daily, i: number): TaskState {
   if (d.claimed & (1 << i)) return 'claimed';
-  if (taskLocked(save, i)) return 'locked';
-  return d.progress[i] >= DAILY.tasks[i].n ? 'ready' : 'open';
+  return d.progress[i] >= taskGoal(save, d, i) ? 'ready' : 'open';
 }
 
 /** Tasks that can be claimed now, plus the bonus once it is ready. */
@@ -111,9 +112,9 @@ export function claimable(save: SaveData, now: number): number {
   return ready + (bonusReady(save, d) ? 1 : 0);
 }
 
-/** The bonus waits for every task the player can do yet: locked ones do not hold it back. */
+/** The bonus waits for every task to be claimed. */
 export function bonusReady(save: SaveData, d: Daily): boolean {
-  return !d.bonus && DAILY.tasks.every((_, i) => taskState(save, d, i) === 'claimed' || taskState(save, d, i) === 'locked');
+  return !d.bonus && DAILY.tasks.every((_, i) => taskState(save, d, i) === 'claimed');
 }
 
 /** Pays task `i` when it is done and not yet claimed. */

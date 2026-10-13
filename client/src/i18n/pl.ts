@@ -254,6 +254,12 @@ export const pl: Table<typeof en> = {
     double: 'Podwój miedź',
     doubled: 'Miedź podwojona!',
     drops: 'Znaleziony ekwipunek',
+    gift: 'Prezent powitalny: {gift}!',
+    nextChest: 'Następna skrzynia na fali {wave}',
+  },
+  gift: {
+    claim: 'Odbierz dzisiejszy prezent: {gift}',
+    tomorrow: 'Jutrzejszy prezent: {gift}',
   },
   shop: {
     free: 'Dzienny prezent',

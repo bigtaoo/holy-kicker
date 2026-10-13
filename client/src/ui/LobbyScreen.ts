@@ -17,7 +17,8 @@ import { EconomyUi, shopHeight, type LobbyTrack } from './lobbyEconomy';
 import type { PatrolLook } from './economyPanels';
 import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
-import { scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
+import { hintArrow, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
+import { hintTab } from './lobbyHint';
 import { monkPanel } from './monkPanel';
 import type { PlayerName } from './playerName';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
@@ -80,6 +81,8 @@ export class LobbyScreen implements Screen {
   private readonly boards: BoardUi;
   /** Whether rewarded ads can be offered, for the shop tab's height. */
   private adOk = false;
+  private hint: Container | null = null;
+  private clock = 0;
 
   constructor(
     private save: SaveData,
@@ -152,6 +155,10 @@ export class LobbyScreen implements Screen {
         this.relayout();
       },
     }));
+    // a new player's next step before chapter 1 is cleared: an arrow bobbing over its tab (lobbyHint.ts)
+    const hint = hintTab(this.save, Date.now(), this.tab);
+    this.hint = hint ? hintArrow(f.w, f.h, hint) : null;
+    if (this.hint) this.view.addChild(this.hint);
     // the consent card waits at the foot of the lobby, under every panel, until it is answered
     const privacy = watched(this.actions.settings.privacy, () => this.relayout());
     if (privacy?.asking()) this.view.addChild(consentCard(f.w, f.h - TAB_H - 200, privacy));
@@ -212,6 +219,8 @@ export class LobbyScreen implements Screen {
   update(dt: number): void {
     this.merging?.update(dt);
     this.econ.update(dt);
+    this.clock += dt;
+    if (this.hint && !this.hint.destroyed) this.hint.pivot.y = -Math.abs(Math.sin(this.clock * 4)) * 24;
   }
 
   destroy(): void {
@@ -353,14 +362,21 @@ export class LobbyScreen implements Screen {
     if (hardOpen(this.save)) card.addChild(this.trackSwitch(-400));
     this.view.addChild(card);
 
+    // a welcome gift takes a row under Patrol and Tasks; on a short screen the stack moves up for it
+    const gift = this.econ.giftRow();
+    const playY = Math.min(midY + 300, h - TAB_H - 140 - (gift ? 130 : 0));
     if (open) {
       const play = button(t('lobby.play'), 620, 190, () => this.actions.play(n), { size: 88 });
-      play.position.set(w / 2, Math.min(midY + 300, h - TAB_H - 140));
+      play.position.set(w / 2, playY);
       this.view.addChild(play);
     }
     const row = this.econ.playRow();
-    row.position.set(w / 2, Math.min(midY + 300, h - TAB_H - 140) + 200);
+    row.position.set(w / 2, playY + 200);
     this.view.addChild(row);
+    if (gift) {
+      gift.position.set(w / 2, playY + 335);
+      this.view.addChild(gift);
+    }
   }
 
   /** Normal and hard side by side above the card, the shown one lit. */

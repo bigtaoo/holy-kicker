@@ -254,6 +254,12 @@ export const th: Table<typeof en> = {
     double: 'ทองแดง ×2',
     doubled: 'ได้ทองแดง ×2!',
     drops: 'อุปกรณ์ที่ได้',
+    gift: 'ของขวัญต้อนรับ: {gift}!',
+    nextChest: 'หีบถัดไปที่คลื่น {wave}',
+  },
+  gift: {
+    claim: 'รับของขวัญวันนี้: {gift}',
+    tomorrow: 'ของขวัญพรุ่งนี้: {gift}',
   },
   shop: {
     free: 'ของขวัญรายวัน',

@@ -252,6 +252,12 @@ export const en = {
     double: 'Double copper',
     doubled: 'Copper doubled!',
     drops: 'Gear found',
+    gift: 'Welcome gift: {gift}!',
+    nextChest: 'Next chest at wave {wave}',
+  },
+  gift: {
+    claim: "Claim today's gift: {gift}",
+    tomorrow: "Tomorrow's gift: {gift}",
   },
   shop: {
     free: 'Daily gift',

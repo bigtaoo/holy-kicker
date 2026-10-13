@@ -254,6 +254,12 @@ export const ja: Table<typeof en> = {
     double: '銅銭2倍',
     doubled: '銅銭が2倍に！',
     drops: '入手した装備',
+    gift: '歓迎の贈り物：{gift}！',
+    nextChest: '次の宝箱はウェーブ {wave}',
+  },
+  gift: {
+    claim: '今日の贈り物を受け取る：{gift}',
+    tomorrow: '明日の贈り物：{gift}',
   },
   shop: {
     free: '毎日のプレゼント',

@@ -193,6 +193,19 @@ describe('drops', () => {
     expect(events.filter((e) => e.type === 'pickup').length).toBe(1);
   });
 
+  it('pulls from FIRST_RUN.magnet away on a first run, through its first wave only', () => {
+    const far = (wave: number, firstRun: boolean): number => {
+      const s = bare({ firstRun });
+      s.wave = wave;
+      dropGem(s, u(600), 0, 5);
+      for (let t = 0; t < 60; t++) dropSystem(s, []);
+      return s.players[0].xp;
+    };
+    expect(far(1, true)).toBe(5);
+    expect(far(2, true)).toBe(0);
+    expect(far(1, false)).toBe(0);
+  });
+
   it('vacuums the whole map, and the cells start over', () => {
     const s = bare();
     for (let i = 0; i < 6; i++) dropGem(s, u(1000 + i * 300), 0, 1);

@@ -7,6 +7,7 @@ import type { GearBalance } from './gear';
 import type { PatrolBalance } from './patrol';
 import type { ShopBalance } from './shop';
 import type { TrainingBalance } from './training';
+import type { WelcomeGift } from './welcome';
 
 // Balance numbers live in balance.json, never in code, so they can move to remote config
 // later (docs/design.md "Platforms, saves and server"). All values are starting points.
@@ -31,7 +32,8 @@ export interface Balance {
   xpPerWave: number;
   levelXpBase: number;
   levelXpStep: number;
-  unlocks: { trainLevel: number; patrolChapter: number; codexChapter: number };
+  /** The level the first training node opens at (each next node one level later), and the codex's chapter. */
+  unlocks: { trainLevel: number; codexChapter: number };
   /** What earns each sutra (progress.ts sutraGoal), in SUTRA_IDS order. */
   sutras: SutraGoal[];
   gear: GearBalance;
@@ -39,6 +41,8 @@ export interface Balance {
   shop: ShopBalance;
   patrol: PatrolBalance;
   daily: DailyBalance;
+  /** A new player's welcome gifts (welcome.ts), one a day from the first run's day. */
+  welcome: WelcomeGift[];
   /** The long-term goals and the jade each pays once (achievements.ts), at most 30. */
   achievements: AchievementGoal[];
   /** Jade price of each monk (monks.ts); the kicker is free. */

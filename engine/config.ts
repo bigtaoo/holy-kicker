@@ -45,6 +45,8 @@ export interface RunConfig {
   bonus: StatBonus;
   /** Hard mode (HARD): the chapter's waves for heroes with endgame gear. */
   hard: boolean;
+  /** A new player's first run (FIRST_RUN). Missing in configs saved before it was kept. */
+  firstRun?: boolean;
 }
 
 export const DEFAULT_RUN: RunConfig = {
@@ -451,6 +453,15 @@ export const DROPS = {
   maxSpeed: perTick(2000),
   /** Share of the velocity turned toward the hero per tick, per mille. */
   turn: 333,
+};
+
+/**
+ * A new player's first run (RunConfig.firstRun): through its first wave the gems fly in from
+ * `magnet` away, so the first card choice comes within seconds even for a player who has not
+ * moved yet (most who leave on wave 1 never do).
+ */
+export const FIRST_RUN = {
+  magnet: toFp(700),
 };
 
 export const SPELLS = {

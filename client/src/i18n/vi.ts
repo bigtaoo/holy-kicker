@@ -254,6 +254,12 @@ export const vi: Table<typeof en> = {
     double: 'Nhân đôi đồng',
     doubled: 'Đã nhân đôi đồng!',
     drops: 'Trang bị nhận được',
+    gift: 'Quà chào mừng: {gift}!',
+    nextChest: 'Rương tiếp theo ở đợt {wave}',
+  },
+  gift: {
+    claim: 'Nhận quà hôm nay: {gift}',
+    tomorrow: 'Quà ngày mai: {gift}',
   },
   shop: {
     free: 'Quà mỗi ngày',

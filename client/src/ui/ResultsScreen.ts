@@ -1,13 +1,15 @@
 import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
+import { BALANCE } from '../meta/balance';
 import type { Reward } from '../meta/progress';
 import type { RunRank } from '../net/backend';
 import { sutraName } from './cardText';
-import { dropLines } from './gearText';
+import { dropLines, dropName, TIER_COLORS } from './gearText';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, fit, label, panel } from './widgets';
 
-// Results after a run: what it paid and dropped (already in the save), its place on the
+// Results after a run: what it paid and dropped (already in the save), after the first run the
+// welcome gift and the one waiting tomorrow, the next progress chest, its place on the
 // leaderboard once the server answers, the rewarded "double copper" offer when an ad can be
 // shown, and Continue back to the lobby.
 
@@ -76,6 +78,12 @@ export class ResultsScreen implements Screen {
       lines.push([t('results.drops'), 48, COLORS.dim]);
       for (const [text, color] of dropLines(r.drops)) lines.push([text, 48, color]);
     }
+    // the first run's welcome gift, and the one waiting tomorrow (welcome.ts)
+    const gift = r.gift?.drops[0];
+    if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
+    const tomorrow = r.gift ? BALANCE.welcome[1] : undefined;
+    if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 48, COLORS.saffron]);
+    if (!r.firstClear && r.nextChest !== null) lines.push([t('results.nextChest', { wave: r.nextChest }), 44, COLORS.dim]);
     if (this.offer === 'paid') lines.push([t('results.doubled'), 48, COLORS.saffron]);
     // the card grows with its lines; the buttons sit a fixed distance below it
     const cardH = lines.reduce((n, [, size]) => n + size + 44, 0) + 120;

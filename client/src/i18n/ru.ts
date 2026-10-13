@@ -254,6 +254,12 @@ export const ru: Table<typeof en> = {
     double: 'Двойная медь',
     doubled: 'Медь удвоена!',
     drops: 'Найденные вещи',
+    gift: 'Подарок новичку: {gift}!',
+    nextChest: 'Следующий сундук на волне {wave}',
+  },
+  gift: {
+    claim: 'Забрать подарок дня: {gift}',
+    tomorrow: 'Завтрашний подарок: {gift}',
   },
   shop: {
     free: 'Ежедневный подарок',

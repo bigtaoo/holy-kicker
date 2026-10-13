@@ -3,8 +3,8 @@ import { BALANCE } from './balance';
 import type { SaveData } from './save';
 
 // Training (docs/design.md "Meta progression"): a single fixed line of nodes, bought in order
-// with copper; node n opens at player level n + 1. Plain stats on a repeating cycle, with an
-// extra free revive on a few nodes. `copper` (more copper from runs) and `revive` act outside
+// with copper; node n opens at player level n + unlocks.trainLevel - 1 (the first one right
+// after the first run). Plain stats on a repeating cycle, with an extra free revive on a few nodes. `copper` (more copper from runs) and `revive` act outside
 // the engine; the rest are engine stats.
 
 export type TrainStat = Stat | 'copper' | 'revive';
@@ -33,7 +33,7 @@ const TRAIN = BALANCE.training;
 
 export function trainNode(n: number): TrainNode {
   const [stat, value]: [TrainStat, number] = TRAIN.reviveNodes.includes(n) ? ['revive', 1] : TRAIN.cycle[(n - 1) % TRAIN.cycle.length];
-  return { n, stat, value, cost: TRAIN.costBase + TRAIN.costStep * (n - 1), level: n + 1 };
+  return { n, stat, value, cost: TRAIN.costBase + TRAIN.costStep * (n - 1), level: n + BALANCE.unlocks.trainLevel - 1 };
 }
 
 /** The next node to buy, or null once the line is done. */

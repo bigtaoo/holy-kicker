@@ -254,6 +254,12 @@ export const de: Table<typeof en> = {
     double: 'Kupfer verdoppeln',
     doubled: 'Kupfer verdoppelt!',
     drops: 'Gefundene Ausrüstung',
+    gift: 'Willkommensgeschenk: {gift}!',
+    nextChest: 'Nächste Truhe bei Welle {wave}',
+  },
+  gift: {
+    claim: 'Heutiges Geschenk holen: {gift}',
+    tomorrow: 'Morgiges Geschenk: {gift}',
   },
   shop: {
     free: 'Tagesgeschenk',

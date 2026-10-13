@@ -14,6 +14,8 @@ export interface RunSetup {
   hard?: boolean;
   /** The monk played as (the kicker by default); his rig must be loaded (art.ts loadMonkArt). */
   monk?: MonkId;
+  /** A new player's first run (the engine's FIRST_RUN). */
+  firstRun?: boolean;
 }
 
 /** The run a scene sets up: what the engine simulates. */
@@ -23,11 +25,11 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     heroEase: scene.cam === 'lock' ? HERO_EASE_LOCKED : HERO_EASE_SMOOTH,
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
     waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras, chapter: setup.chapter,
-    bonus: setup.bonus ?? {}, hard: setup.hard ?? false, monk: setup.monk ?? 'kicker',
+    bonus: setup.bonus ?? {}, hard: setup.hard ?? false, monk: setup.monk ?? 'kicker', firstRun: setup.firstRun ?? false,
   };
 }
 
 /** The setup a run's config was made from (a resumed run's, meta/resume.ts). */
 export function setupOf(c: RunConfig): RunSetup {
-  return { chapter: c.chapter, waves: c.waves, revives: c.revives, relic: c.relic, sutras: c.sutras, bonus: c.bonus, hard: c.hard, monk: c.monk };
+  return { chapter: c.chapter, waves: c.waves, revives: c.revives, relic: c.relic, sutras: c.sutras, bonus: c.bonus, hard: c.hard, monk: c.monk, firstRun: c.firstRun };
 }

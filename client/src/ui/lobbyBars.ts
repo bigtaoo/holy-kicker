@@ -168,3 +168,13 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
   });
   return c;
 }
+
+/** A saffron arrow over `tab`'s cell, pointing down at it; the lobby bobs it by its pivot. */
+export function hintArrow(w: number, h: number, tab: Tab): Container {
+  const c = new Container();
+  c.position.set((w / TABS.length) * (TABS.indexOf(tab) + 0.5), h - TAB_H + 15);
+  c.addChild(new Graphics()
+    .poly([-24, -95, 24, -95, 24, -50, 52, -50, 0, 5, -52, -50, -24, -50]).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 7 }));
+  c.eventMode = 'none';
+  return c;
+}

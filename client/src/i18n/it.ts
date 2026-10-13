@@ -254,6 +254,12 @@ export const it: Table<typeof en> = {
     double: 'Raddoppia il rame',
     doubled: 'Rame raddoppiato!',
     drops: 'Equipaggiamento trovato',
+    gift: 'Regalo di benvenuto: {gift}!',
+    nextChest: "Prossimo forziere all'ondata {wave}",
+  },
+  gift: {
+    claim: 'Riscatta il regalo di oggi: {gift}',
+    tomorrow: 'Regalo di domani: {gift}',
   },
   shop: {
     free: 'Dono del giorno',
