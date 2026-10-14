@@ -28,10 +28,10 @@ export function openBeacon(api, build) {
 const DEFAULT_ENTRY = '/src/main.ts';
 const PORTAL_ENTRY = '/src/main.crazygames.ts';
 
-export function rewritePortalHtml(html) {
+export function rewritePortalHtml(html, beacon = '') {
   let out = html;
   if (out.includes(DEFAULT_ENTRY)) out = out.replace(DEFAULT_ENTRY, PORTAL_ENTRY);
-  if (!out.includes('sdk.crazygames.com')) out = out.replace('</head>', `    ${SDK_TAG}\n  </head>`);
+  if (!out.includes('sdk.crazygames.com')) out = out.replace('</head>', `    ${beacon}${beacon ? '\n    ' : ''}${SDK_TAG}\n  </head>`);
   return out;
 }
 
