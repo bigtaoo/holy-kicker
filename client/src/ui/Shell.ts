@@ -286,6 +286,7 @@ export class Shell {
     }, left?.state);
     this.kills = left?.kills ?? 0;
     if (this.quality) this.game.applyQuality(this.quality);
+    this.game.shake.on = loadSettings(this.platform.storage).shake;
     this.game.onEvents = (events) => {
       for (const e of events) {
         if (e.type === 'mobDown') this.kills++;

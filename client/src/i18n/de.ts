@@ -406,6 +406,8 @@ export const de: Table<typeof en> = {
     autoHint: 'Hält das Spiel flüssig, spart bei wenig Akku',
     highHint: 'Beste Effekte; Handys können warm werden',
     saverHint: '30 fps und weniger Effekte, schont den Akku',
+    shakeOn: 'Wackeln: An',
+    shakeOff: 'Wackeln: Aus',
     data: 'Spieldaten',
     shareOn: 'Teilen: An',
     shareOff: 'Teilen: Aus',

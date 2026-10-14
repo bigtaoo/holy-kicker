@@ -406,6 +406,8 @@ export const tr: Table<typeof en> = {
     autoHint: 'Oyunu akıcı tutar; pil azken güç tasarrufu yapar',
     highHint: 'En iyi efektler; telefon ısınabilir',
     saverHint: '30 fps ve daha az efekt, pili korur',
+    shakeOn: 'Ekran sarsıntısı: Açık',
+    shakeOff: 'Ekran sarsıntısı: Kapalı',
     data: 'Oyun verileri',
     shareOn: 'Paylaşım: Açık',
     shareOff: 'Paylaşım: Kapalı',

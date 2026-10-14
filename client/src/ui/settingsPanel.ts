@@ -10,7 +10,7 @@ import { languagePanel } from './languagePanel';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
 
 // The settings panel, opened from the lobby's gear: language (a button to the picker,
-// languagePanel.ts), the sound effects' and the
+// languagePanel.ts) beside the screen shake on or off, the sound effects' and the
 // music's volume in steps (0 is off), the graphics quality and, online, play data: sharing on or off,
 // the privacy policy (and beside it the ad network's privacy options where they are due, iOS in
 // the EEA/UK) and the install's id, and beside Back a Game Center button while Apple's sign-in
@@ -25,6 +25,8 @@ export interface SettingsActions {
   setMusic(volume: number): void;
   quality(): QualityMode;
   setQuality(mode: QualityMode): void;
+  shake(): boolean;
+  setShake(on: boolean): void;
   /** Where the game talks to its backend, the player's privacy answer (net/privacyChoice.ts); null offline. */
   privacy: PrivacyUi | null;
   /** Signing in to the host's account from here (Game Center); never offered elsewhere. */
@@ -57,6 +59,8 @@ export function storedSettings(
       updateSettings(kv, { quality });
       o.setQuality(quality);
     },
+    shake: () => loadSettings(kv).shake,
+    setShake: (shake) => updateSettings(kv, { shake }),
     privacy: o.privacy,
     account: o.account,
     adPrivacy: o.adPrivacy,
@@ -138,6 +142,26 @@ function dataRows(p: PrivacyUi, ads: AdPrivacy, add: (c: Container, step: number
   add(label(text, 36, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 100, breakWords: true }), 190);
 }
 
+/** The language (a button to the picker) and, beside it, the screen shake on or off. */
+function topRow(view: Container, w: number, h: number, a: SettingsActions): Container {
+  const row = new Container();
+  const bw = (ROW + 160 - 24) / 2;
+  const lang = button(localeName(getLocale()), bw, 110, () => {
+    const picker = languagePanel(w, h, (l) => a.setLanguage(l), () => picker.destroy({ children: true }));
+    view.addChild(picker);
+  }, { fill: COLORS.panelLocked, size: 48 });
+  lang.x = -(bw + 24) / 2;
+  const on = a.shake();
+  const shake = button(on ? t('settings.shakeOn') : t('settings.shakeOff'), bw, 110, () => a.setShake(!on), {
+    fill: on ? COLORS.saffron : COLORS.panelLocked,
+    textFill: on ? COLORS.outline : COLORS.text,
+    size: 44,
+  });
+  shake.x = (bw + 24) / 2;
+  row.addChild(lang, shake);
+  return row;
+}
+
 export function settingsPanel(w: number, h: number, a: SettingsActions): Container {
   const view = new Container();
   view.addChild(backdrop(w, h));
@@ -156,10 +180,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   y += 30;
   add(label(t('settings.title'), 64), 110);
   heading(t('settings.language'));
-  add(button(localeName(getLocale()), ROW + 160, 110, () => {
-    const picker = languagePanel(w, h, (l) => a.setLanguage(l), () => picker.destroy({ children: true }));
-    view.addChild(picker);
-  }, { fill: COLORS.panelLocked, size: 48 }), 150);
+  add(topRow(view, w, h, a), 150);
 
   const volume = a.volume();
   heading(volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }));

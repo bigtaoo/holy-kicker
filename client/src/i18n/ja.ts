@@ -406,6 +406,8 @@ export const ja: Table<typeof en> = {
     autoHint: 'なめらかさを自動調整、電池残量が少ないと省電力',
     highHint: '最高の演出。スマホが熱くなることも',
     saverHint: '30fps・演出控えめでバッテリー節約',
+    shakeOn: '画面揺れ：オン',
+    shakeOff: '画面揺れ：オフ',
     data: 'プレイデータ',
     shareOn: '送信：オン',
     shareOff: '送信：オフ',

@@ -406,6 +406,8 @@ export const th: Table<typeof en> = {
     autoHint: 'เกมลื่นไหล ประหยัดไฟเมื่อแบตต่ำ',
     highHint: 'เอฟเฟกต์เต็มที่ มือถืออาจร้อน',
     saverHint: '30 fps เอฟเฟกต์น้อยลง ประหยัดแบต',
+    shakeOn: 'จอสั่น: เปิด',
+    shakeOff: 'จอสั่น: ปิด',
     data: 'ข้อมูลการเล่น',
     shareOn: 'การแชร์: เปิด',
     shareOff: 'การแชร์: ปิด',

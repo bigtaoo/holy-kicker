@@ -184,6 +184,10 @@ export class LobbyScreen implements Screen {
           set.setQuality(m);
           this.relayout();
         },
+        setShake: (on) => {
+          set.setShake(on);
+          this.relayout();
+        },
         close: () => {
           this.settingsOpen = false;
           this.relayout();

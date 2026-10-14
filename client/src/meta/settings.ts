@@ -5,7 +5,7 @@ import type { KeyValueStore } from './saveStore';
 
 // Device-only settings (docs/design.md: quality, volume and language stay local and are not
 // part of the save): the language, the sound effects' volume, the render quality and whether runs
-// play fast, and the player's answer about play data (meta/privacy.ts).
+// play fast, whether the screen shakes, and the player's answer about play data (meta/privacy.ts).
 
 export const SETTINGS_KEY = 'hk.settings';
 
@@ -23,13 +23,15 @@ export interface Settings {
   quality: QualityMode;
   /** Runs play at double speed (the HUD's fast-forward toggle). */
   fast: boolean;
+  /** The screen shakes on a big burst of kills (game/shake.ts). */
+  shake: boolean;
   /** Whether play data may go to the backend: not answered yet, yes or no. */
   dataSharing: SharingChoice;
   /** The one-time data toast (outside the EEA) has been shown. */
   noticeSeen: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, dataSharing: 'ask', noticeSeen: false };
+export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, dataSharing: 'ask', noticeSeen: false };
 
 function isStep(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= VOLUME_STEPS;
@@ -38,7 +40,7 @@ function isStep(v: unknown): v is number {
 export function loadSettings(kv: KeyValueStore): Settings {
   try {
     const raw: unknown = JSON.parse(kv.getItem(SETTINGS_KEY) ?? '{}');
-    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; quality?: unknown; fast?: unknown; dataSharing?: unknown; noticeSeen?: unknown } | null;
+    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; quality?: unknown; fast?: unknown; shake?: unknown; dataSharing?: unknown; noticeSeen?: unknown } | null;
     // files from before the volume steps only had sound on or off
     const v = r?.volume;
     const m = r?.music;
@@ -52,6 +54,7 @@ export function loadSettings(kv: KeyValueStore): Settings {
       music,
       quality: QUALITY_MODES.includes(q as QualityMode) ? (q as QualityMode) : 'auto',
       fast: r?.fast === true,
+      shake: r?.shake !== false,
       dataSharing: r?.dataSharing === 'yes' || r?.dataSharing === 'no' ? r.dataSharing : 'ask',
       noticeSeen: r?.noticeSeen === true,
     };

@@ -406,6 +406,8 @@ export const it: Table<typeof en> = {
     autoHint: 'Mantiene il gioco fluido; risparmia a batteria bassa',
     highHint: 'Effetti migliori; i telefoni possono scaldarsi',
     saverHint: '30 fps e meno effetti, risparmia batteria',
+    shakeOn: 'Scossoni: Sì',
+    shakeOff: 'Scossoni: No',
     data: 'Dati di gioco',
     shareOn: 'Condivisione: sì',
     shareOff: 'Condivisione: no',

@@ -81,7 +81,7 @@ export class Game {
   private readonly hero: Hero;
   /** World point the camera centres on; trails the hero under the smooth camera. */
   private readonly camPos = { x: 0, y: 0 };
-  private readonly shake = new Shake();
+  readonly shake = new Shake(); // the shell turns it off for players who set it so
   private readonly elites: EliteCrowd | null;
   private readonly horde: HordeView;
   private readonly mist: Mist | null;
@@ -468,7 +468,7 @@ export class Game {
     const vp = this.vp;
     ease(this.camPos, hx, hy, dt, (this.scene.cam === 'lock' ? LOCKED_CAMERA : SMOOTH_CAMERA).camEase);
     const res = this.app.renderer.resolution;
-    const sh = this.shake.step(dt);
+    const sh = this.shake.step(dt / (this.rushing ? RUSH_SPEED : this.speed)); // real time, not sim time
     this.world.position.set(
       snapToPixel(vp.playW / 2 - this.camPos.x * vp.scale + sh.x, res),
       snapToPixel(vp.playH / 2 - this.camPos.y * vp.scale + sh.y, res),
