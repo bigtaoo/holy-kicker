@@ -8,7 +8,8 @@ on it (`python tools/cover_ref.py art/store` writes `ref_*.png`):
 
 The pictures carry no text; the logo (`logo_en.png`, `logo_zh.png`, lettered by
 `python tools/make_logo.py art/store`) is laid over them and each is cropped to 1920×1080,
-800×1200 and 800×800 by `python tools/cover_final.py art/store en` (or `zh`), into `final/`.
+800×1200 and 800×800 by `python tools/cover_final.py art/store en` (or `zh`), into `final/` (the store
+now uses the horde covers below).
 
 Round 1 (`r1/*_fire.png`) edited the plain 4:3 hero picture: every cover came out 4:3, and a
 "glowing golden-red ball" became a fireball. The prompts now describe the real ball (cream leather,
@@ -26,3 +27,14 @@ kicking monk (`art/monk/rig/hero_kick_v1.png`, the A-pose edited with `hero_kick
 ball at his sole; the A-pose versions are `r1/cover_portrait_fists.png` and
 `r1/cover_square_handball.png`. One purple wisp on the square cover had white eyes; they were
 recoloured red by hand (an edit asked to do it deleted the wisp).
+
+The store covers are now the horde covers (`cover_horde_{landscape,portrait,square}.png`, no
+logo; the painted ones above stay as the WeChat share card's source): the gameplay instead of a
+duel, the monk in the middle of a ring of monsters with his spells going off. They are a collage of
+the game's own sprites with a vignette, built by `python tools/cover_horde_ref.py art/store`, then
+finished by `cover_final.py` (logo on the landscape one only). Repaints of the collage with
+`edit_image` either simplified the ring into two facing groups (which reads as a duel again) or
+left it untouched, so the collage is the cover.
+
+The preview videos open on these covers too; the opening still was swapped without re-recording
+by passing a copy of each finished video to `tools/store_video.py` with start 1.

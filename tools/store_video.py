@@ -3,7 +3,8 @@ usage: python store_video.py <landscape|portrait> <raw video> <start seconds> [e
 Writes art/store/video/<lang>_<shape>.mp4: the store cover as a still for the first second
 (the portal asks for the cover as the opening frame), then a hard cut to the recording from
 <start> on, 20 s in all, no sound, H.264 (CRF 23) at 60 fps with the index up front (docs/store.md "Video").
-The cover is drawn at the video's size by cover_final.py, so it matches the static cover."""
+The cover is drawn at the video's size by cover_final.py, so it matches the static cover. To swap
+only the opening still of a finished video, pass a copy of it as <raw video> with <start> 1."""
 import subprocess
 import sys
 import tempfile
@@ -31,7 +32,7 @@ def main():
     out.parent.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         still = Path(tmp) / "cover.png"
-        cover(STORE / f"cover_{shape}.png", logo, (w, h), focus, place).save(still)
+        cover(STORE / f"cover_horde_{shape}.png", logo, (w, h), focus, place).save(still)
         graph = (
             f"[0:v]scale={w}:{h},setsar=1,fps=60,format=yuv420p[a];"
             f"[1:v]scale={w}:{h}:flags=lanczos,setsar=1,fps=60,format=yuv420p[b];"

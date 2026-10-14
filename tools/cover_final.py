@@ -1,19 +1,23 @@
-"""Finishes the store covers: crops each painted cover to its store size and lays the logo over it.
+"""Finishes the store covers: crops each cover to its store size and lays the logo over it.
 usage: python cover_final.py <store dir> [en|zh]
-Reads <store dir>/cover_{landscape,portrait,square}.png and logo_<lang>.png, writes
-<store dir>/final/<lang>_{landscape,portrait,square}.png (docs/store.md "Images"), and the WeChat
-share card client/wechat/share/<lang>.jpg (5:4, cut from the landscape cover)."""
+Reads <store dir>/cover_horde_{landscape,portrait,square}.png (tools/cover_horde_ref.py) and
+logo_<lang>.png, writes <store dir>/final/<lang>_{landscape,portrait,square}.png (docs/store.md
+"Images"), and the WeChat share card client/wechat/share/<lang>.jpg (5:4, cut from the painted
+landscape cover cover_landscape.png)."""
 import sys
 from pathlib import Path
 
 from PIL import Image
 
 # name: store size, crop focus (fraction of width, height kept in view), logo (centre x, centre y,
-# width), all as fractions of the final picture
+# width) as fractions of the final picture, or None. Only the landscape cover, shown big on the game
+# page, carries the logo: on the small grid thumbnails it would be unreadable and cover the horde,
+# and the portal prints the title next to them anyway.
+LOGO_LANDSCAPE = (0.86, 0.12, 0.2)
 COVERS = {
-    "landscape": ((1920, 1080), (0.5, 0.5), (0.497, 0.125, 0.27)),
-    "portrait": ((800, 1200), (0.5, 0.5), (0.5, 0.13, 0.74)),
-    "square": ((800, 800), (0.5, 0.5), (0.5, 0.895, 0.40)),
+    "landscape": ((1920, 1080), (0.5, 0.5), LOGO_LANDSCAPE),
+    "portrait": ((800, 1200), (0.5, 0.5), None),
+    "square": ((800, 800), (0.5, 0.5), None),
 }
 # the card a WeChat share shows: 5:4 at 500x400, a JPEG to stay light in the main package
 SHARE = ((500, 400), (0.44, 0.5), (0.5, 0.15, 0.42))
@@ -36,8 +40,8 @@ def main():
     logo = Image.open(store / f"logo_{lang}.png").convert("RGBA")
     out = store / "final"
     out.mkdir(exist_ok=True)
-    for name, (size, focus, (lx, ly, lw)) in COVERS.items():
-        page = cover(store / f"cover_{name}.png", logo, size, focus, (lx, ly, lw))
+    for name, (size, focus, place) in COVERS.items():
+        page = cover(store / f"cover_horde_{name}.png", logo, size, focus, place)
         page.save(out / f"{lang}_{name}.png", optimize=True)
         print(out / f"{lang}_{name}.png", size)
     SHARE_DIR.mkdir(exist_ok=True)
@@ -47,9 +51,11 @@ def main():
 
 
 def cover(path, logo, size, focus, place):
-    """The painted cover cut to size, with the logo laid over it."""
-    lx, ly, lw = place
+    """The cover cut to size, with the logo laid over it (if place is not None)."""
     page = fit(Image.open(path).convert("RGBA"), size, focus)
+    if place is None:
+        return page.convert("RGB")
+    lx, ly, lw = place
     k = lw * size[0] / logo.width
     mark = logo.resize((round(logo.width * k), round(logo.height * k)), Image.LANCZOS)
     page.alpha_composite(mark, (round(lx * size[0] - mark.width / 2), round(ly * size[1] - mark.height / 2)))

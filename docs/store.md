@@ -60,14 +60,19 @@ thumbnail size.
 
 | Image | Size | Composition |
 |---|---|---|
-| Landscape cover | 1920×1080 | The monk mid-kick on the left third, the ball flying right into a crowd of jiangshi and wisps, the Fallen Abbot looming behind; logo top centre |
-| Portrait cover | 800×1200 | The monk mid-kick in the lower half, horde above; logo on top |
-| Square cover | 800×800 | Monk and ball only, close up; logo at the bottom |
+| Landscape cover | 1920×1080 | The monk mid-kick in the middle of a ring of monsters (jiangshi, fox, lantern wisp, skeleton), a vajra bolt chaining through the left side, cymbals flying out on the right, the incense ring under him; logo top right |
+| Portrait cover | 800×1200 | The same scene, the ring stretched tall; no logo |
+| Square cover | 800×800 | The same scene; no logo |
 | Preview video, landscape | 1920×1080 (16:9), 15–20 s, ≤50 MB | Required. The cover still, then a mid-run fight (see "Video") |
 | Preview video, portrait | 1080×1620 (2:3), 15–20 s, ≤50 MB | Required. The same, at the portrait cover's shape |
 
-Covers are painted key art in the game's sticker style (see `docs/content.md` and
-`art/monk/`), not cropped gameplay: a portrait game screen does not fill a 16:9 cover.
+The covers show the gameplay at a glance: the first painted covers (a monk facing a boss) read as a
+duel, and on 2026-10-14 Holy Kicker's click-through on the portal was half of a game launched the
+same day with the same exposure. They are a collage of the game's own sprites in the sticker style
+(`tools/cover_horde_ref.py`, see `art/store/README.md`), few kinds and big so they read at
+thumbnail size. Only the landscape cover, shown big on the game page, carries the logo: on the
+small grid thumbnails it would be unreadable and cover the horde, and the portal prints the title
+beside them.
 
 ## Video
 
