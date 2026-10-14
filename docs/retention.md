@@ -39,6 +39,13 @@ installs land on `web`.
   their iPads count as desktop (macOS, Safari) until the next upload. "Who the
   new players are" shows each group's size, how many finished a run on day 0 and its D1: a device
   or browser far below the rest is a bug or a performance problem there before it is a design one.
+- **Loading** (from 2026-10-14's CrazyGames build): two anonymous counts per launch, no id and
+  whatever the privacy answer. `open` is sent by an inline script in the portal page before the SDK
+  and the game's code load; `loaded` once the first screen is up. Both split into touch and desktop
+  (`pointer: coarse`). Opened but never loaded is a launch lost to download size, a crash or a
+  closed tab before the game showed anything, which no event can see. The `session` event also
+  carries the CrazyGames SDK's environment and start (`sdk`: `crazygames/ok`, `/timeout`,
+  `/noscript`), its start time in ms (`sdkMs`) and whether the game is in Basic Launch (`basic`).
 
 Below ~100 new installs a day, any share swings by several points from noise alone. Pool a week
 before believing a change, and never read a single day.

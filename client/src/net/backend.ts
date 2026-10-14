@@ -96,6 +96,18 @@ export class Backend {
     if (this.base && this.sharing !== 'off') this.queue.push(e, Date.now(), p);
   }
 
+  /**
+   * The anonymous `loaded_*` checkpoint (protocol BEACONS), sent once the first screen is up and
+   * whatever the privacy answer, since it has no id: against the portal page's `open_*` it shows
+   * how many launches never got past loading. Touch is the same test as the page's inline script.
+   */
+  loaded(): void {
+    if (!this.base || typeof fetch !== 'function') return;
+    const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
+    const q = new URLSearchParams({ h: this.platform.host, s: touch ? 'loaded_touch' : 'loaded_desktop', b: this.build });
+    void fetch(`${this.base}/v1/beacon?${q}`, { mode: 'no-cors', keepalive: true }).catch(() => {});
+  }
+
   /** Sends what waits, one batch at a time; a failed batch goes back for the next try. */
   async flush(): Promise<void> {
     if (!this.base || this.sharing !== 'send' || this.sending || this.queue.size === 0) return;

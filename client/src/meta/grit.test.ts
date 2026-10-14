@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { gritBonus, loadout } from './loadout';
+import { gritBonus, loadout, noviceBonus } from './loadout';
 import { settleRun } from './progress';
 import { newSave, parseSave } from './save';
 
@@ -38,5 +38,14 @@ describe('grit', () => {
   it('survives a save round trip, clamped to the cap', () => {
     expect(parseSave(JSON.stringify({ ...newSave(), grit: 4 })).grit).toBe(4);
     expect(parseSave(JSON.stringify({ ...newSave(), grit: 999 })).grit).toBe(BALANCE.grit.max);
+  });
+
+  it("a new player's first runs of chapter 1 get the head start, later ones and other chapters not", () => {
+    const fresh = newSave();
+    expect(noviceBonus(fresh)).toEqual(BALANCE.novice.bonus);
+    expect(noviceBonus({ ...fresh, runs: BALANCE.novice.runs })).toEqual({});
+    expect(noviceBonus(fresh, 1, true)).toEqual({});
+    const cleared = settleRun(fresh, { chapter: 1, waves: BALANCE.waves }).save;
+    expect(noviceBonus({ ...cleared, runs: 0 }, 1)).toEqual({});
   });
 });

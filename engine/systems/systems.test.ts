@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BALL, BOSS, DEFAULT_RUN, DROPS, THREATS, VIEW, type RunConfig } from '../config';
+import { BALL, BOSS, DEFAULT_RUN, DROPS, FIRST_RUN, THREATS, VIEW, type RunConfig } from '../config';
 import type { SimEvent } from '../events';
 import { toFp } from '../math/fixed';
 import { body, createState, newMob, newElite, newPlayer, type SimState } from '../state';
@@ -193,7 +193,7 @@ describe('drops', () => {
     expect(events.filter((e) => e.type === 'pickup').length).toBe(1);
   });
 
-  it('pulls from FIRST_RUN.magnet away on a first run, through its first wave only', () => {
+  it('pulls from FIRST_RUN.magnet away on a first run, through its first waves only', () => {
     const far = (wave: number, firstRun: boolean): number => {
       const s = bare({ firstRun });
       s.wave = wave;
@@ -202,7 +202,8 @@ describe('drops', () => {
       return s.players[0].xp;
     };
     expect(far(1, true)).toBe(5);
-    expect(far(2, true)).toBe(0);
+    expect(far(FIRST_RUN.magnetWaves, true)).toBe(5);
+    expect(far(FIRST_RUN.magnetWaves + 1, true)).toBe(0);
     expect(far(1, false)).toBe(0);
   });
 

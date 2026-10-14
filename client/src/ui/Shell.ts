@@ -1,6 +1,6 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, isEliteWave, SUTRA_IDS, TICK_RATE, xpToNext, type Card, type SimState } from '@hk/engine';
-import { setLocale, t, type Locale } from '../i18n';
+import { isBossWave, SUTRA_IDS, TICK_RATE, type SimState } from '@hk/engine';
+import { setLocale, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
@@ -27,7 +27,6 @@ import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadMonkArt } from '../art';
 import { monkRig } from '../game/artTypes';
-import { cardText } from './cardText';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { ResumeScreen } from './ResumeScreen';
@@ -35,9 +34,7 @@ import { RunHud } from './RunHud';
 import { storedSettings, type SettingsActions } from './settingsPanel';
 import { canReport, reportProblem } from './problemReport';
 import { PlayerName } from './playerName';
-import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
-import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
-import { buildSlots, spellCharges } from './buildSlots';
+import { RunWatch } from './runWatch';
 import { uiFrame, type Screen } from './uiLayout';
 import { onButtonTap } from './widgets';
 
@@ -45,9 +42,11 @@ import { onButtonTap } from './widgets';
 // afterwards lobby -> run -> results -> lobby. Owns the save, the current screen and the
 // current run, and tells the portal when gameplay starts and stops.
 //
-// The engine runs the chapter's waves; the shell watches its state for a new wave (a
-// banner), experience and level-up offers (the card panel), the hero going down (the death
-// panel, revive with an ad) and the outcome. A run ends won, lost, or when the player gives up.
+// The engine runs the chapter's waves; RunWatch follows each run frame by frame. A run ends won,
+// lost, or when the player gives up; a lost one's results offer to play the chapter again.
+
+/** The first wave a run left unfinished must have reached to be offered again on the next launch. */
+const RESUME_FROM_WAVE = 3;
 
 export class Shell {
   private save: SaveData;
@@ -59,6 +58,7 @@ export class Shell {
   private shownMs = 0;
   private game: Game | null = null;
   private hud: RunHud | null = null;
+  private watch: RunWatch | null = null;
   private chapter = 1;
   /** The run in play is hard mode. */
   private hard = false;
@@ -68,18 +68,10 @@ export class Shell {
   private quality: LevelSettings | null = null;
   /** Switches the render quality mode (boot.ts wires it to the quality runtime). */
   onQualityMode: (mode: QualityMode) => void = () => {};
-  /** The wave the HUD last showed, and whether the death panel is up. */
-  private shownWave = -1;
-  private downShown = false;
-  /** Seconds left on the monk's line after a won run's boss, before the results. */
-  private clearWait: number | null = null;
-  /** The offer whose cards the HUD shows; null when none are up. */
-  private shownOffer: readonly Card[] | null = null;
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
   private freeRevives = 0;
   /** Enemies defeated in this run, for the daily tasks. */
   private kills = 0;
-  private tutorial: Tutorial | null = null;
   /** A chapter's art pack is being fetched; taps on play wait for it. */
   private loading = false;
   readonly sound: Sound;
@@ -118,7 +110,7 @@ export class Shell {
     });
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
-    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device, ...languageProps(platform, globalThis.navigator?.languages) });
+    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device, ...languageProps(platform, globalThis.navigator?.languages), ...platform.sessionProps?.() });
     net.onLeave(() => this.leaving());
   }
 
@@ -128,14 +120,19 @@ export class Shell {
     this.shownMs = 0;
     if (this.screen instanceof LobbyScreen) return { place: 'lobby', secs };
     if (this.screen instanceof ResultsScreen) return { place: 'results', secs };
-    if (this.game) return { place: 'run', secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.tutorial?.step ?? null) };
+    if (this.game) return { place: 'run', secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.watch?.tutorial?.step ?? null) };
     return { place: 'other', secs };
   }
 
   /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
   start(direct = false): void {
     this.portal.loaded(); // before the first run's gameplayStart: CrazyGames ignores one sent while loading
-    const left = direct ? null : loadRun(this.platform.storage);
+    let left = direct ? null : loadRun(this.platform.storage);
+    // a run left in its first waves is not worth a question: it starts over
+    if (left && left.state.wave < RESUME_FROM_WAVE) {
+      dropRun(this.platform.storage);
+      left = null;
+    }
     if (left) this.offerResume(left);
     else if (direct || !this.save.firstRunDone) this.play(this.scene.chapter || this.save.chapter);
     else this.showLobby();
@@ -287,13 +284,7 @@ export class Shell {
       hard: this.hard,
       monk: this.scene.monk ?? this.save.monk, firstRun: !this.save.firstRunDone && this.scene.waves,
     }, left?.state);
-    this.shownWave = -1;
-    this.downShown = false;
-    this.clearWait = null;
-    this.shownOffer = null;
     this.kills = left?.kills ?? 0;
-    // the first run teaches moving; a replayed first chapter (or a resumed run) does not
-    this.tutorial = this.save.firstRunDone || !this.scene.waves || left ? null : newTutorial();
     if (this.quality) this.game.applyQuality(this.quality);
     this.game.onEvents = (events) => {
       for (const e of events) {
@@ -318,6 +309,14 @@ export class Shell {
       report: canReport(this.net, import.meta.env.DEV) ? () => reportProblem(this.platform, this.net, () => this.game, this.scene) : null,
     }, this.art.icons, this.device === 'desktop');
     this.setScreen(this.hud);
+    // the first run teaches moving (and waits for the first input); a replayed first chapter, a resumed run or a dev bot's does not
+    const teach = !this.save.firstRunDone && this.scene.waves && !left && !this.scene.autoplay && !this.scene.record;
+    this.watch = new RunWatch(this.game, this.hud, {
+      chapter, portal: this.portal, ads: this.ads, net: this.net,
+      freeRevives: () => this.freeRevives,
+      input: () => this.stick.origin() !== null || this.platform.readKeys().x !== 0 || this.platform.readKeys().y !== 0,
+      keepRun: () => this.keepRun(), end: () => this.endRun(),
+    }, !!teach);
     // the fast-forward choice carries over from the last run
     this.hud.setFast(loadSettings(this.platform.storage).fast);
     this.portal.gameplayStart();
@@ -343,7 +342,8 @@ export class Shell {
 
   private setPaused(paused: boolean): void {
     if (!this.game) return;
-    this.game.paused = paused;
+    // the first run's hold outlasts the pause panel
+    this.game.paused = paused || !!this.watch?.holding;
     if (paused) this.portal.gameplayStop();
     else this.portal.gameplayStart();
   }
@@ -368,7 +368,8 @@ export class Shell {
     this.game = null;
     this.hud = null;
     // the death panel already told the portal
-    if (!this.downShown) this.portal.gameplayStop();
+    if (!this.watch?.downShown) this.portal.gameplayStop();
+    this.watch = null;
     this.settle(s);
   }
 
@@ -400,20 +401,22 @@ export class Shell {
 
   private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>): void {
     let leaving = false;
+    // the interstitial sits on the break after the results, never inside a run, and never after
+    // the first run (the tutorial), so a new player reaches the lobby before any ad
+    const leave = (then: () => void) => {
+      if (leaving) return;
+      leaving = true;
+      void (this.save.runs > 1 ? this.ads.midgame() : Promise.resolve()).then(then);
+    };
     this.setScreen(new ResultsScreen(reward, waves, {
       double: async () => {
         const paid = await this.rewarded('double');
         if (paid) this.commit(doubleCopper(this.save, reward));
         return paid;
       },
-      next: () => {
-        if (leaving) return;
-        leaving = true;
-        // the interstitial sits on the results -> lobby break, never inside a run, and never
-        // after the first run (the tutorial), so a new player reaches the lobby before any ad
-        const ad = this.save.runs > 1 ? this.ads.midgame() : Promise.resolve();
-        void ad.then(() => this.showLobby());
-      },
+      next: () => leave(() => this.showLobby()),
+      // once the lobby has been seen, a lost run's quickest way back is the same chapter again
+      again: this.save.runs > 1 && !reward.firstClear ? () => leave(() => this.play(this.chapter)) : null,
     }, this.ads.rewardedAvailable(), rank));
   }
 
@@ -428,72 +431,11 @@ export class Shell {
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
       this.screen.layout(uiFrame(computeViewport(width, height, this.scene.record > 0), insets));
     }
-    if (this.game && this.hud) this.watchRun(this.game, this.hud);
+    if (this.watch) this.watch.update(this.app.ticker.deltaMS / 1000);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);
     // the run has the battle music (the boss's on the mid-boss and boss waves, through to the
     // results), every screen around it the lobby's
     const s = this.game?.engine.state;
     this.sound.flush(s ? (s.config.waves > 0 && isBossWave(s.wave, s.config.waves) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS);
-  }
-
-  private watchRun(game: Game, hud: RunHud): void {
-    const s = game.engine.state;
-    hud.update(this.app.ticker.deltaMS / 1000);
-    if (s.wave !== this.shownWave) {
-      this.shownWave = s.wave;
-      hud.setWave(s.wave);
-      const last = s.config.waves;
-      const warning = isBossWave(s.wave, last) ? t('run.boss') : isEliteWave(s.wave, last) ? t('run.elite') : null;
-      if (s.wave > 0) {
-        hud.announce(s.wave, warning, waveLine(this.chapter, s.wave, last));
-        // kept at each wave too, in case the game dies without going to the background first
-        this.keepRun();
-      }
-    }
-    const p = s.players[0];
-    if (this.tutorial && !game.paused && p.offer.length === 0) {
-      const step = this.tutorial.step;
-      this.tutorial = stepTutorial(this.tutorial, this.app.ticker.deltaMS / 1000, p.moving);
-      hud.setTutorial(this.tutorial.step);
-      if (step !== 'done' && this.tutorial.step === 'done') this.net.track('tutorial');
-    }
-    hud.setXp(p.level, p.xp / xpToNext(p.level));
-    hud.setBuild(buildSlots(p));
-    hud.setCharges(spellCharges(p));
-    // offers come one after another (several levels at once, a shrine's insight), each a new list
-    if (p.offer.length > 0 && this.shownOffer !== p.offer) {
-      this.shownOffer = p.offer;
-      const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
-      hud.showOffer(title, p.offer.map((c) => cardText(c, p)));
-    } else if (p.offer.length === 0 && this.shownOffer) {
-      this.shownOffer = null;
-      hud.hideOffer();
-    }
-    if (s.outcome === 'playing' && this.downShown) {
-      this.downShown = false;
-      this.portal.gameplayStart();
-    }
-    if (s.outcome === 'won') {
-      // the run stands still on the monk's line after the boss, then the results
-      if (this.clearWait === null) {
-        this.clearWait = CLEAR_LINE_TIME;
-        this.portal.gameplayStop();
-        hud.speak(clearLine(this.chapter));
-      }
-      this.clearWait -= this.app.ticker.deltaMS / 1000;
-      if (this.clearWait <= 0) this.endRun();
-    }
-    else if (s.outcome === 'lost' && !this.downShown) {
-      this.downShown = true;
-      this.portal.gameplayStop();
-      // the offer appears once the host says an ad can play
-      const revives = s.players[0].revives;
-      hud.showDown(revives > 0 && this.freeRevives > 0 ? 'free' : 'none');
-      if (revives > 0 && this.freeRevives === 0) {
-        void this.ads.rewardedAvailable().then((ok) => {
-          if (ok && this.hud === hud && this.downShown) hud.showDown('ad');
-        });
-      }
-    }
   }
 }

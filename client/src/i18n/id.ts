@@ -245,6 +245,8 @@ export const id: Table<typeof en> = {
     offering: 'Persembahan: tembaga +{n}',
     chest: 'Peti (gelombang {wave}): tembaga +{copper}, giok +{jade}',
     newBest: 'Rekor baru!',
+    best: 'Terbaik: {wave} gelombang',
+    again: 'Main lagi',
     rankNew: 'Peringkat: #{rank}!',
     rankKept: 'Peringkat terbaikmu: #{rank}',
     grit: 'Tekad ×{n}: percobaan berikutnya di sini lebih kuat',

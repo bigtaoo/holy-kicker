@@ -152,6 +152,22 @@ describe('routes', () => {
     expect((await route(req('GET', '/nope'), deps())).status).toBe(404);
   });
 
+  it('counts anonymous load checkpoints by day, host and build, and refuses unknown ones', async () => {
+    const d = deps();
+    for (let i = 0; i < 3; i++) expect((await route(req('GET', '/v1/beacon?h=crazygames&s=open_touch&b=abc1234'), d)).status).toBe(204);
+    expect((await route(req('GET', '/v1/beacon?h=crazygames&s=loaded_touch&b=abc1234'), d)).status).toBe(204);
+    expect((await route(req('GET', '/v1/beacon?h=web&s=open_touch&b=abc1234'), d)).status).toBe(204);
+    expect((await route(req('GET', '/v1/beacon?h=steam&s=open_touch&b=abc1234'), d)).status).toBe(400);
+    expect((await route(req('GET', '/v1/beacon?h=web&s=opened&b=abc1234'), d)).status).toBe(400);
+    expect((await route(req('GET', '/v1/beacon?h=web&s=open_touch&b=a/b'), d)).status).toBe(400);
+    expect((await route(req('GET', '/v1/beacon?h=web&s=open_touch&b=x'), deps({ allow: () => false }))).status).toBe(429);
+    const s = await d.store.stats(1, NOW, 'crazygames');
+    expect(s.beacons).toEqual([
+      { day: '2026-10-05', build: 'abc1234', step: 'loaded_touch', n: 1 },
+      { day: '2026-10-05', build: 'abc1234', step: 'open_touch', n: 3 },
+    ]);
+  });
+
   it('keeps a problem report with its replay, for the operator only', async () => {
     const d = deps();
     const sent = await route(req('POST', '/v1/reports', report()), d);

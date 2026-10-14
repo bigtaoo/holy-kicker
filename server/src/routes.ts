@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
-import { HOSTS, LIMITS, type Host } from './protocol';
+import { BEACONS, HOSTS, LIMITS, type Beacon, type Host } from './protocol';
 import { checkBatch, checkNameEntry, checkReport, checkRun } from './rules';
 import type { Store } from './store';
 
@@ -60,6 +60,16 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     const c = checkBatch(req.body, d.now());
     if (!c.ok) return bad(c.reason);
     await d.store.addEvents(c.value, d.now(), audienceOf(req.headers, c.value.events));
+    return { status: 204 };
+  }
+
+  // anonymous load checkpoints: a GET with no body or preflight, so a page's inline script can send it
+  if (method === 'GET' && path === '/v1/beacon') {
+    if (!d.allow('beacons', req.ip)) return { status: 429 };
+    const host = req.query.get('h') ?? '', step = req.query.get('s') ?? '', build = req.query.get('b') ?? '';
+    if (!(HOSTS as readonly string[]).includes(host) || !(BEACONS as readonly string[]).includes(step)) return bad('bad beacon');
+    if (!/^[\w.+-]{1,32}$/.test(build)) return bad('bad build');
+    await d.store.beacon(host as Host, step as Beacon, build, d.now());
     return { status: 204 };
   }
 
@@ -146,6 +156,7 @@ export class Limiter {
 
 export const RATES = {
   events: { burst: 20, perMinute: 30 },
+  beacons: { burst: 10, perMinute: 20 },
   runs: { burst: 5, perMinute: 6 },
   boards: { burst: 20, perMinute: 30 },
   names: { burst: 5, perMinute: 4 },

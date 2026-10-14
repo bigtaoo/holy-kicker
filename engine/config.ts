@@ -456,12 +456,13 @@ export const DROPS = {
 };
 
 /**
- * A new player's first run (RunConfig.firstRun): through its first wave the gems fly in from
- * `magnet` away, so the first card choice comes within seconds even for a player who has not
- * moved yet (most who leave on wave 1 never do).
+ * A new player's first run (RunConfig.firstRun): through its first `magnetWaves` waves (the
+ * first minute) the gems fly in from `magnet` away, so the card choices keep coming even for a
+ * player who has hardly moved yet (most who leave in the first waves never do).
  */
 export const FIRST_RUN = {
   magnet: toFp(700),
+  magnetWaves: 4,
 };
 
 export const SPELLS = {

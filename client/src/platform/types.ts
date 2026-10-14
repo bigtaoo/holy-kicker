@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import type { Host } from '@hk/protocol';
+import type { Host, PropValue } from '@hk/protocol';
 import type { MusicDeck } from '../audio/music';
 import type { DragStick, Vec2 } from '../game/dragStick';
 import type { Battery, DeviceInfo } from '../game/quality';
@@ -57,6 +57,8 @@ export interface Platform {
   country(): string | null;
   /** Opens a web page (the privacy policy) in a new tab; a no-op where the host has no browser. */
   openUrl(url: string): void;
+  /** What the host itself says about this launch, added to the `session` event (CrazyGames: how its SDK started). */
+  sessionProps?(): Record<string, PropValue>;
 }
 
 /** The text box's wording, already translated, and the longest text it takes. */

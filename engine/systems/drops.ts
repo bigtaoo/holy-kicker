@@ -73,10 +73,10 @@ export function attractAll(s: SimState, p: Player): void {
   for (const g of s.gems) if (!g.flying) launch(s, g, p);
 }
 
-/** Resting gems in the cells overlapping the player's magnet circle start flying (wider on a first run's first wave, FIRST_RUN). */
+/** Resting gems in the cells overlapping the player's magnet circle start flying (wider through a first run's first waves, FIRST_RUN). */
 function attractNear(s: SimState, p: Player): void {
   const { cell } = DROPS;
-  const magnet = s.config.firstRun && s.wave === 1 ? Math.max(FIRST_RUN.magnet, magnetOf(p)) : magnetOf(p);
+  const magnet = s.config.firstRun && s.wave <= FIRST_RUN.magnetWaves ? Math.max(FIRST_RUN.magnet, magnetOf(p)) : magnetOf(p);
   const m2 = magnet * magnet;
   const x0 = Math.floor((p.x - magnet) / cell);
   const x1 = Math.floor((p.x + magnet) / cell);

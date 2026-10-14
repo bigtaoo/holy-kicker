@@ -92,8 +92,16 @@ function isEnvironment(v: unknown): v is CgEnvironment {
   return v === 'local' || v === 'crazygames' || v === 'disabled';
 }
 
+/** How init went, for the `session` event: its end and how long it took. */
+export interface CgStart {
+  /** ok: an environment came back; noscript: the SDK script never appeared; timeout: it did, but init or the environment did not settle in time. */
+  end: 'ok' | 'noscript' | 'timeout';
+  ms: number;
+}
+
 export class CrazyGamesSdk {
   private sdk: CgSdkShape | null = null;
+  private started: CgStart = { end: 'noscript', ms: 0 };
   private env: CgEnvironment = 'disabled';
   private adblock: boolean | null = null;
   private basicLaunch: boolean | null = null;
@@ -107,25 +115,35 @@ export class CrazyGamesSdk {
   /** Waits for the script, runs its init and reads the environment; 'disabled' on every
    *  failure, never a rejection, and never longer than SDK_WAIT_MS. */
   async init(): Promise<CgEnvironment> {
-    const deadline = this.now() + SDK_WAIT_MS;
+    const start = this.now();
+    const end = (how: CgStart['end'], env: CgEnvironment): CgEnvironment => {
+      this.started = { end: how, ms: this.now() - start };
+      return (this.env = env);
+    };
+    const deadline = start + SDK_WAIT_MS;
     for (;;) {
       const sdk = this.global.CrazyGames?.SDK;
       if (sdk) {
         this.sdk = sdk;
         break;
       }
-      if (this.now() >= deadline) return 'disabled';
+      if (this.now() >= deadline) return end('noscript', 'disabled');
       await this.sleep(POLL_MS);
     }
     await this.until(deadline, settle(() => this.sdk?.init?.()));
     for (;;) {
       const prop = this.sdk?.environment;
-      if (isEnvironment(prop)) return (this.env = prop);
+      if (isEnvironment(prop)) return end('ok', prop);
       const asked = await this.until(deadline, settle(() => this.sdk?.getEnvironment?.()));
-      if (isEnvironment(asked)) return (this.env = asked);
-      if (this.now() >= deadline) return 'disabled';
+      if (isEnvironment(asked)) return end('ok', asked);
+      if (this.now() >= deadline) return end('timeout', 'disabled');
       await this.sleep(POLL_MS);
     }
+  }
+
+  /** How the last init went. */
+  start(): CgStart {
+    return this.started;
   }
 
   /** The value of `work`, or undefined once `deadline` passes. */

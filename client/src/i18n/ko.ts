@@ -245,6 +245,8 @@ export const ko: Table<typeof en> = {
     offering: '공양: 동전 +{n}',
     chest: '상자 ({wave} 웨이브): 동전 +{copper}, 옥 +{jade}',
     newBest: '최고 기록!',
+    best: '최고 기록: {wave} 웨이브',
+    again: '다시 하기',
     rankNew: '순위표: {rank}위!',
     rankKept: '순위표 내 최고: {rank}위',
     grit: '불굴 ×{n}: 여기서 다음 도전은 더 강해져요',

@@ -19,6 +19,14 @@ describe('CrazyGamesSdk', () => {
     expect(time.now()).toBeGreaterThanOrEqual(SDK_WAIT_MS);
     expect(cg.dataStore()).toBeNull();
     expect(await cg.requestAd('rewarded')).toBe(false);
+    expect(cg.start()).toEqual({ end: 'noscript', ms: time.now() });
+  });
+
+  it('says when the script came but no environment did', async () => {
+    const { cg } = make({ init: () => new Promise(() => {}) });
+    expect(await cg.init()).toBe('disabled');
+    expect(cg.start().end).toBe('timeout');
+    expect(cg.start().ms).toBeGreaterThanOrEqual(SDK_WAIT_MS);
   });
 
   it('does not hang on an init that never settles', async () => {
@@ -33,6 +41,8 @@ describe('CrazyGamesSdk', () => {
     };
     const { cg } = make(sdk);
     expect(await cg.init()).toBe('local');
+    expect(cg.start().end).toBe('ok');
+    expect(cg.start().ms).toBeLessThan(SDK_WAIT_MS);
   });
 
   it('pays a rewarded ad only when it finished', async () => {

@@ -245,6 +245,8 @@ export const vi: Table<typeof en> = {
     offering: 'Cúng dường: đồng +{n}',
     chest: 'Rương (đợt {wave}): đồng +{copper}, ngọc +{jade}',
     newBest: 'Kỷ lục mới!',
+    best: 'Kỷ lục: {wave} đợt',
+    again: 'Chơi lại',
     rankNew: 'Bảng xếp hạng: hạng {rank}!',
     rankKept: 'Hạng cao nhất của bạn: {rank}',
     grit: 'Kiên cường ×{n}: lần thử tiếp theo ở đây mạnh hơn',

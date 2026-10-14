@@ -245,6 +245,8 @@ export const it: Table<typeof en> = {
     offering: 'Offerte: rame +{n}',
     chest: 'Forziere (ondata {wave}): rame +{copper}, giada +{jade}',
     newBest: 'Nuovo record!',
+    best: 'Record: {wave} ondate',
+    again: 'Gioca ancora',
     rankNew: 'Classifica: #{rank}!',
     rankKept: 'Il tuo record in classifica: #{rank}',
     grit: 'Tenacia ×{n}: il prossimo tentativo qui è più forte',

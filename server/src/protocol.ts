@@ -18,7 +18,7 @@ export type Device = (typeof DEVICES)[number];
  * the background (tab hidden, app switched), the last one of a day being where the player stopped;
  * `iap` an in-app purchase or restore answered (iOS, the ad-free card).
  *
- * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list) and `navLangs` (the browser's). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
+ * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list), `navLangs` (the browser's) and on CrazyGames `sdk` (the SDK's environment and how init ended: `crazygames/ok`, `disabled/timeout`, `disabled/noscript`), `sdkMs` (init's milliseconds) and `basic` (ads held for Basic Launch). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `ad` has `at` (`lobby`, `revive` or
  * `double`) and `free` when the ad-free card paid the reward with no ad. `claim` has `what` (`task`
  * with `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`
@@ -52,6 +52,15 @@ export interface EventBatch {
   locale: string;
   events: ClientEvent[];
 }
+
+/**
+ * Anonymous load checkpoints (GET /v1/beacon?h=<host>&s=<step>&b=<build>): `open_*` from the
+ * portal page's inline script before anything else downloads, `loaded_*` once the game's first
+ * screen is up; `touch` is a coarse pointer (phones and tablets). They carry no install id and go
+ * whatever the privacy answer, so they count every launch: the share that never got past loading.
+ */
+export const BEACONS = ['open_desktop', 'open_touch', 'loaded_desktop', 'loaded_touch'] as const;
+export type Beacon = (typeof BEACONS)[number];
 
 export const LIMITS = {
   idMin: 8,

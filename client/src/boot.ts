@@ -39,6 +39,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     quality.setRange(levelRange(mode, device, low));
   });
   shell.start(opts.direct);
+  net.loaded();
   if (privacy?.noticeDue()) {
     privacyToast(app, () => platform.safeInsets());
     privacy.noticeShown();

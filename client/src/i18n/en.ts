@@ -243,6 +243,8 @@ export const en = {
     offering: 'Offerings: copper +{n}',
     chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
     newBest: 'New best!',
+    best: 'Best: {wave} waves',
+    again: 'Play again',
     rankNew: 'Leaderboard: #{rank}!',
     rankKept: 'Your best on the leaderboard: #{rank}',
     grit: 'Grit ×{n}: the next try here is stronger',

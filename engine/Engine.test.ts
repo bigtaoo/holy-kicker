@@ -94,8 +94,9 @@ describe('Engine', () => {
 
   it('matches the golden hashes for this engine version', () => {
     // Recorded 2026-10-12 for ENGINE_VERSION 36 (chapter 1's opening crowd has the wave's share of health and contact blow), still
-    // the same for 37 (a first run's first wave pulls gems from further, FIRST_RUN). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(37);
+    // the same for 37 (a first run's first wave pulls gems from further, FIRST_RUN) and 38 (its first waves do). A change here is a
+    // rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(38);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);

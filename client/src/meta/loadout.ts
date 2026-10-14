@@ -7,7 +7,7 @@ import { trainingStats } from './training';
 
 // What the meta progression sends into a run (docs/design.md "Engine boundary"): the engine
 // stats of the worn gear, the training line and, on the first uncleared chapter, the grit of
-// the lost tries there summed into RunConfig.bonus, and training's free revives, which the
+// the lost tries there and a new player's head start summed into RunConfig.bonus, and training's free revives, which the
 // shell offers before the rewarded-ad one.
 
 export interface Loadout {
@@ -20,9 +20,10 @@ export function loadout(save: SaveData, chapter = save.chapter, hard = save.hard
   const gear = gearStats(save);
   const trained = trainingStats(save);
   const grit = gritBonus(save, chapter, hard);
+  const novice = noviceBonus(save, chapter, hard);
   const bonus: Partial<Record<Stat, number>> = {};
   for (const stat of STATS) {
-    const n = (gear[stat] ?? 0) + (trained[stat] ?? 0) + (grit[stat] ?? 0);
+    const n = (gear[stat] ?? 0) + (trained[stat] ?? 0) + (grit[stat] ?? 0) + (novice[stat] ?? 0);
     if (n) bonus[stat] = n;
   }
   return { bonus, freeRevives: trained.revive ?? 0 };
@@ -34,4 +35,10 @@ export function gritBonus(save: SaveData, chapter = save.chapter, hard = save.ha
   const out: Partial<Record<Stat, number>> = {};
   for (const [stat, n] of Object.entries(BALANCE.grit.bonus) as [Stat, number][]) out[stat] = n * save.grit;
   return out;
+}
+
+/** A new player's head start: the first runs of chapter 1 while nothing is cleared yet. */
+export function noviceBonus(save: SaveData, chapter = save.chapter, hard = save.hard): Partial<Record<Stat, number>> {
+  const { runs, bonus } = BALANCE.novice;
+  return chapter === 1 && !hard && save.cleared === 0 && save.runs < runs ? { ...bonus } : {};
 }

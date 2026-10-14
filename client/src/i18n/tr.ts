@@ -245,6 +245,8 @@ export const tr: Table<typeof en> = {
     offering: 'Adaklar: bakır +{n}',
     chest: 'Sandık (dalga {wave}): bakır +{copper}, yeşim +{jade}',
     newBest: 'Yeni rekor!',
+    best: 'En iyi: {wave} dalga',
+    again: 'Tekrar oyna',
     rankNew: 'Sıralama: #{rank}!',
     rankKept: 'Sıralamadaki en iyi yerin: #{rank}',
     grit: 'Azim ×{n}: buradaki sonraki deneme daha güçlü',

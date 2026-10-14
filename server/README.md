@@ -26,6 +26,7 @@ before names) goes by a dice name made from its tag.
 |---|---|
 | `GET /health` | `{ ok: true }` |
 | `POST /v1/events` | an `EventBatch` (src/protocol.ts): up to 50 events, names from `EVENT_NAMES` → 204 |
+| `GET /v1/beacon?h=crazygames&s=open_touch&b=<build>` | an anonymous load checkpoint (`BEACONS`: `open_*` from the CrazyGames page before the SDK, `loaded_*` from the game's first screen): counted per day, host, build and step, no id, whatever the privacy answer → 204 |
 | `POST /v1/runs` | a `RunEntry`: kept if it is the install's best on its board → `{ board, rank, best, tag }`; its `name` or `dice`, if the rules take it, becomes the install's name |
 | `POST /v1/name` | a `NameEntry` `{ install, host, name \| dice }`: the install's name on every board → `{ ok: true }`, or 400 `bad name` |
 | `GET /v1/boards/c<N>[h]` | top 50 of chapter N (h: hard), plus the caller's own row (header `x-hk-install`) |

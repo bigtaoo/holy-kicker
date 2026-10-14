@@ -1,9 +1,9 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
 import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
-import { boardId, runScore, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { boardId, runScore, type Beacon, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
-import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from './stats';
+import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
 import { reportId, rowOf, runName, summaryOf, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
@@ -16,6 +16,7 @@ import { reportId, rowOf, runName, summaryOf, type Store } from './store';
 //   best     one per install per board: its best run
 //   names    one per install that has a name, by its tag: a portal account's name or a dice name
 //   reports  problem reports with their replays, dropped after REPORTS_DAYS
+//   beacons  anonymous load checkpoints, one counter per day, host, build and step
 
 const EVENTS_DAYS = 90;
 const REPORTS_DAYS = 180;
@@ -56,13 +57,14 @@ export class MongoStore implements Store {
     private readonly best: Collection<BestDoc>,
     private readonly reportDocs: Collection<ReportDoc>,
     private readonly names: Collection<{ _id: string; name?: string; dice?: number; at: Date }>,
+    private readonly beacons: Collection<{ _id: string; day: string; host: string; build: string; step: string; n: number }>,
   ) {}
 
   static async open(uri: string, dbName: string): Promise<MongoStore> {
     const client = new MongoClient(uri, { maxPoolSize: 10, appName: 'holykicker' });
     await client.connect();
     const db: Db = client.db(dbName);
-    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'), db.collection('names'));
+    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'), db.collection('names'), db.collection('beacons'));
     await Promise.all([
       s.events.createIndex({ at: 1 }, { expireAfterSeconds: EVENTS_DAYS * 86_400 }),
       s.events.createIndex({ e: 1, day: 1 }),
@@ -70,6 +72,7 @@ export class MongoStore implements Store {
       s.active.createIndex({ day: 1 }),
       s.active.createIndex({ install: 1 }),
       s.best.createIndex({ board: 1, score: -1, at: 1 }),
+      s.beacons.createIndex({ day: 1 }),
       s.reportDocs.createIndex({ at: 1 }, { expireAfterSeconds: REPORTS_DAYS * 86_400 }),
     ]);
     await s.upgrade();
@@ -104,6 +107,11 @@ export class MongoStore implements Store {
     if (p.first !== day && !fresh && !ran) return;
     const set = { ...(p.first === day ? { d0: foldDayZero(p.d0, b.events) } : {}), ...(ran ? { progress: foldProgress(p.progress, b.events, offset) } : {}) };
     await this.installs.updateOne({ _id: b.install }, { ...(Object.keys(set).length ? { $set: set } : {}), ...(fresh ? { $addToSet: { back: offset } } : {}) });
+  }
+
+  async beacon(host: Host, step: Beacon, build: string, now: number): Promise<void> {
+    const day = dayOf(now);
+    await this.beacons.updateOne({ _id: `${day}/${host}/${build}/${step}` }, { $setOnInsert: { day, host, build, step }, $inc: { n: 1 } }, { upsert: true });
   }
 
   private async rankOf(doc: BestDoc): Promise<number> {
@@ -151,7 +159,7 @@ export class MongoStore implements Store {
     for await (const p of this.installs.find({ first: window, ...mine }, { projection: { first: 1, build: 1, aud: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
     type Count = { _id: string; n: number };
     type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown }; n: number };
-    const [active, runs, [ends]] = await Promise.all([
+    const [active, runs, [ends], beacons] = await Promise.all([
       this.active.aggregate<Count>([{ $match: { day: window, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
       this.events.aggregate<Count>([{ $match: { e: 'run_start', day: window, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
       this.events.aggregate<{ days: Count[]; outcomes: Outcome[] }>([
@@ -163,11 +171,13 @@ export class MongoStore implements Store {
           },
         },
       ]).toArray(),
+      this.beacons.find({ day: window, ...mine }).toArray(),
     ]);
     const map = (rows: Count[]) => new Map(rows.map((r) => [r._id, r.n]));
     const counts: DayCounts = { active: map(active), runs: map(runs), ended: map(ends?.days ?? []) };
     const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, n }));
-    return fold.result(host, counts, outcomes);
+    const loads: BeaconCount[] = beacons.map(({ day, build, step, n }) => ({ day, build, step, n }));
+    return fold.result(host, counts, outcomes, loads);
   }
 
   async addReport(report: Report, now: number): Promise<string> {

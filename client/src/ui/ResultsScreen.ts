@@ -11,12 +11,15 @@ import { COLORS, button, fit, label, panel } from './widgets';
 // Results after a run: what it paid and dropped (already in the save), after the first run the
 // welcome gift and the one waiting tomorrow, the next progress chest, its place on the
 // leaderboard once the server answers, the rewarded "double copper" offer when an ad can be
-// shown, and Continue back to the lobby.
+// shown, Play again (after the first runs, the quickest way back into a fight) and Continue back
+// to the lobby.
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
   double(): Promise<boolean>;
   next(): void;
+  /** Plays the same chapter again; null where the results lead to the lobby only. */
+  again: (() => void) | null;
 }
 
 type Offer = 'hidden' | 'offered' | 'playing' | 'paid';
@@ -63,6 +66,7 @@ export class ResultsScreen implements Screen {
       [t('results.reached', { wave: this.waves }), 52, COLORS.text],
     ];
     if (r.newBest) lines.push([t('results.newBest'), 48, COLORS.saffron]);
+    else if (!r.firstClear && r.best > 0) lines.push([t('results.best', { wave: r.best }), 44, COLORS.dim]);
     const rank = this.rank;
     if (rank) lines.push(rank.best ? [t('results.rankNew', { rank: rank.rank }), 52, COLORS.saffron] : [t('results.rankKept', { rank: rank.rank }), 44, COLORS.dim]);
     if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.saffron]);
@@ -100,11 +104,21 @@ export class ResultsScreen implements Screen {
     this.view.addChild(card);
 
     let by = card.y + cardH / 2 + 150;
+    const busy = this.offer === 'playing';
+    // with Play again first, Continue (and the ad offer, which matches it) step back
+    const second = this.actions.again ? COLORS.panelLocked : COLORS.saffron;
+    if (this.actions.again) {
+      const again = button(t('results.again'), 640, 150, () => this.actions.again?.(), { fill: COLORS.saffron });
+      again.position.set(f.w / 2, by);
+      if (busy) again.eventMode = 'none';
+      this.view.addChild(again);
+      by += 190;
+    }
     if (this.offer === 'offered' || this.offer === 'playing') {
-      const playing = this.offer === 'playing';
+      const playing = busy;
       // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
       const ad = button(playing ? '…' : t('results.double'), 640, 150, () => void this.playAd(), {
-        fill: playing ? COLORS.panelLocked : COLORS.saffron,
+        fill: playing ? COLORS.panelLocked : second,
         video: !playing,
       });
       ad.position.set(f.w / 2, by);
@@ -112,9 +126,9 @@ export class ResultsScreen implements Screen {
       this.view.addChild(ad);
       by += 190;
     }
-    const next = button(t('common.continue'), 640, 150, () => this.actions.next());
+    const next = button(t('common.continue'), 640, 150, () => this.actions.next(), { fill: second });
     next.position.set(f.w / 2, by);
-    if (this.offer === 'playing') next.eventMode = 'none';
+    if (busy) next.eventMode = 'none';
     this.view.addChild(next);
   }
 

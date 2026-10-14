@@ -49,6 +49,8 @@ export interface Reward {
   /** Sutras this run earned. */
   newSutras: SutraId[];
   newBest: boolean;
+  /** The chapter's best waves before this run (0 for a first try). */
+  best: number;
   /** Gear the run dropped, already in the save. */
   drops: Drop[];
   /** The grit this lost run added (the new count), 0 if none. */
@@ -173,6 +175,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
     newCodex: next.codex.filter((id) => !save.codex.includes(id)),
     newSutras: earnedSutras(next).filter((id) => !earnedSutras(save).includes(id)),
     newBest: waves > was.best[i],
+    best: was.best[i],
     drops,
     grit: tried ? grit : 0,
     nextChest: BALANCE.chests.find((_, k) => !(claimed & (1 << k)))?.wave ?? null,

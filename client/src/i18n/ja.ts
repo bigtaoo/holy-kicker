@@ -245,6 +245,8 @@ export const ja: Table<typeof en> = {
     offering: '供物：銅銭 +{n}',
     chest: '宝箱（ウェーブ{wave}）：銅銭 +{copper}、玉 +{jade}',
     newBest: '新記録！',
+    best: '最高記録：{wave} ウェーブ',
+    again: 'もう一度',
     rankNew: 'ランキング：{rank}位！',
     rankKept: 'ランキング自己ベスト：{rank}位',
     grit: '不屈 ×{n}：次の挑戦はもっと強くなる',

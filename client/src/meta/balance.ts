@@ -24,6 +24,7 @@ export interface Balance {
   /** Rewarded-ad revives per run; wave length and the wave plan are engine rules (engine/config.ts). */
   revives: number;
   grit: GritBalance;
+  novice: NoviceBalance;
   copperPerWave: number;
   copperChapterStep: number;
   chests: Chest[];
@@ -54,6 +55,15 @@ export interface Balance {
  * far adds `bonus` to the next tries there, up to `max` times; clearing it starts over. It
  * turns the long tail of unlucky tries into a few.
  */
+/**
+ * A new player's first `runs` runs of chapter 1, before it is ever cleared, get `bonus` on top of
+ * any grit (loadout.ts), so the first runs reach the twenties and a clear comes within a few tries.
+ */
+export interface NoviceBalance {
+  runs: number;
+  bonus: Partial<Record<Stat, number>>;
+}
+
 export interface GritBalance {
   max: number;
   minWaves: number;

@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
-import { boardId, runScore, type BoardName, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { boardId, runScore, type Beacon, type BoardName, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { dayOf } from './rules';
-import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from './stats';
+import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
 
 // Where the backend keeps things. The routes only see this interface: mongoStore.ts is the real
 // one, MemoryStore below serves the tests and a local run without a database.
@@ -11,6 +11,8 @@ import { StatsFold, windowOf, type DayCounts, type EndCount, type Stats } from '
 export interface Store {
   /** Keeps a checked batch received at `now` (ms); `aud` is kept on a new install. */
   addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void>;
+  /** Counts one anonymous load checkpoint for its day, host and build. */
+  beacon(host: Host, step: Beacon, build: string, now: number): Promise<void>;
   /** Keeps the run if it is the install's best on its board; returns the run's board and the install's rank there. */
   submitRun(run: RunEntry, tag: string, now: number): Promise<{ board: string; rank: number; best: boolean }>;
   /** Keeps the name the boards show for `tag`: a portal account's or a dice name. */
@@ -68,6 +70,13 @@ export class MemoryStore implements Store {
   private readonly best = new Map<string, Best>();
   /** The boards' names by tag. */
   readonly names = new Map<string, BoardName>();
+  /** Load checkpoints by `day/host/build/step`. */
+  readonly beacons = new Map<string, number>();
+
+  async beacon(host: Host, step: Beacon, build: string, now: number): Promise<void> {
+    const key = `${dayOf(now)}/${host}/${build}/${step}`;
+    this.beacons.set(key, (this.beacons.get(key) ?? 0) + 1);
+  }
 
   async addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void> {
     this.events.push({ ...batch, at: now });
@@ -135,7 +144,12 @@ export class MemoryStore implements Store {
         ends.push({ chapter: Number(p.chapter) || 0, hard: p.hard === true, won: p.won === true, gaveUp: p.gaveUp === true, wave: Number(p.wave) || 0, n: 1 });
       }
     }
-    return fold.result(host, counts, ends);
+    const beacons: BeaconCount[] = [];
+    for (const [key, n] of this.beacons) {
+      const [day, h, build, step] = key.split('/');
+      if (day >= list[0] && day <= last && mine(h as Host)) beacons.push({ day, build, step, n });
+    }
+    return fold.result(host, counts, ends, beacons);
   }
 
   async addReport(report: Report, now: number): Promise<string> {

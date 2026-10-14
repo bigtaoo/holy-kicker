@@ -245,6 +245,8 @@ export const th: Table<typeof en> = {
     offering: 'ของถวาย: ทองแดง +{n}',
     chest: 'หีบ (เวฟ {wave}): ทองแดง +{copper}, หยก +{jade}',
     newBest: 'สถิติใหม่!',
+    best: 'ดีที่สุด: {wave} ระลอก',
+    again: 'เล่นอีกครั้ง',
     rankNew: 'กระดานอันดับ: #{rank}!',
     rankKept: 'อันดับดีที่สุดของคุณ: #{rank}',
     grit: 'ใจสู้ ×{n}: ครั้งหน้าที่นี่จะแกร่งขึ้น',

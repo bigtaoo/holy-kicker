@@ -126,7 +126,7 @@ describe('training', () => {
 describe('loadout', () => {
   it('sums gear and training into the engine bonus, revives apart', () => {
     const t = BALANCE.training;
-    const s = { ...withGear(newSave(), 'robe', [1, 0, 0, 0, 0]), trained: t.reviveNodes[0] };
+    const s = { ...withGear(newSave(), 'robe', [1, 0, 0, 0, 0]), trained: t.reviveNodes[0], runs: BALANCE.novice.runs };
     const l = loadout(s);
     expect(l.freeRevives).toBe(1);
     expect(l.bonus.maxHp).toBe(itemStats('robe', 0).maxHp! + (trainingStats(s).maxHp ?? 0));

@@ -38,6 +38,16 @@ export interface Stats {
   audience: { name: string; groups: { label: string; n: number; tutorial: number; ran: number; known: number; back: number }[] }[];
   /** The wave new installs' first finished run ended on, and how many of them came back the next day (D1 known only). */
   firstRun: { wave: number; n: number; back: number }[];
+  /** Anonymous load checkpoints per day and build (protocol BEACONS), all launches counted. */
+  beacons: BeaconCount[];
+}
+
+/** One load checkpoint's count on a day for a build. */
+export interface BeaconCount {
+  day: string;
+  build: string;
+  step: string;
+  n: number;
 }
 
 /** Finished runs with the same outcome, as a store counts them. */
@@ -140,7 +150,7 @@ export class StatsFold {
     if (z.ends > 0) bump(this.firstRun, z.firstWave, d1);
   }
 
-  result(host: Host | null, counts: DayCounts, ends: EndCount[]): Stats {
+  result(host: Host | null, counts: DayCounts, ends: EndCount[], beacons: BeaconCount[] = []): Stats {
     const at = (m: Map<string, number>, day: string) => m.get(day) ?? 0;
     return {
       today: this.today,
@@ -155,6 +165,7 @@ export class StatsFold {
       funnel: FUNNEL.map(([step], i) => ({ step, n: this.funnel[i] })),
       drivers: DRIVERS.map(([name], i) => ({ name, groups: [...this.drivers[i]].map(([label, g]) => ({ label, ...g })) })),
       audience: AUDIENCE_KEYS.map((name, i) => ({ name, groups: [...this.audience[i]].sort(([a, x], [b, y]) => y.n - x.n || a.localeCompare(b)).map(([label, g]) => ({ label, ...g })) })),
+      beacons: [...beacons].sort((a, b) => a.day.localeCompare(b.day) || a.build.localeCompare(b.build) || a.step.localeCompare(b.step)),
       firstRun: [...this.firstRun].sort(([a], [b]) => a - b).map(([wave, g]) => ({ wave, ...g })),
       clears: [...this.clears]
         .sort(([a], [b]) => a.localeCompare(b))

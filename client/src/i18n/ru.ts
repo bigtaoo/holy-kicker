@@ -245,6 +245,8 @@ export const ru: Table<typeof en> = {
     offering: 'Подношения: медь +{n}',
     chest: 'Сундук (волна {wave}): медь +{copper}, нефрит +{jade}',
     newBest: 'Новый рекорд!',
+    best: 'Рекорд: {wave} волн',
+    again: 'Играть снова',
     rankNew: 'Рейтинг: №{rank}!',
     rankKept: 'Твоё лучшее место в рейтинге: №{rank}',
     grit: 'Упорство ×{n}: следующая попытка здесь сильнее',

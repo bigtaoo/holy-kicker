@@ -245,6 +245,8 @@ export const de: Table<typeof en> = {
     offering: 'Opfergaben: Kupfer +{n}',
     chest: 'Truhe (Welle {wave}): Kupfer +{copper}, Jade +{jade}',
     newBest: 'Neuer Rekord!',
+    best: 'Rekord: {wave} Wellen',
+    again: 'Nochmal spielen',
     rankNew: 'Bestenliste: Platz {rank}!',
     rankKept: 'Dein bester Platz in der Bestenliste: {rank}',
     grit: 'Biss ×{n}: Der nächste Versuch hier ist stärker',

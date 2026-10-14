@@ -1,6 +1,6 @@
 import type { DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import type { Host } from '@hk/protocol';
+import type { Host, PropValue } from '@hk/protocol';
 import type { Ads, AudioHost, Banner, Portal } from '../types';
 import { adFree } from '../ios/adFree';
 import { BannerHost } from '../web/banner';
@@ -77,6 +77,12 @@ export class CrazyGamesPlatform extends WebPlatform {
   override languages(): string[] {
     const portal = this.sdk.locale();
     return portal ? [portal] : super.languages();
+  }
+
+  /** The SDK's start (its end and milliseconds) and environment, and whether ads are held for Basic Launch. */
+  sessionProps(): Record<string, PropValue> {
+    const { end, ms } = this.sdk.start();
+    return { sdk: `${this.sdk.environment()}/${end}`, sdkMs: ms, basic: this.basicLaunch() };
   }
 
   /** The portal's country, which decides whether the game asks before sending play data. */
