@@ -71,6 +71,18 @@ const server = createServer((req, res) => {
 });
 server.listen(port, () => console.log(`holykicker api on :${port} (${uri ? 'mongo' : 'memory'} store)`));
 
+// weekly prune of raw perf telemetry (Store.prune): looked at a minute after start and every few
+// hours, since each deploy restarts the process; the store remembers when it last ran
+const PRUNE_LOOK_MS = 6 * 3600_000;
+function prune(): void {
+  store.prune(Date.now()).then(
+    (n) => n !== null && console.log(`pruned ${n} perf and anomaly events`),
+    (err) => console.error('prune failed', err),
+  );
+}
+setTimeout(prune, 60_000).unref();
+setInterval(prune, PRUNE_LOOK_MS).unref();
+
 for (const sig of ['SIGTERM', 'SIGINT'] as const) {
   process.on(sig, () => {
     server.close();

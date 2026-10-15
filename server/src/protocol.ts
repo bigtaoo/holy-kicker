@@ -18,7 +18,7 @@ export type Device = (typeof DEVICES)[number];
  * the background (tab hidden, app switched), the last one of a day being where the player stopped;
  * `iap` an in-app purchase or restore answered (iOS, the ad-free card).
  *
- * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list), `navLangs` (the browser's) and on CrazyGames `sdk` (the SDK's environment and how init ended: `crazygames/ok`, `disabled/timeout`, `disabled/noscript`), `sdkMs` (init's milliseconds) and `basic` (ads held for Basic Launch). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
+ * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list), `navLangs` (the browser's), `mem`, `cores` and `gpu` (SessionDeviceProps) and on CrazyGames `sdk` (the SDK's environment and how init ended: `crazygames/ok`, `disabled/timeout`, `disabled/noscript`), `sdkMs` (init's milliseconds) and `basic` (ads held for Basic Launch). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `ad` has `at` (`lobby`, `revive` or
  * `double`) and `free` when the ad-free card paid the reward with no ad. `claim` has `what` (`task`
  * with `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`
@@ -29,8 +29,11 @@ export type Device = (typeof DEVICES)[number];
  * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached). `iap` has `what` (`buy` or
  * `restore`), `item` (`adfree`) and `outcome` (`owned`, `cancelled`, `pending` or `failed`, and
  * `none` for a restore that found nothing).
+ *
+ * `perf` is a frame-rate snapshot of the battle so far (see PerfProps); `anomaly` one thing gone
+ * wrong on the device, sent as it happens (see AnomalyProps).
  */
-export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap'] as const;
+export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap', 'perf', 'anomaly'] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
 export type PropValue = string | number | boolean;
@@ -75,11 +78,113 @@ export function loadBucket(ms: number): string {
   return bound === undefined ? LOAD_OVER : String(bound);
 }
 
+/** When a `perf` snapshot is taken: the run ended, the game went to the background mid-run, or
+ *  every few battle minutes while something looks wrong (PERF_MID_SECS, perfTrouble). */
+export const PERF_WHY = ['end', 'leave', 'mid'] as const;
+/** The GPU as a coarse class: a software renderer, a known weak phone GPU, anything else, or hidden by the browser. */
+export const GPU_CLASSES = ['software', 'weak', 'other', 'hidden'] as const;
+
+/**
+ * A `perf` event's props, measured over battle frames only (lobby, pauses and card choices left
+ * out), since the previous snapshot of the same run. Frame rates are whole frames per second;
+ * quality levels are the client's level names (client/src/game/quality.ts LEVELS). The device
+ * (memory, cores, GPU class) is not repeated here: it rides once per launch on `session`
+ * (`mem`, `cores`, `gpu`).
+ *
+ * The memory fields locate a leak: `heap` is the JS heap (Chrome only), `tex` the GPU textures
+ * the renderer holds and `nodes` the display objects on stage, each with its change since the
+ * run's first battle frame (`...Up`, may be negative; nodes also grow as the horde does). The
+ * start value is the current one minus the change, so later runs of a launch starting higher
+ * than the first means something survives a run.
+ */
+export interface PerfProps {
+  why: (typeof PERF_WHY)[number];
+  /** Battle seconds measured in this snapshot. */
+  secs: number;
+  /** Median and 5th-percentile frame rate. */
+  fps: number;
+  p5: number;
+  /** Frames of 50 ms or longer. */
+  long: number;
+  /** Quality level the run started on, the lowest it reached, and the one it is on now. */
+  lv0: string;
+  lvMin: string;
+  lv: string;
+  /** Most mobs alive at once. */
+  mobs: number;
+  /** Runs started since launch, this one included. */
+  nth: number;
+  /** JS heap in use and its change since the run started, MB; only where the host exposes it (Chrome's performance.memory). */
+  heap?: number;
+  heapUp?: number;
+  /** GPU texture sources alive, their change since the run started, and their size in MB. */
+  tex: number;
+  texUp: number;
+  texMB: number;
+  /** Display objects on stage, and their change since the run started. */
+  nodes: number;
+  nodesUp: number;
+}
+
+/** Device fields `session` carries for perf (PerfProps): navigator.deviceMemory in GB and hardwareConcurrency (0 when the host does not say) and the GPU class. */
+export interface SessionDeviceProps {
+  mem: number;
+  cores: number;
+  gpu: (typeof GPU_CLASSES)[number];
+}
+
+/** What went wrong in an `anomaly`: the WebGL context lost, an uncaught error, the host's memory warning, or one frame stalled. */
+export const ANOMALY_KINDS = ['webgl_lost', 'error', 'memory', 'stall'] as const;
+
+/** An `anomaly` event's props. */
+export interface AnomalyProps {
+  kind: (typeof ANOMALY_KINDS)[number];
+  /** Where the player was: `run`, `lobby`, `results` or `other` (as `leave`). */
+  place: string;
+  /** `error`: the message, cut to LIMITS.propString, and where it was thrown: the script's file name with line and column (`index-abc.js:1:2345`). */
+  msg?: string;
+  src?: string;
+  /** `memory`: WeChat's warning level (5, 10 or 15 on Android; 0 when not given). */
+  level?: number;
+  /** `stall`: the frame's length in ms. */
+  ms?: number;
+  /** In a run: the wave. */
+  wave?: number;
+  /** `memory` and `webgl_lost`: what the game held then (as PerfProps). */
+  heap?: number;
+  tex?: number;
+  texMB?: number;
+  nodes?: number;
+}
+
+/** A frame at least this long (ms) is a `stall` anomaly; a hidden tab's gap does not count, nor
+ *  one of STALL_MAX_MS or more: frames stopped without the page saying it was hidden (an iframe
+ *  scrolled out of sight, a window covered), a pause rather than a hitch. */
+export const STALL_MS = 1000;
+export const STALL_MAX_MS = 5000;
+/** At most this many `anomaly` events of each kind per session. */
+export const ANOMALY_CAP = 3;
+/** Battle seconds between two looks at a `mid` perf snapshot, and the most one run sends. */
+export const PERF_MID_SECS = 180;
+export const PERF_MID_MAX = 5;
+
+/**
+ * Whether a `mid` snapshot is worth sending: a healthy stretch is not, it is folded into the
+ * run's next snapshot instead, which saves the player's data. Trouble is a slow 5th percentile,
+ * frequent long frames (50 ms or longer, per battle minute), or memory climbing since the run
+ * started (PERF_TROUBLE).
+ */
+export const PERF_TROUBLE = { p5: 40, longPerMin: 6, heapUp: 50, texUp: 30, nodesUp: 3000 } as const;
+export function perfTrouble(p: Pick<PerfProps, 'secs' | 'p5' | 'long' | 'heapUp' | 'texUp' | 'nodesUp'>): boolean {
+  const t = PERF_TROUBLE;
+  return p.p5 < t.p5 || (p.secs > 0 && (p.long * 60) / p.secs > t.longPerMin) || (p.heapUp ?? 0) >= t.heapUp || p.texUp >= t.texUp || p.nodesUp >= t.nodesUp;
+}
+
 export const LIMITS = {
   idMin: 8,
   idMax: 64,
   batchEvents: 50,
-  props: 12,
+  props: 20,
   propKey: 24,
   propString: 64,
   build: 32,

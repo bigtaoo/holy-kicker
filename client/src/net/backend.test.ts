@@ -121,10 +121,14 @@ describe('Backend', () => {
     const host = platform();
     const net = new Backend(host, 'https://api.test', '1.0.0', () => 'en');
     net.onLeave(() => ({ place: 'run', secs: 42, wave: 7 }));
+    net.onHidden(() => net.track('perf', { why: 'leave', secs: 60 }));
     host.hide();
     await vi.advanceTimersByTimeAsync(0);
     expect(calls).toHaveLength(1);
-    expect(sent(calls[0]).events).toEqual([{ e: 'leave', t: expect.any(Number), p: { place: 'run', secs: 42, wave: 7 } }]);
+    expect(sent(calls[0]).events).toEqual([
+      { e: 'leave', t: expect.any(Number), p: { place: 'run', secs: 42, wave: 7 } },
+      { e: 'perf', t: expect.any(Number), p: { why: 'leave', secs: 60 } },
+    ]);
   });
 
   it('enters a run and reads back its rank, null for an answer without one', async () => {

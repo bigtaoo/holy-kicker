@@ -77,6 +77,78 @@ before believing a change, and never read a single day.
 | chapter 1 clear rate very low | The first win comes too late | Ease chapter 1's last waves, or make the first clear reachable within the first 3–4 runs with training |
 | bought in the lobby: big D1 gap | Meta progress is the hook | Make the first purchase happen on day 0 (start with enough copper for one training node) |
 
+## Performance
+
+A device that stutters loses players before any design lever matters, so the dash also shows how
+battles run (builds from 2026-10-15 on; contract in `server/src/protocol.ts` `PerfProps`,
+`SessionDeviceProps` and `AnomalyProps`, numbers in `server/src/perf.ts`, findings in
+`server/src/diagnose.ts`).
+
+- **`perf`** is a frame-rate snapshot over battle frames only (lobby, pauses and card choices left
+  out): seconds measured, median and 5th-percentile fps (`p5`), frames of 50 ms or longer, the
+  quality level the run started on, the lowest it fell to and the current one, the most mobs
+  alive, which run of the launch it is (`nth`), and what the game holds: GPU textures (`tex`,
+  `texMB`), display objects on stage (`nodes`) and, on Chrome, the JS heap, each with its change
+  since the run's first battle frame (`...Up`). One is sent per run, when it ends (`why: end`) or
+  when the game goes to the background mid-run (`leave`); a `mid` snapshot every 3 battle minutes
+  is sent only while something looks wrong (`perfTrouble`: a slow p5, many long frames or memory
+  climbing), and a healthy stretch is folded into the next snapshot instead. So the table rows
+  are mostly one snapshot per run, and the `mid` column counts trouble.
+- The **device** (memory, cores, a coarse GPU class) comes once per launch on the `session` event,
+  not on every snapshot; the server joins it to the snapshots by session id.
+- **`anomaly`** is one thing gone wrong, sent as it happens, at most 3 of each kind per session:
+  `webgl_lost` (the GPU context dropped: the game goes black), `error` (an uncaught error, with
+  its message and the file:line:col it was thrown at), `memory` (the host's memory warning; WeChat
+  on Android gives level 5, 10 or 15) and `stall` (one frame of a second or more; a hidden tab's
+  gap does not count). `memory` and `webgl_lost` carry what the game held at that moment.
+
+**Read the Diagnosis first.** It sits near the top of the dash and lists what the rules found,
+problems (fix) before warnings (watch), each with where (a build, a device class, a device + GPU,
+an error's source), the numbers and where in the client to look. Every rule waits for enough
+runs (usually 5 per group, 10 per build for a regression), so one odd device does not alarm.
+The rules and their thresholds are constants at the top of `diagnose.ts`:
+
+- **leak_in_run**: in a build's runs of 2+ battle minutes, the heap grows 3+ MB per battle minute
+  or textures grow by 10+. The hint names the suspect: textures climbing (never destroyed), else
+  display objects well past what the horde explains (sprites never removed), else plain JS
+  objects (take a heap snapshot).
+- **leak_across_runs**: the third and later runs of a launch start holding more than the first
+  (heap +30 MB, textures +20 or display objects +500): something survives the run teardown.
+- **heap_high**: snapshots holding 800+ MB of heap or 400+ MB of textures, per device class.
+- **memory_warning** and **webgl_lost**: 3+ in a build. WeChat kills the game soon after a
+  level 15 warning; both point at texture memory first.
+- **stalls**: 6+ frames of a second or more per battle hour of a build.
+- **errors**: the same message from the same place 2+ times (5+ is a problem).
+- **slow_device**: a device + GPU whose median p5 is under 30, with how many runs fell below the
+  phone quality level.
+- **fps_regression**: on a device class, the newest build's median p5 is 5+ fps below the build
+  before it.
+
+Under it, the Performance tables split snapshots by the install's device and system and by build
+(newest first, so a regression shows right after a deploy), then list the 10 worst snapshots of
+at least 30 battle seconds with their device details. Worrying numbers:
+
+- **p5 under 30 on phones** (red in the tables): fights stutter whenever the horde is big. Under 45
+  is amber. Look at the worst list for the GPU class, memory and mob count they share.
+- **long/min** above a few, or many `stall` anomalies: hitches big enough to feel (loading art
+  mid-battle, garbage collection, shader compiles).
+- **below phone** high on a device class: the automatic quality drop is doing a lot of work
+  there; the effects budget on that class may be too high.
+- **texture MB** and **nodes** climbing between builds, any `webgl_lost`, memory warnings and a
+  rising heap: the game runs out of memory on those devices, and the next step after a warning
+  is often the host killing it.
+- **errors**: the top messages are bugs to fix; a new message right after a deploy is that build.
+  The anomalies' by-build table shows which build brought it.
+
+A run that crashes or is killed never sends its `end` snapshot. If `leave` snapshots outnumber
+`end` on a device class far more than elsewhere, runs there are dying silently; compare with the
+anomalies on the same days.
+
+**Retention of the raw data.** `perf` and `anomaly` events are kept 28 days (`PERF_KEEP_DAYS`),
+then deleted by a weekly prune (`Store.prune`, run by the server and remembered in the
+database's `meta` collection, so restarts on deploy do not reset it); every other event keeps the
+90-day TTL. A dash window longer than 28 days shows perf numbers for the last 28 only.
+
 ## Rough bars for a casual web game
 
 D1 30%+ good, 20–30% average, under 20% weak; D7 10%+ good, 5–10% average. Portal consoles

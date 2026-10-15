@@ -23,6 +23,7 @@ import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import { languageProps, type Backend, type RunRank } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
+import type { PerfReport } from '../net/perfReport';
 import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadChapterArt, loadLobbyArt, loadMonkArt } from '../art';
@@ -68,6 +69,8 @@ export class Shell {
   private quality: LevelSettings | null = null;
   /** Switches the render quality mode (boot.ts wires it to the quality runtime). */
   onQualityMode: (mode: QualityMode) => void = () => {};
+  /** The `perf` sender (boot.ts feeds it the battle frames); a meter per real run. */
+  perf: PerfReport | null = null;
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
   private freeRevives = 0;
   /** Enemies defeated in this run, for the daily tasks. */
@@ -95,6 +98,8 @@ export class Shell {
     /** The kind of device (analytics); on a desktop the first run's move hint also names the keyboard. */
     private readonly device: Device = 'mobile',
     private readonly privacy: SettingsActions['privacy'] = null, // the player's privacy answer (net/privacyChoice.ts); null offline
+    /** The device's memory, cores and GPU class for `session` (net/perfReport.ts sessionDevice). */
+    deviceProps: Record<string, PropValue> = {},
   ) {
     this.names = new PlayerName(net, platform.storage, platform.portal);
     this.save = this.names.withDice(store.load());
@@ -113,7 +118,7 @@ export class Shell {
     });
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
-    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device, ...languageProps(platform, globalThis.navigator?.languages), ...platform.sessionProps?.() });
+    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device, ...deviceProps, ...languageProps(platform, globalThis.navigator?.languages), ...platform.sessionProps?.() });
     net.onLeave(() => this.leaving());
   }
 
@@ -121,10 +126,16 @@ export class Shell {
   private leaving(): Record<string, PropValue> {
     const secs = Math.round(this.shownMs / 1000);
     this.shownMs = 0;
-    if (this.screen instanceof LobbyScreen) return { place: 'lobby', secs };
-    if (this.screen instanceof ResultsScreen) return { place: 'results', secs };
-    if (this.game) return { place: 'run', secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.watch?.tutorial?.step ?? null) };
-    return { place: 'other', secs };
+    const place = this.place();
+    if (place === 'run' && this.game) return { place, secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.watch?.tutorial?.step ?? null) };
+    return { place, secs };
+  }
+
+  /** Where the player is, as `leave` and `anomaly` name it. */
+  place(): 'lobby' | 'results' | 'run' | 'other' {
+    if (this.screen instanceof LobbyScreen) return 'lobby';
+    if (this.screen instanceof ResultsScreen) return 'results';
+    return this.game ? 'run' : 'other';
   }
 
   /**
@@ -312,6 +323,7 @@ export class Shell {
       monk: this.scene.monk ?? this.save.monk, firstRun: !this.save.firstRunDone && this.scene.waves,
     }, left?.state);
     this.kills = left?.kills ?? 0;
+    this.perf?.start(rankedRun(this.scene) && !this.scene.record);
     if (this.quality) this.game.applyQuality(this.quality);
     this.game.shake.on = loadSettings(this.platform.storage).shake;
     this.game.onEvents = (events) => {
@@ -412,6 +424,7 @@ export class Shell {
       chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
       level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
     };
+    this.perf?.end();
     this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
     const name = rankedRun(this.scene) ? this.names.board(this.save) : null;
     const rank = name ? this.net.submitRun({ ...run, ...name }) : Promise.resolve(null);

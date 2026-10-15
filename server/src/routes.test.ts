@@ -43,6 +43,16 @@ describe('checks', () => {
     expect(checkBatch(batch({ events: Array.from({ length: LIMITS.batchEvents + 1 }, () => ({ e: 'session', t: NOW })) }), NOW).ok).toBe(false);
   });
 
+  it('take a full perf snapshot and an anomaly', () => {
+    const p = { why: 'end', secs: 240, fps: 58, p5: 41, long: 3, lv0: 'high', lvMin: 'phone', lv: 'high', mobs: 210, nth: 2, heap: 96, heapUp: 12, tex: 140, texUp: 4, texMB: 88, nodes: 2400, nodesUp: 1900 };
+    expect(Object.keys(p).length).toBeLessThanOrEqual(LIMITS.props);
+    const lost = { kind: 'webgl_lost', place: 'run', wave: 9, heap: 300, tex: 180, texMB: 210, nodes: 3000 };
+    const error = { kind: 'error', place: 'run', msg: 'x is undefined', src: 'index-abc.js:1:2345', wave: 9 };
+    expect(checkBatch(batch({ events: [{ e: 'perf', t: NOW, p }, { e: 'anomaly', t: NOW, p: lost }, { e: 'anomaly', t: NOW, p: error }] }), NOW).ok).toBe(true);
+    const tooMany = Object.fromEntries(Array.from({ length: LIMITS.props + 1 }, (_, i) => [`k${i}`, i]));
+    expect(checkBatch(batch({ events: [{ e: 'perf', t: NOW, p: tooMany }] }), NOW).ok).toBe(false);
+  });
+
   it('refuse a run that could not have happened', () => {
     expect(checkRun(run()).ok).toBe(true);
     expect(checkRun(run({ won: true, wave: LIMITS.waves, tenths: 8000 })).ok).toBe(true);

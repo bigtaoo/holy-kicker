@@ -61,8 +61,9 @@ export interface LevelRange {
   max: number;
 }
 
-const SOFTWARE_GPU = /swiftshader|llvmpipe|software|basic render/i;
-const WEAK_GPU = /mali-[t4]|mali-g(31|51|52|57)\b|adreno\D*[2-5]\d\d\b|powervr|sgx/i;
+/** GPU names that mean a software renderer, and known weak phone GPUs (also the `perf` gpu class). */
+export const SOFTWARE_GPU = /swiftshader|llvmpipe|software|basic render/i;
+export const WEAK_GPU = /mali-[t4]|mali-g(31|51|52|57)\b|adreno\D*[2-5]\d\d\b|powervr|sgx/i;
 
 /** Level a device starts on in auto mode. */
 export function startLevel(d: DeviceInfo): number {

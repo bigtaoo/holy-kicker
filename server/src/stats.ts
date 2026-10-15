@@ -1,4 +1,6 @@
 import { AUDIENCE_KEYS, type Audience } from './audience';
+import { diagnose, type Finding } from './diagnose';
+import { anomaliesOf, perfOf, type AnomalyCount, type AnomalyStats, type PerfSnap, type PerfStats } from './perf';
 import { boardId, type Host } from './protocol';
 import { RETURN_DAYS, counted, dayAfter, emptyDayZero, type DayZero, type Player, type Progress } from './players';
 
@@ -40,6 +42,12 @@ export interface Stats {
   firstRun: { wave: number; n: number; back: number }[];
   /** Anonymous load checkpoints per day and build (protocol BEACONS), all launches counted. */
   beacons: BeaconCount[];
+  /** Frame rates of the window's battles (src/perf.ts), by the sending install's device and system, and by build. */
+  perf: PerfStats;
+  /** What went wrong on devices in the window: by day, by build, the top errors, memory warnings by level. */
+  anomalies: AnomalyStats;
+  /** What the perf snapshots and anomalies say is wrong, problems first (src/diagnose.ts). */
+  diagnosis: Finding[];
 }
 
 /** One load checkpoint's count on a day for a build. */
@@ -152,7 +160,7 @@ export class StatsFold {
     if (z.ends > 0) bump(this.firstRun, z.firstWave, d1);
   }
 
-  result(host: Host | null, counts: DayCounts, ends: EndCount[], beacons: BeaconCount[] = []): Stats {
+  result(host: Host | null, counts: DayCounts, ends: EndCount[], beacons: BeaconCount[] = [], snaps: PerfSnap[] = [], anomalies: AnomalyCount[] = []): Stats {
     const at = (m: Map<string, number>, day: string) => m.get(day) ?? 0;
     return {
       today: this.today,
@@ -172,6 +180,9 @@ export class StatsFold {
       clears: [...this.clears]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([board, r]) => ({ board, tried: r.tried, cleared: r.days.length, medianDays: median(r.days), medianTries: median(r.tries) })),
+      perf: perfOf(snaps),
+      anomalies: anomaliesOf(anomalies),
+      diagnosis: diagnose(snaps, anomalies),
     };
   }
 }

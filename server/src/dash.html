@@ -117,11 +117,14 @@ function render(s) {
       `<div class="kpis">${kpi(fresh, 'new installs in the window')}${s.days.length > 1 ? kpi(yday.active, `active on ${yday.day}`) : ''}${kpi(today.active, live ? 'active today so far' : `active on ${today.day}`)}
       ${ret.map((r) => kpi(fmt(r.p), `D${r.n} of ${r.fresh} installs`, shade(r.p, r.n))).join('')}</div>`),
     section('What to look at', 'Rules of thumb from the numbers below; each points at the lever most likely to move retention.', diagnose(s, ret)),
+    section('Diagnosis (performance)', 'What the perf snapshots and device anomalies below say is wrong, problems first, each with the numbers and where in the client to look (src/diagnose.ts). Rules wait for enough runs (usually 5 per group) so one odd device does not raise an alarm.', diagnosis(s)),
     section('Retention by first day', 'Each row is the installs first seen that day; the cells are the share seen again exactly N days later. A dash: that day is not over yet.', cohortTable(s)),
     section('Daily', 'Bars: active installs; the darker part is new ones. Hover for numbers.', dailyChart(s)),
     section('New-player funnel (day 0)', 'Of the installs first seen in the window, how many got this far on their first day. A big drop between two steps is where new players give up.', funnel(s)),
-    section('Loading (every launch)', 'Anonymous counts with no install id, sent whatever the privacy answer: opened is the portal page starting (before the SDK and the game download), loaded is the first screen up. Touch is phones and tablets. Loaded / opened is the share that got past loading; compare opened with the portal's own plays.', loading(s)),
-    section('Who the new players are', 'New installs in the window by device, browser, system and country (from Cloudflare, by address; the address is never kept). The bar is the share of new installs; then how many finished the first run's tutorial (walked, then read its two lines), how many finished a run on day 0 and, of those whose next day is over, the share back on day 1. Installs from before 2026-10-10 are unknown.', audience(s)),
+    section('Loading (every launch)', 'Anonymous counts with no install id, sent whatever the privacy answer: opened is the portal page starting (before the SDK and the game download), loaded is the first screen up. Touch is phones and tablets. Loaded / opened is the share that got past loading; compare opened with the portal\'s own plays.', loading(s)),
+    section('Performance (battle frames)', 'Frame-rate snapshots of battles (perf events: one when a run ends or the game goes to the background mid-run, plus a mid snapshot every 3 battle minutes only while something looks wrong), by the sending install\'s device and system, and by build. So the rows count end and leave snapshots mostly; mid is how many trouble snapshots a group sent. fps and p5 are medians over snapshots of the median and 5th-percentile frame rate; long/min is frames of 50 ms+ per battle minute; below phone is the share of snapshots whose run had dropped under the phone quality level; heap, textures (count and MB) and nodes (display objects on stage) are medians of what the game held then. p5 under 30 is red, under 45 amber. Runs that crash never send their end snapshot. GPU, memory and cores come from the session event of the launch. Builds from 2026-10-15 on.', perf(s)),
+    section('Anomalies', 'Things gone wrong on devices, sent as they happen (at most 3 of each kind per session): the WebGL context lost, uncaught errors, the host\'s memory warnings (WeChat; level 5, 10 or 15 on Android, 0 not given) and stalls (one frame of a second or more).', anomalies(s)),
+    section('Who the new players are', 'New installs in the window by device, browser, system and country (from Cloudflare, by address; the address is never kept). The bar is the share of new installs; then how many finished the first run\'s tutorial (walked, then read its two lines), how many finished a run on day 0 and, of those whose next day is over, the share back on day 1. Installs from before 2026-10-10 are unknown.', audience(s)),
     section('Who comes back the next day', 'Installs whose next day is over, split by what they did on day 0. The bar is the share back on day 1, the line the average. Groups with fewer than 20 installs are noise.', drivers(s, ret[0].p)),
     section('Where the first run ended', 'The wave new players\' first finished run ended on, and the share of them back the next day. A pile-up at one wave is a difficulty wall.', firstRun(s)),
     section('Boards', 'All finished runs in the window, and the waves the lost ones ended on: light for died, blue for given up. Labelled waves are bosses (mid-bosses on 20 and 35, the chapter boss on 50); a spike there is a boss wall.', boards(s)),
@@ -171,6 +174,45 @@ function loading(s) {
     return `<td>${o}</td><td>${l} <small>${medianLoad(r[`loaded_${kind}_t`])}</small></td><td>${fmt(pct(l, o))}</td><td>${q} <small>${medianLoad(r[`quit_${kind}_t`])}</small></td>`;
   };
   return `<table><tr><th>day</th><th>build</th><th>desktop opened</th><th>loaded</th><th>%</th><th>quit loading</th><th>touch opened</th><th>loaded</th><th>%</th><th>quit loading</th></tr>${[...rows.values()].reverse().map((r) => `<tr><td>${esc(r.day)}</td><td>${esc(r.build)}</td>${cell(r, 'desktop')}${cell(r, 'touch')}</tr>`).join('')}</table>`;
+}
+
+/** A frame-rate cell: red under 30, amber under 45. */
+const fpsCell = (v) => `<span class="cell" style="${v < 30 ? 'background: color-mix(in srgb, var(--bad) 28%, transparent)' : v < 45 ? 'background: color-mix(in srgb, var(--warn) 28%, transparent)' : ''}">${v}</span>`;
+
+const orDash = (v) => (v === null || v === undefined ? '–' : v);
+
+function perfTable(title, rows) {
+  if (!rows.length) return '';
+  return `<div style="margin-bottom:12px"><table><tr><th>${esc(title)}</th><th>snapshots</th><th>mid</th><th>minutes</th><th>fps</th><th>p5</th><th>long/min</th><th>below phone</th><th>heap MB</th><th>textures</th><th>texture MB</th><th>nodes</th></tr>${rows.map((r) => `<tr><td>${esc(r.label)}</td><td>${r.snaps}</td><td>${r.mids ?? 0}</td><td>${r.minutes}</td><td>${fpsCell(r.fps)}</td><td>${fpsCell(r.p5)}</td><td>${r.longPerMin}</td><td>${fmt(pct(r.low, r.snaps))}</td><td>${orDash(r.heap)}</td><td>${orDash(r.tex)}</td><td>${orDash(r.texMB)}</td><td>${orDash(r.nodes)}</td></tr>`).join('')}</table></div>`;
+}
+
+/** The server's findings (src/diagnose.ts): bad as fix, warn as watch, with where, the numbers and where to look. */
+function diagnosis(s) {
+  const list = s.diagnosis || [];
+  if (!list.length) return '<p class="hint">No problems found.</p>';
+  return `<ul class="diag">${list.map((f) => `<li><span class="tag ${f.level === 'bad' ? 'bad' : 'warn'}">${f.level === 'bad' ? 'fix' : 'watch'}</span><b>${esc(f.rule)}</b> · ${esc(f.where)} · ${f.n}<br>${esc(f.detail)}<br><span class="hint">${esc(f.hint)}</span></li>`).join('')}</ul>`;
+}
+
+function perf(s) {
+  const p = s.perf;
+  if (!p?.byDevice.length) return '<p class="hint">No perf snapshots in the window.</p>';
+  const worst = p.worst.length ? `<h3 style="font-size:13px;margin:12px 0 2px">Worst snapshots (30+ battle seconds, lowest p5)</h3><table><tr><th>day</th><th>host</th><th>build</th><th>device</th><th>system</th><th>gpu</th><th>mem GB</th><th>cores</th><th>secs</th><th>fps</th><th>p5</th><th>lowest level</th><th>mobs</th><th>texture MB</th><th>nodes</th></tr>${p.worst.map((w) => `<tr><td>${esc(w.day)}</td><td>${esc(w.host)}</td><td>${esc(w.build)}</td><td>${esc(w.device)}</td><td>${esc(w.os)}</td><td>${esc(w.gpu)}</td><td>${w.mem || '?'}</td><td>${w.cores || '?'}</td><td>${w.secs}</td><td>${fpsCell(w.fps)}</td><td>${fpsCell(w.p5)}</td><td>${esc(w.lvMin)}</td><td>${w.mobs}</td><td>${orDash(w.texMB)}</td><td>${orDash(w.nodes)}</td></tr>`).join('')}</table>` : '';
+  return `${perfTable('device', p.byDevice)}${perfTable('system', p.byOs)}${perfTable('build', p.byBuild)}${worst}`;
+}
+
+function anomalies(s) {
+  const a = s.anomalies;
+  if (!a?.days.length) return '<p class="hint">No anomalies in the window.</p>';
+  const kinds = [...new Set(a.days.map((d) => d.kind))].sort();
+  const days = new Map();
+  for (const d of a.days) days.set(d.day, { ...(days.get(d.day) || {}), [d.kind]: d.n });
+  const byDay = `<table><tr><th>day</th>${kinds.map((k) => `<th>${esc(k)}</th>`).join('')}</tr>${[...days].reverse().map(([day, n]) => `<tr><td>${esc(day)}</td>${kinds.map((k) => `<td>${n[k] || ''}</td>`).join('')}</tr>`).join('')}</table>`;
+  const errors = a.errors.length ? `<div><h3>Top errors</h3><table><tr><th>message</th><th>thrown at</th><th>count</th></tr>${a.errors.map((e) => `<tr><td style="white-space:normal">${esc(e.msg)}</td><td style="white-space:normal">${esc(e.src || '–')}</td><td>${e.n}</td></tr>`).join('')}</table></div>` : '';
+  const builds = new Map();
+  for (const b of a.builds || []) builds.set(b.build, { ...(builds.get(b.build) || {}), [b.kind]: b.n });
+  const byBuild = builds.size ? `<div><h3>By build</h3><table><tr><th>build</th>${kinds.map((k) => `<th>${esc(k)}</th>`).join('')}</tr>${[...builds].map(([build, n]) => `<tr><td>${esc(build)}</td>${kinds.map((k) => `<td>${n[k] || ''}</td>`).join('')}</tr>`).join('')}</table></div>` : '';
+  const memory = a.memory.length ? `<div><h3>Memory warnings</h3><table><tr><th>level</th><th>count</th></tr>${a.memory.map((m) => `<tr><td>${m.level || 'not given'}</td><td>${m.n}</td></tr>`).join('')}</table></div>` : '';
+  return byDay + `<div class="drivers" style="margin-top:12px">${byBuild}${errors}${memory}</div>`;
 }
 
 /** The load-time bucket the middle beacon falls in ('≤3 s' is 2 to 3 s), from the counts by bucket. */
@@ -301,6 +343,8 @@ function diagnose(s, ret) {
     if (lost >= 30 && wall && wall.died / lost > 0.25) flag('warn', `${fmt(pct(wall.died, lost))} of lost ${b.board} runs die on wave ${wall.wave}, a boss wave: that boss is the wall. Its health, or grit for the players stuck there, are the levers (docs/design.md).`);
   }
   for (const b of s.boards) if (b.board === 'c1' && b.runs >= 30 && pct(b.won, b.runs) < 10) flag('warn', `Chapter 1 is cleared in only ${fmt(pct(b.won, b.runs))} of runs (median loss at wave ${b.medianLostWave}). A first clear early is a strong reason to return.`);
+  const perfBad = (s.diagnosis || []).filter((f) => f.level === 'bad').length;
+  if (perfBad) flag('warn', `${perfBad} performance problem${perfBad > 1 ? 's' : ''} under Diagnosis: a game that stutters, goes black or gets killed loses players before any design lever matters.`);
   if (!out.length) flag('info', 'Nothing stands out yet.');
   return `<ul class="diag">${out.join('')}</ul>`;
 }

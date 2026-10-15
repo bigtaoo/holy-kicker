@@ -69,6 +69,10 @@ export class WeChatPlatform implements Platform {
     wx.onHide?.(cb);
   }
 
+  onMemoryWarning(cb: (level: number) => void): void {
+    wx.onMemoryWarning?.((r) => cb(Number(r?.level) || 0));
+  }
+
   onBattery(cb: (b: Battery) => void): void {
     // no change event for mini-games: ask once a minute (the level moves slower than that)
     const ask = () => wx.getBatteryInfo?.({ success: (r) => cb({ level: Number(r.level) / 100, charging: !!r.isCharging }) });

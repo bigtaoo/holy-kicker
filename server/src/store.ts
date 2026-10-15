@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { boardId, runScore, type Beacon, type BoardName, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
 
@@ -28,8 +29,26 @@ export interface Store {
   reports(limit: number): Promise<ReportSummary[]>;
   /** One report whole, replay and all. */
   report(id: string): Promise<(Report & { id: string; at: number }) | null>;
+  /**
+   * Deletes the `perf` and `anomaly` events older than PERF_KEEP_DAYS, at most once every
+   * PRUNE_EVERY_DAYS (the last run is kept with the data, so a restart does not reset it).
+   * Returns how many went, or null when it was not due. No other event or collection is touched.
+   */
+  prune(now: number): Promise<number | null>;
   close(): Promise<void>;
 }
+
+/** Raw perf telemetry is kept this many days (the longest window it matters in), then pruned weekly. */
+export const PERF_KEEP_DAYS = 28;
+export const PRUNE_EVERY_DAYS = 7;
+/** The only events prune() deletes. */
+export const PRUNED_EVENTS = ['perf', 'anomaly'] as const;
+const DAY_MS = 86_400_000;
+
+/** Whether a prune last run at `last` (ms; null: never) is due at `now`. */
+export const pruneDue = (last: number | null, now: number) => last === null || now - last >= PRUNE_EVERY_DAYS * DAY_MS;
+/** The first day prune() keeps: events received on an earlier day go. */
+export const pruneKeepFrom = (now: number) => dayOf(now - PERF_KEEP_DAYS * DAY_MS);
 
 interface Best {
   board: string;
@@ -72,6 +91,8 @@ export class MemoryStore implements Store {
   readonly names = new Map<string, BoardName>();
   /** Load checkpoints by `day/host/build/step`: the count, and the counts by load-time bucket. */
   readonly beacons = new Map<string, { n: number; t: Record<string, number> }>();
+  /** When prune() last ran (ms), null before the first. */
+  lastPrune: number | null = null;
 
   async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void> {
     const key = `${dayOf(now)}/${host}/${build}/${step}`;
@@ -135,10 +156,17 @@ export class MemoryStore implements Store {
       if (day <= last && mine(this.players.get(install)!.host)) inc(counts.active, day);
     }
     const ends: EndCount[] = [];
+    const snaps: PerfSnap[] = [];
+    // the launch's device fields ride on its `session` event, whatever day it came
+    const launches = new Map(this.events.flatMap((b) => b.events.filter((e) => e.e === 'session').map((e) => [b.session, e.p] as const)));
+    const anomalies: AnomalyCount[] = [];
     for (const b of this.events) {
       const day = dayOf(b.at);
       if (!mine(b.host) || day < list[0] || day > last) continue;
+      const aud = this.players.get(b.install)?.aud;
       for (const e of b.events) {
+        if (e.e === 'perf') snaps.push({ day, host: b.host, build: b.build, device: aud?.device ?? 'unknown', os: aud?.os ?? 'unknown', ...sessionDevice(launches.get(b.session)), p: e.p ?? {} });
+        if (e.e === 'anomaly') anomalies.push({ ...anomalyKey(day, b.build, e.p ?? {}), n: 1 });
         if (e.e === 'run_start') inc(counts.runs, day);
         if (e.e !== 'run_end') continue;
         inc(counts.ended, day);
@@ -151,7 +179,7 @@ export class MemoryStore implements Store {
       const [day, h, build, step] = key.split('/');
       if (day >= list[0] && day <= last && mine(h as Host)) beacons.push({ day, build, step, n, ...(Object.keys(t).length ? { t: { ...t } } : {}) });
     }
-    return fold.result(host, counts, ends, beacons);
+    return fold.result(host, counts, ends, beacons, snaps, anomalies);
   }
 
   async addReport(report: Report, now: number): Promise<string> {
@@ -166,6 +194,21 @@ export class MemoryStore implements Store {
 
   async report(id: string) {
     return this.reportList.find((r) => r.id === id) ?? null;
+  }
+
+  async prune(now: number): Promise<number | null> {
+    if (!pruneDue(this.lastPrune, now)) return null;
+    const keep = pruneKeepFrom(now);
+    const old = (e: { e: string }) => (PRUNED_EVENTS as readonly string[]).includes(e.e);
+    let n = 0;
+    for (const b of this.events) {
+      if (dayOf(b.at) >= keep) continue;
+      const kept = b.events.filter((e) => !old(e));
+      n += b.events.length - kept.length;
+      b.events = kept;
+    }
+    this.lastPrune = now;
+    return n;
   }
 
   async close(): Promise<void> {}

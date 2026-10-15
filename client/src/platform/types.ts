@@ -36,6 +36,9 @@ export interface Platform {
   safeInsets(): Insets;
   /** The game went to the background (tab hidden, app switched, a call came in). */
   onHide(cb: () => void): void;
+  /** The host warns that the game uses too much memory (WeChat; `level` 5, 10 or 15 on Android, 0
+   *  when not given); unset where the host has no such warning. */
+  onMemoryWarning?(cb: (level: number) => void): void;
   /** The battery now and whenever it changes; never called where the host cannot tell. */
   onBattery(cb: (b: Battery) => void): void;
   readonly portal: Portal;

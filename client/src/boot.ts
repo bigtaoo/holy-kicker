@@ -1,7 +1,9 @@
 import { Assets } from 'pixi.js';
 import { loadArt } from './art';
 import { getLocale, setLocale } from './i18n';
+import { watchAnomalies } from './net/anomaly';
 import { apiBase, Backend } from './net/backend';
+import { liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
 import { deviceTimeZone, PrivacyChoice } from './net/privacyChoice';
 import { levelRange, lowBattery, useMsaa } from './game/quality';
 import { QualityRuntime, gpuName } from './game/qualityRuntime';
@@ -29,8 +31,21 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   const net = new Backend(platform, base, __HK_BUILD__, getLocale);
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
   const privacy = base ? new PrivacyChoice(net, platform, base, deviceTimeZone()) : null;
-  const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy);
+  const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
+  // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
+  const probe = memProbe(app);
+  const perf = (shell.perf = new PerfReport(net, probe));
+  const anomalies = watchAnomalies(app, platform, net, probe, () => {
+    const place = shell.place();
+    const s = shell.run?.engine.state;
+    return place === 'run' && s ? { place, wave: Math.max(1, s.wave) } : { place };
+  });
+  quality.onBattleFrame = (ms, level) => {
+    const s = shell.run?.engine.state;
+    perf.frame(ms, level, s ? liveMobs(s) : 0);
+    anomalies.frame(ms);
+  };
   // a ?quality= dev switch pins the mode for the session
   if (!scene.quality) shell.onQualityMode = (m) => quality.setRange(levelRange((mode = m), device, low));
   platform.onBattery((b) => {

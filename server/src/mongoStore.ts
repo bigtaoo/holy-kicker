@@ -1,10 +1,11 @@
 import { MongoClient, type Collection, type Db } from 'mongodb';
 import type { Audience } from './audience';
-import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
+import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { boardId, runScore, type Beacon, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
-import { reportId, rowOf, runName, summaryOf, type Store } from './store';
+import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summaryOf, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
 // Collections:
@@ -17,6 +18,7 @@ import { reportId, rowOf, runName, summaryOf, type Store } from './store';
 //   names    one per install that has a name, by its tag: a portal account's name or a dice name
 //   reports  problem reports with their replays, dropped after REPORTS_DAYS
 //   beacons  anonymous load checkpoints, one counter per day, host, build and step
+//   meta     bookkeeping: `prune`, when perf and anomaly events were last pruned (store.ts prune)
 
 const EVENTS_DAYS = 90;
 const REPORTS_DAYS = 180;
@@ -58,13 +60,14 @@ export class MongoStore implements Store {
     private readonly reportDocs: Collection<ReportDoc>,
     private readonly names: Collection<{ _id: string; name?: string; dice?: number; at: Date }>,
     private readonly beacons: Collection<{ _id: string; day: string; host: string; build: string; step: string; n: number; t?: Record<string, number> }>,
+    private readonly meta: Collection<{ _id: string; at: Date }>,
   ) {}
 
   static async open(uri: string, dbName: string): Promise<MongoStore> {
     const client = new MongoClient(uri, { maxPoolSize: 10, appName: 'holykicker' });
     await client.connect();
     const db: Db = client.db(dbName);
-    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'), db.collection('names'), db.collection('beacons'));
+    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'), db.collection('names'), db.collection('beacons'), db.collection('meta'));
     await Promise.all([
       s.events.createIndex({ at: 1 }, { expireAfterSeconds: EVENTS_DAYS * 86_400 }),
       s.events.createIndex({ e: 1, day: 1 }),
@@ -159,7 +162,8 @@ export class MongoStore implements Store {
     for await (const p of this.installs.find({ first: window, ...mine }, { projection: { first: 1, build: 1, aud: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
     type Count = { _id: string; n: number };
     type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown }; n: number };
-    const [active, runs, [ends], beacons] = await Promise.all([
+    type Trouble = { _id: { day: string; build: string; kind: unknown; msg: unknown; src: unknown; level: unknown }; n: number };
+    const [active, runs, [ends], beacons, perfDocs, trouble] = await Promise.all([
       this.active.aggregate<Count>([{ $match: { day: window, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
       this.events.aggregate<Count>([{ $match: { e: 'run_start', day: window, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
       this.events.aggregate<{ days: Count[]; outcomes: Outcome[] }>([
@@ -172,12 +176,31 @@ export class MongoStore implements Store {
         },
       ]).toArray(),
       this.beacons.find({ day: window, ...mine }).toArray(),
+      this.events.find({ e: 'perf', day: window, ...mine }, { projection: { _id: 0, day: 1, host: 1, build: 1, install: 1, session: 1, p: 1 } }).toArray(),
+      this.events.aggregate<Trouble>([
+        { $match: { e: 'anomaly', day: window, ...mine } },
+        { $group: { _id: { day: '$day', build: '$build', kind: '$p.kind', msg: '$p.msg', src: '$p.src', level: '$p.level' }, n: { $sum: 1 } } },
+      ]).toArray(),
     ]);
     const map = (rows: Count[]) => new Map(rows.map((r) => [r._id, r.n]));
     const counts: DayCounts = { active: map(active), runs: map(runs), ended: map(ends?.days ?? []) };
     const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, n }));
     const loads: BeaconCount[] = beacons.map(({ day, build, step, n, t }) => ({ day, build, step, n, ...(t ? { t } : {}) }));
-    return fold.result(host, counts, outcomes, loads);
+    // the device and system are the sending install's, kept once on its first batch
+    // and the GPU class, memory and cores the launch's `session` event (the same day, or the one before for a run past midnight)
+    const ids = [...new Set(perfDocs.map((d) => d.install))];
+    const sessions = [...new Set(perfDocs.map((d) => d.session))];
+    const [installs, launches] = await Promise.all([
+      this.installs.find({ _id: { $in: ids } }, { projection: { aud: 1 } }).toArray(),
+      this.events.find({ e: 'session', day: { $gte: dayAfter(list[0], -1), $lte: list[list.length - 1] }, session: { $in: sessions } }, { projection: { _id: 0, session: 1, 'p.mem': 1, 'p.cores': 1, 'p.gpu': 1 } }).toArray(),
+    ]);
+    const auds = new Map(installs.map((p) => [p._id, p.aud]));
+    const devices = new Map(launches.map((l) => [l.session, sessionDevice(l.p)]));
+    const snaps: PerfSnap[] = perfDocs.map((d) => ({
+      day: d.day, host: d.host, build: d.build, device: auds.get(d.install)?.device ?? 'unknown', os: auds.get(d.install)?.os ?? 'unknown', ...(devices.get(d.session) ?? sessionDevice(undefined)), p: d.p ?? {},
+    }));
+    const anomalies: AnomalyCount[] = trouble.map(({ _id: { day, build, ...p }, n }) => ({ ...anomalyKey(day, build ?? 'unknown', p as Record<string, PropValue>), n }));
+    return fold.result(host, counts, outcomes, loads, snaps, anomalies);
   }
 
   async addReport(report: Report, now: number): Promise<string> {
@@ -196,6 +219,15 @@ export class MongoStore implements Store {
     if (!doc) return null;
     const { _id, at, ...r } = doc;
     return { ...r, id: _id, at: at.getTime() };
+  }
+
+  async prune(now: number): Promise<number | null> {
+    const last = await this.meta.findOne({ _id: 'prune' });
+    if (!pruneDue(last ? last.at.getTime() : null, now)) return null;
+    // by type and receive day, so the { e, day } index serves it; the 90-day TTL still covers the rest
+    const { deletedCount } = await this.events.deleteMany({ e: { $in: [...PRUNED_EVENTS] }, day: { $lt: pruneKeepFrom(now) } });
+    await this.meta.replaceOne({ _id: 'prune' }, { at: new Date(now) }, { upsert: true });
+    return deletedCount;
   }
 
   async close(): Promise<void> {

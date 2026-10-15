@@ -20,6 +20,8 @@ export class QualityRuntime {
   private readonly gate: FrameGate;
   private readonly maxResolution: number;
   private last = 0;
+  /** Each battle frame's length (ms) and the level it ran on (perf telemetry); calm frames never come here. */
+  onBattleFrame: (ms: number, level: number) => void = () => {};
 
   constructor(
     private readonly app: Application,
@@ -42,7 +44,11 @@ export class QualityRuntime {
       this.gate.fps = targetFps(this.settings, calm);
       if (!this.gate.pass(now)) return;
       // calm frames come slower on purpose and say nothing about the load
-      if (this.last > 0 && !calm && this.governor.sample((now - this.last) / 1000)) this.apply();
+      if (this.last > 0 && !calm) {
+        const level = this.governor.level;
+        if (this.governor.sample((now - this.last) / 1000)) this.apply();
+        this.onBattleFrame(now - this.last, level);
+      }
       this.last = now;
       app.ticker.update(now);
     };

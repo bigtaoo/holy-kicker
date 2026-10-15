@@ -48,6 +48,7 @@ export class Backend {
   private readonly queue = new EventQueue();
   private sending = false;
   private leave: (() => Record<string, PropValue>) | null = null;
+  private readonly hidden: (() => void)[] = [];
 
   constructor(
     private readonly platform: Platform,
@@ -60,6 +61,7 @@ export class Backend {
     setInterval(() => void this.flush(), FLUSH_EVERY * 1000);
     platform.onHide(() => {
       if (this.leave) this.track('leave', this.leave());
+      for (const cb of this.hidden) cb();
       void this.flush();
     });
   }
@@ -86,6 +88,11 @@ export class Backend {
   /** Says where the player is each time the game goes to the background (the `leave` event, sent at once). */
   onLeave(props: () => Record<string, PropValue>): void {
     this.leave = props;
+  }
+
+  /** Runs as the game goes to the background, after `leave` and before the flush, so what it tracks goes out with it. */
+  onHidden(cb: () => void): void {
+    this.hidden.push(cb);
   }
 
   get online(): boolean {
