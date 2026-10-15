@@ -20,8 +20,9 @@ const BLEED = 800;
 const TAB_ICONS: Record<Tab, string> = { shop: 'shop', gear: 'robe', play: 'ball', train: 'train_attack', codex: 'codex' };
 
 /** The painted temple courtyard, covering the frame between the bars, a little darkened. */
-export function scenery(f: UiFrame, tex: Texture): Container {
+export function scenery(f: UiFrame, tex: Texture | null): Container {
   const c = new Container();
+  if (!tex) return c;
   const room = f.h - TOP_H - TAB_H;
   const pic = new Sprite(tex);
   pic.anchor.set(0.5, 1);

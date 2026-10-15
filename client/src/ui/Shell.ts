@@ -25,7 +25,7 @@ import { languageProps, type Backend, type RunRank } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
 import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
-import { loadChapterArt, loadMonkArt } from '../art';
+import { loadChapterArt, loadLobbyArt, loadMonkArt } from '../art';
 import { monkRig } from '../game/artTypes';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
@@ -74,6 +74,9 @@ export class Shell {
   private kills = 0;
   /** A chapter's art pack is being fetched; taps on play wait for it. */
   private loading = false;
+  /** The lobby's art (loadLobbyArt), once asked for; `lobbyIn` once it has settled. */
+  private lobbyArt: Promise<void> | null = null;
+  private lobbyIn = false;
   readonly sound: Sound;
   /** The host's ads, with the game silent while one plays. */
   private readonly ads: Ads;
@@ -124,8 +127,17 @@ export class Shell {
     return { place: 'other', secs };
   }
 
-  /** `direct` skips the lobby, for stress tests and screenshots (?direct). */
-  start(direct = false): void {
+  /**
+   * Shows the first screen, settled once it is up. `direct` skips the lobby, for stress tests and
+   * screenshots (?direct). What the first screen does not need comes in behind it: the lobby's
+   * art, then chapter 2's.
+   */
+  async start(direct = false): Promise<void> {
+    await this.firstScreen(direct);
+    void this.lobbyReady().then(() => loadChapterArt(this.platform, this.scene, this.art, 2)).catch(() => undefined);
+  }
+
+  private async firstScreen(direct: boolean): Promise<void> {
     this.portal.loaded(); // before the first run's gameplayStart: CrazyGames ignores one sent while loading
     let left = direct ? null : loadRun(this.platform.storage);
     // a run left in its first waves is not worth a question: it starts over
@@ -134,8 +146,19 @@ export class Shell {
       left = null;
     }
     if (left) this.offerResume(left);
-    else if (direct || !this.save.firstRunDone) this.play(this.scene.chapter || this.save.chapter);
-    else this.showLobby();
+    else if (direct || !this.save.firstRunDone) await this.play(this.scene.chapter || this.save.chapter);
+    else {
+      await this.lobbyReady();
+      this.showLobby();
+    }
+  }
+
+  /** The lobby's art, loading or in. A failed load gives a plain lobby rather than none. */
+  private lobbyReady(): Promise<void> {
+    this.lobbyArt ??= loadLobbyArt(this.platform, this.art).catch((err: unknown) => console.error(err)).then(() => {
+      this.lobbyIn = true;
+    });
+    return this.lobbyArt;
   }
 
   /** The current run, for dev console hooks. */
@@ -189,6 +212,10 @@ export class Shell {
 
   /** `settings` opens the lobby on its settings panel (after a language change). */
   private showLobby(settings = false): void {
+    if (!this.lobbyIn) {
+      void this.lobbyReady().then(() => this.showLobby(settings));
+      return;
+    }
     // a new day's counters, and the patrol once it opens
     const now = Date.now();
     const save = startPatrol(fixPatrolClock(rollDay(this.save, now), now), now);
@@ -250,11 +277,11 @@ export class Shell {
   }
 
   /** Starts a run of `chapter` (or goes on with `left`) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
-  private play(chapter: number, left?: SavedRun): void {
-    if (this.loading) return;
+  private play(chapter: number, left?: SavedRun): Promise<void> {
+    if (this.loading) return Promise.resolve();
     this.loading = true;
     const monk = left?.state.config.monk ?? this.scene.monk ?? this.save.monk;
-    Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)]).then(
+    return Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)]).then(
       () => {
         this.loading = false;
         this.startRun(chapter, left);

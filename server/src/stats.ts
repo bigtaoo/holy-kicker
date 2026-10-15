@@ -48,6 +48,8 @@ export interface BeaconCount {
   build: string;
   step: string;
   n: number;
+  /** The `loaded_*` and `quit_*` counts by load-time bucket (protocol LOAD_SECONDS), if any came with a time. */
+  t?: Record<string, number>;
 }
 
 /** Finished runs with the same outcome, as a store counts them. */

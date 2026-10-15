@@ -11,8 +11,8 @@ import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, t
 export interface Store {
   /** Keeps a checked batch received at `now` (ms); `aud` is kept on a new install. */
   addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void>;
-  /** Counts one anonymous load checkpoint for its day, host and build. */
-  beacon(host: Host, step: Beacon, build: string, now: number): Promise<void>;
+  /** Counts one anonymous load checkpoint for its day, host and build, and its load-time bucket (protocol loadBucket) if it has one. */
+  beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void>;
   /** Keeps the run if it is the install's best on its board; returns the run's board and the install's rank there. */
   submitRun(run: RunEntry, tag: string, now: number): Promise<{ board: string; rank: number; best: boolean }>;
   /** Keeps the name the boards show for `tag`: a portal account's or a dice name. */
@@ -70,12 +70,14 @@ export class MemoryStore implements Store {
   private readonly best = new Map<string, Best>();
   /** The boards' names by tag. */
   readonly names = new Map<string, BoardName>();
-  /** Load checkpoints by `day/host/build/step`. */
-  readonly beacons = new Map<string, number>();
+  /** Load checkpoints by `day/host/build/step`: the count, and the counts by load-time bucket. */
+  readonly beacons = new Map<string, { n: number; t: Record<string, number> }>();
 
-  async beacon(host: Host, step: Beacon, build: string, now: number): Promise<void> {
+  async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void> {
     const key = `${dayOf(now)}/${host}/${build}/${step}`;
-    this.beacons.set(key, (this.beacons.get(key) ?? 0) + 1);
+    const b = this.beacons.get(key) ?? this.beacons.set(key, { n: 0, t: {} }).get(key)!;
+    b.n++;
+    if (bucket) b.t[bucket] = (b.t[bucket] ?? 0) + 1;
   }
 
   async addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void> {
@@ -145,9 +147,9 @@ export class MemoryStore implements Store {
       }
     }
     const beacons: BeaconCount[] = [];
-    for (const [key, n] of this.beacons) {
+    for (const [key, { n, t }] of this.beacons) {
       const [day, h, build, step] = key.split('/');
-      if (day >= list[0] && day <= last && mine(h as Host)) beacons.push({ day, build, step, n });
+      if (day >= list[0] && day <= last && mine(h as Host)) beacons.push({ day, build, step, n, ...(Object.keys(t).length ? { t: { ...t } } : {}) });
     }
     return fold.result(host, counts, ends, beacons);
   }

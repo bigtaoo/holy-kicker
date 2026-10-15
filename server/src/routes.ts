@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
-import { BEACONS, HOSTS, LIMITS, type Beacon, type Host } from './protocol';
+import { BEACONS, HOSTS, LIMITS, loadBucket, type Beacon, type Host } from './protocol';
 import { checkBatch, checkNameEntry, checkReport, checkRun } from './rules';
 import type { Store } from './store';
 
@@ -69,7 +69,10 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     const host = req.query.get('h') ?? '', step = req.query.get('s') ?? '', build = req.query.get('b') ?? '';
     if (!(HOSTS as readonly string[]).includes(host) || !(BEACONS as readonly string[]).includes(step)) return bad('bad beacon');
     if (!/^[\w.+-]{1,32}$/.test(build)) return bad('bad build');
-    await d.store.beacon(host as Host, step as Beacon, build, d.now());
+    // the load time, if any: whole milliseconds, under an hour
+    const ms = req.query.get('ms');
+    if (ms !== null && !/^\d{1,7}$/.test(ms)) return bad('bad ms');
+    await d.store.beacon(host as Host, step as Beacon, build, d.now(), ms === null ? null : loadBucket(Number(ms)));
     return { status: 204 };
   }
 

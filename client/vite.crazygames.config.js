@@ -8,11 +8,14 @@ import { buildDefine } from '../build/buildId.mjs';
 //  1. base './': the portal serves the upload from a path of its choosing, so every path must
 //     be relative (our art paths already are).
 //  2. the entry is src/main.crazygames.ts instead of src/main.ts;
-//  3. the SDK <script> goes into <head>, ahead of the entry (CrazyGamesSdk.init polls for it).
+//  3. the SDK <script> goes ahead of the entry (CrazyGamesSdk.init polls for it), in <body> after
+//     the HTML loading screen: the tag is synchronous, so in <head> nothing would paint until it came.
 // A build also gets the `open_*` load checkpoint (server/src/protocol.ts BEACONS) as an inline
-// script ahead of the SDK tag, which is synchronous: a tick after it would miss every launch given
-// up while the SDK itself downloads. The game sends `loaded_*` once its first screen is up
-// (Backend.beacon), with the same desktop/touch test, so loaded / opened is the share past loading.
+// script ahead of the SDK tag: a tick after it would miss every launch given up while the SDK
+// itself downloads. The same script sends `quit_*` with the time since the page opened if the page
+// is hidden or left while still loading (the loading screen still up, or not parsed yet). The game
+// sends `loaded_*` with its own load time once its first screen is up (Backend.loaded), with the
+// same desktop/touch test, so loaded / opened is the share past loading.
 // (2) and (3) rewrite index.html on two hooks, because Vite's build reaches the HTML through
 // `transform` (before vite:build-html swaps the entry) and dev through `transformIndexHtml`.
 // The build fails if neither ran, rather than shipping a game without the integration.
@@ -20,9 +23,12 @@ import { buildDefine } from '../build/buildId.mjs';
 const SDK_TAG = '<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>';
 const API = (process.env.VITE_HK_API || 'https://hk.gamestao.com').replace(/\/+$/, '');
 
-/** The inline `open_*` checkpoint: no id, no storage, nothing from a developer's own machine. */
+/**
+ * The inline `open_*` and `quit_*` checkpoints: no id, no storage, nothing from a developer's own
+ * machine. Loading is over once the body is in and the loading screen (#boot) is gone.
+ */
 export function openBeacon(api, build) {
-  return `<script>(function(){try{var h=location.hostname;if(h==='localhost'||h==='[::1]'||h.indexOf('127.')===0)return;var t=matchMedia('(pointer: coarse)').matches?'touch':'desktop';fetch('${api}/v1/beacon?h=crazygames&s=open_'+t+'&b='+encodeURIComponent(${JSON.stringify(build)}),{mode:'no-cors',keepalive:true}).catch(function(){})}catch(e){}})()</script>`;
+  return `<script>(function(){try{var h=location.hostname;if(h==='localhost'||h==='[::1]'||h.indexOf('127.')===0)return;var t=matchMedia('(pointer: coarse)').matches?'touch':'desktop';var u='${api}/v1/beacon?h=crazygames&b='+encodeURIComponent(${JSON.stringify(build)})+'&s=';var send=function(s){fetch(u+s,{mode:'no-cors',keepalive:true}).catch(function(){})};send('open_'+t);var gone=false;var quit=function(){if(gone||(document.body&&!document.getElementById('boot')))return;gone=true;send('quit_'+t+'&ms='+Math.round(performance.now()))};addEventListener('pagehide',quit);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')quit()})}catch(e){}})()</script>`;
 }
 
 const DEFAULT_ENTRY = '/src/main.ts';
@@ -31,7 +37,7 @@ const PORTAL_ENTRY = '/src/main.crazygames.ts';
 export function rewritePortalHtml(html, beacon = '') {
   let out = html;
   if (out.includes(DEFAULT_ENTRY)) out = out.replace(DEFAULT_ENTRY, PORTAL_ENTRY);
-  if (!out.includes('sdk.crazygames.com')) out = out.replace('</head>', `    ${beacon}${beacon ? '\n    ' : ''}${SDK_TAG}\n  </head>`);
+  if (!out.includes('sdk.crazygames.com')) out = out.replace('<script type="module"', `${beacon}${beacon ? '\n    ' : ''}${SDK_TAG}\n    <script type="module"`);
   return out;
 }
 

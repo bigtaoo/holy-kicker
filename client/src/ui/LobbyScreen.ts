@@ -91,7 +91,8 @@ export class LobbyScreen implements Screen {
     private readonly actions: LobbyActions,
     private readonly icons: IconSheet,
     private readonly renderer: Renderer,
-    private readonly backdrop: Texture,
+    /** Null if it failed to load: the plain background shows. */
+    private readonly backdrop: Texture | null,
     /** What the patrol panel's scene is drawn with (the chosen monk's rig). */
     patrolLook: () => PatrolLook,
   ) {

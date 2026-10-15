@@ -163,10 +163,26 @@ function loading(s) {
   const rows = new Map();
   for (const b of s.beacons) {
     const k = `${b.day} ${b.build}`;
-    rows.set(k, { ...(rows.get(k) || { day: b.day, build: b.build }), [b.step]: b.n });
+    rows.set(k, { ...(rows.get(k) || { day: b.day, build: b.build }), [b.step]: b.n, [`${b.step}_t`]: b.t });
   }
-  const cell = (r, kind) => { const o = r[`open_${kind}`] || 0, l = r[`loaded_${kind}`] || 0; return `<td>${o}</td><td>${l}</td><td>${fmt(pct(l, o))}</td>`; };
-  return `<table><tr><th>day</th><th>build</th><th>desktop opened</th><th>loaded</th><th>%</th><th>touch opened</th><th>loaded</th><th>%</th></tr>${[...rows.values()].reverse().map((r) => `<tr><td>${esc(r.day)}</td><td>${esc(r.build)}</td>${cell(r, 'desktop')}${cell(r, 'touch')}</tr>`).join('')}</table>`;
+  // loaded and quit-while-loading, each with its median load time (protocol LOAD_SECONDS buckets)
+  const cell = (r, kind) => {
+    const o = r[`open_${kind}`] || 0, l = r[`loaded_${kind}`] || 0, q = r[`quit_${kind}`] || 0;
+    return `<td>${o}</td><td>${l} <small>${medianLoad(r[`loaded_${kind}_t`])}</small></td><td>${fmt(pct(l, o))}</td><td>${q} <small>${medianLoad(r[`quit_${kind}_t`])}</small></td>`;
+  };
+  return `<table><tr><th>day</th><th>build</th><th>desktop opened</th><th>loaded</th><th>%</th><th>quit loading</th><th>touch opened</th><th>loaded</th><th>%</th><th>quit loading</th></tr>${[...rows.values()].reverse().map((r) => `<tr><td>${esc(r.day)}</td><td>${esc(r.build)}</td>${cell(r, 'desktop')}${cell(r, 'touch')}</tr>`).join('')}</table>`;
+}
+
+/** The load-time bucket the middle beacon falls in ('≤3 s' is 2 to 3 s), from the counts by bucket. */
+const LOAD_BUCKETS = ['1', '2', '3', '5', '8', '13', '20', '30', '60', '60+'];
+function medianLoad(t) {
+  const all = t ? Object.values(t).reduce((a, n) => a + n, 0) : 0;
+  let seen = 0;
+  for (const k of LOAD_BUCKETS) {
+    seen += t?.[k] || 0;
+    if (all && seen * 2 >= all) return k === '60+' ? '60 s+' : `≤${k} s`;
+  }
+  return '';
 }
 
 /** Steps measured against an earlier one (the rest only against everyone who opened the game). */

@@ -28,26 +28,33 @@ export interface Art {
   /** The Mountain Palm's (evolved) stone hand. */
   mountain: Texture;
   /**
-   * Grounds by chapter from chapter 1; a chapter without its own takes the last one. Chapters
-   * in an art pack (chapter 3 on) add theirs when the pack is loaded (loadChapterArt).
+   * Grounds by chapter from chapter 1; a chapter without its own takes the last one. Chapter 2
+   * on add theirs when a run of theirs loads them (loadChapterArt).
    */
   stages: StageArt[];
   /** The boss rig; null when the scene leaves the boss out. */
   boss: TaoAsset | null;
-  /** The lobby's painted backdrop. */
-  lobby: Texture;
-  /** The patrol panel's far hills and roadside props (art/monk/ui/patrol). */
-  patrol: PatrolArt;
+  /** The lobby's painted backdrop: null until it comes in behind the first screen (loadLobbyArt). */
+  lobby: Texture | null;
+  /** The patrol panel's far hills and roadside props (art/monk/ui/patrol), loaded with the lobby's. */
+  patrol: PatrolArt | null;
   /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
   icons: ReadonlyMap<string, Texture>;
-  /** Chapter 2's mobs, elite and boss (tools/bake_mob.py, specs in art/monk/mobs). */
-  marsh: { ghost: MobSheet; toad: MobSheet; toadKing: MobSheet; carp: MobSheet };
+  /** Chapter 2's mobs, elite and boss (tools/bake_mob.py, specs in art/monk/mobs): null until a run from chapter 2 on loads them. */
+  marsh: MarshArt | null;
   /** Chapter 3's, from its art pack: null until a run from chapter 3 on loads it. */
   snow: SnowArt | null;
   /** Chapter 4's, from its art pack: null until a chapter 4 (or 5) run loads it. */
   ghost: GhostArt | null;
   /** Chapter 5's, from its own pack: null until a chapter 5 run loads it. */
   peak: PeakArt | null;
+}
+
+export interface MarshArt {
+  ghost: MobSheet;
+  toad: MobSheet;
+  toadKing: MobSheet;
+  carp: MobSheet;
 }
 
 export interface SnowArt {

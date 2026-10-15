@@ -58,9 +58,22 @@ export interface EventBatch {
  * portal page's inline script before anything else downloads, `loaded_*` once the game's first
  * screen is up; `touch` is a coarse pointer (phones and tablets). They carry no install id and go
  * whatever the privacy answer, so they count every launch: the share that never got past loading.
+ * `quit_*` is sent by the same inline script when the page is hidden or left while still loading
+ * (one that comes back and loads counts in `loaded_*` too). `loaded_*` and `quit_*` carry `&ms=`,
+ * the time since the page opened, counted in LOAD_SECONDS buckets.
  */
-export const BEACONS = ['open_desktop', 'open_touch', 'loaded_desktop', 'loaded_touch'] as const;
+export const BEACONS = ['open_desktop', 'open_touch', 'loaded_desktop', 'loaded_touch', 'quit_desktop', 'quit_touch'] as const;
 export type Beacon = (typeof BEACONS)[number];
+
+/** Upper bounds (seconds) of the load-time buckets; anything longer is `LOAD_OVER`. */
+export const LOAD_SECONDS = [1, 2, 3, 5, 8, 13, 20, 30, 60] as const;
+export const LOAD_OVER = '60+';
+
+/** The bucket a load time of `ms` falls in: the first bound it is under, as a string ('3' is 2 to 3 s). */
+export function loadBucket(ms: number): string {
+  const bound = LOAD_SECONDS.find((s) => ms < s * 1000);
+  return bound === undefined ? LOAD_OVER : String(bound);
+}
 
 export const LIMITS = {
   idMin: 8,

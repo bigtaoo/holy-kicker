@@ -9,9 +9,16 @@
       canvas { display: block; }
       /* no text selection, long-press menu or tap flash on touch screens (a portal requirement) */
       html, body, canvas { -webkit-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+      /* the loading screen, painted before any script arrives; boot.ts removes it at the first screen */
+      #boot { position: fixed; inset: 0; z-index: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4vmin; background: #141816; font-family: system-ui, sans-serif; }
+      #boot b { color: #f2b632; font-size: min(11vmin, 72px); font-weight: 900; letter-spacing: 0.04em; text-shadow: 0 0.06em 0 #3a2410, 0 0 0.02em #3a2410; }
+      #boot i { position: relative; width: min(46vmin, 300px); height: min(2.4vmin, 14px); border-radius: 99px; background: #2a302c; overflow: hidden; }
+      #boot i::after { content: ''; position: absolute; top: 0; bottom: 0; width: 40%; border-radius: 99px; background: #f2b632; animation: boot 1.1s ease-in-out infinite; }
+      @keyframes boot { from { left: -40%; } to { left: 100%; } }
     </style>
   </head>
   <body>
+    <div id="boot"><b>HOLY KICKER</b><i></i></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

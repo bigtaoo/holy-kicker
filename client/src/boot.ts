@@ -38,7 +38,9 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     low = !low;
     quality.setRange(levelRange(mode, device, low));
   });
-  shell.start(opts.direct);
+  await shell.start(opts.direct);
+  // the page's loading screen (index.html) goes once the first screen is up; no page on WeChat
+  if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
   net.loaded();
   if (privacy?.noticeDue()) {
     privacyToast(app, () => platform.safeInsets());

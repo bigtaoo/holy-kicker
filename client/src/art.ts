@@ -14,15 +14,12 @@ import { GHOST_DECO, MARSH_DECO, PEAK_DECO, sliceDeco, SNOW_DECO, TEMPLE_DECO, t
 // server (client/public) and inside the WeChat package (client/wechat/art).
 export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>): Promise<Art> {
   const { ground, deco } = scene;
-  const [hero, monkIcons, lobby, patrolFar, patrolProps, jiangshi, fox, cuju, staff, fish, meteor, ruyi, morningBell, lion, palm, mountain, groundTex, decoSheet, marshTex, marshDeco, boss, icons, ghost, toad, toadKing, carp] = await Promise.all([
+  // only what chapter 1's first run draws: the lobby's and chapter 2's come in behind the first
+  // screen (loadLobbyArt, loadChapterArt)
+  const [hero, monkIcons, jiangshi, fox, cuju, staff, fish, meteor, ruyi, morningBell, lion, palm, mountain, groundTex, decoSheet, boss, icons] = await Promise.all([
     loadTao(platform, 'art/hero'),
     // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
     loadDeco(platform, 'art/icons/monks'),
-    // the lobby's painted backdrop (art/monk/ui)
-    Assets.load<Texture>('art/ui/lobby.jpg'),
-    // the patrol panel's road (art/monk/ui/patrol)
-    Assets.load<Texture>('art/ui/patrol_far.jpg'),
-    loadDeco(platform, 'art/ui/patrol_props'),
     loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined),
     loadSheet(platform, 'art/mobs/fox'),
     Assets.load<Texture>('art/cuju.png'),
@@ -39,32 +36,71 @@ export async function loadArt(platform: Platform, scene: Pick<SceneOptions, 'gro
     Assets.load<Texture>('art/mountain.png'),
     ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`),
     deco === 'none' ? null : loadDeco(platform, 'art/ground/deco'),
-    // chapter 2's misty marsh; ?ground picks chapter 1's only
-    ground === 'flat' ? null : Assets.load<Texture>('art/ground/marsh.png'),
-    deco === 'none' ? null : loadDeco(platform, 'art/ground/marsh_deco'),
     scene.boss ? loadTao(platform, 'art/boss_monk') : null,
     loadDeco(platform, 'art/icons/icons'),
-    // chapter 2's water ghost, toad, toad king and Black Carp King
-    loadSheet(platform, 'art/mobs/waterghost'),
-    loadSheet(platform, 'art/mobs/toad'),
-    loadSheet(platform, 'art/mobs/toad_king'),
-    loadSheet(platform, 'art/mobs/carp'),
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
-    { ground: marshTex, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST },
-  ], monks: {}, boss, lobby, patrol: { far: patrolFar, props: patrolProps.frames }, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: { ghost, toad, toadKing, carp }, snow: null, ghost: null, peak: null };
+  ], monks: {}, boss, lobby: null, patrol: null, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: null, snow: null, ghost: null, peak: null };
+}
+
+/** Loads in flight or done, by name, so a load behind the first screen and a run's own share one fetch. */
+const loads = new Map<string, Promise<void>>();
+
+function once(key: string, load: () => Promise<void>): Promise<void> {
+  let p = loads.get(key);
+  if (!p) {
+    // a failed load is forgotten, so the next call tries again
+    p = load().catch((err: unknown) => {
+      loads.delete(key);
+      throw err;
+    });
+    loads.set(key, p);
+  }
+  return p;
 }
 
 /**
- * Loads the art packs (art/ch<n>/, WeChat subpackages) chapter `chapter` needs into `art`, those
- * not loaded yet: chapter 3's snow pass (its ground, props, wolves, ice wraiths and the Bone
+ * Loads the lobby's painted backdrop and the patrol panel's road into `art`. A first run shows
+ * neither, so they come in behind the first screen; a lobby waits for them.
+ */
+export function loadLobbyArt(platform: Platform, art: Art): Promise<void> {
+  return once('lobby', async () => {
+    const [lobby, far, props] = await Promise.all([
+      // the lobby's backdrop (art/monk/ui)
+      Assets.load<Texture>('art/ui/lobby.jpg'),
+      // the patrol panel's road (art/monk/ui/patrol)
+      Assets.load<Texture>('art/ui/patrol_far.jpg'),
+      loadDeco(platform, 'art/ui/patrol_props'),
+    ]);
+    art.lobby = lobby;
+    art.patrol = { far, props: props.frames };
+  });
+}
+
+/**
+ * Loads the art chapter `chapter` needs into `art`, what is not loaded yet: chapter 2's misty
+ * marsh (in the main package, but no first run needs it), which chapters 4 and 5 play too (water
+ * ghosts, the empowered Carp King); then the art packs (art/ch<n>/, WeChat subpackages): chapter 3's snow pass (its ground, props, wolves, ice wraiths and the Bone
  * Witch's own), which the later chapters play too (wolf packs, the empowered Witch), chapter 4's
  * ghost market, which chapter 5 plays too (its lantern ghosts, effigies, door god and the
  * empowered Judge), and chapter 5's Demon Peak.
  */
 export async function loadChapterArt(platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco'>, art: Art, chapter: number): Promise<void> {
   const { ground, deco } = scene;
+  if (chapter >= 2 && !art.marsh) await once('marsh', async () => {
+    const [marsh, marshDeco, ghost, toad, toadKing, carp] = await Promise.all([
+      ground === 'flat' ? null : Assets.load<Texture>('art/ground/marsh.png'),
+      deco === 'none' ? null : loadDeco(platform, 'art/ground/marsh_deco'),
+      // the water ghost, toad, toad king and Black Carp King
+      loadSheet(platform, 'art/mobs/waterghost'),
+      loadSheet(platform, 'art/mobs/toad'),
+      loadSheet(platform, 'art/mobs/toad_king'),
+      loadSheet(platform, 'art/mobs/carp'),
+    ]);
+    art.stages[1] = { ground: marsh, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST };
+    art.marsh = { ghost, toad, toadKing, carp };
+  });
   if (chapter >= 3 && !art.snow) {
     await platform.loadPack('ch3');
     const [snow, snowDeco, wolf, wolfLeader, wraith, skeleton, shard, witch] = await Promise.all([

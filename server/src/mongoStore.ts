@@ -57,7 +57,7 @@ export class MongoStore implements Store {
     private readonly best: Collection<BestDoc>,
     private readonly reportDocs: Collection<ReportDoc>,
     private readonly names: Collection<{ _id: string; name?: string; dice?: number; at: Date }>,
-    private readonly beacons: Collection<{ _id: string; day: string; host: string; build: string; step: string; n: number }>,
+    private readonly beacons: Collection<{ _id: string; day: string; host: string; build: string; step: string; n: number; t?: Record<string, number> }>,
   ) {}
 
   static async open(uri: string, dbName: string): Promise<MongoStore> {
@@ -109,9 +109,9 @@ export class MongoStore implements Store {
     await this.installs.updateOne({ _id: b.install }, { ...(Object.keys(set).length ? { $set: set } : {}), ...(fresh ? { $addToSet: { back: offset } } : {}) });
   }
 
-  async beacon(host: Host, step: Beacon, build: string, now: number): Promise<void> {
+  async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void> {
     const day = dayOf(now);
-    await this.beacons.updateOne({ _id: `${day}/${host}/${build}/${step}` }, { $setOnInsert: { day, host, build, step }, $inc: { n: 1 } }, { upsert: true });
+    await this.beacons.updateOne({ _id: `${day}/${host}/${build}/${step}` }, { $setOnInsert: { day, host, build, step }, $inc: { n: 1, ...(bucket ? { [`t.${bucket}`]: 1 } : {}) } }, { upsert: true });
   }
 
   private async rankOf(doc: BestDoc): Promise<number> {
@@ -176,7 +176,7 @@ export class MongoStore implements Store {
     const map = (rows: Count[]) => new Map(rows.map((r) => [r._id, r.n]));
     const counts: DayCounts = { active: map(active), runs: map(runs), ended: map(ends?.days ?? []) };
     const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, n }));
-    const loads: BeaconCount[] = beacons.map(({ day, build, step, n }) => ({ day, build, step, n }));
+    const loads: BeaconCount[] = beacons.map(({ day, build, step, n, t }) => ({ day, build, step, n, ...(t ? { t } : {}) }));
     return fold.result(host, counts, outcomes, loads);
   }
 
