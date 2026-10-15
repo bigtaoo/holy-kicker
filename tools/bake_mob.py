@@ -12,6 +12,9 @@ spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..
     "frames": 8, "fps": 14,
     "flash": false,                 # optional: no white hit-flash copies (a boss flashes
                                     # through a filter instead; the copies double the sheet)
+    "outline": {"px": 7, "color": "#e2f2ee", "steps": 12},  # optional: the elites' sticker
+                                    # rim (client outline.ts ELITE_OUTLINE), baked in so a run
+                                    # need not keep the plain sheet and a rimmed copy
     "height": 160,                  # px of the source cut-out's height in the sheet
     "ground": [x, y],               # the feet; the sheet's anchor
     "pad": [left, top, right, bottom],
@@ -89,6 +92,24 @@ def inverse(d, t, x, y):
     raise ValueError(f"unknown deformer {kind}")
 
 
+def outline(f, px, steps, colour):
+    """Frame f (premultiplied) grown by px on each side, over a rim px wide of `colour`: its
+    silhouette stamped round a ring of `steps`, as client/src/game/outline.ts does at run time."""
+    h, w = f.shape[:2]
+    H, W = h + 2 * px, w + 2 * px
+    inner = np.zeros((H, W, 4), np.float32)
+    inner[px:px + h, px:px + w] = f
+    keep = np.ones((H, W), np.float32)
+    for i in range(steps):
+        a = 2 * math.pi * i / steps
+        m = np.float32([[1, 0, math.cos(a) * px], [0, 1, math.sin(a) * px]])
+        keep *= 1 - cv2.warpAffine(inner[:, :, 3], m, (W, H), flags=cv2.INTER_LINEAR)
+    rim = np.zeros_like(inner)
+    rim[:, :, :3] = colour * (1 - keep)[:, :, None]
+    rim[:, :, 3] = 1 - keep
+    return inner + rim * (1 - inner[:, :, 3:])
+
+
 def drop_paint(im, rules):
     """Erases matching paint below a line that touches the outside, e.g. a coloured ground
     shadow and the paper showing through it; the same colours inside the outline stay."""
@@ -153,6 +174,13 @@ def bake(spec, base):
         white[:, :, :3] = f[:, :, 3:]
         white[:, :, 3] = f[:, :, 3]
         frames.append(white)
+    ol = spec.get("outline")
+    pad = ol["px"] if ol else 0
+    if ol:
+        colour = np.array([int(ol["color"][k:k + 2], 16) / 255 for k in (1, 3, 5)], np.float32)
+        # the flash copies flash rim and all
+        frames = [outline(f, pad, ol["steps"], colour if i < n else np.ones(3, np.float32)) for i, f in enumerate(frames)]
+        fw, fh = fw + 2 * pad, fh + 2 * pad
     cols = math.ceil(math.sqrt(len(frames) * fh / fw))
     rows = math.ceil(len(frames) / cols)
     sheet = np.zeros((rows * fh, cols * fw, 4), np.float32)
@@ -164,10 +192,12 @@ def bake(spec, base):
     out = Image.fromarray((np.clip(sheet, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
     meta = {
         "frames": n, "flash": n if len(frames) > n else 0, "cols": cols, "frameW": fw, "frameH": fh, "fps": spec["fps"],
-        "anchor": [round(gx * scale, 1), round(gy * scale, 1)],
+        "anchor": [round(gx * scale, 1) + pad, round(gy * scale, 1) + pad],
         # the cut-out's height in sheet px, and how high off the ground each frame floats
         "height": spec["height"], "lift": lift,
     }
+    if ol:
+        meta["outline"] = pad
     return out, meta
 
 

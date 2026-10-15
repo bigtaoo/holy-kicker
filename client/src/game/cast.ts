@@ -90,7 +90,11 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
   // the elites alone get the sticker rim (outline.ts), baked when one of a kind first comes;
   // on the plain horde it glared
   const rimmed = new Map<EliteKind, MobLook>();
-  const rim = (kind: EliteKind) => rimmed.get(kind) ?? rimmed.set(kind, { ...looks[kind], sheet: outlineSheet(renderer, looks[kind].sheet) }).get(kind)!;
+  // the chapter elites come with it baked in (bake_mob.py), so no plain copy sits beside it
+  const rim = (kind: EliteKind) => {
+    const look = looks[kind];
+    return look.sheet.meta.outline ? look : rimmed.get(kind) ?? rimmed.set(kind, { ...look, sheet: outlineSheet(renderer, look.sheet) }).get(kind)!;
+  };
   const ring = () => makeRing(renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
   // only the big jiangshi is tinted; the others are drawn in their own colours
   const tint = (k: number, kind: EliteKind) => (kind === 'charger' ? ELITE_TINTS[k % ELITE_TINTS.length] : 0xffffff);

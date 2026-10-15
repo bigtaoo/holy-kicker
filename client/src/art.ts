@@ -59,22 +59,44 @@ function once(key: string, load: () => Promise<void>): Promise<void> {
   return p;
 }
 
+/** The lobby's textures: its backdrop (art/monk/ui), the patrol panel's road and props (art/monk/ui/patrol). */
+const LOBBY = { backdrop: 'art/ui/lobby.jpg', far: 'art/ui/patrol_far.jpg', props: 'art/ui/patrol_props' };
+/** Settles once freeLobbyArt has let the last lobby art go, so a new load never races the unload. */
+let lobbyGone: Promise<void> = Promise.resolve();
+
 /**
  * Loads the lobby's painted backdrop and the patrol panel's road into `art`. A first run shows
  * neither, so they come in behind the first screen; a lobby waits for them.
  */
 export function loadLobbyArt(platform: Platform, art: Art): Promise<void> {
   return once('lobby', async () => {
+    await lobbyGone;
     const [lobby, far, props] = await Promise.all([
-      // the lobby's backdrop (art/monk/ui)
-      Assets.load<Texture>('art/ui/lobby.jpg'),
-      // the patrol panel's road (art/monk/ui/patrol)
-      Assets.load<Texture>('art/ui/patrol_far.jpg'),
-      loadDeco(platform, 'art/ui/patrol_props'),
+      Assets.load<Texture>(LOBBY.backdrop),
+      Assets.load<Texture>(LOBBY.far),
+      loadDeco(platform, LOBBY.props),
     ]);
     art.lobby = lobby;
     art.patrol = { far, props: props.frames };
   });
+}
+
+/**
+ * Lets the lobby's art go while a run plays (several MB of GPU memory no run draws); the next
+ * lobby loads it again, from the local cache. Call once the lobby is off screen.
+ */
+export function freeLobbyArt(art: Art): void {
+  const load = loads.get('lobby');
+  if (!load) return;
+  loads.delete('lobby');
+  lobbyGone = load
+    .catch(() => undefined)
+    .then(() => {
+      art.lobby = null;
+      art.patrol = null;
+      return Promise.all([LOBBY.backdrop, LOBBY.far, `${LOBBY.props}.png`].map((url) => Assets.unload(url)));
+    })
+    .then(() => undefined, () => undefined);
 }
 
 /** Loads monk `monk`'s rig into `art` (the kicker's is always there) from the 'monks' art pack. */

@@ -4,7 +4,9 @@ import type { SheetMeta } from './mobAnim';
 import { sliceSheet, type MobSheet } from './mobView';
 
 // The elites' sticker edge: a pale cold rim around the big foes, so they stand out of the
-// dark horde on the dark ground (the plain mobs go without: on all of them it glared). Baked once per sheet when a run
+// dark horde on the dark ground (the plain mobs go without: on all of them it glared). The
+// chapter elites have it baked into their sheets (tools/bake_mob.py "outline"); the jiangshi,
+// whose sheet the horde draws plain, gets it baked when a run
 // starts, from the sheet's own white flash copies (stamped around the frame in a ring, tinted,
 // under the frame), into a sheet whose frames are padded so a rim never bleeds into the next.
 

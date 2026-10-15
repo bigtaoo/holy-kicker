@@ -26,7 +26,7 @@ import { runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
-import { loadLobbyArt, loadMonkArt } from '../art';
+import { freeLobbyArt, loadLobbyArt, loadMonkArt } from '../art';
 import { freeChapterArt, loadChapterArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
 import { LobbyScreen } from './LobbyScreen';
@@ -167,9 +167,13 @@ export class Shell {
 
   /** The lobby's art, loading or in. A failed load gives a plain lobby rather than none. */
   private lobbyReady(): Promise<void> {
-    this.lobbyArt ??= loadLobbyArt(this.platform, this.art).catch((err: unknown) => console.error(err)).then(() => {
-      this.lobbyIn = true;
-    });
+    if (!this.lobbyArt) {
+      const load: Promise<void> = loadLobbyArt(this.platform, this.art).catch((err: unknown) => console.error(err)).then(() => {
+        // not if a run freed it meanwhile
+        if (this.lobbyArt === load) this.lobbyIn = true;
+      });
+      this.lobbyArt = load;
+    }
     return this.lobbyArt;
   }
 
@@ -312,6 +316,10 @@ export class Shell {
     this.chapter = chapter;
     this.hard = left ? left.state.config.hard : this.scene.hard || this.save.hard;
     this.setScreen(null);
+    // no run draws the lobby: its art goes until the next lobby asks for it again
+    freeLobbyArt(this.art);
+    this.lobbyArt = null;
+    this.lobbyIn = false;
     const { bonus, freeRevives } = loadout(this.save, chapter, this.hard);
     this.freeRevives = left ? left.freeRevives : freeRevives;
     this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, left ? setupOf(left.state.config) : {

@@ -3,6 +3,7 @@
   "out": "../../../client/public/art/mobs/toad_king",
   "frames": 10,
   "fps": 8,
+  "outline": {"px": 7, "color": "#e2f2ee", "steps": 12},
   "height": 210,
   "ground": [380, 790],
   "pad": [20, 70, 30, 10],

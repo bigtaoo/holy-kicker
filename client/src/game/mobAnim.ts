@@ -15,6 +15,8 @@ export interface SheetMeta {
   height: number;
   /** How far each frame floats above the ground, in sheet px (a jiangshi hop). */
   lift: number[];
+  /** Width of the sticker rim baked round every frame (bake_mob.py "outline"), if any. */
+  outline?: number;
 }
 
 /** Frame shown `time` seconds into the loop, for a mob whose cycle starts at `phase` (0..1). */
