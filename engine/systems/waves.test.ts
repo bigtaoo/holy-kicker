@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, SHRINE, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
+import { TICK_RATE } from '../math/fixed';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
 import { openingShare, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, mobHp, twinHp, waveFoeHp } from './waves';
@@ -181,6 +182,20 @@ describe('chapter run', () => {
     expect(s.players[0].hp).toBe(HERO.hp);
     expect(s.wave).toBe(0);
     expect(s.elites[0].hp).toBe(ELITE.hp);
+  });
+});
+
+describe('a first run', () => {
+  // the client starts it live, input or not (ui/runWatch.ts): a player who never touches the
+  // controls must see kills at once and must not go down in the opening minute
+  it('kills within a second and keeps an idle hero standing for a minute', () => {
+    for (const seed of [1, 2, 3, 4, 5]) {
+      const e = new Engine({ ...CHAPTER, seed, firstRun: true });
+      const first = idle(e, TICK_RATE).filter((t) => t === 'mobDown').length;
+      expect(first).toBeGreaterThan(0);
+      expect(idle(e, 59 * TICK_RATE)).not.toContain('heroDown');
+      expect(e.state.outcome).toBe('playing');
+    }
   });
 });
 

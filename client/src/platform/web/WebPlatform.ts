@@ -120,6 +120,8 @@ export class WebPlatform implements Platform {
     });
     if (record) app.canvas.style.cssText = 'display:block;max-width:100vw;max-height:100vh;margin:0 auto';
     document.body.appendChild(app.canvas);
+    // ask for the keys from the start (a portal's iframe may still keep them until a click)
+    window.focus();
     // a right-click or long press is a game input, never the browser's menu
     app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     window.addEventListener('keydown', (e) => {
@@ -136,6 +138,8 @@ export class WebPlatform implements Platform {
   bindStick(app: Application, stick: DragStick): void {
     const canvas = app.canvas;
     canvas.addEventListener('pointerdown', (e) => {
+      // in a portal's iframe the keys go to the portal page until the game has the focus
+      window.focus();
       stick.down(e.pointerId, e.clientX, e.clientY);
       // Keep receiving moves when the finger or mouse leaves the canvas mid-drag.
       canvas.setPointerCapture(e.pointerId);

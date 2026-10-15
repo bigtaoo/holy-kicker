@@ -12,8 +12,9 @@ import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
 // One run as the shell sees it, frame by frame: it watches the engine's state for a new wave (a
 // banner), experience and level-up offers (the card panel), the hero going down (the death panel,
 // revive with an ad), the tutorial's steps and the outcome, and tells the portal when gameplay
-// stops and starts again. The first run holds still until the player's first touch or key, so a
-// portal's consent popup or a tab opened in the background does not eat its opening seconds.
+// stops and starts again. The first run plays from its first frame, input or not: the kicks are
+// automatic and the opening horde starts in kick range, so the first kills come within a second
+// (a frozen screen waiting for a key lost desktop players who never pressed one).
 
 export interface RunWatchDeps {
   chapter: number;
@@ -22,8 +23,6 @@ export interface RunWatchDeps {
   net: Backend;
   /** Free revives (training) left in the run; they come before the rewarded-ad one. */
   freeRevives(): number;
-  /** The player is touching the screen or holding a move key. */
-  input(): boolean;
   /** Keeps the run for the next launch (meta/resume.ts). */
   keepRun(): void;
   /** The run is over (won, after the monk's line). */
@@ -39,8 +38,6 @@ export class RunWatch {
   /** The offer whose cards the HUD shows; null when none are up. */
   private shownOffer: readonly Card[] | null = null;
   tutorial: Tutorial | null;
-  /** The first run waits for the player's first input. */
-  holding: boolean;
 
   constructor(
     private readonly game: Game,
@@ -50,21 +47,13 @@ export class RunWatch {
     teach: boolean,
   ) {
     this.tutorial = teach ? newTutorial() : null;
-    this.holding = teach;
-    if (teach) {
-      game.paused = true;
-      hud.setTutorial('move');
-    }
+    if (teach) hud.setTutorial('move');
   }
 
   update(dt: number): void {
     const { game, hud, d } = this;
     const s = game.engine.state;
     hud.update(dt);
-    if (this.holding && d.input()) {
-      this.holding = false;
-      game.paused = false;
-    }
     if (s.wave !== this.shownWave) {
       this.shownWave = s.wave;
       hud.setWave(s.wave);

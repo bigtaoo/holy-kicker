@@ -337,12 +337,11 @@ export class Shell {
       report: canReport(this.net, import.meta.env.DEV) ? () => reportProblem(this.platform, this.net, () => this.game, this.scene) : null,
     }, this.art.icons, this.device === 'desktop');
     this.setScreen(this.hud);
-    // the first run teaches moving (and waits for the first input); a replayed first chapter, a resumed run or a dev bot's does not
+    // the first run teaches moving; a replayed first chapter, a resumed run or a dev bot's does not
     const teach = !this.save.firstRunDone && this.scene.waves && !left && !this.scene.autoplay && !this.scene.record;
     this.watch = new RunWatch(this.game, this.hud, {
       chapter, portal: this.portal, ads: this.ads, net: this.net,
       freeRevives: () => this.freeRevives,
-      input: () => this.stick.origin() !== null || this.platform.readKeys().x !== 0 || this.platform.readKeys().y !== 0,
       keepRun: () => this.keepRun(), end: () => this.endRun(),
     }, !!teach);
     // the fast-forward choice carries over from the last run
@@ -370,8 +369,7 @@ export class Shell {
 
   private setPaused(paused: boolean): void {
     if (!this.game) return;
-    // the first run's hold outlasts the pause panel
-    this.game.paused = paused || !!this.watch?.holding;
+    this.game.paused = paused;
     if (paused) this.portal.gameplayStop();
     else this.portal.gameplayStart();
   }
