@@ -1,4 +1,4 @@
-import { Container, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { ColorMatrixFilter, Container, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { FP, JUDGE, TICK_RATE, WITCH, type Boss as BossState } from '@hk/engine';
 import { t, type Key } from '../i18n';
 import { BossBar } from './bossBar';
@@ -60,6 +60,9 @@ export class StaffBossView {
   private tint = 0;
   private time = 0;
   private glow = 0;
+  /** The hit flash, for a sheet baked without white copies (they would double its memory). */
+  private readonly white = whiteFlash();
+  private flashing = false;
 
   constructor(
     private readonly renderer: Renderer, private readonly sheet: MobSheet, world: Container, shadowTex: Texture, readonly height: number,
@@ -88,6 +91,8 @@ export class StaffBossView {
     const frame = Math.floor(this.time * m.fps) % m.frames;
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
     this.sprite.texture = this.sheet.textures[frame + (this.tint > 0 ? m.flash : 0)];
+    const white = !m.flash && this.tint > 0;
+    if (white !== this.flashing) this.sprite.filters = (this.flashing = white) ? this.white : null;
     const k = b.phase === 'windup' ? Math.min(1, (b.t + alpha) / this.style.windup) : 0;
     const s = this.scale * (1 + this.style.swell * k);
     this.sprite.scale.set(-this.facing * s, s);
@@ -189,4 +194,11 @@ export function summonFx(fx: FxPool, x: number, y: number): void {
       rotation: 0, spin: 0, drag: 0.05, color: 0xd8dce8, alpha: 0.8,
     });
   }
+}
+
+/** Paints a sprite as a flat white silhouette, alpha kept: a hit flash without baked white frames. */
+export function whiteFlash(): ColorMatrixFilter {
+  const f = new ColorMatrixFilter();
+  f.matrix = [0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 1, 0];
+  return f;
 }

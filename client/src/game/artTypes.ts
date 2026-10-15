@@ -40,7 +40,7 @@ export interface Art {
   patrol: PatrolArt | null;
   /** Build icons by item id (relic, spells, passives) for the HUD and the cards. */
   icons: ReadonlyMap<string, Texture>;
-  /** Chapter 2's mobs, elite and boss (tools/bake_mob.py, specs in art/monk/mobs): null until a run from chapter 2 on loads them. */
+  /** Chapter 2's mobs and elite (tools/bake_mob.py, specs in art/monk/mobs): null until a run from chapter 2 on loads them. */
   marsh: MarshArt | null;
   /** Chapter 3's, from its art pack: null until a run from chapter 3 on loads it. */
   snow: SnowArt | null;
@@ -48,13 +48,20 @@ export interface Art {
   ghost: GhostArt | null;
   /** Chapter 5's, from its own pack: null until a chapter 5 run loads it. */
   peak: PeakArt | null;
+  /**
+   * The baked bosses, each loaded only for the two chapters that fight it (its own, and the
+   * next as the empowered mid-boss) and freed again when a run of a chapter far from those starts.
+   */
+  bosses: Partial<Record<SheetBoss, MobSheet>>;
 }
+
+/** The bosses drawn from a baked sheet (the abbot and the Inner Demon are rigs). */
+export type SheetBoss = 'carp' | 'witch' | 'judge';
 
 export interface MarshArt {
   ghost: MobSheet;
   toad: MobSheet;
   toadKing: MobSheet;
-  carp: MobSheet;
 }
 
 export interface SnowArt {
@@ -63,7 +70,6 @@ export interface SnowArt {
   wraith: MobSheet;
   skeleton: MobSheet;
   shard: MobSheet;
-  witch: MobSheet;
 }
 
 export interface PeakArt {
@@ -78,7 +84,6 @@ export interface GhostArt {
   lantern: MobSheet;
   effigy: MobSheet;
   doorGod: MobSheet;
-  judge: MobSheet;
 }
 
 /** The rig a run plays monk `monk` with. */

@@ -3,6 +3,7 @@ import { bakeTexture } from './bake';
 import type { Bowl } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 import { makeShadow } from './shadow';
+import { ViewPool } from './viewPool';
 
 // The alms bowl relic (engine systems/bowl.ts): thrown bowls in flight, drawn from the sim's
 // bowl list as a spinning bowl seen from above over a ground shadow. The mobs it drags are
@@ -49,9 +50,13 @@ interface Flight {
 export class BowlView {
   private readonly textures: Texture[];
   private readonly live = new Map<number, Flight>();
+  private readonly bowls: ViewPool<Sprite>;
+  private readonly shadows: ViewPool<Sprite>;
 
-  constructor(renderer: Renderer, private readonly layer: Container, private readonly shadowTex: Texture) {
+  constructor(renderer: Renderer, layer: Container, shadowTex: Texture) {
     this.textures = LOOKS.map((l) => bowlTexture(renderer, l));
+    this.shadows = new ViewPool(() => makeShadow(shadowTex, SIZE * 0.4, SIZE * 0.14), (s) => layer.addChild(s));
+    this.bowls = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => layer.addChild(s));
   }
 
   /** `hand` is the thrower's hand from his feet, where a new bowl starts out. */
@@ -60,9 +65,9 @@ export class BowlView {
     for (const b of bowls) {
       let f = this.live.get(b.id);
       if (!f) {
-        const sprite = new Sprite({ texture: this.textures[b.swallow ? 1 : 0], anchor: 0.5 });
-        f = { sprite, shadow: makeShadow(this.shadowTex, SIZE * 0.4, SIZE * 0.14), seen: false, fromX: hand.x, fromY: hand.y + LIFT, from: 1 };
-        this.layer.addChild(f.shadow, sprite);
+        const sprite = this.bowls.take();
+        sprite.texture = this.textures[b.swallow ? 1 : 0];
+        f = { sprite, shadow: this.shadows.take(), seen: false, fromX: hand.x, fromY: hand.y + LIFT, from: 1 };
         this.live.set(b.id, f);
       }
       f.seen = true;
@@ -78,8 +83,8 @@ export class BowlView {
     }
     for (const [id, f] of this.live) {
       if (f.seen) continue;
-      f.sprite.destroy();
-      f.shadow.destroy();
+      this.bowls.give(f.sprite);
+      this.shadows.give(f.shadow);
       this.live.delete(id);
     }
   }

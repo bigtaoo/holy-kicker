@@ -2,6 +2,7 @@ import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } f
 import { bakeTexture } from './bake';
 import { FP, type Bead, type BeadsRing } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
+import { ViewPool } from './viewPool';
 
 // The prayer beads relic (engine systems/beads.ts): the sim's beads circling the hero, on a
 // faint cord at their orbit so the ring reads as one string of beads. They draw over the horde
@@ -36,9 +37,11 @@ export class BeadsView {
   private readonly sprites = new Map<number, { sprite: Sprite; seen: boolean }>();
   private readonly cord = new Graphics();
   private cordKey = '';
+  private readonly pool: ViewPool<Sprite>;
 
-  constructor(renderer: Renderer, private readonly world: Container) {
+  constructor(renderer: Renderer, world: Container) {
     this.textures = LOOKS.map((l) => beadTexture(renderer, l.fill, l.shade));
+    this.pool = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => world.addChild(s));
     this.cord.visible = false;
     world.addChild(this.cord);
   }
@@ -58,8 +61,8 @@ export class BeadsView {
     for (const b of beads) {
       let v = this.sprites.get(b.id);
       if (!v) {
-        const sprite = new Sprite({ texture: this.textures[b.ring % 2], anchor: 0.5 });
-        this.world.addChild(sprite);
+        const sprite = this.pool.take();
+        sprite.texture = this.textures[b.ring % 2];
         v = { sprite, seen: false };
         this.sprites.set(b.id, v);
       }
@@ -70,7 +73,7 @@ export class BeadsView {
     }
     for (const [id, v] of this.sprites) {
       if (v.seen) continue;
-      v.sprite.destroy();
+      this.pool.give(v.sprite);
       this.sprites.delete(id);
     }
   }

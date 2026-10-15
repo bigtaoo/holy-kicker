@@ -3,6 +3,7 @@
  "out": "../../../client/public/art/ch4/mobs/judge",
  "frames": 12,
  "fps": 9,
+ "flash": false,
  "height": 380,
  "ground": [
   355,

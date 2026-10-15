@@ -1,7 +1,7 @@
 {
   "frames": 12,
-  "flash": 12,
-  "cols": 6,
+  "flash": 0,
+  "cols": 4,
   "frameW": 337,
   "frameH": 403,
   "fps": 9,

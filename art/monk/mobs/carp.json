@@ -3,6 +3,7 @@
   "out": "../../../client/public/art/mobs/carp",
   "frames": 12,
   "fps": 10,
+  "flash": false,
   "height": 380,
   "ground": [360, 765],
   "pad": [40, 30, 60, 20],

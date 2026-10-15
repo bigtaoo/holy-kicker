@@ -10,6 +10,8 @@ spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..
     "source": "../style_r3/enemy_jiangshi_fix.png",  # relative to the spec file
     "out": "../../../client/public/art/mobs/jiangshi", # writes <out>.png and <out>.json
     "frames": 8, "fps": 14,
+    "flash": false,                 # optional: no white hit-flash copies (a boss flashes
+                                    # through a filter instead; the copies double the sheet)
     "height": 160,                  # px of the source cut-out's height in the sheet
     "ground": [x, y],               # the feet; the sheet's anchor
     "pad": [left, top, right, bottom],
@@ -146,7 +148,7 @@ def bake(spec, base):
     n = len(frames)
     # hit-flash copies: the same frames as flat white silhouettes, in the same sheet so
     # flashing mobs still batch with the rest
-    for f in frames[:n]:
+    for f in frames[:n] if spec.get("flash", True) else []:
         white = np.ones_like(f)
         white[:, :, :3] = f[:, :, 3:]
         white[:, :, 3] = f[:, :, 3]
@@ -161,7 +163,7 @@ def bake(spec, base):
     sheet[:, :, :3] = np.where(alpha > 1e-4, sheet[:, :, :3] / np.maximum(alpha, 1e-4), 0)
     out = Image.fromarray((np.clip(sheet, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
     meta = {
-        "frames": n, "flash": n, "cols": cols, "frameW": fw, "frameH": fh, "fps": spec["fps"],
+        "frames": n, "flash": n if len(frames) > n else 0, "cols": cols, "frameW": fw, "frameH": fh, "fps": spec["fps"],
         "anchor": [round(gx * scale, 1), round(gy * scale, 1)],
         # the cut-out's height in sheet px, and how high off the ground each frame floats
         "height": spec["height"], "lift": lift,

@@ -2,6 +2,7 @@ import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } f
 import { bakeTexture } from './bake';
 import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Lotus, type Player } from '@hk/engine';
 import { SHADOW_Z } from './shadow';
+import { ViewPool } from './viewPool';
 
 // The sutra spells (engine systems/sutras.ts). Lotus Steps: the sim's seeds as small lotus buds
 // on the ground (gold for the Lotus Path) and a ring of petals opening where one blooms. Halo
@@ -63,14 +64,21 @@ export class SutraView {
   private readonly beams = new Graphics();
   private readonly bursts: Burst[] = [];
   private readonly lions: { sprite: Sprite; t: number }[] = [];
+  private readonly seedPool: ViewPool<Sprite>;
+  private readonly lionPool: ViewPool<Sprite>;
+  private readonly burstPool: ViewPool<Graphics>;
 
   constructor(
     renderer: Renderer,
-    private readonly world: Container,
+    world: Container,
     private readonly overZ: number,
     private readonly lionTex: Texture,
   ) {
     this.buds = [budTexture(renderer, PETAL), budTexture(renderer, GOLD)];
+    const place = (v: Container) => world.addChild(v);
+    this.seedPool = new ViewPool(() => new Sprite({ anchor: { x: 0.5, y: 0.75 } }), place);
+    this.lionPool = new ViewPool(() => new Sprite({ texture: lionTex, anchor: 0.5 }), place);
+    this.burstPool = new ViewPool(() => new Graphics(), place);
     this.beams.visible = false;
     world.addChild(this.beams);
   }
@@ -135,10 +143,9 @@ export class SutraView {
 
   /** The Thunder Roar's lion head over the hero standing at (x, y). */
   private lion(x: number, y: number): void {
-    const sprite = new Sprite({ texture: this.lionTex, anchor: 0.5 });
+    const sprite = this.lionPool.take();
     sprite.position.set(x, y - LION_Y);
     sprite.zIndex = this.overZ + 1;
-    this.world.addChild(sprite);
     this.lions.push({ sprite, t: 0 });
     this.drawLion(this.lions[this.lions.length - 1]);
   }
@@ -155,10 +162,11 @@ export class SutraView {
   }
 
   private burst(x: number, y: number, life: number, draw: (g: Graphics, k: number) => void, z: number): void {
-    const g = new Graphics();
+    const g = this.burstPool.take();
     g.position.set(x, y);
+    // a bounce flattens its burst onto the ground
+    g.scale.set(1);
     g.zIndex = z;
-    this.world.addChild(g);
     this.bursts.push({ g, t: 0, life, draw });
   }
 
@@ -168,10 +176,10 @@ export class SutraView {
     for (const l of lotuses) {
       let v = this.seeds.get(l.id);
       if (!v) {
-        const sprite = new Sprite({ texture: this.buds[l.pull ? 1 : 0], anchor: { x: 0.5, y: 0.75 } });
+        const sprite = this.seedPool.take();
+        sprite.texture = this.buds[l.pull ? 1 : 0];
         sprite.position.set(l.x / FP, l.y / FP);
         sprite.zIndex = l.y / FP;
-        this.world.addChild(sprite);
         v = { sprite, seen: false };
         this.seeds.set(l.id, v);
       }
@@ -184,7 +192,7 @@ export class SutraView {
     }
     for (const [id, v] of this.seeds) {
       if (v.seen) continue;
-      v.sprite.destroy();
+      this.seedPool.give(v.sprite);
       this.seeds.delete(id);
     }
     this.drawHalo(p, alpha, hx, hy);
@@ -192,14 +200,14 @@ export class SutraView {
       const l = this.lions[i];
       l.t += dt;
       if (this.drawLion(l)) continue;
-      l.sprite.destroy();
+      this.lionPool.give(l.sprite);
       this.lions.splice(i, 1);
     }
     for (let i = this.bursts.length - 1; i >= 0; i--) {
       const b = this.bursts[i];
       b.t += dt;
       if (b.t >= b.life) {
-        b.g.destroy();
+        this.burstPool.give(b.g.clear());
         this.bursts.splice(i, 1);
         continue;
       }

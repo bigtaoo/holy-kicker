@@ -112,9 +112,9 @@ export function makeBosses(renderer: Renderer, world: Container, art: Art, scene
   } else if (sandboxBoss) kinds.add('abbot');
   const views: BossViews = {};
   if (kinds.has('abbot') && art.boss) views.abbot = new Boss(renderer, world, art.boss, shadowTex, scene.bossSize, fx);
-  if (kinds.has('carp') && art.marsh) views.carp = new CarpView(renderer, art.marsh.carp, world, shadowTex, scene.bossSize, fx);
-  if (kinds.has('witch') && art.snow) views.witch = new StaffBossView(renderer, art.snow.witch, world, shadowTex, scene.bossSize * WITCH_SCALE, fx, WITCH_STYLE);
-  if (kinds.has('judge') && art.ghost) views.judge = new StaffBossView(renderer, art.ghost.judge, world, shadowTex, scene.bossSize * JUDGE_SCALE, fx, JUDGE_STYLE);
+  if (kinds.has('carp') && art.bosses.carp) views.carp = new CarpView(renderer, art.bosses.carp, world, shadowTex, scene.bossSize, fx);
+  if (kinds.has('witch') && art.bosses.witch) views.witch = new StaffBossView(renderer, art.bosses.witch, world, shadowTex, scene.bossSize * WITCH_SCALE, fx, WITCH_STYLE);
+  if (kinds.has('judge') && art.bosses.judge) views.judge = new StaffBossView(renderer, art.bosses.judge, world, shadowTex, scene.bossSize * JUDGE_SCALE, fx, JUDGE_STYLE);
   if (kinds.has('demon') && art.peak) views.demon = new DemonView(renderer, world, art.peak.demon, shadowTex, scene.bossSize * DEMON_SCALE, fx);
   return Object.keys(views).length > 0 ? new BossStage(views) : null;
 }

@@ -26,7 +26,8 @@ import { runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import type { Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
-import { loadChapterArt, loadLobbyArt, loadMonkArt } from '../art';
+import { loadLobbyArt, loadMonkArt } from '../art';
+import { freeChapterArt, loadChapterArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
 import { LobbyScreen } from './LobbyScreen';
 import { ResultsScreen } from './ResultsScreen';
@@ -292,7 +293,8 @@ export class Shell {
     if (this.loading) return Promise.resolve();
     this.loading = true;
     const monk = left?.state.config.monk ?? this.scene.monk ?? this.save.monk;
-    return Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)]).then(
+    // what no chapter near this one draws goes first, so a phone never holds every chapter's horde
+    return freeChapterArt(this.art, chapter).then(() => Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)])).then(
       () => {
         this.loading = false;
         this.startRun(chapter, left);

@@ -3,7 +3,7 @@
 
 export interface SheetMeta {
   frames: number;
-  /** Index of the first white hit-flash copy of the frames. */
+  /** Index of the first white hit-flash copy of the frames; 0 for a sheet baked without them (a boss, which flashes through `whiteFlash`). */
   flash: number;
   cols: number;
   frameW: number;

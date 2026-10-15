@@ -6,6 +6,7 @@ import type { FxPool } from './fx';
 import { PalmFalls } from './palmView';
 import { bolt, explosion, fieldMotes, nova, type RingMode } from './spells';
 import { SHADOW_Z } from './shadow';
+import { ViewPool } from './viewPool';
 
 // Spell effects: the build's spells and the area-spell stress test. The engine casts the
 // spells and kills what they reach (systems/spells.ts); this draws the casts from its events,
@@ -94,10 +95,11 @@ export class SpellView {
   /** Golden Body: seconds the hero stays untouchable after the bell broke. */
   private guardT = 0;
   private readonly palms: PalmFalls;
+  private readonly discs: ViewPool<Sprite>;
 
   constructor(
     renderer: Renderer,
-    private readonly layer: Container,
+    layer: Container,
     private readonly pool: FxPool,
     private readonly ring: RingMode,
     /** The falling palm's art and the Mountain Palm's, drawn at this zIndex (over the horde). */
@@ -105,6 +107,7 @@ export class SpellView {
     private readonly rand: () => number = Math.random,
   ) {
     this.palms = new PalmFalls(layer, palm.tex, palm.mountain, palm.z);
+    this.discs = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => layer.addChild(s));
     this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0);
     this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8);
     this.printTex = printTexture(renderer);
@@ -156,9 +159,9 @@ export class SpellView {
     for (const c of cymbals) {
       let v = this.cymbals.get(c.id);
       if (!v) {
-        const sprite = new Sprite({ texture: this.cymbalTex, anchor: 0.5 });
+        const sprite = this.discs.take();
+        sprite.texture = this.cymbalTex;
         sprite.scale.set((c.radius / FP) * 1.3 / this.cymbalTex.width);
-        this.layer.addChild(sprite);
         v = { sprite, seen: false };
         this.cymbals.set(c.id, v);
       }
@@ -178,7 +181,7 @@ export class SpellView {
     }
     for (const [id, v] of this.cymbals) {
       if (v.seen) continue;
-      v.sprite.destroy();
+      this.discs.give(v.sprite);
       this.cymbals.delete(id);
     }
     // the wheel's cymbals are spread evenly round their owner, so their middle is his
@@ -221,11 +224,13 @@ export class SpellView {
       let s = this.sprites.get(f.id);
       if (!s) {
         const texture = f.pin ? this.printTex : f.heal > 0 ? this.healTex : this.fieldTex;
-        const sprite = new Sprite({ texture, anchor: 0.5 });
+        // cymbals and fields share the pool of plain discs
+        const sprite = this.discs.take();
+        sprite.texture = texture;
+        sprite.rotation = 0;
         sprite.scale.set((r * 2) / this.fieldTex.width, (r * 0.9) / this.fieldTex.height);
         sprite.position.set(f.x / FP, f.y / FP);
         sprite.zIndex = SHADOW_Z + 1;
-        this.layer.addChild(sprite);
         s = { sprite, seen: false };
         this.sprites.set(f.id, s);
       }
@@ -236,7 +241,7 @@ export class SpellView {
     }
     for (const [id, s] of this.sprites) {
       if (s.seen) continue;
-      s.sprite.destroy();
+      this.discs.give(s.sprite);
       this.sprites.delete(id);
     }
   }

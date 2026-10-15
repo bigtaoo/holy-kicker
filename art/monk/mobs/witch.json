@@ -3,6 +3,7 @@
  "out": "../../../client/public/art/ch3/mobs/witch",
  "frames": 12,
  "fps": 9,
+ "flash": false,
  "height": 380,
  "ground": [
   380,
