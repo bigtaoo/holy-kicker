@@ -82,6 +82,7 @@ export const de: Table<typeof en> = {
     },
     lastFall: 'Zuletzt gefallen: Welle {wave}',
     brokeThrough: 'Durchgebrochen!',
+    newRecord: 'Neuer Rekord!',
     language: 'Sprache',
     report: 'Problem melden',
     unfinished: 'Unbeendeter Lauf',

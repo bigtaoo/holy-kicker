@@ -368,7 +368,7 @@ export class Shell {
     this.watch = new RunWatch(this.game, this.hud, {
       chapter, portal: this.portal, ads: this.ads, net: this.net, past: runPast(this.save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
-      keepRun: () => this.keepRun(), end: () => this.endRun(),
+      keepRun: () => this.keepRun(), end: () => this.endRun(), cheer: () => this.sound.play('cleared'),
     }, !!teach);
     // the fast-forward choice carries over from the last run
     this.hud.setFast(loadSettings(this.platform.storage).fast);

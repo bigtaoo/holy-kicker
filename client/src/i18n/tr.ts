@@ -82,6 +82,7 @@ export const tr: Table<typeof en> = {
     },
     lastFall: 'Son düşüş: {wave}. dalga',
     brokeThrough: 'Aşıldı!',
+    newRecord: 'Yeni rekor!',
     language: 'Dil',
     report: 'Sorun bildir',
     unfinished: 'Yarım kalan tur',

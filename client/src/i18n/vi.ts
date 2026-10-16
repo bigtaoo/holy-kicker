@@ -82,6 +82,7 @@ export const vi: Table<typeof en> = {
     },
     lastFall: 'Lần trước ngã ở: đợt {wave}',
     brokeThrough: 'Đột phá!',
+    newRecord: 'Kỷ lục mới!',
     language: 'Ngôn ngữ',
     report: 'Báo lỗi',
     unfinished: 'Trận chưa xong',

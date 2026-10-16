@@ -12,6 +12,8 @@ import type { TutorialStep } from './tutorial';
 import { tutorialHint, type TutorialHint } from './tutorialHint';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
+import { RECORD_BURST } from './recordBurst';
+import { RecordBurstView } from './recordBurstView';
 
 // The in-run overlay: the experience bar and level, the build strip with the spells' recharge, the wave counter,
 // the fast-forward toggle, a pause button and the pause panel (resume, language, report a problem, give up), a banner when a wave starts, the level-up cards, and the death panel (downPanel.ts).
@@ -64,7 +66,9 @@ export class RunHud implements Screen {
   private downInfo: DownInfo | null = null;
   private lastFall = 0;
   private lastFallText: Text | null = null;
-  private banner: { lines: [string, number][]; story: StoryLine | null; t: number } | null = null;
+  /** The wave banner; `record` makes its cheer line the new-record burst, `age` its seconds up. */
+  private banner: { lines: [string, number][]; story: StoryLine | null; t: number; record: boolean; age: number } | null = null;
+  private burst: RecordBurstView | null = null;
   /** Rebuilt with every layout, like the rest of the HUD. */
   private xpView: Container | null = null;
   private xpFill: Sprite | null = null;
@@ -124,6 +128,7 @@ export class RunHud implements Screen {
     this.hint = null;
     if (this.tutorial !== 'done' && !this.paused && !this.down && !this.offer) this.drawTutorial(f);
     this.bannerView = null;
+    this.burst = null;
     // a panel covers the middle, so a banner then waits out its time unseen
     if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
     this.cards = null;
@@ -204,17 +209,18 @@ export class RunHud implements Screen {
    * A banner across the middle: the wave number, for elite and boss waves a warning, and around
    * a boss its line of the story; `cheer` (passing the last run's fall) under the number.
    */
-  announce(wave: number, warning: string | null, story: StoryLine | null = null, cheer: string | null = null): void {
+  announce(wave: number, warning: string | null, story: StoryLine | null = null, cheer: string | null = null, record = false): void {
     const lines: [string, number][] = [[t('run.waveStart', { wave }), 96]];
-    if (cheer) lines.push([cheer, 72]);
+    if (cheer) lines.push([cheer, record ? 88 : 72]);
     if (warning) lines.push([warning, 64]);
-    this.banner = { lines, story, t: story ? STORY_TIME : BANNER_TIME };
+    const time = Math.max(story ? STORY_TIME : BANNER_TIME, record ? RECORD_BURST.length : 0);
+    this.banner = { lines, story, t: time, record: record && !!cheer, age: 0 };
     this.relayout();
   }
 
   /** A story line alone across the middle (the monk's, once the chapter boss fell). */
   speak(story: StoryLine): void {
-    this.banner = { lines: [], story, t: STORY_TIME };
+    this.banner = { lines: [], story, t: STORY_TIME, record: false, age: 0 };
     this.relayout();
   }
 
@@ -249,6 +255,8 @@ export class RunHud implements Screen {
     // a banner waits out the card choice
     if (!this.banner || this.offer) return;
     this.banner.t -= dt;
+    this.banner.age += dt;
+    this.burst?.update(this.banner.age);
     if (this.banner.t <= 0) {
       this.banner = null;
       this.bannerView?.destroy({ children: true });
@@ -331,10 +339,18 @@ export class RunHud implements Screen {
     const box = new Container();
     box.position.set(f.w / 2, f.h * 0.36);
     let y = 0;
-    for (const [text, size] of this.banner!.lines) {
-      const l = fit(label(text, size, size > 80 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), f.w - 80);
-      l.y = y;
-      box.addChild(l);
+    for (const [i, [text, size]] of this.banner!.lines.entries()) {
+      const l = fit(label(text, size, size > 90 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), f.w - 80);
+      if (i === 1 && this.banner!.record) {
+        // the new record: the cheer line pops in over turning rays and a burst of sparks
+        const burst = (this.burst = new RecordBurstView(l));
+        burst.view.y = y;
+        burst.update(this.banner!.age);
+        box.addChildAt(burst.view, 0);
+      } else {
+        l.y = y;
+        box.addChild(l);
+      }
       y += size + 24;
     }
     const story = this.banner!.story;

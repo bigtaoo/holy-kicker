@@ -82,6 +82,7 @@ export const fr: Table<typeof en> = {
     },
     lastFall: 'Dernière chute : vague {wave}',
     brokeThrough: 'Percée !',
+    newRecord: 'Nouveau record !',
     language: 'Langue',
     report: 'Signaler un problème',
     unfinished: 'Partie inachevée',

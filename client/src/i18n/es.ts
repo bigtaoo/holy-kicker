@@ -82,6 +82,7 @@ export const es: Table<typeof en> = {
     },
     lastFall: 'Última caída: oleada {wave}',
     brokeThrough: '¡Superado!',
+    newRecord: '¡Nuevo récord!',
     language: 'Idioma',
     report: 'Informar de un problema',
     unfinished: 'Partida sin terminar',

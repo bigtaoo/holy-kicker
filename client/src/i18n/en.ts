@@ -80,6 +80,7 @@ export const en = {
     },
     lastFall: 'Last fall: wave {wave}',
     brokeThrough: 'Broke through!',
+    newRecord: 'New record!',
     language: 'Language',
     report: 'Report a problem',
     unfinished: 'Unfinished run',

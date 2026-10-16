@@ -82,6 +82,7 @@ export const ru: Table<typeof en> = {
     },
     lastFall: 'Прошлое падение: волна {wave}',
     brokeThrough: 'Прорвался!',
+    newRecord: 'Новый рекорд!',
     language: 'Язык',
     report: 'Сообщить о проблеме',
     unfinished: 'Незавершённый забег',

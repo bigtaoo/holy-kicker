@@ -146,6 +146,18 @@ describe('RunWatch', () => {
     expect(hud.calls.announce?.map((c) => c[3])).toEqual([null, null, null, t('run.brokeThrough'), null]);
   });
 
+  it('cheers a new record, louder than a broken-through fall, once the run clears more than the best', () => {
+    const { game, hud, w } = watch(false, { best: 3, chests: 0, fell: 2 });
+    const s = game.engine.state;
+    for (const wave of [1, 2, 3, 4, 5, 6]) {
+      s.wave = wave;
+      w.update(1 / 30);
+    }
+    expect(hud.calls.announce?.map((c) => [c[3], c[4]])).toEqual([
+      [null, false], [null, false], [t('run.brokeThrough'), false], [null, false], [t('run.newRecord'), true], [null, false],
+    ]);
+  });
+
   it('marks nothing on a run with no past fall', () => {
     const { game, hud, w } = watch(false);
     game.engine.state.wave = 1;

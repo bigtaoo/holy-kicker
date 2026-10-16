@@ -82,6 +82,7 @@ export const th: Table<typeof en> = {
     },
     lastFall: 'ล้มครั้งก่อน: คลื่น {wave}',
     brokeThrough: 'ฝ่าไปได้!',
+    newRecord: 'สถิติใหม่!',
     language: 'ภาษา',
     report: 'แจ้งปัญหา',
     unfinished: 'รอบที่ยังเล่นไม่จบ',

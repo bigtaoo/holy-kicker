@@ -82,6 +82,7 @@ export const zh: Table<typeof en> = {
     },
     lastFall: '上次倒在：第 {wave} 波',
     brokeThrough: '突破了！',
+    newRecord: '新纪录！',
     language: '语言',
     report: '报告问题',
     unfinished: '未完成的战斗',

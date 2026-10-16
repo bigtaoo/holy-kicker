@@ -82,6 +82,7 @@ export const id: Table<typeof en> = {
     },
     lastFall: 'Terakhir jatuh: gelombang {wave}',
     brokeThrough: 'Tembus!',
+    newRecord: 'Rekor baru!',
     language: 'Bahasa',
     report: 'Laporkan masalah',
     unfinished: 'Permainan belum selesai',

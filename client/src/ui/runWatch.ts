@@ -32,6 +32,8 @@ export interface RunWatchDeps {
   keepRun(): void;
   /** The run is over (won, after the monk's line). */
   end(): void;
+  /** Plays the new-record fanfare. */
+  cheer?(): void;
 }
 
 export class RunWatch {
@@ -69,16 +71,21 @@ export class RunWatch {
     const s = game.engine.state;
     hud.update(dt);
     if (s.wave !== this.shownWave) {
-      // the last run's fall stays marked until this run gets past it, which the banner cheers
+      // the last run's fall stays marked until this run gets past it, which the banner cheers;
+      // clearing more waves than the chapter's best ever did is cheered louder (a new record)
       const fell = d.past?.fell ?? 0;
+      const best = d.past?.best ?? 0;
       const broke = this.shownWave > 0 && this.shownWave <= fell && s.wave > fell;
+      const record = best > 0 && this.shownWave > 0 && this.shownWave - 1 <= best && s.wave - 1 > best;
       this.shownWave = s.wave;
       hud.setWave(s.wave);
       hud.setLastFall(s.wave <= fell ? fell : 0);
       const last = s.config.waves;
       const warning = isBossWave(s.wave, last) ? t('run.boss') : isEliteWave(s.wave, last) ? t('run.elite') : null;
       if (s.wave > 0) {
-        hud.announce(s.wave, warning, waveLine(d.chapter, s.wave, last), broke ? t('run.brokeThrough') : null);
+        const cheer = record ? t('run.newRecord') : broke ? t('run.brokeThrough') : null;
+        hud.announce(s.wave, warning, waveLine(d.chapter, s.wave, last), cheer, record);
+        if (record) d.cheer?.();
         // kept at each wave too, in case the game dies without going to the background first
         d.keepRun();
       }

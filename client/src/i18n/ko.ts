@@ -82,6 +82,7 @@ export const ko: Table<typeof en> = {
     },
     lastFall: '지난번 쓰러진 곳: {wave} 웨이브',
     brokeThrough: '돌파!',
+    newRecord: '신기록!',
     language: '언어',
     report: '문제 신고',
     unfinished: '끝나지 않은 플레이',

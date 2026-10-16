@@ -82,6 +82,7 @@ export const ja: Table<typeof en> = {
     },
     lastFall: '前回の倒れた所：ウェーブ {wave}',
     brokeThrough: '突破！',
+    newRecord: '新記録！',
     language: '言語',
     report: '問題を報告',
     unfinished: '中断したプレイ',

@@ -82,6 +82,7 @@ export const pl: Table<typeof en> = {
     },
     lastFall: 'Ostatni upadek: fala {wave}',
     brokeThrough: 'Przełamane!',
+    newRecord: 'Nowy rekord!',
     language: 'Język',
     report: 'Zgłoś problem',
     unfinished: 'Niedokończona rozgrywka',

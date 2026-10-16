@@ -82,6 +82,7 @@ export const it: Table<typeof en> = {
     },
     lastFall: 'Ultima caduta: ondata {wave}',
     brokeThrough: 'Sfondato!',
+    newRecord: 'Nuovo record!',
     language: 'Lingua',
     report: 'Segnala un problema',
     unfinished: 'Partita in sospeso',
