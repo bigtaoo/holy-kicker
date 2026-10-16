@@ -2,9 +2,9 @@ import { RELIC_IDS, SUTRA_IDS, type RelicId, type SutraId } from '@hk/engine';
 import { BALANCE, type Chest, type SutraGoal } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { addDrops, grantRelics, rollDrops, type Drop } from './gear';
-import type { Haul } from './haul';
 import type { SaveData } from './save';
 import { trainingStats } from './training';
+import type { FirstGift } from './welcome';
 
 // What a finished run pays and unlocks. Pure: takes a save (and, for the gear drops, a random
 // source giving [0, 1)), returns a new one.
@@ -58,7 +58,7 @@ export interface Reward {
   /** The wave of the chapter's next unclaimed progress chest, null with all of them claimed. */
   nextChest: number | null;
   /** The welcome gift the first run paid (welcome.ts afterRun), set after settling. */
-  gift?: Haul | null;
+  gift?: FirstGift | null;
 }
 
 /** Copper multiplier of a stage (`stage`): 1, 1.5, 2, ... */

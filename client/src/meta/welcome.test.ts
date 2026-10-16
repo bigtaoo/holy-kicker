@@ -3,7 +3,8 @@ import { BALANCE } from './balance';
 import { dayKey, today } from './daily';
 import { settleRun } from './progress';
 import { newSave } from './save';
-import { afterRun, claimGift, giftReady, nextGift } from './welcome';
+import { addDrops, itemStats } from './gear';
+import { afterRun, claimGift, giftGain, giftReady, nextGift } from './welcome';
 
 const NOON = new Date(2026, 9, 4, 12).getTime();
 const EVENING = new Date(2026, 9, 4, 20).getTime();
@@ -55,5 +56,27 @@ describe('welcome gifts', () => {
     expect(after.gift).toBeNull();
     expect(after.save.firstDay).toBe(0);
     expect(claimGift(after.save, TOMORROW)!.n).toBe(0);
+  });
+
+  it('says what the gift adds when it is worn, and nothing when an item as good is owned', () => {
+    const fresh = newSave();
+    // an empty slot: all of its stats
+    expect(giftGain(fresh, { item: 'robe', tier: 1 })).toEqual(itemStats('robe', 1));
+    // over a Common robe: only what the Fine one raises (more health, and its first affix)
+    const common = { ...fresh, gear: addDrops(fresh.gear, [{ item: 'robe', tier: 0 }]) };
+    const [c, f] = [itemStats('robe', 0), itemStats('robe', 1)];
+    expect(giftGain(common, { item: 'robe', tier: 1 })).toEqual({ maxHp: f.maxHp! - c.maxHp!, guard: f.guard });
+    const fine = { ...fresh, gear: addDrops(fresh.gear, [{ item: 'robe', tier: 1 }]) };
+    expect(giftGain(fine, { item: 'robe', tier: 1 })).toBeNull();
+    // a relic other than the chosen one does not change the run's weapon
+    expect(giftGain(fresh, { item: 'staff', tier: 2 })).toBeNull();
+    expect(giftGain(fresh, { item: fresh.relic, tier: 2 })).not.toBeNull();
+  });
+
+  it('hands the first gift to the results with what it adds', () => {
+    const run = settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save;
+    const { gift } = afterRun(run, NOON, 3, 40);
+    const first = BALANCE.welcome[0];
+    expect(gift!.gain).toEqual(giftGain(run, { item: first.item, tier: first.tier }));
   });
 });

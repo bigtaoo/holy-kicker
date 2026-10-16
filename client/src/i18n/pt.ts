@@ -257,6 +257,7 @@ export const pt: Table<typeof en> = {
     doubled: 'Cobre dobrado!',
     drops: 'Equipamento encontrado',
     gift: 'Presente de boas-vindas: {gift}!',
+    giftWorn: 'Equipado para a próxima partida: {gift}!',
     nextChest: 'Próximo baú na onda {wave}',
   },
   gift: {

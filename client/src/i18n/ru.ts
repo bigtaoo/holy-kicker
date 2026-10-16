@@ -257,6 +257,7 @@ export const ru: Table<typeof en> = {
     doubled: 'Медь удвоена!',
     drops: 'Найденные вещи',
     gift: 'Подарок новичку: {gift}!',
+    giftWorn: 'Надето на следующий забег: {gift}!',
     nextChest: 'Следующий сундук на волне {wave}',
   },
   gift: {

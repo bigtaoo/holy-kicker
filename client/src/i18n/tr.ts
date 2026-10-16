@@ -257,6 +257,7 @@ export const tr: Table<typeof en> = {
     doubled: 'Bakır ikiye katlandı!',
     drops: 'Bulunan eşyalar',
     gift: 'Hoş geldin hediyesi: {gift}!',
+    giftWorn: 'Sonraki oyun için kuşanıldı: {gift}!',
     nextChest: 'Sonraki sandık {wave}. dalgada',
   },
   gift: {
