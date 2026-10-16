@@ -36,6 +36,7 @@ export interface BridgeShape {
     checkAdBlock?: () => unknown;
   };
   device?: { type?: string };
+  analytics?: { send?: (event: string, data?: Record<string, string | number | boolean>) => unknown };
 }
 
 export interface BridgeGlobal {
@@ -114,6 +115,11 @@ export class PlaygamaBridge {
   /** game_ready, gameplay_started, player_got_achievement, … */
   send(message: string): void {
     void settle(() => this.sdk?.platform?.sendMessage?.(message));
+  }
+
+  /** One custom analytics event (Bridge 2.3.0 and newer; a no-op before). */
+  track(event: string, data?: Record<string, string | number | boolean>): void {
+    void settle(() => this.sdk?.analytics?.send?.(event, data));
   }
 
   /** The platform's pause: true when it asks the game to stop (an ad, the tab hidden). */

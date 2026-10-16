@@ -52,6 +52,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     const s = shell.run?.engine.state;
     perf.frame(ms, level, s ? liveMobs(s) : 0);
     anomalies.frame(ms);
+    platform.analytics?.frame(ms);
   };
   // a ?quality= dev switch pins the mode for the session
   if (!scene.quality) shell.onQualityMode = (m) => quality.setRange(levelRange((mode = m), device, low));

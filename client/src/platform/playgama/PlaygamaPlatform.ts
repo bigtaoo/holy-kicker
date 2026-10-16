@@ -5,10 +5,11 @@ import { SAVE_KEY, SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { SETTINGS_KEY } from '../../meta/settings';
 import { INSTALL_KEY } from '../../net/backend';
 import { SENT_KEY } from '../../ui/playerName';
-import { NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type Portal } from '../types';
+import { NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type HostAnalytics, type Portal } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { webAudioHost } from '../web/webAudio';
 import { BridgeStore, PlaygamaBridge } from './bridge';
+import { bridgeAnalytics } from './bridgeAnalytics';
 
 // The Playgama host: the browser host plus the Bridge SDK for saves, ads, the platform's pause and
 // sound switches and the lifecycle messages (game_ready once the lobby is up, gameplay brackets).
@@ -27,6 +28,7 @@ export class PlaygamaPlatform extends WebPlatform {
   override readonly ads: Ads;
   override readonly banner: Banner = NO_BANNER;
   override readonly audio: AudioHost | null;
+  readonly analytics?: HostAnalytics;
 
   private constructor(private readonly bridge: PlaygamaBridge, store: BridgeStore | null) {
     super();
@@ -44,6 +46,8 @@ export class PlaygamaPlatform extends WebPlatform {
     // the browser's audio, plus the platform's own sound switch (it also turns off for ads)
     const web = webAudioHost();
     this.audio = web && { ...web, onHostMute: (cb) => bridge.onMute(cb) };
+    // only from the portal itself: a local preview and the QA tool stay out of the game's numbers
+    if (this.host === 'playgama') this.analytics = bridgeAnalytics(bridge, __HK_BUILD__, (cb) => this.onHide(cb));
     const rewardedOk = async () => bridge.rewardedSupported() && !(await bridge.hasAdblock());
     this.ads = {
       rewardedAvailable: rewardedOk,

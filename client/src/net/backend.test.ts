@@ -51,6 +51,20 @@ describe('Backend', () => {
     expect(new Backend(platform(), null, '1.0.0', () => 'en').install).not.toBe(a.install);
   });
 
+  it("feeds the host's analytics only while sharing is on, online or not", () => {
+    const seen: string[] = [];
+    const shared: boolean[] = [];
+    const host = { ...platform(), analytics: { event: (e: string) => void seen.push(e), share: (on: boolean) => void shared.push(on), frame: () => {} } };
+    const net = new Backend(host, null, '1.0.0', () => 'en');
+    net.track('run_start', { chapter: 1 });
+    net.setSharing('hold');
+    net.track('run_end', { chapter: 1 });
+    net.setSharing('send');
+    net.track('tutorial');
+    expect(seen).toEqual(['run_start', 'tutorial']);
+    expect(shared).toEqual([false, true]);
+  });
+
   it('does nothing offline', async () => {
     const calls = server({ ok: true });
     const net = new Backend(platform(), null, '1.0.0', () => 'en');

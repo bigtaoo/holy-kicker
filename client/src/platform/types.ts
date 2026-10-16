@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import type { Host, PropValue } from '@hk/protocol';
+import type { EventName, Host, PropValue } from '@hk/protocol';
 import type { MusicDeck } from '../audio/music';
 import type { DragStick, Vec2 } from '../game/dragStick';
 import type { Battery, DeviceInfo } from '../game/quality';
@@ -66,6 +66,18 @@ export interface Platform {
   openUrl(url: string): void;
   /** What the host itself says about this launch, added to the `session` event (CrazyGames: how its SDK started). */
   sessionProps?(): Record<string, PropValue>;
+  /** The host's own analytics, fed beside the backend; unset where the host has none. */
+  readonly analytics?: HostAnalytics;
+}
+
+/** A host's analytics (Playgama's telemetry, through Bridge). */
+export interface HostAnalytics {
+  /** Whether the player's privacy answer lets anything go out now (Backend.setSharing). */
+  share(on: boolean): void;
+  /** Every event the backend tracks, as it is tracked while sharing is on. */
+  event(e: EventName, p?: Record<string, PropValue>): void;
+  /** One battle frame's length in ms (the lobby, pauses and card choices left out). */
+  frame(ms: number): void;
 }
 
 /** The text box's wording, already translated, and the longest text it takes. */

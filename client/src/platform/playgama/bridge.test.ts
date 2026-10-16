@@ -112,3 +112,14 @@ describe('BridgeStore', () => {
     expect(sets).toEqual([[['x', 'y'], ['3', '2']]]);
   });
 });
+
+describe('PlaygamaBridge analytics', () => {
+  it('sends custom events, and is a no-op on a Bridge without the module', async () => {
+    const sent: unknown[] = [];
+    const bridge = await make({ initialize: () => {}, analytics: { send: (e, d) => void sent.push([e, d]) } });
+    bridge.track('progression_started', { step_index: 1 });
+    expect(sent).toEqual([['progression_started', { step_index: 1 }]]);
+    const old = await make({ initialize: () => {} });
+    expect(() => old.track('x')).not.toThrow();
+  });
+});
