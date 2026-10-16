@@ -3,9 +3,10 @@ import Capacitor
 import WebKit
 
 // The root view controller: Capacitor's web view plus `window.HKNative`, the bridge the game reads
-// through client/src/platform/ios/bridge.ts (contract in docs/ios.md). No Capacitor plugins: the
-// bridge is one WKScriptMessageHandler named "hk" and one script injected at document start, as in
-// D:\funny's NWBridgeViewController. SceneDelegate makes this the window's root.
+// through client/src/platform/ios/bridge.ts (contract in docs/ios.md). It is no Capacitor plugin
+// (the only ones are SystemBars and the hot-update plugin, capacitor.config.ts): one
+// WKScriptMessageHandler named "hk" and one script injected at document start, as in D:\funny's
+// NWBridgeViewController. SceneDelegate makes this the window's root.
 //
 // Calls from JS are messages `{ op, ... }`. Answers are pushed back into the page rather than
 // settled by id: Game Center's, AdMob's and the store's states go to `HKNative._gameCenter`,

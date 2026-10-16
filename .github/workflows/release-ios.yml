@@ -78,7 +78,26 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build:ios
+
+      # The web bundle baked into this shell is <MARKETING_VERSION>.<run number>; hot updates
+      # (ota-ios.yml) made for it count on from there, and must all rank below it.
+      - name: Resolve the bundle version
+        id: ver
+        run: |
+          set -eu
+          MV=$(grep -o 'MARKETING_VERSION = [^;]*' client/ios/App/App.xcodeproj/project.pbxproj | sort -u | sed 's/.* = //')
+          if ! echo "$MV" | grep -Eq '^[0-9]+\.[0-9]+$'; then echo "MARKETING_VERSION must be one X.Y (got: $MV)"; exit 1; fi
+          V="$MV.${{ github.run_number }}"
+          LIVE=$(curl -fsS --max-time 10 https://hk-ota.gamestao.com/manifest.json | jq -r .version || true)
+          if [ -n "$LIVE" ] && [ "$(printf '%s\n%s\n' "$LIVE" "$V" | sort -V | tail -1)" != "$V" ]; then
+            echo "the live hot update $LIVE outranks this shell's $V"; exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Bundle version $V (live hot update: ${LIVE:-none})" >> "$GITHUB_STEP_SUMMARY"
+      - name: Build the web bundle
+        env:
+          HK_BUNDLE_VERSION: ${{ steps.ver.outputs.version }}
+        run: npm run build:ios
 
       - name: Sync Capacitor (copies dist-ios, runs pod install)
         working-directory: client

@@ -1,10 +1,13 @@
 import { boot } from './boot';
 import { DEFAULT_SCENE } from './game/scene';
 import { IosPlatform } from './platform/ios/IosPlatform';
+import { applyDownloaded, checkOta } from './platform/ios/ota';
 import { showVideoBadges } from './ui/widgets';
 
 // iOS entry (vite.ios.config.js swaps it in): the build the Capacitor shell packages (docs/ios.md).
 async function start() {
+  // a hot update the last session downloaded: the page reloads into it, so nothing boots here
+  if (await applyDownloaded()) return;
   const platform = new IosPlatform();
   // with the ad-free card, rewarded offers pay at once: no video badge on them
   showVideoBadges(!platform.storeKit.owned());
@@ -16,6 +19,7 @@ async function start() {
     showVideoBadges(!platform.storeKit.owned());
     shell.reloadSave();
   };
+  void checkOta();
 }
 
 start().catch((err) => {

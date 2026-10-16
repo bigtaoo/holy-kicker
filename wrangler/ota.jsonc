@@ -1,0 +1,17 @@
+{
+  // Hot updates for the iOS app (docs/ios.md "Hot updates"): Cloudflare Workers static assets at
+  // hk-ota.gamestao.com, holding the newest bundle only: manifest.json and <version>.zip, which
+  // .github/workflows/ota-ios.yml writes into client/dist-ota with the _headers that let the app's
+  // origin (capacitor://localhost) read them and keep the manifest uncached. A deploy replaces the
+  // set whole, so the manifest never points at a zip that is not there.
+  //
+  // Deploy (from the repo root, after the workflow's build):   npx wrangler deploy -c wrangler/ota.jsonc
+  "name": "holy-kicker-ota",
+  "compatibility_date": "2026-10-05",
+  "assets": {
+    "directory": "../client/dist-ota"
+  },
+  "routes": [
+    { "pattern": "hk-ota.gamestao.com", "custom_domain": true }
+  ]
+}

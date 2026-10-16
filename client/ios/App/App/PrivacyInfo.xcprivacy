@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <!--
-  The app's privacy manifest (docs/ios.md "Privacy and store listing"). No tracking. The one
-  required-reason API is UserDefaults (KeyStore.swift: the save's copy, this app only = CA92.1).
+  The app's privacy manifest (docs/ios.md "Privacy and store listing"). No tracking. The
+  required-reason APIs: UserDefaults (KeyStore.swift: the save's copy, and the Capgo updater's
+  bookkeeping, this app only = CA92.1); the updater, which ships no manifest of its own, also reads
+  file dates of its bundles in the app's container (C617.1) and the free disk space before a
+  download (E174.1).
   Collected data types go in the App Store Connect privacy label; the SDKs (Capacitor, later AdMob)
   ship their own manifests.
 -->
@@ -22,6 +25,22 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>CA92.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryFileTimestamp</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>C617.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>E174.1</string>
 			</array>
 		</dict>
 	</array>

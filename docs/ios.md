@@ -18,7 +18,7 @@ says what we take from funny, what we build new, and in which order.
 | AdMob: rewarded + interstitial, Google's consent form (UMP) in the EEA/UK | Banner, ATT / personalised ads |
 | One purchase: the **ad-free card** (non-consumable), with Restore | Jade packs, starter pack, battle pass |
 | Every storefront except mainland China | China (needs a game licence for IAP) |
-| Builds and uploads from GitHub Actions (no Mac needed) | OTA web-bundle updates |
+| Builds and uploads from GitHub Actions (no Mac needed), hot updates of the web layer | |
 
 Why only the ad-free card: an active player earns about 100 jade a day and jade has few sinks
 (the jade chest, quick patrols, two monks), so jade packs would sell poorly; jade in a local
@@ -30,7 +30,7 @@ waiting; every daily cap stays, so balance never has to price in a paying player
 
 | Piece | funny | Here |
 |---|---|---|
-| Native bridge | `NWBridgeViewController` in `client/ios/App/App/AppDelegate.swift`: a `CAPBridgeViewController` subclass that registers `WKScriptMessageHandler`s and injects `window.NW*` objects, promises settled by id. No Capacitor plugins. | Same pattern, renamed `HK*`. |
+| Native bridge | `NWBridgeViewController` in `client/ios/App/App/AppDelegate.swift`: a `CAPBridgeViewController` subclass that registers `WKScriptMessageHandler`s and injects `window.NW*` objects, promises settled by id. No Capacitor plugins. | Same pattern, renamed `HK*`; the only plugins are core SystemBars and Capgo's updater ("Hot updates"). |
 | StoreKit 2 | purchase, `Transaction.unfinished` / `updates`, finish only after the grant | Reuse purchase + updates; **new**: `currentEntitlements` and `AppStore.sync()` (Restore), no server grant |
 | AdMob | rewarded only, npa=1, no ATT, test unit in Debug, error codes surfaced | Reuse rewarded; **new**: interstitial, UMP |
 | Game Center | none | **new** |
@@ -256,6 +256,39 @@ Built (step 4) in `App/Store.swift`, `platform/ios/storeKit.ts`, `adFree.ts` and
 - Analytics: a new `iap` event (`what`: buy or restore, `item`: adfree, `outcome`), and the `ad`
   event gets `free: true` when the card paid it; the dashboard's "watched an ad" leaves those out.
 
+## Hot updates
+
+The web layer (everything in `client/dist-ios`) can change without App Review, after funny §11:
+`@capgo/capacitor-updater` in the shell, driven by hand from `client/src/platform/ios/ota.ts`
+against our own static manifest at `https://hk-ota.gamestao.com/manifest.json`, never Capgo's
+cloud (`capacitor.config.ts`: `autoUpdate: false`, `statsUrl: ''`).
+
+- **When**: once the game is up, `checkOta` calls `notifyAppReady` (a bundle that never gets
+  there in `appReadyTimeout`, 30 s, is rolled back and not fetched again), reads the manifest and
+  downloads a newer bundle. At the next launch, before anything is drawn, `applyDownloaded`
+  switches to it with `set()`. It never arms one with `next()`: the plugin swaps an armed bundle
+  in whenever the app goes to the background, which would throw away a run the player only
+  switched away from.
+- **Versions** (`__HK_BUNDLE__`, `build/buildId.mjs`): a shell's own bundle is
+  `<MARKETING_VERSION>.<release run number>` (`1.0.18`); its hot updates are `1.0.18.1`,
+  `1.0.18.2`, … So each update outranks the shell it was made for, and the next shell outranks
+  every update for the one before (`resetWhenUpdate` drops them after an App Store update).
+  Builds outside the iOS workflows stamp `0.0.0` and never update. Shells up to build 17 have
+  no plugin.
+- **Publishing**: Actions → `ota-ios` → Run workflow on a commit whose ci run is green. It works
+  the version out from the newest release-ios run and the live manifest, builds, zips, writes
+  the manifest with the zip's sha256 (Capgo v8 refuses a download without one) and deploys
+  `client/dist-ota` to the `holy-kicker-ota` worker (`wrangler/ota.jsonc`, Workers static assets,
+  the Cloudflare secrets of the web deploy). A deploy replaces the whole set, so only the latest
+  update is served. `_headers` allows any origin (the page is `capacitor://localhost`) and keeps
+  the manifest out of caches. `minNativeVersion` (the workflow's input) holds an update back from
+  shells too old for it.
+- **What may travel**: JS, art and sound only. Anything that needs a new bridge call or a new
+  native setting needs a shell first (and the web side feature-detects it anyway). Guideline
+  3.3.1 allows interpreted code that does not change the app's purpose; never use it to add a
+  purchase that bypasses StoreKit.
+- Privacy manifest: the plugin reads file timestamps and free disk space (`C617.1`, `E174.1`).
+
 ## Privacy and store listing
 
 - `PrivacyInfo.xcprivacy`: `UserDefaults` (`CA92.1`); no tracking; the AdMob SDK and Capacitor
@@ -353,9 +386,6 @@ App Store Connect); waits for a sandbox purchase. Step 5's listing entered the s
 
 ## Later
 
-- **OTA** web-bundle updates (funny §11: Capgo, self-hosted on R2, applied on the next cold
-  start), so balance changes reach iOS without a review. Mind the CORS rule for
-  `capacitor://localhost` on the bucket.
 - **Cloud save** keyed to Game Center: verify `fetchItems(forIdentityVerificationSignature)`
   on the server (funny's CrazyGames auth in `server/metaserver/src/service/auth/crazygames.ts`
   is the shape to copy). This is what jade packs would need first.

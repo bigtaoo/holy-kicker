@@ -1,0 +1,119 @@
+name: ota-ios
+
+# A hot update of the iOS app's web layer (docs/ios.md "Hot updates"): the iOS web build of this
+# commit, zipped, with a manifest, published to hk-ota.gamestao.com (wrangler/ota.jsonc). Shells
+# with the updater download it once the game is up and switch to it at their next launch. No App
+# Review, no macOS runner. Native changes (Swift, Info.plist, the Podfile, capacitor.config.ts)
+# never travel this way: they need release-ios.yml and a new build.
+#
+# Run it by hand (Actions -> ota-ios -> Run workflow) on a commit whose ci run is green. The
+# version is worked out, never typed: <shell>.<n>, where <shell> is the newest release-ios.yml
+# build's bundle version (<MARKETING_VERSION>.<run number>, the one baked into that shell) and n
+# counts up from the live manifest. So an update always outranks the shell it was made for, and
+# the next shell outranks every update made for the one before.
+#
+# Needs the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets ci.yml deploys the web with.
+
+on:
+  workflow_dispatch:
+    inputs:
+      min_native:
+        description: 'oldest shell version (CFBundleShortVersionString) the update needs'
+        required: true
+        default: '1.0'
+        type: string
+
+concurrency:
+  group: ota-deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  MANIFEST_URL: https://hk-ota.gamestao.com/manifest.json
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Resolve the version
+        id: ver
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -eu
+          GREEN=$(gh run list -R "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" --status success --limit 1 --json databaseId -q length)
+          if [ "$GREEN" != "1" ]; then echo "ci has not passed on $GITHUB_SHA"; exit 1; fi
+          MV=$(grep -o 'MARKETING_VERSION = [^;]*' client/ios/App/App.xcodeproj/project.pbxproj | sort -u | sed 's/.* = //')
+          if ! echo "$MV" | grep -Eq '^[0-9]+\.[0-9]+$'; then echo "MARKETING_VERSION must be one X.Y (got: $MV)"; exit 1; fi
+          # release runs only: the push-triggered compile runs share the run counter
+          BUILD=$(gh run list -R "$GITHUB_REPOSITORY" --workflow release-ios.yml --status success --limit 100 \
+            --json number,event,headBranch \
+            -q '[.[] | select(.event == "workflow_dispatch" or (.headBranch | startswith("ios-v")))][0].number')
+          if [ -z "$BUILD" ] || [ "$BUILD" = "null" ]; then echo "no successful release-ios.yml run"; exit 1; fi
+          SHELL_V="$MV.$BUILD"
+          LIVE=$(curl -fsS --max-time 10 "$MANIFEST_URL" | jq -r .version || true)
+          case "$LIVE" in
+            "$SHELL_V".*) N=$(( ${LIVE##*.} + 1 )) ;;
+            *) N=1 ;;
+          esac
+          V="$SHELL_V.$N"
+          if [ -n "$LIVE" ] && [ "$(printf '%s\n%s\n' "$LIVE" "$V" | sort -V | tail -1)" != "$V" ]; then
+            echo "$V would not outrank the live $LIVE"; exit 1
+          fi
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "Publishing $V for shell $SHELL_V (live: ${LIVE:-none})" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build the bundle
+        env:
+          HK_BUNDLE_VERSION: ${{ steps.ver.outputs.version }}
+        run: npm run build:ios
+
+      - name: Zip it with the manifest
+        env:
+          V: ${{ steps.ver.outputs.version }}
+          MIN_NATIVE: ${{ inputs.min_native }}
+        run: |
+          set -eu
+          OUT=client/dist-ota
+          rm -rf "$OUT" && mkdir -p "$OUT"
+          (cd client/dist-ios && zip -r -q -X "../dist-ota/$V.zip" .)
+          SIZE=$(stat -c %s "$OUT/$V.zip")
+          # Workers static assets take files up to 25 MiB
+          if [ "$SIZE" -gt 25000000 ]; then echo "$V.zip is $SIZE bytes, over the 25 MB asset limit"; exit 1; fi
+          SUM=$(sha256sum "$OUT/$V.zip" | cut -d' ' -f1)
+          jq -n --arg v "$V" --arg url "https://hk-ota.gamestao.com/$V.zip" --arg sum "$SUM" --arg min "$MIN_NATIVE" \
+            '{version: $v, url: $url, checksum: $sum, minNativeVersion: $min}' > "$OUT/manifest.json"
+          # the app's page (capacitor://localhost) reads the manifest; it must never come from a cache
+          printf '/*\n  Access-Control-Allow-Origin: *\n/manifest.json\n  Cache-Control: no-cache, must-revalidate\n' > "$OUT/_headers"
+          cat "$OUT/manifest.json" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx -y wrangler@4.118.0 deploy -c wrangler/ota.jsonc
+
+      - name: Verify from the outside
+        env:
+          V: ${{ steps.ver.outputs.version }}
+        run: |
+          set -eu
+          for i in $(seq 1 20); do
+            GOT=$(curl -fsS --max-time 10 -H 'Origin: capacitor://localhost' "$MANIFEST_URL?v=check$i" | jq -r .version || true)
+            [ "$GOT" = "$V" ] && break
+            sleep 5
+          done
+          if [ "$GOT" != "$V" ]; then echo "the manifest says ${GOT:-nothing}, not $V"; exit 1; fi
+          curl -fsSI -H 'Origin: capacitor://localhost' "$MANIFEST_URL" | grep -qi '^access-control-allow-origin:'
+          curl -fsS --max-time 60 -o /tmp/got.zip "https://hk-ota.gamestao.com/$V.zip"
+          [ "$(sha256sum /tmp/got.zip | cut -d' ' -f1)" = "$(jq -r .checksum client/dist-ota/manifest.json)" ]

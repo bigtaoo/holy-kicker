@@ -19,5 +19,15 @@ export function buildId() {
   return `${version}+${sha}${git('status --porcelain --untracked-files=no -- ":/" ":(top,exclude)client/wechat/project.config.json"') ? '-dirty' : ''}`;
 }
 
-/** Vite's `define` for it: `__HK_BUILD__` in the client. */
-export const buildDefine = () => ({ __HK_BUILD__: JSON.stringify(buildId()) });
+/**
+ * The iOS web bundle's version (docs/ios.md "Hot updates"): `<MARKETING_VERSION>.<build>` for the
+ * one inside a shell, `<shell>.<n>` for a hot update, from HK_BUNDLE_VERSION, which only the iOS
+ * workflows set. 0.0.0 elsewhere, which turns the update check off.
+ */
+export const bundleVersion = () => process.env.HK_BUNDLE_VERSION || '0.0.0';
+
+/** Vite's `define` for them: `__HK_BUILD__` and `__HK_BUNDLE__` in the client. */
+export const buildDefine = () => ({
+  __HK_BUILD__: JSON.stringify(buildId()),
+  __HK_BUNDLE__: JSON.stringify(bundleVersion()),
+});

@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-crazygames/
 dist-ios/
+dist-ota/
 *.tsbuildinfo
 
 # Real credentials never go in the repo (dev keys live in D:\cloud, see README)

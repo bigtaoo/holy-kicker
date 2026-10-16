@@ -73,3 +73,6 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - `.github/workflows/release-ios.yml` — the iOS app, built only on the macOS runner (no Mac here):
   an unsigned compile on pushes that touch the shell; a tag `ios-v*` or a manual run signs it and
   uploads to TestFlight (`docs/ios.md`).
+- `.github/workflows/ota-ios.yml` — a hot update of the iOS app's web layer, run by hand: zips the
+  iOS web build and deploys it with a manifest to hk-ota.gamestao.com (`wrangler/ota.jsonc`);
+  shells fetch it once the game is up and switch at the next launch (`docs/ios.md` "Hot updates").
