@@ -32,7 +32,7 @@ def main():
     out.parent.mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         still = Path(tmp) / "cover.png"
-        cover(STORE / f"cover_horde_{shape}.png", logo, (w, h), focus, place).save(still)
+        cover(STORE / f"cover_key_{shape}.png", logo, (w, h), focus, place).save(still)
         graph = (
             f"[0:v]scale={w}:{h},setsar=1,fps=60,format=yuv420p[a];"
             f"[1:v]scale={w}:{h}:flags=lanczos,setsar=1,fps=60,format=yuv420p[b];"

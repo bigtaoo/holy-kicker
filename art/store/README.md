@@ -9,7 +9,7 @@ on it (`python tools/cover_ref.py art/store` writes `ref_*.png`):
 The pictures carry no text; the logo (`logo_en.png`, `logo_zh.png`, lettered by
 `python tools/make_logo.py art/store`) is laid over them and each is cropped to 1920×1080,
 800×1200 and 800×800 by `python tools/cover_final.py art/store en` (or `zh`), into `final/` (the store
-now uses the horde covers below).
+now uses the key covers below).
 
 Round 1 (`r1/*_fire.png`) edited the plain 4:3 hero picture: every cover came out 4:3, and a
 "glowing golden-red ball" became a fireball. The prompts now describe the real ball (cream leather,
@@ -36,5 +36,13 @@ finished by `cover_final.py` (logo on the landscape one only). Repaints of the c
 `edit_image` either simplified the ring into two facing groups (which reads as a duel again) or
 left it untouched, so the collage is the cover.
 
-The preview videos open on these covers too; the opening still was swapped without re-recording
+The preview videos open on the store covers too; the opening still was swapped without re-recording
 by passing a copy of each finished video to `tools/store_video.py` with start 1.
+
+Since 2026-10-16 the store covers are painted again (`cover_key_{landscape,portrait,square}.png`):
+the collage read as grey-blue noise around a small monk at thumbnail size. The landscape one is
+`cover_landscape.png` edited with `cover_key_landscape.txt` (the boss swapped for a horde charging
+in, the ball bursting into it), then with `cover_key_landscape_ball.txt` (the first edit left the
+ball in his hand). The portrait and square ones started as canvases at their shape with the monk
+cut from the landscape cover pasted bottom left and the ball and horde top right, repainted into one
+scene with `cover_key_merge.txt`. `cover_final.py` finishes them as before.

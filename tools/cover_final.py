@@ -1,6 +1,6 @@
 """Finishes the store covers: crops each cover to its store size and lays the logo over it.
 usage: python cover_final.py <store dir> [en|zh]
-Reads <store dir>/cover_horde_{landscape,portrait,square}.png (tools/cover_horde_ref.py) and
+Reads <store dir>/cover_key_{landscape,portrait,square}.png (art/store/README.md) and
 logo_<lang>.png, writes <store dir>/final/<lang>_{landscape,portrait,square}.png (docs/store.md
 "Images"), and the WeChat share card client/wechat/share/<lang>.jpg (5:4, cut from the painted
 landscape cover cover_landscape.png)."""
@@ -41,7 +41,7 @@ def main():
     out = store / "final"
     out.mkdir(exist_ok=True)
     for name, (size, focus, place) in COVERS.items():
-        page = cover(store / f"cover_horde_{name}.png", logo, size, focus, place)
+        page = cover(store / f"cover_key_{name}.png", logo, size, focus, place)
         page.save(out / f"{lang}_{name}.png", optimize=True)
         print(out / f"{lang}_{name}.png", size)
     SHARE_DIR.mkdir(exist_ok=True)
