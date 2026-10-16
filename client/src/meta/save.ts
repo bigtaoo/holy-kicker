@@ -51,6 +51,9 @@ export interface SaveData {
   hardCleared: number;
   hardBest: number[];
   hardChests: number[];
+  /** The wave the last lost run fell on per chapter, 0 for none (falls.ts), and hard mode's. */
+  fell: number[];
+  hardFell: number[];
   /** The monk played as (monks.ts), and the monks owned, bit i for MONK_IDS[i] (the kicker always). */
   monk: MonkId;
   monks: number;
@@ -73,7 +76,7 @@ export function newSave(): SaveData {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
-    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), monk: 'kicker', monks: 1,
+    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0,
   };
 }
@@ -113,6 +116,7 @@ function owned(monks: number, id: unknown): boolean {
  * Version 3 had no achievements: the kills start at 0, and what the progress already reached
  * waits to be claimed.
  * Version 4 had no welcome gifts: a player past the first run gets them from the next lobby.
+ * A save without the last falls reads as none fallen yet.
  */
 export function parseSave(text: string | null): SaveData {
   const fresh = newSave();
@@ -158,6 +162,8 @@ export function parseSave(text: string | null): SaveData {
     hardCleared,
     hardBest: ints(raw.hardBest, 0, BALANCE.waves),
     hardChests: ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1),
+    fell: ints(raw.fell, 0, BALANCE.waves),
+    hardFell: ints(raw.hardFell, 0, BALANCE.waves),
     monk: owned(monks, raw.monk) ? (raw.monk as MonkId) : 'kicker',
     monks,
     kills: int(raw.kills, 0, max, 0),

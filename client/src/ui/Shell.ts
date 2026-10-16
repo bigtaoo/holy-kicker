@@ -9,6 +9,7 @@ import { computeViewport } from '../game/viewport';
 import { setupOf } from '../game/runSetup';
 import { BALANCE } from '../meta/balance';
 import { evolvedIn } from '../meta/codex';
+import { noteFall, runPast } from '../meta/falls';
 import { loadout } from '../meta/loadout';
 import { rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
@@ -36,6 +37,7 @@ import { RunHud } from './RunHud';
 import { storedSettings, type SettingsActions } from './settingsPanel';
 import { canReport, reportProblem } from './problemReport';
 import { PlayerName } from './playerName';
+import type { DeathCause } from './deathInfo';
 import { RunWatch } from './runWatch';
 import { uiFrame, type Screen } from './uiLayout';
 import { onButtonTap } from './widgets';
@@ -337,6 +339,7 @@ export class Shell {
     if (this.quality) this.game.applyQuality(this.quality);
     this.game.shake.on = loadSettings(this.platform.storage).shake;
     this.game.onEvents = (events) => {
+      this.watch?.see(events);
       for (const e of events) {
         if (e.type === 'mobDown') this.kills++;
         const cue = eventCue(e, 0);
@@ -362,7 +365,7 @@ export class Shell {
     // the first run teaches moving; a replayed first chapter, a resumed run or a dev bot's does not
     const teach = !this.save.firstRunDone && this.scene.waves && !left && !this.scene.autoplay && !this.scene.record;
     this.watch = new RunWatch(this.game, this.hud, {
-      chapter, portal: this.portal, ads: this.ads, net: this.net,
+      chapter, portal: this.portal, ads: this.ads, net: this.net, past: runPast(this.save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
       keepRun: () => this.keepRun(), end: () => this.endRun(),
     }, !!teach);
@@ -417,16 +420,18 @@ export class Shell {
     this.hud = null;
     // the death panel already told the portal
     if (!this.watch?.downShown) this.portal.gameplayStop();
+    const cause = this.watch?.cause ?? null;
     this.watch = null;
-    this.settle(s);
+    this.settle(s, cause);
   }
 
   /**
    * Pays out the run that ended in `s` (won, lost or given up; `waves` are the ones fully cleared)
    * and shows the results. Tells the backend how it went, and enters it on its board when no dev
    * switch bent the rules; the results show its rank there once it comes (none offline, unranked or failed).
+   * A lost run also says what felled the hero (`cause`, RunWatch) and is kept as the chapter's last fall.
    */
-  private settle(s: SimState): void {
+  private settle(s: SimState, cause: DeathCause | null = null): void {
     dropRun(this.platform.storage);
     const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
     const p = s.players[0];
@@ -435,11 +440,11 @@ export class Shell {
       level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
     };
     this.perf?.end();
-    this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing' });
+    this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}) });
     const name = rankedRun(this.scene) ? this.names.board(this.save) : null;
     const rank = name ? this.net.submitRun({ ...run, ...name }) : Promise.resolve(null);
     void this.net.flush();
-    const { reward, save: played } = settleRun(this.save, { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills });
+    const { reward, save: played } = settleRun(noteFall(this.save, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills });
     const { save, gift } = afterRun(played, Date.now(), waves, this.kills);
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);

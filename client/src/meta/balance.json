@@ -123,5 +123,6 @@
     { "kind": "tier", "n": 4, "jade": 50 },
     { "kind": "monks", "n": 3, "jade": 30 }
   ],
-  "monks": { "kicker": 0, "fat": 500, "novice": 300 }
+  "monks": { "kicker": 0, "fat": 500, "novice": 300 },
+  "fall": { "levelEvery": 5, "levels": [7, 11, 14, 17, 20, 23, 25, 27, 29, 31], "levelGap": 4 }
 }
