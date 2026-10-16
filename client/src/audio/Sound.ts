@@ -91,12 +91,12 @@ export class Sound {
     if (this.holds.size === 0) this.gate.add(cue);
   }
 
-  /** Plays this frame's cues and moves the music toward `track`. Call once a frame. */
-  flush(track: Track | null, dtMs: number): void {
+  /** Plays this frame's cues and moves the music toward `track`, at `duck` of its level (the kill cam lowers it). Call once a frame. */
+  flush(track: Track | null, dtMs: number, duck = 1): void {
     if (this.music) {
       // the effects' own setting does not silence the music
       const held = this.holds.has('hidden') || this.holds.has('ad') || this.holds.has('host');
-      const level = held ? 0 : MUSIC * (this.musicVolume / STEPS) ** 2;
+      const level = held ? 0 : duck * MUSIC * (this.musicVolume / STEPS) ** 2;
       this.music.setVolume(level);
       this.music.update(level > 0 ? track : null, dtMs);
     }

@@ -1,15 +1,22 @@
-// The kill cam: when the hero goes down, the view runs in slow motion for about three seconds while
-// the camera eases in toward the point between him and the blow that felled him, so the player
-// sees what killed him before the death panel opens. The sim has already stopped (the run is
-// lost); only the view's time slows. Pure timeline maths, used by killCamView.ts.
+// The kill cam: when the hero goes down, the view freezes for a beat with a white flash (the blow
+// lands), then runs in slow motion for about three seconds in all while the camera eases in toward
+// the point between him and the blow that felled him, the rest of the field darkens, black bars
+// close in and he tips over, so the player sees what killed him before the death panel or the
+// results. A tap after the first second skips to the ease out. The sim has already stopped (the
+// run is lost); only the view's time slows. Pure timeline maths, used by killCamView.ts.
 
 export const KILL_CAM = {
   /** View time per real time while the cam runs. */
   scale: 0.25,
-  /** Real seconds to ease in, to hold, and to ease back out. */
+  /** Real seconds of the frozen beat as the blow lands, to ease in, to hold, and to ease back out. */
+  stop: 0.15,
   easeIn: 0.4,
-  hold: 2.2,
+  hold: 2.05,
   easeOut: 0.4,
+  /** Real seconds before a tap may skip the rest. */
+  skipAfter: 1,
+  /** Real seconds the hero takes to tip over. */
+  fall: 0.5,
   /** Camera zoom at the hold. */
   zoom: 1.25,
   /** World units the blow's source counts at most away from the hero, so he stays in view. */
@@ -18,7 +25,7 @@ export const KILL_CAM = {
   pulse: 3,
 };
 
-export type KillCamPhase = 'idle' | 'in' | 'hold' | 'out';
+export type KillCamPhase = 'idle' | 'stop' | 'in' | 'hold' | 'out';
 
 export interface KillCamShot {
   phase: KillCamPhase;
@@ -29,13 +36,17 @@ export interface KillCamShot {
   mix: number;
   /** The highlight's pulse, 0..1. */
   pulse: number;
+  /** The white flash as the blow lands, 1 down to 0 over the frozen beat. */
+  flash: number;
+  /** How far the hero has tipped over, 0..1 (he stays down once the cam is over). */
+  fall: number;
 }
 
-export const IDLE_SHOT: KillCamShot = { phase: 'idle', scale: 1, zoom: 1, mix: 0, pulse: 0 };
+export const IDLE_SHOT: KillCamShot = { phase: 'idle', scale: 1, zoom: 1, mix: 0, pulse: 0, flash: 0, fall: 0 };
 
 /** Real seconds the whole cam lasts. */
 export function killCamLength(): number {
-  return KILL_CAM.easeIn + KILL_CAM.hold + KILL_CAM.easeOut;
+  return KILL_CAM.stop + KILL_CAM.easeIn + KILL_CAM.hold + KILL_CAM.easeOut;
 }
 
 function smooth(k: number): number {
@@ -46,11 +57,13 @@ function smooth(k: number): number {
 /** The shot `t` real seconds after the hero went down. */
 export function shotAt(t: number): KillCamShot {
   if (t < 0 || t >= killCamLength()) return IDLE_SHOT;
-  const { easeIn, hold } = KILL_CAM;
-  const phase: KillCamPhase = t < easeIn ? 'in' : t < easeIn + hold ? 'hold' : 'out';
-  const mix = phase === 'in' ? smooth(t / easeIn) : phase === 'hold' ? 1 : 1 - smooth((t - easeIn - hold) / KILL_CAM.easeOut);
-  const pulse = 0.5 - 0.5 * Math.cos(t * KILL_CAM.pulse * Math.PI * 2);
-  return { phase, scale: KILL_CAM.scale, zoom: 1 + (KILL_CAM.zoom - 1) * mix, mix, pulse };
+  const { stop, easeIn, hold } = KILL_CAM;
+  if (t < stop) return { phase: 'stop', scale: 0, zoom: 1, mix: 0, pulse: 0, flash: 1 - t / stop, fall: 0 };
+  const u = t - stop;
+  const phase: KillCamPhase = u < easeIn ? 'in' : u < easeIn + hold ? 'hold' : 'out';
+  const mix = phase === 'in' ? smooth(u / easeIn) : phase === 'hold' ? 1 : 1 - smooth((u - easeIn - hold) / KILL_CAM.easeOut);
+  const pulse = 0.5 - 0.5 * Math.cos(u * KILL_CAM.pulse * Math.PI * 2);
+  return { phase, scale: KILL_CAM.scale, zoom: 1 + (KILL_CAM.zoom - 1) * mix, mix, pulse, flash: 0, fall: smooth(u / KILL_CAM.fall) };
 }
 
 /** The point the cam eases toward: halfway from the hero to the source, the source clamped to `reach`. */
@@ -76,6 +89,14 @@ export class KillCam {
 
   stop(): void {
     this.t = -1;
+  }
+
+  /** A tap: after the first second, jumps to the ease out; whether it did. */
+  skip(): boolean {
+    const out = killCamLength() - KILL_CAM.easeOut;
+    if (this.t < KILL_CAM.skipAfter || this.t >= out) return false;
+    this.t = out;
+    return true;
   }
 
   /** Advances by `dt` real seconds; the shot now. */

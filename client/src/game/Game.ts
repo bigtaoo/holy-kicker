@@ -197,7 +197,7 @@ export class Game {
     this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, mountain: art.mountain, z: HERO_TOP_Z - 2 });
     this.aura = new AuraStack(scene.stack);
     this.zen = new ZenRing(this.world);
-    this.downCam = new KillCamView(this.world, { horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
+    this.downCam = new KillCamView(this.world, { hero: this.hero.view, horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
     this.lowHp = new LowHealthView(app.renderer, () => this.onHeartbeat());
 
     this.root.addChild(this.world, this.label);
@@ -275,7 +275,7 @@ export class Game {
     const real = Math.min(frameMs / 1000, 0.05);
     if (!this.stepping) {
       // a stopped run stands still, but for the kill cam's slow motion after the hero goes down
-      const dt = this.downCam.step(this.paused ? 0 : real);
+      const dt = this.downCam.step(this.paused ? 0 : real, this.stick.presses);
       this.draw(this.loop.alpha, dt, this.paused ? 0 : this.downCam.busy ? dt : real);
       return;
     }
@@ -482,7 +482,7 @@ export class Game {
     const res = this.app.renderer.resolution;
     const sh = this.shake.step(real); // real time, not sim time
     // the kill cam eases in toward the killing blow
-    const cam = this.downCam.frame(this.camPos);
+    const cam = this.downCam.frame(this.camPos, vp.playW / vp.scale, vp.playH / vp.scale);
     const k = vp.scale * cam.zoom;
     this.world.scale.set(k);
     this.world.position.set(snapToPixel(vp.playW / 2 - cam.x * k + sh.x, res), snapToPixel(vp.playH / 2 - cam.y * k + sh.y, res));

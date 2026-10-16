@@ -11,6 +11,8 @@ export class DragStick {
   private ox = 0;
   private oy = 0;
   private vec: Vec2 = { x: 0, y: 0 };
+  /** Fingers put down so far (a new tap shows as a change). */
+  presses = 0;
 
   constructor(
     private readonly radius = 70,
@@ -19,6 +21,7 @@ export class DragStick {
 
   down(id: number, x: number, y: number): void {
     if (this.id !== null) return;
+    this.presses++;
     this.id = id;
     this.ox = x;
     this.oy = y;

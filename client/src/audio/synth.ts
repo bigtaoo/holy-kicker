@@ -85,8 +85,11 @@ export const VOICES: Record<Cue, (k: Kit) => void> = {
     k.tone(320, 0.16, 0.6, { type: 'square', to: 140 });
     k.noise(0.08, 0.5, { cut: 1800 });
   },
+  // a heavy low thud as the blow lands, then the falling tone and the gong
   heroDown: (k) => {
-    k.tone(440, 0.9, 0.7, { type: 'triangle', to: 110 });
+    k.tone(80, 0.3, 1, { to: 34, attack: 0.005 });
+    k.noise(0.12, 0.6, { cut: 400 });
+    k.tone(440, 0.9, 0.7, { type: 'triangle', to: 110, at: 0.12 });
     k.metal(98, GONG, 1.6, 0.6, 0.1);
   },
   revive: (k) => [523, 659, 784, 1047].forEach((f, i) => k.tone(f, 0.25, 0.6, { type: 'triangle', at: i * 0.07 })),

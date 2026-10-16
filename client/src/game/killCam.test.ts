@@ -2,12 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { IDLE_SHOT, KILL_CAM, KillCam, focusPoint, killCamLength, mixColor, mulColor, shotAt } from './killCam';
 
 describe('shotAt', () => {
+  it('freezes with a flash as the blow lands', () => {
+    expect(shotAt(0)).toMatchObject({ phase: 'stop', scale: 0, flash: 1, mix: 0 });
+    expect(shotAt(KILL_CAM.stop / 2).flash).toBeCloseTo(0.5);
+    expect(shotAt(KILL_CAM.stop).flash).toBe(0);
+  });
+
   it('eases in, holds at full zoom in slow motion, and eases back out', () => {
-    expect(shotAt(0)).toMatchObject({ phase: 'in', zoom: 1, mix: 0, scale: KILL_CAM.scale });
-    const mid = shotAt(KILL_CAM.easeIn / 2);
+    const t0 = KILL_CAM.stop;
+    expect(shotAt(t0)).toMatchObject({ phase: 'in', zoom: 1, mix: 0, scale: KILL_CAM.scale });
+    const mid = shotAt(t0 + KILL_CAM.easeIn / 2);
     expect(mid.zoom).toBeGreaterThan(1);
     expect(mid.zoom).toBeLessThan(KILL_CAM.zoom);
-    expect(shotAt(KILL_CAM.easeIn + 0.01)).toMatchObject({ phase: 'hold', zoom: KILL_CAM.zoom, mix: 1 });
+    expect(shotAt(t0 + KILL_CAM.easeIn + 0.01)).toMatchObject({ phase: 'hold', zoom: KILL_CAM.zoom, mix: 1 });
     const out = shotAt(killCamLength() - 0.01);
     expect(out.phase).toBe('out');
     expect(out.mix).toBeLessThan(0.05);
@@ -17,6 +24,12 @@ describe('shotAt', () => {
     expect(shotAt(-1)).toBe(IDLE_SHOT);
     expect(shotAt(killCamLength())).toBe(IDLE_SHOT);
     expect(IDLE_SHOT.scale).toBe(1);
+  });
+
+  it('tips the hero over early and keeps him down', () => {
+    expect(shotAt(KILL_CAM.stop).fall).toBe(0);
+    expect(shotAt(KILL_CAM.stop + KILL_CAM.fall).fall).toBe(1);
+    expect(shotAt(killCamLength() - 0.01).fall).toBe(1);
   });
 
   it('keeps the pulse within 0..1', () => {
@@ -42,6 +55,17 @@ describe('KillCam', () => {
     expect(frames / 60).toBeCloseTo(killCamLength(), 1);
     expect(killCamLength()).toBeGreaterThan(2.8);
     expect(killCamLength()).toBeLessThan(3.2);
+  });
+
+  it('skips to the ease out on a tap, but not in the first second', () => {
+    const c = new KillCam();
+    c.start();
+    c.step(0.5);
+    expect(c.skip()).toBe(false);
+    c.step(0.6);
+    expect(c.skip()).toBe(true);
+    expect(c.step(0.01).phase).toBe('out');
+    expect(c.skip()).toBe(false);
   });
 
   it('stops at once', () => {
