@@ -29,7 +29,7 @@ describe('shotAt', () => {
 });
 
 describe('KillCam', () => {
-  it('runs for about a second of real time after start, then goes idle', () => {
+  it('runs for about three seconds of real time after start, then goes idle', () => {
     const c = new KillCam();
     expect(c.busy).toBe(false);
     expect(c.step(0.1)).toBe(IDLE_SHOT);
@@ -40,8 +40,8 @@ describe('KillCam', () => {
       frames++;
     }
     expect(frames / 60).toBeCloseTo(killCamLength(), 1);
-    expect(killCamLength()).toBeGreaterThan(0.8);
-    expect(killCamLength()).toBeLessThan(1.5);
+    expect(killCamLength()).toBeGreaterThan(2.8);
+    expect(killCamLength()).toBeLessThan(3.2);
   });
 
   it('stops at once', () => {

@@ -1,4 +1,4 @@
-// The kill cam: when the hero goes down, the view runs in slow motion for about a second while
+// The kill cam: when the hero goes down, the view runs in slow motion for about three seconds while
 // the camera eases in toward the point between him and the blow that felled him, so the player
 // sees what killed him before the death panel opens. The sim has already stopped (the run is
 // lost); only the view's time slows. Pure timeline maths, used by killCamView.ts.
@@ -7,9 +7,9 @@ export const KILL_CAM = {
   /** View time per real time while the cam runs. */
   scale: 0.25,
   /** Real seconds to ease in, to hold, and to ease back out. */
-  easeIn: 0.3,
-  hold: 0.45,
-  easeOut: 0.3,
+  easeIn: 0.4,
+  hold: 2.2,
+  easeOut: 0.4,
   /** Camera zoom at the hold. */
   zoom: 1.25,
   /** World units the blow's source counts at most away from the hero, so he stays in view. */

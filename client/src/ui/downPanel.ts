@@ -6,7 +6,8 @@ import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The death panel: "You fell", what did it with a picture and one tip for next time, the nearest
-// goal the run fell short of, then the revive (free from training or with an ad) and the way out.
+// goal the run fell short of, then the revive (free from training or with an ad) and the way out;
+// with no revive left, Play again comes first (the same chapter at once) and the way out steps back.
 
 /** Death panel: no revive to offer, a free one (training), the ad offered, or the ad playing. */
 export type Down = 'none' | 'free' | 'offered' | 'playing';
@@ -14,6 +15,8 @@ export type Down = 'none' | 'free' | 'offered' | 'playing';
 export interface DownActions {
   revive(): void;
   giveUp(): void;
+  /** Ends the run and starts the same chapter again. */
+  again(): void;
 }
 
 const W = 940;
@@ -41,8 +44,9 @@ export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: n
   }
   // the way out matches the revive in size, font and colour, so declining the ad never looks
   // disabled (CrazyGames' rewarded-ad rules)
-  const giveUp = button(t('run.giveUp'), 640, 150, () => actions.giveUp());
-  if (down !== 'none') {
+  const giveUp = button(t('run.giveUp'), 640, 150, () => actions.giveUp(), { fill: down === 'none' ? COLORS.panelLocked : COLORS.saffron });
+  if (down === 'none') items.push([button(t('results.again'), 640, 150, () => actions.again()), 190]);
+  else {
     const playing = down === 'playing';
     const free = down === 'free';
     const revive = button(playing ? '…' : free ? t('run.reviveFree') : t('run.revive'), 640, 150, () => actions.revive(), {

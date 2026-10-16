@@ -357,6 +357,7 @@ export class Shell {
         updateSettings(this.platform.storage, { fast });
       },
       giveUp: () => this.endRun(),
+      again: () => this.endRun(true),
       revive: () => this.revive(),
       pick: (index) => this.game?.pick(index),
       setLanguage: (locale) => this.keepLanguage(locale),
@@ -413,7 +414,8 @@ export class Shell {
     return true;
   }
 
-  private endRun(): void {
+  /** Ends the run and settles it; `again` (the death panel's Play again) goes straight into the next run. */
+  private endRun(again = false): void {
     if (!this.game) return;
     const s = this.game.engine.state;
     this.game.destroy();
@@ -423,16 +425,17 @@ export class Shell {
     if (!this.watch?.downShown) this.portal.gameplayStop();
     const cause = this.watch?.cause ?? null;
     this.watch = null;
-    this.settle(s, cause);
+    this.settle(s, cause, again);
   }
 
   /**
    * Pays out the run that ended in `s` (won, lost or given up; `waves` are the ones fully cleared)
    * and shows the results. Tells the backend how it went, and enters it on its board when no dev
-   * switch bent the rules; the results show its rank there once it comes (none offline, unranked or failed).
-   * A lost run also says what felled the hero (`cause`, RunWatch) and is kept as the chapter's last fall.
+   * switch bent the rules; the results show its rank there once it comes (none offline, unranked or failed). A lost
+   * run also says what felled the hero (`cause`, RunWatch), is kept as the chapter's last fall, and `again` skips the
+   * results (the death panel's Play again) unless a gift came that they announce.
    */
-  private settle(s: SimState, cause: DeathCause | null = null): void {
+  private settle(s: SimState, cause: DeathCause | null = null, again = false): void {
     dropRun(this.platform.storage);
     const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
     const p = s.players[0];
@@ -451,18 +454,17 @@ export class Shell {
     this.commit(save);
     if (gift) this.net.track('claim', { what: 'gift', n: 0, copper: gift.copper, jade: gift.jade, drops: gift.drops.length });
     if (reward.firstClear) this.portal.celebrate();
-    this.showResults({ ...reward, gift }, waves, rank);
+    if (again && !gift) this.between(() => this.play(this.chapter, undefined, true));
+    else this.showResults({ ...reward, gift }, waves, rank);
   }
 
+  /** The break between runs: the interstitial, never after the first run (the tutorial), so a new player reaches the lobby before any ad. */
+  private readonly between = (then: () => void) => void (this.save.runs > 1 ? this.ads.midgame() : Promise.resolve()).then(then);
+
   private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>): void {
-    let leaving = false;
-    // the interstitial sits on the break after the results, never inside a run, and never after
-    // the first run (the tutorial), so a new player reaches the lobby before any ad
-    const leave = (then: () => void) => {
-      if (leaving) return;
-      leaving = true;
-      void (this.save.runs > 1 ? this.ads.midgame() : Promise.resolve()).then(then);
-    };
+    // the interstitial sits on the break after the results (once, whichever button), never inside a run
+    let left = false;
+    const leave = (then: () => void) => void (left || ((left = true), this.between(then)));
     this.setScreen(new ResultsScreen(reward, waves, {
       double: async () => {
         const paid = await this.rewarded('double');

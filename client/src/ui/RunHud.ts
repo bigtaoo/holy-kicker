@@ -23,6 +23,8 @@ export interface RunActions {
   /** Runs the sim at double speed, or back at normal. */
   setFast(fast: boolean): void;
   giveUp(): void;
+  /** Ends the lost run and starts the same chapter again. */
+  again(): void;
   /** Revives, free or after the rewarded ad; resolves whether it did. */
   revive(): Promise<boolean>;
   /** Takes card `index` of the level-up offer. */
@@ -134,7 +136,7 @@ export class RunHud implements Screen {
     }
     if (this.paused) this.pausePanel(f);
     if (this.down) {
-      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }));
+      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp(), again: () => this.actions.again() }));
     }
   }
 
