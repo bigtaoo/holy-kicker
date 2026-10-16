@@ -1,5 +1,5 @@
 import { CARP, EMPOWERED_CARP, HURT } from '../config';
-import type { SimEvent } from '../events';
+import type { HurtFn, SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Boss, Player, SimState } from '../state';
 import { ring } from './threats';
@@ -23,7 +23,7 @@ function swimTo(b: Boss, x: number, y: number, step: number, stop: number): void
 }
 
 /** Steps a carp that is not down; `target` is the nearest player. */
-export function stepCarp(s: SimState, b: Boss, target: Player, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+export function stepCarp(s: SimState, b: Boss, target: Player, events: SimEvent[], hurt: HurtFn): void {
   if (b.phase === 'walk') {
     swimTo(b, target.x, target.y, CARP.speed, CARP.stopDist);
     if (--b.cooldown > 0) return;
@@ -52,7 +52,7 @@ export function stepCarp(s: SimState, b: Boss, target: Player, events: SimEvent[
     b.t = 0;
     events.push({ type: 'bossSlam', x: b.zoneX, y: b.zoneY, radius: CARP.radius });
     const r2 = CARP.radius * CARP.radius;
-    for (const p of s.players) if (dist2(p.x - b.zoneX, p.y - b.zoneY) <= r2) hurt(p.owner, HURT.surface);
+    for (const p of s.players) if (dist2(p.x - b.zoneX, p.y - b.zoneY) <= r2) hurt(p.owner, HURT.surface, 'slam', b.zoneX, b.zoneY);
     ring(s, b.zoneX, b.zoneY, CARP.radius, b.empowered ? EMPOWERED_CARP.ring : CARP.ring, s.tick);
     return;
   }

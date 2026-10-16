@@ -111,6 +111,8 @@ export const HURT = {
   crowdPercent: 25,
   crowdDist: toFp(140),
   crowdMax: 4,
+  /** With this many other mobs pressing in, a blow counts as the crowd's ('crowd' hurt source, for the death panel). */
+  crowdSource: 2,
   swarm: 3,
   elite: 12,
   charge: 22,

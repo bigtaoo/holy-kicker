@@ -11,8 +11,8 @@ describe('eventCue', () => {
   });
 
   it('keeps the sandbox\'s harmless hurts quiet', () => {
-    expect(eventCue({ type: 'hurt', owner: 0, value: 0 }, 0)).toBeNull();
-    expect(eventCue({ type: 'hurt', owner: 0, value: 5 }, 0)).toBe('hurt');
+    expect(eventCue({ type: 'hurt', owner: 0, value: 0, src: 'mob', x: 0, y: 0 }, 0)).toBeNull();
+    expect(eventCue({ type: 'hurt', owner: 0, value: 5, src: 'mob', x: 0, y: 0 }, 0)).toBe('hurt');
   });
 
   it('tells crits and ball hits from plain hits', () => {

@@ -5,6 +5,16 @@ import type { CardKind } from './content';
 // (animations, effects, numbers, sounds). Rebuilt every tick; positions are FP. When several
 // ticks run in one frame the view gets all of their events.
 
+/**
+ * What hurt a player: a mob's blow ('crowd' when other mobs pressed in on him too), an elite or
+ * the boss touching him, an elite's charge, a boss's slam (or the carp surfacing), an emerger
+ * rising under him, a bullet, or a ground zone going off.
+ */
+export type HurtSource = 'mob' | 'crowd' | 'elite' | 'boss' | 'charge' | 'slam' | 'emerge' | 'bullet' | 'zone';
+
+/** How systems hurt a player: `value` before the chapter's scaling, from `src` standing at (x, y) (FP). */
+export type HurtFn = (owner: number, value: number, src: HurtSource, x: number, y: number) => void;
+
 /** What a hit landed on: a horde mob (by index), an elite or the boss. */
 export type TargetKind = 'mob' | 'elite' | 'boss';
 
@@ -15,8 +25,8 @@ export type SimEvent =
   | { type: 'sweep'; owner: number; x: number; y: number; brad: number; reach: number; full: boolean }
   /** A player tapped the wooden fish: a ring grows from (x, y) to `reach`; `stun` for the Stunning Bell's fourth. */
   | { type: 'ring'; owner: number; x: number; y: number; reach: number; stun: boolean }
-  /** A player took `value` damage (0 in the sandbox, where heroes cannot die). */
-  | { type: 'hurt'; owner: number; value: number }
+  /** A player took `value` damage (0 in the sandbox, where heroes cannot die) from `src` at (x, y). */
+  | { type: 'hurt'; owner: number; value: number; src: HurtSource; x: number; y: number }
   | { type: 'heroDown'; owner: number }
   /** The fat monk's belly bounced the enemies within `radius` of (x, y) back. */
   | { type: 'bounce'; owner: number; x: number; y: number; radius: number }

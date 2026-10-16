@@ -1,5 +1,5 @@
 import { CASTER, EMERGE, HURT, MONK, SHOOTER, TOAD_KING } from '../config';
-import type { SimEvent } from '../events';
+import type { HurtFn, SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import { teleport, type Elite, type Mob, type SimState } from '../state';
@@ -26,7 +26,7 @@ export function resetMob(s: SimState, m: Mob): void {
  * Emergers under the ground count down; with `warn` left they move to a mark near their hero
  * (where it is then), and at 0 they rise, hurting a hero standing on the mark.
  */
-export function emergeSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+export function emergeSystem(s: SimState, events: SimEvent[], hurt: HurtFn): void {
   for (let i = 0; i < s.mobs.length; i++) {
     const m = s.mobs[i];
     if (m.kind !== 'emerger' || m.t <= 0) continue;
@@ -40,7 +40,7 @@ export function emergeSystem(s: SimState, events: SimEvent[], hurt: (owner: numb
     if (m.t > 0) continue;
     events.push({ type: 'emerge', index: i, x: m.x, y: m.y });
     const grab2 = EMERGE.grab * EMERGE.grab;
-    for (const p of s.players) if (!p.dead && dist2(p.x - m.x, p.y - m.y) < grab2) hurt(p.owner, HURT.emerge);
+    for (const p of s.players) if (!p.dead && dist2(p.x - m.x, p.y - m.y) < grab2) hurt(p.owner, HURT.emerge, 'emerge', m.x, m.y);
   }
 }
 

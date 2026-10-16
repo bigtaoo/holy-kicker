@@ -1,5 +1,5 @@
 import { BALL, HARD, HERO, HURT, rampChapter, ZEN } from '../config';
-import type { SimEvent } from '../events';
+import type { HurtSource, SimEvent } from '../events';
 import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -80,7 +80,7 @@ export function chapterHurt(chapter: number, value: number, wave: number, hard =
   return Math.trunc((value * pct) / 100);
 }
 
-export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value: number): void {
+export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value: number, src: HurtSource = 'mob', x = 0, y = 0): void {
   const p = s.players.find((q) => q.owner === owner);
   if (!p || p.dead || p.hurtCd > 0) return;
   if (breakBell(s, events, p)) return;
@@ -91,7 +91,7 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   p.actionT = 0;
   const dealt = s.config.waves > 0 ? Math.min(p.hp, chapterHurt(s.config.chapter, value, s.wave, s.config.hard)) : 0;
   p.hp -= dealt;
-  events.push({ type: 'hurt', owner, value: dealt });
+  events.push({ type: 'hurt', owner, value: dealt, src, x, y });
   if (p.hp > 0) return bellyBounce(s, events, p);
   p.dead = true;
   p.action = 'none';
@@ -172,7 +172,14 @@ export function contactSystem(s: SimState, events: SimEvent[]): void {
     const value = t < s.mobs.length
       ? s.mobs[t].kind === 'swarm' || s.mobs[t].kind === 'shard' ? HURT.swarm : mob()
       : t < bossIndex(s) ? HURT.elite : HURT.boss;
-    hurtPlayer(s, events, p.owner, t < s.mobs.length ? Math.trunc((value * (100 + HURT.crowdPercent * pressing(s, p))) / 100) : value);
+    if (t >= s.mobs.length) {
+      const big = t < bossIndex(s) ? s.elites[t - s.mobs.length] : s.boss;
+      hurtPlayer(s, events, p.owner, value, t < bossIndex(s) ? 'elite' : 'boss', big?.x ?? p.x, big?.y ?? p.y);
+      continue;
+    }
+    const press = pressing(s, p);
+    const m = s.mobs[t];
+    hurtPlayer(s, events, p.owner, Math.trunc((value * (100 + HURT.crowdPercent * press)) / 100), press >= HURT.crowdSource ? 'crowd' : 'mob', m.x, m.y);
   }
 }
 

@@ -140,13 +140,13 @@ describe('chapter run', () => {
     const p = s.players[0];
     touch(e);
     // the opening crowd hits for its share (openingShare)
-    expect(e.step([still(e)])).toContainEqual({ type: 'hurt', owner: 0, value: Math.trunc((HURT.mob * openingShare(1, 1)) / 100) });
+    expect(e.step([still(e)])).toContainEqual(expect.objectContaining({ type: 'hurt', owner: 0, value: Math.trunc((HURT.mob * openingShare(1, 1)) / 100) }));
     p.hp = HERO.hp;
     p.hurtCd = 0;
     s.wave = 9;
     touch(e);
     const ev = e.step([still(e)]);
-    expect(ev).toContainEqual({ type: 'hurt', owner: 0, value: HURT.mob });
+    expect(ev).toContainEqual(expect.objectContaining({ type: 'hurt', owner: 0, value: HURT.mob }));
     expect(p.hp).toBe(HERO.hp - HURT.mob);
 
     p.hp = 1;
@@ -178,7 +178,7 @@ describe('chapter run', () => {
     const s = e.state;
     touch(e);
     const ev = e.step([still(e)]);
-    expect(ev).toContainEqual({ type: 'hurt', owner: 0, value: 0 });
+    expect(ev).toContainEqual(expect.objectContaining({ type: 'hurt', owner: 0, value: 0 }));
     expect(s.players[0].hp).toBe(HERO.hp);
     expect(s.wave).toBe(0);
     expect(s.elites[0].hp).toBe(ELITE.hp);

@@ -1,5 +1,5 @@
 import { HERO, type RunConfig } from './config';
-import type { SimEvent } from './events';
+import type { HurtFn, SimEvent } from './events';
 import { SpatialGrid } from './grid';
 import { LocalInputSource, type InputSource, type PlayerCommand } from './input';
 import { toFp } from './math/fixed';
@@ -63,7 +63,7 @@ export class Engine {
   step(cmds: readonly PlayerCommand[]): SimEvent[] {
     const s = this.state;
     const events: SimEvent[] = (this.events = []);
-    const hurt = (owner: number, value: number) => hurtPlayer(s, events, owner, value);
+    const hurt: HurtFn = (owner, value, src, x, y) => hurtPlayer(s, events, owner, value, src, x, y);
     s.tick++;
     // network order is not the sim's business: commands apply by owner
     applyInput(s, events, [...cmds].sort((a, b) => a.owner - b.owner));

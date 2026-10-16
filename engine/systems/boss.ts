@@ -1,5 +1,5 @@
 import { BOSS, CARP, DEMON, EMPOWERED, HURT, JUDGE, WITCH, type BossKind } from '../config';
-import type { SimEvent } from '../events';
+import type { HurtFn, SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import { body, teleport, type Boss, type SimState } from '../state';
@@ -33,7 +33,7 @@ export function hurtBoss(b: Boss, value: number): boolean {
 }
 
 /** Steps the boss; calls `hurt` for every player the slam lands on. */
-export function bossSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+export function bossSystem(s: SimState, events: SimEvent[], hurt: HurtFn): void {
   const b = s.boss;
   if (!b) return;
   b.px = b.x;
@@ -90,7 +90,7 @@ export function bossSystem(s: SimState, events: SimEvent[], hurt: (owner: number
     b.t = 0;
     events.push({ type: 'bossSlam', x: b.zoneX, y: b.zoneY, radius: BOSS.slamRadius });
     const r2 = BOSS.slamRadius * BOSS.slamRadius;
-    for (const p of s.players) if (dist2(p.x - b.zoneX, p.y - b.zoneY) <= r2) hurt(p.owner, HURT.slam);
+    for (const p of s.players) if (dist2(p.x - b.zoneX, p.y - b.zoneY) <= r2) hurt(p.owner, HURT.slam, 'slam', b.zoneX, b.zoneY);
     if (b.empowered) ring(s, b.zoneX, b.zoneY, BOSS.slamRadius, EMPOWERED.ring, s.tick);
     return;
   }

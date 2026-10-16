@@ -1,5 +1,5 @@
 import { HURT, THREATS } from '../config';
-import type { SimEvent } from '../events';
+import type { HurtFn, SimEvent } from '../events';
 import { dist, dist2, FP } from '../math/fixed';
 import { atan2B, BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { SimState } from '../state';
@@ -10,7 +10,7 @@ import { nearestPlayer } from './horde';
 // blast (the toad king's poison pools, or the test's random ones).
 
 /** Flies every bullet; one that meets a player hurts him and is gone. */
-export function bulletSystem(s: SimState, hurt: (owner: number, value: number) => void): void {
+export function bulletSystem(s: SimState, hurt: HurtFn): void {
   const p = THREATS;
   const hit2 = p.hitRadius * p.hitRadius;
   let w = 0;
@@ -23,7 +23,7 @@ export function bulletSystem(s: SimState, hurt: (owner: number, value: number) =
     let hit = false;
     for (const pl of s.players) {
       if (dist2(b.x - pl.x, b.y - pl.y) < hit2) {
-        hurt(pl.owner, HURT.bullet);
+        hurt(pl.owner, HURT.bullet, 'bullet', b.x, b.y);
         hit = true;
       }
     }
@@ -46,7 +46,7 @@ export function threatSystem(s: SimState): void {
 }
 
 /** Ages every zone; one at THREATS.warn goes off, hurting the players in it. */
-export function zoneSystem(s: SimState, events: SimEvent[], hurt: (owner: number, value: number) => void): void {
+export function zoneSystem(s: SimState, events: SimEvent[], hurt: HurtFn): void {
   const p = THREATS;
   let w = 0;
   for (const z of s.zones) {
@@ -56,7 +56,7 @@ export function zoneSystem(s: SimState, events: SimEvent[], hurt: (owner: number
       continue;
     }
     events.push({ type: 'blast', x: z.x, y: z.y, radius: z.radius });
-    for (const pl of s.players) if (dist2(z.x - pl.x, z.y - pl.y) < z.radius * z.radius) hurt(pl.owner, z.hurt);
+    for (const pl of s.players) if (dist2(z.x - pl.x, z.y - pl.y) < z.radius * z.radius) hurt(pl.owner, z.hurt, 'zone', z.x, z.y);
   }
   s.zones.length = w;
 }

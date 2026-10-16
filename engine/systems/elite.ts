@@ -1,5 +1,5 @@
 import { ELITE, HURT, WOLF_LEADER } from '../config';
-import type { SimEvent } from '../events';
+import type { HurtFn, SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import type { Elite, SimState } from '../state';
 import { nearestPlayer, stepHorde, walkSpeed } from './horde';
@@ -16,8 +16,6 @@ import { howl } from './snow';
 // Chapter 2's toad king (systems/marsh.ts) shoots instead. Chapter 3's wolf leader charges
 // faster and, every other time, howls instead (systems/snow.ts): the mobs around it run fast.
 // Chapter 4's door god shields itself and smashes (systems/ghost.ts).
-
-export type HurtFn = (owner: number, value: number) => void;
 
 /** Ticks a charge lasts. */
 export const DASH_TICKS = Math.ceil(ELITE.dashLength / ELITE.dashSpeed);
@@ -47,7 +45,7 @@ function stepElite(s: SimState, e: Elite, events: SimEvent[], hurt: HurtFn): voi
     e.x += e.vx;
     e.y += e.vy;
     const lane2 = ELITE.laneHalf * ELITE.laneHalf;
-    for (const p of s.players) if (!p.dead && dist2(p.x - e.x, p.y - e.y) < lane2) hurt(p.owner, HURT.charge);
+    for (const p of s.players) if (!p.dead && dist2(p.x - e.x, p.y - e.y) < lane2) hurt(p.owner, HURT.charge, 'charge', e.x, e.y);
     if (e.t >= DASH_TICKS) enter(e, 'rest');
   } else if (e.phase === 'rest') {
     if (e.t >= ELITE.rest) {
