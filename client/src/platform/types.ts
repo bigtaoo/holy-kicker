@@ -72,9 +72,9 @@ export interface Platform {
 
 /** A host's analytics (Playgama's telemetry, through Bridge). */
 export interface HostAnalytics {
-  /** Whether the player's privacy answer lets anything go out now (Backend.setSharing). */
+  /** False once the player turned sharing off (Backend.setSharing); a held answer still sends. */
   share(on: boolean): void;
-  /** Every event the backend tracks, as it is tracked while sharing is on. */
+  /** Every event the backend tracks, as it is tracked, unless sharing is off. */
   event(e: EventName, p?: Record<string, PropValue>): void;
   /** One battle frame's length in ms (the lobby, pauses and card choices left out). */
   frame(ms: number): void;

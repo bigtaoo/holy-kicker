@@ -4,7 +4,8 @@ import { PerfSampler, progressionEvent } from './telemetry';
 
 // The game's one telemetry adapter for Playgama (telemetry.ts says what goes out): run events as
 // a progression funnel and `performance_sample`, both through Bridge's custom events until it has
-// system events. Nothing goes while the player's privacy answer holds or refuses sharing.
+// system events. Nothing goes once the player turned sharing off; a held answer (the EEA before
+// the player says yes) does not stop it, as Bridge's own telemetry runs then too.
 
 /** Chrome's JS heap in MB, or undefined where the browser does not say. */
 function heapMB(): number | undefined {

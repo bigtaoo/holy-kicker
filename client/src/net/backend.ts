@@ -81,7 +81,7 @@ export class Backend {
   /** What may go out from now on: held events go once sharing is on, and are dropped once it is off. */
   setSharing(s: Sharing): void {
     this.sharing = s;
-    this.platform.analytics?.share(s === 'send');
+    this.platform.analytics?.share(s !== 'off');
     if (s === 'off') this.queue.clear();
     if (s === 'send') void this.flush();
   }
@@ -100,9 +100,13 @@ export class Backend {
     return this.base !== null;
   }
 
-  /** Queues an event for the backend; the host's own analytics (Platform.analytics) gets it too, while sharing is on. */
+  /**
+   * Queues an event for the backend. The host's own analytics (Platform.analytics) gets it at once
+   * unless the player turned sharing off: it is the portal's anonymous gameplay telemetry, which
+   * the portal collects under its own terms, so it does not wait for the yes our backend waits for.
+   */
   track(e: EventName, p?: Record<string, PropValue>): void {
-    if (this.sharing === 'send') this.platform.analytics?.event(e, p);
+    if (this.sharing !== 'off') this.platform.analytics?.event(e, p);
     if (this.base && this.sharing !== 'off') this.queue.push(e, Date.now(), p);
   }
 
