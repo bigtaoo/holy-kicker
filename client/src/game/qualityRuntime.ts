@@ -22,6 +22,8 @@ export class QualityRuntime {
   private last = 0;
   /** Each battle frame's length (ms) and the level it ran on (perf telemetry); calm frames never come here. */
   onBattleFrame: (ms: number, level: number) => void = () => {};
+  /** onBattleFrame threw once (logged then, not every frame after). */
+  private faulted = false;
 
   constructor(
     private readonly app: Application,
@@ -47,7 +49,13 @@ export class QualityRuntime {
       if (this.last > 0 && !calm) {
         const level = this.governor.level;
         if (this.governor.sample((now - this.last) / 1000)) this.apply();
-        this.onBattleFrame(now - this.last, level);
+        // telemetry only watches: a fault in it must never stop the game's frame below
+        try {
+          this.onBattleFrame(now - this.last, level);
+        } catch (err) {
+          if (!this.faulted) console.error(err);
+          this.faulted = true;
+        }
       }
       this.last = now;
       app.ticker.update(now);

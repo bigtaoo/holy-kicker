@@ -30,7 +30,7 @@ function heapMB(): number | undefined {
 /** Reads what the game holds now: the stage's display objects, the renderer's textures, the heap. */
 export function memProbe(app: Application): () => MemSample {
   return () => {
-    const sources = (app.renderer as { texture?: { managedTextures?: readonly TextureSource[] } }).texture?.managedTextures ?? [];
+    const sources = (app.renderer as { texture?: { managedTextures?: readonly (TextureSource | null)[] } }).texture?.managedTextures ?? [];
     const sample: MemSample = { ...textureStats(sources), nodes: countNodes(app.stage) };
     const heap = heapMB();
     if (heap !== undefined) sample.heap = heap;

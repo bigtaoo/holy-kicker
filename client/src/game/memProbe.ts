@@ -29,9 +29,17 @@ export function countNodes(root: Node): number {
   return n;
 }
 
-/** Texture count and size in MB (4 bytes a pixel, mipmaps left out) of a renderer's managed texture sources. */
-export function textureStats(sources: readonly { pixelWidth: number; pixelHeight: number }[]): { tex: number; texMB: number } {
+/**
+ * Texture count and size in MB (4 bytes a pixel, mipmaps left out) of a renderer's managed texture
+ * sources. Pixi leaves a null where it unloaded one (GCManagedHash), so those are skipped.
+ */
+export function textureStats(sources: readonly ({ pixelWidth: number; pixelHeight: number } | null | undefined)[]): { tex: number; texMB: number } {
   let bytes = 0;
-  for (const s of sources) bytes += (s.pixelWidth || 0) * (s.pixelHeight || 0) * 4;
-  return { tex: sources.length, texMB: Math.round(bytes / 2 ** 20) };
+  let tex = 0;
+  for (const s of sources) {
+    if (!s) continue;
+    tex++;
+    bytes += (s.pixelWidth || 0) * (s.pixelHeight || 0) * 4;
+  }
+  return { tex, texMB: Math.round(bytes / 2 ** 20) };
 }
