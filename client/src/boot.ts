@@ -17,7 +17,14 @@ import { Shell } from './ui/Shell';
 // Boot shared by every entry: the language, the renderer, the art, then the shell. The
 // platform is fully initialised before this runs (CrazyGames waits for its SDK first, since
 // the save lives in the SDK's data module).
+/** The page's loading screen bar (index.html), at `share` of the way; no page on WeChat. */
+function bootBar(share: number): void {
+  if (typeof document !== 'undefined') document.getElementById?.('boot')?.style.setProperty('--p', share.toFixed(3));
+}
+
 export async function boot(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean } = {}) {
+  // the script is in: about a third of the way (the bar crept there on its own while it came)
+  bootBar(0.3);
   const settings = loadSettings(platform.storage);
   setLocale(pickLocale(settings, platform.languages()));
   let mode = scene.quality ?? settings.quality;
@@ -31,7 +38,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   const net = new Backend(platform, base, __HK_BUILD__, getLocale);
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
   const privacy = base ? new PrivacyChoice(net, platform, base, deviceTimeZone()) : null;
-  const shell = new Shell(app, platform, await loadArt(platform, scene), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
+  const shell = new Shell(app, platform, await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k)), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
   const probe = memProbe(app);
@@ -53,6 +60,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     low = !low;
     quality.setRange(levelRange(mode, device, low));
   });
+  bootBar(0.95);
   await shell.start(opts.direct);
   // the page's loading screen (index.html) goes once the first screen is up; no page on WeChat
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
