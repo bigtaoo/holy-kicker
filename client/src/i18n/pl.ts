@@ -265,7 +265,7 @@ export const pl: Table<typeof en> = {
     hardUnlocked: 'Tryb trudny otwarty: silniejsi wrogowie, lepszy ekwipunek',
     fallen: 'Koniec rozgrywki',
     copper: 'Miedź +{n}',
-    chest: 'Skrzynia (fala {wave}): miedź +{copper}, jadeit +{jade}',
+    chests: 'Odblokowane skrzynie ×{n}: otwórz je w lobby',
     newBest: 'Nowy rekord!',
     best: 'Rekord: {wave} fal',
     again: 'Zagraj ponownie',

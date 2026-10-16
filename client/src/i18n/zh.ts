@@ -265,7 +265,7 @@ export const zh: Table<typeof en> = {
     hardUnlocked: '困难模式已开启：敌人更强，装备更好',
     fallen: '本局结束',
     copper: '铜钱 +{n}',
-    chest: '宝箱（第 {wave} 波）：铜钱 +{copper}，玉 +{jade}',
+    chests: '解锁宝箱 ×{n}：回大厅领取',
     newBest: '新纪录！',
     best: '最佳：{wave} 波',
     again: '再来一局',

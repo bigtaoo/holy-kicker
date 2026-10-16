@@ -265,7 +265,7 @@ export const ru: Table<typeof en> = {
     hardUnlocked: 'Открыт сложный режим: враги сильнее, вещи лучше',
     fallen: 'Забег окончен',
     copper: 'Медь +{n}',
-    chest: 'Сундук (волна {wave}): медь +{copper}, нефрит +{jade}',
+    chests: 'Открыто сундуков ×{n}: забери в лобби',
     newBest: 'Новый рекорд!',
     best: 'Рекорд: {wave} волн',
     again: 'Играть снова',

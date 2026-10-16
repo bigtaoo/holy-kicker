@@ -265,7 +265,7 @@ export const pt: Table<typeof en> = {
     hardUnlocked: 'Modo difícil liberado: inimigos mais duros, equipamento melhor',
     fallen: 'Fim da partida',
     copper: 'Cobre +{n}',
-    chest: 'Baú (onda {wave}): cobre +{copper}, jade +{jade}',
+    chests: 'Baús desbloqueados ×{n}: abra no lobby',
     newBest: 'Novo recorde!',
     best: 'Recorde: {wave} ondas',
     again: 'Jogar de novo',

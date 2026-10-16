@@ -6,6 +6,7 @@ import { BALANCE } from '../meta/balance';
 import { claimable, claimBonus, claimTask, tasksOpen } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
+import { openProgressChest } from '../meta/progressChests';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
 import { claimGift, giftReady, nextGift } from '../meta/welcome';
@@ -158,6 +159,11 @@ export class EconomyUi {
     }, { fill: ready ? COLORS.saffron : COLORS.panelLocked, size: 44, icon: iconSprite(this.host.icons, 'chest_free', 76) });
     if (ready) b.addChild(dot(465, -40));
     return b;
+  }
+
+  /** Opens a progress chest the runs reached (progressChests.ts) and shows what it paid. */
+  progressChest(chapter: number, hard: boolean, index: number): void {
+    this.pay(openProgressChest(this.host.save(), chapter, hard, index), 'claim', { what: 'progressChest', chapter, hard, index });
   }
 
   /** The Shop tab, centred on x = 0 from y = 0 down (shopHeight tall). */

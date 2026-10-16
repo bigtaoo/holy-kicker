@@ -265,7 +265,7 @@ export const ja: Table<typeof en> = {
     hardUnlocked: 'ハードモード解放：敵は強く、装備は良く',
     fallen: 'プレイ終了',
     copper: '銅銭 +{n}',
-    chest: '宝箱（ウェーブ{wave}）：銅銭 +{copper}、玉 +{jade}',
+    chests: '宝箱解放 ×{n}：ロビーで開けよう',
     newBest: '新記録！',
     best: '最高記録：{wave} ウェーブ',
     again: 'もう一度',

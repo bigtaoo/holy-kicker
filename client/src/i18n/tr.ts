@@ -265,7 +265,7 @@ export const tr: Table<typeof en> = {
     hardUnlocked: 'Zor mod açıldı: sert düşmanlar, iyi eşyalar',
     fallen: 'Tur bitti',
     copper: 'Bakır +{n}',
-    chest: 'Sandık (dalga {wave}): bakır +{copper}, yeşim +{jade}',
+    chests: 'Açılan sandıklar ×{n}: lobide aç',
     newBest: 'Yeni rekor!',
     best: 'En iyi: {wave} dalga',
     again: 'Tekrar oyna',

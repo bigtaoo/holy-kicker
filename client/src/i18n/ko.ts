@@ -265,7 +265,7 @@ export const ko: Table<typeof en> = {
     hardUnlocked: '어려움 모드 열림: 더 강한 적, 더 좋은 장비',
     fallen: '판 종료',
     copper: '동전 +{n}',
-    chest: '상자 ({wave} 웨이브): 동전 +{copper}, 옥 +{jade}',
+    chests: '상자 해금 ×{n}: 로비에서 열기',
     newBest: '최고 기록!',
     best: '최고 기록: {wave} 웨이브',
     again: '다시 하기',

@@ -265,7 +265,7 @@ export const id: Table<typeof en> = {
     hardUnlocked: 'Mode sulit terbuka: musuh lebih kuat, perlengkapan lebih bagus',
     fallen: 'Permainan usai',
     copper: 'Tembaga +{n}',
-    chest: 'Peti (gelombang {wave}): tembaga +{copper}, giok +{jade}',
+    chests: 'Peti terbuka ×{n}: buka di lobi',
     newBest: 'Rekor baru!',
     best: 'Terbaik: {wave} gelombang',
     again: 'Main lagi',

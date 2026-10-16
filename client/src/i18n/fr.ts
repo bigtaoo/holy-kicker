@@ -265,7 +265,7 @@ export const fr: Table<typeof en> = {
     hardUnlocked: 'Mode difficile ouvert : ennemis plus coriaces, meilleur équipement',
     fallen: 'Partie terminée',
     copper: 'Cuivre +{n}',
-    chest: 'Coffre (vague {wave}) : cuivre +{copper}, jade +{jade}',
+    chests: 'Coffres débloqués ×{n} : ouvre-les dans le lobby',
     newBest: 'Nouveau record !',
     best: 'Record : {wave} vagues',
     again: 'Rejouer',

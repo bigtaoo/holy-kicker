@@ -148,7 +148,7 @@ export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: n
   return Object.assign([c, y] as Part, { copper });
 }
 
-/** The rarer news, one short line each: unlocks, chests, the welcome gift and tomorrow's. */
+/** The rarer news, one short line each: unlocks, the chests waiting in the lobby, the welcome gift and tomorrow's. */
 export function newsLines(r: Reward, doubled: boolean): [string, number, number][] {
   const lines: [string, number, number][] = [];
   if (doubled) lines.push([t('results.doubled'), 48, COLORS.saffron]);
@@ -157,7 +157,8 @@ export function newsLines(r: Reward, doubled: boolean): [string, number, number]
   if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 48, COLORS.saffron]);
   for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 42, COLORS.saffron]);
   for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 42, COLORS.saffron]);
-  for (const ch of r.chests) lines.push([t('results.chest', { wave: ch.wave, copper: ch.copper, jade: ch.jade }), 40, COLORS.jade]);
+  // the chests reached wait in the lobby (progressChests.ts): one line, however many
+  if (r.chests.length > 0) lines.push([t('results.chests', { n: r.chests.length }), 42, COLORS.jade]);
   // the first run's welcome gift, worn in the next run when it is better (so the next try is
   // visibly stronger), and the one waiting tomorrow (welcome.ts)
   const gift = r.gift?.drops[0];

@@ -265,7 +265,7 @@ export const vi: Table<typeof en> = {
     hardUnlocked: 'Mở chế độ Khó: địch mạnh hơn, đồ xịn hơn',
     fallen: 'Hết trận',
     copper: 'Đồng +{n}',
-    chest: 'Rương (đợt {wave}): đồng +{copper}, ngọc +{jade}',
+    chests: 'Mở khóa rương ×{n}: mở ở sảnh',
     newBest: 'Kỷ lục mới!',
     best: 'Kỷ lục: {wave} đợt',
     again: 'Chơi lại',

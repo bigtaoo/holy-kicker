@@ -265,7 +265,7 @@ export const de: Table<typeof en> = {
     hardUnlocked: 'Schwerer Modus offen: härtere Feinde, bessere Ausrüstung',
     fallen: 'Lauf vorbei',
     copper: 'Kupfer +{n}',
-    chest: 'Truhe (Welle {wave}): Kupfer +{copper}, Jade +{jade}',
+    chests: 'Truhen freigeschaltet ×{n}: in der Lobby öffnen',
     newBest: 'Neuer Rekord!',
     best: 'Rekord: {wave} Wellen',
     again: 'Nochmal spielen',

@@ -263,7 +263,7 @@ export const en = {
     hardUnlocked: 'Hard mode open: tougher foes, better gear',
     fallen: 'Run over',
     copper: 'Copper +{n}',
-    chest: 'Chest (wave {wave}): copper +{copper}, jade +{jade}',
+    chests: 'Chests unlocked ×{n}: open them in the lobby',
     newBest: 'New best!',
     best: 'Best: {wave} waves',
     again: 'Play again',

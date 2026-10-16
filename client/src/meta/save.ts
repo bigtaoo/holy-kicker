@@ -26,8 +26,10 @@ export interface SaveData {
   cleared: number;
   /** Best waves cleared per chapter, index 0 is chapter 1. */
   best: number[];
-  /** Claimed progress chests per chapter, one bit per chest in BALANCE.chests order. */
+  /** Progress chests reached per chapter, one bit per chest in BALANCE.chests order. */
   chests: number[];
+  /** The reached chests already opened in the lobby, the same bits (progressChests.ts). */
+  opened: number[];
   runs: number;
   /** The relic chosen for the next run (docs/content.md "Relics": one more per chapter cleared). */
   relic: RelicId;
@@ -47,10 +49,11 @@ export interface SaveData {
   grit: number;
   /** The lobby shows hard mode (open once every chapter is cleared); `chapter` is on that track. */
   hard: boolean;
-  /** Hard mode's own clears, best waves and claimed chests, as `cleared`, `best` and `chests`. */
+  /** Hard mode's own clears, best waves and chests, as `cleared`, `best`, `chests` and `opened`. */
   hardCleared: number;
   hardBest: number[];
   hardChests: number[];
+  hardOpened: number[];
   /** The wave the last lost run fell on per chapter, 0 for none (falls.ts), and hard mode's. */
   fell: number[];
   hardFell: number[];
@@ -74,9 +77,9 @@ export function newSave(): SaveData {
   const zeros = () => new Array<number>(BALANCE.chapters).fill(0);
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
-    chapter: 1, cleared: 0, best: zeros(), chests: zeros(), runs: 0, relic: 'ball', codex: [],
+    chapter: 1, cleared: 0, best: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
-    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
+    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0,
   };
 }
@@ -89,6 +92,12 @@ function ints(v: unknown, min: number, max: number): number[] {
   const out = new Array<number>(BALANCE.chapters).fill(0);
   if (Array.isArray(v)) for (let i = 0; i < out.length; i++) out[i] = int(v[i], min, max, 0);
   return out;
+}
+
+/** The opened chests, within the reached ones; a save from before opening in the lobby was paid every chest it reached. */
+function openedOf(v: unknown, reached: number[]): number[] {
+  if (!Array.isArray(v)) return [...reached];
+  return ints(v, 0, (1 << BALANCE.chests.length) - 1).map((o, i) => o & reached[i]);
 }
 
 function inventory(v: unknown): Inventory {
@@ -135,6 +144,8 @@ export function parseSave(text: string | null): SaveData {
   const hardCleared = cleared >= BALANCE.chapters ? int(raw.hardCleared, 0, BALANCE.chapters, 0) : 0;
   const hard = cleared >= BALANCE.chapters && raw.hard === true;
   const monks = int(raw.monks, 0, (1 << MONK_IDS.length) - 1, 1) | 1;
+  const chests = ints(raw.chests, 0, (1 << BALANCE.chests.length) - 1);
+  const hardChests = ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1);
   return {
     version: SAVE_VERSION,
     firstRunDone: raw.firstRunDone === true,
@@ -146,7 +157,8 @@ export function parseSave(text: string | null): SaveData {
     chapter: int(raw.chapter, 1, Math.min(BALANCE.chapters, (hard ? hardCleared : cleared) + 1), 1),
     cleared,
     best: ints(raw.best, 0, BALANCE.waves),
-    chests: ints(raw.chests, 0, (1 << BALANCE.chests.length) - 1),
+    chests,
+    opened: openedOf(raw.opened, chests),
     runs: int(raw.runs, 0, max, 0),
     // only a relic the clears have unlocked
     relic: RELIC_IDS.indexOf(raw.relic as RelicId) >= 0 && RELIC_IDS.indexOf(raw.relic as RelicId) <= cleared ? (raw.relic as RelicId) : 'ball',
@@ -161,7 +173,8 @@ export function parseSave(text: string | null): SaveData {
     hard,
     hardCleared,
     hardBest: ints(raw.hardBest, 0, BALANCE.waves),
-    hardChests: ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1),
+    hardChests,
+    hardOpened: openedOf(raw.hardOpened, hardChests),
     fell: ints(raw.fell, 0, BALANCE.waves),
     hardFell: ints(raw.hardFell, 0, BALANCE.waves),
     monk: owned(monks, raw.monk) ? (raw.monk as MonkId) : 'kicker',

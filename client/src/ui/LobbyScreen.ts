@@ -2,7 +2,6 @@ import { Container, Graphics, type Renderer, type Text, type Texture } from 'pix
 import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { rollDice } from '@hk/protocol';
 import { t } from '../i18n';
-import { BALANCE } from '../meta/balance';
 import { earnedSutras, hardOpen, playableChapters, track, unlockedRelics, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
@@ -12,6 +11,7 @@ import { gritBonus } from '../meta/loadout';
 import { buyMonk, chooseMonk, monkPrice } from '../meta/monks';
 import { train } from '../meta/training';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
+import { chestRow } from './chestRow';
 import { codexHeight, codexTab } from './codexTab';
 import { EconomyUi, shopHeight, type LobbyTrack } from './lobbyEconomy';
 import type { PatrolLook } from './economyPanels';
@@ -344,7 +344,7 @@ export class LobbyScreen implements Screen {
       ranks.position.set(340, -145);
       card.addChild(ranks);
     }
-    const chests = this.chests(n);
+    const chests = chestRow(this.save, n, this.icons, (i) => this.econ.progressChest(n, this.save.hard, i));
     chests.y = -95 + shift;
     const relics = this.relics();
     relics.y = 85 + shift;
@@ -428,32 +428,6 @@ export class LobbyScreen implements Screen {
         if (id !== chosen) this.actions.selectRelic(id);
       });
       row.addChild(c);
-    });
-    return row;
-  }
-
-  /** The five progress chests of a chapter over their waves: dimmed with a tick once claimed. */
-  private chests(chapter: number): Container {
-    const row = new Container();
-    const claimed = track(this.save, this.save.hard).chests[chapter - 1];
-    BALANCE.chests.forEach((c, i) => {
-      const x = (i - 2) * 160;
-      const got = (claimed & (1 << i)) !== 0;
-      const chest = iconSprite(this.icons, 'chest', 96);
-      if (chest) {
-        chest.position.set(x, 50);
-        if (got) chest.alpha = 0.4;
-        row.addChild(chest);
-      }
-      if (got) {
-        row.addChild(new Graphics().moveTo(x - 22, 50).lineTo(x - 4, 68).lineTo(x + 28, 30)
-          .stroke({ color: COLORS.outline, width: 22, cap: 'round', join: 'round' })
-          .moveTo(x - 22, 50).lineTo(x - 4, 68).lineTo(x + 28, 30)
-          .stroke({ color: COLORS.jade, width: 12, cap: 'round', join: 'round' }));
-      }
-      const wave = label(String(c.wave), 40, got ? COLORS.dim : COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
-      wave.position.set(x, 112);
-      row.addChild(wave);
     });
     return row;
   }

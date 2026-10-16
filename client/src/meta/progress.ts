@@ -32,7 +32,7 @@ export interface Reward {
   copper: number;
   /** The offerings' share of `copper`. */
   offering: number;
-  /** Progress chests opened for the first time by this run. */
+  /** Progress chests this run reached for the first time, waiting in the lobby (progressChests.ts). */
   chests: ChestReward[];
   xp: number;
   levelsGained: number;
@@ -79,6 +79,12 @@ export function hardOpen(save: SaveData): boolean {
   return save.cleared >= BALANCE.chapters;
 }
 
+/** What progress chest `index` holds at stage `at` (`stage`): its wave, copper grown along the climb, jade. */
+export function chestPay(at: number, index: number): Chest {
+  const c = BALANCE.chests[index];
+  return { wave: c.wave, copper: Math.round(c.copper * chapterMul(at)), jade: c.jade };
+}
+
 /** One track's progress: clears, best waves and claimed chests, normal or hard. */
 export function track(save: SaveData, hard: boolean): { cleared: number; best: number[]; chests: number[] } {
   return hard
@@ -106,21 +112,20 @@ export function xpToNext(level: number): number {
   return BALANCE.levelXpBase + BALANCE.levelXpStep * (level - 1);
 }
 
-/** Pays the run into the save: copper, unclaimed chests, xp, best wave, chapter clear. */
+/** Pays the run into the save: copper, xp, best wave, chapter clear; the chests it reached wait in the lobby. */
 export function settleRun(save: SaveData, run: RunResult, rand: () => number = Math.random): { save: SaveData; reward: Reward } {
   const i = run.chapter - 1;
   const hard = run.hard === true;
   const was = track(save, hard);
   const waves = Math.max(0, Math.min(BALANCE.waves, Math.floor(run.waves)));
   const at = stage(run.chapter, hard);
-  const mul = chapterMul(at);
   const chests: ChestReward[] = [];
   let claimed = was.chests[i];
   BALANCE.chests.forEach((c, index) => {
     const bit = 1 << index;
     if (waves >= c.wave && !(claimed & bit)) {
       claimed |= bit;
-      chests.push({ index, wave: c.wave, copper: Math.round(c.copper * mul), jade: c.jade });
+      chests.push({ index, ...chestPay(at, index) });
     }
   });
   const base = waves * copperPerWave(at);
@@ -152,8 +157,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
     firstRunDone: true,
     level,
     xp,
-    copper: save.copper + copper + chests.reduce((n, c) => n + c.copper, 0),
-    jade: save.jade + chests.reduce((n, c) => n + c.jade, 0),
+    copper: save.copper + copper,
     // a first clear moves the lobby on to the chapter it just unlocked, the last one to hard mode
     chapter: hardUnlocked ? 1 : firstClear ? Math.min(BALANCE.chapters, run.chapter + 1) : save.chapter,
     hard: hardUnlocked || save.hard,

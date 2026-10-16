@@ -103,7 +103,11 @@ export class ResultsScreen implements Screen {
 
     const cardH = zones.reduce((n, [, h]) => n + h + GAP, 0) + 60;
     const card = new Container();
-    card.position.set(f.w / 2, Math.max(cardH / 2 + 40, f.h / 2 - 220));
+    // a long card shrinks so the buttons under it stay on screen
+    const below = (this.actions.again ? 185 : 0) + 270;
+    const k = Math.min(1, (f.h - 80 - below) / cardH);
+    card.scale.set(k);
+    card.position.set(f.w / 2, Math.max((k * cardH) / 2 + 40, f.h / 2 - 220));
     card.addChild(panel(CARD_W, cardH));
     let y = -cardH / 2 + 40;
     this.parts = [];
@@ -117,7 +121,7 @@ export class ResultsScreen implements Screen {
     this.copper = { text: rewards.copper, part: zones.indexOf(rewards) };
 
     const buttons = new Container();
-    this.buttons(buttons, f.w / 2, card.y + cardH / 2 + 130);
+    this.buttons(buttons, f.w / 2, card.y + (k * cardH) / 2 + 130);
     this.view.addChild(buttons);
     this.parts.push([buttons, 0]);
     this.update(0, total);

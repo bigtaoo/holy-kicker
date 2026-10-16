@@ -4,6 +4,7 @@ import { seeTab, TABS, tabLock, tabNew, type Lock, type Tab } from '../meta/prog
 import type { SaveData } from '../meta/save';
 import { monkAffordable } from '../meta/monks';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
+import { anyChestWaiting } from '../meta/progressChests';
 import { shopWaiting } from './lobbyEconomy';
 import type { UiFrame } from './uiLayout';
 import { COLORS, button, dot, fit, label, shade } from './widgets';
@@ -156,7 +157,7 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
       const l = lockIcon(icons, 52);
       l.position.set(tw / 2 - 40, -TAB_H / 2 + 44);
       cell.addChild(l);
-    } else if (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now()))) {
+    } else if (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save))) {
       cell.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
     }
     cell.eventMode = 'static';

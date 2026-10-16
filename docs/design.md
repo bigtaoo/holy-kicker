@@ -55,7 +55,8 @@ wave reached is recorded.
   Specific spell + passive pairs **evolve**.
 - Death: one rewarded-ad revive per run; otherwise results are paid by the wave reached.
 - **Progress chests** at waves 10/20/30/40/50 of each chapter, claimable once each, so a
-  failed push still pays.
+  failed push still pays. A run only unlocks them; the player opens them on the lobby's chapter
+  card (a lit chest with a dot), which keeps the results short and gives the lobby a first tap.
 - Clearing a chapter unlocks the next. Clearing chapter 5 opens hard mode.
 - **Launch with 5 chapters.** Each needs a ground, 3–4 mob types, 1–2 elites and a boss.
 

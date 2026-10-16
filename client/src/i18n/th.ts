@@ -265,7 +265,7 @@ export const th: Table<typeof en> = {
     hardUnlocked: 'เปิดโหมดยาก: ศัตรูแกร่งขึ้น อุปกรณ์ดีขึ้น',
     fallen: 'จบรอบ',
     copper: 'ทองแดง +{n}',
-    chest: 'หีบ (เวฟ {wave}): ทองแดง +{copper}, หยก +{jade}',
+    chests: 'ปลดล็อกหีบ ×{n}: ไปเปิดที่ล็อบบี้',
     newBest: 'สถิติใหม่!',
     best: 'ดีที่สุด: {wave} ระลอก',
     again: 'เล่นอีกครั้ง',
