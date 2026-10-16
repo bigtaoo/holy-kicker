@@ -8,6 +8,8 @@ export const pt: Table<typeof en> = {
     continue: 'Continuar',
     back: 'Voltar',
     locked: 'Bloqueado',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Nv.{level}',

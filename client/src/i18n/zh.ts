@@ -8,6 +8,8 @@ export const zh: Table<typeof en> = {
     continue: '继续',
     back: '返回',
     locked: '未解锁',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Lv.{level}',

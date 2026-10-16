@@ -181,6 +181,16 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
   return c;
 }
 
+/** A keycap with `text` (Enter, Esc) on the upper right corner of a `w` by `h` button, for desktops. */
+export function keyCap(b: Container, w: number, h: number, text: string): void {
+  const l = label(text, 34, COLORS.outline);
+  const cw = Math.max(64, l.width + 28);
+  const cap = new Container();
+  cap.addChild(new Graphics().roundRect(-cw / 2, -26, cw, 52, 14).fill(0xffd860).stroke({ color: COLORS.outline, width: 5 }), l);
+  cap.position.set(w / 2 - cw / 2 + 10, -h / 2 - 6);
+  b.addChild(cap);
+}
+
 /** A video camera's play sign: a rounded frame with a triangle, `h` tall, centred. */
 export function videoBadge(h: number, color: number): Graphics {
   const w = h * 1.4;

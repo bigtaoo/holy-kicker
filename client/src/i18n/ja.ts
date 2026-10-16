@@ -8,6 +8,8 @@ export const ja: Table<typeof en> = {
     continue: '続ける',
     back: '戻る',
     locked: '未解放',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Lv.{level}',

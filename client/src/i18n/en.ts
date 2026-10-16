@@ -6,6 +6,8 @@ export const en = {
     continue: 'Continue',
     back: 'Back',
     locked: 'Locked',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Lv.{level}',

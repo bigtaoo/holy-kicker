@@ -8,6 +8,8 @@ export const id: Table<typeof en> = {
     continue: 'Lanjut',
     back: 'Kembali',
     locked: 'Terkunci',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Lv.{level}',

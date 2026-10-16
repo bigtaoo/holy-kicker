@@ -8,6 +8,8 @@ export const ru: Table<typeof en> = {
     continue: 'Продолжить',
     back: 'Назад',
     locked: 'Закрыто',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Ур.{level}',

@@ -8,6 +8,8 @@ export const vi: Table<typeof en> = {
     continue: 'Tiếp tục',
     back: 'Quay lại',
     locked: 'Đã khóa',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Lv.{level}',

@@ -7,7 +7,8 @@ import type { DownInfo } from './deathInfo';
 import { fallPart, headerPart, newsLines, rewardsPart, type Part } from './resultsParts';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, button, buttonLabel, fit, label, panel } from './widgets';
+import { panelKey } from './panelKeys';
+import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from './widgets';
 
 // Results after a run, in three zones on one card: the header (the title, the waves cleared as
 // one big number, a badge for the best and the leaderboard place once the server answers), after
@@ -16,7 +17,9 @@ import { COLORS, button, buttonLabel, fit, label, panel } from './widgets';
 // news (unlocks, chests, the welcome gift) in short lines under them. The parts come in one after
 // another (resultsReveal.ts); a tap shows them all. Under the card: Play again (after a lost run,
 // the quickest way back into a fight), then the rewarded "double copper" offer and Continue side
-// by side at the same size, font and colour (CrazyGames' rewarded-ad rules).
+// by side at the same size, font and colour (CrazyGames' rewarded-ad rules). On a desktop Enter
+// takes the first button (Play again, or Continue alone) and Escape continues; the buttons wear
+// their keys. The rewarded ad has no key: it plays only on a click.
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
@@ -51,6 +54,8 @@ export class ResultsScreen implements Screen {
     /** What felled the hero, for a lost run. */
     private readonly fall: DownInfo | null = null,
     private readonly icons: IconSheet = new Map(),
+    /** A desktop: the keys work and the buttons show them. */
+    private readonly keys = false,
   ) {
     // the leaderboard badge comes in when the server answers; offline or unranked runs have none
     void rank.then((r) => {
@@ -127,6 +132,7 @@ export class ResultsScreen implements Screen {
       const again = button(t('results.again'), 640, 150, () => this.actions.again?.(), { fill: COLORS.saffron });
       again.position.set(x, y);
       if (busy) again.eventMode = 'none';
+      else if (this.keys) keyCap(again, 640, 150, t('common.keyEnter'));
       c.addChild(again);
       y += 185;
     }
@@ -145,6 +151,7 @@ export class ResultsScreen implements Screen {
     const next = button(t('common.continue'), w, 140, () => this.actions.next(), { fill: second, size });
     next.position.set(pair ? x + w / 2 + 15 : x, y);
     if (busy) next.eventMode = 'none';
+    else if (this.keys) keyCap(next, w, 140, t(this.actions.again ? 'common.keyEsc' : 'common.keyEnter'));
     c.addChild(next);
     if (pair) {
       // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
@@ -164,6 +171,16 @@ export class ResultsScreen implements Screen {
       view.y = rest + (1 - k) * REVEAL.rise;
     }
     if (this.copper && !this.copper.text.destroyed) this.copper.text.text = `+${countUp(this.age, this.copper.part, total)}`;
+  }
+
+  /** Enter: the first key press while the parts come in shows them all, the next plays again (or continues); Escape continues. */
+  key(code: string, repeat: boolean): void {
+    const k = panelKey(code, repeat);
+    if (!this.keys || !k || k === 'pause' || this.offer === 'playing') return;
+    if (k === 'ok' && this.age < REVEALED && partIn(this.age, this.parts.length - 1) < 1) return this.skip();
+    playTap();
+    if (k === 'ok' && this.actions.again) this.actions.again();
+    else this.actions.next();
   }
 
   destroy(): void {

@@ -8,6 +8,8 @@ export const tr: Table<typeof en> = {
     continue: 'Devam',
     back: 'Geri',
     locked: 'Kilitli',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Sv. {level}',

@@ -3,7 +3,7 @@ import { t } from '../i18n';
 import type { DownInfo, Goal } from './deathInfo';
 import { fallIcon } from './fallIcons';
 import type { UiFrame } from './uiLayout';
-import { COLORS, backdrop, button, fit, label, panel } from './widgets';
+import { COLORS, backdrop, button, fit, keyCap, label, panel } from './widgets';
 
 // The death panel, shown only when a revive is on offer: "You fell", what did it with a picture
 // and one tip for next time, the nearest goal the run fell short of, then the revive (free from
@@ -43,7 +43,8 @@ export function fallLines(info: DownInfo, wave: number, width: number, iconScale
   return items;
 }
 
-export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: number, actions: DownActions): Container {
+/** `keys`: a desktop, where the buttons wear their keys (Enter revives, Escape gives up; RunHud.key). */
+export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: number, actions: DownActions, keys = false): Container {
   const layer = new Container();
   layer.addChild(backdrop(f.w, f.h));
   // stacked top down: [view, height it takes]
@@ -60,8 +61,10 @@ export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: n
       video: !playing && !free,
     });
     if (playing) revive.eventMode = giveUp.eventMode = 'none';
+    else if (keys) keyCap(revive, 640, 150, t('common.keyEnter'));
     items.push([revive, 190]);
   }
+  if (keys && down !== 'playing') keyCap(giveUp, 640, 150, t('common.keyEsc'));
   items.push([giveUp, 190]);
   const h = items.reduce((sum, [, step]) => sum + step, 0) + 80;
   const box = new Container();

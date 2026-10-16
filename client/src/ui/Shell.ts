@@ -475,7 +475,7 @@ export class Shell {
       // a lost run's quickest way back is the same chapter again, from the very first run on (the
       // tutorial does not come back: firstRunDone is set by now)
       again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, true)) : null,
-    }, this.ads.rewardedAvailable(), rank, fall, this.art.icons));
+    }, this.ads.rewardedAvailable(), rank, fall, this.art.icons, this.device === 'desktop'));
   }
 
   private tick(): void {

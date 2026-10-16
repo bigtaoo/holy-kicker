@@ -8,6 +8,8 @@ export const th: Table<typeof en> = {
     continue: 'ไปต่อ',
     back: 'กลับ',
     locked: 'ล็อกอยู่',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Lv.{level}',

@@ -3,6 +3,7 @@ import { getLocale, localeName, t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot, type Charge } from './buildSlots';
 import { cardPanel, type CardPanel } from './cardPanel';
+import { panelKey } from './panelKeys';
 import type { DownInfo } from './deathInfo';
 import { downPanel, type Down } from './downPanel';
 import { languagePanel } from './languagePanel';
@@ -11,7 +12,7 @@ import type { StoryLine } from './story';
 import type { TutorialStep } from './tutorial';
 import { tutorialHint, type TutorialHint } from './tutorialHint';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, backdrop, button, fit, label, panel } from './widgets';
+import { COLORS, backdrop, button, fit, keyCap, label, panel, playTap } from './widgets';
 import { RECORD_BURST } from './recordBurst';
 import { RecordBurstView } from './recordBurstView';
 
@@ -141,7 +142,7 @@ export class RunHud implements Screen {
     }
     if (this.paused) this.pausePanel(f);
     if (this.down) {
-      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }));
+      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }, this.keys));
     }
   }
 
@@ -324,9 +325,26 @@ export class RunHud implements Screen {
     this.setXp(this.xp.level, this.xp.share);
   }
 
-  /** A key went down; the level-up cards take it while they are open. */
+  /**
+   * A key went down: the level-up cards take it while they are open; otherwise Enter revives and
+   * Escape gives up on the death panel, Escape (or P) pauses and resumes, and Enter resumes.
+   */
   key(code: string, repeat: boolean): void {
-    if (!this.paused && !this.down) this.cards?.key(code, repeat);
+    if (this.offer && !this.paused && !this.down) return this.cards?.key(code, repeat);
+    const k = panelKey(code, repeat);
+    if (!k || this.down === 'playing') return;
+    if (this.down) {
+      if (k === 'ok' && this.down !== 'none') void this.playRevive();
+      else if (k === 'back') this.actions.giveUp();
+      else return;
+    } else if (this.languages) {
+      if (k !== 'back') return;
+      this.languages = false;
+      this.relayout();
+    } else if (this.paused) this.setPaused(false);
+    else if (k !== 'ok') this.setPaused(true);
+    else return;
+    playTap();
   }
 
   private pickCard(index: number): void {
@@ -386,7 +404,9 @@ export class RunHud implements Screen {
     box.position.set(f.w / 2, f.h / 2);
     // stacked top down: [view, height it takes]
     const items: [Container, number][] = [[label(t('run.paused'), 72), 150]];
-    items.push([button(t('run.resume'), 560, 150, () => this.setPaused(false)), 190]);
+    const resume = button(t('run.resume'), 560, 150, () => this.setPaused(false));
+    if (this.keys) keyCap(resume, 560, 150, t('common.keyEsc'));
+    items.push([resume, 190]);
     const lang = button(`${t('run.language')} · ${localeName(getLocale())}`, 560, 120, () => {
       this.languages = true;
       this.relayout();

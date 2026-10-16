@@ -8,6 +8,8 @@ export const ko: Table<typeof en> = {
     continue: '계속',
     back: '뒤로',
     locked: '잠김',
+    keyEnter: 'Enter',
+    keyEsc: 'Esc',
   },
   lobby: {
     level: 'Lv.{level}',
