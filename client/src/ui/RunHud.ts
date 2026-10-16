@@ -3,6 +3,8 @@ import { getLocale, localeName, t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot, type Charge } from './buildSlots';
 import { cardPanel, type CardPanel } from './cardPanel';
+import type { DownInfo } from './deathInfo';
+import { downPanel, type Down } from './downPanel';
 import { languagePanel } from './languagePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
@@ -12,8 +14,8 @@ import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The in-run overlay: the experience bar and level, the build strip with the spells' recharge, the wave counter,
-// the fast-forward toggle, a pause button and the pause panel (resume, language, report a problem, give up), a banner when a wave starts, the level-up cards, and the death panel (revive
-// free from training or with an ad, or give up).
+// the fast-forward toggle, a pause button and the pause panel (resume, language, report a problem, give up), a banner when a wave starts, the level-up cards, and the death panel (downPanel.ts).
+// Under the wave counter, the wave the last run of the chapter fell on, until this run passes it.
 
 export interface RunActions {
   pause(): void;
@@ -35,8 +37,6 @@ export type ReportOutcome = 'sent' | 'failed' | 'cancelled';
 /** The pause panel's report button: ready, waiting for the text box or the server, or done. */
 type Reporting = 'idle' | 'busy' | 'sent' | 'failed';
 
-/** Death panel: no revive to offer, a free one (training), the ad offered, or the ad playing. */
-type Down = 'none' | 'free' | 'offered' | 'playing';
 export type ReviveOffer = 'none' | 'free' | 'ad';
 
 /** Seconds a wave banner stays (longer with a story line to read), the last of them fading. */
@@ -60,6 +60,10 @@ export class RunHud implements Screen {
   private languages = false;
   private reporting: Reporting = 'idle';
   private down: Down | null = null;
+  /** What the death panel says about the fall, and the last run's fall (0 for none shown). */
+  private downInfo: DownInfo | null = null;
+  private lastFall = 0;
+  private lastFallText: Text | null = null;
   private banner: { lines: [string, number][]; story: StoryLine | null; t: number } | null = null;
   /** Rebuilt with every layout, like the rest of the HUD. */
   private xpView: Container | null = null;
@@ -102,7 +106,10 @@ export class RunHud implements Screen {
     wave.anchor.set(0, 0.5);
     wave.position.set(40, 300);
     this.waveText = wave;
-    this.view.addChild(wave);
+    const fell = (this.lastFallText = label('', 48, COLORS.dim, { stroke: { color: COLORS.outline, width: 8 } }));
+    fell.anchor.set(0, 0.5);
+    fell.position.set(40, 370);
+    this.view.addChild(wave, fell);
     this.xpBar(f);
     const build = (this.build = new BuildBar(this.icons));
     build.view.position.set(f.w / 2, BUILD_Y);
@@ -126,7 +133,9 @@ export class RunHud implements Screen {
       this.view.addChild(this.cards.view);
     }
     if (this.paused) this.pausePanel(f);
-    if (this.down) this.downPanel(f, this.down);
+    if (this.down) {
+      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }));
+    }
   }
 
   /** Wave 0 is the sandbox, which has no counter and no levels. */
@@ -137,6 +146,15 @@ export class RunHud implements Screen {
     this.waveText.text = t(this.hard ? 'run.hardWave' : 'run.wave', { wave, total: this.total });
     if (this.xpView) this.xpView.visible = wave > 0;
     if (this.build) this.build.view.visible = wave > 0;
+    this.setLastFall(this.lastFall);
+  }
+
+  /** The wave the chapter's last run fell on, under the wave counter; 0 hides it. */
+  setLastFall(wave: number): void {
+    this.lastFall = wave;
+    if (!this.lastFallText) return;
+    this.lastFallText.visible = wave > 0 && this.wave > 0;
+    this.lastFallText.text = t('run.lastFall', { wave });
   }
 
   /** The hero's build; the strip is redrawn only when it looks different. */
@@ -184,10 +202,11 @@ export class RunHud implements Screen {
 
   /**
    * A banner across the middle: the wave number, for elite and boss waves a warning, and around
-   * a boss its line of the story.
+   * a boss its line of the story; `cheer` (passing the last run's fall) under the number.
    */
-  announce(wave: number, warning: string | null, story: StoryLine | null = null): void {
+  announce(wave: number, warning: string | null, story: StoryLine | null = null, cheer: string | null = null): void {
     const lines: [string, number][] = [[t('run.waveStart', { wave }), 96]];
+    if (cheer) lines.push([cheer, 72]);
     if (warning) lines.push([warning, 64]);
     this.banner = { lines, story, t: story ? STORY_TIME : BANNER_TIME };
     this.relayout();
@@ -199,8 +218,9 @@ export class RunHud implements Screen {
     this.relayout();
   }
 
-  /** The hero went down: offers a free revive, the rewarded ad or nothing. */
-  showDown(offer: ReviveOffer): void {
+  /** The hero went down: offers a free revive, the rewarded ad or nothing; `info` says what did it (kept when left out). */
+  showDown(offer: ReviveOffer, info: DownInfo | null = this.downInfo): void {
+    this.downInfo = info;
     this.down = offer === 'free' ? 'free' : offer === 'ad' ? 'offered' : 'none';
     this.paused = false;
     this.relayout();
@@ -391,31 +411,6 @@ export class RunHud implements Screen {
     if (this.view.destroyed) return;
     this.reporting = outcome === 'cancelled' ? 'idle' : outcome;
     this.relayout();
-  }
-
-  private downPanel(f: UiFrame, down: Down): void {
-    this.view.addChild(backdrop(f.w, f.h));
-    const box = new Container();
-    box.position.set(f.w / 2, f.h / 2);
-    const title = label(t('run.down'), 80, COLORS.text);
-    title.y = down === 'none' ? -110 : -200;
-    box.addChild(panel(800, down === 'none' ? 440 : 640), title);
-    // the way out matches the revive in size, font and colour, so declining the ad never looks
-    // disabled (CrazyGames' rewarded-ad rules)
-    const giveUp = button(t('run.giveUp'), 640, 150, () => this.actions.giveUp());
-    giveUp.y = down === 'none' ? 70 : 190;
-    if (down !== 'none') {
-      const playing = down === 'playing';
-      const free = down === 'free';
-      const revive = button(playing ? '…' : free ? t('run.reviveFree') : t('run.revive'), 640, 150, () => void this.playRevive(), {
-        fill: playing ? COLORS.panelLocked : COLORS.saffron,
-        video: !playing && !free,
-      });
-      if (playing) revive.eventMode = giveUp.eventMode = 'none';
-      box.addChild(revive);
-    }
-    box.addChild(giveUp);
-    this.view.addChild(box);
   }
 
   private async playRevive(): Promise<void> {

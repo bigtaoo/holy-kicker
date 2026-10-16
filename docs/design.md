@@ -313,7 +313,7 @@ re-simulate submitted runs with the deterministic engine to verify them.
 CrazyGames; the `SaveStore` and ad interfaces must not assume CrazyGames.
 
 **Save contents** (well under 50 KB): player level and XP, copper, jade, gear counts per item
-and tier (the best is worn), training nodes bought, per-chapter best wave and claimed chests, unlocked relics / sutras / codex
+and tier (the best is worn), training nodes bought, per-chapter best wave, claimed chests and last fall (the wave of the latest lost run, cleared by a win), unlocked relics / sutras / codex
 entries, daily tasks and ad counts, patrol start time, lifetime kills and claimed achievements, save version.
 
 ## Localization

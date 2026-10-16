@@ -51,6 +51,20 @@ export interface Balance {
   achievements: AchievementGoal[];
   /** Jade price of each monk (monks.ts); the kicker is free. */
   monks: Record<MonkId, number>;
+  fall: FallBalance;
+}
+
+/**
+ * The death panel's "under-levelled" verdict (ui/deathInfo.ts): `levels[i]` is the level a hero
+ * normally has on wave `levelEvery * (i + 1)` (straight between, level 1 on wave 0), and a death
+ * at least `levelGap` levels below it blames the level. Measured with the balance bots (casual
+ * and skilled, chapter 1, seeds 1-8, no meta upgrades, 2026-10-16): both medians, which agree
+ * within a level; the standing-still bot sits 4-6 levels below from wave 5 on.
+ */
+export interface FallBalance {
+  levelEvery: number;
+  levels: number[];
+  levelGap: number;
 }
 
 /**
