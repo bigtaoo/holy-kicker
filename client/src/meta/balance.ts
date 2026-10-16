@@ -3,6 +3,7 @@ import type { AchievementGoal } from './achievements';
 import type { Stat } from '@hk/engine';
 import data from './balance.json';
 import type { DailyBalance } from './daily';
+import type { LowHealthBalance } from '../game/lowHealth';
 import type { GearBalance } from './gear';
 import type { PatrolBalance } from './patrol';
 import type { ShopBalance } from './shop';
@@ -23,6 +24,8 @@ export interface Balance {
   waves: number;
   /** Rewarded-ad revives per run; wave length and the wave plan are engine rules (engine/config.ts). */
   revives: number;
+  /** The low-health warning (game/lowHealth.ts): when the heart beats and how fast. */
+  lowHealth: LowHealthBalance;
   grit: GritBalance;
   novice: NoviceBalance;
   copperPerWave: number;

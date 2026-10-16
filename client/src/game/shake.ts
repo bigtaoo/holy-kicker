@@ -20,6 +20,8 @@ export const SHAKE = {
   decay: 0.1,
   /** Wobbles per real second. */
   rate: 24,
+  /** Px of amplitude when the hero goes down (the kill cam plays it in slow motion). */
+  down: 8,
 };
 
 export class Shake {
@@ -36,6 +38,13 @@ export class Shake {
     this.mean += (n - this.mean) / SHAKE.window;
     if (!this.on || n < bar || this.wait > 0) return;
     this.amp = Math.min(SHAKE.max, SHAKE.perKill * n);
+    this.wait = SHAKE.rest;
+  }
+
+  /** One heavy blow (the hero going down) shakes whatever the kill rate, unless shake is off. */
+  blow(amp = SHAKE.down): void {
+    if (!this.on) return;
+    this.amp = Math.max(this.amp, Math.min(SHAKE.max, amp));
     this.wait = SHAKE.rest;
   }
 

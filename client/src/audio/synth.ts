@@ -90,6 +90,11 @@ export const VOICES: Record<Cue, (k: Kit) => void> = {
     k.metal(98, GONG, 1.6, 0.6, 0.1);
   },
   revive: (k) => [523, 659, 784, 1047].forEach((f, i) => k.tone(f, 0.25, 0.6, { type: 'triangle', at: i * 0.07 })),
+  // a soft low lub-dub
+  heartbeat: (k) => {
+    k.tone(62, 0.13, 1, { to: 42, attack: 0.01 });
+    k.tone(56, 0.15, 0.75, { to: 38, attack: 0.01, at: 0.17 });
+  },
   hit: (k) => {
     k.noise(0.04, 0.7, { cut: 2200 });
     k.tone(300, 0.04, 0.4, { to: 180 });

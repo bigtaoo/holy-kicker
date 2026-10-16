@@ -343,6 +343,7 @@ export class Shell {
         if (cue) this.sound.play(cue);
       }
     };
+    this.game.onHeartbeat = () => this.sound.play('heartbeat');
     // the run adds itself to the stage; keep the UI above it
     this.app.stage.addChild(this.ui);
     this.hud = new RunHud(BALANCE.waves, this.hard, {

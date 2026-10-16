@@ -9,7 +9,7 @@
 
 export type Cue =
   // the hero and his relics
-  | 'kick' | 'thump' | 'swish' | 'woodfish' | 'zen' | 'hurt' | 'heroDown' | 'revive'
+  | 'kick' | 'thump' | 'swish' | 'woodfish' | 'zen' | 'hurt' | 'heroDown' | 'revive' | 'heartbeat'
   // hits and kills
   | 'hit' | 'crit' | 'pop' | 'eliteDown' | 'clang'
   // spells and sutras
@@ -37,6 +37,8 @@ export const CUES: Record<Cue, CueDef> = {
   hurt: { priority: 4, gain: 0.3, gap: 0.25 },
   heroDown: { priority: 5, gain: 0.7, gap: 1 },
   revive: { priority: 5, gain: 0.6, gap: 1 },
+  // the low-health warning; the fastest heart beats about every 0.45 s
+  heartbeat: { priority: 3, gain: 0.35, gap: 0.35 },
   hit: { priority: 0, gain: 0.22, gap: 0.07 },
   crit: { priority: 1, gain: 0.3, gap: 0.12 },
   pop: { priority: 0, gain: 0.3, gap: 0.06 },
