@@ -5,6 +5,15 @@ server/README.md). It reads `GET /v1/stats` and shows one host or all of them. P
 you shipped to: CrazyGames, Poki and our own web build bring different players, and our own test
 installs land on `web`.
 
+Playgama's sandbox (Bridge platform `playgama_sandbox`) admits no request outside Playgama's own
+hosts, so the game plays offline there and its players never reach this dashboard (no boards, no
+problem reports either). Their numbers are in Playgama's telemetry only: Bridge's own session and
+ad events, plus ours through `bridge.analytics.send` (`client/src/platform/playgama/telemetry.ts`):
+`progression_started` / `_completed` / `_failed` per chapter and mode, `tutorial_completed`, and a
+`performance_sample` every 30 s of battle. They go out unless the player turned sharing off (a held
+EEA answer still sends, as Bridge's own telemetry does). The catalog (platform `playgama`) still
+talks to the backend as host `playgama`; whether its page lets that through is not yet known.
+
 ## What is measured
 
 - **Install**: a random id kept in the host's storage (CrazyGames: its data module, so it follows
