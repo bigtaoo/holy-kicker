@@ -6,7 +6,7 @@ import type { Backend } from '../net/backend';
 import type { Ads, Portal } from '../platform/types';
 import { buildSlots, spellCharges } from './buildSlots';
 import { cardText } from './cardText';
-import { deathCause, nearestGoal, type DeathCause, type DownInfo } from './deathInfo';
+import { deathCause, nearestGoal, type DownInfo } from './deathInfo';
 import type { RunHud } from './RunHud';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
 import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
@@ -43,9 +43,10 @@ export class RunWatch {
   /** The offer whose cards the HUD shows; null when none are up. */
   private shownOffer: readonly Card[] | null = null;
   tutorial: Tutorial | null;
-  /** What the last blow that hurt the local hero came from, and what felled him last (null while he never fell). */
+  /** What the last blow that hurt the local hero came from. */
   private lastBlow: HurtSource | null = null;
-  cause: DeathCause | null = null;
+  /** What felled the hero last and the nearest goal he fell short of (null while he never fell). */
+  fall: DownInfo | null = null;
 
   constructor(
     private readonly game: Game,
@@ -117,13 +118,16 @@ export class RunWatch {
     } else if (s.outcome === 'lost' && !this.downShown && !game.downCamBusy()) {
       this.downShown = true;
       d.portal.gameplayStop();
-      // the offer appears once the host says an ad can play
-      const revives = p.revives;
-      const free = d.freeRevives();
-      hud.showDown(revives > 0 && free > 0 ? 'free' : 'none', this.fallInfo());
-      if (revives > 0 && free === 0) {
+      // the death panel only asks about a revive; with none to offer the results come at once
+      // (they say what felled the hero too), and the ad's offer waits for the host to say it can play
+      const info = this.fallInfo();
+      if (p.revives === 0) d.end();
+      else if (d.freeRevives() > 0) hud.showDown('free', info);
+      else {
         void d.ads.rewardedAvailable().then((ok) => {
-          if (ok && this.downShown && !hud.view.destroyed) hud.showDown('ad');
+          if (!this.downShown || hud.view.destroyed) return;
+          if (ok) hud.showDown('ad', info);
+          else d.end();
         });
       }
     }
@@ -132,7 +136,8 @@ export class RunWatch {
   /** What felled the hero just now, and the nearest goal the run fell short of. */
   private fallInfo(): DownInfo {
     const s = this.game.engine.state;
-    this.cause = deathCause(this.lastBlow, s.players[0].level, s.wave);
-    return { cause: this.cause, goal: this.d.past ? nearestGoal(s.wave, s.config.waves, this.d.past) : null };
+    const cause = deathCause(this.lastBlow, s.players[0].level, s.wave);
+    this.fall = { cause, goal: this.d.past ? nearestGoal(s.wave, s.config.waves, this.d.past) : null };
+    return this.fall;
   }
 }

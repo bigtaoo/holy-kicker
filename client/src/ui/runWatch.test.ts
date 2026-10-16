@@ -18,13 +18,15 @@ function fakeHud(): RunHud & { calls: Record<string, unknown[][]> } {
   }) as unknown as RunHud & { calls: Record<string, unknown[][]> };
 }
 
-function watch(teach: boolean, past?: RunPast, cam = { busy: false }) {
+function watch(teach: boolean, past?: RunPast, cam = { busy: false }, offer = { free: 0, ad: false }) {
   const game = { engine: new Engine({ ...DEFAULT_RUN, waves: 50, firstRun: teach }), paused: false, downCamBusy: () => cam.busy } as unknown as Game;
   const hud = fakeHud();
   const portal = { gameplayStart: vi.fn(), gameplayStop: vi.fn() } as unknown as Portal;
   const net = { track: vi.fn() } as unknown as Backend;
-  const w = new RunWatch(game, hud, { chapter: 1, portal, ads: {} as Ads, net, past, freeRevives: () => 0, keepRun: vi.fn(), end: vi.fn() }, teach);
-  return { game, hud, net, w };
+  const ads = { rewardedAvailable: () => Promise.resolve(offer.ad) } as unknown as Ads;
+  const end = vi.fn();
+  const w = new RunWatch(game, hud, { chapter: 1, portal, ads, net, past, freeRevives: () => offer.free, keepRun: vi.fn(), end }, teach);
+  return { game, hud, net, w, end };
 }
 
 describe('RunWatch', () => {
@@ -56,58 +58,81 @@ describe('RunWatch', () => {
     expect(game.paused).toBe(false);
   });
 
-  /** Fells the hero on `wave` at `level`, with no revive left (so no ad is asked for). */
-  function fell(game: Game, wave: number, level = 1): void {
+  /** Fells the hero on `wave` at `level`, with no revive left unless `revives` says so. */
+  function fell(game: Game, wave: number, level = 1, revives = 0): void {
     const s = game.engine.state;
     s.wave = wave;
     s.outcome = 'lost';
     s.players[0].dead = true;
-    s.players[0].revives = 0;
+    s.players[0].revives = revives;
     s.players[0].level = level;
   }
 
   const blow = (src: 'bullet' | 'slam', owner = 0, value = 5): SimEvent => ({ type: 'hurt', owner, value, src, x: 0, y: 0 });
 
-  it('tells the death panel what dealt the last blow that hurt the hero', () => {
-    const { game, hud, w } = watch(false);
+  it('goes straight to the results with no revive left, knowing what dealt the last blow', () => {
+    const { game, hud, w, end } = watch(false);
     w.see([blow('slam'), blow('bullet')]);
     // blows to another hero, or ones that dealt nothing, do not count
     w.see([blow('slam', 1), blow('slam', 0, 0)]);
     fell(game, 1);
     w.update(1 / 30);
-    expect(w.cause).toBe('bullet');
-    expect(hud.calls.showDown).toEqual([['none', expect.objectContaining({ cause: 'bullet' })]]);
+    expect(w.fall?.cause).toBe('bullet');
+    expect(end).toHaveBeenCalledTimes(1);
+    expect(hud.calls.showDown).toBeUndefined();
+  });
+
+  it('offers a free revive from training on the death panel, with the cause', () => {
+    const { game, hud, w, end } = watch(false, undefined, undefined, { free: 1, ad: false });
+    fell(game, 1, 1, 1);
+    w.update(1 / 30);
+    expect(hud.calls.showDown).toEqual([['free', expect.objectContaining({ cause: 'crowd' })]]);
+    expect(end).not.toHaveBeenCalled();
+  });
+
+  it('offers the ad revive only when the host can play one, else ends the run', async () => {
+    const a = watch(false, undefined, undefined, { free: 0, ad: true });
+    fell(a.game, 1, 1, 1);
+    a.w.update(1 / 30);
+    await Promise.resolve();
+    expect(a.hud.calls.showDown?.[0][0]).toBe('ad');
+    const b = watch(false, undefined, undefined, { free: 0, ad: false });
+    fell(b.game, 1, 1, 1);
+    b.w.update(1 / 30);
+    await Promise.resolve();
+    expect(b.hud.calls.showDown).toBeUndefined();
+    expect(b.end).toHaveBeenCalledTimes(1);
   });
 
   it('blames the horde when no blow was seen, and too few levels whatever the blow', () => {
     const a = watch(false);
     fell(a.game, 1);
     a.w.update(1 / 30);
-    expect(a.w.cause).toBe('crowd');
+    expect(a.w.fall?.cause).toBe('crowd');
     const b = watch(false);
     b.w.see([blow('bullet')]);
     fell(b.game, 30, 1);
     b.w.update(1 / 30);
-    expect(b.w.cause).toBe('level');
+    expect(b.w.fall?.cause).toBe('level');
   });
 
-  it('holds the death panel back while the kill cam runs', () => {
+  it('holds the end of the run back while the kill cam runs', () => {
     const cam = { busy: true };
-    const { game, hud, w } = watch(false, undefined, cam);
+    const { game, w, end } = watch(false, undefined, cam);
     fell(game, 1);
     w.update(1 / 30);
-    expect(hud.calls.showDown).toBeUndefined();
+    expect(end).not.toHaveBeenCalled();
     expect(w.downShown).toBe(false);
     cam.busy = false;
     w.update(1 / 30);
-    expect(hud.calls.showDown).toHaveLength(1);
+    expect(end).toHaveBeenCalledTimes(1);
   });
 
   it('measures the fall against the chapter past: the nearest goal', () => {
-    const { game, hud, w } = watch(false, { best: 0, chests: 0, fell: 0 });
+    const { game, w } = watch(false, { best: 0, chests: 0, fell: 0 });
     fell(game, 49);
     w.update(1 / 30);
-    expect(hud.calls.showDown?.[0][1]).toEqual(expect.objectContaining({ goal: { kind: 'clear', wave: 50, n: 2 } }));
+    expect(w.fall).toEqual(expect.objectContaining({ goal: { kind: 'clear', wave: 50, n: 2 } }));
   });
 
   it('marks the last fall until the run gets past it, and cheers that wave', () => {

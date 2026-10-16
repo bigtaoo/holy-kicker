@@ -4,6 +4,8 @@ import { BALANCE } from '../meta/balance';
 import type { Reward } from '../meta/progress';
 import type { RunRank } from '../net/backend';
 import { sutraName } from './cardText';
+import type { DownInfo } from './deathInfo';
+import { fallLines } from './downPanel';
 import { dropLines, dropName, TIER_COLORS } from './gearText';
 import { statLines } from './statText';
 import type { Screen, UiFrame } from './uiLayout';
@@ -11,6 +13,7 @@ import { COLORS, button, fit, label, panel } from './widgets';
 
 // Results after a run: what it paid and dropped (already in the save), after the first run the
 // welcome gift (and what it adds, when it is worn in the next run) and the one waiting tomorrow,
+// after a lost run what felled the hero, one tip and the nearest goal (as on the death panel),
 // the next progress chest, its place on the leaderboard once the server answers, the rewarded
 // "double copper" offer when an ad can be shown, Play again (after a lost run, from the very
 // first one, the quickest way back into a fight) and Continue back to the lobby.
@@ -37,6 +40,8 @@ export class ResultsScreen implements Screen {
     private readonly actions: ResultsActions,
     adAvailable: Promise<boolean>,
     rank: Promise<RunRank | null>,
+    /** What felled the hero, for a lost run. */
+    private readonly fall: DownInfo | null = null,
   ) {
     // the leaderboard line comes in when the server answers; offline or unranked runs have none
     void rank.then((r) => {
@@ -93,15 +98,25 @@ export class ResultsScreen implements Screen {
     } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
     const tomorrow = r.gift ? BALANCE.welcome[1] : undefined;
     if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 48, COLORS.saffron]);
-    if (!r.firstClear && r.nextChest !== null) lines.push([t('results.nextChest', { wave: r.nextChest }), 44, COLORS.dim]);
+    // a fall's goal already names the nearest chest when it is the nearest goal
+    if (!r.firstClear && r.nextChest !== null && !this.fall) lines.push([t('results.nextChest', { wave: r.nextChest }), 44, COLORS.dim]);
     if (this.offer === 'paid') lines.push([t('results.doubled'), 48, COLORS.saffron]);
     // the card grows with its lines; the buttons sit a fixed distance below it
-    const cardH = lines.reduce((n, [, size]) => n + size + 44, 0) + 120;
+    // a lost run's fall sits under the title and the waves reached (it fell on the wave after them)
+    const fall = this.fall ? fallLines(this.fall, this.waves + 1, 840, 0.75) : [];
+    const cardH = lines.reduce((n, [, size]) => n + size + 44, 0) + fall.reduce((n, [, h]) => n + h, 0) + 120;
     const card = new Container();
     card.position.set(f.w / 2, f.h / 2 - 200);
     card.addChild(panel(920, cardH));
     let y = -cardH / 2 + 60;
-    for (const [text, size, fill] of lines) {
+    for (const [i, [text, size, fill]] of lines.entries()) {
+      if (i === 2) {
+        for (const [view, h] of fall) {
+          view.y = y + h / 2;
+          card.addChild(view);
+          y += h;
+        }
+      }
       const l = fit(label(text, size, fill), 840);
       l.y = y + size / 2;
       card.addChild(l);
