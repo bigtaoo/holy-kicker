@@ -4,7 +4,7 @@ import { FP, TICK_RATE, type Cymbal, type Field, type SimEvent } from '@hk/engin
 import { lerpX, lerpY } from './fixedStep';
 import type { FxPool } from './fx';
 import { PalmFalls } from './palmView';
-import { bolt, explosion, fieldMotes, nova, type RingMode } from './spells';
+import { bolt, explosion, fieldMotes, nova, rubble, type RingMode } from './spells';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
 
@@ -47,9 +47,12 @@ function fieldTexture(renderer: Renderer, fill: number, rim: number): Texture {
 /** The Mountain Palm's print: a golden hand pressed into the ground, fingers up. */
 function printTexture(renderer: Renderer): Texture {
   const r = FIELD_R;
-  const g = new Graphics().circle(r, r, r * 0.97).fill({ color: 0xffd860, alpha: 0.16 });
-  const hand = { color: 0xffd860, alpha: 0.55 };
-  const edge = { color: 0x8a5a18, width: r * 0.04, alpha: 0.8 };
+  // it carries the pin alone once the stone hand has sunk, so it reads a little stronger than a field
+  const g = new Graphics()
+    .circle(r, r, r * 0.97).fill({ color: 0xffd860, alpha: 0.22 })
+    .circle(r, r, r * 0.93).stroke({ color: 0x8a5a18, width: r * 0.05, alpha: 0.55 });
+  const hand = { color: 0xffd860, alpha: 0.72 };
+  const edge = { color: 0x7a4c12, width: r * 0.05, alpha: 0.9 };
   g.ellipse(r, r * 1.22, r * 0.44, r * 0.4).fill(hand).stroke(edge);
   // four fingers and a thumb as rounded bars
   const fingers: [number, number, number][] = [[-0.3, 0.3, 0.5], [-0.1, 0.18, 0.62], [0.1, 0.18, 0.6], [0.3, 0.3, 0.48]];
@@ -106,7 +109,7 @@ export class SpellView {
     palm: { tex: Texture; mountain: Texture; z: number },
     private readonly rand: () => number = Math.random,
   ) {
-    this.palms = new PalmFalls(layer, palm.tex, palm.mountain, palm.z);
+    this.palms = new PalmFalls(layer, palm.tex, palm.mountain, palm.z, (x, y, r) => rubble(pool, rand, x, y, r));
     this.discs = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => layer.addChild(s));
     this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0);
     this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8);

@@ -54,6 +54,19 @@ export function explosion(pool: FxPool, rand: () => number, x: number, y: number
   }
 }
 
+/** The Mountain Palm's stone hand sinking into its print: a low ring of stone dust round its base. */
+export function rubble(pool: FxPool, rand: () => number, x: number, y: number, r: number): void {
+  for (let i = 0; i < 9; i++) {
+    const a = (i / 9) * Math.PI * 2 + rand() * 0.5;
+    const c = Math.cos(a);
+    const v = r * (0.5 + rand() * 0.4);
+    pool.emit({
+      shape: 'puff', x: x + c * r * 0.3, y: y + Math.sin(a) * r * 0.12, vx: c * v, vy: Math.sin(a) * v * 0.35 - r * 0.25, life: 0.45 + rand() * 0.25,
+      size0: r * 0.25, size1: r * 0.55, rotation: rand() * Math.PI, spin: (rand() - 0.5) * 2, drag: 0.08, color: i % 2 ? 0x8c8a8f : 0x6c6b74, alpha: 0.6,
+    }, true);
+  }
+}
+
 /** The Endless Chain's bolts are gold and thicker. */
 const BOLT = { color: 0xc8f0ff, spark: 0xe0f8ff, width: 16 };
 const GOLD_BOLT = { color: 0xffe070, spark: 0xfff4c0, width: 24 };

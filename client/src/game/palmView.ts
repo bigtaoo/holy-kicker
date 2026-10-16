@@ -1,14 +1,14 @@
 import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
-import { palmHold, palmPose } from './palmPose';
+import { MOUNTAIN_EXIT, PALM_EXIT, palmPose, palmSinks, type PalmExit } from './palmPose';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
 
 // The Rulai Palm falling (timing in palmPose.ts): a golden hand dropping from the sky onto its
 // target, over the horde, with a dark shadow growing on the ground under it as a warning. The
 // blast itself is the sim's 'meteor' cast when it lands (spellView.ts). The evolved Mountain
-// Palm drops a stone hand instead, Buddha's hand become the Five Finger Mountain: it stands on
-// its print, a little see-through so the crowd behind it stays readable, for as long as the
-// print pins the mobs under it, then sinks away.
+// Palm drops a stone hand instead, Buddha's hand become the Five Finger Mountain: it slams onto
+// its print, stands a moment, a little see-through, then sinks into the ground in a puff of dust
+// and leaves the print to pin the mobs under it.
 
 /** The hand is this many blast radii tall. */
 const HAND = 2;
@@ -25,8 +25,12 @@ interface Falling {
   shadow: Graphics;
   /** Height in world units. */
   tall: number;
-  hold: number;
+  /** Blast radius, world units. */
+  r: number;
+  exit: PalmExit;
   mountain: boolean;
+  /** The stone hand has started to sink (its dust puffed). */
+  sunk: boolean;
   x: number;
   y: number;
   t: number;
@@ -43,6 +47,8 @@ export class PalmFalls {
     private readonly tex: Texture,
     private readonly mountainTex: Texture,
     private readonly overZ: number,
+    /** The stone hand starts sinking into its print at (x, y), blast radius r. */
+    private readonly onSink: (x: number, y: number, r: number) => void = () => {},
   ) {}
 
   /**
@@ -59,7 +65,7 @@ export class PalmFalls {
     shadow.position.set(x, y);
     shadow.zIndex = SHADOW_Z + 2;
     const tall = r * (mountain ? MOUNTAIN : HAND);
-    this.palms.push({ hand, shadow, tall, hold: palmHold(print), mountain, x, y, t: 0, fall });
+    this.palms.push({ hand, shadow, tall, r, exit: mountain ? MOUNTAIN_EXIT : PALM_EXIT, mountain, sunk: false, x, y, t: 0, fall });
     this.pose(this.palms[this.palms.length - 1]);
   }
 
@@ -67,6 +73,10 @@ export class PalmFalls {
     for (let i = this.palms.length - 1; i >= 0; i--) {
       const p = this.palms[i];
       p.t += dt;
+      if (p.mountain && !p.sunk && p.t >= p.fall + palmSinks(p.exit)) {
+        p.sunk = true;
+        this.onSink(p.x, p.y, p.r);
+      }
       if (this.pose(p)) continue;
       this.hands.give(p.hand);
       this.shadows.give(p.shadow);
@@ -76,7 +86,7 @@ export class PalmFalls {
 
   /** Places p for its time; false once it is gone. */
   private pose(p: Falling): boolean {
-    const o = palmPose(p.t, p.fall, p.hold);
+    const o = palmPose(p.t, p.fall, p.exit);
     if (o.done) return false;
     const size = p.tall / p.hand.texture.height;
     p.hand.scale.set(size * o.scaleX, size * o.scaleY);

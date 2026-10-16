@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { PALM_DROP, PALM_FADE, PALM_HOLD, PALM_SQUASH, palmHold, palmPose } from './palmPose';
+import { MOUNTAIN_EXIT, MOUNTAIN_HOLD, MOUNTAIN_SINK, PALM_DROP, PALM_FADE, PALM_HOLD, PALM_SQUASH, palmPose, palmSinks } from './palmPose';
 
 describe('palmPose', () => {
   it('drops from the sky, faster and faster, while its shadow grows', () => {
@@ -24,14 +24,18 @@ describe('palmPose', () => {
     expect(palmPose(fall + PALM_SQUASH + PALM_HOLD + PALM_FADE, fall)).toMatchObject({ alpha: 0, done: true });
   });
 
-  it('holds the Mountain Palm for as long as its print pins, then sinks as it fades', () => {
+  it('holds the Mountain Palm a moment, then sinks it deep long before its print stops pinning', () => {
     const fall = 0.4;
-    expect(palmHold(0)).toBe(PALM_HOLD);
-    const hold = palmHold(2);
-    expect(PALM_SQUASH + hold + PALM_FADE).toBeCloseTo(2);
-    expect(palmPose(fall + 1.5, fall, hold)).toMatchObject({ scaleY: 1, alpha: 1, done: false });
-    const fading = palmPose(fall + PALM_SQUASH + hold + PALM_FADE / 2, fall, hold);
-    expect(fading.scaleY).toBeLessThan(1);
-    expect(palmPose(fall + 2, fall, hold).done).toBe(true);
+    const sinks = fall + palmSinks(MOUNTAIN_EXIT);
+    expect(sinks - fall).toBeCloseTo(PALM_SQUASH + MOUNTAIN_HOLD);
+    expect(palmPose(sinks - 0.01, fall, MOUNTAIN_EXIT)).toMatchObject({ scaleY: 1, alpha: 1, done: false });
+    // eased in and still solid halfway down, then sunk deep as it goes
+    const half = palmPose(sinks + MOUNTAIN_SINK / 2, fall, MOUNTAIN_EXIT);
+    expect(half.alpha).toBeCloseTo(1);
+    expect(half.scaleY).toBeLessThan(1);
+    expect(palmPose(sinks + MOUNTAIN_SINK * 0.99, fall, MOUNTAIN_EXIT).scaleY).toBeLessThan(0.25);
+    expect(palmPose(sinks + MOUNTAIN_SINK + 0.001, fall, MOUNTAIN_EXIT)).toMatchObject({ alpha: 0, done: true });
+    // the evolved print pins for 2 s
+    expect(palmSinks(MOUNTAIN_EXIT) + MOUNTAIN_SINK).toBeLessThan(1);
   });
 });
