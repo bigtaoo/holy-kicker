@@ -36,8 +36,10 @@ import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { Shake } from './shake';
 import { FixedStep, lerpX, lerpY } from './fixedStep';
 import { releaseBaked } from './bake';
+import { KillCamView } from './killCamView';
+import { LowHealthView } from './lowHealthView';
 import { runConfig, type RunSetup } from './runSetup';
-import { heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
+import { drawStick, heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -108,8 +110,13 @@ export class Game {
   private readonly stickBase: Sprite;
   private readonly stickKnob: Sprite;
   private hurtFlash = 0;
+  /** The slow-motion look at the killing blow, and the low-health heartbeat. */
+  private readonly downCam: KillCamView;
+  private readonly lowHp: LowHealthView;
   /** Every tick's events after the view reacted, for the shell (sounds). */
   onEvents: (events: readonly SimEvent[]) => void = () => {};
+  /** Each beat of the low-health heartbeat, for the shell (its sound). */
+  onHeartbeat: () => void = () => {};
   private vp: Viewport = computeViewport(1, 1);
   private screenKey = '';
   private fpsTimer = 0;
@@ -190,6 +197,8 @@ export class Game {
     this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, mountain: art.mountain, z: HERO_TOP_Z - 2 });
     this.aura = new AuraStack(scene.stack);
     this.zen = new ZenRing(this.world);
+    this.downCam = new KillCamView(this.world, { horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
+    this.lowHp = new LowHealthView(app.renderer, () => this.onHeartbeat());
 
     this.root.addChild(this.world, this.label);
     if (this.boss) this.root.addChild(...this.boss.huds);
@@ -197,7 +206,7 @@ export class Game {
     this.root.mask = this.playMask;
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer, STICK_RADIUS);
     this.sides = sideGround(stage.ground, app.screen, this.root, this.world);
-    app.stage.addChild(this.sides, this.playMask, this.root, this.stickBase, this.stickKnob);
+    app.stage.addChild(this.sides, this.playMask, this.root, this.lowHp.view, this.stickBase, this.stickKnob);
 
     // the fps / tick readout is for development only
     this.label.visible = import.meta.env.DEV && !scene.record;
@@ -208,7 +217,7 @@ export class Game {
    *  textures stay loaded for the next run. */
   destroy(): void {
     this.app.ticker.remove(this.onTick);
-    for (const c of [this.sides, this.playMask, this.root, this.stickBase, this.stickKnob]) c.destroy({ children: true });
+    for (const c of [this.sides, this.playMask, this.root, this.lowHp.view, this.stickBase, this.stickKnob]) c.destroy({ children: true });
     releaseBaked(this.app.renderer);
   }
 
@@ -229,7 +238,7 @@ export class Game {
     const vp = (this.vp = computeViewport(width, height, this.scene.record > 0));
     this.root.position.set(vp.playX, vp.playY);
     this.playMask.clear().rect(vp.playX, vp.playY, vp.playW, vp.playH).fill(0xffffff);
-    this.world.scale.set(vp.scale);
+    this.lowHp.layout(vp);
     this.label.style.fontSize = Math.max(10, 48 * vp.scale);
     this.label.style.stroke = { color: 0x000000, width: Math.max(1, 4 * vp.scale) };
     // dev only, below the HUD strip, the wave counter and the boss bar
@@ -241,6 +250,11 @@ export class Game {
   /** Brings the downed hero back on the next tick (the engine checks he has a revive left). */
   revive(): void {
     this.reviving = true;
+  }
+
+  /** Whether the kill cam is still playing after the hero went down (the death panel waits). */
+  downCamBusy(): boolean {
+    return this.downCam.busy;
   }
 
   /** Takes card `index` of the open level-up offer on the next tick. */
@@ -258,8 +272,11 @@ export class Game {
     }
     const over = (s.outcome !== 'playing' && !this.reviving) || (s.players[0].offer.length > 0 && this.picking === undefined);
     this.stepping = !this.paused && !over;
+    const real = Math.min(frameMs / 1000, 0.05);
     if (!this.stepping) {
-      this.draw(this.loop.alpha, 0);
+      // a stopped run stands still, but for the kill cam's slow motion after the hero goes down
+      const dt = this.downCam.step(this.paused ? 0 : real);
+      this.draw(this.loop.alpha, dt, this.paused ? 0 : this.downCam.busy ? dt : real);
       return;
     }
     const speed = this.rushing ? RUSH_SPEED : this.speed;
@@ -272,7 +289,7 @@ export class Game {
       this.react(events);
       this.onEvents(events);
     }
-    this.draw(this.loop.alpha, Math.min(frameMs / 1000, 0.05) * speed);
+    this.draw(this.loop.alpha, real * speed, real);
   }
 
   /** Dev: the bot is still rushing to the ?from wave, so a recording waits. */
@@ -317,7 +334,14 @@ export class Game {
           if (e.owner === LOCAL) {
             this.hero.hurt();
             this.hurtFlash = HURT_FLASH;
+            this.downCam.struck(e.src, e.x, e.y);
           }
+          break;
+        case 'heroDown':
+          if (e.owner === LOCAL && s.config.waves > 0) this.downCam.down(s);
+          break;
+        case 'revive':
+          if (e.owner === LOCAL) [this.downCam, this.lowHp].forEach((v) => v.reset());
           break;
         case 'hit': {
           if (e.ball) this.fx.hit(e.bx / FP, e.by / FP - BALL_LIFT);
@@ -366,22 +390,12 @@ export class Game {
           summonFx(this.fx.pool, e.x / FP, e.y / FP);
           break;
         case 'bossCast':
-          if (s.boss) this.boss?.cast(s.boss, e.x / FP, e.y / FP);
-          break;
         case 'bossDive':
-          if (s.boss) this.boss?.dive(s.boss, e.x / FP, e.y / FP);
-          break;
         case 'bossWindup':
-          if (s.boss) this.boss?.windup(s.boss);
-          break;
         case 'bossSlam':
-          if (s.boss) this.boss?.impact(s.boss, e.x / FP, e.y / FP, e.radius / FP);
-          break;
         case 'bossDown':
-          if (s.boss) this.boss?.down(s.boss);
-          break;
         case 'bossBack':
-          if (s.boss) this.boss?.back(s.boss);
+          if (s.boss) this.boss?.react(e, s.boss);
           break;
         case 'blast':
           this.threats?.blast(e.x / FP, e.y / FP, e.radius / FP);
@@ -399,13 +413,9 @@ export class Game {
           this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP, e.gold);
           break;
         case 'bloom':
-          this.sutras.bloom(e.x / FP, e.y / FP, e.radius / FP);
-          break;
         case 'roar':
-          this.sutras.roar(e.x / FP, e.y / FP, e.brad, e.radius / FP, e.full);
-          break;
         case 'bounce':
-          this.sutras.bounce(e.x / FP, e.y / FP, e.radius / FP);
+          this.sutras.react(e);
           break;
         case 'dodge': {
           const p = s.players.find((q) => q.owner === e.owner);
@@ -425,8 +435,8 @@ export class Game {
     this.shake.kills(kills);
   }
 
-  /** Draws the sim state `alpha` of the way through its last tick; dt is the frame time. */
-  private draw(alpha: number, dt: number): void {
+  /** Draws the sim state `alpha` of the way through its last tick; dt is the frame's view time, real its real time. */
+  private draw(alpha: number, dt: number, real: number): void {
     const s = this.engine.state;
     const p = s.players[0];
     const hx = lerpX(p, alpha);
@@ -443,8 +453,10 @@ export class Game {
     this.healthBar.update(dt, p.hp, p.maxHp);
     this.healthBar.view.position.set(hx, hy + 22);
     this.healthBar.view.zIndex = this.hero.view.zIndex + 0.25;
+    this.lowHp.update(real, p.hp, p.maxHp, s.config.waves > 0 && s.outcome === 'playing' && !p.dead);
 
-    this.drawHorde(s, alpha, dt, hx, hy);
+    this.horde.draw(s.mobs, alpha, dt, hx, hy);
+    this.elites?.draw(s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), 2 * twinHp(s.config.chapter, s.wave, s.config.hard));
     this.corpses.update(dt);
     this.mist?.update(dt);
     this.balls.sync(s.balls, alpha, dt);
@@ -468,13 +480,14 @@ export class Game {
     const vp = this.vp;
     ease(this.camPos, hx, hy, dt, (this.scene.cam === 'lock' ? LOCKED_CAMERA : SMOOTH_CAMERA).camEase);
     const res = this.app.renderer.resolution;
-    const sh = this.shake.step(dt / (this.rushing ? RUSH_SPEED : this.speed)); // real time, not sim time
-    this.world.position.set(
-      snapToPixel(vp.playW / 2 - this.camPos.x * vp.scale + sh.x, res),
-      snapToPixel(vp.playH / 2 - this.camPos.y * vp.scale + sh.y, res),
-    );
+    const sh = this.shake.step(real); // real time, not sim time
+    // the kill cam eases in toward the killing blow
+    const cam = this.downCam.frame(this.camPos);
+    const k = vp.scale * cam.zoom;
+    this.world.scale.set(k);
+    this.world.position.set(snapToPixel(vp.playW / 2 - cam.x * k + sh.x, res), snapToPixel(vp.playH / 2 - cam.y * k + sh.y, res));
 
-    this.drawStick();
+    drawStick(this.stick, this.stickBase, this.stickKnob, STICK_RADIUS);
     this.fpsTimer -= dt;
     if (this.fpsTimer <= 0) {
       this.fpsTimer = 0.5;
@@ -483,17 +496,4 @@ Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
     }
   }
 
-  private drawHorde(s: SimState, alpha: number, dt: number, hx: number, hy: number): void {
-    this.horde.draw(s.mobs, alpha, dt, hx, hy);
-    this.elites?.draw(s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), 2 * twinHp(s.config.chapter, s.wave, s.config.hard));
-  }
-
-  private drawStick(): void {
-    const o = this.stick.origin();
-    this.stickBase.visible = this.stickKnob.visible = !!o;
-    if (!o) return;
-    const v = this.stick.read();
-    this.stickBase.position.set(o.x, o.y);
-    this.stickKnob.position.set(o.x + v.x * STICK_RADIUS, o.y + v.y * STICK_RADIUS);
-  }
 }

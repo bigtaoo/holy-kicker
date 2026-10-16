@@ -1,6 +1,6 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
-import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Lotus, type Player } from '@hk/engine';
+import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Lotus, type Player, type SimEvent } from '@hk/engine';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
 
@@ -81,6 +81,13 @@ export class SutraView {
     this.burstPool = new ViewPool(() => new Graphics(), place);
     this.beams.visible = false;
     world.addChild(this.beams);
+  }
+
+  /** A sutra event from the sim: a bloom, a roar or a bounce (positions in FP). */
+  react(e: SimEvent): void {
+    if (e.type === 'bloom') this.bloom(e.x / FP, e.y / FP, e.radius / FP);
+    else if (e.type === 'roar') this.roar(e.x / FP, e.y / FP, e.brad, e.radius / FP, e.full);
+    else if (e.type === 'bounce') this.bounce(e.x / FP, e.y / FP, e.radius / FP);
   }
 
   /** A seed bloomed at (x, y) with radius r, world units: petals open over the ground. */

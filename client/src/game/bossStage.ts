@@ -1,5 +1,5 @@
 import type { Container } from 'pixi.js';
-import type { Boss as BossState, BossKind } from '@hk/engine';
+import { FP, type Boss as BossState, type BossKind, type SimEvent } from '@hk/engine';
 import type { Boss } from './bossView';
 import type { CarpView } from './carpView';
 import type { DemonView } from './demonView';
@@ -50,6 +50,29 @@ export class BossStage {
   /** A hit on boss b; the height to show the number at. */
   hit(b: BossState): number {
     return this.views[b.kind]?.hit(b) ?? 0;
+  }
+
+  /** The view drawing boss b (the kill cam tints it). */
+  viewOf(b: BossState): Container | null {
+    return this.views[b.kind]?.view ?? null;
+  }
+
+  /** A boss event from the sim, for boss b. */
+  react(e: SimEvent, b: BossState): void {
+    switch (e.type) {
+      case 'bossCast':
+        return this.cast(b, e.x / FP, e.y / FP);
+      case 'bossDive':
+        return this.dive(b, e.x / FP, e.y / FP);
+      case 'bossWindup':
+        return this.windup(b);
+      case 'bossSlam':
+        return this.impact(b, e.x / FP, e.y / FP, e.radius / FP);
+      case 'bossDown':
+        return this.down(b);
+      case 'bossBack':
+        return this.back(b);
+    }
   }
 
   dive(b: BossState, x: number, y: number): void {

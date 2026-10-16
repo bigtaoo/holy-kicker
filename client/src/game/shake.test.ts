@@ -64,4 +64,14 @@ describe('Shake', () => {
     s.kills(100);
     expect(peak(s, 10)).toBe(0);
   });
+
+  it('shakes on the hero going down, never when off', () => {
+    const s = new Shake();
+    s.blow();
+    expect(peak(s, 3)).toBeGreaterThan(SHAKE.down / 2);
+    const off = new Shake();
+    off.on = false;
+    off.blow();
+    expect(peak(off, 10)).toBe(0);
+  });
 });

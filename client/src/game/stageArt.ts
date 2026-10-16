@@ -3,6 +3,7 @@ import { bakeTexture } from './bake';
 import { periodStart, type Vec } from './camera';
 import type { DecoSheet, DecoStyle } from './decoView';
 import type { MistLayer } from './mistView';
+import type { DragStick } from './dragStick';
 import { SHADOW_Z } from './shadow';
 
 // Stage pieces the game scene is built from: the ground, rings under figures, the hero's dark
@@ -120,4 +121,14 @@ function bake(renderer: Renderer, g: Graphics, w: number, h: number, resolution:
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, w, h), resolution, antialias: true });
   g.destroy();
   return tex;
+}
+
+/** Shows the stick's base where the drag began and its knob where it is now, or hides both. */
+export function drawStick(stick: DragStick, base: Sprite, knob: Sprite, radius: number): void {
+  const o = stick.origin();
+  base.visible = knob.visible = !!o;
+  if (!o) return;
+  const v = stick.read();
+  base.position.set(o.x, o.y);
+  knob.position.set(o.x + v.x * radius, o.y + v.y * radius);
 }

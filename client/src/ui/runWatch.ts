@@ -97,7 +97,7 @@ export class RunWatch {
       }
       this.clearWait -= dt;
       if (this.clearWait <= 0) d.end();
-    } else if (s.outcome === 'lost' && !this.downShown) {
+    } else if (s.outcome === 'lost' && !this.downShown && !game.downCamBusy()) {
       this.downShown = true;
       d.portal.gameplayStop();
       // the offer appears once the host says an ad can play
