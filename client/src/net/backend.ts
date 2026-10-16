@@ -62,7 +62,7 @@ export class Backend {
     platform.onHide(() => {
       if (this.leave) this.track('leave', this.leave());
       for (const cb of this.hidden) cb();
-      void this.flush();
+      void this.flushLast();
     });
   }
 
@@ -124,8 +124,7 @@ export class Backend {
     try {
       while (this.queue.size > 0) {
         const events = this.queue.take();
-        const batch: EventBatch = { install: this.install, session: this.session, host: this.platform.host, build: this.build, locale: this.locale(), events };
-        const ok = await this.send('POST', '/v1/events', batch);
+        const ok = await this.send('POST', '/v1/events', this.batch(events));
         if (ok === null) {
           this.queue.restore(events);
           break;
@@ -134,6 +133,22 @@ export class Backend {
     } finally {
       this.sending = false;
     }
+  }
+
+  /**
+   * As the game goes to the background (perhaps for good): sends what waits at once. A batch the
+   * timer still has on its way would make flush() wait, and the page may be gone before it ends,
+   * taking the `leave` with it, so the rest goes out beside it.
+   */
+  private async flushLast(): Promise<void> {
+    if (!this.sending) return this.flush();
+    if (!this.base || this.sharing !== 'send' || this.queue.size === 0) return;
+    const events = this.queue.take();
+    if ((await this.send('POST', '/v1/events', this.batch(events))) === null) this.queue.restore(events);
+  }
+
+  private batch(events: EventBatch['events']): EventBatch {
+    return { install: this.install, session: this.session, host: this.platform.host, build: this.build, locale: this.locale(), events };
   }
 
   /** Enters a finished run on its board; the reply has the install's rank there, or null offline. */

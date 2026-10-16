@@ -79,9 +79,20 @@ export class WebPlatform implements Platform {
   }
 
   onHide(cb: () => void): void {
+    // once per time away: a portal that swaps the game's iframe out (another game picked on its
+    // page) fires only pagehide in it, a closed tab fires both
+    let away = false;
+    const hide = () => {
+      if (away) return;
+      away = true;
+      cb();
+    };
     document.addEventListener('visibilitychange', () => {
-      if (document.hidden) cb();
+      if (document.hidden) hide();
+      else away = false;
     });
+    window.addEventListener('pagehide', hide);
+    window.addEventListener('pageshow', () => (away = false));
   }
 
   onBattery(cb: (b: Battery) => void): void {

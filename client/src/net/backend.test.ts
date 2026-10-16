@@ -116,6 +116,29 @@ describe('Backend', () => {
     expect(calls).toHaveLength(2);
   });
 
+  it('sends the leave at once even while the timer batch is still on its way', async () => {
+    const calls: Call[] = [];
+    let answer = () => {};
+    vi.stubGlobal('fetch', (url: string, init: RequestInit) => {
+      calls.push({ url, init });
+      const reply = { ok: true, status: 204, json: async () => ({}) };
+      return calls.length === 1 ? new Promise((r) => (answer = () => r(reply))) : Promise.resolve(reply);
+    });
+    const host = platform();
+    const net = new Backend(host, 'https://api.test', '1.0.0', () => 'en');
+    net.onLeave(() => ({ place: 'run', secs: 30 }));
+    net.track('run_start');
+    await vi.advanceTimersByTimeAsync(20_000);
+    expect(calls).toHaveLength(1);
+    host.hide();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(calls).toHaveLength(2);
+    expect(sent(calls[1]).events.map((e: { e: string }) => e.e)).toEqual(['leave']);
+    answer();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(calls).toHaveLength(2);
+  });
+
   it('says where the player was as the game goes to the background, in the same send', async () => {
     const calls = server({ ok: true, status: 204 });
     const host = platform();
