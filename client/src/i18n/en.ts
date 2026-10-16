@@ -115,6 +115,7 @@ export const en = {
     move: 'Drag anywhere to move',
     keys: 'Move with WASD or the arrow keys',
     drag: 'or drag with the mouse',
+    click: 'Click the game first, then use the keys',
     auto: 'Your kicks are automatic',
     gems: 'Grab the gems to level up',
   },

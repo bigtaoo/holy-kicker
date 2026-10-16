@@ -362,7 +362,7 @@ export class Shell {
       pick: (index) => this.game?.pick(index),
       setLanguage: (locale) => this.keepLanguage(locale),
       report: canReport(this.net, import.meta.env.DEV) ? () => reportProblem(this.platform, this.net, () => this.game, this.scene) : null,
-    }, this.art.icons, this.device === 'desktop');
+    }, this.art.icons, this.device === 'desktop', () => this.platform.keysReach?.() ?? true);
     this.setScreen(this.hud);
     // the first run teaches moving; a replayed first chapter, a resumed run or a dev bot's does not
     const teach = !this.save.firstRunDone && this.scene.waves && !left && !this.scene.autoplay && !this.scene.record;

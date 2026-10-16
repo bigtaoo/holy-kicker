@@ -20,6 +20,8 @@ export interface Platform {
   readKeys(): Vec2;
   /** Every key that goes down, `code` as KeyboardEvent.code names it; unset where there is no keyboard. */
   onKey?(cb: (code: string, repeat: boolean) => void): void;
+  /** Whether key presses reach the game now (a portal's iframe keeps them until a click in it); unset where they always do. */
+  keysReach?(): boolean;
   /** Reads a text file shipped with the game (relative path, as for textures). */
   readText(path: string): Promise<string>;
   /** Reads a binary file shipped with the game (the sound samples). */

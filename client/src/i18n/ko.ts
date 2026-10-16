@@ -117,6 +117,7 @@ export const ko: Table<typeof en> = {
     move: '아무 곳이나 드래그해서 이동',
     keys: 'WASD 또는 방향키로 이동',
     drag: '마우스로 드래그해도 돼요',
+    click: '먼저 게임 화면을 클릭하세요',
     auto: '발차기는 자동이에요',
     gems: '보석을 주워 레벨 업',
   },

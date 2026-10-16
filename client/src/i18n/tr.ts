@@ -117,6 +117,7 @@ export const tr: Table<typeof en> = {
     move: 'Hareket için herhangi bir yeri sürükle',
     keys: 'WASD ya da ok tuşlarıyla yürü',
     drag: 'ya da fareyle sürükle',
+    click: 'Önce oyuna tıkla, sonra tuşları kullan',
     auto: 'Tekmelerin otomatik',
     gems: 'Seviye atlamak için taşları topla',
   },

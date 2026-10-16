@@ -117,6 +117,7 @@ export const id: Table<typeof en> = {
     move: 'Geser di mana saja untuk bergerak',
     keys: 'Bergerak dengan WASD atau tombol panah',
     drag: 'atau seret dengan mouse',
+    click: 'Klik game dulu, lalu pakai tombolnya',
     auto: 'Tendanganmu otomatis',
     gems: 'Ambil permata untuk naik level',
   },

@@ -101,6 +101,8 @@ export class RunHud implements Screen {
     private readonly icons: IconSheet,
     /** A desktop: the move hint shows the arrow keys. */
     private readonly keys = false,
+    /** Whether the keys reach the game now: the move hint asks for a click first when they do not. */
+    private readonly keysReach: () => boolean = () => true,
   ) {}
 
   layout(f: UiFrame): void {
@@ -355,7 +357,7 @@ export class RunHud implements Screen {
 
   /** The hint low on the screen, under the fight (tutorialHint.ts). */
   private drawTutorial(f: UiFrame): void {
-    const hint = (this.hint = tutorialHint(this.tutorial, f.w, this.keys));
+    const hint = (this.hint = tutorialHint(this.tutorial, f.w, this.keys ? this.keysReach : null));
     hint.view.position.set(f.w / 2, f.h * (this.tutorial === 'move' ? 0.78 : 0.88));
     hint.update(this.clock);
     this.view.addChild(hint.view);

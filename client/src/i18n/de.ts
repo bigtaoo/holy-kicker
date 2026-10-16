@@ -117,6 +117,7 @@ export const de: Table<typeof en> = {
     move: 'Zieh irgendwo, um dich zu bewegen',
     keys: 'Bewege dich mit WASD oder den Pfeiltasten',
     drag: 'oder ziehe mit der Maus',
+    click: 'Klicke zuerst ins Spiel, dann gehen die Tasten',
     auto: 'Deine Tritte gehen automatisch',
     gems: 'Sammle die Edelsteine zum Aufsteigen',
   },

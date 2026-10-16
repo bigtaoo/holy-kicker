@@ -117,6 +117,7 @@ export const pl: Table<typeof en> = {
     move: 'Przeciągnij gdziekolwiek, by się ruszać',
     keys: 'Ruszaj się WASD lub strzałkami',
     drag: 'albo przeciągaj myszą',
+    click: 'Najpierw kliknij grę, potem działają klawisze',
     auto: 'Twoje kopnięcia są automatyczne',
     gems: 'Zbieraj klejnoty, by awansować',
   },

@@ -117,6 +117,7 @@ export const zh: Table<typeof en> = {
     move: '按住屏幕任意处拖动来移动',
     keys: '用 WASD 或方向键移动',
     drag: '也可以按住鼠标拖动',
+    click: '先点一下游戏画面，键盘才能用',
     auto: '踢球是自动的',
     gems: '捡起宝石来升级',
   },

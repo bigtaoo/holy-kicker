@@ -117,6 +117,7 @@ export const ja: Table<typeof en> = {
     move: '画面のどこでもドラッグで移動',
     keys: 'WASD か矢印キーで移動',
     drag: 'マウスのドラッグでもOK',
+    click: 'まずゲーム画面をクリックしてね',
     auto: 'キックは自動で出る',
     gems: 'ジェムを拾ってレベルアップ',
   },

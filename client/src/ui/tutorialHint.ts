@@ -6,7 +6,9 @@ import { COLORS, fit, label } from './widgets';
 // The first run's hint, drawn low on the screen under the fight (tutorial.ts says which step).
 // The move step shows how to move on this device: on a touch screen a finger swaying along a
 // track ("drag anywhere"); on a desktop the arrow keys pressed in turn, with the mouse drag as
-// the small second line, since few desktop players think of dragging with the mouse.
+// the small second line, since few desktop players think of dragging with the mouse. In a portal's
+// iframe the keys only reach the game after a click in it, so until then a pulsing line over the
+// keys asks for that click and the keys stand dimmed.
 
 /** The arrow keys in the order the hint presses them, and how long each stays down. */
 export const KEY_ORDER = ['up', 'right', 'down', 'left'] as const;
@@ -34,8 +36,8 @@ export interface TutorialHint {
   update(clock: number): void;
 }
 
-/** The hint for `step` (not 'done'), `width` wide; `keys` for a desktop. */
-export function tutorialHint(step: TutorialStep, width: number, keys: boolean): TutorialHint {
+/** The hint for `step` (not 'done'), `width` wide; on a desktop `keys` says whether the keys reach the game now. */
+export function tutorialHint(step: TutorialStep, width: number, keys: (() => boolean) | null): TutorialHint {
   const view = new Container();
   view.eventMode = 'none';
   const move = step === 'move';
@@ -46,7 +48,7 @@ export function tutorialHint(step: TutorialStep, width: number, keys: boolean): 
     view.addChild(l);
   });
   if (!move) return { view, update() {} };
-  return keys ? arrowKeys(view) : swayingFinger(view);
+  return keys ? arrowKeys(view, width, keys) : swayingFinger(view);
 }
 
 function swayingFinger(view: Container): TutorialHint {
@@ -60,7 +62,7 @@ function swayingFinger(view: Container): TutorialHint {
   return { view, update: (clock) => (hand.x = Math.sin(clock * 4) * 120) };
 }
 
-function arrowKeys(view: Container): TutorialHint {
+function arrowKeys(view: Container, width: number, reach: () => boolean): TutorialHint {
   const cluster = new Container();
   cluster.y = -110 - 2 * KEY - GAP;
   const caps = new Map<ArrowKey, { up: Container; down: Container }>();
@@ -75,7 +77,15 @@ function arrowKeys(view: Container): TutorialHint {
     caps.set(key, { up, down });
   }
   view.addChild(cluster);
+  const click = fit(label(t('tutorial.click'), 56, COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), width - 80);
+  click.y = cluster.y - 70;
+  const base = click.scale.x;
+  view.addChild(click);
   const update = (clock: number) => {
+    const off = !reach();
+    click.visible = off;
+    click.scale.set(base * (1 + 0.06 * Math.sin(clock * 6)));
+    cluster.alpha = off ? 0.4 : 1;
     const lit = litKey(clock);
     for (const [key, cap] of caps) {
       cap.up.visible = key !== lit;

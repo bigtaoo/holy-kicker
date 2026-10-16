@@ -157,6 +157,10 @@ export class WebPlatform implements Platform {
     this.keyListeners.push(cb);
   }
 
+  keysReach(): boolean {
+    return document.hasFocus();
+  }
+
   readKeys(): Vec2 {
     let x = 0;
     let y = 0;
