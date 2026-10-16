@@ -68,6 +68,9 @@ export interface Platform {
   sessionProps?(): Record<string, PropValue>;
   /** The host's own analytics, fed beside the backend; unset where the host has none. */
   readonly analytics?: HostAnalytics;
+  /** The host's page lets no request reach the game's backend (Playgama's sandbox, by its CSP): the
+   *  game then plays offline there, the privacy answer still governing the host's own analytics. */
+  readonly backendBlocked?: boolean;
 }
 
 /** A host's analytics (Playgama's telemetry, through Bridge). */

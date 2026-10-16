@@ -34,10 +34,12 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   device.gpu = gpuName(app.renderer);
   await Assets.init({ skipDetections: opts.skipDetections });
   const query = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
-  const base = apiBase(platform.host, import.meta.env.DEV, query, import.meta.env.VITE_HK_API);
+  const api = apiBase(platform.host, import.meta.env.DEV, query, import.meta.env.VITE_HK_API);
+  // a host that blocks the backend plays offline, but its own analytics still follow the privacy answer
+  const base = platform.backendBlocked ? null : api;
   const net = new Backend(platform, base, __HK_BUILD__, getLocale);
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
-  const privacy = base ? new PrivacyChoice(net, platform, base, deviceTimeZone()) : null;
+  const privacy = api ? new PrivacyChoice(net, platform, api, deviceTimeZone()) : null;
   const shell = new Shell(app, platform, await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k)), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)

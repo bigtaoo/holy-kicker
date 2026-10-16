@@ -20,6 +20,8 @@ const KEYS = [SAVE_KEY, SETTINGS_KEY, RUN_KEY, INSTALL_KEY, SENT_KEY];
 
 /** Bridge's stand-ins for a page that is no portal: a developer's own preview and the QA tool. */
 const TEST_PLATFORMS = new Set(['mock', 'qa_tool']);
+/** Bridge's id for the sandbox, where a published build plays before the catalog. */
+const SANDBOX = 'playgama_sandbox';
 
 export class PlaygamaPlatform extends WebPlatform {
   override readonly host: Host;
@@ -29,12 +31,15 @@ export class PlaygamaPlatform extends WebPlatform {
   override readonly banner: Banner = NO_BANNER;
   override readonly audio: AudioHost | null;
   readonly analytics?: HostAnalytics;
+  readonly backendBlocked: boolean;
 
   private constructor(private readonly bridge: PlaygamaBridge, store: BridgeStore | null) {
     super();
     const id = bridge.platformId();
     // a local preview reports to the backend as web, like every other test install
     this.host = id && !TEST_PLATFORMS.has(id) ? 'playgama' : 'web';
+    // the sandbox's CSP admits Playgama's own hosts only; the catalog may differ, so it stays online
+    this.backendBlocked = id === SANDBOX;
     this.storage = new SafeStore(store ?? browserStorage());
     this.portal = !bridge.isReady() ? NO_PORTAL : {
       ...NO_PORTAL,

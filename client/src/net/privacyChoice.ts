@@ -4,8 +4,9 @@ import { loadSettings, updateSettings } from '../meta/settings';
 import type { Platform } from '../platform/types';
 import { INSTALL_KEY, type Backend } from './backend';
 
-// The player's privacy answer, applied to the backend (meta/privacy.ts has the rules): built only
-// where the game talks to a backend, so offline builds and WeChat never ask.
+// The player's privacy answer, applied to the backend and the host's own analytics (meta/privacy.ts
+// has the rules): built only where the game has a backend, so offline builds and WeChat never ask.
+// A host that blocks the backend (Playgama's sandbox) still asks, for its analytics.
 
 /** What the lobby's consent card and the settings panel read and change. */
 export interface PrivacyUi {
