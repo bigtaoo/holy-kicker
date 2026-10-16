@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { BALL, BOSS, DEFAULT_RUN, DROPS, FIRST_RUN, THREATS, VIEW, type RunConfig } from '../config';
+import { BALL, BOSS, DEFAULT_RUN, HURT, DROPS, FIRST_RUN, THREATS, VIEW, type RunConfig } from '../config';
 import type { SimEvent } from '../events';
 import { toFp } from '../math/fixed';
 import { body, createState, newMob, newElite, newPlayer, type SimState } from '../state';
+import { contactSystem } from './players';
 import { bossSystem, newBoss } from './boss';
 import { ballSystem, bigTarget, damage, kickTarget, launchBall, nearestTarget } from './combat';
 import { attractAll, dropGem, dropSystem, tierOf } from './drops';
@@ -249,5 +250,33 @@ describe('threats', () => {
     expect(events.map((e) => e.type)).toEqual(['blast']);
     const inside = THREATS.zoneSpread <= THREATS.zoneRadius || events.some((e) => e.type === 'blast' && Math.hypot(e.x, e.y) < e.radius);
     expect(hurt.length).toBe(inside ? 1 : 0);
+  });
+});
+
+describe('contact', () => {
+  /** The hurt events contactSystem pushes for the player at the origin. */
+  function hurts(s: SimState): SimEvent[] {
+    const events: SimEvent[] = [];
+    contactSystem(s, events);
+    return events.filter((e) => e.type === 'hurt');
+  }
+
+  it('says a lone mob hit the hero, and from where', () => {
+    const s = bare({ waves: 50 });
+    s.mobs.push(newMob(u(40), u(10)));
+    expect(hurts(s)).toEqual([expect.objectContaining({ owner: 0, src: 'mob', x: u(40), y: u(10) })]);
+  });
+
+  it('calls it the crowd once enough other mobs press in', () => {
+    const s = bare({ waves: 50 });
+    s.mobs.push(newMob(u(40), 0));
+    for (let i = 0; i < HURT.crowdSource; i++) s.mobs.push(newMob(-u(60), u(30) * i));
+    expect(hurts(s)).toEqual([expect.objectContaining({ src: 'crowd' })]);
+  });
+
+  it("names an elite's touch with the elite's position", () => {
+    const s = bare({ waves: 50 });
+    s.elites.push(newElite(u(50), -u(20)));
+    expect(hurts(s)).toEqual([expect.objectContaining({ src: 'elite', x: u(50), y: -u(20) })]);
   });
 });
