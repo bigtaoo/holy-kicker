@@ -255,6 +255,7 @@ export const en = {
     doubled: 'Copper doubled!',
     drops: 'Gear found',
     gift: 'Welcome gift: {gift}!',
+    giftWorn: 'Equipped for your next run: {gift}!',
     nextChest: 'Next chest at wave {wave}',
   },
   gift: {

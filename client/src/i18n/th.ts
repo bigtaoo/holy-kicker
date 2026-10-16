@@ -257,6 +257,7 @@ export const th: Table<typeof en> = {
     doubled: 'ได้ทองแดง ×2!',
     drops: 'อุปกรณ์ที่ได้',
     gift: 'ของขวัญต้อนรับ: {gift}!',
+    giftWorn: 'สวมใส่สำหรับรอบถัดไปแล้ว: {gift}!',
     nextChest: 'หีบถัดไปที่คลื่น {wave}',
   },
   gift: {

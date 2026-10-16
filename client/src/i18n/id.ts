@@ -257,6 +257,7 @@ export const id: Table<typeof en> = {
     doubled: 'Tembaga digandakan!',
     drops: 'Perlengkapan didapat',
     gift: 'Hadiah sambutan: {gift}!',
+    giftWorn: 'Dipakai untuk permainan berikutnya: {gift}!',
     nextChest: 'Peti berikutnya di gelombang {wave}',
   },
   gift: {

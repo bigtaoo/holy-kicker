@@ -5,14 +5,15 @@ import type { Reward } from '../meta/progress';
 import type { RunRank } from '../net/backend';
 import { sutraName } from './cardText';
 import { dropLines, dropName, TIER_COLORS } from './gearText';
+import { statLines } from './statText';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, fit, label, panel } from './widgets';
 
 // Results after a run: what it paid and dropped (already in the save), after the first run the
-// welcome gift and the one waiting tomorrow, the next progress chest, its place on the
-// leaderboard once the server answers, the rewarded "double copper" offer when an ad can be
-// shown, Play again (after the first runs, the quickest way back into a fight) and Continue back
-// to the lobby.
+// welcome gift (and what it adds, when it is worn in the next run) and the one waiting tomorrow,
+// the next progress chest, its place on the leaderboard once the server answers, the rewarded
+// "double copper" offer when an ad can be shown, Play again (after a lost run, from the very
+// first one, the quickest way back into a fight) and Continue back to the lobby.
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
@@ -82,9 +83,14 @@ export class ResultsScreen implements Screen {
       lines.push([t('results.drops'), 48, COLORS.dim]);
       for (const [text, color] of dropLines(r.drops)) lines.push([text, 48, color]);
     }
-    // the first run's welcome gift, and the one waiting tomorrow (welcome.ts)
+    // the first run's welcome gift, worn in the next run when it is better (so the next try is
+    // visibly stronger), and the one waiting tomorrow (welcome.ts)
     const gift = r.gift?.drops[0];
-    if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
+    const gain = r.gift?.gain;
+    if (gift && gain) {
+      lines.push([t('results.giftWorn', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
+      lines.push([statLines(gain).join('  ·  '), 44, COLORS.saffron]);
+    } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
     const tomorrow = r.gift ? BALANCE.welcome[1] : undefined;
     if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 48, COLORS.saffron]);
     if (!r.firstClear && r.nextChest !== null) lines.push([t('results.nextChest', { wave: r.nextChest }), 44, COLORS.dim]);

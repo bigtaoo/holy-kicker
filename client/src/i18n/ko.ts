@@ -257,6 +257,7 @@ export const ko: Table<typeof en> = {
     doubled: '동전 2배 획득!',
     drops: '획득한 장비',
     gift: '환영 선물: {gift}!',
+    giftWorn: '다음 판에 장착 완료: {gift}!',
     nextChest: '다음 상자: {wave} 웨이브',
   },
   gift: {

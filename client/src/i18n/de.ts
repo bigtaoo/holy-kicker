@@ -257,6 +257,7 @@ export const de: Table<typeof en> = {
     doubled: 'Kupfer verdoppelt!',
     drops: 'Gefundene Ausrüstung',
     gift: 'Willkommensgeschenk: {gift}!',
+    giftWorn: 'Für den nächsten Lauf angelegt: {gift}!',
     nextChest: 'Nächste Truhe bei Welle {wave}',
   },
   gift: {

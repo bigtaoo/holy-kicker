@@ -257,6 +257,7 @@ export const zh: Table<typeof en> = {
     doubled: '铜钱已翻倍！',
     drops: '获得装备',
     gift: '见面礼：{gift}！',
+    giftWorn: '已为下一局装备：{gift}！',
     nextChest: '下一个宝箱在第 {wave} 波',
   },
   gift: {
