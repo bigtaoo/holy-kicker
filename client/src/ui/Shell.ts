@@ -474,7 +474,7 @@ export class Shell {
       // a lost run's quickest way back is the same chapter again, from the very first run on (the
       // tutorial does not come back: firstRunDone is set by now)
       again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, true)) : null,
-    }, this.ads.rewardedAvailable(), rank, fall));
+    }, this.ads.rewardedAvailable(), rank, fall, this.art.icons));
   }
 
   private tick(): void {
@@ -493,6 +493,6 @@ export class Shell {
     // the run has the battle music (the boss's on the mid-boss and boss waves, through to the
     // results), every screen around it the lobby's
     const s = this.game?.engine.state;
-    this.sound.flush(s ? (s.config.waves > 0 && isBossWave(s.wave, s.config.waves) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS);
+    this.sound.flush(s ? (s.config.waves > 0 && isBossWave(s.wave, s.config.waves) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS, this.game?.downCamBusy() ? 0.25 : 1);
   }
 }

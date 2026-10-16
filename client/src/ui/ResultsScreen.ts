@@ -1,22 +1,22 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, type Text } from 'pixi.js';
 import { t } from '../i18n';
-import { BALANCE } from '../meta/balance';
 import type { Reward } from '../meta/progress';
 import type { RunRank } from '../net/backend';
-import { sutraName } from './cardText';
+import type { IconSheet } from './buildBar';
 import type { DownInfo } from './deathInfo';
-import { fallLines } from './downPanel';
-import { dropLines, dropName, TIER_COLORS } from './gearText';
-import { statLines } from './statText';
+import { fallPart, headerPart, newsLines, rewardsPart, type Part } from './resultsParts';
+import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, button, fit, label, panel } from './widgets';
+import { COLORS, button, buttonLabel, fit, label, panel } from './widgets';
 
-// Results after a run: what it paid and dropped (already in the save), after the first run the
-// welcome gift (and what it adds, when it is worn in the next run) and the one waiting tomorrow,
-// after a lost run what felled the hero, one tip and the nearest goal (as on the death panel),
-// the next progress chest, its place on the leaderboard once the server answers, the rewarded
-// "double copper" offer when an ad can be shown, Play again (after a lost run, from the very
-// first one, the quickest way back into a fight) and Continue back to the lobby.
+// Results after a run, in three zones on one card: the header (the title, the waves cleared as
+// one big number, a badge for the best and the leaderboard place once the server answers), after
+// a lost run a strip with what felled the hero, how near the next goal came and one short tip, and
+// the rewards as icons (the copper counting up, the gear in tier-coloured frames), with the rarer
+// news (unlocks, chests, the welcome gift) in short lines under them. The parts come in one after
+// another (resultsReveal.ts); a tap shows them all. Under the card: Play again (after a lost run,
+// the quickest way back into a fight), then the rewarded "double copper" offer and Continue side
+// by side at the same size, font and colour (CrazyGames' rewarded-ad rules).
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
@@ -28,11 +28,19 @@ export interface ResultsActions {
 
 type Offer = 'hidden' | 'offered' | 'playing' | 'paid';
 
+const CARD_W = 920;
+const INNER_W = 840;
+const GAP = 30;
+
 export class ResultsScreen implements Screen {
   readonly view = new Container();
   private frame: UiFrame | null = null;
   private offer: Offer = 'hidden';
   private rank: RunRank | null = null;
+  private age = 0;
+  /** The parts in reveal order with where each rests, and the copper count with its part. */
+  private parts: [Container, number][] = [];
+  private copper: { text: Text; part: number } | null = null;
 
   constructor(
     private readonly reward: Reward,
@@ -42,8 +50,9 @@ export class ResultsScreen implements Screen {
     rank: Promise<RunRank | null>,
     /** What felled the hero, for a lost run. */
     private readonly fall: DownInfo | null = null,
+    private readonly icons: IconSheet = new Map(),
   ) {
-    // the leaderboard line comes in when the server answers; offline or unranked runs have none
+    // the leaderboard badge comes in when the server answers; offline or unranked runs have none
     void rank.then((r) => {
       if (r && !this.view.destroyed) {
         this.rank = r;
@@ -64,97 +73,105 @@ export class ResultsScreen implements Screen {
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
-    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill({ color: COLORS.bg, alpha: 0.92 }));
+    // a tap anywhere off the buttons shows everything at once
+    const back = new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill({ color: COLORS.bg, alpha: 0.92 });
+    back.eventMode = 'static';
+    back.on('pointertap', () => this.skip());
+    this.view.addChild(back);
 
     const r = this.reward;
-    const lines: [string, number, number][] = [
-      [r.firstClear ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen'), 80, r.firstClear ? COLORS.saffron : COLORS.text],
-      [t('results.reached', { wave: this.waves }), 52, COLORS.text],
-    ];
-    if (r.newBest) lines.push([t('results.newBest'), 48, COLORS.saffron]);
-    else if (!r.firstClear && r.best > 0) lines.push([t('results.best', { wave: r.best }), 44, COLORS.dim]);
-    const rank = this.rank;
-    if (rank) lines.push(rank.best ? [t('results.rankNew', { rank: rank.rank }), 52, COLORS.saffron] : [t('results.rankKept', { rank: rank.rank }), 44, COLORS.dim]);
-    if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.saffron]);
-    if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 48, COLORS.danger]);
-    if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 52, COLORS.saffron]);
-    for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 48, COLORS.saffron]);
-    for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 48, COLORS.saffron]);
-    // after the rewarded ad the line shows what was paid in all (doubleCopper)
-    lines.push([t('results.copper', { n: this.offer === 'paid' ? 2 * r.copper : r.copper }), 56, COLORS.copper]);
-    if (r.offering > 0) lines.push([t('results.offering', { n: r.offering }), 44, COLORS.copper]);
-    for (const c of r.chests) lines.push([t('results.chest', { wave: c.wave, copper: c.copper, jade: c.jade }), 44, COLORS.jade]);
-    if (r.drops.length > 0) {
-      lines.push([t('results.drops'), 48, COLORS.dim]);
-      for (const [text, color] of dropLines(r.drops)) lines.push([text, 48, color]);
+    // the zones top down, each [view, height]; the rewards' copper counts up
+    const zones: Part[] = [headerPart(r, this.waves, this.rank, INNER_W)];
+    if (this.fall) zones.push(fallPart(this.fall, this.waves, INNER_W));
+    const total = this.offer === 'paid' ? 2 * r.copper : r.copper;
+    const rewards = rewardsPart(r, total, this.icons, INNER_W);
+    zones.push(rewards);
+    const news = new Container();
+    let ny = 0;
+    for (const [text, size, fill] of newsLines(r, this.offer === 'paid')) {
+      const l = fit(label(text, size, fill), INNER_W);
+      l.y = ny + size / 2;
+      news.addChild(l);
+      ny += size + 24;
     }
-    // the first run's welcome gift, worn in the next run when it is better (so the next try is
-    // visibly stronger), and the one waiting tomorrow (welcome.ts)
-    const gift = r.gift?.drops[0];
-    const gain = r.gift?.gain;
-    if (gift && gain) {
-      lines.push([t('results.giftWorn', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
-      lines.push([statLines(gain).join('  ·  '), 44, COLORS.saffron]);
-    } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
-    const tomorrow = r.gift ? BALANCE.welcome[1] : undefined;
-    if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 48, COLORS.saffron]);
-    // a fall's goal already names the nearest chest when it is the nearest goal
-    if (!r.firstClear && r.nextChest !== null && !this.fall) lines.push([t('results.nextChest', { wave: r.nextChest }), 44, COLORS.dim]);
-    if (this.offer === 'paid') lines.push([t('results.doubled'), 48, COLORS.saffron]);
-    // the card grows with its lines; the buttons sit a fixed distance below it
-    // a lost run's fall sits under the title and the waves reached (it fell on the wave after them)
-    const fall = this.fall ? fallLines(this.fall, this.waves + 1, 840, 0.75) : [];
-    const cardH = lines.reduce((n, [, size]) => n + size + 44, 0) + fall.reduce((n, [, h]) => n + h, 0) + 120;
+    if (ny > 0) zones.push([news, ny]);
+
+    const cardH = zones.reduce((n, [, h]) => n + h + GAP, 0) + 60;
     const card = new Container();
-    card.position.set(f.w / 2, f.h / 2 - 200);
-    card.addChild(panel(920, cardH));
-    let y = -cardH / 2 + 60;
-    for (const [i, [text, size, fill]] of lines.entries()) {
-      if (i === 2) {
-        for (const [view, h] of fall) {
-          view.y = y + h / 2;
-          card.addChild(view);
-          y += h;
-        }
-      }
-      const l = fit(label(text, size, fill), 840);
-      l.y = y + size / 2;
-      card.addChild(l);
-      y += size + 44;
+    card.position.set(f.w / 2, Math.max(cardH / 2 + 40, f.h / 2 - 220));
+    card.addChild(panel(CARD_W, cardH));
+    let y = -cardH / 2 + 40;
+    this.parts = [];
+    for (const [view, h] of zones) {
+      view.y = y;
+      card.addChild(view);
+      this.parts.push([view, y]);
+      y += h + GAP;
     }
     this.view.addChild(card);
+    this.copper = { text: rewards.copper, part: zones.indexOf(rewards) };
 
-    let by = card.y + cardH / 2 + 150;
+    const buttons = new Container();
+    this.buttons(buttons, f.w / 2, card.y + cardH / 2 + 130);
+    this.view.addChild(buttons);
+    this.parts.push([buttons, 0]);
+    this.update(0, total);
+  }
+
+  /** Play again, then the ad offer and Continue side by side (or Continue alone), from `y` down. */
+  private buttons(c: Container, x: number, y: number): void {
     const busy = this.offer === 'playing';
     // with Play again first, Continue (and the ad offer, which matches it) step back
     const second = this.actions.again ? COLORS.panelLocked : COLORS.saffron;
     if (this.actions.again) {
       const again = button(t('results.again'), 640, 150, () => this.actions.again?.(), { fill: COLORS.saffron });
-      again.position.set(f.w / 2, by);
+      again.position.set(x, y);
       if (busy) again.eventMode = 'none';
-      this.view.addChild(again);
-      by += 190;
+      c.addChild(again);
+      y += 185;
     }
-    if (this.offer === 'offered' || this.offer === 'playing') {
-      const playing = busy;
-      // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
-      const ad = button(playing ? '…' : t('results.double'), 640, 150, () => void this.playAd(), {
-        fill: playing ? COLORS.panelLocked : second,
-        video: !playing,
-      });
-      ad.position.set(f.w / 2, by);
-      if (playing) ad.eventMode = 'none';
-      this.view.addChild(ad);
-      by += 190;
+    const pair = this.offer === 'offered' || this.offer === 'playing';
+    const w = pair ? 430 : 640;
+    const adText = busy ? '…' : t('results.double');
+    // the pair share one font size: the size at which the longer label (with the ad's badge) fits
+    let size = 52;
+    if (pair) {
+      const probe = button(adText, w, 140, () => {}, { video: !busy, size });
+      const other = button(t('common.continue'), w, 140, () => {}, { size });
+      size *= Math.min(buttonLabel(probe).scale.x, buttonLabel(other).scale.x);
+      probe.destroy({ children: true });
+      other.destroy({ children: true });
     }
-    const next = button(t('common.continue'), 640, 150, () => this.actions.next(), { fill: second });
-    next.position.set(f.w / 2, by);
+    const next = button(t('common.continue'), w, 140, () => this.actions.next(), { fill: second, size });
+    next.position.set(pair ? x + w / 2 + 15 : x, y);
     if (busy) next.eventMode = 'none';
-    this.view.addChild(next);
+    c.addChild(next);
+    if (pair) {
+      // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
+      const ad = button(adText, w, 140, () => void this.playAd(), { fill: busy ? COLORS.panelLocked : second, video: !busy, size });
+      ad.position.set(x - w / 2 - 15, y);
+      if (busy) ad.eventMode = 'none';
+      c.addChild(ad);
+
+    }
+  }
+
+  update(dt: number, total = this.offer === 'paid' ? 2 * this.reward.copper : this.reward.copper): void {
+    this.age += dt;
+    for (const [i, [view, rest]] of this.parts.entries()) {
+      const k = partIn(this.age, i);
+      view.alpha = k;
+      view.y = rest + (1 - k) * REVEAL.rise;
+    }
+    if (this.copper && !this.copper.text.destroyed) this.copper.text.text = `+${countUp(this.age, this.copper.part, total)}`;
   }
 
   destroy(): void {
     this.view.destroy({ children: true });
+  }
+
+  private skip(): void {
+    this.age = Math.max(this.age, REVEALED);
   }
 
   private relayout(): void {

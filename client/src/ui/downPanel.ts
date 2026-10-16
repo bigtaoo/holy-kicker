@@ -20,7 +20,7 @@ export interface DownActions {
 const W = 940;
 const TEXT_W = W - 120;
 
-function goalText(goal: Goal): string {
+export function goalText(goal: Goal): string {
   return goal.kind === 'clear' ? t('run.goal.clear', { n: goal.n }) : t(`run.goal.${goal.kind}`, { n: goal.n, wave: goal.wave });
 }
 
