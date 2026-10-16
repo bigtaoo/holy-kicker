@@ -50,7 +50,8 @@ Names are working names; every name ships through the string table (en / zh-CN s
 - **Evolutions implemented** (`SPELL_EVOLVED`, `RELIC_AWAKENED`, `EVOLVE` in `engine/content.ts`):
   a ready evolution is always dealt first on the next level-up (or Insight) as a gold card; the
   evolved row keeps the level-5 numbers and adds the mechanic. Mountain Palm leaves a print
-  that pins mobs for 2 s and burns at 30 %; Endless Chain forks to the nearest other enemy at
+  that pins mobs for 2 s and burns at 30 % (its stone hand only slams, holds 0.3 s and sinks
+  into the print, which shows the pin alone: three standing hands hid the horde); Endless Chain forks to the nearest other enemy at
   every jump; Healing Incense heals 2.4 % health per second inside; Golden Body guards 2 s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
@@ -157,7 +158,7 @@ The engine already has four of these shapes (`nova`, `meteor`, `field`, `chain`)
 
 | Spell | en / zh-CN | Shape | Pairs with | Evolution |
 |---|---|---|---|---|
-| Buddha Palm | Buddha Palm / 如来掌 | Giant palm slams the densest group (`meteor`) | Wisdom Eye | **Mountain Palm** / 五指山: the palm stays and pins mobs for 2 s |
+| Buddha Palm | Buddha Palm / 如来掌 | Giant palm slams the densest group (`meteor`) | Wisdom Eye | **Mountain Palm** / 五指山: a stone hand slams and sinks, its print pins mobs for 2 s |
 | Vajra Bolt | Vajra Bolt / 金刚雷 | Lightning chains through 5 mobs (`chain`) | Wrath | **Endless Chain** / 雷音: the chain does not weaken and forks |
 | Incense Ring | Incense Ring / 香火阵 | Burning zone at the hero's feet (`field`) | Alms Rice | **Healing Incense** / 万家香火: standing in it heals |
 | Golden Bell | Golden Bell / 金钟罩 | Blocks one hit every 8 s; breaking it blasts (`nova`) | Iron Head | **Golden Body** / 金身: 2 s of immunity after it breaks, larger blast |
