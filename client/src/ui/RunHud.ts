@@ -81,6 +81,8 @@ export class RunHud implements Screen {
   /** Seconds since the cards opened (they rise in locked), and their panel in this layout. */
   private offerAge = 0;
   private cards: CardPanel | null = null;
+  /** The card the keys would take, on a desktop. */
+  private cardFocus = { focus: 0 };
   private picked = false;
   private build: BuildBar | null = null;
   private slots: readonly BuildSlot[] = [];
@@ -133,7 +135,7 @@ export class RunHud implements Screen {
     if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
     this.cards = null;
     if (this.offer) {
-      this.cards = cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i));
+      this.cards = cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i), this.keys ? this.cardFocus : null);
       this.cards.update(this.offerAge);
       this.view.addChild(this.cards.view);
     }
@@ -195,6 +197,7 @@ export class RunHud implements Screen {
     this.offer = cards;
     this.offerTitle = title;
     this.offerAge = 0;
+    this.cardFocus.focus = 0;
     this.picked = false;
     this.paused = false;
     this.relayout();
@@ -319,6 +322,11 @@ export class RunHud implements Screen {
     bar.addChild(back, fill, level);
     this.view.addChild(bar);
     this.setXp(this.xp.level, this.xp.share);
+  }
+
+  /** A key went down; the level-up cards take it while they are open. */
+  key(code: string, repeat: boolean): void {
+    if (!this.paused && !this.down) this.cards?.key(code, repeat);
   }
 
   private pickCard(index: number): void {

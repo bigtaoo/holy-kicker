@@ -35,5 +35,7 @@ export interface Screen {
   layout(f: UiFrame): void;
   /** Animates, every frame, if the screen has anything moving. */
   update?(dt: number): void;
+  /** A key went down (the web's keyboard), `code` as KeyboardEvent.code names it. */
+  key?(code: string, repeat: boolean): void;
   destroy(): void;
 }

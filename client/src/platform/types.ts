@@ -18,6 +18,8 @@ export interface Platform {
   bindStick(app: Application, stick: DragStick): void;
   /** Extra movement source such as the keyboard; a zero vector when idle. */
   readKeys(): Vec2;
+  /** Every key that goes down, `code` as KeyboardEvent.code names it; unset where there is no keyboard. */
+  onKey?(cb: (code: string, repeat: boolean) => void): void;
   /** Reads a text file shipped with the game (relative path, as for textures). */
   readText(path: string): Promise<string>;
   /** Reads a binary file shipped with the game (the sound samples). */

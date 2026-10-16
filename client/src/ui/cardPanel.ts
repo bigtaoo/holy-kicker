@@ -3,6 +3,7 @@ import type { CardKind } from '@hk/engine';
 import { t } from '../i18n';
 import { iconSprite, type IconSheet } from './buildBar';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
+import { cardKey } from './cardKeys';
 import type { CardText } from './cardText';
 import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, fit, label, panel } from './widgets';
@@ -11,7 +12,8 @@ import { COLORS, backdrop, fit, label, panel } from './widgets';
 // thumb tap each. Each card shows the item's icon on a disc in its kind's colour (with what it
 // evolves with small on the corner), the name, "New!" or the level step, and its effect lines.
 // Shrine blessings have no item and keep a drawn shape. The cards rise in grey and only take taps
-// once a gold line has run round their rims (cardGate.ts).
+// once a gold line has run round their rims (cardGate.ts). On a desktop the keys pick too
+// (cardKeys.ts): each card wears its number, and a gold ring shows the one Enter takes.
 
 const CARD_W = 960;
 const CARD_H = 330;
@@ -133,11 +135,20 @@ export interface CardPanel {
   view: Container;
   /** Poses the cards `age` seconds after the choice opened. */
   update(age: number): void;
+  /** A key went down (cardKeys.ts); ignored on touch screens and while the cards are locked. */
+  key(code: string, repeat: boolean): void;
 }
 
-/** The modal choice over the run under `title`; `onPick` gets the card's index. */
+/** The ring round the highlighted card. */
+const FOCUS_PAD = 14;
+
+/**
+ * The modal choice over the run under `title`; `onPick` gets the card's index. `keys` holds the
+ * highlighted card on a desktop (kept by the caller across layouts), null on a touch screen.
+ */
 export function cardPanel(
   f: UiFrame, title: string, texts: readonly CardText[], icons: IconSheet, onPick: (index: number) => void,
+  keys: { focus: number } | null = null,
 ): CardPanel {
   const view = new Container();
   view.addChild(backdrop(f.w, f.h, 0.7));
@@ -149,14 +160,33 @@ export function cardPanel(
   hint.position.set(f.w / 2, top - 90);
   view.addChild(heading, hint);
   let locked = true;
+  if (keys && keys.focus >= texts.length) keys.focus = 0;
   const cards = texts.map((text, i) => {
     const body = card(text, icons, () => onPick(i), () => locked);
     const rim = new Graphics();
+    const ring = new Graphics()
+      .roundRect(-CARD_W / 2 - FOCUS_PAD, -CARD_H / 2 - FOCUS_PAD, CARD_W + 2 * FOCUS_PAD, CARD_H + 2 * FOCUS_PAD, CARD_RADIUS + FOCUS_PAD)
+      .stroke({ color: GOLD_RIM, width: 10 });
+    ring.visible = false;
     const c = new Container();
-    c.addChild(body, rim);
+    c.addChild(ring, body, rim);
+    if (keys) {
+      // the card's number key, on its upper left corner
+      const chip = new Container();
+      const n = label(String(i + 1), 44, COLORS.outline);
+      chip.addChild(new Graphics().roundRect(-34, -34, 68, 68, 16).fill(GOLD_RIM).stroke({ color: COLORS.outline, width: 6 }), n);
+      chip.position.set(-CARD_W / 2 + 8, -CARD_H / 2 + 8);
+      body.addChild(chip);
+      // the mouse moves the highlight too, so keys and mouse never disagree
+      body.on('pointerover', () => {
+        keys.focus = i;
+        showFocus();
+      });
+    }
     view.addChild(c);
-    return { c, body, rim, y: top + CARD_H / 2 + i * (CARD_H + GAP) };
+    return { c, body, rim, ring, y: top + CARD_H / 2 + i * (CARD_H + GAP) };
   });
+  const showFocus = () => cards.forEach(({ ring }, i) => (ring.visible = !!keys && !locked && keys.focus === i));
   let settled = false;
   const update = (age: number) => {
     if (settled) return;
@@ -174,7 +204,16 @@ export function cardPanel(
           .stroke({ color: GOLD_RIM, width: 10, alpha: pose.rimAlpha, cap: 'round', join: 'round' });
       }
     });
+    showFocus();
+  };
+  const key = (code: string, repeat: boolean) => {
+    if (!keys || locked) return;
+    const k = cardKey(code, repeat, keys.focus, cards.length);
+    if (k && 'focus' in k) {
+      keys.focus = k.focus;
+      showFocus();
+    } else if (k) onPick(k.pick);
   };
   update(0);
-  return { view, update };
+  return { view, update, key };
 }

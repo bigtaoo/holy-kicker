@@ -113,6 +113,7 @@ export class Shell {
     this.portal = bracketed(platform.portal);
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
+    platform.onKey?.((code, repeat) => this.screen?.key?.(code, repeat));
     // coming back to a run mid-fight is unfair; it waits on the pause panel instead, and is kept
     // in case the game is closed for good
     platform.onHide(() => {

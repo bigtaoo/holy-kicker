@@ -36,6 +36,7 @@ export function browserStorage(): KeyValueStore | null {
 export class WebPlatform implements Platform {
   readonly host: Host = 'web';
   private held = new Set<string>();
+  private keyListeners: ((code: string, repeat: boolean) => void)[] = [];
   readonly storage: KeyValueStore = new SafeStore(browserStorage());
   readonly portal: Portal = NO_PORTAL;
   readonly ads: Ads = new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
@@ -125,9 +126,11 @@ export class WebPlatform implements Platform {
     // a right-click or long press is a game input, never the browser's menu
     app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     window.addEventListener('keydown', (e) => {
+      for (const cb of this.keyListeners) cb(e.code, e.repeat);
+      if (e.code === 'Space') e.preventDefault();
       if (!KEY_DIRS[e.code]) return;
       this.held.add(e.code);
-      // arrows must not scroll a portal page around the game's iframe
+      // arrows (and Space) must not scroll a portal page around the game's iframe
       e.preventDefault();
     });
     window.addEventListener('keyup', (e) => this.held.delete(e.code));
@@ -148,6 +151,10 @@ export class WebPlatform implements Platform {
     const end = (e: PointerEvent) => stick.up(e.pointerId);
     canvas.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);
+  }
+
+  onKey(cb: (code: string, repeat: boolean) => void): void {
+    this.keyListeners.push(cb);
   }
 
   readKeys(): Vec2 {
