@@ -29,6 +29,17 @@
       "port": 4174
     },
     {
+      "name": "playgama-dist",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "preview:playgama",
+        "-w",
+        "client"
+      ],
+      "port": 4176
+    },
+    {
       "name": "api",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

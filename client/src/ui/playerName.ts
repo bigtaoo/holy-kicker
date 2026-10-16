@@ -13,7 +13,7 @@ import { diceName } from './boardPanel';
 // roll, a sign-in, a renamed account) and with every run.
 
 /** The last name the server took, so an unchanged one is not sent again. */
-const SENT_KEY = 'hk.named';
+export const SENT_KEY = 'hk.named';
 /** Rolls in a row send only the last one, after this long. */
 const SEND_AFTER_MS = 1500;
 

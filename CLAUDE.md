@@ -41,9 +41,11 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - `engine/` — the simulation (`@hk/engine`, consumed as source; see `engine/README.md`).
 - `client/` — the game's view and hosts (Vite). Entries `src/main.ts` (web dev),
   `src/main.crazygames.ts` (`npm run build:crazygames` → `client/dist-crazygames/`, the zip to
-  upload), `src/main.wechat.ts` and `src/main.ios.ts` (`npm run build:ios` → `client/dist-ios/`,
+  upload), `src/main.playgama.ts` (`npm run build:playgama` → `client/dist-playgama/`, zipped with
+  `index.html` at the root for the Playgama console; saves, ads and pause through Bridge v2),
+  `src/main.wechat.ts` and `src/main.ios.ts` (`npm run build:ios` → `client/dist-ios/`,
   which the Capacitor shell in `client/ios/` packages), all through `src/boot.ts`;
-  `src/platform/{web,crazygames,wechat,ios}` host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,
+  `src/platform/{web,crazygames,playgama,wechat,ios}` host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,
   results and HUD; `src/meta` save, progress and balance; `src/audio` sound effects (cue table, procedural
   voices, rate limits and voice cap) and music (two crossfading decks); `src/i18n` string tables.
   Recorded sounds: picks in `art/audio/audition.html` (`tools/audio_audition.py`) →

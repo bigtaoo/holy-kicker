@@ -14,7 +14,10 @@
     "build:wechat": "tsc --noEmit && vite build --config vite.wechat.config.js",
     "build:ios": "tsc --noEmit && vite build --config vite.ios.config.js",
     "build:wechat:debug": "tsc --noEmit && vite build --config vite.wechat.config.js --mode development",
-    "preview": "vite preview --port 4173"
+    "preview": "vite preview --port 4173",
+    "build:playgama": "tsc --noEmit && vite build --config vite.playgama.config.js",
+    "dev:playgama": "vite --config vite.playgama.config.js",
+    "preview:playgama": "vite preview --config vite.playgama.config.js --port 4176 --strictPort"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.3",
