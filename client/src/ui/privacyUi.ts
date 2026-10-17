@@ -14,6 +14,8 @@ import { COLORS, button, label, panel } from './widgets';
 const TOAST_AFTER = 2;
 const TOAST_FOR = 8;
 const FADE = 0.6;
+/** The toast's centre from the top of the frame, below the wave counter and the pause button. */
+const TOAST_Y = 480;
 
 /** Shows the one-time data toast over whatever is on screen; it cannot be tapped and goes by itself. */
 export function privacyToast(app: Application, insets: () => Insets): void {
@@ -35,8 +37,8 @@ export function privacyToast(app: Application, insets: () => Insets): void {
     const f = uiFrame(computeViewport(app.screen.width, app.screen.height), insets());
     layer.position.set(f.x, f.y);
     layer.scale.set(f.scale);
-    // under the move hint (RunHud's tutorial at 0.7 of the height), above the bottom edge
-    view.position.set(f.w / 2, f.h * 0.88);
+    // high, under the HUD's top rows: the first run's move hint and its keys fill the lower third
+    view.position.set(f.w / 2, TOAST_Y);
     layer.alpha = Math.max(0, Math.min(1, (age - TOAST_AFTER) / FADE, left / FADE));
     // the run and its HUD are added after this; stay on top of them
     if (app.stage.children[app.stage.children.length - 1] !== layer) app.stage.addChild(layer);

@@ -51,7 +51,7 @@ export class BoardUi {
   /** The button that opens chapter `chapter`'s board, or null offline. */
   button(chapter: number, hard: boolean): Container | null {
     if (!this.fetchBoard) return null;
-    return button(t('board.button'), 200, 90, () => this.show(chapter, hard), { fill: COLORS.panelLocked, size: 44 });
+    return button(t('board.button'), 200, 80, () => this.show(chapter, hard), { fill: COLORS.panelLocked, size: 44 });
   }
 
   private show(chapter: number, hard: boolean): void {

@@ -328,7 +328,7 @@ export class LobbyScreen implements Screen {
     const progress = track(this.save, hard);
     const name = t(`chapter.${n}` as never);
     const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text), 640);
-    title.y = -235;
+    title.y = -245;
     // the save keeps waves cleared (the chests count those); the lobby names the wave the best run
     // reached, as the leaderboard and the run's HUD do
     const best = progress.best[n - 1];
@@ -341,7 +341,8 @@ export class LobbyScreen implements Screen {
     status.y = -145;
     const ranks = open ? this.boards.button(n, hard) : null;
     if (ranks) {
-      ranks.position.set(340, -145);
+      // under the › arrow, with a gap: it is a smaller button than the arrow (boardPanel.ts)
+      ranks.position.set(340, -140);
       card.addChild(ranks);
     }
     const chests = chestRow(this.save, n, this.icons, (i) => this.econ.progressChest(n, this.save.hard, i));
@@ -358,8 +359,8 @@ export class LobbyScreen implements Screen {
     const arrow = (dir: -1 | 1) => {
       const target = n + dir;
       if (target < 1 || target > playableChapters(this.save)) return;
-      const b = button(dir < 0 ? '‹' : '›', 90, 110, () => this.actions.selectChapter(target), { fill: COLORS.panelLocked, size: 80 });
-      b.position.set(dir * 385, -235);
+      const b = button(dir < 0 ? '‹' : '›', 90, 100, () => this.actions.selectChapter(target), { fill: COLORS.panelLocked, size: 80 });
+      b.position.set(dir * 385, -245);
       card.addChild(b);
     };
     arrow(-1);

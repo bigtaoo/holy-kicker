@@ -437,7 +437,7 @@ export const ja: Table<typeof en> = {
     policy: 'プライバシー',
     gameCenter: 'Game Center',
     adPrivacy: '広告のプライバシー',
-    dataNotice: 'プレイ統計とランキングの記録をサーバーに送り、\nバランス調整とランキングに使います。',
+    dataNotice: 'プレイ統計とランキング記録を送信し、\nバランス調整とランキングに使います。',
     playId: 'あなたのプレイID：{id}',
   },
   privacy: {

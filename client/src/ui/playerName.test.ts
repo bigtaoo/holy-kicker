@@ -67,6 +67,18 @@ describe('player name', () => {
     expect(sent).toHaveLength(1);
   });
 
+  it('sends a refused name once a launch, not on every redraw', async () => {
+    vi.useFakeTimers();
+    const sent: BoardName[] = [];
+    const net = { online: true, sendName: async (n: BoardName) => (sent.push(n), false) };
+    const names = new PlayerName(net, new MemoryStore(), { userName: () => 'kicker42', accounts: () => true });
+    for (let i = 0; i < 3; i++) {
+      names.sync(newSave());
+      await vi.runAllTimersAsync();
+    }
+    expect(sent).toEqual([{ name: 'kicker42' }]);
+  });
+
   it('sends nothing offline', async () => {
     vi.useFakeTimers();
     const { names, sent } = setup(null, false);

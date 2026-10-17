@@ -19,6 +19,8 @@ const SEND_AFTER_MS = 1500;
 
 export class PlayerName {
   private timer: ReturnType<typeof setTimeout> | undefined;
+  /** The name last sent this launch: one the server refused is not sent again on every redraw. */
+  private tried: string | null = null;
 
   constructor(
     private readonly net: Pick<Backend, 'online' | 'sendName'>,
@@ -67,8 +69,9 @@ export class PlayerName {
     if (!this.net.online || !name) return;
     const key = JSON.stringify(name);
     clearTimeout(this.timer);
-    if (this.storage.getItem(SENT_KEY) === key) return;
+    if (this.storage.getItem(SENT_KEY) === key || this.tried === key) return;
     this.timer = setTimeout(() => {
+      this.tried = key;
       void this.net.sendName(name).then((ok) => ok && this.storage.setItem(SENT_KEY, key));
     }, SEND_AFTER_MS);
   }
