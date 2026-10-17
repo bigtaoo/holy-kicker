@@ -93,6 +93,8 @@ export class MemoryStore implements Store {
   readonly beacons = new Map<string, { n: number; t: Record<string, number> }>();
   /** When prune() last ran (ms), null before the first. */
   lastPrune: number | null = null;
+  /** `session/n` of every numbered event kept (ClientEvent.n). */
+  private readonly seen = new Set<string>();
 
   async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void> {
     const key = `${dayOf(now)}/${host}/${build}/${step}`;
@@ -101,7 +103,11 @@ export class MemoryStore implements Store {
     if (bucket) b.t[bucket] = (b.t[bucket] ?? 0) + 1;
   }
 
-  async addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void> {
+  async addEvents(sent: EventBatch, now: number, aud?: Audience): Promise<void> {
+    const events = sent.events.filter((e) => e.n === undefined || !this.seen.has(`${sent.session}/${e.n}`));
+    for (const e of events) if (e.n !== undefined) this.seen.add(`${sent.session}/${e.n}`);
+    if (events.length === 0) return;
+    const batch = { ...sent, events };
     this.events.push({ ...batch, at: now });
     const day = dayOf(now);
     const p = this.players.get(batch.install) ?? { _id: batch.install, first: day, host: batch.host, build: batch.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() };

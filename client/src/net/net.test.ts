@@ -33,4 +33,15 @@ describe('backend', () => {
     q.push('session', 1, { a: 1 });
     expect(q.size).toBe(QUEUE_CAP - LIMITS.batchEvents + 1);
   });
+
+  it('numbers the events of a launch, and a batch taken back keeps its numbers', () => {
+    const q = new EventQueue();
+    q.push('session', 1);
+    q.push('run_start', 2, { chapter: 1 });
+    const sent = q.take();
+    expect(sent.map((e) => e.n)).toEqual([1, 2]);
+    q.restore(sent);
+    q.push('leave', 3);
+    expect(q.take().map((e) => e.n)).toEqual([1, 2, 3]);
+  });
 });

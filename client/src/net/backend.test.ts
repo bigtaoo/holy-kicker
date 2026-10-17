@@ -165,8 +165,8 @@ describe('Backend', () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(calls).toHaveLength(1);
     expect(sent(calls[0]).events).toEqual([
-      { e: 'leave', t: expect.any(Number), p: { place: 'run', secs: 42, wave: 7 } },
-      { e: 'perf', t: expect.any(Number), p: { why: 'leave', secs: 60 } },
+      { e: 'leave', t: expect.any(Number), n: 1, p: { place: 'run', secs: 42, wave: 7 } },
+      { e: 'perf', t: expect.any(Number), n: 2, p: { why: 'leave', secs: 60 } },
     ]);
   });
 
@@ -196,7 +196,7 @@ describe('Backend', () => {
     net.setSharing('send');
     await vi.advanceTimersByTimeAsync(0);
     expect(calls).toHaveLength(2);
-    expect(sent(calls[1]).events).toEqual([{ e: 'run_start', t: expect.any(Number) }]);
+    expect(sent(calls[1]).events).toEqual([{ e: 'run_start', t: expect.any(Number), n: expect.any(Number) }]);
     net.setSharing('off');
     net.track('run_end');
     net.setSharing('hold');

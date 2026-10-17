@@ -1,4 +1,4 @@
-import { MongoClient, type Collection, type Db } from 'mongodb';
+import { MongoBulkWriteError, MongoClient, type Collection, type Db, type ObjectId } from 'mongodb';
 import type { Audience } from './audience';
 import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { boardId, runScore, type Beacon, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
@@ -24,6 +24,8 @@ const EVENTS_DAYS = 90;
 const REPORTS_DAYS = 180;
 
 interface EventDoc {
+  /** `session/n` for a numbered event (ClientEvent.n), so a batch sent twice is kept once. */
+  _id?: string | ObjectId;
   at: Date;
   day: string;
   install: string;
@@ -92,13 +94,26 @@ export class MongoStore implements Store {
     }
   }
 
-  async addEvents(b: EventBatch, now: number, aud?: Audience): Promise<void> {
+  async addEvents(sent: EventBatch, now: number, aud?: Audience): Promise<void> {
     const at = new Date(now);
     const day = dayOf(now);
-    await this.events.insertMany(
-      b.events.map((e) => ({ at, day, install: b.install, session: b.session, host: b.host, build: b.build, locale: b.locale, e: e.e, t: new Date(e.t), p: e.p ?? {} })),
-      { ordered: false },
-    );
+    const docs = sent.events.map((e): EventDoc => ({
+      ...(e.n !== undefined ? { _id: `${sent.session}/${e.n}` } : {}),
+      at, day, install: sent.install, session: sent.session, host: sent.host, build: sent.build, locale: sent.locale, e: e.e, t: new Date(e.t), p: e.p ?? {},
+    }));
+    const dupes = new Set<number>();
+    try {
+      await this.events.insertMany(docs, { ordered: false });
+    } catch (err) {
+      // events already kept (a batch sent again after its reply was lost) are skipped, and only
+      // the new ones are counted below; any other failure is a real one
+      if (!(err instanceof MongoBulkWriteError)) throw err;
+      const errors = Array.isArray(err.writeErrors) ? err.writeErrors : [err.writeErrors];
+      if (errors.some((w) => w.code !== 11000)) throw err;
+      for (const w of errors) dupes.add(w.index);
+    }
+    const b = { ...sent, events: sent.events.filter((_, i) => !dupes.has(i)) };
+    if (b.events.length === 0) return;
     const [p, seen] = await Promise.all([
       this.installs.findOneAndUpdate({ _id: b.install }, { $setOnInsert: { first: day, host: b.host, build: b.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() } }, { upsert: true, returnDocument: 'after' }),
       this.active.updateOne({ _id: `${day}/${b.install}` }, { $setOnInsert: { day, install: b.install, host: b.host } }, { upsert: true }),

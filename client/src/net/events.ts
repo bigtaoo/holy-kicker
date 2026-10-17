@@ -17,13 +17,16 @@ export function newId(rand: () => number): string {
 
 export class EventQueue {
   private items: ClientEvent[] = [];
+  /** The last event's number in this launch (ClientEvent.n). */
+  private n = 0;
 
   get size(): number {
     return this.items.length;
   }
 
   push(e: EventName, t: number, p?: Record<string, PropValue>): void {
-    this.items.push(p ? { e, t, p } : { e, t });
+    const n = ++this.n;
+    this.items.push(p ? { e, t, n, p } : { e, t, n });
     if (this.items.length > QUEUE_CAP) this.items.splice(0, this.items.length - QUEUE_CAP);
   }
 

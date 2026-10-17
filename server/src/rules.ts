@@ -47,8 +47,9 @@ function checkProps(v: unknown): Record<string, PropValue> | null {
 function checkEvent(v: unknown, now: number): ClientEvent | null {
   if (!isObj(v) || !(EVENT_NAMES as readonly unknown[]).includes(v.e)) return null;
   if (typeof v.t !== 'number' || !Number.isFinite(v.t) || v.t < now - LIMITS.late || v.t > now + LIMITS.early) return null;
+  if (v.n !== undefined && !isInt(v.n, 1, 1e9)) return null;
   const p = checkProps(v.p);
-  return p ? { e: v.e as ClientEvent['e'], t: Math.trunc(v.t), p } : null;
+  return p ? { e: v.e as ClientEvent['e'], t: Math.trunc(v.t), ...(v.n !== undefined ? { n: v.n } : {}), p } : null;
 }
 
 /** An analytics batch received at `now` (ms). */

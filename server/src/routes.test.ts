@@ -41,6 +41,8 @@ describe('checks', () => {
     expect(checkBatch(batch({ events: [{ e: 'session', t: NOW - LIMITS.late - 1 }] }), NOW).ok).toBe(false);
     expect(checkBatch(batch({ events: [{ e: 'session', t: NOW, p: { x: { y: 1 } } }] }), NOW).ok).toBe(false);
     expect(checkBatch(batch({ events: Array.from({ length: LIMITS.batchEvents + 1 }, () => ({ e: 'session', t: NOW })) }), NOW).ok).toBe(false);
+    expect(checkBatch(batch({ events: [{ e: 'session', t: NOW, n: 0 }] }), NOW).ok).toBe(false);
+    expect(checkBatch(batch({ events: [{ e: 'session', t: NOW, n: 1.5 }] }), NOW).ok).toBe(false);
   });
 
   it('take a full perf snapshot and an anomaly', () => {
@@ -76,6 +78,21 @@ describe('routes', () => {
     expect((await route(req('POST', '/v1/events', batch({ host: 'x' })), d)).status).toBe(400);
     expect(d.store.events.length).toBe(1);
     expect(d.store.events[0].at).toBe(NOW);
+  });
+
+  it('keeps a numbered event once when its batch comes again, and counts the run once', async () => {
+    const d = deps();
+    const end = { e: 'run_end', t: NOW - 500, n: 2, p: { chapter: 1, hard: false, won: true, wave: 50, tenths: 9000, kills: 900, level: 30 } };
+    const first = batch({ events: [{ e: 'run_start', t: NOW - 1000, n: 1, p: { chapter: 1, hard: false } }, end] });
+    await route(req('POST', '/v1/events', first), d);
+    const progress = structuredClone(d.store.players.get(INSTALL)!.progress);
+    // the reply was lost: the same two go again with a newer one
+    await route(req('POST', '/v1/events', { ...first, events: [...first.events, { e: 'leave', t: NOW, n: 3 }] }), d);
+    expect(d.store.events.map((b) => b.events.map((e) => e.n))).toEqual([[1, 2], [3]]);
+    expect(d.store.players.get(INSTALL)!.progress).toEqual(progress);
+    // another launch numbers from 1 again
+    await route(req('POST', '/v1/events', batch({ session: 'session02', events: [{ e: 'session', t: NOW, n: 1 }] })), d);
+    expect(d.store.events).toHaveLength(3);
   });
 
   it('keeps who a new install is from the request, once', async () => {

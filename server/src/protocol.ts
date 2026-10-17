@@ -48,6 +48,11 @@ export interface ClientEvent {
   e: EventName;
   /** Client clock, ms since the epoch (the server keeps its own receive time too). */
   t: number;
+  /**
+   * The event's number in its launch (1, 2, ...): a batch the server kept but whose reply never
+   * arrived is sent again, and the server keeps each (session, n) once. Old builds send none.
+   */
+  n?: number;
   p?: Record<string, PropValue>;
 }
 
