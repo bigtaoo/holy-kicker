@@ -39,23 +39,24 @@ export async function loadArt(
     tick(loadDeco(platform, 'art/icons/monks')),
     tick(loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined)),
     tick(loadSheet(platform, 'art/mobs/fox')),
-    tick(loadPic('art/cuju.png')),
-    tick(loadPic('art/staff.png')),
-    tick(loadPic('art/fish.png')),
+    // the relics and spell sprites are drawn at a third to a half of their size
+    tick(loadPic('art/cuju.png').then(mipmapped)),
+    tick(loadPic('art/staff.png').then(mipmapped)),
+    tick(loadPic('art/fish.png').then(mipmapped)),
     // the awakened relics: Meteor Ball, Ruyi Staff, Morning Bell (art/monk/icons/evolved)
-    tick(Assets.load<Texture>('art/cuju_meteor.png')),
-    tick(Assets.load<Texture>('art/staff_ruyi.png')),
-    tick(Assets.load<Texture>('art/bell_relic.png')),
+    tick(Assets.load<Texture>('art/cuju_meteor.png').then(mipmapped)),
+    tick(Assets.load<Texture>('art/staff_ruyi.png').then(mipmapped)),
+    tick(Assets.load<Texture>('art/bell_relic.png').then(mipmapped)),
     // the Thunder Roar's lion head (art/monk/icons/evolved)
-    tick(Assets.load<Texture>('art/lion.png')),
-    tick(Assets.load<Texture>('art/palm.png')),
+    tick(Assets.load<Texture>('art/lion.png').then(mipmapped)),
+    tick(Assets.load<Texture>('art/palm.png').then(mipmapped)),
     // the Mountain Palm's stone hand (art/monk/fx/mountain.txt)
-    tick(Assets.load<Texture>('art/mountain.png')),
+    tick(Assets.load<Texture>('art/mountain.png').then(mipmapped)),
     tick(ground === 'flat' ? null : loadPic(`art/ground/${ground}.png`)),
     tick(deco === 'none' ? null : loadDeco(platform, 'art/ground/deco')),
     tick(scene.boss ? loadTao(platform, 'art/boss_monk') : null),
     // 128 px cells, drawn from about 40 to 100 px
-    tick(loadDeco(platform, 'art/icons/icons', true)),
+    tick(loadDeco(platform, 'art/icons/icons')),
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
@@ -139,7 +140,7 @@ export function loadLobbyArt(platform: Platform, art: Art): Promise<void> {
     const [lobby, far, props] = await Promise.all([
       Assets.load<Texture>(LOBBY.backdrop),
       Assets.load<Texture>(LOBBY.far),
-      loadDeco(platform, LOBBY.props),
+      loadDeco(platform, LOBBY.props, false),
     ]);
     art.lobby = lobby;
     art.patrol = { far, props: props.frames };
@@ -171,19 +172,29 @@ export async function loadMonkArt(platform: Platform, art: Art, monk: MonkId): P
   art.monks[monk] = await loadTao(platform, `art/monks/${monk}`);
 }
 
+/**
+ * Gives `tex` mipmaps, for art drawn well below its own size: a phone shows the mobs, the rigs
+ * and the icons at a quarter to a half of their texels, and shrinking without mipmaps picks
+ * single texels out of them, which sparkles. Set before its first draw, when the GPU copy is
+ * made (WebGL1 skips it for a texture that is not 2^n).
+ */
+export function mipmapped(tex: Texture): Texture {
+  tex.source.autoGenerateMipmaps = true;
+  return tex;
+}
+
 /** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py).
- *  `mipmaps` for a sheet drawn well below its own size, which would sparkle otherwise. */
-export async function loadDeco(platform: Platform, path: string, mipmaps = false): Promise<DecoSheet> {
+ *  `mipmaps` off for one drawn at about its own size (the lobby's). */
+export async function loadDeco(platform: Platform, path: string, mipmaps = true): Promise<DecoSheet> {
   const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), loadPic(`${path}.png`)]);
-  // set before its first draw, when the GPU copy is made (WebGL1 skips it for a sheet that is not 2^n)
-  if (mipmaps) sheet.source.autoGenerateMipmaps = true;
+  if (mipmaps) mipmapped(sheet);
   return sliceDeco((JSON.parse(text) as { frames: DecoFrame[] }).frames, sheet);
 }
 
 /** A baked mob: <path>.json + <path>.png, or another png with the same layout. */
 export async function loadSheet(platform: Platform, path: string, png = `${path}.png`): Promise<MobSheet> {
   const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), Assets.load<Texture>(png)]);
-  return sliceSheet(JSON.parse(text) as SheetMeta, sheet);
+  return sliceSheet(JSON.parse(text) as SheetMeta, mipmapped(sheet));
 }
 
 /** A .tao bundle unpacked into a folder: skeleton.json + atlas.png (tools/pack_tao.py). */
@@ -194,5 +205,5 @@ export async function loadTao(platform: Platform, dir: string): Promise<TaoAsset
   ]);
   const skeleton = JSON.parse(text) as TaoSkeleton;
   if (skeleton.version !== 1) throw new Error(`${dir}: unsupported .tao version ${skeleton.version}`);
-  return sliceAtlas(skeleton, atlas);
+  return sliceAtlas(skeleton, mipmapped(atlas));
 }
