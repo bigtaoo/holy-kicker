@@ -66,7 +66,10 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   is https://hk.gamestao.com/dash; how to read it and which levers move retention: `docs/retention.md`.
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
-- `client/public/art/` — shipped sprites (exported by `tools/cutout.py`).
+- `client/public/art/` — shipped sprites (exported by `tools/cutout.py`). The big ones listed in
+  `client/src/webpArt.json` also ship a `.webp` twin (`python tools/webp.py` after changing a PNG;
+  `check:webp` fails on a missing or mis-sized one); web hosts load it when the browser decodes WebP, falling back
+  to the PNG per file; WeChat ships PNG only.
 - `art/` — source art and style exploration; `tools/` — art scripts.
 - `build/` — check scripts.
 - `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` ships

@@ -1,17 +1,38 @@
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { de } from './de';
+import { es } from './es';
+import { fr } from './fr';
+import { id } from './id';
+import { it as italian } from './it';
+import { ja } from './ja';
+import { ko } from './ko';
+import { pl } from './pl';
+import { pt } from './pt';
+import { ru } from './ru';
+import { th } from './th';
+import { tr } from './tr';
+import { vi } from './vi';
 import { en } from './en';
-import { MORE } from './more';
+import { MORE_NAMES } from './more';
 import { zh } from './zh';
-import { detectLocale, formatAmount, LOCALES, localeName, setLocale, t } from './index';
+import { detectLocale, formatAmount, loadLocale, LOCALES, localeName, setLocale, t } from './index';
 
-const TABLES = { en, zh, ...MORE };
+const TABLES = { en, zh, de, es, fr, id, it: italian, ja, ko, pl, pt, ru, th, tr, vi };
 
 function leaves(node: object, prefix = ''): string[] {
   return Object.entries(node).flatMap(([k, v]) => (typeof v === 'string' ? [`${prefix}${k}`] : leaves(v, `${prefix}${k}.`)));
 }
 
 describe('i18n', () => {
+  beforeAll(async () => {
+    for (const l of LOCALES) expect(await loadLocale(l), l).toBe(true);
+  });
   afterEach(() => setLocale('en'));
+
+  it("names every language before its table is fetched, as the table does", () => {
+    for (const [l, name] of Object.entries(MORE_NAMES)) expect(name, l).toBe(TABLES[l as keyof typeof TABLES].lang.name);
+    expect(Object.keys(MORE_NAMES).sort()).toEqual(LOCALES.filter((l) => l !== 'en' && l !== 'zh').sort());
+  });
 
   it('ships fifteen languages, each named in itself', () => {
     expect(LOCALES).toEqual(['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko', 'vi', 'tr', 'th', 'id']);

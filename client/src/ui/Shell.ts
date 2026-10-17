@@ -1,6 +1,6 @@
 import { Container, type Application } from 'pixi.js';
 import { isBossWave, SUTRA_IDS, TICK_RATE, type SimState } from '@hk/engine';
-import { setLocale, type Locale } from '../i18n';
+import { loadLocale, setLocale, type Locale } from '../i18n';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
@@ -274,11 +274,11 @@ export class Shell {
   }
 
   private setLanguage(locale: Locale): void {
-    this.keepLanguage(locale);
-    this.showLobby(true);
+    void this.keepLanguage(locale).then(() => this.showLobby(true));
   }
 
-  private keepLanguage(locale: Locale): void {
+  private async keepLanguage(locale: Locale): Promise<void> {
+    if (!(await loadLocale(locale))) return; // the table's chunk failed to load: keep the current language
     setLocale(locale);
     updateSettings(this.platform.storage, { locale });
   }

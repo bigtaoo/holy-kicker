@@ -63,10 +63,15 @@ export interface EventBatch {
  * screen is up; `touch` is a coarse pointer (phones and tablets). They carry no install id and go
  * whatever the privacy answer, so they count every launch: the share that never got past loading.
  * `quit_*` is sent by the same inline script when the page is hidden or left while still loading
- * (one that comes back and loads counts in `loaded_*` too). `loaded_*` and `quit_*` carry `&ms=`,
- * the time since the page opened, counted in LOAD_SECONDS buckets.
+ * (one that comes back and loads counts in `loaded_*` too). `script_*` and `art_*` go with
+ * `loaded_*`, timing the phases of the same load: the game's script running (downloaded, parsed and
+ * the portal's SDK up) and the first screen's art in (downloaded and decoded). All but `open_*`
+ * carry `&ms=`, the time since the page opened, counted in LOAD_SECONDS buckets.
  */
-export const BEACONS = ['open_desktop', 'open_touch', 'loaded_desktop', 'loaded_touch', 'quit_desktop', 'quit_touch'] as const;
+export const BEACONS = [
+  'open_desktop', 'open_touch', 'loaded_desktop', 'loaded_touch', 'quit_desktop', 'quit_touch',
+  'script_desktop', 'script_touch', 'art_desktop', 'art_touch',
+] as const;
 export type Beacon = (typeof BEACONS)[number];
 
 /** Upper bounds (seconds) of the load-time buckets; anything longer is `LOAD_OVER`. */

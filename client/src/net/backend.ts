@@ -114,14 +114,19 @@ export class Backend {
    * The anonymous `loaded_*` checkpoint (protocol BEACONS), sent once the first screen is up and
    * whatever the privacy answer, since it has no id: against the portal page's `open_*` it shows
    * how many launches never got past loading. Touch is the same test as the page's inline script;
-   * `ms` is the time since the page opened, where there is one (not on WeChat).
+   * `ms` is the time since the page opened, where there is one (not on WeChat). The `script_*` and
+   * `art_*` checkpoints go with it, at the times boot.ts saw those phases end (`phases`, ms).
    */
-  loaded(): void {
+  loaded(phases: { script: number; art: number }): void {
     if (!this.base || typeof fetch !== 'function') return;
-    const touch = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches;
-    const q = new URLSearchParams({ h: this.platform.host, s: touch ? 'loaded_touch' : 'loaded_desktop', b: this.build });
-    if (typeof performance !== 'undefined' && typeof document !== 'undefined') q.set('ms', String(Math.round(performance.now())));
-    void fetch(`${this.base}/v1/beacon?${q}`, { mode: 'no-cors', keepalive: true }).catch(() => {});
+    const kind = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches ? 'touch' : 'desktop';
+    const timed = typeof performance !== 'undefined' && typeof document !== 'undefined';
+    const steps: [string, number][] = [['script', phases.script], ['art', phases.art], ['loaded', timed ? performance.now() : 0]];
+    for (const [step, ms] of timed ? steps : steps.slice(2)) {
+      const q = new URLSearchParams({ h: this.platform.host, s: `${step}_${kind}`, b: this.build });
+      if (timed) q.set('ms', String(Math.round(ms)));
+      void fetch(`${this.base}/v1/beacon?${q}`, { mode: 'no-cors', keepalive: true }).catch(() => {});
+    }
   }
 
   /** Sends what waits, one batch at a time; a failed batch goes back for the next try. */

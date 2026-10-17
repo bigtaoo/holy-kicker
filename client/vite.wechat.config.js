@@ -36,7 +36,7 @@ const onlyEnZh = {
     return null;
   },
   load(id) {
-    return id === '\0i18n-more-stub' ? 'export const MORE = {};' : null;
+    return id === '\0i18n-more-stub' ? 'export const MORE = {}; export const MORE_NAMES = {};' : null;
   },
 };
 
@@ -54,7 +54,8 @@ const copyArt = {
     const from = fileURLToPath(new URL('./public/art', import.meta.url));
     const to = fileURLToPath(new URL('./wechat/art', import.meta.url));
     rmSync(to, { recursive: true, force: true });
-    cpSync(from, to, { recursive: true });
+    // the web builds' WebP copies (tools/webp.py) stay out: WeChat loads the PNGs
+    cpSync(from, to, { recursive: true, filter: (src) => !src.endsWith('.webp') });
     const packs = readdirSync(to).filter((d) => /^(ch\d+|monks)$/.test(d)).sort();
     for (const name of packs) writeFileSync(`${to}/${name}/game.js`, `// ${name}: an art pack, loaded by wx.loadSubpackage\n`);
     const gameJson = fileURLToPath(new URL('./wechat/game.json', import.meta.url));

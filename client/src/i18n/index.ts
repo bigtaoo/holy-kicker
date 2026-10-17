@@ -1,5 +1,5 @@
 import { en } from './en';
-import { MORE } from './more';
+import { MORE, MORE_NAMES } from './more';
 import { zh } from './zh';
 
 // String tables (docs/design.md "Localization"). English is the source: every other table is
@@ -18,9 +18,26 @@ type Paths<T> = {
 
 export type Key = Paths<typeof en>;
 
-const TABLES: Partial<Record<Locale, Table<typeof en>>> = { en, zh, ...MORE };
+/** The tables in hand: en and zh always, the others once loadLocale fetched them. */
+const TABLES: Partial<Record<Locale, Table<typeof en>>> = { en, zh };
 /** The languages this build ships (WeChat: en and zh only, i18n/more.ts), in the picker's order. */
-export const LOCALES: readonly Locale[] = ALL.filter((l) => TABLES[l]);
+export const LOCALES: readonly Locale[] = ALL.filter((l) => TABLES[l] || MORE[l]);
+
+/**
+ * Fetches `locale`'s table if it is not in hand yet; resolves whether it is (false when the fetch
+ * failed, offline say: the caller stays in the language it had). Until then t() reads English.
+ */
+export async function loadLocale(locale: Locale): Promise<boolean> {
+  if (TABLES[locale]) return true;
+  const load = MORE[locale];
+  if (!load) return false;
+  try {
+    TABLES[locale] = await load();
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 let current: Locale = DEFAULT_LOCALE;
 
@@ -68,7 +85,7 @@ export function t(key: Key, vars?: Record<string, string | number>): string {
 
 /** A language's own name for itself, for the language picker. */
 export function localeName(locale: Locale): string {
-  return (TABLES[locale] ?? en).lang.name;
+  return TABLES[locale]?.lang.name ?? MORE_NAMES[locale] ?? en.lang.name;
 }
 
 /**

@@ -1,6 +1,6 @@
 import { Assets } from 'pixi.js';
-import { loadArt } from './art';
-import { getLocale, setLocale } from './i18n';
+import { loadArt, useWebp, webpDecodes } from './art';
+import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale } from './i18n';
 import { watchAnomalies } from './net/anomaly';
 import { apiBase, Backend } from './net/backend';
 import { liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
@@ -25,8 +25,15 @@ function bootBar(share: number): void {
 export async function boot(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean } = {}) {
   // the script is in: about a third of the way (the bar crept there on its own while it came)
   bootBar(0.3);
+  const since = () => (typeof performance === 'undefined' ? 0 : performance.now());
+  const script = since();
   const settings = loadSettings(platform.storage);
-  setLocale(pickLocale(settings, platform.languages()));
+  // a language past en and zh is its own chunk: fetched while the renderer comes up (English if it fails)
+  const locale = pickLocale(settings, platform.languages());
+  const lang = loadLocale(locale).then((ok) => setLocale(ok ? locale : DEFAULT_LOCALE));
+  // the first screen's colour sheets come as WebP where the browser decodes them (a quarter of
+  // the bytes; art.ts falls back to the PNG on any failed load); WeChat ships the PNGs alone
+  const webp = opts.skipDetections ? Promise.resolve(false) : webpDecodes();
   let mode = scene.quality ?? settings.quality;
   let low = false;
   const device = await platform.probe();
@@ -40,7 +47,11 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   const net = new Backend(platform, base, __HK_BUILD__, getLocale);
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
   const privacy = api ? new PrivacyChoice(net, platform, api, deviceTimeZone()) : null;
-  const shell = new Shell(app, platform, await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k)), scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
+  await lang;
+  useWebp(await webp);
+  const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k));
+  const artMs = since();
+  const shell = new Shell(app, platform, art, scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
   const probe = memProbe(app);
@@ -67,7 +78,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   await shell.start(opts.direct);
   // the page's loading screen (index.html) goes once the first screen is up; no page on WeChat
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
-  net.loaded();
+  net.loaded({ script, art: artMs });
   if (privacy?.noticeDue()) {
     privacyToast(app, () => platform.safeInsets());
     privacy.noticeShown();

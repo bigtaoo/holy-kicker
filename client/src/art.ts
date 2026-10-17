@@ -8,6 +8,7 @@ import type { TaoSkeleton } from './game/tao/types';
 import type { Platform } from './platform/types';
 import type { SceneOptions } from './game/scene';
 import { sliceDeco, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
+import WEBP_ART from './webpArt.json';
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
@@ -38,9 +39,9 @@ export async function loadArt(
     tick(loadDeco(platform, 'art/icons/monks')),
     tick(loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined)),
     tick(loadSheet(platform, 'art/mobs/fox')),
-    tick(Assets.load<Texture>('art/cuju.png')),
-    tick(Assets.load<Texture>('art/staff.png')),
-    tick(Assets.load<Texture>('art/fish.png')),
+    tick(loadPic('art/cuju.png')),
+    tick(loadPic('art/staff.png')),
+    tick(loadPic('art/fish.png')),
     // the awakened relics: Meteor Ball, Ruyi Staff, Morning Bell (art/monk/icons/evolved)
     tick(Assets.load<Texture>('art/cuju_meteor.png')),
     tick(Assets.load<Texture>('art/staff_ruyi.png')),
@@ -50,7 +51,7 @@ export async function loadArt(
     tick(Assets.load<Texture>('art/palm.png')),
     // the Mountain Palm's stone hand (art/monk/fx/mountain.txt)
     tick(Assets.load<Texture>('art/mountain.png')),
-    tick(ground === 'flat' ? null : Assets.load<Texture>(`art/ground/${ground}.png`)),
+    tick(ground === 'flat' ? null : loadPic(`art/ground/${ground}.png`)),
     tick(deco === 'none' ? null : loadDeco(platform, 'art/ground/deco')),
     tick(scene.boss ? loadTao(platform, 'art/boss_monk') : null),
     tick(loadDeco(platform, 'art/icons/icons')),
@@ -58,6 +59,52 @@ export async function loadArt(
   return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
   ], monks: {}, boss, lobby: null, patrol: null, icons: new Map([...icons.frames, ...monkIcons.frames, ['fig_jiangshi', jiangshi.textures[0]]]), marsh: null, snow: null, ghost: null, peak: null, bosses: {} };
+}
+
+/**
+ * The PNGs with a lossy WebP beside them (tools/webp.py): the full-colour sheets of the first
+ * screen, a quarter of the bytes. Only art never unloaded by its URL belongs here (chapterArt.ts
+ * and freeLobbyArt unload by the PNG's).
+ */
+const WEBP = new Set<string>(WEBP_ART);
+let webp = false;
+
+/** A 1 x 1 lossy WebP with alpha (Google's feature test image). */
+const WEBP_PROBE = 'data:image/webp;base64,UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA==';
+
+/**
+ * Whether this browser decodes a lossy WebP with alpha the way Pixi decodes textures
+ * (createImageBitmap where there is one, else an <img>). Never throws: false on any doubt.
+ */
+export async function webpDecodes(): Promise<boolean> {
+  try {
+    if (typeof createImageBitmap === 'function' && typeof fetch === 'function') {
+      const bmp = await createImageBitmap(await (await fetch(WEBP_PROBE)).blob());
+      const ok = bmp.width === 1 && bmp.height === 1;
+      bmp.close?.();
+      if (!ok) return false;
+    }
+    if (typeof Image === 'undefined') return false;
+    return await new Promise<boolean>((resolve) => {
+      const img = new Image();
+      img.onload = () => resolve(img.width === 1 && img.height === 1);
+      img.onerror = () => resolve(false);
+      img.src = WEBP_PROBE;
+    });
+  } catch {
+    return false;
+  }
+}
+
+/** Lets loadPic take the WebP files (boot.ts, once webpDecodes said yes; never on WeChat). */
+export function useWebp(on: boolean): void {
+  webp = on;
+}
+
+/** A texture by its PNG's path: the WebP beside it where listed and decodable, the PNG if that load fails. */
+export function loadPic(png: string): Promise<Texture> {
+  if (!webp || !WEBP.has(png)) return Assets.load<Texture>(png);
+  return Assets.load<Texture>(`${png.slice(0, -'.png'.length)}.webp`).catch(() => Assets.load<Texture>(png));
 }
 
 /** Loads in flight or done, by name, so a load behind the first screen and a run's own share one fetch. */
@@ -139,7 +186,7 @@ export async function loadSheet(platform: Platform, path: string, png = `${path}
 export async function loadTao(platform: Platform, dir: string): Promise<TaoAsset> {
   const [text, atlas] = await Promise.all([
     platform.readText(`${dir}/skeleton.json`),
-    Assets.load<Texture>(`${dir}/atlas.png`),
+    loadPic(`${dir}/atlas.png`),
   ]);
   const skeleton = JSON.parse(text) as TaoSkeleton;
   if (skeleton.version !== 1) throw new Error(`${dir}: unsupported .tao version ${skeleton.version}`);

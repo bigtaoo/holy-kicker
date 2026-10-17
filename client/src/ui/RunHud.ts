@@ -30,8 +30,8 @@ export interface RunActions {
   revive(): Promise<boolean>;
   /** Takes card `index` of the level-up offer. */
   pick(index: number): void;
-  /** Switches the language and keeps it; the HUD redraws itself in it. */
-  setLanguage(locale: Locale): void;
+  /** Switches the language and keeps it (once its table is fetched); the HUD redraws itself in it. */
+  setLanguage(locale: Locale): Promise<void>;
   /** Asks what went wrong and sends it with the run's replay; null where a report could go nowhere. */
   report: (() => Promise<ReportOutcome>) | null;
 }
@@ -445,7 +445,7 @@ export class RunHud implements Screen {
     if (this.languages) {
       this.view.addChild(languagePanel(f.w, f.h, (l) => {
         this.languages = false;
-        this.actions.setLanguage(l);
+        void this.actions.setLanguage(l).then(() => !this.view.destroyed && this.relayout());
         this.relayout();
       }, () => {
         this.languages = false;

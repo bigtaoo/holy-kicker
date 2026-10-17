@@ -166,6 +166,7 @@ describe('routes', () => {
     const d = deps();
     for (let i = 0; i < 3; i++) expect((await route(req('GET', '/v1/beacon?h=crazygames&s=open_touch&b=abc1234'), d)).status).toBe(204);
     expect((await route(req('GET', '/v1/beacon?h=crazygames&s=loaded_touch&b=abc1234&ms=2400'), d)).status).toBe(204);
+    expect((await route(req('GET', '/v1/beacon?h=crazygames&s=art_touch&b=abc1234&ms=1900'), d)).status).toBe(204);
     expect((await route(req('GET', '/v1/beacon?h=crazygames&s=quit_touch&b=abc1234&ms=75000'), d)).status).toBe(204);
     expect((await route(req('GET', '/v1/beacon?h=crazygames&s=quit_touch&b=abc1234&ms=-1'), d)).status).toBe(400);
     expect((await route(req('GET', '/v1/beacon?h=web&s=open_touch&b=abc1234'), d)).status).toBe(204);
@@ -175,6 +176,7 @@ describe('routes', () => {
     expect((await route(req('GET', '/v1/beacon?h=web&s=open_touch&b=x'), deps({ allow: () => false }))).status).toBe(429);
     const s = await d.store.stats(1, NOW, 'crazygames');
     expect(s.beacons).toEqual([
+      { day: '2026-10-05', build: 'abc1234', step: 'art_touch', n: 1, t: { 2: 1 } },
       { day: '2026-10-05', build: 'abc1234', step: 'loaded_touch', n: 1, t: { 3: 1 } },
       { day: '2026-10-05', build: 'abc1234', step: 'open_touch', n: 3 },
       { day: '2026-10-05', build: 'abc1234', step: 'quit_touch', n: 1, t: { '60+': 1 } },

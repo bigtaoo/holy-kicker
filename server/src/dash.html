@@ -168,10 +168,12 @@ function loading(s) {
     const k = `${b.day} ${b.build}`;
     rows.set(k, { ...(rows.get(k) || { day: b.day, build: b.build }), [b.step]: b.n, [`${b.step}_t`]: b.t });
   }
-  // loaded and quit-while-loading, each with its median load time (protocol LOAD_SECONDS buckets)
+  // loaded and quit-while-loading, each with its median load time (protocol LOAD_SECONDS buckets);
+  // a loaded count's phases, where the build sends them: its script running, then its art in
   const cell = (r, kind) => {
     const o = r[`open_${kind}`] || 0, l = r[`loaded_${kind}`] || 0, q = r[`quit_${kind}`] || 0;
-    return `<td>${o}</td><td>${l} <small>${medianLoad(r[`loaded_${kind}_t`])}</small></td><td>${fmt(pct(l, o))}</td><td>${q} <small>${medianLoad(r[`quit_${kind}_t`])}</small></td>`;
+    const phases = r[`script_${kind}_t`] ? ` (script ${medianLoad(r[`script_${kind}_t`])}, art ${medianLoad(r[`art_${kind}_t`])})` : '';
+    return `<td>${o}</td><td>${l} <small>${medianLoad(r[`loaded_${kind}_t`])}${phases}</small></td><td>${fmt(pct(l, o))}</td><td>${q} <small>${medianLoad(r[`quit_${kind}_t`])}</small></td>`;
   };
   return `<table><tr><th>day</th><th>build</th><th>desktop opened</th><th>loaded</th><th>%</th><th>quit loading</th><th>touch opened</th><th>loaded</th><th>%</th><th>quit loading</th></tr>${[...rows.values()].reverse().map((r) => `<tr><td>${esc(r.day)}</td><td>${esc(r.build)}</td>${cell(r, 'desktop')}${cell(r, 'touch')}</tr>`).join('')}</table>`;
 }
