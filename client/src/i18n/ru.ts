@@ -270,6 +270,7 @@ export const ru: Table<typeof en> = {
     newBest: 'Новый рекорд!',
     best: 'Рекорд: {wave} волн',
     again: 'Играть снова',
+    nextChapter: 'Следующая глава',
     rankNew: 'Рейтинг: №{rank}!',
     grit: 'Упорство ×{n}: следующая попытка здесь сильнее',
     newRelic: 'Новая реликвия: {name}!',

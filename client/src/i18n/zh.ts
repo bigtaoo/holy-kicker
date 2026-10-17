@@ -270,6 +270,7 @@ export const zh: Table<typeof en> = {
     newBest: '新纪录！',
     best: '最佳：{wave} 波',
     again: '再来一局',
+    nextChapter: '下一章',
     rankNew: '排行榜：第 {rank} 名！',
     grit: '愈挫愈勇 ×{n}：下次挑战本章更强',
     newRelic: '新法器：{name}！',

@@ -270,6 +270,7 @@ export const ja: Table<typeof en> = {
     newBest: '新記録！',
     best: '最高記録：{wave} ウェーブ',
     again: 'もう一度',
+    nextChapter: '次の章へ',
     rankNew: 'ランキング：{rank}位！',
     grit: '不屈 ×{n}：次の挑戦はもっと強くなる',
     newRelic: '新しい法具：{name}！',

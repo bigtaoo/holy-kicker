@@ -268,6 +268,7 @@ export const en = {
     newBest: 'New best!',
     best: 'Best: {wave} waves',
     again: 'Play again',
+    nextChapter: 'Next chapter',
     rankNew: 'Leaderboard: #{rank}!',
     grit: 'Grit ×{n}: the next try here is stronger',
     newRelic: 'New relic: {name}!',

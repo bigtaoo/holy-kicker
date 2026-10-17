@@ -40,8 +40,9 @@ describe('grit', () => {
     expect(parseSave(JSON.stringify({ ...newSave(), grit: 999 })).grit).toBe(BALANCE.grit.max);
   });
 
-  it("a new player's first runs of chapter 1 get the head start, later ones and other chapters not", () => {
-    const fresh = newSave();
+  it("a new player's early runs of chapter 1 after the first get the head start, later ones and other chapters not", () => {
+    expect(noviceBonus(newSave())).toEqual({});
+    const fresh = { ...newSave(), firstRunDone: true, runs: 1 };
     expect(noviceBonus(fresh)).toEqual(BALANCE.novice.bonus);
     expect(noviceBonus({ ...fresh, runs: BALANCE.novice.runs })).toEqual({});
     expect(noviceBonus(fresh, 1, true)).toEqual({});

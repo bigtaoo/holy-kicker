@@ -270,6 +270,7 @@ export const tr: Table<typeof en> = {
     newBest: 'Yeni rekor!',
     best: 'En iyi: {wave} dalga',
     again: 'Tekrar oyna',
+    nextChapter: 'Sonraki bölüm',
     rankNew: 'Sıralama: #{rank}!',
     grit: 'Azim ×{n}: buradaki sonraki deneme daha güçlü',
     newRelic: 'Yeni emanet: {name}!',

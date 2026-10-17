@@ -16,16 +16,17 @@ import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from 
 // the rewards as icons (the copper counting up, the gear in tier-coloured frames), with the rarer
 // news (unlocks, chests, the welcome gift) in short lines under them. The parts come in one after
 // another (resultsReveal.ts); a tap shows them all. Under the card: Play again (after a lost run,
-// the quickest way back into a fight), then the rewarded "double copper" offer and Continue side
+// the quickest way back into a fight) or Next chapter (after a first clear, so a winner goes on
+// instead of stopping at the results), then the rewarded "double copper" offer and Continue side
 // by side at the same size, font and colour (CrazyGames' rewarded-ad rules). On a desktop Enter
-// takes the first button (Play again, or Continue alone) and Escape continues; the buttons wear
-// their keys. The rewarded ad has no key: it plays only on a click.
+// takes the first button (Play again or Next chapter, or Continue alone) and Escape continues; the
+// buttons wear their keys. The rewarded ad has no key: it plays only on a click.
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
   double(): Promise<boolean>;
   next(): void;
-  /** Plays the same chapter again; null where the results lead to the lobby only. */
+  /** Plays the same chapter again (Next chapter: the one a first clear opened); null where the results lead to the lobby only. */
   again: (() => void) | null;
 }
 
@@ -133,7 +134,7 @@ export class ResultsScreen implements Screen {
     // with Play again first, Continue (and the ad offer, which matches it) step back
     const second = this.actions.again ? COLORS.panelLocked : COLORS.saffron;
     if (this.actions.again) {
-      const again = button(t('results.again'), 640, 150, () => this.actions.again?.(), { fill: COLORS.saffron });
+      const again = button(t(this.reward.firstClear ? 'results.nextChapter' : 'results.again'), 640, 150, () => this.actions.again?.(), { fill: COLORS.saffron });
       again.position.set(x, y);
       if (busy) again.eventMode = 'none';
       else if (this.keys) keyCap(again, 640, 150, t('common.keyEnter'));

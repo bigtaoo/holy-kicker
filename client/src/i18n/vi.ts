@@ -270,6 +270,7 @@ export const vi: Table<typeof en> = {
     newBest: 'Kỷ lục mới!',
     best: 'Kỷ lục: {wave} đợt',
     again: 'Chơi lại',
+    nextChapter: 'Chương tiếp theo',
     rankNew: 'Bảng xếp hạng: hạng {rank}!',
     grit: 'Kiên cường ×{n}: lần thử tiếp theo ở đây mạnh hơn',
     newRelic: 'Pháp khí mới: {name}!',

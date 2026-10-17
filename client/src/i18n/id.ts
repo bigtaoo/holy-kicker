@@ -270,6 +270,7 @@ export const id: Table<typeof en> = {
     newBest: 'Rekor baru!',
     best: 'Terbaik: {wave} gelombang',
     again: 'Main lagi',
+    nextChapter: 'Bab berikutnya',
     rankNew: 'Peringkat: #{rank}!',
     grit: 'Tekad ×{n}: percobaan berikutnya di sini lebih kuat',
     newRelic: 'Pusaka baru: {name}!',

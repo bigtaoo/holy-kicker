@@ -295,8 +295,8 @@ export class Shell {
     this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => this.play(c.chapter, left), giveUp }));
   }
 
-  /** Starts a run of `chapter` (or goes on with `left`; `again` from the results' Play again) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
-  private play(chapter: number, left?: SavedRun, again = false): Promise<void> {
+  /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
+  private play(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null): Promise<void> {
     if (this.loading) return Promise.resolve();
     this.loading = true;
     const monk = left?.state.config.monk ?? this.scene.monk ?? this.save.monk;
@@ -304,7 +304,7 @@ export class Shell {
     return freeChapterArt(this.art, chapter).then(() => Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)])).then(
       () => {
         this.loading = false;
-        this.startRun(chapter, left, again);
+        this.startRun(chapter, left, from);
       },
       (err: unknown) => {
         // stay in (or go back to) the lobby; the next tap tries again
@@ -315,7 +315,7 @@ export class Shell {
     );
   }
 
-  private startRun(chapter: number, left?: SavedRun, again = false): void {
+  private startRun(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null): void {
     this.chapter = chapter;
     this.hard = left ? left.state.config.hard : this.scene.hard || this.save.hard;
     this.setScreen(null);
@@ -376,7 +376,7 @@ export class Shell {
     this.portal.gameplayStart();
     // a resumed fight waits on the pause panel until the player looks (a card choice or the death panel holds it anyway)
     const s = this.game.engine.state;
-    if (!left) this.net.track('run_start', { chapter, hard: this.hard, monk: this.scene.monk ?? this.save.monk, relic: this.scene.relic ?? this.save.relic, ...(again && { again }) });
+    if (!left) this.net.track('run_start', { chapter, hard: this.hard, monk: this.scene.monk ?? this.save.monk, relic: this.scene.relic ?? this.save.relic, ...(from && { [from]: true }) });
     else if (s.outcome === 'playing' && s.players[0].offer.length === 0) this.hud.pauseForHost();
   }
 
@@ -472,9 +472,9 @@ export class Shell {
         return paid;
       },
       next: () => leave(() => this.showLobby()),
-      // a lost run's quickest way back is the same chapter again, from the very first run on (the
-      // tutorial does not come back: firstRunDone is set by now)
-      again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, true)) : null,
+      // a lost run's quickest way back is the same chapter again (the tutorial does not come back:
+      // firstRunDone is set by now), a first clear's the chapter it opened (settleRun moved the lobby there)
+      again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, 'again')) : this.save.chapter !== this.chapter || this.save.hard !== this.hard ? () => leave(() => this.play(this.save.chapter, undefined, 'next')) : null,
     }, this.ads.rewardedAvailable(), rank, fall, this.art.icons, this.device === 'desktop'));
   }
 

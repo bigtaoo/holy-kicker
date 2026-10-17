@@ -270,6 +270,7 @@ export const es: Table<typeof en> = {
     newBest: '¡Nuevo récord!',
     best: 'Récord: {wave} oleadas',
     again: 'Jugar otra vez',
+    nextChapter: 'Siguiente capítulo',
     rankNew: 'Clasificación: ¡n.º {rank}!',
     grit: 'Tesón ×{n}: tu próximo intento aquí será más fuerte',
     newRelic: '¡Nueva reliquia: {name}!',

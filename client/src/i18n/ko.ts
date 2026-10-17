@@ -270,6 +270,7 @@ export const ko: Table<typeof en> = {
     newBest: '최고 기록!',
     best: '최고 기록: {wave} 웨이브',
     again: '다시 하기',
+    nextChapter: '다음 장',
     rankNew: '순위표: {rank}위!',
     grit: '불굴 ×{n}: 여기서 다음 도전은 더 강해져요',
     newRelic: '새 법구: {name}!',

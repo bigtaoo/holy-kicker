@@ -270,6 +270,7 @@ export const th: Table<typeof en> = {
     newBest: 'สถิติใหม่!',
     best: 'ดีที่สุด: {wave} ระลอก',
     again: 'เล่นอีกครั้ง',
+    nextChapter: 'บทถัดไป',
     rankNew: 'กระดานอันดับ: #{rank}!',
     grit: 'ใจสู้ ×{n}: ครั้งหน้าที่นี่จะแกร่งขึ้น',
     newRelic: 'อาวุธวิเศษใหม่: {name}!',

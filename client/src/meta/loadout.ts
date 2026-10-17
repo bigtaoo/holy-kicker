@@ -37,8 +37,12 @@ export function gritBonus(save: SaveData, chapter = save.chapter, hard = save.ha
   return out;
 }
 
-/** A new player's head start: the first runs of chapter 1 while nothing is cleared yet. */
+/**
+ * A new player's head start: chapter 1's runs after the first (`runs` counts it) while nothing is
+ * cleared yet. The first run goes without: its seed and opening cards make it easy enough already
+ * (bots won it 19 of 20 with the bonus, so a first clear taught nothing about the game's pull).
+ */
 export function noviceBonus(save: SaveData, chapter = save.chapter, hard = save.hard): Partial<Record<Stat, number>> {
   const { runs, bonus } = BALANCE.novice;
-  return chapter === 1 && !hard && save.cleared === 0 && save.runs < runs ? { ...bonus } : {};
+  return chapter === 1 && !hard && save.firstRunDone && save.cleared === 0 && save.runs < runs ? { ...bonus } : {};
 }
