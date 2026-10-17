@@ -144,7 +144,7 @@ export class RunHud implements Screen {
     }
     if (this.paused) this.pausePanel(f);
     if (this.down) {
-      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }, this.keys));
+      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }, this.icons, this.keys));
     }
   }
 

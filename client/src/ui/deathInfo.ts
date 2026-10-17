@@ -1,4 +1,4 @@
-import { isShrineWave, type HurtSource } from '@hk/engine';
+import { isShrineWave, type HurtSource, type MonkId } from '@hk/engine';
 import { BALANCE } from '../meta/balance';
 import type { RunPast } from '../meta/falls';
 
@@ -25,6 +25,8 @@ export interface Goal {
 export interface DownInfo {
   cause: DeathCause;
   goal: Goal | null;
+  /** The monk who fell, for the picture (the kicker when unknown). */
+  monk?: MonkId;
 }
 
 function causeOf(src: HurtSource | null): Exclude<DeathCause, 'level'> {

@@ -87,7 +87,7 @@ export class ResultsScreen implements Screen {
     const r = this.reward;
     // the zones top down, each [view, height]; the rewards' copper counts up
     const zones: Part[] = [headerPart(r, this.waves, this.rank, INNER_W)];
-    if (this.fall) zones.push(fallPart(this.fall, this.waves, INNER_W));
+    if (this.fall) zones.push(fallPart(this.fall, this.waves, INNER_W, this.icons));
     const total = this.offer === 'paid' ? 2 * r.copper : r.copper;
     const rewards = rewardsPart(r, total, this.icons, INNER_W);
     zones.push(rewards);

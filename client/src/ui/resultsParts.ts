@@ -8,7 +8,7 @@ import { iconSprite, type IconSheet } from './buildBar';
 import { sutraName } from './cardText';
 import type { DownInfo } from './deathInfo';
 import { goalText } from './downPanel';
-import { fallIcon } from './fallIcons';
+import { fallFigures, fallIcon } from './fallIcons';
 import { dropName, TIER_COLORS } from './gearText';
 import { goalShare } from './resultsReveal';
 import { statLines } from './statText';
@@ -62,9 +62,9 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
 }
 
 /** What felled the hero, the nearest goal with a bar for how near it came, and one short tip. */
-export function fallPart(fall: DownInfo, waves: number, width: number): Part {
+export function fallPart(fall: DownInfo, waves: number, width: number, icons: IconSheet): Part {
   const c = new Container();
-  const icon = fallIcon(fall.cause);
+  const icon = fallIcon(fall.cause, fallFigures(icons, fall.monk));
   icon.scale.set(0.62);
   const textX = -width / 2 + 190;
   const textW = width / 2 - textX - 30;

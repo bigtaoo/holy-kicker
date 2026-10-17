@@ -57,7 +57,7 @@ export async function loadArt(
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
-  ], monks: {}, boss, lobby: null, patrol: null, icons: new Map([...icons.frames, ...monkIcons.frames]), marsh: null, snow: null, ghost: null, peak: null, bosses: {} };
+  ], monks: {}, boss, lobby: null, patrol: null, icons: new Map([...icons.frames, ...monkIcons.frames, ['fig_jiangshi', jiangshi.textures[0]]]), marsh: null, snow: null, ghost: null, peak: null, bosses: {} };
 }
 
 /** Loads in flight or done, by name, so a load behind the first screen and a run's own share one fetch. */

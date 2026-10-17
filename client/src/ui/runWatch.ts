@@ -164,7 +164,7 @@ export class RunWatch {
   private fallInfo(): DownInfo {
     const s = this.game.engine.state;
     const cause = deathCause(this.lastBlow, s.players[0].level, s.wave);
-    this.fall = { cause, goal: this.d.past ? nearestGoal(s.wave, s.config.waves, this.d.past) : null };
+    this.fall = { cause, monk: s.players[0].monk, goal: this.d.past ? nearestGoal(s.wave, s.config.waves, this.d.past) : null };
     return this.fall;
   }
 }

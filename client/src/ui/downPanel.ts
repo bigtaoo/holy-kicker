@@ -1,7 +1,8 @@
 import { Container } from 'pixi.js';
 import { t } from '../i18n';
 import type { DownInfo, Goal } from './deathInfo';
-import { fallIcon } from './fallIcons';
+import type { IconSheet } from './buildBar';
+import { fallFigures, fallIcon } from './fallIcons';
 import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, keyCap, label, panel } from './widgets';
 
@@ -29,8 +30,8 @@ export function goalText(goal: Goal): string {
  * picture (at `iconScale`), the cause, one tip and the nearest goal, `width` wide at most.
  * Shared by the death panel and the results.
  */
-export function fallLines(info: DownInfo, wave: number, width: number, iconScale = 1): [Container, number][] {
-  const icon = fallIcon(info.cause);
+export function fallLines(info: DownInfo, wave: number, width: number, icons: IconSheet, iconScale = 1): [Container, number][] {
+  const icon = fallIcon(info.cause, fallFigures(icons, info.monk));
   icon.scale.set(iconScale);
   const items: [Container, number][] = [[icon, 200 * iconScale]];
   items.push([fit(label(t(`run.fall.${info.cause}.cause`, { wave }), 56, COLORS.saffron), width), 80]);
@@ -44,12 +45,12 @@ export function fallLines(info: DownInfo, wave: number, width: number, iconScale
 }
 
 /** `keys`: a desktop, where the buttons wear their keys (Enter revives, Escape gives up; RunHud.key). */
-export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: number, actions: DownActions, keys = false): Container {
+export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: number, actions: DownActions, icons: IconSheet, keys = false): Container {
   const layer = new Container();
   layer.addChild(backdrop(f.w, f.h));
   // stacked top down: [view, height it takes]
   const items: [Container, number][] = [[label(t('run.down'), 80, COLORS.text), 120]];
-  if (info) items.push(...fallLines(info, wave, TEXT_W));
+  if (info) items.push(...fallLines(info, wave, TEXT_W, icons));
   // the way out matches the revive in size, font and colour, so declining the ad never looks
   // disabled (CrazyGames' rewarded-ad rules)
   const giveUp = button(t('run.giveUp'), 640, 150, () => actions.giveUp());
