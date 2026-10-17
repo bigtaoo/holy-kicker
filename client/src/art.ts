@@ -54,7 +54,8 @@ export async function loadArt(
     tick(ground === 'flat' ? null : loadPic(`art/ground/${ground}.png`)),
     tick(deco === 'none' ? null : loadDeco(platform, 'art/ground/deco')),
     tick(scene.boss ? loadTao(platform, 'art/boss_monk') : null),
-    tick(loadDeco(platform, 'art/icons/icons')),
+    // 128 px cells, drawn from about 40 to 100 px
+    tick(loadDeco(platform, 'art/icons/icons', true)),
   ]);
   return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
@@ -170,9 +171,12 @@ export async function loadMonkArt(platform: Platform, art: Art, monk: MonkId): P
   art.monks[monk] = await loadTao(platform, `art/monks/${monk}`);
 }
 
-/** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py). */
-export async function loadDeco(platform: Platform, path: string): Promise<DecoSheet> {
-  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), Assets.load<Texture>(`${path}.png`)]);
+/** A named-frame sheet: <name>.json + <name>.png (tools/pack_deco.py, tools/pack_icons.py).
+ *  `mipmaps` for a sheet drawn well below its own size, which would sparkle otherwise. */
+export async function loadDeco(platform: Platform, path: string, mipmaps = false): Promise<DecoSheet> {
+  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), loadPic(`${path}.png`)]);
+  // set before its first draw, when the GPU copy is made (WebGL1 skips it for a sheet that is not 2^n)
+  if (mipmaps) sheet.source.autoGenerateMipmaps = true;
   return sliceDeco((JSON.parse(text) as { frames: DecoFrame[] }).frames, sheet);
 }
 

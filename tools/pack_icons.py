@@ -23,7 +23,8 @@ HOLES = {
 
 CELL = 128
 COLS = 4
-PAD = 2
+# the game mipmaps the sheet: 4 px keeps a clear pixel between cells two levels down
+PAD = 4
 
 
 def main():
@@ -49,7 +50,8 @@ def main():
         page.alpha_composite(im, (x + (CELL - im.width) // 2, y + (CELL - im.height) // 2))
         frames.append({"name": Path(s).stem, "x": x, "y": y, "w": CELL, "h": CELL})
     out.mkdir(parents=True, exist_ok=True)
-    # a 256-colour palette, like the baked mobs: about a third of the size, no visible change
+    # a 256-colour palette, like the baked mobs: a fifth of the size (full colour put WeChat's main
+    # package over 4 MB). Its speckle only showed while the game shrank the icons without mipmaps.
     page.quantize(256, method=Image.Quantize.FASTOCTREE).save(out / f"{name}.png", optimize=True)
     (out / f"{name}.json").write_text(json.dumps({"frames": frames}, indent=1))
     print(f"{len(frames)} icons, {page.size[0]}x{page.size[1]}, {(out / f'{name}.png').stat().st_size // 1024} KB")
