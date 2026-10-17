@@ -72,6 +72,29 @@ before believing a change, and never read a single day.
 4. **Compare builds.** "first build played" splits D1 by the release new players started on. Wait
    for a few hundred installs on the new build before calling it.
 
+## Checking a new upload
+
+The dashboard needs days; a broken upload should show within hours. `tools/launch_check.mjs`
+compares a host's newest build with the one before it, each over the same age (the hours the
+newest has been up), split desktop / touch:
+
+```bash
+node tools/launch_check.mjs --host crazygames --since 2026-10-14
+```
+
+`--builds 3997841,baee706` picks the builds (any part of the name; default: the two newest that
+sent a `session` since `--since`), `--all` drops the same-age window, `--save f.json` /
+`--load f.json` keep or reuse the raw pull. It reads production MongoDB through the hk-api
+container (`ssh blightbloom`, read only) and prints, per build and device: new installs and
+launches; load beacons with their median bucket; first runs on screen 60 s or more (a proxy for
+CrazyGames' conversion; desktop needs ~63%), the median day-0 time on screen, first runs left at
+the tutorial's `move` step (with 0 kills or some, and on new builds whether the game ever had
+the keys or saw input), replay after the first death, a second run, reaching the lobby; runs
+that stopped with no `leave` or `run_end` (the page died) with the wave the last `alive` saw;
+`run_resume`; stalls, `perf` trouble snapshots and problem reports. A "–" means the build does not
+send that event. With tens of installs per build a few players move any share by 5–10 points:
+look for a step change, a share halving or a count going from 0 to many, not for small drifts.
+
 ## Symptoms and levers
 
 | What the dashboard shows | Likely cause | Levers in this game |
