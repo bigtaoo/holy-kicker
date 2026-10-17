@@ -113,6 +113,12 @@ export function foldDayZero(d: DayZero | undefined, events: readonly ClientEvent
         z.left = (PLACES as readonly unknown[]).includes(p.place) ? String(p.place) : 'other';
         z.leftWave = z.left === 'run' ? num(p.wave) : 0;
         break;
+      case 'alive':
+      case 'run_resume':
+        // still in a run: where a page that died with no `leave` last was
+        z.left = 'run';
+        z.leftWave = num(p.wave);
+        break;
     }
   }
   return z;

@@ -30,7 +30,8 @@ talks to the backend as host `playgama`; whether its page lets that through is n
 - **Day 0**: everything an install did on its first day: launches, runs started and finished,
   furthest wave, the wave its first run ended on, the tutorial, lobby purchases, ads, minutes on
   screen (`leave` events), and where it was when it last left (lobby, results, or mid-run and on
-  which wave). Ads are the ones watched: a reward paid with no ad (iOS's ad-free card, every
+  which wave; a run whose page died with no `leave` counts as left mid-run at its last `alive`,
+  the beat each minute of play sends). Ads are the ones watched: a reward paid with no ad (iOS's ad-free card, every
   rewarded offer while CrazyGames keeps the game in Basic Launch) is tracked as `free` and left
   out, so "watched an ad" stays "no" on CrazyGames until Full Launch.
 - **Boards**: every finished run in the window by chapter and mode, with the wave each lost one

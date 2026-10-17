@@ -292,7 +292,7 @@ export class Shell {
     };
     // fallen with no revive left, there is nothing to go on with
     if (outcome === 'lost' && players[0].revives === 0) return giveUp();
-    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => this.play(c.chapter, left), giveUp }));
+    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }));
   }
 
   /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
@@ -369,7 +369,7 @@ export class Shell {
     this.watch = new RunWatch(this.game, this.hud, {
       chapter, portal: this.portal, ads: this.ads, net: this.net, past: runPast(this.save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
-      keepRun: () => this.keepRun(), end: () => this.endRun(), cheer: () => this.sound.play('cleared'),
+      kills: () => this.kills, keepRun: () => this.keepRun(), end: () => this.endRun(), cheer: () => this.sound.play('cleared'),
     }, !!teach);
     // the fast-forward choice carries over from the last run
     this.hud.setFast(loadSettings(this.platform.storage).fast);

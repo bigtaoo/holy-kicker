@@ -16,7 +16,10 @@ export type Device = (typeof DEVICES)[number];
  * rewarded ad watched to the end; `claim` a daily task, achievement or patrol paid out; `share`
  * the host's share sheet answered (WeChat: the player picked a forward); `leave` the game going to
  * the background (tab hidden, app switched), the last one of a day being where the player stopped;
- * `iap` an in-app purchase or restore answered (iOS, the ad-free card).
+ * `iap` an in-app purchase or restore answered (iOS, the ad-free card); `alive` a minute of a run
+ * on screen, so a run whose page died with no `leave` (a crash, a killed tab, a switched-off
+ * computer) still shows how far it got; `run_resume` a run kept from an earlier launch picked up
+ * again (meta/resume.ts), which sends no `run_start`, so its `run_end` has a start in this session.
  *
  * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list), `navLangs` (the browser's), `mem`, `cores` and `gpu` (SessionDeviceProps) and on CrazyGames `sdk` (the SDK's environment and how init ended: `crazygames/ok`, `disabled/timeout`, `disabled/noscript`), `sdkMs` (init's milliseconds) and `basic` (ads held for Basic Launch). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `ad` has `at` (`lobby`, `revive` or
@@ -27,14 +30,16 @@ export type Device = (typeof DEVICES)[number];
  * `leave` has `place` (`lobby`, `run`, `results` or `other`), `secs` (seconds on screen since
  * the previous `leave`) and, in a run, `chapter`, `wave`, the hero's `level`, the run's `kills`,
  * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached) and, in a browser, `focus` (the game ever had the keys since launch) and `input` (any key or click reached it). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,
- * `emerge`, `bullet`, `zone`, or `level` when under-levelled for the wave). `iap` has `what` (`buy` or
+ * `emerge`, `bullet`, `zone`, or `level` when under-levelled for the wave). `alive` has what a `leave` in a run has
+ * (`chapter`, `wave`, `level`, `kills`, `card`, `tutorial`). `run_resume` has `chapter`, `hard` and
+ * `wave`. `iap` has `what` (`buy` or
  * `restore`), `item` (`adfree`) and `outcome` (`owned`, `cancelled`, `pending` or `failed`, and
  * `none` for a restore that found nothing).
  *
  * `perf` is a frame-rate snapshot of the battle so far (see PerfProps); `anomaly` one thing gone
  * wrong on the device, sent as it happens (see AnomalyProps).
  */
-export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap', 'perf', 'anomaly'] as const;
+export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap', 'perf', 'anomaly', 'alive', 'run_resume'] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
 export type PropValue = string | number | boolean;

@@ -4,6 +4,7 @@ import { BALANCE } from '../meta/balance';
 import type { Game } from '../game/Game';
 import type { RunPast } from '../meta/falls';
 import type { Backend } from '../net/backend';
+import { runLeave } from '../net/leaveProps';
 import type { Ads, Portal } from '../platform/types';
 import { buildSlots, spellCharges } from './buildSlots';
 import { cardText } from './cardText';
@@ -20,6 +21,9 @@ import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
 // automatic and the opening horde starts in kick range, so the first kills come within a second
 // (a frozen screen waiting for a key lost desktop players who never pressed one).
 
+/** Seconds of play between two `alive` beats: a run whose page dies with no `leave` still says how far it got. */
+export const ALIVE_EVERY = 60;
+
 export interface RunWatchDeps {
   chapter: number;
   portal: Portal;
@@ -29,6 +33,8 @@ export interface RunWatchDeps {
   past?: RunPast;
   /** Free revives (training) left in the run; they come before the rewarded-ad one. */
   freeRevives(): number;
+  /** The run's kills so far. */
+  kills(): number;
   /** Keeps the run for the next launch (meta/resume.ts). */
   keepRun(): void;
   /** The run is over (won, after the monk's line). */
@@ -57,6 +63,8 @@ export class RunWatch {
   private lastBlow: HurtSource | null = null;
   /** What felled the hero last and the nearest goal he fell short of (null while he never fell). */
   fall: DownInfo | null = null;
+  /** Seconds of play since the last `alive` beat. */
+  private sinceAlive = 0;
 
   constructor(
     private readonly game: Game,
@@ -100,6 +108,11 @@ export class RunWatch {
       }
     }
     const p = s.players[0];
+    // a beat each minute of play (a frame's step capped, so a stalled tab does not count as play)
+    if (s.outcome === 'playing' && !game.paused && (this.sinceAlive += Math.min(dt, 1)) >= ALIVE_EVERY) {
+      this.sinceAlive = 0;
+      d.net.track('alive', runLeave(s, d.chapter, d.kills(), this.tutorial?.step ?? null));
+    }
     if (this.tutorial && !game.paused && p.offer.length === 0) {
       const step = this.tutorial.step;
       this.tutorial = stepTutorial(this.tutorial, dt, p.moving);

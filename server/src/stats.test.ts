@@ -24,6 +24,11 @@ describe('day 0', () => {
     expect(z).toMatchObject({ sessions: 1, starts: 2, ends: 2, best: 12, firstWave: 7, tutorial: true, buys: 1, secs: 360, left: 'other', leftWave: 0 });
   });
 
+  it('keeps a run whose page died with no leave as left in the run, at its last beat', () => {
+    const z = foldDayZero(undefined, [session, { e: 'run_start', t: DAY0 }, { e: 'alive', t: DAY0, p: { chapter: 1, wave: 3 } }, { e: 'alive', t: DAY0, p: { chapter: 1, wave: 6 } }]);
+    expect(z).toMatchObject({ starts: 1, secs: 0, left: 'run', leftWave: 6 });
+  });
+
   it('counts days in whole UTC days', () => {
     expect(dayOffset('2026-09-30', '2026-10-07')).toBe(7);
     expect(dayAfter('2026-10-31', 1)).toBe('2026-11-01');

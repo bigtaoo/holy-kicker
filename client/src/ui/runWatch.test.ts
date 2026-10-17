@@ -7,7 +7,7 @@ import type { RunPast } from '../meta/falls';
 import type { Backend } from '../net/backend';
 import type { Ads, Portal } from '../platform/types';
 import type { RunHud } from './RunHud';
-import { RunWatch } from './runWatch';
+import { ALIVE_EVERY, RunWatch } from './runWatch';
 import { TUTORIAL_MOVE } from './tutorial';
 
 /** A HUD whose every method is a spy (RunWatch only calls them). */
@@ -26,11 +26,23 @@ function watch(teach: boolean, past?: RunPast, cam = { busy: false }, offer = { 
   const net = { track: vi.fn() } as unknown as Backend;
   const ads = { rewardedAvailable: () => Promise.resolve(offer.ad) } as unknown as Ads;
   const end = vi.fn();
-  const w = new RunWatch(game, hud, { chapter: 1, portal, ads, net, past, freeRevives: () => offer.free, keepRun: vi.fn(), end }, teach);
+  const w = new RunWatch(game, hud, { chapter: 1, portal, ads, net, past, freeRevives: () => offer.free, kills: () => 9, keepRun: vi.fn(), end }, teach);
   return { game, hud, net, w, end };
 }
 
 describe('RunWatch', () => {
+  it('beats once a minute of play, not while paused, with where the run is', () => {
+    const { game, net, w } = watch(false);
+    const alive = () => vi.mocked(net.track).mock.calls.filter(([e]) => e === 'alive');
+    for (let i = 0; i < ALIVE_EVERY - 1; i++) w.update(1);
+    game.paused = true;
+    for (let i = 0; i < 30; i++) w.update(1);
+    expect(alive()).toHaveLength(0);
+    game.paused = false;
+    w.update(5); // a stalled frame counts as one second at most
+    expect(alive()).toEqual([['alive', { chapter: 1, wave: 1, level: 1, kills: 9, card: false }]]);
+  });
+
   it('starts a first run live, with the move hint up, whether or not the player gives input', () => {
     const { game, hud, w } = watch(true);
     expect(game.paused).toBe(false);
