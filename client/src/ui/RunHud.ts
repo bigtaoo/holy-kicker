@@ -224,6 +224,12 @@ export class RunHud implements Screen {
     this.relayout();
   }
 
+  /** One short line across the middle: a card the first run took for a player still standing. */
+  gained(name: string): void {
+    this.banner = { lines: [[t('card.gained', { name }), 72]], story: null, t: BANNER_TIME, record: false, age: 0 };
+    this.relayout();
+  }
+
   /** A story line alone across the middle (the monk's, once the chapter boss fell). */
   speak(story: StoryLine): void {
     this.banner = { lines: [], story, t: STORY_TIME, record: false, age: 0 };

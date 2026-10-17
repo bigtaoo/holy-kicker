@@ -124,6 +124,7 @@ export const ko: Table<typeof en> = {
   card: {
     levelUp: '레벨 업!',
     pickOne: '하나를 고르세요',
+    gained: '습득: {name}',
     new: 'NEW!',
     level: 'Lv {a} → {b}',
     bounces: '튕김 {a} → {b}회',

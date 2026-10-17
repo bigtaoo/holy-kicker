@@ -124,6 +124,7 @@ export const vi: Table<typeof en> = {
   card: {
     levelUp: 'Lên cấp!',
     pickOne: 'Chọn một',
+    gained: 'Đã học: {name}',
     new: 'Mới!',
     level: 'Lv {a} → {b}',
     bounces: 'Nảy {a} → {b}',

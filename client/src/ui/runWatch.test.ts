@@ -19,7 +19,7 @@ function fakeHud(): RunHud & { calls: Record<string, unknown[][]> } {
 }
 
 function watch(teach: boolean, past?: RunPast, cam = { busy: false }, offer = { free: 0, ad: false }) {
-  const game = { engine: new Engine({ ...DEFAULT_RUN, waves: 50, firstRun: teach }), paused: false, downCamBusy: () => cam.busy } as unknown as Game;
+  const game = { engine: new Engine({ ...DEFAULT_RUN, waves: 50, firstRun: teach }), paused: false, downCamBusy: () => cam.busy, pick: vi.fn() } as unknown as Game;
   const hud = fakeHud();
   const portal = { gameplayStart: vi.fn(), gameplayStop: vi.fn() } as unknown as Portal;
   const net = { track: vi.fn() } as unknown as Backend;
@@ -48,6 +48,24 @@ describe('RunWatch', () => {
     for (let i = 0; i < 30 * 8; i++) w.update(1 / 30);
     expect(w.tutorial?.step).toBe('done');
     expect(net.track).toHaveBeenCalledWith('tutorial');
+  });
+
+  it('takes the first card for a first-run player who never moved, and deals the cards once they did', () => {
+    const { game, hud, w } = watch(true);
+    const p = game.engine.state.players[0];
+    p.offer = [{ kind: 'spell', id: 'palm' }, { kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }];
+    w.update(1 / 30);
+    expect(game.pick).toHaveBeenCalledWith(0);
+    expect(hud.calls.gained).toHaveLength(1);
+    expect(hud.calls.showOffer).toBeUndefined();
+    p.offer = [];
+    p.moving = true;
+    for (let i = 0; i < Math.ceil(TUTORIAL_MOVE * 30) + 1; i++) w.update(1 / 30);
+    expect(w.tutorial?.step).toBe('auto');
+    p.offer = [{ kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }, { kind: 'spell', id: 'bell' }];
+    w.update(1 / 30);
+    expect(hud.calls.showOffer).toHaveLength(1);
+    expect(game.pick).toHaveBeenCalledTimes(1);
   });
 
   it('teaches nothing on a later run', () => {

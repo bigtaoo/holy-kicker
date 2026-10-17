@@ -124,6 +124,7 @@ export const ja: Table<typeof en> = {
   card: {
     levelUp: 'レベルアップ！',
     pickOne: '1つ選ぼう',
+    gained: '習得：{name}',
     new: 'NEW！',
     level: 'Lv {a} → {b}',
     bounces: 'バウンド {a} → {b}回',

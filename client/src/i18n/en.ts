@@ -122,6 +122,7 @@ export const en = {
   card: {
     levelUp: 'Level up!',
     pickOne: 'Pick one',
+    gained: 'Learned: {name}',
     new: 'New!',
     level: 'Lv {a} → {b}',
     bounces: 'Bounces {a} → {b}',

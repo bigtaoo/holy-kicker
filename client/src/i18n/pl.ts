@@ -124,6 +124,7 @@ export const pl: Table<typeof en> = {
   card: {
     levelUp: 'Awans!',
     pickOne: 'Wybierz jedno',
+    gained: 'Nauczono: {name}',
     new: 'Nowe!',
     level: 'Poz. {a} → {b}',
     bounces: 'Odbicia {a} → {b}',

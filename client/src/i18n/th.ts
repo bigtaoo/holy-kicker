@@ -124,6 +124,7 @@ export const th: Table<typeof en> = {
   card: {
     levelUp: 'เลเวลอัป!',
     pickOne: 'เลือก 1 อย่าง',
+    gained: 'ได้เรียนรู้: {name}',
     new: 'ใหม่!',
     level: 'Lv {a} → {b}',
     bounces: 'เด้ง {a} → {b}',

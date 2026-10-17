@@ -124,6 +124,7 @@ export const zh: Table<typeof en> = {
   card: {
     levelUp: '升级！',
     pickOne: '选择一项',
+    gained: '习得：{name}',
     new: '新！',
     level: '等级 {a} → {b}',
     bounces: '弹射 {a} → {b} 次',

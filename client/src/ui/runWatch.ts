@@ -103,8 +103,16 @@ export class RunWatch {
     // offers come one after another (several levels at once, a shrine's insight), each a new list
     if (p.offer.length > 0 && this.shownOffer !== p.offer) {
       this.shownOffer = p.offer;
-      const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
-      hud.showOffer(title, p.offer.map((c) => cardText(c, p)));
+      // a first-run level-up before the player ever moved takes its first card at once: a modal
+      // over a fight the player has not touched yet lost desktop players (most of those who left
+      // at the move hint had the cards up)
+      if (this.tutorial?.step === 'move' && p.offer[0].kind !== 'shrine') {
+        game.pick(0);
+        hud.gained(cardText(p.offer[0], p).name);
+      } else {
+        const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
+        hud.showOffer(title, p.offer.map((c) => cardText(c, p)));
+      }
     } else if (p.offer.length === 0 && this.shownOffer) {
       this.shownOffer = null;
       hud.hideOffer();
