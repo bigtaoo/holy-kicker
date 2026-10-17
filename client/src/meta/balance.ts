@@ -52,6 +52,19 @@ export interface Balance {
   /** Jade price of each monk (monks.ts); the kicker is free. */
   monks: Record<MonkId, number>;
   fall: FallBalance;
+  firstRun: FirstRunBalance;
+}
+
+/**
+ * A new player's first run: the engine seed it always plays (so its card deals are known), and
+ * how many level-ups take a card by themselves (ui/runWatch.ts autoPick). Seed 92 was the best of
+ * 200 for the casual and standing-still balance bots with 5 spell-first picks (2026-10-17);
+ * client/src/game/firstRun.test.ts locks its first cards, so an engine change that reshuffles
+ * them fails there and wants the seed search run again.
+ */
+export interface FirstRunBalance {
+  seed: number;
+  autoPicks: number;
 }
 
 /**

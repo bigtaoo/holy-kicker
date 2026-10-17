@@ -1,5 +1,6 @@
 import { isBossWave, isEliteWave, xpToNext, type Card, type HurtSource, type SimEvent } from '@hk/engine';
 import { t } from '../i18n';
+import { BALANCE } from '../meta/balance';
 import type { Game } from '../game/Game';
 import type { RunPast } from '../meta/falls';
 import type { Backend } from '../net/backend';
@@ -36,6 +37,11 @@ export interface RunWatchDeps {
   cheer?(): void;
 }
 
+/** The card an opening level-up takes: the first spell (new or stronger), else the first card. */
+export function autoPick(offer: readonly Card[]): number {
+  return Math.max(0, offer.findIndex((c) => c.kind === 'spell'));
+}
+
 export class RunWatch {
   /** The wave the HUD last showed, and whether the death panel is up. */
   private shownWave = -1;
@@ -45,6 +51,8 @@ export class RunWatch {
   /** The offer whose cards the HUD shows; null when none are up. */
   private shownOffer: readonly Card[] | null = null;
   tutorial: Tutorial | null;
+  /** Level-ups left that take a card by themselves (the first run's opening, BALANCE.firstRun). */
+  private autoPicks: number;
   /** What the last blow that hurt the local hero came from. */
   private lastBlow: HurtSource | null = null;
   /** What felled the hero last and the nearest goal he fell short of (null while he never fell). */
@@ -58,6 +66,7 @@ export class RunWatch {
     teach: boolean,
   ) {
     this.tutorial = teach ? newTutorial() : null;
+    this.autoPicks = teach ? BALANCE.firstRun.autoPicks : 0;
     if (teach) hud.setTutorial('move');
   }
 
@@ -103,12 +112,15 @@ export class RunWatch {
     // offers come one after another (several levels at once, a shrine's insight), each a new list
     if (p.offer.length > 0 && this.shownOffer !== p.offer) {
       this.shownOffer = p.offer;
-      // a first-run level-up before the player ever moved takes its first card at once: a modal
-      // over a fight the player has not touched yet lost desktop players (most of those who left
-      // at the move hint had the cards up)
-      if (this.tutorial?.step === 'move' && p.offer[0].kind !== 'shrine') {
-        game.pick(0);
-        hud.gained(cardText(p.offer[0], p).name);
+      // the first run's opening level-ups, and any before the player ever moved, take a card by
+      // themselves: a modal over a fight the player has not touched yet lost desktop players (most
+      // of those who left at the move hint had the cards up), and so did one every few seconds
+      // in the first half minute; a shrine's choice is always the player's
+      if ((this.autoPicks > 0 || this.tutorial?.step === 'move') && p.offer[0].kind !== 'shrine') {
+        this.autoPicks = Math.max(0, this.autoPicks - 1);
+        const i = autoPick(p.offer);
+        game.pick(i);
+        hud.gained(cardText(p.offer[i], p).name);
       } else {
         const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
         hud.showOffer(title, p.offer.map((c) => cardText(c, p)));

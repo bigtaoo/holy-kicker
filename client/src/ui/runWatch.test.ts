@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_RUN, Engine, type SimEvent } from '@hk/engine';
 import type { Game } from '../game/Game';
 import { t } from '../i18n';
+import { BALANCE } from '../meta/balance';
 import type { RunPast } from '../meta/falls';
 import type { Backend } from '../net/backend';
 import type { Ads, Portal } from '../platform/types';
@@ -50,22 +51,41 @@ describe('RunWatch', () => {
     expect(net.track).toHaveBeenCalledWith('tutorial');
   });
 
-  it('takes the first card for a first-run player who never moved, and deals the cards once they did', () => {
+  it("takes the first run's opening cards, spells first, then deals them once the player moved", () => {
     const { game, hud, w } = watch(true);
     const p = game.engine.state.players[0];
-    p.offer = [{ kind: 'spell', id: 'palm' }, { kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }];
-    w.update(1 / 30);
-    expect(game.pick).toHaveBeenCalledWith(0);
-    expect(hud.calls.gained).toHaveLength(1);
+    for (let i = 0; i < BALANCE.firstRun.autoPicks; i++) {
+      p.offer = [{ kind: 'passive', id: 'iron' }, { kind: 'spell', id: 'palm' }, { kind: 'spell', id: 'bolt' }];
+      w.update(1 / 30);
+      expect(game.pick).toHaveBeenLastCalledWith(1);
+    }
+    expect(hud.calls.gained).toHaveLength(BALANCE.firstRun.autoPicks);
     expect(hud.calls.showOffer).toBeUndefined();
+    // no spell on offer: the first card
+    p.offer = [{ kind: 'passive', id: 'iron' }, { kind: 'passive', id: 'eye' }, { kind: 'passive', id: 'rice' }];
+    w.update(1 / 30);
+    expect(game.pick).toHaveBeenLastCalledWith(0);
+    // a shrine's choice is the player's
+    p.offer = [{ kind: 'shrine', id: 'heal' }, { kind: 'shrine', id: 'insight' }];
+    w.update(1 / 30);
+    expect(hud.calls.showOffer).toHaveLength(1);
     p.offer = [];
+    w.update(1 / 30);
     p.moving = true;
     for (let i = 0; i < Math.ceil(TUTORIAL_MOVE * 30) + 1; i++) w.update(1 / 30);
     expect(w.tutorial?.step).toBe('auto');
     p.offer = [{ kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }, { kind: 'spell', id: 'bell' }];
     w.update(1 / 30);
+    expect(hud.calls.showOffer).toHaveLength(2);
+    expect(game.pick).toHaveBeenCalledTimes(BALANCE.firstRun.autoPicks + 1);
+  });
+
+  it('deals every card on a later run', () => {
+    const { game, hud, w } = watch(false);
+    game.engine.state.players[0].offer = [{ kind: 'spell', id: 'palm' }, { kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }];
+    w.update(1 / 30);
+    expect(game.pick).not.toHaveBeenCalled();
     expect(hud.calls.showOffer).toHaveLength(1);
-    expect(game.pick).toHaveBeenCalledTimes(1);
   });
 
   it('teaches nothing on a later run', () => {

@@ -1,4 +1,5 @@
 import { HERO_EASE_LOCKED, HERO_EASE_SMOOTH, type MonkId, type RelicId, type RunConfig, type StatBonus, type SutraId } from '@hk/engine';
+import { BALANCE } from '../meta/balance';
 import type { SceneOptions } from './scene';
 
 // What a run is set up with, and the engine config it becomes.
@@ -16,6 +17,11 @@ export interface RunSetup {
   monk?: MonkId;
   /** A new player's first run (the engine's FIRST_RUN). */
   firstRun?: boolean;
+}
+
+/** The run's engine seed: the dev switch's, the fixed first-run one (BALANCE.firstRun), or a random one. */
+export function runSeed(scene: SceneOptions, setup: RunSetup, random = Math.random): number {
+  return scene.seed || (setup.firstRun ? BALANCE.firstRun.seed : 1 + Math.floor(random() * 0x7ffffffe));
 }
 
 /** The run a scene sets up: what the engine simulates. */

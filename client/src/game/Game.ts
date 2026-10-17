@@ -38,7 +38,7 @@ import { FixedStep, lerpX, lerpY } from './fixedStep';
 import { releaseBaked } from './bake';
 import { KillCamView } from './killCamView';
 import { LowHealthView } from './lowHealthView';
-import { runConfig, type RunSetup } from './runSetup';
+import { runConfig, runSeed, type RunSetup } from './runSetup';
 import { drawStick, heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
@@ -142,7 +142,7 @@ export class Game {
     /** A run left unfinished, to go on with (meta/resume.ts); `setup` must match its config. */
     restored?: SimState,
   ) {
-    const seed = restored?.config.seed ?? (scene.seed || 1 + Math.floor(Math.random() * 0x7ffffffe));
+    const seed = restored?.config.seed ?? runSeed(scene, setup);
     this.engine = new Engine(restored?.config ?? runConfig(scene, seed, setup), undefined, restored);
     this.resumed = !!restored;
     this.autoplay = scene.autoplay ? new Autoplay(LOCAL, seed, scene.from) : null;
