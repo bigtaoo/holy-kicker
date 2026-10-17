@@ -131,7 +131,7 @@ export class Shell {
     const secs = Math.round(this.shownMs / 1000);
     this.shownMs = 0;
     const place = this.place();
-    if (place === 'run' && this.game) return { place, secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.watch?.tutorial?.step ?? null) };
+    if (place === 'run' && this.game) return { place, secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.watch?.tutorial?.step ?? null, this.platform.attention?.()) };
     return { place, secs };
   }
 

@@ -4,7 +4,7 @@ import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { Battery, DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { FAKE_ADS, NO_ADS, fakeStore, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
+import { FAKE_ADS, NO_ADS, fakeStore, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type Attention, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { BannerHost, FAKE_BANNER_FILL } from './banner';
 import { askTextDom } from './textAsk';
 import { webAudioHost } from './webAudio';
@@ -37,6 +37,7 @@ export class WebPlatform implements Platform {
   readonly host: Host = 'web';
   private held = new Set<string>();
   private keyListeners: ((code: string, repeat: boolean) => void)[] = [];
+  private seen: Attention = { focus: false, input: false };
   readonly storage: KeyValueStore = new SafeStore(browserStorage());
   readonly portal: Portal = NO_PORTAL;
   readonly ads: Ads = new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
@@ -134,9 +135,12 @@ export class WebPlatform implements Platform {
     document.body.appendChild(app.canvas);
     // ask for the keys from the start (a portal's iframe may still keep them until a click)
     window.focus();
+    this.seen.focus = document.hasFocus();
+    window.addEventListener('focus', () => (this.seen.focus = true));
     // a right-click or long press is a game input, never the browser's menu
     app.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     window.addEventListener('keydown', (e) => {
+      this.seen.input = true;
       for (const cb of this.keyListeners) cb(e.code, e.repeat);
       if (e.code === 'Space') e.preventDefault();
       if (!KEY_DIRS[e.code]) return;
@@ -152,6 +156,7 @@ export class WebPlatform implements Platform {
   bindStick(app: Application, stick: DragStick): void {
     const canvas = app.canvas;
     canvas.addEventListener('pointerdown', (e) => {
+      this.seen.input = true;
       // in a portal's iframe the keys go to the portal page until the game has the focus
       window.focus();
       stick.down(e.pointerId, e.clientX, e.clientY);
@@ -170,6 +175,12 @@ export class WebPlatform implements Platform {
 
   keysReach(): boolean {
     return document.hasFocus();
+  }
+
+  attention(): Attention {
+    // asked as the game goes to the background, when the page has just lost the focus
+    if (document.hasFocus()) this.seen.focus = true;
+    return { ...this.seen };
   }
 
   readKeys(): Vec2 {

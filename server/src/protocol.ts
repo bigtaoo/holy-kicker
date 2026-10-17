@@ -26,7 +26,7 @@ export type Device = (typeof DEVICES)[number];
  * has `to` (`chat` or `moments`) and `from` (`lobby`, `run` or `results`, where the player was).
  * `leave` has `place` (`lobby`, `run`, `results` or `other`), `secs` (seconds on screen since
  * the previous `leave`) and, in a run, `chapter`, `wave`, the hero's `level`, the run's `kills`,
- * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,
+ * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached) and, in a browser, `focus` (the game ever had the keys since launch) and `input` (any key or click reached it). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,
  * `emerge`, `bullet`, `zone`, or `level` when under-levelled for the wave). `iap` has `what` (`buy` or
  * `restore`), `item` (`adfree`) and `outcome` (`owned`, `cancelled`, `pending` or `failed`, and
  * `none` for a restore that found nothing).

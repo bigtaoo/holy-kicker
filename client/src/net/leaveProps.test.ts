@@ -11,4 +11,13 @@ describe('runLeave', () => {
     expect(runLeave(s, 1, 120, null)).toEqual({ chapter: 1, wave: 3, level: 4, kills: 120, card: false });
     expect(runLeave(s, 1, 0, 'move')).toMatchObject({ tutorial: 'move' });
   });
+
+  it('adds whether the game had the keys and saw any input, on the first run only', () => {
+    const s = createState({ ...DEFAULT_RUN, waves: 50 });
+    s.players.push(newPlayer(0, 0, 0));
+    const seen = { focus: false, input: true };
+    expect(runLeave(s, 1, 9, 'move', seen)).toMatchObject({ tutorial: 'move', focus: false, input: true });
+    expect(runLeave(s, 1, 9, null, seen)).not.toHaveProperty('focus');
+    expect(runLeave(s, 1, 9, 'move')).not.toHaveProperty('input');
+  });
 });

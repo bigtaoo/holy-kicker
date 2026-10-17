@@ -22,6 +22,8 @@ export interface Platform {
   onKey?(cb: (code: string, repeat: boolean) => void): void;
   /** Whether key presses reach the game now (a portal's iframe keeps them until a click in it); unset where they always do. */
   keysReach?(): boolean;
+  /** Since launch: whether the game ever had the keys (`focus`) and whether any key or pointer went down in it (`input`); unset where the keys always reach it. */
+  attention?(): Attention;
   /** Reads a text file shipped with the game (relative path, as for textures). */
   readText(path: string): Promise<string>;
   /** Reads a binary file shipped with the game (the sound samples). */
@@ -91,6 +93,12 @@ export interface TextAsk {
   send: string;
   cancel: string;
   max: number;
+}
+
+/** Whether the player could reach the game and tried to (Platform.attention). */
+export interface Attention {
+  focus: boolean;
+  input: boolean;
 }
 
 export interface Insets {
