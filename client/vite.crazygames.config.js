@@ -27,8 +27,8 @@ const API = (process.env.VITE_HK_API || 'https://hk.gamestao.com').replace(/\/+$
  * The inline `open_*` and `quit_*` checkpoints: no id, no storage, nothing from a developer's own
  * machine. Loading is over once the body is in and the loading screen (#boot) is gone.
  */
-export function openBeacon(api, build) {
-  return `<script>(function(){try{var h=location.hostname;if(h==='localhost'||h==='[::1]'||h.indexOf('127.')===0)return;var t=matchMedia('(pointer: coarse)').matches?'touch':'desktop';var u='${api}/v1/beacon?h=crazygames&b='+encodeURIComponent(${JSON.stringify(build)})+'&s=';var send=function(s){fetch(u+s,{mode:'no-cors',keepalive:true}).catch(function(){})};send('open_'+t);var gone=false;var quit=function(){if(gone||(document.body&&!document.getElementById('boot')))return;gone=true;send('quit_'+t+'&ms='+Math.round(performance.now()))};addEventListener('pagehide',quit);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')quit()})}catch(e){}})()</script>`;
+export function openBeacon(api, build, host = 'crazygames') {
+  return `<script>(function(){try{var h=location.hostname;if(h==='localhost'||h==='[::1]'||h.indexOf('127.')===0)return;var t=matchMedia('(pointer: coarse)').matches?'touch':'desktop';var u='${api}/v1/beacon?h=${host}&b='+encodeURIComponent(${JSON.stringify(build)})+'&s=';var send=function(s){fetch(u+s,{mode:'no-cors',keepalive:true}).catch(function(){})};send('open_'+t);var gone=false;var quit=function(){if(gone||(document.body&&!document.getElementById('boot')))return;gone=true;send('quit_'+t+'&ms='+Math.round(performance.now()))};addEventListener('pagehide',quit);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')quit()})}catch(e){}})()</script>`;
 }
 
 const DEFAULT_ENTRY = '/src/main.ts';

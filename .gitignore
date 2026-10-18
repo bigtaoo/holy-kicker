@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-crazygames/
 dist-playgama/
+dist-newgrounds/
 dist-ios/
 dist-ota/
 *.tsbuildinfo

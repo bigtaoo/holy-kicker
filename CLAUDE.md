@@ -43,6 +43,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `src/main.crazygames.ts` (`npm run build:crazygames` → `client/dist-crazygames/`, the zip to
   upload), `src/main.playgama.ts` (`npm run build:playgama` → `client/dist-playgama/`, zipped with
   `index.html` at the root for the Playgama console; saves, ads and pause through Bridge v2),
+  `src/main.newgrounds.ts` (`npm run build:newgrounds` → `client/dist-newgrounds/`, the plain web
+  host reporting as `newgrounds`; zip it with forward-slash paths, `index.html` at the root),
   `src/main.wechat.ts` and `src/main.ios.ts` (`npm run build:ios` → `client/dist-ios/`,
   which the Capacitor shell in `client/ios/` packages), all through `src/boot.ts`;
   `src/platform/{web,crazygames,playgama,wechat,ios}` host adapters (storage, ads, portal hooks); `src/game` the run; `src/ui` the shell, lobby,

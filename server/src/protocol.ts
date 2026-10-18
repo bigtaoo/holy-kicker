@@ -3,7 +3,7 @@
 // sides agree on names and limits. Pure: no Node or browser APIs.
 
 /** Hosts the game ships on. */
-export const HOSTS = ['web', 'crazygames', 'poki', 'playgama', 'wechat', 'ios'] as const;
+export const HOSTS = ['web', 'crazygames', 'poki', 'playgama', 'newgrounds', 'wechat', 'ios'] as const;
 export type Host = (typeof HOSTS)[number];
 
 /** The kind of device a `session` event names in `device`. */
