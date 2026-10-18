@@ -3,9 +3,9 @@ import { LIMITS } from './protocol';
 
 // Reading a request off the wire, apart from the process (index.ts) so it can be tested.
 
-/** A request body's limit: a problem report carries a replay, everything else is small. */
+/** A request body's limit: a problem report and a challenge run carry a replay, everything else is small. */
 export const MAX_BODY = 32 * 1024;
-export const maxBody = (path: string) => (path === '/v1/reports' ? LIMITS.reportBytes : MAX_BODY);
+export const maxBody = (path: string) => (path === '/v1/reports' || path === '/v1/challenge/runs' ? LIMITS.reportBytes : MAX_BODY);
 
 export function readBody(req: IncomingMessage, limit: number): Promise<unknown> {
   return new Promise((resolve, reject) => {

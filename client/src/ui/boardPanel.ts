@@ -1,5 +1,5 @@
 import { Container } from 'pixi.js';
-import { boardId, DICE, packDice, unpackDice, type BoardReply, type BoardRow } from '@hk/protocol';
+import { boardId, DICE, packDice, topPercent, unpackDice, type BoardReply, type BoardRow } from '@hk/protocol';
 import { t } from '../i18n';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
@@ -41,9 +41,17 @@ export function resultOf(r: Pick<BoardRow, 'won' | 'wave' | 'tenths'>): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${r.tenths % 10}`;
 }
 
+/** A board to open: its id, its title and the line under it, and the title's colour. */
+export interface BoardView {
+  id: string;
+  title: string;
+  sub: string;
+  color: number;
+}
+
 export class BoardUi {
   /** The board open, its reply once in ('failed' when the fetch did not work). */
-  private open: { chapter: number; hard: boolean } | null = null;
+  private open: BoardView | null = null;
   private reply: BoardReply | 'loading' | 'failed' = 'loading';
 
   constructor(private readonly fetchBoard: FetchBoard | null, private readonly relayout: () => void) {}
@@ -51,19 +59,20 @@ export class BoardUi {
   /** The button that opens chapter `chapter`'s board, or null offline. */
   button(chapter: number, hard: boolean): Container | null {
     if (!this.fetchBoard) return null;
-    return button(t('board.button'), 200, 80, () => this.show(chapter, hard), { fill: COLORS.panelLocked, size: 44 });
+    const name = t(`chapter.${chapter}` as never);
+    const view = { id: boardId(chapter, hard), title: t('board.title', { n: chapter, name }), sub: hard ? t('lobby.hard') : t('lobby.normal'), color: hard ? COLORS.danger : COLORS.text };
+    return button(t('board.button'), 200, 80, () => this.show(view), { fill: COLORS.panelLocked, size: 44 });
   }
 
-  private show(chapter: number, hard: boolean): void {
-    const fetchBoard = this.fetchBoard;
+  /** Opens `view`'s board, fetched with `fetchBoard` (the challenge boards come through here with their own fetch). */
+  show(view: BoardView, fetchBoard = this.fetchBoard): void {
     if (!fetchBoard) return;
-    const open = { chapter, hard };
-    this.open = open;
+    this.open = view;
     this.reply = 'loading';
     this.relayout();
-    void fetchBoard(boardId(chapter, hard)).then((r) => {
+    void fetchBoard(view.id).then((r) => {
       // a later open, or a close, wins
-      if (this.open !== open) return;
+      if (this.open !== view) return;
       this.reply = r ?? 'failed';
       this.relayout();
     });
@@ -78,10 +87,9 @@ export class BoardUi {
     box.position.set(w / 2, h / 2);
     const top = -BOX_H / 2;
     box.addChild(panel(BOX_W, BOX_H));
-    const name = t(`chapter.${open.chapter}` as never);
-    const title = fit(label(t('board.title', { n: open.chapter, name }), 60, open.hard ? COLORS.danger : COLORS.text), BOX_W - 80);
+    const title = fit(label(open.title, 60, open.color), BOX_W - 80);
     title.y = top + 80;
-    const mode = label(open.hard ? t('lobby.hard') : t('lobby.normal'), 42, COLORS.dim);
+    const mode = fit(label(open.sub, 42, COLORS.dim), BOX_W - 80);
     mode.y = top + 150;
     box.addChild(title, mode, this.body(top + 230));
     const back = button(t('common.back'), 400, 110, () => {
@@ -109,11 +117,15 @@ export class BoardUi {
     const shown = r.rows.slice(0, ROWS).some((row) => row.tag === mineTag);
     const footY = y0 + ROWS * ROW_H + 40;
     if (r.mine && !shown) c.addChild(rowView(r.mine, true, footY));
-    else {
-      const total = label(t('board.total', { n: r.total }), 40, COLORS.dim);
-      total.y = footY;
-      c.addChild(total);
-    }
+    // under it, the board's size; on a challenge board the player's share ("top N %"), or that
+    // their run still waits for its re-simulation (ChallengeBoardReply.pending)
+    const challenge = 'pending' in r;
+    const pending = challenge && r.pending === true;
+    if (r.mine && !shown && !challenge) return c;
+    const text = pending ? t('challenge.checking') : challenge && r.mine ? t('challenge.top', { n: topPercent(r.mine.rank, r.total) }) : t('board.total', { n: r.total });
+    const foot = label(text, 40, challenge && r.mine ? COLORS.saffron : COLORS.dim);
+    foot.y = footY + (r.mine && !shown ? ROW_H + 10 : 0);
+    c.addChild(foot);
     return c;
   }
 }

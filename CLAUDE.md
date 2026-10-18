@@ -58,7 +58,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; elites every 5th; mid-bosses 20 and 35), `?chapter=N` plays chapter N; `?relic=staff` (or `fish`, `beads`, `bowl`) plays
   the run with that relic whatever the save says; `?sutras` gives every run all four sutras;
   `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode;
-  `?monk=fat` (or `novice`) plays as that monk whatever the save says.
+  `?monk=fat` (or `novice`) plays as that monk whatever the save says; `?challenge` shows a daily
+  challenge made up on the device when offline (online the server's record wins).
   `?autoplay` lets the balance bot play (`&from=N` rushes it to wave N first); `?record=SECONDS` records the run to a
   video (`&shape=landscape|portrait|phone`, `src/dev/recorder.ts`); store videos: `tools/record_video.mjs` → `tools/store_video.py` (`docs/store.md`).
 - `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay) at

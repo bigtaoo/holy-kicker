@@ -36,6 +36,11 @@ talks to the backend as host `playgama`; whether its page lets that through is n
   out, so "watched an ad" stays "no" on CrazyGames until Full Launch.
 - **Boards**: every finished run in the window by chapter and mode, with the wave each lost one
   ended on (died or gave up there); the boss waves (20, 35, 50) are marked.
+- **Daily challenge** (from the challenge build, not on the dash yet): a challenge run's
+  `run_start` and `run_end` carry `challenge` (the day's id, `d20261019`); the dash does
+  not tell them apart yet, so they also count as runs on their chapter's board. The challenge boards
+  themselves (`/v1/challenge/boards/…`, server/README.md) show how many played each day; how many
+  of a day's active installs open the daily is the lever to watch once it ships.
 - **First clears**: of the window's new installs, how many tried each board and cleared it, and
   the median days since their first day and runs it took. Only runs from 2026-10-07 on are
   counted, and installs still stuck are left out of the medians.

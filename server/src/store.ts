@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
-import { boardId, runScore, type Beacon, type BoardName, type BoardReply, type BoardRow, type EventBatch, type Host, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { RESIM_TOP, boardId, runScore, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
@@ -30,6 +30,18 @@ export interface Store {
   /** One report whole, replay and all. */
   report(id: string): Promise<(Report & { id: string; at: number }) | null>;
   /**
+   * Keeps an install's run for a challenge board, unless it has one there already (`repeat`; a
+   * daily counts the first). A run that would rank in the top RESIM_TOP is kept `pending`, off the
+   * board with its replay until settleChallengeRun; any other enters at once (`ranked`).
+   */
+  challengeRun(entry: ChallengeEntry, now: number): Promise<Omit<ChallengeRunReply, 'tag'>>;
+  /** The re-simulation's verdict on a pending run: it enters the board with its pick timeline, or (null) is dropped. */
+  settleChallengeRun(board: string, tag: string, picks: PickWire[] | null): Promise<void>;
+  /** The runs still waiting for their re-simulation (to queue again after a restart). */
+  pendingChallengeRuns(): Promise<ChallengeDoc[]>;
+  /** The top `limit` rows of a challenge board, and the row of `tag` (pending or entered). */
+  challengeBoard(board: string, limit: number, tag: string | null): Promise<ChallengeBoardReply>;
+  /**
    * Deletes the `perf` and `anomaly` events older than PERF_KEEP_DAYS, at most once every
    * PRUNE_EVERY_DAYS (the last run is kept with the data, so a restart does not reset it).
    * Returns how many went, or null when it was not due. No other event or collection is touched.
@@ -50,12 +62,43 @@ export const pruneDue = (last: number | null, now: number) => last === null || n
 /** The first day prune() keeps: events received on an earlier day go. */
 export const pruneKeepFrom = (now: number) => dayOf(now - PERF_KEEP_DAYS * DAY_MS);
 
-interface Best {
+export interface Best {
   board: string;
   tag: string;
   score: number;
   run: RunEntry;
   at: number;
+}
+
+/** A challenge run as it arrives, checked and fitted to its challenge. */
+export interface ChallengeEntry {
+  board: string;
+  tag: string;
+  challenge: string;
+  run: RunEntry;
+  replay: ReplayWire;
+}
+
+/**
+ * A challenge run as kept: `pending` until re-simulated (with its replay), then `entered` with
+ * its pick timeline; a run outside the top RESIM_TOP enters unverified, with neither.
+ */
+export interface ChallengeDoc extends Best {
+  challenge: string;
+  state: 'pending' | 'entered';
+  verified: boolean;
+  replay?: ReplayWire;
+  picks?: PickWire[];
+}
+
+/** Whether `a` ranks above `b` on a board: the higher score, then whoever got there first. */
+export const ahead = (a: Best, b: Best) => a.score > b.score || (a.score === b.score && a.at < b.at);
+
+/** A verified run keeps its replay only on a weekly board, where the top runs can be watched; a daily's is dropped. */
+export function keptReplay(doc: ChallengeDoc): ChallengeDoc {
+  if (doc.challenge.startsWith('w')) return doc;
+  const { replay: _, ...rest } = doc;
+  return rest;
 }
 
 /** A report's id: 16 hex digits, unguessable (the reports are only for the operator anyway). */
@@ -95,6 +138,8 @@ export class MemoryStore implements Store {
   lastPrune: number | null = null;
   /** `session/n` of every numbered event kept (ClientEvent.n). */
   private readonly seen = new Set<string>();
+  /** Challenge runs by `board/tag`. */
+  readonly challenges = new Map<string, ChallengeDoc>();
 
   async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void> {
     const key = `${dayOf(now)}/${host}/${build}/${step}`;
@@ -200,6 +245,43 @@ export class MemoryStore implements Store {
 
   async report(id: string) {
     return this.reportList.find((r) => r.id === id) ?? null;
+  }
+
+  private place(doc: ChallengeDoc): { rank: number; total: number } {
+    const entered = [...this.challenges.values()].filter((d) => d.board === doc.board && d.state === 'entered');
+    return { rank: entered.filter((d) => ahead(d, doc)).length + 1, total: entered.length + (doc.state === 'pending' ? 1 : 0) };
+  }
+
+  async challengeRun(e: ChallengeEntry, now: number) {
+    const key = `${e.board}/${e.tag}`;
+    const old = this.challenges.get(key);
+    if (old) return { board: e.board, status: 'repeat' as const, ...this.place(old) };
+    const doc: ChallengeDoc = { board: e.board, tag: e.tag, challenge: e.challenge, score: runScore(e.run), run: e.run, at: now, state: 'pending', verified: false };
+    const top = this.place(doc).rank <= RESIM_TOP;
+    this.challenges.set(key, top ? { ...doc, replay: e.replay } : { ...doc, state: 'entered' });
+    const name = runName(e.run);
+    if (name) await this.setName(e.tag, name);
+    return { board: e.board, status: top ? ('pending' as const) : ('ranked' as const), ...this.place(this.challenges.get(key)!) };
+  }
+
+  async settleChallengeRun(board: string, tag: string, picks: PickWire[] | null): Promise<void> {
+    const key = `${board}/${tag}`;
+    const doc = this.challenges.get(key);
+    if (!doc || doc.state !== 'pending') return;
+    if (!picks) this.challenges.delete(key);
+    else this.challenges.set(key, { ...keptReplay(doc), state: 'entered', verified: true, picks });
+  }
+
+  async pendingChallengeRuns(): Promise<ChallengeDoc[]> {
+    return [...this.challenges.values()].filter((d) => d.state === 'pending');
+  }
+
+  async challengeBoard(board: string, limit: number, tag: string | null): Promise<ChallengeBoardReply> {
+    const entered = [...this.challenges.values()].filter((d) => d.board === board && d.state === 'entered').sort((a, b) => (ahead(a, b) ? -1 : 1));
+    const own = tag ? this.challenges.get(`${board}/${tag}`) : undefined;
+    const rows = entered.slice(0, limit).map((d, k) => rowOf(d, k + 1, this.names));
+    const pending = own?.state === 'pending';
+    return { board, total: entered.length + (pending ? 1 : 0), rows, mine: own ? rowOf(own, this.place(own).rank, this.names) : null, pending };
   }
 
   async prune(now: number): Promise<number | null> {

@@ -69,4 +69,10 @@ and boss lived and the final build. Run it after any tuning change; the targets 
 
 - Online: a `NetInputSource`, the relay server, checkpoint hash exchange, local prediction of
   the own hero (daydayup's `LocalPredictor`).
-- The golden hash is checked in Node and Chromium; WeChat's iOS JavaScriptCore is untested.
+- The golden hash is checked in Node and Chromium (2026-10-18, Chrome 152, all nine cases of
+  `Engine.test.ts` run in the page through Vite's `/@fs/` imports), and every daily challenge run is
+  a cross-runtime check: the server re-simulates the device's replay in Node and files a problem
+  report on a mismatch. Safari and WeChat's iOS JavaScriptCore are untested: play a daily on an
+  iPhone against a dev server (`npm run dev -w client -- --host`, `?api=` the PC's LAN address with
+  `npm run dev -w server`) and look for a problem report from "server re-simulation" (the server
+  also logs "challenge run refused"), or paste the golden cases into Safari's Web Inspector console.

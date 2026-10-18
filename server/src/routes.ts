@@ -1,8 +1,9 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
-import { BEACONS, HOSTS, LIMITS, loadBucket, type Beacon, type Host } from './protocol';
-import { checkBatch, checkNameEntry, checkReport, checkRun } from './rules';
-import type { Store } from './store';
+import { challengeFor, misfit, openChallenges } from './challenge';
+import { BEACONS, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, loadBucket, type Beacon, type Host } from './protocol';
+import { checkBatch, checkChallengeRun, checkNameEntry, checkReport, checkRun } from './rules';
+import type { ChallengeEntry, Store } from './store';
 
 // The HTTP API (server/README.md), as a function from a parsed request to a reply so the tests
 // drive it without sockets; index.ts does the networking. Every player route is anonymous and
@@ -32,6 +33,8 @@ export interface Deps {
   now(): number;
   /** Rate limit: false when `key` asked for `route` too often. */
   allow(route: string, key: string): boolean;
+  /** Where pending challenge runs go to be re-simulated (resimQueue.ts). */
+  resim: { push(job: ChallengeEntry): void };
 }
 
 export const BOARD_ROWS = 50;
@@ -50,6 +53,12 @@ function keyMatches(given: string | undefined, key: string): boolean {
 }
 
 const bad = (reason: string): Reply => ({ status: 400, body: { error: reason } });
+
+/** The asking install's tag, from its `x-hk-install` header (a board shows its own row). */
+function installTag(req: Req, d: Deps): string | null {
+  const install = req.headers['x-hk-install'];
+  return install && install.length >= LIMITS.idMin && install.length <= LIMITS.idMax ? tagOf(install, d.tagSalt) : null;
+}
 
 export async function route(req: Req, d: Deps): Promise<Reply> {
   const { method, path } = req;
@@ -97,9 +106,35 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
   if (method === 'GET' && board !== null) {
     if (!d.allow('boards', req.ip)) return { status: 429 };
     if (!BOARD.test(board) || Number(board[1]) > LIMITS.chapters) return bad('bad board');
-    const install = req.headers['x-hk-install'];
-    const tag = install && install.length >= LIMITS.idMin && install.length <= LIMITS.idMax ? tagOf(install, d.tagSalt) : null;
-    return { status: 200, body: await d.store.board(board, BOARD_ROWS, tag) };
+    return { status: 200, body: await d.store.board(board, BOARD_ROWS, installTag(req, d)) };
+  }
+
+  if (method === 'GET' && path === '/v1/challenge') {
+    if (!d.allow('boards', req.ip)) return { status: 429 };
+    return { status: 200, body: { now: d.now(), challenges: openChallenges(d.now()) } };
+  }
+
+  if (method === 'POST' && path === '/v1/challenge/runs') {
+    if (!d.allow('challenge', req.ip)) return { status: 429 };
+    const c = checkChallengeRun(req.body);
+    if (!c.ok) return bad(c.reason);
+    const { run, replay } = c.value;
+    const challenge = challengeFor(c.value.challenge, d.now());
+    if (!challenge) return bad('closed');
+    const why = misfit(challenge, run, replay);
+    if (why) return bad(why);
+    const tag = tagOf(run.install, d.tagSalt);
+    const entry = { board: challengeBoardId(challenge.id, challenge.engine, run.chapter), tag, challenge: challenge.id, run, replay };
+    const r = await d.store.challengeRun(entry, d.now());
+    if (r.status === 'pending') d.resim.push(entry);
+    return { status: 200, body: { ...r, tag } };
+  }
+
+  const cboard = path.startsWith('/v1/challenge/boards/') ? path.slice('/v1/challenge/boards/'.length) : null;
+  if (method === 'GET' && cboard !== null) {
+    if (!d.allow('boards', req.ip)) return { status: 429 };
+    if (!CHALLENGE_BOARD.test(cboard)) return bad('bad board');
+    return { status: 200, body: await d.store.challengeBoard(cboard, BOARD_ROWS, installTag(req, d)) };
   }
 
   if (method === 'POST' && path === '/v1/reports') {
@@ -164,6 +199,7 @@ export const RATES = {
   boards: { burst: 20, perMinute: 30 },
   names: { burst: 5, perMinute: 4 },
   reports: { burst: 3, perMinute: 2 },
+  challenge: { burst: 3, perMinute: 2 },
 };
 
 /** A real calendar day written YYYY-MM-DD. */

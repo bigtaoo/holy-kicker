@@ -1,4 +1,4 @@
-import { EVENT_NAMES, HOSTS, LIMITS, checkName, isDice, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
+import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, checkName, isDice, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
 
 // Checks what clients send before anything is stored. Pure: each check takes the parsed JSON
 // (unknown) and returns the clean value or the reason it was refused. Anything unexpected is
@@ -115,6 +115,16 @@ function checkReplay(v: unknown): ReplayWire | null | undefined {
   if (cmds.length > LIMITS.replayNumbers || cmds.length % 5 !== 0 || !cmds.every((n) => isInt(n, -1, 1e9))) return undefined;
   if (JSON.stringify(v.config).length > LIMITS.replayConfig) return undefined;
   return { engine: v.engine, config: v.config, wave: v.wave, cmds: cmds as number[], tick: v.tick, hash: v.hash };
+}
+
+/** A challenge run: the challenge's id, a plausible run and its replay (which re-simulation checks later). */
+export function checkChallengeRun(v: unknown): Checked<ChallengeRun> {
+  if (!isObj(v) || typeof v.challenge !== 'string' || !CHALLENGE_ID.test(v.challenge)) return { ok: false, reason: 'bad challenge' };
+  const run = checkRun(v.run);
+  if (!run.ok) return run;
+  const replay = checkReplay(v.replay);
+  if (!replay) return { ok: false, reason: 'bad replay' };
+  return { ok: true, value: { challenge: v.challenge, run: run.value, replay } };
 }
 
 /** A problem report: free text kept as written (the operator reads it, nothing renders it). */

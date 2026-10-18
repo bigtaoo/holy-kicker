@@ -1,9 +1,11 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { ENGINE_VERSION } from '@hk/engine';
 import DASH from './dash.html';
 import { ipOf, maxBody, pageLang, readBody } from './http';
 import PRIVACY_EN from './privacy.en.html';
 import PRIVACY_ZH from './privacy.zh.html';
 import { MongoStore } from './mongoStore';
+import { ResimQueue } from './resimQueue';
 import { Limiter, RATES, route } from './routes';
 import { MemoryStore, type Store } from './store';
 
@@ -22,7 +24,10 @@ if (uri && !env.HK_TAG_SALT) throw new Error('HK_TAG_SALT is required with HK_MO
 
 const store: Store = uri ? await MongoStore.open(uri, env.HK_MONGO_DB || 'holykicker') : new MemoryStore();
 const limiter = new Limiter(RATES, Date.now);
-const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter) };
+// challenge runs are re-simulated here, one at a time, off the request path
+const resim = new ResimQueue(store, ENGINE_VERSION, Date.now, (line) => console.log(line));
+await resim.start();
+const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim };
 
 /** Any page may call the API: it is anonymous and sets no cookies (the game runs in portal iframes). */
 const CORS = {

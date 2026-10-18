@@ -8,7 +8,7 @@ const NOW = Date.parse('2026-10-05T12:00:00Z');
 const INSTALL = 'abcdefgh1234';
 
 function deps(over: Partial<Deps> = {}): Deps & { store: MemoryStore } {
-  return { store: new MemoryStore(), tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, ...over } as Deps & { store: MemoryStore };
+  return { store: new MemoryStore(), tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, resim: { push() {} }, ...over } as Deps & { store: MemoryStore };
 }
 
 function req(method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Req {

@@ -1,4 +1,4 @@
-import type { BoardName, BoardReply, EventBatch, EventName, Host, NameEntry, PropValue, Report, RunEntry } from '@hk/protocol';
+import type { BoardName, BoardReply, ChallengeBoardReply, ChallengeList, ChallengeRun, ChallengeRunReply, EventBatch, EventName, Host, NameEntry, PropValue, ReplayWire, Report, RunEntry } from '@hk/protocol';
 import type { Sharing } from '../meta/privacy';
 import type { Platform } from '../platform/types';
 import { EventQueue, newId } from './events';
@@ -187,6 +187,25 @@ export class Backend {
   /** Read as this install (with its own row) only while sharing; the top rows are anyone's. */
   async board(id: string): Promise<BoardReply | null> {
     return (await this.send('GET', `/v1/boards/${id}`)) as BoardReply | null;
+  }
+
+  /** The open challenges and the server's clock, or null offline (the lobby then shows no challenge card). */
+  async challenges(): Promise<ChallengeList | null> {
+    const r = (await this.send('GET', '/v1/challenge')) as Partial<ChallengeList> | null;
+    return r && typeof r.now === 'number' && Array.isArray(r.challenges) ? (r as ChallengeList) : null;
+  }
+
+  /** Sends a counted challenge run with its replay, which the server re-simulates when it would rank high. */
+  async submitChallengeRun(challenge: string, run: RunResult, replay: ReplayWire): Promise<ChallengeRunReply | null> {
+    if (this.sharing !== 'send') return null;
+    const body: ChallengeRun = { challenge, run: { ...run, install: this.install, host: this.platform.host, build: this.build }, replay };
+    const r = (await this.send('POST', '/v1/challenge/runs', body, REPORT_TIMEOUT_MS)) as Partial<ChallengeRunReply> | null;
+    return r && typeof r.rank === 'number' && typeof r.total === 'number' && typeof r.board === 'string' ? (r as ChallengeRunReply) : null;
+  }
+
+  /** A challenge board, read like board(); `pending` while the install's own run waits for its check. */
+  async challengeBoard(id: string): Promise<ChallengeBoardReply | null> {
+    return (await this.send('GET', `/v1/challenge/boards/${id}`)) as ChallengeBoardReply | null;
   }
 
   /** The reply's JSON ({} for an empty one), or null when anything went wrong. */

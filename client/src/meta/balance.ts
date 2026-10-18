@@ -2,6 +2,7 @@ import type { MonkId } from '@hk/engine';
 import type { AchievementGoal } from './achievements';
 import type { Stat } from '@hk/engine';
 import data from './balance.json';
+import type { ChallengeBalance } from './challenge';
 import type { DailyBalance } from './daily';
 import type { LowHealthBalance } from '../game/lowHealth';
 import type { GearBalance } from './gear';
@@ -53,6 +54,8 @@ export interface Balance {
   monks: Record<MonkId, number>;
   fall: FallBalance;
   firstRun: FirstRunBalance;
+  /** The daily challenge (challenge.ts): the player level it opens at and its milestones. */
+  challenge: ChallengeBalance;
 }
 
 /**

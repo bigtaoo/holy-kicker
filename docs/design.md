@@ -245,9 +245,9 @@ Two currencies only:
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
   gear tier, monks), each paying jade once, about 800 in all. Progress is read from the save,
   so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.
-- Daily and weekly challenges (planned): see "Challenges" below.
+- Daily and weekly challenges (the daily is built, still on full 50-wave runs): see "Challenges" below.
 
-## Challenges (planned)
+## Challenges (daily built; weekly planned)
 
 Two shared runs on top of the chapters, built on what the deterministic engine already gives:
 the same config and commands replay tick for tick, so a run can be checked by the server and
@@ -367,13 +367,19 @@ boards absorb.
 
 ### Order of work
 
-1. **Server**: challenge records, boards keyed by challenge and engine version, run plus
-   replay intake, the re-simulation worker with the pick timeline, rank settlement at the end
-   of a week. Cross-runtime golden-hash check (Safari, WeChat iOS).
-2. **Daily, client**: the challenge card on the Play tab, the run from the challenge record,
-   milestones on the results screen with "next challenge in Xh", the board as "top N %".
-   No engine change yet: the first version runs the chapter's normal waves and counts the wave
-   reached, with milestones at 5/10/15/20.
+1. **Server** (built, but for the weekly's rank settlement and the cross-runtime check):
+   challenge records (`GET /v1/challenge`, the daily from the UTC date), boards keyed by
+   challenge, engine version and chapter, run plus replay intake, the re-simulation queue with
+   the pick timeline (server/README.md). Still to do: rank settlement at the end of a week, and
+   the golden hash in Safari (JavaScriptCore) and WeChat on iOS (engine/README.md).
+2. **Daily, client** (built): the challenge tile beside PLAY from player level 2
+   (`ui/challengePanel.ts`), the run from the record with the player's loadout and no revives
+   (`meta/challenge.ts`), the counted run sent with its replay (`ui/challengeFlow.ts`), milestones
+   on its results with "next challenge in Xh" (`ui/ChallengeResultsScreen.ts`), the board as
+   "top N %". No engine change yet: the run plays the chapter's normal 50 waves and the
+   milestones count the waves cleared (5/10/15/20). A challenge run is never kept for the next
+   launch, so closing the game mid-run leaves the day open; `run_start` and `run_end` carry
+   `challenge` (the id). `?challenge` shows a daily made up on the device when offline.
 3. **Engine**: a run that ends as a win on wave 20's mid-boss, and `RunConfig.mutator` with
    the first few mutators; bump `ENGINE_VERSION`, shipped on a Monday.
 4. **Weekly, client**: the fixed loadout, best-of attempts, the board with the pick timeline,
