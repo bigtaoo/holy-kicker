@@ -1,6 +1,8 @@
 import { Container } from 'pixi.js';
-import { boardId, DICE, packDice, unpackDice, type BoardReply, type BoardRow } from '@hk/protocol';
+import { boardId, DICE, packDice, topPercent, unpackDice, type BoardReply, type BoardRow, type ChallengeBoardReply, type TopRun } from '@hk/protocol';
 import { t } from '../i18n';
+import type { IconSheet } from './buildBar';
+import { chosenTimeline, markMedal, topRows, watchButton, type WatchTop, type WeeklyBoardState } from './weeklyBoard';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The leaderboard (server/README.md): a button on the lobby's chapter card opens the board of
@@ -14,6 +16,8 @@ export type FetchBoard = (id: string) => Promise<BoardReply | null>;
 const BOX_W = 960;
 const BOX_H = 1640;
 const ROWS = 20;
+/** A weekly board lists fewer rows, for the chosen top run's pick timeline under them. */
+const WEEKLY_ROWS = 12;
 const ROW_H = 58;
 
 /** A dice name (protocol.ts packDice) in the player's language: "{adj} {noun} {n}" from the string table; '' for none. */
@@ -31,6 +35,11 @@ export function nameOf(tag: string): string {
   return diceName(packDice(h % w, Math.floor(h / w) % w, DICE.numMin + (Math.floor(h / 1000) % (DICE.numMax - DICE.numMin + 1))));
 }
 
+/** The name a row goes by: its portal name, else its dice name, else one made from its tag. */
+export function rowName(r: Pick<BoardRow, 'name' | 'dice' | 'tag'>): string {
+  return r.name || diceName(r.dice) || nameOf(r.tag);
+}
+
 /**
  * What a row reached: a won run's bare time to a tenth (the jade colour says it was a clear, and
  * clears rank by time, so the tenth splits runs within a second), else the wave it fell on.
@@ -41,29 +50,42 @@ export function resultOf(r: Pick<BoardRow, 'won' | 'wave' | 'tenths'>): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${r.tenths % 10}`;
 }
 
+/** A board to open: its id, its title and the line under it, and the title's colour. */
+export interface BoardView {
+  id: string;
+  title: string;
+  sub: string;
+  color: number;
+}
+
 export class BoardUi {
   /** The board open, its reply once in ('failed' when the fetch did not work). */
-  private open: { chapter: number; hard: boolean } | null = null;
+  private open: BoardView | null = null;
   private reply: BoardReply | 'loading' | 'failed' = 'loading';
+  private watch: WatchTop | null = null;
+  private weekly: WeeklyBoardState = { chosen: 0, busy: null, failed: null };
 
-  constructor(private readonly fetchBoard: FetchBoard | null, private readonly relayout: () => void) {}
+  constructor(private readonly fetchBoard: FetchBoard | null, private readonly relayout: () => void, private readonly icons: IconSheet = new Map()) {}
 
   /** The button that opens chapter `chapter`'s board, or null offline. */
   button(chapter: number, hard: boolean): Container | null {
     if (!this.fetchBoard) return null;
-    return button(t('board.button'), 200, 80, () => this.show(chapter, hard), { fill: COLORS.panelLocked, size: 44 });
+    const name = t(`chapter.${chapter}` as never);
+    const view = { id: boardId(chapter, hard), title: t('board.title', { n: chapter, name }), sub: hard ? t('lobby.hard') : t('lobby.normal'), color: hard ? COLORS.danger : COLORS.text };
+    return button(t('board.button'), 200, 80, () => this.show(view), { fill: COLORS.panelLocked, size: 44 });
   }
 
-  private show(chapter: number, hard: boolean): void {
-    const fetchBoard = this.fetchBoard;
+  /** Opens `view`'s board, fetched with `fetchBoard` (the challenge boards come through here with their own fetch; a weekly's with `watch`). */
+  show(view: BoardView, fetchBoard = this.fetchBoard, watch: WatchTop | null = null): void {
     if (!fetchBoard) return;
-    const open = { chapter, hard };
-    this.open = open;
+    this.open = view;
     this.reply = 'loading';
+    this.watch = watch;
+    this.weekly = { chosen: 0, busy: null, failed: null };
     this.relayout();
-    void fetchBoard(boardId(chapter, hard)).then((r) => {
+    void fetchBoard(view.id).then((r) => {
       // a later open, or a close, wins
-      if (this.open !== open) return;
+      if (this.open !== view) return;
       this.reply = r ?? 'failed';
       this.relayout();
     });
@@ -78,10 +100,9 @@ export class BoardUi {
     box.position.set(w / 2, h / 2);
     const top = -BOX_H / 2;
     box.addChild(panel(BOX_W, BOX_H));
-    const name = t(`chapter.${open.chapter}` as never);
-    const title = fit(label(t('board.title', { n: open.chapter, name }), 60, open.hard ? COLORS.danger : COLORS.text), BOX_W - 80);
+    const title = fit(label(open.title, 60, open.color), BOX_W - 80);
     title.y = top + 80;
-    const mode = label(open.hard ? t('lobby.hard') : t('lobby.normal'), 42, COLORS.dim);
+    const mode = fit(label(open.sub, 42, COLORS.dim), BOX_W - 80);
     mode.y = top + 150;
     box.addChild(title, mode, this.body(top + 230));
     const back = button(t('common.back'), 400, 110, () => {
@@ -104,21 +125,67 @@ export class BoardUi {
       return c;
     }
     const mineTag = r.mine?.tag ?? null;
-    r.rows.slice(0, ROWS).forEach((row, i) => c.addChild(rowView(row, row.tag === mineTag, y0 + i * ROW_H)));
+    const weekly = 'top' in r && r.top && this.watch ? (r as ChallengeBoardReply) : null;
+    const n = weekly ? WEEKLY_ROWS : ROWS;
+    const tops = weekly ? topRows(weekly, n) : [];
+    r.rows.slice(0, n).forEach((row, i) => {
+      const top = tops.findIndex((x) => x.row === row);
+      const v = rowView(row, row.tag === mineTag, y0 + i * ROW_H, top >= 0);
+      if (top >= 0) this.topRow(v, top, tops[top].row, tops[top].top);
+      c.addChild(v);
+    });
     // the player's own row under the list when it is not on it
-    const shown = r.rows.slice(0, ROWS).some((row) => row.tag === mineTag);
-    const footY = y0 + ROWS * ROW_H + 40;
-    if (r.mine && !shown) c.addChild(rowView(r.mine, true, footY));
-    else {
-      const total = label(t('board.total', { n: r.total }), 40, COLORS.dim);
-      total.y = footY;
-      c.addChild(total);
+    const shown = r.rows.slice(0, n).some((row) => row.tag === mineTag);
+    const footY = y0 + n * ROW_H + 40;
+    if (weekly) {
+      const tl = chosenTimeline(weekly, this.weekly, n, this.icons, BOX_W - 100, 360, rowName, (row, top, from) => this.watchTop(row, top, from));
+      if (tl) {
+        tl.y = footY + 150;
+        c.addChild(tl);
+      }
     }
+    if (r.mine && !shown) c.addChild(rowView(r.mine, true, footY));
+    // under it, the board's size; on a challenge board the player's share ("top N %"), or that
+    // their run still waits for its re-simulation (ChallengeBoardReply.pending)
+    const challenge = 'pending' in r;
+    const pending = challenge && r.pending === true;
+    if (r.mine && !shown && !challenge) return c;
+    const text = pending ? t('challenge.checking') : challenge && r.mine ? t('challenge.top', { n: topPercent(r.mine.rank, r.total) }) : t('board.total', { n: r.total });
+    const foot = label(text, 40, challenge && r.mine ? COLORS.saffron : COLORS.dim);
+    foot.y = footY + (r.mine && !shown ? ROW_H + 10 : 0);
+    c.addChild(foot);
     return c;
+  }
+
+  /** A weekly top row: a tap chooses its timeline (the chosen one sits on a band), and its Watch button. */
+  private topRow(v: Container, i: number, row: BoardRow, top: TopRun): void {
+    if (i === this.weekly.chosen) v.addChildAt(panel(BOX_W - 60, ROW_H - 6, COLORS.panelLocked, 14), 0);
+    v.eventMode = 'static';
+    v.cursor = 'pointer';
+    v.on('pointertap', () => {
+      this.weekly.chosen = i;
+      this.relayout();
+    });
+    const b = watchButton(top, this.weekly, 0, () => void this.watchTop(row, top));
+    if (b) v.addChild(b);
+  }
+
+  /** Fetches a top run's replay and watches it; the button says so while it loads, or that it failed. */
+  private async watchTop(row: BoardRow, top: TopRun, from?: number): Promise<boolean> {
+    const watch = this.watch;
+    if (!watch || this.weekly.busy) return false;
+    this.weekly = { ...this.weekly, busy: top.tag, failed: null };
+    this.relayout();
+    const ok = await watch(row, top, from);
+    this.weekly = { ...this.weekly, busy: null, failed: ok ? null : top.tag };
+    if (ok) this.open = null;
+    this.relayout();
+    return ok;
   }
 }
 
-function rowView(r: BoardRow, mine: boolean, y: number): Container {
+/** A board row; `narrow` leaves room on the right for a Watch button. */
+function rowView(r: BoardRow, mine: boolean, y: number, narrow = false): Container {
   const c = new Container();
   c.y = y;
   if (mine) c.addChild(panel(BOX_W - 60, ROW_H - 6, COLORS.panelLocked, 14));
@@ -126,13 +193,19 @@ function rowView(r: BoardRow, mine: boolean, y: number): Container {
   const rank = label(String(r.rank), 44, fill);
   rank.anchor.set(1, 0.5);
   rank.x = -330;
-  const name = r.name || diceName(r.dice) || nameOf(r.tag);
-  const who = fit(label(mine ? t('board.you', { name }) : name, 44, fill, { align: 'left' }), 470);
+  const name = rowName(r);
+  const medal = markMedal(r.mark, 20);
+  const nameX = medal ? -260 : -300;
+  if (medal) {
+    medal.x = -280;
+    c.addChild(medal);
+  }
+  const who = fit(label(mine ? t('board.you', { name }) : name, 44, fill, { align: 'left' }), (narrow ? 300 : 470) - (medal ? 40 : 0));
   who.anchor.set(0, 0.5);
-  who.x = -300;
+  who.x = nameX;
   const result = label(resultOf(r), 44, r.won ? COLORS.jade : fill);
   result.anchor.set(1, 0.5);
-  result.x = 430;
+  result.x = narrow ? 220 : 430;
   c.addChild(rank, who, result);
   return c;
 }

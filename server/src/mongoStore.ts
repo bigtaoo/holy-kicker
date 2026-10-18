@@ -1,11 +1,12 @@
 import { MongoBulkWriteError, MongoClient, type Collection, type Db, type ObjectId } from 'mongodb';
 import type { Audience } from './audience';
 import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
-import { boardId, runScore, type Beacon, type BoardName, type BoardReply, type EventBatch, type Host, type PropValue, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { challengeUpdate, freshDoc, settleDoc, standing, topRuns, waiting } from './challengeDocs';
+import { RESIM_TOP, WATCH_TOP, boardId, runScore, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
-import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summaryOf, type Store } from './store';
+import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summaryOf, type ChallengeDoc, type ChallengeEntry, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
 // Collections:
@@ -15,6 +16,9 @@ import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summa
 //            board's first clear
 //   active   one per install per day it sent anything (daily actives)
 //   best     one per install per board: its best run
+//   challenge one per install per challenge board (challengeDocs.ts ChallengeDoc): pending with
+//            its replay until re-simulated, then entered with its pick timeline; a weekly row
+//            keeps the install's best, a better run waiting for its check in `next`
 //   names    one per install that has a name, by its tag: a portal account's name or a dice name
 //   reports  problem reports with their replays, dropped after REPORTS_DAYS
 //   beacons  anonymous load checkpoints, one counter per day, host, build and step
@@ -43,6 +47,10 @@ interface ReportDoc extends Report {
   at: Date;
 }
 
+interface ChallengeRow extends ChallengeDoc {
+  _id: string;
+}
+
 interface BestDoc {
   _id: string;
   board: string;
@@ -63,13 +71,14 @@ export class MongoStore implements Store {
     private readonly names: Collection<{ _id: string; name?: string; dice?: number; at: Date }>,
     private readonly beacons: Collection<{ _id: string; day: string; host: string; build: string; step: string; n: number; t?: Record<string, number> }>,
     private readonly meta: Collection<{ _id: string; at: Date }>,
+    private readonly challenges: Collection<ChallengeRow>,
   ) {}
 
   static async open(uri: string, dbName: string): Promise<MongoStore> {
     const client = new MongoClient(uri, { maxPoolSize: 10, appName: 'holykicker' });
     await client.connect();
     const db: Db = client.db(dbName);
-    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'), db.collection('names'), db.collection('beacons'), db.collection('meta'));
+    const s = new MongoStore(client, db.collection('events'), db.collection('installs'), db.collection('active'), db.collection('best'), db.collection('reports'), db.collection('names'), db.collection('beacons'), db.collection('meta'), db.collection('challenge'));
     await Promise.all([
       s.events.createIndex({ at: 1 }, { expireAfterSeconds: EVENTS_DAYS * 86_400 }),
       s.events.createIndex({ e: 1, day: 1 }),
@@ -77,6 +86,9 @@ export class MongoStore implements Store {
       s.active.createIndex({ day: 1 }),
       s.active.createIndex({ install: 1 }),
       s.best.createIndex({ board: 1, score: -1, at: 1 }),
+      s.challenges.createIndex({ board: 1, state: 1, score: -1, at: 1 }),
+      s.challenges.createIndex({ state: 1 }),
+      s.challenges.createIndex({ 'next.at': 1 }, { sparse: true }),
       s.beacons.createIndex({ day: 1 }),
       s.reportDocs.createIndex({ at: 1 }, { expireAfterSeconds: REPORTS_DAYS * 86_400 }),
     ]);
@@ -160,6 +172,76 @@ export class MongoStore implements Store {
     const docs = await this.names.find({ _id: { $in: tags } }).toArray();
     const names = new Map(docs.map((n): [string, BoardName] => [n._id, n.name ? { name: n.name } : { dice: n.dice ?? 0 }]));
     return { board, total, rows: top.map((b, k) => rowOf(b, k + 1, names)), mine: own ? rowOf(own, await this.rankOf(own), names) : null };
+  }
+
+  private async place(doc: ChallengeDoc): Promise<{ rank: number; total: number }> {
+    const entered = { board: doc.board, state: 'entered' as const };
+    const [above, n] = await Promise.all([
+      this.challenges.countDocuments({ ...entered, $or: [{ score: { $gt: doc.score } }, { score: doc.score, at: { $lt: doc.at } }] }),
+      this.challenges.countDocuments(entered),
+    ]);
+    return { rank: above + 1, total: n + (doc.state === 'pending' ? 1 : 0) };
+  }
+
+  async challengeRun(e: ChallengeEntry, now: number) {
+    const _id = `${e.board}/${e.tag}`;
+    const old = await this.challenges.findOne({ _id });
+    const doc = challengeUpdate(old, e, now, (await this.place(freshDoc(e, now))).rank <= RESIM_TOP);
+    if (typeof doc === 'string') return { board: e.board, status: doc, ...(await this.place(standing(old!))) };
+    // two sends at once: the first write wins, the other is told it was no better
+    const won = old
+      ? (await this.challenges.replaceOne({ _id, at: old.at, 'next.at': old.next?.at ?? null }, doc)).matchedCount > 0
+      : (await this.challenges.updateOne({ _id }, { $setOnInsert: { ...doc, _id } }, { upsert: true })).upsertedCount > 0;
+    const name = runName(e.run);
+    if (name) await this.setName(e.tag, name, now);
+    if (!won) return { board: e.board, status: old ? ('lower' as const) : ('repeat' as const), ...(await this.place(standing(doc))) };
+    return { board: e.board, status: waiting(doc) ? ('pending' as const) : ('ranked' as const), ...(await this.place(standing(doc))) };
+  }
+
+  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void> {
+    const _id = `${board}/${tag}`;
+    const doc = await this.challenges.findOne({ _id });
+    const next = doc && settleDoc(doc, at, picks);
+    if (!doc || next === undefined) return;
+    // only while the row still holds what was checked
+    const same = { _id, at: doc.at, 'next.at': doc.next?.at ?? null };
+    if (next === null) await this.challenges.deleteOne(same);
+    else await this.challenges.replaceOne(same, next);
+  }
+
+  async pendingChallengeRuns(): Promise<ChallengeDoc[]> {
+    return this.challenges.find({ $or: [{ state: 'pending' }, { 'next.at': { $exists: true } }] }).toArray();
+  }
+
+  async challengeBoard(board: string, limit: number, tag: string | null): Promise<ChallengeBoardReply> {
+    const noBulk = { projection: { replay: 0, picks: 0, next: 0 } };
+    const [top, own, best] = await Promise.all([
+      this.challenges.find({ board, state: 'entered' }, noBulk).sort({ score: -1, at: 1 }).limit(limit).toArray(),
+      tag ? this.challenges.findOne({ _id: `${board}/${tag}` }, { projection: { replay: 0, picks: 0, 'next.replay': 0 } }) : null,
+      // the weekly's top runs publish their pick timeline and whether their replay is kept
+      board.startsWith('w') ? this.challenges.find({ board, state: 'entered' }, { projection: { next: 0, 'replay.cmds': 0 } }).sort({ score: -1, at: 1 }).limit(WATCH_TOP).toArray() : [],
+    ]);
+    const tags = [...new Set([...top.map((b) => b.tag), ...(own ? [own.tag] : [])])];
+    const docs = await this.names.find({ _id: { $in: tags } }).toArray();
+    const names = new Map(docs.map((n): [string, BoardName] => [n._id, n.name ? { name: n.name } : { dice: n.dice ?? 0 }]));
+    const placed = own ? await this.place(own) : { rank: 0, total: await this.challenges.countDocuments({ board, state: 'entered' }) };
+    return { board, total: placed.total, rows: top.map((b, k) => rowOf(b, k + 1, names)), mine: own ? rowOf(own, placed.rank, names) : null, pending: own ? waiting(own) : false, top: topRuns(board, best) };
+  }
+
+  async challengeReplay(board: string, tag: string): Promise<ReplayWire | null> {
+    const doc = await this.challenges.findOne({ _id: `${board}/${tag}`, state: 'entered', verified: true }, { projection: { next: 0, picks: 0 } });
+    if (!doc?.replay) return null;
+    return (await this.place(doc)).rank <= WATCH_TOP ? doc.replay : null;
+  }
+
+  async weekRanks(week: string): Promise<string[][]> {
+    const rows = await this.challenges
+      .find({ board: { $regex: `^${week}-` }, state: 'entered' }, { projection: { board: 1, tag: 1 } })
+      .sort({ board: 1, score: -1, at: 1 })
+      .toArray();
+    const boards = new Map<string, string[]>();
+    for (const r of rows) boards.set(r.board, [...(boards.get(r.board) ?? []), r.tag]);
+    return [...boards.values()];
   }
 
   async setName(tag: string, name: BoardName, now: number): Promise<void> {

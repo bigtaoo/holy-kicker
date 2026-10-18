@@ -24,7 +24,7 @@ const CARD_RADIUS = 28;
 /** A locked card is drawn this grey. */
 const LOCKED_TINT = 0x8a8a8a;
 
-const KIND_COLOR: Record<CardKind, number> = {
+export const KIND_COLOR: Record<CardKind, number> = {
   relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade, shrine: 0xe0607a, evolve: 0xffc83a,
 };
 /** An evolution is a gold card: a warm panel with a bright rim. */

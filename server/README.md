@@ -30,6 +30,10 @@ before names) goes by a dice name made from its tag.
 | `POST /v1/runs` | a `RunEntry`: kept if it is the install's best on its board → `{ board, rank, best, tag }`; its `name` or `dice`, if the rules take it, becomes the install's name |
 | `POST /v1/name` | a `NameEntry` `{ install, host, name \| dice }`: the install's name on every board → `{ ok: true }`, or 400 `bad name` |
 | `GET /v1/boards/c<N>[h]` | top 50 of chapter N (h: hard), plus the caller's own row (header `x-hk-install`) |
+| `GET /v1/challenge` | the open challenges (`ChallengeList`, src/challengeWire.ts) and the server's clock: today's daily, made from the UTC date (src/challenge.ts `dailyOf`: id `d20261019`, seed, chapter `furthest`, 50 waves for now, the server's `ENGINE_VERSION`), and this week's weekly (`weeklyOf`: id `w2026-43`, Monday 00:00 UTC to Monday, its relic, monk, sutras and chapter picked by hand in src/weeklies.ts, else a rotation) |
+| `POST /v1/challenge/runs` | a `ChallengeRun`: the challenge id, a `RunEntry` and its replay (up to 3 MB). Checked against the record (src/challenge.ts: still open or closed at most 2 h ago (`LATE_MS`); `misfit`: the same engine version, the record's seed and waves, no revives, normal mode, a replay from wave 1, the run's chapter, relic and monk matching the replay's), then kept once per install per board (`<challenge>-e<engine>-c<chapter>`): a run that would rank in the top 100 (`RESIM_TOP`) waits `pending` for re-simulation, the rest enter unverified (a weekly keeps each install's best run instead: `lower` for one no better) → `{ board, status: pending \| ranked \| repeat \| lower, rank, total, tag }` |
+| `GET /v1/challenge/boards/<board>` | top 50 of a challenge board, plus the caller's own row (`mine`, header `x-hk-install`) and whether it is still `pending`; a weekly's also lists its top 3 verified runs (`top`: tag, pick timeline, whether a replay is kept). Rows here and on the chapter boards carry `mark` (1–3), the tier their install reached in last week's weekly (src/marks.ts) |
+| `GET /v1/challenge/boards/<board>/replays/<tag>` | the `ReplayWire` of a weekly top-3 run, to watch; 404 for any other |
 | `POST /v1/reports` | a `Report`: the player's note, device, chapter and wave, and a replay of the run (up to 3 MB) → `{ id }` |
 | `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /v1/reports/<id>` | one report whole, replay included (same key) |
@@ -40,7 +44,15 @@ before names) goes by a dice name made from its tag.
 A run ranks by: a win over any loss, then more waves, then less time (`runScore`). Every request
 is checked whole (`src/rules.ts`) and refused on anything unexpected; a run that could not have
 happened (a win short of the last wave, under 4 s per wave) is refused too. Each caller IP has a
-token bucket per route (`RATES` in `src/routes.ts`). Runs on the boards are not replayed yet.
+token bucket per route (`RATES` in `src/routes.ts`). Runs on the chapter boards are not replayed.
+
+**Challenge runs** (docs/design.md "Challenges") are re-simulated off the request path
+(src/resimQueue.ts): one pending run at a time, a slice of ticks per turn of the event loop. The
+replay must land on the `hashState`, outcome, wave, level and time the run claims
+(src/resim.ts); then the run enters the board with its pick timeline (each level-up and shrine:
+tick, wave, cards offered, card taken). A mismatch drops the run and is kept as a problem report
+with the replay (it may be a determinism bug, not a cheat). After a restart the queue picks up
+the store's pending runs again.
 
 **Problem reports** come from the pause panel's "Report a problem" (`client/src/ui/problemReport.ts`):
 the host's text box (a DOM dialog on the web, `wx.showModal` on WeChat), then the note with an
@@ -60,7 +72,7 @@ until the backend has an ICP-filed domain on the mini-game's request whitelist.
 
 MongoDB Atlas, a cluster of its own (`cluster0.qcp0r96`, not daydayup's), database `holykicker` (`HK_MONGO_DB`):
 `events` (TTL 90 days; `perf` and `anomaly` ones go after 28 days, `PERF_KEEP_DAYS`, by a weekly prune: `Store.prune` in src/store.ts, looked at a minute after start and every 6 hours, and run when the last run, kept in `meta`, is 7 days old), `installs` (one per install, src/players.ts: first day, host, first build, the days it came back, its day 0 and its way to each board's first clear, folded as batches arrive), `active` (install per day), `best` (one
-per install per board), `names` (one per named install, by tag: a portal name or a dice name), `reports` (TTL 180 days), `meta` (bookkeeping: when the prune last ran). Without `HK_MONGO_URI` the server keeps everything in memory
+per install per board), `challenge` (one per install per challenge board: pending with its replay until re-simulated, then entered with its pick timeline; no TTL yet), `names` (one per named install, by tag: a portal name or a dice name), `reports` (TTL 180 days), `meta` (bookkeeping: when the prune last ran). Without `HK_MONGO_URI` the server keeps everything in memory
 (development, tests).
 
 ## Running

@@ -1,8 +1,9 @@
 import { MONK_IDS, RELIC_IDS, type MonkId, type RelicId } from '@hk/engine';
-import { isDice } from '@hk/protocol';
+import { CHALLENGE_ID, isDice } from '@hk/protocol';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { newDaily, parseDaily, type Daily } from './daily';
+import { parseWeeks, type WeekEntry } from './weekly';
 import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './gear';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
@@ -71,6 +72,10 @@ export interface SaveData {
   giftDay: number;
   /** The local date (yyyymmdd) the first run ended, 0 before; that day's tasks ask less (daily.ts). */
   firstDay: number;
+  /** The challenge whose counted run is done (challenge.ts), '' for none: later runs of it are practice. */
+  challenge: string;
+  /** Weeks with a finished weekly run, until paid once their ranks are final (weekly.ts). */
+  weeks: WeekEntry[];
 }
 
 export function newSave(): SaveData {
@@ -80,7 +85,7 @@ export function newSave(): SaveData {
     chapter: 1, cleared: 0, best: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
-    kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0,
+    kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [],
   };
 }
 
@@ -185,5 +190,7 @@ export function parseSave(text: string | null): SaveData {
     gifts: int(raw.gifts, 0, BALANCE.welcome.length, 0),
     giftDay: int(raw.giftDay, 0, 99999999, 0),
     firstDay: int(raw.firstDay, 0, 99999999, 0),
+    challenge: typeof raw.challenge === 'string' && CHALLENGE_ID.test(raw.challenge) ? raw.challenge : '',
+    weeks: parseWeeks(raw.weeks),
   };
 }

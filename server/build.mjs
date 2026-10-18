@@ -1,5 +1,6 @@
 // Bundles the server into one ESM file, dist/server.mjs, for the Docker image (deploy/).
-// mongodb stays external: the image installs it from deploy/package.json.
+// mongodb stays external: the image installs it from deploy/package.json. @hk/engine (the
+// re-simulation of challenge runs) is bundled from source through tsconfig.base.json's paths.
 import { build } from 'esbuild';
 import { fileURLToPath } from 'node:url';
 

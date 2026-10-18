@@ -25,6 +25,7 @@ import { settingsPanel, type SettingsActions } from './settingsPanel';
 import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
 import { BoardUi, type FetchBoard } from './boardPanel';
+import { ChallengeUi, TILE_W, type ChallengeLobby } from './challengePanel';
 import { consentCard, watched } from './privacyUi';
 import { COLORS, button, fit, label, panel } from './widgets';
 
@@ -49,6 +50,8 @@ export interface LobbyActions {
   rewarded(): Promise<boolean>;
   /** Fetches a leaderboard; null offline (no Ranks button then). */
   board: FetchBoard | null;
+  /** The daily challenge for the tile beside PLAY; null while there is none to show (challengeFlow.ts). */
+  challenge: () => ChallengeLobby | null;
   /** The ad-free card's purchase, for the Shop tab; null on every host but iOS. */
   store: Store | null;
 
@@ -79,6 +82,7 @@ export class LobbyScreen implements Screen {
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly econ: EconomyUi;
   private readonly boards: BoardUi;
+  private readonly challenge: ChallengeUi;
   /** Whether rewarded ads can be offered, for the shop tab's height. */
   private adOk = false;
   private hint: Container | null = null;
@@ -112,7 +116,8 @@ export class LobbyScreen implements Screen {
       store: actions.store,
       track: actions.track,
     }, ads);
-    this.boards = new BoardUi(actions.board, () => this.relayout());
+    this.boards = new BoardUi(actions.board, () => this.relayout(), icons);
+    this.challenge = new ChallengeUi(actions.challenge, this.boards, icons, () => this.relayout());
   }
 
   layout(f: UiFrame): void {
@@ -166,6 +171,8 @@ export class LobbyScreen implements Screen {
     if (this.tab === 'gear' && this.gearOpen) this.view.addChild(gearDetail(this.save, this.gearOpen, this.icons, f.w, f.h, this.gearActions()));
     const overlay = this.econ.overlay(f.w, f.h);
     if (overlay) this.view.addChild(overlay);
+    const daily = this.tab === 'play' ? this.challenge.overlay(f.w, f.h) : null;
+    if (daily) this.view.addChild(daily);
     const board = this.boards.overlay(f.w, f.h);
     if (board) this.view.addChild(board);
     if (this.settingsOpen) {
@@ -376,9 +383,16 @@ export class LobbyScreen implements Screen {
     // a welcome gift takes a row under Patrol and Tasks; on a short screen the stack moves up for it
     const gift = this.econ.giftRow();
     const playY = Math.min(midY + 300, h - TAB_H - 140 - (gift ? 130 : 0));
+    // the daily challenge's tile beside PLAY, at the card's right edge, PLAY narrower for it
+    const tile = open ? this.challenge.tile(190) : null;
+    if (tile) {
+      tile.position.set(w / 2 + 450 - TILE_W / 2, playY);
+      this.view.addChild(tile);
+    }
     if (open) {
-      const play = button(t('lobby.play'), 620, 190, () => this.actions.play(n), { size: 88 });
-      play.position.set(w / 2, playY);
+      const pw = tile ? 900 - TILE_W - 20 : 620;
+      const play = button(t('lobby.play'), pw, 190, () => this.actions.play(n), { size: 88 });
+      play.position.set(tile ? w / 2 - 450 + pw / 2 : w / 2, playY);
       this.view.addChild(play);
     }
     const row = this.econ.playRow();

@@ -1,5 +1,5 @@
 import { Container, Graphics } from 'pixi.js';
-import { getLocale, localeName, t, type Key, type Locale } from '../i18n';
+import { getLocale, loadLocale, localeName, setLocale, t, type Key, type Locale } from '../i18n';
 import { QUALITY_MODES, type QualityMode } from '../game/quality';
 import type { Sound } from '../audio/Sound';
 import type { KeyValueStore } from '../meta/saveStore';
@@ -38,14 +38,21 @@ export interface SettingsActions {
   close(): void;
 }
 
-/** The panel's actions over the stored settings and the sound; a new language or quality mode also goes to `o`. */
+/** Switches to `locale` and stores it, once its table is in (a chunk that failed to load keeps the current language). */
+export async function keepLanguage(kv: KeyValueStore, locale: Locale): Promise<void> {
+  if (!(await loadLocale(locale))) return;
+  setLocale(locale);
+  updateSettings(kv, { locale });
+}
+
+/** The panel's actions over the stored settings and the sound; a new language (once stored) or quality mode also goes to `o`. */
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
   o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId'>,
 ): Omit<SettingsActions, 'close'> {
   return {
-    setLanguage: o.setLanguage,
+    setLanguage: (locale) => void keepLanguage(kv, locale).then(() => o.setLanguage(locale)),
     volume: () => sound.level,
     setVolume: (volume) => {
       sound.setVolume(volume);

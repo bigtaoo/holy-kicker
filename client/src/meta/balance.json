@@ -126,5 +126,15 @@
   ],
   "monks": { "kicker": 0, "fat": 500, "novice": 300 },
   "firstRun": { "seed": 92, "autoPicks": 5 },
-  "fall": { "levelEvery": 5, "levels": [7, 11, 14, 17, 20, 23, 25, 27, 29, 31], "levelGap": 4 }
+  "fall": { "levelEvery": 5, "levels": [7, 11, 14, 17, 20, 23, 25, 27, 29, 31], "levelGap": 4 },
+  "challenge": {
+    "unlockLevel": 2,
+    "milestones": [
+      { "wave": 5, "copper": 50, "jade": 1 },
+      { "wave": 10, "copper": 100, "jade": 1 },
+      { "wave": 15, "copper": 150, "jade": 2 },
+      { "wave": 20, "copper": 200, "jade": 3 }
+    ],
+    "weekly": { "participation": 10, "tiers": [10, 30, 80] }
+  }
 }

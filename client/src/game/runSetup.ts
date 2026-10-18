@@ -17,11 +17,13 @@ export interface RunSetup {
   monk?: MonkId;
   /** A new player's first run (the engine's FIRST_RUN). */
   firstRun?: boolean;
+  /** A fixed engine seed (a challenge's), over the dev switch's. */
+  seed?: number;
 }
 
-/** The run's engine seed: the dev switch's, the fixed first-run one (BALANCE.firstRun), or a random one. */
+/** The run's engine seed: the setup's (a challenge's), the dev switch's, the fixed first-run one (BALANCE.firstRun), or a random one. */
 export function runSeed(scene: SceneOptions, setup: RunSetup, random = Math.random): number {
-  return scene.seed || (setup.firstRun ? BALANCE.firstRun.seed : 1 + Math.floor(random() * 0x7ffffffe));
+  return setup.seed || scene.seed || (setup.firstRun ? BALANCE.firstRun.seed : 1 + Math.floor(random() * 0x7ffffffe));
 }
 
 /** The run a scene sets up: what the engine simulates. */

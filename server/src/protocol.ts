@@ -32,7 +32,8 @@ export type Device = (typeof DEVICES)[number];
  * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached) and, in a browser, `focus` (the game ever had the keys since launch) and `input` (any key or click reached it). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,
  * `emerge`, `bullet`, `zone`, or `level` when under-levelled for the wave). `alive` has what a `leave` in a run has
  * (`chapter`, `wave`, `level`, `kills`, `card`, `tutorial`). `run_resume` has `chapter`, `hard` and
- * `wave`. `iap` has `what` (`buy` or
+ * `wave`. A daily challenge run's `run_start` and `run_end` also have `challenge`, the
+ * challenge's id (`d20261019`). `iap` has `what` (`buy` or
  * `restore`), `item` (`adfree`) and `outcome` (`owned`, `cancelled`, `pending` or `failed`, and
  * `none` for a restore that found nothing).
  *
@@ -277,6 +278,8 @@ export interface BoardRow {
   level: number;
   monk: string;
   relic: string;
+  /** Last week's weekly challenge tier (challengeWire.ts weekTier), worn as a mark beside the name; absent for none. */
+  mark?: number;
 }
 
 export interface BoardReply {
@@ -403,3 +406,5 @@ export function checkName(raw: string): NameCheck {
   if (RUDE_INSIDE.test(lower.replace(/[ _.-]/g, '')) || lower.split(/[ _.-]+/).some((w) => RUDE_WORD.test(w))) return { ok: false, why: 'rude' };
   return { ok: true, name };
 }
+
+export * from './challengeWire';
