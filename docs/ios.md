@@ -1,7 +1,7 @@
 # iOS release plan
 
-Status, 2026-10-09: steps 1–3 (the shell, Game Center's nickname, AdMob) work on a phone from
-TestFlight; step 4 (the ad-free card) is built and waits for a sandbox purchase; step 5 is a plan.
+Status, 2026-10-18: version 1.0 (22) and the ad-free card are in App Review (submitted
+2026-10-18). Steps 1–3 work on a phone from TestFlight; step 4's sandbox purchase was never tried.
 
 The iOS app is the web build inside a Capacitor shell (WKWebView), like the other hosts it is
 one more `Platform` (`client/src/platform/types.ts`). Most of the native plumbing already
@@ -345,7 +345,9 @@ step 3 done 2026-10-09 (1.0 (9), HolyKicker's app id with Google's demo units: G
 form at first launch once the GDPR message in AdMob lists the app, settings' "Ad privacy" opens
 it again, and the test ads play). Step 4 built 2026-10-09 (1.0 (12), the `.adfree` product in
 App Store Connect); waits for a sandbox purchase. Step 5's listing entered the same day on 1.0 (14)
-(our own ad units); submitting it is the owner's.
+(our own ad units). Submitted 2026-10-18 on 1.0 (22), the ad-free card in the same submission,
+after the account holder accepted the updated Developer Program License Agreement (App Store
+Connect refuses every submission until then).
 
 ## Owner setup
 
