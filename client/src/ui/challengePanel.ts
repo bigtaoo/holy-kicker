@@ -88,7 +88,7 @@ export class ChallengeUi {
     const open = wk.state === 'open';
     const name = fit(label(t('weekly.tab'), 44, open ? COLORS.text : COLORS.dim), TILE_W - 40);
     name.y = 10;
-    const sub = fit(label(open ? t('weekly.tileOpen', { d: wk.days, h: wk.hours }) : t('challenge.tileUpdate'), 34, open ? COLORS.text : COLORS.dim), TILE_W - 40);
+    const sub = fit(label(open ? (wk.days > 0 ? t('weekly.tileOpen', { d: wk.days, h: wk.hours }) : t('challenge.tileOpen', { h: wk.hours })) : t('challenge.tileUpdate'), 34, open ? COLORS.text : COLORS.dim), TILE_W - 40);
     sub.y = 58;
     face.addChild(name, sub);
     const tile = button('', TILE_W, h, () => this.show(true, 'weekly'), { fill: open ? COLORS.jade : COLORS.panelLocked, icon: face });

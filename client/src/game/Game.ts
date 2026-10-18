@@ -152,6 +152,7 @@ export class Game {
       s.wave = Math.min(scene.wave, setup.waves) - 1;
       s.waveT = WAVES.ticks - 1;
     }
+    Object.assign(this.camPos, { x: lerpX(s.players[0], 1), y: lerpY(s.players[0], 1) }); // a resumed or sought run opens on its hero
 
     this.world.sortableChildren = true;
     const stage = art.stages[Math.min(Math.max(setup.chapter, 1), art.stages.length) - 1];
@@ -475,9 +476,8 @@ export class Game {
     this.threats?.draw(s.bullets, s.zones, alpha);
     this.boss?.draw(s.boss, alpha, dt, hx);
 
-    // Camera: ease after the hero towards the centre of the play area, on whole pixels.
-    const vp = this.vp;
-    ease(this.camPos, hx, hy, dt, (this.scene.cam === 'lock' ? LOCKED_CAMERA : SMOOTH_CAMERA).camEase);
+    const vp = this.vp; // camera: eases after the hero, on whole pixels; locked on in a paused replay, whose seek passes no view time
+    ease(this.camPos, hx, hy, dt, (this.scene.cam === 'lock' || (this.watchEnd > 0 && this.paused) ? LOCKED_CAMERA : SMOOTH_CAMERA).camEase);
     const res = this.app.renderer.resolution;
     const sh = this.shake.step(real); // real time, not sim time
     // the kill cam eases in toward the killing blow

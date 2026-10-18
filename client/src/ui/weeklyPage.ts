@@ -54,7 +54,7 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
     add(t('weekly.rank', { rank: w.reply.rank, total: w.reply.total }), 42, COLORS.text, y);
     y += 52;
   }
-  add(t('weekly.ends', { d: w.days, h: w.hours }), 40, COLORS.dim, y);
+  add(w.days > 0 ? t('weekly.ends', { d: w.days, h: w.hours }) : t('challenge.ends', { h: w.hours }), 40, COLORS.dim, y); // no "0d" on the last day
   const buttons: Container[] = [];
   if (w.state === 'open') buttons.push(button(t('weekly.play'), 420, 125, actions.play, { fill: COLORS.saffron, size: 60 }));
   if (actions.ranks) buttons.push(button(t('board.button'), 360, 125, actions.ranks, { fill: COLORS.panelLocked, size: 52 }));
