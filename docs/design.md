@@ -34,8 +34,8 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
 | Unlocks at | Feature |
 |---|---|
 | End of first run | Play, Gear (first run always drops one item), Shop |
-| Player level 2 | Training (talents) |
-| Chapter 1 cleared | Patrol (idle income), second relic |
+| Player level 2 | Training (talents), daily challenge *(planned)* |
+| Chapter 1 cleared | Patrol (idle income), second relic, weekly challenge *(planned)* |
 | Chapter 2 cleared | Codex |
 
 ## Chapters (the run)
@@ -245,6 +245,141 @@ Two currencies only:
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
   gear tier, monks), each paying jade once, about 800 in all. Progress is read from the save,
   so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.
+- Daily and weekly challenges (planned): see "Challenges" below.
+
+## Challenges (planned)
+
+Two shared runs on top of the chapters, built on what the deterministic engine already gives:
+the same config and commands replay tick for tick, so a run can be checked by the server and
+watched by other players. Why: on CrazyGames 75 % of new installs start only one run
+(docs/retention.md), and the meta systems above do not reach them; the daily challenge is the
+one long-term feature that is also a day-0 reason to come back tomorrow. The weekly one gives
+veterans something past hard mode that costs no new art.
+
+### Daily and weekly: two different jobs
+
+| | Daily | Weekly |
+|---|---|---|
+| Job | A habit and a reward: "come back tomorrow" | A competition and a lesson: "see how the best play it" |
+| Run | 20 waves of the player's furthest unlocked chapter, ending on the mid-boss (about 5 min) | One full chapter run, 50 waves (about 12 min) |
+| Same for everyone | Seed and the day's mutator | Seed, chapter, mutator and the whole loadout (below) |
+| Player's own | Monk, relic, sutras, gear, training | Nothing |
+| Attempts | The first finished run of the UTC day counts; later runs are practice and pay nothing | Unlimited; the best run counts |
+| Ranked by | Reward milestones by wave reached; a board per chapter, shown as "top N %" | `runScore` (won, then wave, then time) on one board |
+| Pays | Milestones (below) | Participation and a rank tier, settled after the week |
+| Replays | Kept for verification only | Top 3 published, with their pick timeline |
+
+- **UTC days and weeks** (Monday 00:00 UTC), unlike daily tasks, which follow the device's
+  local date: a shared board needs one clock. The server's time decides; the client shows the
+  time left from the server's answer.
+- **No revives** in either: a rewarded-ad revive would buy rank, and the ad-free card and
+  CrazyGames' Basic Launch pay it out free. Training's free revives are off too.
+- **Mutators** are one per challenge, from a small list the engine knows (`RunConfig.mutator`,
+  an engine change): elite-heavy waves, a faster horde, a fragile hero with double XP, sutra
+  cards only. The daily one rotates; the weekly one is picked by hand in the challenge record.
+
+### The weekly loadout
+
+Fairness and learning both need every player to have the same options, so the weekly
+challenge fixes the whole run config, not just the gear:
+
+- `bonus` all zero: no gear, no training (`?bare` already plays this way).
+- Relic and monk set by the challenge ("this week: alms bowl, fat monk"), whether the player
+  has unlocked them or not; trying a locked relic here is also a preview of what is coming.
+- Sutras: a fixed set from the challenge, so the card pool is the same for everyone and a pick
+  in a replay is a pick the viewer could make.
+- Chapter: any of 1–5, whatever the player has cleared (it opens after chapter 1). Hard mode
+  only as a later variant.
+
+### Challenge records and engine versions
+
+The server owns the challenge list (`GET /v1/challenge`): id (`d20261019`, `w2026-43`), kind,
+start and end, seed, chapter or "furthest", mutator, the weekly loadout, and the engine version
+it runs on. The client builds its `RunConfig` from that record alone.
+
+A replay only plays back on the `ENGINE_VERSION` it was recorded with (engine/replay.ts), and
+that number moves often. So:
+
+- **Boards are keyed by challenge and engine version.** A client asks for, and sends to, the
+  board of its own version.
+- **Engine changes ship on Mondays** by convention, with the new weekly challenge, so a week
+  normally has one board. An urgent mid-week engine fix starts a second board for the rest of
+  the week; both pay out, each by its own ranks.
+- Hosts that lag (CrazyGames uploads by hand, WeChat review) play on the board of the version
+  they have. A client whose version has no board this week shows the challenge as "update to
+  play" rather than a broken run.
+- Published replays are listed only to clients of the same version. Last week's top 3 stay
+  watchable while the engine is unchanged.
+
+### Submitting and verifying a run
+
+A challenge run sends its `RunEntry` together with its replay (`ReplayWire`, the same format
+as problem reports). The server today checks runs for plausibility only (`server/src/rules.ts`
+`checkRun`); challenge runs are re-simulated:
+
+- The server takes `@hk/engine` as a dependency (it is pure TypeScript with no imports outside
+  itself) and steps the replay to its end in a worker, off the request path. The run's final
+  `hashState` and outcome must match what the client sent; then it enters the board. A
+  mismatch is refused (no ban: it may be a determinism bug) and logged for the operator, as a
+  problem report with the replay.
+- Only runs that would rank in a board's top 100 are re-simulated (about 23 000 ticks for a
+  weekly run); the rest keep the plausibility check and show no replay.
+- Re-simulation also produces the **pick timeline** that the board shows: for each level-up and
+  shrine, the tick, the wave, the three cards offered and the one taken, and each evolution.
+- Before launch: check the golden hash in Safari (JavaScriptCore) and WeChat on iOS
+  (engine/README.md lists that as untested). A runtime that diverges would see every good run
+  refused.
+
+### Watching a replay and the pick timeline
+
+- The weekly board's top 3 rows have a Watch button. The replay downloads on demand
+  (measure the size of a full 50-wave run; gzip on the wire; `LIMITS.replayNumbers` is the cap).
+- The replay screen reuses the run view, fed by `ReplayInputSource` instead of the player:
+  play, pause, 1x / 2x / 4x, and jump to a wave (stepping the engine without drawing). No HUD
+  buttons that do nothing; the hero's stick is drawn so the viewer sees how they moved.
+- Under the board (and under the replay), the **pick timeline**: one row of card icons in
+  order, tapping one jumps the replay there. This is often what a player wants to learn, and it
+  needs no replay download.
+
+### Rewards
+
+Numbers are *tune* values and live in `balance.json` under `challenge`, like everything else.
+
+- **Daily milestones** on the counted run: waves 5, 10, 15 and 20 (the mid-boss down) each pay
+  copper and a little jade; together about one normal full-clear's copper of that chapter, so
+  the challenge sits beside farming instead of replacing it. A rewarded ad doubles the copper,
+  as on a normal results screen.
+- **Weekly participation**: one finished run pays jade.
+- **Weekly rank tiers**, settled once the week is over and claimed at the next launch: top
+  50 %, top 10 %, top 3. Jade, plus a cosmetic mark next to the name on the boards for the
+  next week (top 3: gold, with their replay). No stat items: a reward that adds power would
+  leak into a competition built on everyone having none.
+- Rewards are written to the local save like any other. The server only answers the rank;
+  someone who forges it cheats only themselves, as with the clock.
+- Achievements can follow later (first daily, a 7-day streak of dailies, a weekly top 10 %).
+
+### Platforms
+
+Challenges need the server. They are hidden where the game plays offline (Playgama's sandbox,
+development without `?api`) and while the backend does not answer, rather than shown broken.
+WeChat reaches the server already; its review may lag a version behind, which the version-keyed
+boards absorb.
+
+### Order of work
+
+1. **Server**: challenge records, boards keyed by challenge and engine version, run plus
+   replay intake, the re-simulation worker with the pick timeline, rank settlement at the end
+   of a week. Cross-runtime golden-hash check (Safari, WeChat iOS).
+2. **Daily, client**: the challenge card on the Play tab, the run from the challenge record,
+   milestones on the results screen with "next challenge in Xh", the board as "top N %".
+   No engine change yet: the first version runs the chapter's normal waves and counts the wave
+   reached, with milestones at 5/10/15/20.
+3. **Engine**: a run that ends as a win on wave 20's mid-boss, and `RunConfig.mutator` with
+   the first few mutators; bump `ENGINE_VERSION`, shipped on a Monday.
+4. **Weekly, client**: the fixed loadout, best-of attempts, the board with the pick timeline,
+   the replay screen, the weekly reward claim.
+5. **Measure** (docs/retention.md): `challenge_start` / `challenge_end` events, and D1 / D7 of
+   installs that played a challenge on day 0 against those that did not.
 
 ## Ads and monetization
 
