@@ -1,6 +1,6 @@
 """Draws a seamless flagstone ground tile: staggered rows of uneven slabs with dark seams,
 a few cracks, puddles and paper scraps, in flat colours (no generated picture needed).
-usage: python flagstone_tile.py <out.png> [--size 512] [--seed 4] [--rgb 70,78,96]
+usage: python flagstone_tile.py <out.png> [--size 512] [--seed 4] [--rgb 70,78,96] [--seam 0.55]
 Everything is drawn on a 3x3 canvas and the middle cut out, so slabs that cross an edge
 wrap round to the other side."""
 import argparse
@@ -13,13 +13,14 @@ ap.add_argument("dst")
 ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--seed", type=int, default=4)
 ap.add_argument("--rgb", default="70,78,96", help="the slabs' mean colour")
+ap.add_argument("--seam", type=float, default=0.55, help="the seams' and cracks' share of the slab colour")
 ap.add_argument("--colors", type=int, default=64)
 a = ap.parse_args()
 
 rnd = random.Random(a.seed)
 N = a.size
 base = tuple(int(v) for v in a.rgb.split(","))
-SEAM = tuple(max(0, int(c * 0.55)) for c in base)
+SEAM = tuple(max(0, int(c * a.seam)) for c in base)
 ROWS = 5
 row_h = N // ROWS
 

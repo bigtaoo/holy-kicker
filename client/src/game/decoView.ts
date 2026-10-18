@@ -81,7 +81,8 @@ export const SNOW_DECO: DecoStyle = {
 
 /** Chapter 4, the ghost market at night: blue lantern posts, empty stalls, jars, crates and
  * incense burners on the flagstones, spirit money lying flat; the patches lean to a cold teal
- * so the lantern light seems to pool on the street. */
+ * so the lantern light seems to pool on the street. The props are tinted a warm grey: drawn blue,
+ * they shared the teal ghosts' hue and outshone them on the stone, so the tint greys them back. */
 export const GHOST_DECO: DecoStyle = {
   kinds: [
     { name: 'lantern_post', weight: 3, size: 140 },
@@ -91,8 +92,8 @@ export const GHOST_DECO: DecoStyle = {
     { name: 'stall', weight: 1, size: 150 },
     { name: 'burner', weight: 1, size: 105 },
   ],
-  tint: 0xb0b8cc,
-  decal: { papers: { tint: 0x9ca4bc, alpha: 0.8 } },
+  tint: 0xb4aca4,
+  decal: { papers: { tint: 0xa49c94, alpha: 0.7 } },
   dark: { tint: 0x080c18, alpha: 0.4 },
   light: { tint: 0x80d8e8, alpha: 0.14 },
 };
