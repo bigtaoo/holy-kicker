@@ -1,4 +1,4 @@
-import { DEFAULT_RUN, Engine, MONK_IDS, RELIC_IDS, STATS, SUTRA_IDS, TICK_RATE, hashState, replayEngine, type RunConfig } from '@hk/engine';
+import { DEFAULT_RUN, Engine, MONK_IDS, MUTATOR_IDS, RELIC_IDS, STATS, SUTRA_IDS, TICK_RATE, hashState, replayEngine, type RunConfig } from '@hk/engine';
 import { LIMITS, type PickWire, type ReplayWire, type RunEntry } from './protocol';
 
 // Re-simulating a challenge run (docs/design.md "Submitting and verifying a run"): the replay
@@ -14,8 +14,8 @@ const oneOf = <T extends string>(v: unknown, list: readonly T[]): v is T => type
 
 /**
  * The replay's config as a RunConfig a ranked run could have had, or null: one hero, the
- * chapter's waves, no stress-test switches, and the player's own relic, monk, sutras and stats
- * from gear and training (whole numbers on known stats; the client is trusted on their size).
+ * chapter's waves, no stress-test switches, a known mutator or none, and the player's own relic, monk, sutras
+ * and stats from gear and training (whole numbers on known stats; the client is trusted on their size).
  */
 export function rankedConfig(c: Record<string, unknown>): RunConfig | null {
   const d = DEFAULT_RUN;
@@ -25,6 +25,8 @@ export function rankedConfig(c: Record<string, unknown>): RunConfig | null {
   if (!Array.isArray(c.spells) || c.spells.length !== 0 || c.spellRate !== d.spellRate || c.drops !== 0) return null;
   if (!oneOf(c.relic, RELIC_IDS) || !oneOf(c.monk, MONK_IDS) || !isInt(c.chapter, 1, LIMITS.chapters) || c.hard !== false) return null;
   if (c.firstRun !== undefined && c.firstRun !== false) return null;
+  const mutator = c.mutator ?? null;
+  if (mutator !== null && !oneOf(mutator, MUTATOR_IDS)) return null;
   const sutras = c.sutras;
   if (!Array.isArray(sutras) || !sutras.every((s) => oneOf(s, SUTRA_IDS)) || new Set(sutras).size !== sutras.length) return null;
   const bonus = c.bonus;
@@ -33,7 +35,7 @@ export function rankedConfig(c: Record<string, unknown>): RunConfig | null {
   return {
     seed: c.seed, players: 1, mobs: d.mobs, sep: d.sep, queue: d.queue, heroEase: c.heroEase, elite: true, boss: true, threats: false,
     spells: [], spellRate: d.spellRate, drops: 0, waves: c.waves, revives: 0, relic: c.relic, monk: c.monk, sutras, chapter: c.chapter,
-    bonus: bonus as RunConfig['bonus'], hard: false, firstRun: false,
+    bonus: bonus as RunConfig['bonus'], hard: false, firstRun: false, mutator,
   };
 }
 

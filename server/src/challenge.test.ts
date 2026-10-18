@@ -1,6 +1,6 @@
-import { ENGINE_VERSION } from '@hk/engine';
+import { ENGINE_VERSION, MUTATOR_IDS } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
-import { challengeFor, dailyOf, dailySeed, misfit, weeklyOf, ymdOf, DAY_MS, LATE_MS } from './challenge';
+import { challengeFor, DAILY_WAVES, dailyOf, dailySeed, misfit, weeklyOf, ymdOf, DAY_MS, LATE_MS } from './challenge';
 import { RESIM_TOP, challengeBoardId, topPercent, type ChallengeBoardReply, type ChallengeList, type ChallengeRunReply, type ReplayWire, type RunEntry } from './protocol';
 import { rankedConfig, resimulate } from './resim';
 import { ResimQueue } from './resimQueue';
@@ -30,6 +30,15 @@ describe('the daily', () => {
     expect(dailySeed(20261018)).toBe(DAILY.seed);
   });
 
+  it('ends on wave 20 with a mutator that turns every day', () => {
+    expect(DAILY_WAVES).toBe(20);
+    expect(DAILY.waves).toBe(20);
+    const week = Array.from({ length: 7 }, (_, d) => dailyOf(NOW + d * DAY_MS).mutator);
+    expect(new Set(week)).toEqual(new Set(MUTATOR_IDS));
+    for (let d = 0; d < 6; d++) expect(week[d + 1]).not.toBe(week[d]);
+    expect(PLAYED.replay.config.mutator).toBe(DAILY.mutator);
+  });
+
   it('takes runs until a little after it closed', () => {
     expect(challengeFor(DAILY.id, NOW)?.id).toBe(DAILY.id);
     expect(challengeFor(DAILY.id, DAILY.end + LATE_MS - 1)?.id).toBe(DAILY.id);
@@ -43,6 +52,8 @@ describe('the daily', () => {
     expect(misfit(DAILY, run, replay)).toBeNull();
     expect(misfit(DAILY, run, { ...replay, engine: replay.engine - 1 })).toBe('engine');
     expect(misfit(DAILY, run, { ...replay, config: { ...replay.config, seed: 7 } })).toBe('seed');
+    expect(misfit(DAILY, run, { ...replay, config: { ...replay.config, mutator: null } })).toBe('mutator');
+    expect(misfit({ ...DAILY, mutator: null }, run, { ...replay, config: { ...replay.config, mutator: undefined } })).not.toBe('mutator');
     expect(misfit(DAILY, run, { ...replay, config: { ...replay.config, revives: 1 } })).toBe('revives');
     expect(misfit(DAILY, run, { ...replay, wave: 20 })).toBe('waves');
     expect(misfit(DAILY, { ...run, chapter: 2 }, replay)).toBe('chapter');
@@ -91,6 +102,9 @@ describe('re-simulation', () => {
     expect(rankedConfig({ ...c, bonus: { attack: 1.5 } })).toBeNull();
     expect(rankedConfig({ ...c, bonus: { wings: 5 } })).toBeNull();
     expect(rankedConfig({ ...c, relic: 'sword' })).toBeNull();
+    expect(rankedConfig({ ...c, mutator: 'chaos' })).toBeNull();
+    expect(rankedConfig({ ...c, mutator: undefined })?.mutator).toBeNull();
+    expect(rankedConfig(c)?.mutator).toBe(DAILY.mutator);
     expect(rankedConfig({ ...c, bonus: { attack: 40, maxHp: 120 }, sutras: ['halo'], relic: 'bowl', monk: 'fat' })).not.toBeNull();
   });
 });

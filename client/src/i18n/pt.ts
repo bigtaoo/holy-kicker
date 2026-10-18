@@ -133,6 +133,10 @@ export const pt: Table<typeof en> = {
     checking: 'Conferindo sua partida…',
     top: 'Top {n}%',
   },
+  mutator: {
+    line: '{name}: {info}', elites: 'Ondas de elite', elitesInfo: 'um elite a mais em cada onda de elite',
+    swift: 'Horda veloz', swiftInfo: 'a horda se move mais rápido', glass: 'Monge de vidro', glassInfo: 'metade da vida, XP em dobro',
+  },
   weekly: {
     tab: 'Semanal', title: 'Desafio semanal', tileOpen: 'faltam {d} d {h} h', loadout: 'A partida da semana',
     rule1: 'Todos jogam com o mesmo monge, relíquia e sutras', rule2: 'Sem equipamento, sem treino, sem reviver',

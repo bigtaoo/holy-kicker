@@ -8,6 +8,7 @@ export * from './input';
 export * from './state';
 export { Engine, ENGINE_VERSION, STEP_ORDER } from './Engine';
 export { hashState } from './hash';
+export { MUTATOR_IDS, MUTATORS, mutatorOf, type MutatorId } from './mutators';
 export { checkReplay, packCommands, replayEngine, takeReplay, unpackCommands, type Replay } from './replay';
 export { restoreState, resumeEngine, takeSnapshot, type Snapshot } from './snapshot';
 export { FP, TICK_RATE, fromFp } from './math/fixed';

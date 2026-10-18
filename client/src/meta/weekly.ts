@@ -1,4 +1,4 @@
-import { ENGINE_VERSION, type MonkId, type RelicId, type SutraId } from '@hk/engine';
+import { ENGINE_VERSION, mutatorOf, type MonkId, type RelicId, type SutraId } from '@hk/engine';
 import { CHALLENGE_BOARD, LATE_MS, weekTier, type Challenge } from '@hk/protocol';
 import type { RunSetup } from '../game/runSetup';
 import { BALANCE } from './balance';
@@ -38,12 +38,12 @@ export function weeklyState(save: SaveData, c: Challenge, engine = ENGINE_VERSIO
   return c.engine !== engine ? 'update' : 'open';
 }
 
-/** What a run of the weekly `c` is set up with: the record's whole loadout, seed and waves, and nothing of the player's. */
+/** What a run of the weekly `c` is set up with: the record's whole loadout, seed, waves and mutator, and nothing of the player's. */
 export function weeklySetup(c: Challenge): RunSetup {
   const l = c.loadout!;
   return {
     chapter: l.chapter, waves: c.waves, revives: 0, relic: l.relic as RelicId, sutras: l.sutras as SutraId[],
-    bonus: {}, hard: false, monk: l.monk as MonkId, firstRun: false, seed: c.seed,
+    bonus: {}, hard: false, monk: l.monk as MonkId, firstRun: false, seed: c.seed, mutator: mutatorOf(c.mutator),
   };
 }
 

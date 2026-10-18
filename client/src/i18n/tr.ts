@@ -133,6 +133,10 @@ export const tr: Table<typeof en> = {
     checking: 'Oyunun kontrol ediliyor…',
     top: 'İlk %{n}',
   },
+  mutator: {
+    line: '{name}: {info}', elites: 'Seçkin dalgalar', elitesInfo: 'her seçkin dalgasında bir seçkin daha',
+    swift: 'Hızlı sürü', swiftInfo: 'sürü daha hızlı hareket eder', glass: 'Cam keşiş', glassInfo: 'yarı can, iki kat TP',
+  },
   weekly: {
     tab: 'Haftalık', title: 'Haftalık Meydan Okuma', tileOpen: '{d} g {h} sa kaldı', loadout: 'Haftanın oyunu',
     rule1: 'Herkes aynı keşiş, kalıntı ve sutralarla oynar', rule2: 'Ekipman, antrenman ve dirilme yok',

@@ -1,4 +1,4 @@
-import { ENGINE_VERSION, MONK_IDS, RELIC_IDS, SUTRA_IDS } from '@hk/engine';
+import { ENGINE_VERSION, MONK_IDS, MUTATOR_IDS, RELIC_IDS, SUTRA_IDS, type MutatorId } from '@hk/engine';
 import { CHALLENGE_ID, DAY_MS, LATE_MS, WEEK_MS, weekIdOf, weekStart, type Challenge, type ChallengeLoadout, type ReplayWire, type RunEntry } from './protocol';
 import { WEEKLIES } from './weeklies';
 
@@ -9,8 +9,13 @@ export { DAY_MS, LATE_MS, WEEK_MS, weekIdOf, weekStart };
 // day. A weekly runs Monday 00:00 UTC to Monday with a fixed loadout, picked by hand in
 // weeklies.ts or, for a week without one there, from a rotation by week.
 
-/** The daily's waves: the chapter's full run until the engine can end one on wave 20's mid-boss. */
-export const DAILY_WAVES = 50;
+/** The daily's waves: it ends as a win on wave 20's mid-boss (about 5 minutes). */
+export const DAILY_WAVES = 20;
+
+/** The daily's mutator: the engine's mutators in turn, one a UTC day. */
+export function dailyMutator(start: number): MutatorId {
+  return MUTATOR_IDS[Math.floor(start / DAY_MS) % MUTATOR_IDS.length];
+}
 
 /** The UTC day of `ms` as the number YYYYMMDD. */
 export function ymdOf(ms: number): number {
@@ -31,7 +36,7 @@ export function dailySeed(ymd: number): number {
 export function dailyOf(ms: number, engine = ENGINE_VERSION): Challenge {
   const start = Math.floor(ms / DAY_MS) * DAY_MS;
   const ymd = ymdOf(start);
-  return { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: dailySeed(ymd), chapter: 'furthest', waves: DAILY_WAVES, mutator: null, loadout: null, engine };
+  return { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: dailySeed(ymd), chapter: 'furthest', waves: DAILY_WAVES, mutator: dailyMutator(start), loadout: null, engine };
 }
 
 /** The weekly's waves: one full chapter run. */
@@ -47,14 +52,14 @@ export function rotationLoadout(start: number): ChallengeLoadout {
   };
 }
 
-/** The weekly of the week `ms` falls in: the hand-picked record if there is one, else the rotation's. */
+/** The weekly of the week `ms` falls in: the hand-picked record if there is one (its mutator too), else the rotation's (none). */
 export function weeklyOf(ms: number, engine = ENGINE_VERSION): Challenge {
   const start = weekStart(ms);
   const id = weekIdOf(start);
   const picked = WEEKLIES[id];
   const loadout = picked ? { relic: picked.relic, monk: picked.monk, sutras: [...picked.sutras], chapter: picked.chapter } : rotationLoadout(start);
   const seed = picked?.seed ?? dailySeed(0x40000000 + Number(id.slice(1, 5)) * 100 + Number(id.slice(6)));
-  return { id, kind: 'weekly', start, end: start + WEEK_MS, seed, chapter: loadout.chapter, waves: WEEKLY_WAVES, mutator: null, loadout, engine };
+  return { id, kind: 'weekly', start, end: start + WEEK_MS, seed, chapter: loadout.chapter, waves: WEEKLY_WAVES, mutator: picked?.mutator ?? null, loadout, engine };
 }
 
 /** The challenges open at `now`. */
@@ -72,7 +77,7 @@ export function challengeFor(id: string, now: number): Challenge | null {
 
 /**
  * Why a run and its replay cannot be a run of `c`, or null when they can (the cheap checks
- * before any re-simulation): the engine version, the seed, no revives, the chapter's normal
+ * before any re-simulation): the engine version, the seed, the mutator, no revives, the challenge's
  * waves from the start, the run's own fields matching its config, and a weekly's loadout
  * whole: its relic, monk and sutras, and no gear or training.
  */
@@ -80,6 +85,7 @@ export function misfit(c: Challenge, run: RunEntry, replay: ReplayWire): string 
   const cfg = replay.config;
   if (replay.engine !== c.engine) return 'engine';
   if (cfg.seed !== c.seed) return 'seed';
+  if ((cfg.mutator ?? null) !== c.mutator) return 'mutator';
   if (cfg.revives !== 0) return 'revives';
   if (cfg.waves !== c.waves || replay.wave !== 1) return 'waves';
   if (run.hard || cfg.hard !== false || cfg.firstRun === true) return 'mode';

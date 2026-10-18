@@ -1,4 +1,4 @@
-import { DEFAULT_RUN, Engine, takeReplay, type LocalInputSource, type MonkId, type RelicId, type RunConfig, type SutraId } from '@hk/engine';
+import { DEFAULT_RUN, Engine, takeReplay, type LocalInputSource, type MonkId, type MutatorId, type RelicId, type RunConfig, type SutraId } from '@hk/engine';
 import { Bot } from '@hk/engine/bot/bot';
 import type { Challenge, ReplayWire, RunEntry } from './protocol';
 
@@ -8,13 +8,13 @@ export const INSTALL = 'abcdefgh1234';
 
 /**
  * A real run of `c`: the bot plays on the challenge's seed with what a client would set up (a
- * weekly's loadout, else chapter 1 as the starting monk), and gives up after `ticks` (or falls
+ * weekly's loadout, else chapter 1 as the starting monk, and the challenge's mutator), and gives up after `ticks` (or falls
  * first). Returns the run and its replay as sent.
  */
 export function playRun(c: Challenge, ticks = 2400, install = INSTALL): { run: RunEntry; replay: ReplayWire } {
   const l = c.loadout;
   const loadout: Partial<RunConfig> = l ? { relic: l.relic as RelicId, monk: l.monk as MonkId, sutras: l.sutras as SutraId[], chapter: l.chapter, bonus: {} } : {};
-  const config: RunConfig = { ...DEFAULT_RUN, seed: c.seed, waves: c.waves, revives: 0, firstRun: false, ...loadout };
+  const config: RunConfig = { ...DEFAULT_RUN, seed: c.seed, waves: c.waves, revives: 0, firstRun: false, mutator: c.mutator as MutatorId | null, ...loadout };
   const engine = new Engine(config);
   const s = engine.state;
   const bot = new Bot(0, 'casual', c.seed);

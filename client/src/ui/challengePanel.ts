@@ -7,12 +7,12 @@ import type { WeekClaim } from '../meta/weekly';
 import { rowName, type BoardUi, type FetchBoard } from './boardPanel';
 import { iconSprite, type IconSheet } from './buildBar';
 import type { DailyView, WeeklyView } from './challengeFlow';
-import { claimCard, weeklyPage } from './weeklyPage';
+import { claimCard, mutatorLine, weeklyPage } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The challenges in the lobby (docs/design.md "Challenges"): a tile beside PLAY with the daily's
 // time left (or Done; the weekly's when there is no daily), which opens a panel with a tab for
-// each. The daily's: the rules, the milestones and what they pay, the player's share of the board
+// each. The daily's: its mutator, the rules, the milestones and what they pay, the player's share of the board
 // once their run is in, and Play (Practice once the day's run counted) and Ranks. The weekly's:
 // ui/weeklyPage.ts, its board with the top runs to watch. On another engine version than the
 // record's, the tile says to update and the panel offers no run. A closed week waiting to be paid
@@ -157,7 +157,9 @@ export class ChallengeUi {
 
   private daily(box: Container, top: number, add: (text: string, size: number, fill: number, y: number) => void, lobby: ChallengeLobby, d: DailyView): void {
     add(t('lobby.chapterTitle', { n: d.chapter, name: t(`chapter.${d.chapter}` as never) }), 48, COLORS.text, 165);
-    ['challenge.rule1', 'challenge.rule2', 'challenge.rule3'].forEach((key, i) => add(t(key as never), 40, COLORS.dim, 250 + i * 58));
+    const mutator = mutatorLine(d.challenge.mutator);
+    if (mutator) add(mutator, 42, COLORS.saffron, 232);
+    ['challenge.rule1', 'challenge.rule2', 'challenge.rule3'].forEach((key, i) => add(t(key as never), 40, COLORS.dim, (mutator ? 295 : 250) + i * 56));
     add(t('challenge.milestones'), 48, COLORS.text, 470);
     BALANCE.challenge.milestones.forEach((m, i) => box.addChild(this.milestoneRow(milestonePay(m, d.chapter), top + 560 + i * 90, d.state === 'done')));
     // where the day stands: time left, done (with the board share once known), or update

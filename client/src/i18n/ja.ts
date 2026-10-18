@@ -133,6 +133,10 @@ export const ja: Table<typeof en> = {
     checking: '記録を確認中…',
     top: '上位{n}%',
   },
+  mutator: {
+    line: '{name}：{info}', elites: 'エリート増量', elitesInfo: 'エリート波でエリートが1体増える',
+    swift: '俊足の群れ', swiftInfo: '敵の群れの移動が速い', glass: 'ガラスの体', glassInfo: 'HP半分、経験値2倍',
+  },
   weekly: {
     tab: 'ウィークリー', title: 'ウィークリーチャレンジ', tileOpen: '残り{d}日{h}時間', loadout: '今週のラン', rule1: '全員が同じ僧・法具・経典で挑む', rule2: '装備・修行・復活なし',
     rule3: '何回でも挑戦可能：最高記録が残る', rewards: '週の終わりに報酬', part: 'ランを最後までプレイ', half: '上位50%', tenth: '上位10%', three: 'トップ3', ends: '残り{d}日{h}時間で終了',

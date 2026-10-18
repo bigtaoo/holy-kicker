@@ -21,10 +21,13 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
   balls, rings, beads, bowls, spells, threats, contact, drops, build, waves. The order is part of the contract.
 - `RunConfig.waves` > 0 runs a chapter (`systems/waves.ts`): the horde grows each wave, elites
   and bosses arrive on their waves, the hero has health and can go down, and `state.outcome`
-  turns `won` (the last boss fell) or `lost` (every hero down). A `revive` command brings a
+  turns `won` (the last boss fell, or the mid-boss of a run that ends on a mid-boss wave, like
+  the daily's 20) or `lost` (every hero down). A `revive` command brings a
   downed hero back. Mobs have health that grows with the wave (`mobHp`) and come back with the
   current wave's health when they fall. `waves: 0` is the sandbox for stress tests: fixed
   horde dying in one hit, no death, no levelling.
+- `RunConfig.mutator` bends one rule for a challenge run (`mutators.ts`): more elites, a faster
+  horde, or a fragile hero with double XP.
 - The build (`content.ts`, `systems/build.ts`): experience fills levels; each level-up deals
   three cards (relic level, a spell, a passive) into `player.offer` and the sim stands still
   until a `pick` command takes one. Passives are a modifier stack read through `stat()`.

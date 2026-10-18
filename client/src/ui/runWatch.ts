@@ -151,7 +151,7 @@ export class RunWatch {
       if (this.clearWait === null) {
         this.clearWait = CLEAR_LINE_TIME;
         d.portal.gameplayStop();
-        hud.speak(clearLine(d.chapter));
+        hud.speak(clearLine(d.chapter, s.wave, s.config.waves));
       }
       this.clearWait -= dt;
       if (this.clearWait <= 0) d.end();

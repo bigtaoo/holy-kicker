@@ -1,6 +1,7 @@
 import { FP, perTick, TICK_RATE, ticks, toFp } from './math/fixed';
 import { degToBrad } from './math/trig';
 import type { MonkId, RelicId, StatBonus, SutraId } from './content';
+import type { MutatorId } from './mutators';
 
 // Run configuration (what a match is set up with, part of a replay) and the tuning numbers,
 // all converted once at load into FP units per tick and whole ticks.
@@ -47,6 +48,8 @@ export interface RunConfig {
   hard: boolean;
   /** A new player's first run (FIRST_RUN). Missing in configs saved before it was kept. */
   firstRun?: boolean;
+  /** The challenge's mutator (mutators.ts), null or missing for none. */
+  mutator?: MutatorId | null;
 }
 
 export const DEFAULT_RUN: RunConfig = {
@@ -356,8 +359,8 @@ export const WAVES = {
   /** Every this many waves an elite comes (not on boss waves). */
   eliteEvery: 5,
   /**
-   * The mid-boss waves, the first with the story's lines; the last wave always has the chapter
-   * boss. Boss waves last until it falls.
+   * The mid-boss waves, the first with the story's lines; the last wave has the chapter boss,
+   * unless it is a mid-boss wave (a short challenge run ends on that). Boss waves last until it falls.
    */
   midBosses: [20, 35] as readonly number[],
   /**

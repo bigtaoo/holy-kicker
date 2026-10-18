@@ -4,6 +4,7 @@ import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Prng } from '../math/prng';
 import { teleport, underground, type Body, type Player, type SimState } from '../state';
+import { mutatorSpeed } from '../mutators';
 import { mobSpeed } from './snow';
 
 // Horde movement: every mob walks toward its nearest player, then soft collision moves it out
@@ -169,7 +170,7 @@ function stunned(s: SimState): void {
  */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
-  const speedOf = (i: number) => mobSpeed(s.mobs[i]);
+  const speedOf = (i: number) => mutatorSpeed(mobSpeed(s.mobs[i]), c.mutator);
   const stopOf = (i: number) => {
     const k = s.mobs[i].kind;
     return k === 'shooter' ? SHOOTER.stopDist : k === 'caster' ? CASTER.stopDist : HORDE.stopDist;

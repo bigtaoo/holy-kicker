@@ -29,7 +29,7 @@ export interface Challenge {
   chapter: number | 'furthest';
   /** Waves the run plays (the chapter's full 50 until the engine can end a run early). */
   waves: number;
-  /** The run's mutator (a later RunConfig.mutator), null for none. */
+  /** The run's mutator (RunConfig.mutator, engine/mutators.ts), null for none. */
   mutator: string | null;
   /** The weekly's fixed loadout; null when players bring their own (the daily). */
   loadout: ChallengeLoadout | null;

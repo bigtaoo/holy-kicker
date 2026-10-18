@@ -133,6 +133,10 @@ export const pl: Table<typeof en> = {
     checking: 'Sprawdzamy twoją rozgrywkę…',
     top: 'Top {n}%',
   },
+  mutator: {
+    line: '{name}: {info}', elites: 'Więcej elit', elitesInfo: 'o jednego elitarnego wroga więcej na każdej fali elit',
+    swift: 'Szybka horda', swiftInfo: 'horda porusza się szybciej', glass: 'Szklany mnich', glassInfo: 'połowa zdrowia, podwójne XP',
+  },
   weekly: {
     tab: 'Tydzień', title: 'Wyzwanie tygodnia', tileOpen: 'zostało {d} d {h} h', loadout: 'Gra tygodnia',
     rule1: 'Wszyscy grają tym samym mnichem, reliktem i sutrami', rule2: 'Bez ekwipunku, treningu i wskrzeszeń',

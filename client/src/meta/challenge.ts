@@ -1,4 +1,4 @@
-import { ENGINE_VERSION, STATS, type Stat, type StatBonus } from '@hk/engine';
+import { ENGINE_VERSION, STATS, mutatorOf, type Stat, type StatBonus } from '@hk/engine';
 import type { Challenge } from '@hk/protocol';
 import { BALANCE } from './balance';
 import { mergeCodex } from './codex';
@@ -44,12 +44,12 @@ export function challengeChapter(save: SaveData, c: Challenge): number {
   return c.chapter === 'furthest' ? playableChapters(save, false) : c.chapter;
 }
 
-/** What a run of `c` is set up with (a weekly: its fixed loadout, weekly.ts): the record's seed and waves, no revives, the player's relic, monk, sutras, gear and training (no grit or head start: they are not the same for everyone at a level). */
+/** What a run of `c` is set up with (a weekly: its fixed loadout, weekly.ts): the record's seed, waves and mutator, no revives, the player's relic, monk, sutras, gear and training (no grit or head start: they are not the same for everyone at a level). */
 export function challengeSetup(save: SaveData, c: Challenge): RunSetup {
   if (c.loadout) return weeklySetup(c);
   return {
     chapter: challengeChapter(save, c), waves: c.waves, revives: 0, relic: save.relic, sutras: earnedSutras(save),
-    bonus: challengeBonus(save), hard: false, monk: save.monk, firstRun: false, seed: c.seed,
+    bonus: challengeBonus(save), hard: false, monk: save.monk, firstRun: false, seed: c.seed, mutator: mutatorOf(c.mutator),
   };
 }
 

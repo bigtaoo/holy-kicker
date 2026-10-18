@@ -35,15 +35,15 @@ function say(c: number, moment: Moment): Key {
 /** The line for the banner of `wave` in `chapter` (`last` waves), or null for a wave without one. */
 export function waveLine(chapter: number, wave: number, last: number): StoryLine | null {
   const c = chapterOf(chapter);
-  if (wave === last) return { who: BOSS_SPEAKER[c - 1], say: say(c, 'bossBefore') };
-  // the first mid-boss has the story's lines
+  // the first mid-boss has the story's lines, also when it ends the run (a 20-wave challenge)
   const mid = WAVES.midBosses[0];
   if (wave === mid && isMidBoss(wave, last)) return { who: MID_SPEAKER[c - 1], say: say(c, 'midBefore') };
+  if (wave === last) return isMidBoss(wave, last) ? null : { who: BOSS_SPEAKER[c - 1], say: say(c, 'bossBefore') };
   if (wave === mid + 1 && isMidBoss(mid, last)) return { who: MONK, say: say(c, 'midAfter') };
   return null;
 }
 
-/** The monk's line once `chapter`'s boss fell and the run is won. */
-export function clearLine(chapter: number): StoryLine {
-  return { who: MONK, say: say(chapterOf(chapter), 'bossAfter') };
+/** The monk's line once the run is won on `wave` of `last`: after `chapter`'s boss, or after the mid-boss that ended a shorter run. */
+export function clearLine(chapter: number, wave: number, last: number): StoryLine {
+  return { who: MONK, say: say(chapterOf(chapter), isMidBoss(wave, last) ? 'midAfter' : 'bossAfter') };
 }

@@ -39,6 +39,9 @@ describe('daily challenge', () => {
     expect(challengeSetup(save, daily)).toMatchObject({
       chapter: 3, waves: 50, revives: 0, relic: 'fish', monk: 'fat', hard: false, firstRun: false, seed: daily.seed, bonus: challengeBonus(save),
     });
+    // the record's mutator; one this build does not know plays as none
+    expect(challengeSetup(save, { ...daily, mutator: 'glass' }).mutator).toBe('glass');
+    expect(challengeSetup(save, { ...daily, mutator: 'newer' }).mutator).toBeNull();
     // the worn gear and the training line, nothing for grit or the novice
     const fresh = newSave();
     expect(challengeBonus(fresh)).toEqual({ ...trainingStats(fresh), ...gearStats(fresh) });

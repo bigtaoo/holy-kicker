@@ -133,6 +133,10 @@ export const it: Table<typeof en> = {
     checking: 'Controllo della partita…',
     top: 'Top {n}%',
   },
+  mutator: {
+    line: '{name}: {info}', elites: "Ondate d'élite", elitesInfo: "un'élite in più a ogni ondata d'élite",
+    swift: 'Orda rapida', swiftInfo: "l'orda si muove più veloce", glass: 'Monaco di vetro', glassInfo: 'metà salute, EXP doppia',
+  },
   weekly: {
     tab: 'Settimana', title: 'Sfida della settimana', tileOpen: '{d} g {h} h rimasti', loadout: 'La partita della settimana',
     rule1: 'Tutti giocano con lo stesso monaco, reliquia e sutra', rule2: 'Niente equipaggiamento, allenamento o rinascite',

@@ -133,6 +133,10 @@ export const id: Table<typeof en> = {
     checking: 'Memeriksa permainanmu…',
     top: 'Top {n}%',
   },
+  mutator: {
+    line: '{name}: {info}', elites: 'Gelombang elit', elitesInfo: 'satu elit tambahan di tiap gelombang elit',
+    swift: 'Gerombolan gesit', swiftInfo: 'gerombolan bergerak lebih cepat', glass: 'Biksu kaca', glassInfo: 'nyawa separuh, XP ganda',
+  },
   weekly: {
     tab: 'Mingguan', title: 'Tantangan Mingguan', tileOpen: 'sisa {d} h {h} j', loadout: 'Permainan minggu ini',
     rule1: 'Semua main dengan biksu, relik, dan sutra yang sama', rule2: 'Tanpa perlengkapan, latihan, atau hidup lagi',

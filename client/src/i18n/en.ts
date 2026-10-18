@@ -131,6 +131,10 @@ export const en = {
     checking: 'Checking your run…',
     top: 'Top {n}%',
   },
+  mutator: {
+    line: '{name}: {info}', elites: 'Elite waves', elitesInfo: 'one more elite on every elite wave',
+    swift: 'Swift horde', swiftInfo: 'the horde moves faster', glass: 'Glass monk', glassInfo: 'half health, double XP',
+  },
   weekly: {
     tab: 'Weekly', title: 'Weekly Challenge', tileOpen: '{d}d {h}h left', loadout: "This week's run",
     rule1: 'Everyone plays the same monk, relic and sutras', rule2: 'No gear, no training, no revives',

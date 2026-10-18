@@ -59,8 +59,9 @@ describe('wave plan', () => {
     const bosses = Array.from({ length: 50 }, (_, i) => i + 1).filter((w) => isBossWave(w, 50));
     expect(elites).toEqual([5, 10, 15, 25, 30, 40, 45]);
     expect(bosses).toEqual([...WAVES.midBosses, 50]);
-    // a short chapter ends on its boss and has no mid-boss
-    expect(isMidBoss(WAVES.midBosses[0], WAVES.midBosses[0])).toBe(false);
+    // a run that ends on a mid-boss wave has that mid-boss as its last boss; a shorter one has none
+    expect(isMidBoss(WAVES.midBosses[0], WAVES.midBosses[0])).toBe(true);
+    expect(isMidBoss(WAVES.midBosses[0], WAVES.midBosses[0] - 1)).toBe(false);
     expect(isEliteWave(20, 20)).toBe(false);
   });
 });
@@ -121,6 +122,26 @@ describe('chapter run', () => {
     s.elites.length = 0;
     expect(idle(e, 1)).toContain('wave');
     expect(s.wave).toBe(WAVES.midBosses[0] + 1);
+  });
+
+  it('ends a run whose last wave is a mid-boss wave as a win once that mid-boss falls', () => {
+    for (const chapter of [1, 2]) {
+      const e = new Engine({ ...CHAPTER, chapter, waves: WAVES.midBosses[0] });
+      const s = e.state;
+      s.players[0].hurtCd = 1e6;
+      s.wave = WAVES.midBosses[0] - 1;
+      s.waveT = WAVES.ticks - 1;
+      idle(e, 1);
+      // the twins in chapter 1, the previous chapter's boss empowered after it; never the chapter boss
+      if (chapter === 1) expect([s.elites.length, s.boss]).toEqual([2, null]);
+      else expect(s.boss).toMatchObject({ empowered: true, kind: 'abbot' });
+      idle(e, WAVES.ticks * 2);
+      expect(s.outcome).toBe('playing');
+      s.elites.length = 0;
+      if (s.boss) Object.assign(s.boss, { hp: 0, phase: 'down' });
+      expect(idle(e, 1)).toContain('cleared');
+      expect(s).toMatchObject({ wave: WAVES.midBosses[0], outcome: 'won' });
+    }
   });
 
   it('brings an elite that can fall on every fifth wave', () => {

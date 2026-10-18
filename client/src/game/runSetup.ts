@@ -1,4 +1,4 @@
-import { HERO_EASE_LOCKED, HERO_EASE_SMOOTH, type MonkId, type RelicId, type RunConfig, type StatBonus, type SutraId } from '@hk/engine';
+import { HERO_EASE_LOCKED, HERO_EASE_SMOOTH, type MonkId, type MutatorId, type RelicId, type RunConfig, type StatBonus, type SutraId } from '@hk/engine';
 import { BALANCE } from '../meta/balance';
 import type { SceneOptions } from './scene';
 
@@ -19,6 +19,8 @@ export interface RunSetup {
   firstRun?: boolean;
   /** A fixed engine seed (a challenge's), over the dev switch's. */
   seed?: number;
+  /** A challenge's mutator (the engine's mutators.ts). */
+  mutator?: MutatorId | null;
 }
 
 /** The run's engine seed: the setup's (a challenge's), the dev switch's, the fixed first-run one (BALANCE.firstRun), or a random one. */
@@ -34,10 +36,11 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     elite: true, boss: scene.boss, threats: scene.threats, spells: scene.spells, spellRate: scene.rate, drops: scene.drops,
     waves: setup.waves, revives: setup.revives, relic: setup.relic, sutras: setup.sutras, chapter: setup.chapter,
     bonus: setup.bonus ?? {}, hard: setup.hard ?? false, monk: setup.monk ?? 'kicker', firstRun: setup.firstRun ?? false,
+    mutator: setup.mutator ?? null,
   };
 }
 
 /** The setup a run's config was made from (a resumed run's, meta/resume.ts). */
 export function setupOf(c: RunConfig): RunSetup {
-  return { chapter: c.chapter, waves: c.waves, revives: c.revives, relic: c.relic, sutras: c.sutras, bonus: c.bonus, hard: c.hard, monk: c.monk, firstRun: c.firstRun };
+  return { chapter: c.chapter, waves: c.waves, revives: c.revives, relic: c.relic, sutras: c.sutras, bonus: c.bonus, hard: c.hard, monk: c.monk, firstRun: c.firstRun, mutator: c.mutator };
 }

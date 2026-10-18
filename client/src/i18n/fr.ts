@@ -133,6 +133,10 @@ export const fr: Table<typeof en> = {
     checking: 'Vérification de ta partie…',
     top: 'Top {n} %',
   },
+  mutator: {
+    line: '{name} : {info}', elites: 'Vagues d’élites', elitesInfo: 'une élite de plus à chaque vague d’élites',
+    swift: 'Horde rapide', swiftInfo: 'la horde se déplace plus vite', glass: 'Moine de verre', glassInfo: 'moitié de vie, double XP',
+  },
   weekly: {
     tab: 'Hebdo', title: 'Défi de la semaine', tileOpen: '{d} j {h} h restants', loadout: 'La partie de la semaine',
     rule1: 'Tout le monde joue le même moine, la même relique et les mêmes sutras', rule2: "Pas d'équipement, pas d'entraînement, pas de réanimation",

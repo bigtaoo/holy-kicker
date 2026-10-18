@@ -133,6 +133,10 @@ export const ko: Table<typeof en> = {
     checking: '기록 확인 중…',
     top: '상위 {n}%',
   },
+  mutator: {
+    line: '{name}: {info}', elites: '정예 강화', elitesInfo: '정예 웨이브마다 정예 1마리 추가',
+    swift: '날쌘 무리', swiftInfo: '적 무리가 더 빨리 움직임', glass: '유리 몸', glassInfo: '체력 절반, 경험치 2배',
+  },
   weekly: {
     tab: '주간', title: '주간 챌린지', tileOpen: '{d}일 {h}시간 남음', loadout: '이번 주의 판', rule1: '모두 같은 승려, 유물, 경전으로 플레이', rule2: '장비, 수련, 부활 없음',
     rule3: '몇 번이든 도전: 최고 기록이 남아요', rewards: '주가 끝나면 보상', part: '한 판 끝까지 플레이', half: '상위 50%', tenth: '상위 10%', three: '톱 3', ends: '{d}일 {h}시간 후 종료',

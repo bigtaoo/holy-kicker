@@ -25,6 +25,8 @@ const HARD_PEAK: RunConfig = { ...PEAK, hard: true };
 /** The other monks: their stats and passives (systems/monks.ts). */
 const FAT: RunConfig = { ...SNOW, monk: 'fat' };
 const NOVICE: RunConfig = { ...SNOW, monk: 'novice' };
+/** The challenge mutators (mutators.ts) on chapter 2. */
+const MUTATED: RunConfig[] = (['elites', 'swift', 'glass'] as const).map((mutator) => ({ ...MARSH, mutator }));
 
 /** A scripted stick: circles, stops and dashes, the same for every run; takes any level-up card. */
 function stick(tick: number, owner = 0): PlayerCommand {
@@ -94,9 +96,9 @@ describe('Engine', () => {
 
   it('matches the golden hashes for this engine version', () => {
     // Recorded 2026-10-12 for ENGINE_VERSION 36 (chapter 1's opening crowd has the wave's share of health and contact blow), still
-    // the same for 37 (a first run's first wave pulls gems from further, FIRST_RUN) and 38 (its first waves do). A change here is a
-    // rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(38);
+    // the same for 37 (a first run's first wave pulls gems from further, FIRST_RUN), 38 (its first waves do) and 39 (a run can end
+    // on a mid-boss wave; the mutators, recorded then). A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(39);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -107,6 +109,7 @@ describe('Engine', () => {
     expect(GOLDEN_HARD).not.toBe(GOLDEN_PEAK);
     expect(run(FAT, 4800, 4800).hashes[0]).toBe(GOLDEN_FAT);
     expect(run(NOVICE, 4800, 4800).hashes[0]).toBe(GOLDEN_NOVICE);
+    expect(MUTATED.map((c) => run(c, 4800, 4800).hashes[0])).toEqual(GOLDEN_MUTATED);
   });
 
   it('plays a chapter the same way twice', () => {
@@ -130,3 +133,4 @@ const GOLDEN_PEAK = 1972422506;
 const GOLDEN_HARD = 1081030800;
 const GOLDEN_FAT = 1041512001;
 const GOLDEN_NOVICE = 2791305082;
+const GOLDEN_MUTATED = [139697308, 439380575, 4051788227];

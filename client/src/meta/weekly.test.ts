@@ -25,8 +25,9 @@ describe('weekly challenge', () => {
   it("plays the record's whole loadout, owned or not, with nothing of the player's", () => {
     const save = player({ relic: 'fish', monk: 'kicker', gear: { ...newSave().gear } });
     expect(challengeSetup(save, weekly)).toEqual({
-      chapter: 2, waves: 50, revives: 0, relic: 'bowl', sutras: ['lotus', 'roar'], bonus: {}, hard: false, monk: 'novice', firstRun: false, seed: 4242,
+      chapter: 2, waves: 50, revives: 0, relic: 'bowl', sutras: ['lotus', 'roar'], bonus: {}, hard: false, monk: 'novice', firstRun: false, seed: 4242, mutator: null,
     });
+    expect(challengeSetup(save, { ...weekly, mutator: 'swift' }).mutator).toBe('swift');
   });
 
   it('notes the week with its best waves, counting every run', () => {

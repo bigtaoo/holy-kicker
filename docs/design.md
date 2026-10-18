@@ -245,9 +245,9 @@ Two currencies only:
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
   gear tier, monks), each paying jade once, about 800 in all. Progress is read from the save,
   so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.
-- Daily and weekly challenges (both built, still on full 50-wave runs and without mutators): see "Challenges" below.
+- Daily and weekly challenges (both built, with mutators): see "Challenges" below.
 
-## Challenges (daily and weekly built; mutators and the 20-wave daily planned)
+## Challenges (daily and weekly built)
 
 Two shared runs on top of the chapters, built on what the deterministic engine already gives:
 the same config and commands replay tick for tick, so a run can be checked by the server and
@@ -275,8 +275,14 @@ veterans something past hard mode that costs no new art.
 - **No revives** in either: a rewarded-ad revive would buy rank, and the ad-free card and
   CrazyGames' Basic Launch pay it out free. Training's free revives are off too.
 - **Mutators** are one per challenge, from a small list the engine knows (`RunConfig.mutator`,
-  an engine change): elite-heavy waves, a faster horde, a fragile hero with double XP, sutra
-  cards only. The daily one rotates; the weekly one is picked by hand in the challenge record.
+  `engine/mutators.ts`, numbers in `MUTATORS`): `elites` (one more of the first elite on every
+  elite wave), `swift` (the horde walks at 125 %; elites and bosses as before) and `glass` (half
+  the base health, double XP). Sutra cards only is still an idea. The daily's rotates by the UTC
+  day (`dailyMutator` in `server/src/challenge.ts`), so no two days in a row share one; a weekly
+  has one when its entry in `server/src/weeklies.ts` names it (the rotation's fallback weeks
+  have none). The panel shows it in saffron above the rules ("Swift horde: the horde moves
+  faster"); a client that does not know a newer server's mutator id is on an older engine and
+  sees "update" anyway. The server refuses a run whose config's mutator is not the record's.
 
 ### The weekly loadout
 
@@ -380,13 +386,15 @@ boards absorb.
    (`ui/challengePanel.ts`), the run from the record with the player's loadout and no revives
    (`meta/challenge.ts`), the counted run sent with its replay (`ui/challengeFlow.ts`), milestones
    on its results with "next challenge in Xh" (`ui/ChallengeResultsScreen.ts`), the board as
-   "top N %". No engine change yet: the run plays the chapter's normal 50 waves and the
-   milestones count the waves cleared (5/10/15/20). A challenge run is never kept for the next
+   "top N %". The milestones count the waves cleared (5/10/15/20). A challenge run is never kept for the next
    launch, so closing the game mid-run leaves the day open; `run_start` and `run_end` carry
    `challenge` (the id). `?challenge` shows a daily made up on the device when offline.
-3. **Engine**: a run that ends as a win on wave 20's mid-boss, and `RunConfig.mutator` with
-   the first few mutators; bump `ENGINE_VERSION`, shipped on a Monday.
-4. **Weekly, client** (built, without mutators): a Weekly tab in the challenge panel (the tile
+3. **Engine** (built, `ENGINE_VERSION` 39): a run whose last wave is a mid-boss wave (the
+   daily's 20) ends as a win once that mid-boss falls (`isMidBoss(wave, last)` in
+   `engine/systems/waves.ts`; the story's last line is the mid-boss's), and the mutators above.
+   The HUD counts the run's own waves ("Wave 3/20"). Ship it on a Monday: a version bump starts
+   new boards, so pushing it mid-week splits that week's.
+4. **Weekly, client** (built): a Weekly tab in the challenge panel (the tile
    shows the weekly when there is no daily) once chapter 1 is cleared (`ui/weeklyPage.ts`): the
    week's relic, monk and sutras, owned or not, no gear, training or revives
    (`meta/weekly.ts` `weeklySetup`), unlimited attempts with the week's best kept in the save

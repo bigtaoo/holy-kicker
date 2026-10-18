@@ -1,5 +1,5 @@
 import { LIMITS, challengeBoardId, weekIdOf, weekStart, WEEK_MS, type Challenge, type ChallengeList, type ChallengeRunReply, type ReplayWire, type TopRun } from '@hk/protocol';
-import { ENGINE_VERSION, takeReplay, type LocalInputSource, type Replay, type SimState } from '@hk/engine';
+import { ENGINE_VERSION, MUTATOR_IDS, takeReplay, type LocalInputSource, type Replay, type SimState } from '@hk/engine';
 import type { Game } from '../game/Game';
 import { evolvedIn } from '../meta/codex';
 import { challengeChapter, challengeState, hoursLeft, settleChallenge, type ChallengeReward, type ChallengeState } from '../meta/challenge';
@@ -233,14 +233,14 @@ export class ChallengeFlow {
   }
 }
 
-/** The challenges as the device makes them up (?challenge offline): the UTC day's and ISO week's ids and bounds, a seed from each. */
+/** The challenges as the device makes them up (?challenge offline): the UTC day's and ISO week's ids and bounds, a seed from each, the daily's mutator by the day as the server picks it. */
 function madeUp(now: number): ChallengeList {
   const start = now - (now % DAY_MS);
   const ymd = Number(new Date(start).toISOString().slice(0, 10).replace(/-/g, ''));
-  const daily: Challenge = { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: ymd, chapter: 'furthest', waves: 50, mutator: null, loadout: null, engine: ENGINE_VERSION };
+  const daily: Challenge = { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: ymd, chapter: 'furthest', waves: 20, mutator: MUTATOR_IDS[(start / DAY_MS) % MUTATOR_IDS.length], loadout: null, engine: ENGINE_VERSION };
   const week = weekStart(now);
   const id = weekIdOf(now);
   const loadout = { relic: 'bowl', monk: 'novice', sutras: ['lotus', 'roar'], chapter: 2 };
-  const weekly: Challenge = { id, kind: 'weekly', start: week, end: week + WEEK_MS, seed: Number(id.slice(1).replace('-', '')), chapter: 2, waves: 50, mutator: null, loadout, engine: ENGINE_VERSION };
+  const weekly: Challenge = { id, kind: 'weekly', start: week, end: week + WEEK_MS, seed: Number(id.slice(1).replace('-', '')), chapter: 2, waves: 50, mutator: 'swift', loadout, engine: ENGINE_VERSION };
   return { now, challenges: [daily, weekly] };
 }

@@ -3,6 +3,7 @@ import {
   rampChapter, tempKind, TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
+import { MUTATORS, type MutatorId } from '../mutators';
 import { body, newElite, newMob, underground, type SimState } from '../state';
 import { newBoss } from './boss';
 import { openShrine, payBet } from './build';
@@ -15,7 +16,7 @@ import { resetMob } from './marsh';
 // them brings the previous chapter's elite along), and the boss waves last until their boss
 // falls: the mid-bosses (WAVES.midBosses) are two elites, the twin big jiangshi, in chapter 1
 // and the previous chapter's boss empowered after it, and the last wave has the chapter boss
-// (CHAPTER_BOSSES). Elites and mid-bosses grow tougher wave by wave (waveFoeHp). The chapter boss falling wins the run;
+// (CHAPTER_BOSSES), unless the run ends on a mid-boss wave. Elites and mid-bosses grow tougher wave by wave (waveFoeHp). The last boss falling wins the run;
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
 
@@ -100,9 +101,9 @@ export function chapterBoss(chapter: number): BossKind {
 
 /**
  * The elites coming on elite wave `wave`: the chapter's, and on the last one the previous
- * chapter's too; hard mode adds a second of the first.
+ * chapter's too; hard mode adds a second of the first, the elites mutator more of it.
  */
-export function eliteKinds(chapter: number, wave: number, last: number, hard = false): EliteKind[] {
+export function eliteKinds(chapter: number, wave: number, last: number, hard = false, mutator: MutatorId | null = null): EliteKind[] {
   let kinds: EliteKind[];
   // chapter 5 has none of its own: earlier ones, one on the first elite wave, then the pairs in turn (ELITE_PAIRS)
   const k = Math.trunc(wave / WAVES.eliteEvery) - 1;
@@ -112,6 +113,7 @@ export function eliteKinds(chapter: number, wave: number, last: number, hard = f
     if (chapter > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
   }
   if (hard) kinds.push(kinds[0]);
+  if (mutator === 'elites') for (let i = 0; i < MUTATORS.elites.more; i++) kinds.push(kinds[0]);
   return kinds;
 }
 
@@ -147,9 +149,12 @@ export function isBossWave(wave: number, last: number): boolean {
   return wave === last || isMidBoss(wave, last);
 }
 
-/** A mid-boss wave: the twins or the empowered abbot (a chapter shorter than it has none). */
+/**
+ * A mid-boss wave: the twins or the empowered abbot (a chapter shorter than it has none). A run
+ * whose last wave is a mid-boss wave (the 20-wave daily challenge) ends on its mid-boss, not the chapter boss.
+ */
 export function isMidBoss(wave: number, last: number): boolean {
-  return WAVES.midBosses.includes(wave) && wave < last;
+  return WAVES.midBosses.includes(wave) && wave <= last;
 }
 
 /** The mid-boss (the twins or the empowered boss) or the chapter boss is standing. */
@@ -215,7 +220,7 @@ export function beginWave(s: SimState, wave: number): void {
     s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, k.kind, s.config.chapter, s.config.hard), k.kind));
   }
   if (isEliteWave(wave, last) && s.elites.length === 0) {
-    for (const kind of eliteKinds(s.config.chapter, wave, last, s.config.hard)) {
+    for (const kind of eliteKinds(s.config.chapter, wave, last, s.config.hard, s.config.mutator ?? null)) {
       const e = newEliteOf(s, kind);
       ringPoint(s.ai, p.x, p.y, e);
       s.elites.push(e);

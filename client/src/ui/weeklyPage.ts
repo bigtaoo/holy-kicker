@@ -1,4 +1,5 @@
 import { Container } from 'pixi.js';
+import { mutatorOf } from '@hk/engine';
 import { BALANCE } from '../meta/balance';
 import type { WeekClaim } from '../meta/weekly';
 import { t } from '../i18n';
@@ -8,7 +9,7 @@ import { markMedal } from './weeklyBoard';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The weekly challenge's page in the challenge panel (docs/design.md "Challenges"): the week's
-// fixed loadout (relic, monk and sutras, owned or not), its rules, what each tier pays when the
+// fixed loadout (relic, monk and sutras, owned or not), its mutator if any, its rules, what each tier pays when the
 // week ends, the player's best this week and the time left, then Play and Ranks. And the card
 // that pays a closed week at the next launch: its rank, its medal and the jade.
 
@@ -17,6 +18,12 @@ export function weeklyTiers(): { key: string; jade: number }[] {
   const b = BALANCE.challenge.weekly;
   const keys = ['weekly.part', 'weekly.half', 'weekly.tenth', 'weekly.three'];
   return keys.map((key, i) => ({ key, jade: b.participation + b.tiers.slice(0, i).reduce((n, j) => n + j, 0) }));
+}
+
+/** A challenge's mutator as one line ("Swift horde: the horde moves faster"), or null without one (or one this build does not know). */
+export function mutatorLine(id: string | null | undefined): string | null {
+  const m = mutatorOf(id);
+  return m && t('mutator.line', { name: t(`mutator.${m}`), info: t(`mutator.${m}Info`) });
 }
 
 export interface WeeklyPageActions {
@@ -44,7 +51,9 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
   });
   add(`${t(`relic.${l.relic}.name` as never)} · ${t(`monk.${l.monk}.name` as never)}`, 38, COLORS.saffron, 360);
   add(l.sutras.map((s) => t(`spell.${s}.name` as never)).join(' · '), 36, COLORS.dim, 408);
-  ['weekly.rule1', 'weekly.rule2', 'weekly.rule3'].forEach((key, i) => add(t(key as never), 38, COLORS.dim, 480 + i * 54));
+  const mutator = mutatorLine(w.challenge.mutator);
+  if (mutator) add(mutator, 38, COLORS.saffron, 462);
+  ['weekly.rule1', 'weekly.rule2', 'weekly.rule3'].forEach((key, i) => add(t(key as never), mutator ? 36 : 38, COLORS.dim, mutator ? 512 + i * 46 : 480 + i * 54));
   add(t('weekly.rewards'), 48, COLORS.text, 665);
   weeklyTiers().forEach((tier, i) => box.addChild(tierRow(t(tier.key as never), tier.jade, i, top + 740 + i * 68, icons)));
   if (w.state === 'update') add(t('weekly.update'), 44, COLORS.danger, 1025);

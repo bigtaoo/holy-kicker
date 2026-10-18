@@ -133,6 +133,10 @@ export const de: Table<typeof en> = {
     checking: 'Dein Lauf wird geprüft…',
     top: 'Top {n} %',
   },
+  mutator: {
+    line: '{name}: {info}', elites: 'Elitewellen', elitesInfo: 'eine Elite mehr in jeder Elitewelle',
+    swift: 'Flinke Horde', swiftInfo: 'die Horde ist schneller', glass: 'Gläserner Mönch', glassInfo: 'halbe Gesundheit, doppelte EP',
+  },
   weekly: {
     tab: 'Woche', title: 'Wochen-Challenge', tileOpen: 'noch {d} T {h} Std', loadout: 'Der Lauf der Woche',
     rule1: 'Alle spielen denselben Mönch, dasselbe Relikt und dieselben Sutras', rule2: 'Keine Ausrüstung, kein Training, keine Wiederbelebung',

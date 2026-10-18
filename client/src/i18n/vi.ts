@@ -133,6 +133,10 @@ export const vi: Table<typeof en> = {
     checking: 'Đang kiểm tra lượt chơi…',
     top: 'Top {n}%',
   },
+  mutator: {
+    line: '{name}: {info}', elites: 'Sóng tinh anh', elitesInfo: 'thêm một tinh anh ở mỗi sóng tinh anh',
+    swift: 'Bầy nhanh nhẹn', swiftInfo: 'bầy quái di chuyển nhanh hơn', glass: 'Nhà sư thủy tinh', glassInfo: 'nửa máu, gấp đôi EXP',
+  },
   weekly: {
     tab: 'Hằng tuần', title: 'Thử thách tuần', tileOpen: 'còn {d} ngày {h} giờ', loadout: 'Lượt chơi của tuần',
     rule1: 'Mọi người cùng chơi một nhà sư, bảo vật và kinh', rule2: 'Không trang bị, không tu luyện, không hồi sinh',

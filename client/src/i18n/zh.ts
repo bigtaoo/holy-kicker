@@ -133,6 +133,10 @@ export const zh: Table<typeof en> = {
     checking: '正在核对你的成绩…',
     top: '前 {n}%',
   },
+  mutator: {
+    line: '{name}：{info}', elites: '精英潮', elitesInfo: '每个精英波多来一只精英',
+    swift: '疾行尸潮', swiftInfo: '小怪移动更快', glass: '琉璃之身', glassInfo: '生命减半，经验翻倍',
+  },
   weekly: {
     tab: '每周', title: '每周挑战', tileOpen: '剩 {d} 天 {h} 小时', loadout: '本周的局', rule1: '所有人用同样的武僧、法宝和经文', rule2: '不带装备、不算修炼、不能复活', rule3: '想打几次都行，取最好的一局',
     rewards: '本周结束后发奖', part: '打完一局', half: '前 50%', tenth: '前 10%', three: '前 3 名', ends: '{d} 天 {h} 小时后结束', best: '你的最佳：第 {wave} 波', noBest: '本周还没有成绩',

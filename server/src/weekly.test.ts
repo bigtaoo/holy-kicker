@@ -1,4 +1,4 @@
-import { ENGINE_VERSION, MONK_IDS, RELIC_IDS, SUTRA_IDS } from '@hk/engine';
+import { ENGINE_VERSION, MONK_IDS, MUTATOR_IDS, RELIC_IDS, SUTRA_IDS } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
 import { DAY_MS, LATE_MS, WEEK_MS, challengeFor, misfit, rotationLoadout, weekIdOf, weekStart, weeklyOf } from './challenge';
 import { challengeUpdate, settleDoc, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
@@ -48,6 +48,7 @@ describe('the weekly', () => {
       expect(MONK_IDS).toContain(w.monk);
       for (const s of w.sutras) expect(SUTRA_IDS).toContain(s);
       expect(w.chapter >= 1 && w.chapter <= 5).toBe(true);
+      if (w.mutator !== undefined) expect(MUTATOR_IDS).toContain(w.mutator);
       const c = weeklyOf(Date.parse(`${id.slice(1, 5)}-01-04T00:00:00Z`) + (Number(id.slice(6)) - 1) * WEEK_MS);
       expect(c.id).toBe(id);
       expect(rankedConfig(playRun(c, 30).replay.config)).not.toBeNull();

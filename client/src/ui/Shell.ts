@@ -342,7 +342,7 @@ export class Shell {
     this.game.onHeartbeat = () => this.sound.play('heartbeat');
     // the run adds itself to the stage; keep the UI above it
     this.app.stage.addChild(this.ui);
-    this.hud = new RunHud(BALANCE.waves, this.hard, {
+    this.hud = new RunHud(this.game.engine.state.config.waves || BALANCE.waves, this.hard, {
       pause: () => this.setPaused(true),
       resume: () => this.setPaused(false),
       setFast: (fast) => {
