@@ -1,7 +1,7 @@
 # iOS release plan
 
 Status, 2026-10-18: version 1.0 (22) and the ad-free card are in App Review (submitted
-2026-10-18). Steps 1–3 work on a phone from TestFlight; step 4's sandbox purchase was never tried.
+2026-10-18). Steps 1–4 work on a phone from TestFlight, the ad-free card bought on an earlier build.
 
 The iOS app is the web build inside a Capacitor shell (WKWebView), like the other hosts it is
 one more `Platform` (`client/src/platform/types.ts`). Most of the native plumbing already
@@ -344,7 +344,10 @@ the alias with no sheet; the settings button for a signed-out player is still un
 step 3 done 2026-10-09 (1.0 (9), HolyKicker's app id with Google's demo units: Google's consent
 form at first launch once the GDPR message in AdMob lists the app, settings' "Ad privacy" opens
 it again, and the test ads play). Step 4 built 2026-10-09 (1.0 (12), the `.adfree` product in
-App Store Connect); waits for a sandbox purchase. Step 5's listing entered the same day on 1.0 (14)
+App Store Connect); the owner bought it from TestFlight on a build before 1.0 (22), whose
+store code (`Store.swift`, `storeKit.ts`, `adFree.ts`, `adFreeCard.ts`) is unchanged since 1.0 (12).
+An account that owns the card cannot buy it again: a fresh purchase needs another sandbox
+tester, or that tester's purchase history cleared in App Store Connect. Step 5's listing entered the same day on 1.0 (14)
 (our own ad units). Submitted 2026-10-18 on 1.0 (22), the ad-free card in the same submission,
 after the account holder accepted the updated Developer Program License Agreement (App Store
 Connect refuses every submission until then).
