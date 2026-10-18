@@ -439,6 +439,8 @@ export const id: Table<typeof en> = {
     adPrivacy: 'Privasi iklan',
     dataNotice: 'Statistik main dan rekor peringkat dikirim ke server kami, untuk menyeimbangkan game dan papan peringkat.',
     playId: 'ID main kamu: {id}',
+    idCopied: 'ID disalin',
+    idCopyFailed: 'Gagal menyalin ID',
   },
   privacy: {
     toast: 'Game ini mengirim statistik main dan rekor peringkat ke servernya.\nMatikan kapan saja di Pengaturan.',

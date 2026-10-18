@@ -260,7 +260,7 @@ export class Shell {
       settings: storedSettings(this.platform.storage, this.sound, {
         setLanguage: (locale) => this.setLanguage(locale),
         setQuality: (quality) => this.onQualityMode(quality),
-        privacy: this.privacy,
+        privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform),
         account: this.platform.portal, adPrivacy: this.platform.adPrivacy,
       }),
       commit: (save) => this.commit(save),

@@ -439,6 +439,8 @@ export const vi: Table<typeof en> = {
     adPrivacy: 'Quyền riêng tư QC',
     dataNotice: 'Thống kê chơi và kết quả xếp hạng được gửi về máy chủ để cân bằng game và vận hành bảng xếp hạng.',
     playId: 'ID của bạn: {id}',
+    idCopied: 'Đã sao chép ID',
+    idCopyFailed: 'Không sao chép được ID',
   },
   privacy: {
     toast: 'Game gửi thống kê chơi và kết quả xếp hạng về máy chủ.\nBạn có thể tắt bất cứ lúc nào trong Cài đặt.',

@@ -439,6 +439,8 @@ export const ja: Table<typeof en> = {
     adPrivacy: '広告のプライバシー',
     dataNotice: 'プレイ統計とランキング記録を送信し、\nバランス調整とランキングに使います。',
     playId: 'あなたのプレイID：{id}',
+    idCopied: 'IDをコピーしました',
+    idCopyFailed: 'コピーできませんでした',
   },
   privacy: {
     toast: 'このゲームはプレイ統計とランキングの記録をサーバーに送ります。\n設定からいつでもオフにできます。',

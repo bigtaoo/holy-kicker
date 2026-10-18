@@ -33,6 +33,8 @@ export interface SettingsActions {
   account: Pick<Portal, 'canSignIn' | 'signIn'>;
   /** The ad network's own privacy options; shown with the play-data rows. */
   adPrivacy: AdPrivacy;
+  /** Copies the play ID when it is tapped (false when the host refused); unset where there is no clipboard. */
+  copyId?: (id: string) => Promise<boolean>;
   close(): void;
 }
 
@@ -40,7 +42,7 @@ export interface SettingsActions {
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId'>,
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: o.setLanguage,
@@ -64,6 +66,7 @@ export function storedSettings(
     privacy: o.privacy,
     account: o.account,
     adPrivacy: o.adPrivacy,
+    copyId: o.copyId,
   };
 }
 
@@ -121,7 +124,10 @@ function volumeRow(volume: number, set: (v: number) => void): Container {
 
 /** Sharing on or off and the policy side by side (and the ad network's options, when due), then
  *  what is sent and the install's id. */
-function dataRows(p: PrivacyUi, ads: AdPrivacy, add: (c: Container, step: number) => void, heading: (text: string) => void): void {
+function dataRows(
+  p: PrivacyUi, ads: AdPrivacy, copyId: SettingsActions['copyId'],
+  add: (c: Container, step: number) => void, heading: (text: string) => void,
+): void {
   heading(t('settings.data'));
   const row = new Container();
   const n = ads.offered() ? 3 : 2;
@@ -138,8 +144,21 @@ function dataRows(p: PrivacyUi, ads: AdPrivacy, add: (c: Container, step: number
   row.children.forEach((b, i) => (b.x = (i - (n - 1) / 2) * (bw + 24)));
   add(row, 140);
   const id = p.id();
-  const text = t('settings.dataNotice') + (id ? '\n' + t('settings.playId', { id }) : '');
-  add(label(text, 36, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 100, breakWords: true }), 190);
+  const style = { wordWrap: true, wordWrapWidth: W - 100, breakWords: true };
+  const notice = label(t('settings.dataNotice'), 36, COLORS.dim, style);
+  if (!id) return add(notice, 190);
+  add(notice, notice.height + 10);
+  // the ID on a line of its own, which copies itself when tapped (players quote it in a problem)
+  const line = label(t('settings.playId', { id }), 36, copyId ? COLORS.text : COLORS.dim, style);
+  if (copyId) {
+    line.eventMode = 'static';
+    line.cursor = 'pointer';
+    line.on('pointertap', () => {
+      playTap();
+      void copyId(id);
+    });
+  }
+  add(line, 180 - notice.height);
 }
 
 /** The language (a button to the picker) and, beside it, the screen shake on or off. */
@@ -194,7 +213,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   add(choices(QUALITY_MODES, (m) => t(`settings.${m}`), mode, (m) => a.setQuality(m)), 140);
   add(fit(label(t(HINT[mode]), 40, COLORS.dim), W - 80), 90);
 
-  if (a.privacy) dataRows(a.privacy, a.adPrivacy, add, heading);
+  if (a.privacy) dataRows(a.privacy, a.adPrivacy, a.copyId, add, heading);
 
   y += 40;
   const back = button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked });

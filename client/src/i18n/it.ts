@@ -439,6 +439,8 @@ export const it: Table<typeof en> = {
     adPrivacy: 'Privacy annunci',
     dataNotice: 'Le statistiche di gioco e le partite in classifica vanno al nostro server, per bilanciare il gioco e gestire le classifiche.',
     playId: 'Il tuo ID di gioco: {id}',
+    idCopied: 'ID copiato',
+    idCopyFailed: "Impossibile copiare l'ID",
   },
   privacy: {
     toast: 'Il gioco invia statistiche e partite in classifica al suo server.\nPuoi disattivarlo quando vuoi nelle Impostazioni.',

@@ -66,6 +66,8 @@ export interface Platform {
   country(): string | null;
   /** Opens a web page (the privacy policy) in a new tab; a no-op where the host has no browser. */
   openUrl(url: string): void;
+  /** Puts `text` on the clipboard, from a tap; false when the host refused. Unset where there is none. */
+  copyText?(text: string): Promise<boolean>;
   /** What the host itself says about this launch, added to the `session` event (CrazyGames: how its SDK started). */
   sessionProps?(): Record<string, PropValue>;
   /** The host's own analytics, fed beside the backend; unset where the host has none. */

@@ -439,6 +439,8 @@ export const tr: Table<typeof en> = {
     adPrivacy: 'Reklam gizliliği',
     dataNotice: 'Oyun istatistikleri ve sıralama turları, oyunu dengelemek ve sıralamaları yürütmek için sunucumuza gider.',
     playId: 'Oyun kimliğin: {id}',
+    idCopied: 'Kimlik kopyalandı',
+    idCopyFailed: 'Kimlik kopyalanamadı',
   },
   privacy: {
     toast: 'Oyun, istatistikleri ve sıralama turlarını sunucusuna gönderir.\nBunu Ayarlar\'dan istediğin zaman kapatabilirsin.',

@@ -439,6 +439,8 @@ export const en = {
     adPrivacy: 'Ad privacy',
     dataNotice: 'Play stats and leaderboard runs go to our server, to balance the game and run the boards.',
     playId: 'Your play ID: {id}',
+    idCopied: 'ID copied',
+    idCopyFailed: "Couldn't copy the ID",
   },
   privacy: {
     toast: 'The game sends play stats and leaderboard runs to its server.\nTurn this off anytime in Settings.',

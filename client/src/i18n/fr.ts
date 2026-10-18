@@ -439,6 +439,8 @@ export const fr: Table<typeof en> = {
     adPrivacy: 'Pubs et vie privée',
     dataNotice: 'Les statistiques de jeu et les parties classées vont à notre serveur, pour équilibrer le jeu et gérer les classements.',
     playId: 'Ton ID de jeu : {id}',
+    idCopied: 'ID copié',
+    idCopyFailed: "Impossible de copier l'ID",
   },
   privacy: {
     toast: 'Le jeu envoie des statistiques et les parties classées à son serveur.\nTu peux le désactiver à tout moment dans les réglages.',

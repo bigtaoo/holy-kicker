@@ -439,6 +439,8 @@ export const de: Table<typeof en> = {
     adPrivacy: 'Werbung & Datenschutz',
     dataNotice: 'Spielstatistiken und Bestenlisten-Läufe gehen an unseren Server, um das Spiel auszubalancieren und die Bestenlisten zu betreiben.',
     playId: 'Deine Spiel-ID: {id}',
+    idCopied: 'ID kopiert',
+    idCopyFailed: 'ID konnte nicht kopiert werden',
   },
   privacy: {
     toast: 'Das Spiel sendet Spielstatistiken und Bestenlisten-Läufe an seinen Server.\nDu kannst das jederzeit in den Einstellungen abschalten.',

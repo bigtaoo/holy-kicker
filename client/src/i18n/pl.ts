@@ -439,6 +439,8 @@ export const pl: Table<typeof en> = {
     adPrivacy: 'Prywatność reklam',
     dataNotice: 'Statystyki gry i wyniki do rankingów trafiają na nasz serwer, by balansować grę i prowadzić rankingi.',
     playId: 'Twój identyfikator gry: {id}',
+    idCopied: 'Skopiowano identyfikator',
+    idCopyFailed: 'Nie udało się skopiować identyfikatora',
   },
   privacy: {
     toast: 'Gra wysyła statystyki i wyniki do rankingów na swój serwer.\nMożesz to wyłączyć w każdej chwili w Ustawieniach.',

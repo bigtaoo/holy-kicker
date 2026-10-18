@@ -63,6 +63,16 @@ export class WebPlatform implements Platform {
     window.open(url, '_blank', 'noopener');
   }
 
+  async copyText(text: string): Promise<boolean> {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      // a portal's iframe may withhold clipboard-write: the old way still works from a tap
+      return copyByCommand(text);
+    }
+  }
+
   languages(): string[] {
     return [...(navigator.languages ?? [navigator.language])];
   }
@@ -206,5 +216,23 @@ export class WebPlatform implements Platform {
     const res = await fetch(path);
     if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);
     return res.arrayBuffer();
+  }
+}
+
+/** Copies through a hidden read-only text box (readonly keeps a phone's keyboard shut). */
+function copyByCommand(text: string): boolean {
+  const box = document.createElement('textarea');
+  box.value = text;
+  box.readOnly = true;
+  box.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0';
+  document.body.appendChild(box);
+  try {
+    box.select();
+    box.setSelectionRange(0, text.length);
+    return document.execCommand('copy');
+  } catch {
+    return false;
+  } finally {
+    box.remove();
   }
 }

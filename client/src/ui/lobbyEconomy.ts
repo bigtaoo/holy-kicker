@@ -222,7 +222,7 @@ export class EconomyUi {
       }));
     }
     if (this.haul) {
-      c.addChild(haulPanel(this.haul, w, h, () => {
+      c.addChild(haulPanel(this.haul, this.host.icons, w, h, () => {
         this.haul = null;
         this.host.relayout();
       }));

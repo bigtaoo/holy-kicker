@@ -439,6 +439,8 @@ export const es: Table<typeof en> = {
     adPrivacy: 'Privacidad de anuncios',
     dataNotice: 'Las estadísticas de juego y las partidas clasificadas van a nuestro servidor, para equilibrar el juego y gestionar las clasificaciones.',
     playId: 'Tu ID de juego: {id}',
+    idCopied: 'ID copiado',
+    idCopyFailed: 'No se pudo copiar el ID',
   },
   privacy: {
     toast: 'El juego envía estadísticas y partidas clasificadas a su servidor.\nPuedes desactivarlo cuando quieras en Ajustes.',

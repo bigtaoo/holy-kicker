@@ -8,7 +8,7 @@ import type { SaveData } from '../meta/save';
 import { ROWS_TOP, ROW_H, TASKS_BOX_H, achieveRows, tasksSwitch, type AchievePanelActions, type TasksView } from './achievePanel';
 import { dropLines } from './gearText';
 import type { TaoAsset } from '../game/tao/TaoActor';
-import type { IconSheet } from './buildBar';
+import { iconSprite, type IconSheet } from './buildBar';
 import { PatrolScene, type PatrolArt } from './patrolScene';
 import { COLORS, backdrop, button, fit, label, meter, panel } from './widgets';
 
@@ -208,10 +208,11 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
 }
 
 /** What a chest or a patrol just paid, over everything, until OK. */
-export function haulPanel(haul: Haul, w: number, h: number, close: () => void): Container {
-  const lines: [string, number, number][] = [];
-  if (haul.copper > 0) lines.push([t('haul.copper', { n: formatAmount(haul.copper) }), 56, COLORS.copper]);
-  if (haul.jade > 0) lines.push([t('haul.jade', { n: formatAmount(haul.jade) }), 56, COLORS.jade]);
+export function haulPanel(haul: Haul, icons: IconSheet, w: number, h: number, close: () => void): Container {
+  // text, size, colour and the coin drawn before it
+  const lines: [string, number, number, string?][] = [];
+  if (haul.copper > 0) lines.push([t('haul.copper', { n: formatAmount(haul.copper) }), 56, COLORS.copper, 'copper']);
+  if (haul.jade > 0) lines.push([t('haul.jade', { n: formatAmount(haul.jade) }), 56, COLORS.jade, 'jade']);
   for (const [text, color] of dropLines(haul.drops)) lines.push([text, 48, color]);
   const root = new Container();
   root.addChild(backdrop(w, h, 0.7));
@@ -224,10 +225,19 @@ export function haulPanel(haul: Haul, w: number, h: number, close: () => void): 
   title.y = y;
   box.addChild(title);
   y += 90;
-  for (const [text, size, fill] of lines) {
+  for (const [text, size, fill, coin] of lines) {
     const l: Text = fit(label(text, size, fill), 780);
     l.y = y + size / 2;
     box.addChild(l);
+    const icon = coin ? iconSprite(icons, coin, size * 1.5) : null;
+    if (icon) {
+      // the coin and the line centred together, a small gap between
+      const gap = 16;
+      const left = -(icon.width + gap + l.width) / 2;
+      icon.position.set(left + icon.width / 2, l.y);
+      l.x = left + icon.width + gap + l.width / 2;
+      box.addChild(icon);
+    }
     y += size + 36;
   }
   const ok = button(t('haul.ok'), 400, 120, close);

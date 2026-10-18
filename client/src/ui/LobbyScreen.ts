@@ -173,6 +173,11 @@ export class LobbyScreen implements Screen {
       this.view.addChild(settingsPanel(f.w, f.h, {
         ...set,
         privacy,
+        // the toast stands below the panel, where the tab bar is
+        copyId: set.copyId && ((id) => set.copyId!(id).then((ok) => {
+          this.showToast(t(ok ? 'settings.idCopied' : 'settings.idCopyFailed'));
+          return ok;
+        })),
         setVolume: (v) => {
           set.setVolume(v);
           this.relayout();
