@@ -88,10 +88,8 @@ export class Game {
   private readonly horde: HordeView;
   private readonly mist: Mist | null;
   private readonly healthBar = new HealthBar();
-  /** A revive to send with the next command (the death screen's ad paid). */
-  private reviving = false;
-  /** A level-up card to send with the next command. */
-  private picking: number | undefined;
+  private reviving = false; // a revive to send with the next command (the death screen's ad paid)
+  private picking: number | undefined; // a level-up card to send with the next command
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
   private readonly damage: DamageLayer;
@@ -121,12 +119,12 @@ export class Game {
   private screenKey = '';
   private fpsTimer = 0;
   private levelName = '';
-  /** A paused run neither simulates nor animates; it is still drawn. */
-  paused = false;
+  paused = false; // a paused run neither simulates nor animates; it is still drawn
+  /** Watching a replay (ui/replayWatch.ts) up to this tick: offers do not wait, and it stops there; 0 for a run in play. */
+  watchEnd = 0;
   /** Whether the last frame stepped the sim: false while paused, on an open offer or once over. */
   stepping = false;
-  /** Sim time per real time: 2 fast-forwards the run (ticks and animations), 1 is normal. */
-  speed = 1;
+  speed = 1; // sim time per real time: 2 fast-forwards the run (ticks and animations), 1 is normal
   private readonly onTick = (t: { deltaMS: number }) => this.frame(t.deltaMS);
   /** Dev: the bot playing instead of the stick (?autoplay). */
   private readonly autoplay: Autoplay | null;
@@ -139,11 +137,12 @@ export class Game {
     /** Bound to the host's input once, by the shell, and shared by every run. */
     private readonly stick: DragStick,
     setup: RunSetup,
-    /** A run left unfinished, to go on with (meta/resume.ts); `setup` must match its config. */
-    restored?: SimState,
+    /** A run left unfinished, to go on with (meta/resume.ts; `setup` must match its config), or a replay's engine to watch. */
+    restored?: SimState | Engine,
   ) {
-    const seed = restored?.config.seed ?? runSeed(scene, setup);
-    this.engine = new Engine(restored?.config ?? runConfig(scene, seed, setup), undefined, restored);
+    const from = restored instanceof Engine ? restored.state : restored;
+    const seed = from?.config.seed ?? runSeed(scene, setup);
+    this.engine = restored instanceof Engine ? restored : new Engine(from?.config ?? runConfig(scene, seed, setup), undefined, from);
     this.resumed = !!restored;
     this.autoplay = scene.autoplay ? new Autoplay(LOCAL, seed, scene.from) : null;
     const chapter = setup.waves > 0;
@@ -270,7 +269,7 @@ export class Game {
     if (this.autoplay && s.players[0].offer.length > 0 && this.picking === undefined && !this.paused) {
       this.picking = this.autoplay.pick(s, frameMs);
     }
-    const over = (s.outcome !== 'playing' && !this.reviving) || (s.players[0].offer.length > 0 && this.picking === undefined);
+    const over = this.watchEnd ? s.tick >= this.watchEnd : (s.outcome !== 'playing' && !this.reviving) || (s.players[0].offer.length > 0 && this.picking === undefined);
     this.stepping = !this.paused && !over;
     const real = Math.min(frameMs / 1000, 0.05);
     if (!this.stepping) {
@@ -281,7 +280,7 @@ export class Game {
     }
     const speed = this.rushing ? RUSH_SPEED : this.speed;
     const steps = this.loop.advance(frameMs, speed);
-    for (let i = 0; i < steps; i++) {
+    for (let i = 0; i < steps && !(this.watchEnd && s.tick >= this.watchEnd); i++) {
       this.engine.submit(this.command());
       const events = this.engine.advance();
       // null only while a network input source waits for the server; never offline
@@ -488,6 +487,7 @@ export class Game {
     this.world.position.set(snapToPixel(vp.playW / 2 - cam.x * k + sh.x, res), snapToPixel(vp.playH / 2 - cam.y * k + sh.y, res));
 
     drawStick(this.stick, this.stickBase, this.stickKnob, STICK_RADIUS);
+    if (this.watchEnd) this.stickBase.visible = this.stickKnob.visible = this.label.visible = false;
     this.fpsTimer -= dt;
     if (this.fpsTimer <= 0) {
       this.fpsTimer = 0.5;

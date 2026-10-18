@@ -133,6 +133,17 @@ export const it: Table<typeof en> = {
     checking: 'Controllo della partita…',
     top: 'Top {n}%',
   },
+  weekly: {
+    tab: 'Settimana', title: 'Sfida della settimana', tileOpen: '{d} g {h} h rimasti', loadout: 'La partita della settimana',
+    rule1: 'Tutti giocano con lo stesso monaco, reliquia e sutra', rule2: 'Niente equipaggiamento, allenamento o rinascite',
+    rule3: 'Gioca quanto vuoi: conta la tua partita migliore', rewards: 'Premi a fine settimana', part: 'Finisci una partita', half: 'Top 50%',
+    tenth: 'Top 10%', three: 'Top 3', ends: 'Finisce tra {d} g {h} h', best: 'Il tuo record: ondata {wave}', noBest: 'Nessuna partita questa settimana',
+    update: 'Aggiorna il gioco per la sfida di questa settimana', newBest: 'Nuovo record!', bestStands: 'Il tuo record resta: ondata {wave}',
+    rank: 'Posto {rank} su {total}', after: 'I premi arrivano a fine settimana', watch: 'Guarda', picks: 'Carte di {name}', replayOf: 'Partita di {name}',
+    loading: 'Caricamento…', failed: 'Riprova', seeking: 'Avanti veloce…', ended: 'Replay finito', play: 'Riproduci', pause: 'Pausa', again: 'Ancora',
+    prevWave: '‹ Ondata', nextWave: 'Ondata ›', speed: '{n}x', claimTitle: 'Sfida della settimana',
+    claimRank: 'Settimana scorsa: posto {rank} su {total}', claimNoRank: 'Grazie per aver partecipato la settimana scorsa', claim: 'Ritira',
+  },
   tutorial: {
     move: 'Trascina ovunque per muoverti',
     keys: 'Muoviti con WASD o le frecce',

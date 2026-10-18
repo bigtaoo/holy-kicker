@@ -208,6 +208,12 @@ export class Backend {
     return (await this.send('GET', `/v1/challenge/boards/${id}`)) as ChallengeBoardReply | null;
   }
 
+  /** The replay of a weekly board's top run `tag` (ChallengeBoardReply.top), to watch; null when not kept or offline. */
+  async challengeReplay(board: string, tag: string): Promise<ReplayWire | null> {
+    const r = (await this.send('GET', `/v1/challenge/boards/${board}/replays/${tag}`)) as Partial<ReplayWire> | null;
+    return r && Array.isArray(r.cmds) && typeof r.tick === 'number' && typeof r.engine === 'number' ? (r as ReplayWire) : null;
+  }
+
   /** The reply's JSON ({} for an empty one), or null when anything went wrong. */
   private async send(method: 'GET' | 'POST', path: string, body?: unknown, timeout = TIMEOUT_MS): Promise<unknown> {
     if (!this.base || typeof fetch !== 'function') return null;

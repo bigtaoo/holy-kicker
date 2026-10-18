@@ -133,6 +133,14 @@ export const zh: Table<typeof en> = {
     checking: '正在核对你的成绩…',
     top: '前 {n}%',
   },
+  weekly: {
+    tab: '每周', title: '每周挑战', tileOpen: '剩 {d} 天 {h} 小时', loadout: '本周的局', rule1: '所有人用同样的武僧、法宝和经文', rule2: '不带装备、不算修炼、不能复活', rule3: '想打几次都行，取最好的一局',
+    rewards: '本周结束后发奖', part: '打完一局', half: '前 50%', tenth: '前 10%', three: '前 3 名', ends: '{d} 天 {h} 小时后结束', best: '你的最佳：第 {wave} 波', noBest: '本周还没有成绩',
+    update: '更新游戏后才能参加本周挑战', newBest: '新纪录！', bestStands: '最佳成绩不变：第 {wave} 波', rank: '第 {rank} 名，共 {total} 人', after: '本周结束后发奖', watch: '观看',
+    picks: '{name} 的选卡', replayOf: '{name} 的一局', loading: '加载中…', failed: '重试', seeking: '快进中…', ended: '回放结束', play: '播放', pause: '暂停', again: '重看',
+    prevWave: '‹ 上一波', nextWave: '下一波 ›', speed: '{n} 倍速', claimTitle: '每周挑战', claimRank: '上周：第 {rank} 名，共 {total} 人', claimNoRank: '感谢参加上周的挑战',
+    claim: '领取',
+  },
   tutorial: {
     move: '按住屏幕任意处拖动来移动',
     keys: '用 WASD 或方向键移动',

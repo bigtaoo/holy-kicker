@@ -1,25 +1,40 @@
 import { Container, Graphics } from 'pixi.js';
-import { challengeBoardId, topPercent } from '@hk/protocol';
+import { challengeBoardId, topPercent, type Challenge, type TopRun } from '@hk/protocol';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { milestonePay } from '../meta/challenge';
-import type { BoardUi, FetchBoard } from './boardPanel';
+import type { WeekClaim } from '../meta/weekly';
+import { rowName, type BoardUi, type FetchBoard } from './boardPanel';
 import { iconSprite, type IconSheet } from './buildBar';
-import type { DailyView } from './challengeFlow';
+import type { DailyView, WeeklyView } from './challengeFlow';
+import { claimCard, weeklyPage } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
-// The daily challenge in the lobby (docs/design.md "Challenges"): a tile beside PLAY with the
-// time left (or Done), which opens a panel with the rules, the milestones and what they pay, the
-// player's share of the board once their run is in, and Play (Practice once the day's run
-// counted) and Ranks. On another engine version than the record's, the tile says to update and
-// the panel offers no run. The lobby shows no tile while there is no challenge (ui/challengeFlow.ts).
+// The challenges in the lobby (docs/design.md "Challenges"): a tile beside PLAY with the daily's
+// time left (or Done; the weekly's when there is no daily), which opens a panel with a tab for
+// each. The daily's: the rules, the milestones and what they pay, the player's share of the board
+// once their run is in, and Play (Practice once the day's run counted) and Ranks. The weekly's:
+// ui/weeklyPage.ts, its board with the top runs to watch. On another engine version than the
+// record's, the tile says to update and the panel offers no run. A closed week waiting to be paid
+// shows its claim card over the lobby. The lobby shows no tile while there is no challenge
+// (ui/challengeFlow.ts).
 
 export interface ChallengeLobby {
-  daily: DailyView;
-  play(): void;
+  daily: DailyView | null;
+  weekly: WeeklyView | null;
+  /** A closed week's reward ready to claim. */
+  claim: WeekClaim | null;
+  /** Starts a run of `c` on `chapter`. */
+  play(c: Challenge, chapter: number): void;
   /** Fetches a challenge board; null without a name on the boards. */
   board: FetchBoard | null;
+  /** Fetches weekly board `board`'s top run and watches it (from pick tick `from`); null without a name on the boards. */
+  watch: ((board: string, top: TopRun, name: string, from?: number) => Promise<boolean>) | null;
+  /** Pays `claim` into the save. */
+  take(claim: WeekClaim): void;
 }
+
+type Tab = 'daily' | 'weekly';
 
 export const TILE_W = 300;
 const BOX_W = 960;
@@ -27,6 +42,7 @@ const BOX_H = 1460;
 
 export class ChallengeUi {
   private open = false;
+  private tab: Tab = 'daily';
 
   constructor(
     /** Read at each layout: the record may come in while the lobby is up. */
@@ -38,8 +54,9 @@ export class ChallengeUi {
 
   /** The tile beside PLAY (`h` tall), or null when there is no challenge to show. */
   tile(h: number): Container | null {
-    const d = this.current()?.daily;
-    if (!d) return null;
+    const lobby = this.current();
+    const d = lobby?.daily;
+    if (!d) return lobby?.weekly ? this.weeklyTile(lobby.weekly, h) : null;
     const face = new Container();
     const icon = iconSprite(this.icons, 'lotus', 64);
     if (icon) {
@@ -54,21 +71,45 @@ export class ChallengeUi {
     ), TILE_W - 40);
     sub.y = 58;
     face.addChild(name, sub);
-    const tile = button('', TILE_W, h, () => this.show(true), { fill: d.state === 'open' ? COLORS.jade : COLORS.panelLocked, icon: face });
-    // an open daily wears a dot, like the tabs with something waiting
-    if (d.state === 'open') tile.addChild(new Graphics().circle(TILE_W / 2 - 22, -h / 2 + 14, 16).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 4 }));
+    const tile = button('', TILE_W, h, () => this.show(true, 'daily'), { fill: d.state === 'open' ? COLORS.jade : COLORS.panelLocked, icon: face });
+    // an open daily (or a weekly not played yet this week) wears a dot, like the tabs with something waiting
+    if (d.state === 'open' || (lobby.weekly?.state === 'open' && lobby.weekly.best === 0)) tile.addChild(new Graphics().circle(TILE_W / 2 - 22, -h / 2 + 14, 16).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 4 }));
     return tile;
   }
 
-  private show(on: boolean): void {
+  /** The tile when the weekly is the only challenge: its time left, a dot until played this week. */
+  private weeklyTile(wk: WeeklyView, h: number): Container {
+    const face = new Container();
+    const icon = iconSprite(this.icons, wk.challenge.loadout!.relic, 64);
+    if (icon) {
+      icon.y = -h / 2 + 50;
+      face.addChild(icon);
+    }
+    const open = wk.state === 'open';
+    const name = fit(label(t('weekly.tab'), 44, open ? COLORS.text : COLORS.dim), TILE_W - 40);
+    name.y = 10;
+    const sub = fit(label(open ? t('weekly.tileOpen', { d: wk.days, h: wk.hours }) : t('challenge.tileUpdate'), 34, open ? COLORS.text : COLORS.dim), TILE_W - 40);
+    sub.y = 58;
+    face.addChild(name, sub);
+    const tile = button('', TILE_W, h, () => this.show(true, 'weekly'), { fill: open ? COLORS.jade : COLORS.panelLocked, icon: face });
+    if (open && wk.best === 0) tile.addChild(new Graphics().circle(TILE_W / 2 - 22, -h / 2 + 14, 16).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 4 }));
+    return tile;
+  }
+
+  private show(on: boolean, tab: Tab = this.tab): void {
     this.open = on;
+    this.tab = tab;
     this.relayout();
   }
 
   overlay(w: number, h: number): Container | null {
     const lobby = this.current();
+    if (lobby?.claim) {
+      const c = lobby.claim;
+      return claimCard(w, h, c, this.icons, () => lobby.take(c));
+    }
     if (!this.open || !lobby) return null;
-    const d = lobby.daily;
+    const tab: Tab = !lobby.daily ? 'weekly' : !lobby.weekly ? 'daily' : this.tab;
     const root = new Container();
     root.addChild(backdrop(w, h));
     const box = new Container();
@@ -80,7 +121,41 @@ export class ChallengeUi {
       l.y = top + y;
       box.addChild(l);
     };
-    add(t('challenge.title'), 68, COLORS.saffron, 80);
+    // a tab for each challenge when both are open, else the one's title
+    if (lobby.daily && lobby.weekly) {
+      (['daily', 'weekly'] as const).forEach((k, i) => {
+        const b = button(t(k === 'daily' ? 'challenge.tile' : 'weekly.tab'), 400, 100, () => this.show(true, k), { fill: k === tab ? COLORS.saffron : COLORS.panelLocked, size: 50 });
+        b.position.set(i === 0 ? -210 : 210, top + 80);
+        box.addChild(b);
+      });
+    } else add(t(tab === 'daily' ? 'challenge.title' : 'weekly.title'), 68, COLORS.saffron, 80);
+    if (tab === 'weekly' && lobby.weekly) this.weekly(box, top, lobby, lobby.weekly);
+    else if (lobby.daily) this.daily(box, top, add, lobby, lobby.daily);
+    const back = button(t('common.back'), 400, 110, () => this.show(false), { fill: COLORS.panelLocked });
+    back.y = top + BOX_H - 95;
+    box.addChild(back);
+    root.addChild(box);
+    return root;
+  }
+
+  private weekly(box: Container, top: number, lobby: ChallengeLobby, wk: WeeklyView): void {
+    const fetchBoard = lobby.board;
+    const watch = wk.state === 'open' ? lobby.watch : null;
+    const chapter = wk.challenge.loadout!.chapter;
+    weeklyPage(box, top, BOX_W, wk, this.icons, {
+      play: () => {
+        this.open = false;
+        lobby.play(wk.challenge, chapter);
+      },
+      ranks: fetchBoard && (() => this.boards.show(
+        { id: wk.board, title: t('weekly.title'), sub: t('lobby.chapterTitle', { n: chapter, name: t(`chapter.${chapter}` as never) }), color: COLORS.saffron },
+        fetchBoard,
+        watch && ((row, topRun, from) => watch(wk.board, topRun, rowName(row), from)),
+      )),
+    });
+  }
+
+  private daily(box: Container, top: number, add: (text: string, size: number, fill: number, y: number) => void, lobby: ChallengeLobby, d: DailyView): void {
     add(t('lobby.chapterTitle', { n: d.chapter, name: t(`chapter.${d.chapter}` as never) }), 48, COLORS.text, 165);
     ['challenge.rule1', 'challenge.rule2', 'challenge.rule3'].forEach((key, i) => add(t(key as never), 40, COLORS.dim, 250 + i * 58));
     add(t('challenge.milestones'), 48, COLORS.text, 470);
@@ -99,7 +174,7 @@ export class ChallengeUi {
     if (d.state !== 'update') {
       buttons.push(button(t(d.state === 'done' ? 'challenge.practice' : 'lobby.play'), 420, 140, () => {
         this.open = false;
-        lobby.play();
+        lobby.play(d.challenge, d.chapter);
       }, { fill: d.state === 'done' ? COLORS.panelLocked : COLORS.saffron, size: 60 }));
     }
     const fetchBoard = lobby.board;
@@ -113,11 +188,6 @@ export class ChallengeUi {
       b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + 1170);
       box.addChild(b);
     });
-    const back = button(t('common.back'), 400, 110, () => this.show(false), { fill: COLORS.panelLocked });
-    back.y = top + BOX_H - 95;
-    box.addChild(back);
-    root.addChild(box);
-    return root;
   }
 
   /** "Clear wave N" and what it pays, copper and jade, on one row. */

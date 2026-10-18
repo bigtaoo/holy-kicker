@@ -1,37 +1,14 @@
-import { DEFAULT_RUN, ENGINE_VERSION, Engine, takeReplay, type LocalInputSource, type RunConfig } from '@hk/engine';
-import { Bot } from '@hk/engine/bot/bot';
+import { ENGINE_VERSION } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
-import { challengeFor, dailyOf, dailySeed, misfit, ymdOf, DAY_MS, LATE_MS } from './challenge';
-import { RESIM_TOP, challengeBoardId, topPercent, type Challenge, type ChallengeBoardReply, type ChallengeList, type ChallengeRunReply, type ReplayWire, type RunEntry } from './protocol';
+import { challengeFor, dailyOf, dailySeed, misfit, weeklyOf, ymdOf, DAY_MS, LATE_MS } from './challenge';
+import { RESIM_TOP, challengeBoardId, topPercent, type ChallengeBoardReply, type ChallengeList, type ChallengeRunReply, type ReplayWire, type RunEntry } from './protocol';
 import { rankedConfig, resimulate } from './resim';
 import { ResimQueue } from './resimQueue';
 import { route, type Deps, type Req } from './routes';
 import { MemoryStore, type ChallengeEntry } from './store';
+import { INSTALL, playRun } from './testPlay';
 
 const NOW = Date.parse('2026-10-18T09:30:00Z');
-const INSTALL = 'abcdefgh1234';
-
-/**
- * A real run of `c`: the bot plays chapter 1 on the challenge's seed with what a client would
- * set up, and gives up after `ticks` (or falls first). Returns the run and its replay as sent.
- */
-function playRun(c: Challenge, ticks = 2400, install = INSTALL): { run: RunEntry; replay: ReplayWire } {
-  const config: RunConfig = { ...DEFAULT_RUN, seed: c.seed, waves: c.waves, revives: 0, firstRun: false };
-  const engine = new Engine(config);
-  const s = engine.state;
-  const bot = new Bot(0, 'casual', c.seed);
-  while (s.outcome === 'playing' && s.tick < ticks) {
-    engine.submit(bot.command(s));
-    engine.advance();
-  }
-  const r = takeReplay(engine, (engine.input as LocalInputSource).history);
-  const p = s.players[0];
-  const run: RunEntry = {
-    install, host: 'web', build: '0.0.1', chapter: 1, hard: false, won: s.outcome === 'won', wave: Math.max(1, s.wave),
-    tenths: Math.round((s.tick * 10) / 30), level: p.level, kills: 0, monk: p.monk, relic: p.relicId,
-  };
-  return { run, replay: JSON.parse(JSON.stringify(r)) as ReplayWire };
-}
 
 const DAILY = dailyOf(NOW);
 const PLAYED = playRun(DAILY);
@@ -134,12 +111,12 @@ const send = (d: Deps, played: { run: RunEntry; replay: ReplayWire }, challenge 
   route(req('POST', '/v1/challenge/runs', { challenge, ...played }), d);
 
 describe('challenge routes', () => {
-  it('list the open daily with the server clock', async () => {
+  it('list the open daily and weekly with the server clock', async () => {
     const { deps } = setup();
     const r = await route(req('GET', '/v1/challenge'), deps);
     const body = r.body as ChallengeList;
     expect(body.now).toBe(NOW);
-    expect(body.challenges).toEqual([DAILY]);
+    expect(body.challenges).toEqual([DAILY, weeklyOf(NOW)]);
   });
 
   it('keep a top run pending until re-simulated, then put it on the board', async () => {

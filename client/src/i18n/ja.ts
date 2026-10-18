@@ -133,6 +133,14 @@ export const ja: Table<typeof en> = {
     checking: '記録を確認中…',
     top: '上位{n}%',
   },
+  weekly: {
+    tab: 'ウィークリー', title: 'ウィークリーチャレンジ', tileOpen: '残り{d}日{h}時間', loadout: '今週のラン', rule1: '全員が同じ僧・法具・経典で挑む', rule2: '装備・修行・復活なし',
+    rule3: '何回でも挑戦可能：最高記録が残る', rewards: '週の終わりに報酬', part: 'ランを最後までプレイ', half: '上位50%', tenth: '上位10%', three: 'トップ3', ends: '残り{d}日{h}時間で終了',
+    best: '自己ベスト：ウェーブ {wave}', noBest: '今週はまだ記録なし', update: '今週のチャレンジにはアップデートが必要です', newBest: '自己ベスト更新！', bestStands: '自己ベストはそのまま：ウェーブ {wave}',
+    rank: '{total}人中{rank}位', after: '報酬は週の終わりに届きます', watch: '観る', picks: '{name}の選択', replayOf: '{name}のラン', loading: '読み込み中…', failed: '再試行',
+    seeking: '早送り中…', ended: 'リプレイ終了', play: '再生', pause: '一時停止', again: 'もう一度', prevWave: '‹ ウェーブ', nextWave: 'ウェーブ ›', speed: '{n}倍',
+    claimTitle: 'ウィークリーチャレンジ', claimRank: '先週：{total}人中{rank}位', claimNoRank: '先週のご参加ありがとうございました', claim: '受け取る',
+  },
   tutorial: {
     move: '画面のどこでもドラッグで移動',
     keys: 'WASD か矢印キーで移動',

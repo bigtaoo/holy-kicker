@@ -1,9 +1,11 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { gzipSync } from 'node:zlib';
 import { ENGINE_VERSION } from '@hk/engine';
 import DASH from './dash.html';
 import { ipOf, maxBody, pageLang, readBody } from './http';
 import PRIVACY_EN from './privacy.en.html';
 import PRIVACY_ZH from './privacy.zh.html';
+import { WeekMarks } from './marks';
 import { MongoStore } from './mongoStore';
 import { ResimQueue } from './resimQueue';
 import { Limiter, RATES, route } from './routes';
@@ -27,7 +29,11 @@ const limiter = new Limiter(RATES, Date.now);
 // challenge runs are re-simulated here, one at a time, off the request path
 const resim = new ResimQueue(store, ENGINE_VERSION, Date.now, (line) => console.log(line));
 await resim.start();
-const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim };
+const marks = new WeekMarks(store, Date.now);
+const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim, marks };
+
+/** Replies longer than this (bytes of JSON) go gzipped to a client that takes it. */
+const GZIP_FROM = 4096;
 
 /** Any page may call the API: it is anonymous and sets no cookies (the game runs in portal iframes). */
 const CORS = {
@@ -64,7 +70,14 @@ async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
   const headers = Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
   const reply = await route({ method: req.method ?? 'GET', path: url.pathname, query: url.searchParams, headers, body, ip: ipOf(req) }, deps);
   if (reply.body === undefined) res.writeHead(reply.status, CORS).end();
-  else res.writeHead(reply.status, { ...CORS, 'content-type': 'application/json', 'cache-control': 'no-store' }).end(JSON.stringify(reply.body));
+  else {
+    // replays and boards with their pick timelines are big and compress well
+    const json = JSON.stringify(reply.body);
+    const zip = json.length > GZIP_FROM && /gzip/.test(String(req.headers['accept-encoding'] ?? ''));
+    const head = { ...CORS, 'content-type': 'application/json', 'cache-control': 'no-store', vary: 'accept-encoding' };
+    if (zip) res.writeHead(reply.status, { ...head, 'content-encoding': 'gzip' }).end(gzipSync(json));
+    else res.writeHead(reply.status, head).end(json);
+  }
 }
 
 const server = createServer((req, res) => {

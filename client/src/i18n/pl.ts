@@ -133,6 +133,17 @@ export const pl: Table<typeof en> = {
     checking: 'Sprawdzamy twoją rozgrywkę…',
     top: 'Top {n}%',
   },
+  weekly: {
+    tab: 'Tydzień', title: 'Wyzwanie tygodnia', tileOpen: 'zostało {d} d {h} h', loadout: 'Gra tygodnia',
+    rule1: 'Wszyscy grają tym samym mnichem, reliktem i sutrami', rule2: 'Bez ekwipunku, treningu i wskrzeszeń',
+    rule3: 'Graj, ile chcesz: liczy się najlepsza gra', rewards: 'Nagrody po końcu tygodnia', part: 'Ukończ grę', half: 'Top 50%', tenth: 'Top 10%',
+    three: 'Top 3', ends: 'Koniec za {d} d {h} h', best: 'Twój rekord: fala {wave}', noBest: 'Brak gry w tym tygodniu',
+    update: 'Zaktualizuj grę, by zagrać w wyzwanie tygodnia', newBest: 'Nowy rekord!', bestStands: 'Twój rekord zostaje: fala {wave}',
+    rank: 'Miejsce {rank} z {total}', after: 'Nagrody po końcu tygodnia', watch: 'Oglądaj', picks: 'Karty: {name}', replayOf: 'Gra: {name}',
+    loading: 'Wczytywanie…', failed: 'Ponów', seeking: 'Przewijanie…', ended: 'Koniec powtórki', play: 'Odtwórz', pause: 'Pauza', again: 'Jeszcze raz',
+    prevWave: '‹ Fala', nextWave: 'Fala ›', speed: '{n}x', claimTitle: 'Wyzwanie tygodnia', claimRank: 'Zeszły tydzień: miejsce {rank} z {total}',
+    claimNoRank: 'Dzięki za udział w zeszłym tygodniu', claim: 'Odbierz',
+  },
   tutorial: {
     move: 'Przeciągnij gdziekolwiek, by się ruszać',
     keys: 'Ruszaj się WASD lub strzałkami',

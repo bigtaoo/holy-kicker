@@ -133,6 +133,17 @@ export const pt: Table<typeof en> = {
     checking: 'Conferindo sua partida…',
     top: 'Top {n}%',
   },
+  weekly: {
+    tab: 'Semanal', title: 'Desafio semanal', tileOpen: 'faltam {d} d {h} h', loadout: 'A partida da semana',
+    rule1: 'Todos jogam com o mesmo monge, relíquia e sutras', rule2: 'Sem equipamento, sem treino, sem reviver',
+    rule3: 'Jogue quanto quiser: conta sua melhor partida', rewards: 'Prêmios no fim da semana', part: 'Terminar uma partida', half: 'Top 50%',
+    tenth: 'Top 10%', three: 'Top 3', ends: 'Termina em {d} d {h} h', best: 'Seu melhor: onda {wave}', noBest: 'Nenhuma partida nesta semana',
+    update: 'Atualize o jogo para jogar o desafio desta semana', newBest: 'Novo recorde!', bestStands: 'Seu recorde continua: onda {wave}',
+    rank: 'Posição {rank} de {total}', after: 'Os prêmios chegam no fim da semana', watch: 'Assistir', picks: 'Cartas de {name}',
+    replayOf: 'Partida de {name}', loading: 'Carregando…', failed: 'Tentar de novo', seeking: 'Avançando…', ended: 'Fim do replay', play: 'Reproduzir',
+    pause: 'Pausar', again: 'De novo', prevWave: '‹ Onda', nextWave: 'Onda ›', speed: '{n}x', claimTitle: 'Desafio semanal',
+    claimRank: 'Semana passada: posição {rank} de {total}', claimNoRank: 'Obrigado por participar na semana passada', claim: 'Resgatar',
+  },
   tutorial: {
     move: 'Arraste em qualquer lugar para mover',
     keys: 'Mova-se com WASD ou as setas',

@@ -116,7 +116,7 @@ export class LobbyScreen implements Screen {
       store: actions.store,
       track: actions.track,
     }, ads);
-    this.boards = new BoardUi(actions.board, () => this.relayout());
+    this.boards = new BoardUi(actions.board, () => this.relayout(), icons);
     this.challenge = new ChallengeUi(actions.challenge, this.boards, icons, () => this.relayout());
   }
 

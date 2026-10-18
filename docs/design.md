@@ -245,9 +245,9 @@ Two currencies only:
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
   gear tier, monks), each paying jade once, about 800 in all. Progress is read from the save,
   so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.
-- Daily and weekly challenges (the daily is built, still on full 50-wave runs): see "Challenges" below.
+- Daily and weekly challenges (both built, still on full 50-wave runs and without mutators): see "Challenges" below.
 
-## Challenges (daily built; weekly planned)
+## Challenges (daily and weekly built; mutators and the 20-wave daily planned)
 
 Two shared runs on top of the chapters, built on what the deterministic engine already gives:
 the same config and commands replay tick for tick, so a run can be checked by the server and
@@ -367,11 +367,15 @@ boards absorb.
 
 ### Order of work
 
-1. **Server** (built, but for the weekly's rank settlement and the cross-runtime check):
-   challenge records (`GET /v1/challenge`, the daily from the UTC date), boards keyed by
-   challenge, engine version and chapter, run plus replay intake, the re-simulation queue with
-   the pick timeline (server/README.md). Still to do: rank settlement at the end of a week, and
-   the golden hash in Safari (JavaScriptCore) and WeChat on iOS (engine/README.md).
+1. **Server** (built, but for the cross-runtime check): challenge records (`GET /v1/challenge`,
+   the daily from the UTC date, the weekly from `server/src/weeklies.ts` with a rotation as the
+   fallback), boards keyed by challenge, engine version and chapter, run plus replay intake (a
+   weekly keeps each install's best: `lower` for a run no better), the re-simulation queue with
+   the pick timeline, the top 3 verified weekly runs with their replays
+   (`GET /v1/challenge/boards/<board>/replays/<tag>`), and last week's tiers as a `mark` on
+   every board's rows (`server/src/marks.ts`). There is no settlement job: once a week is closed
+   and its runs re-simulated, its board is final and a client asks for its own row. Still to
+   do: the golden hash in Safari (JavaScriptCore) and WeChat on iOS (engine/README.md).
 2. **Daily, client** (built): the challenge tile beside PLAY from player level 2
    (`ui/challengePanel.ts`), the run from the record with the player's loadout and no revives
    (`meta/challenge.ts`), the counted run sent with its replay (`ui/challengeFlow.ts`), milestones
@@ -382,8 +386,22 @@ boards absorb.
    `challenge` (the id). `?challenge` shows a daily made up on the device when offline.
 3. **Engine**: a run that ends as a win on wave 20's mid-boss, and `RunConfig.mutator` with
    the first few mutators; bump `ENGINE_VERSION`, shipped on a Monday.
-4. **Weekly, client**: the fixed loadout, best-of attempts, the board with the pick timeline,
-   the replay screen, the weekly reward claim.
+4. **Weekly, client** (built, without mutators): a Weekly tab in the challenge panel (the tile
+   shows the weekly when there is no daily) once chapter 1 is cleared (`ui/weeklyPage.ts`): the
+   week's relic, monk and sutras, owned or not, no gear, training or revives
+   (`meta/weekly.ts` `weeklySetup`), unlimited attempts with the week's best kept in the save
+   and sent when it is at least as good. Its results show a new best or the best that stands,
+   and the rank. The board shows 12 rows; the top 3 have Watch and a tap shows their pick
+   timeline under it, a tap on a pick watches from there (`ui/weeklyBoard.ts`). The replay
+   screen (`ui/replayWatch.ts`) plays the run view in a watch mode: play and pause, 1x/2x/4x,
+   a wave back or on, and the pick timeline, where a tap seeks (`ui/replaySeek.ts`: a bare
+   engine stepped a slice a frame). Only clients of the record's engine version play or watch;
+   others see "update". A closed week is claimed at the next launch (a card over the lobby):
+   participation 10 jade, then +10 / +30 / +80 for the top 50 % / 10 % / 3 (`balance.json`
+   `challenge.weekly`), and the tier shows as a medal beside the name on the next week's boards.
+   A full 50-wave replay is about 110 KB of JSON, about 30 KB gzipped. `?challenge` also makes
+   up a weekly offline; `?challenge=settle` treats the saved weeks as closed (offline: rank 2
+   of 10) to see the claim.
 5. **Measure** (docs/retention.md): `challenge_start` / `challenge_end` events, and D1 / D7 of
    installs that played a challenge on day 0 against those that did not.
 

@@ -133,6 +133,17 @@ export const es: Table<typeof en> = {
     checking: 'Comprobando tu partida…',
     top: 'Top {n} %',
   },
+  weekly: {
+    tab: 'Semanal', title: 'Desafío semanal', tileOpen: 'quedan {d} d {h} h', loadout: 'La partida de la semana',
+    rule1: 'Todos juegan con el mismo monje, reliquia y sutras', rule2: 'Sin equipo, sin entrenamiento, sin revivir',
+    rule3: 'Juega cuanto quieras: cuenta tu mejor partida', rewards: 'Premios al acabar la semana', part: 'Terminar una partida', half: 'Top 50 %',
+    tenth: 'Top 10 %', three: 'Top 3', ends: 'Termina en {d} d {h} h', best: 'Tu mejor: oleada {wave}', noBest: 'Aún no has jugado esta semana',
+    update: 'Actualiza el juego para jugar el desafío de esta semana', newBest: '¡Nuevo récord!', bestStands: 'Tu récord sigue: oleada {wave}',
+    rank: 'Puesto {rank} de {total}', after: 'Los premios llegan al acabar la semana', watch: 'Ver', picks: 'Cartas de {name}',
+    replayOf: 'Partida de {name}', loading: 'Cargando…', failed: 'Reintentar', seeking: 'Avanzando…', ended: 'Fin de la repetición', play: 'Reproducir',
+    pause: 'Pausa', again: 'Otra vez', prevWave: '‹ Oleada', nextWave: 'Oleada ›', speed: '{n}x', claimTitle: 'Desafío semanal',
+    claimRank: 'Semana pasada: puesto {rank} de {total}', claimNoRank: 'Gracias por participar la semana pasada', claim: 'Recoger',
+  },
   tutorial: {
     move: 'Arrastra en cualquier parte para moverte',
     keys: 'Muévete con WASD o las flechas',

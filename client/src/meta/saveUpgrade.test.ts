@@ -24,7 +24,7 @@ describe('a save from the live build before lobby chests', () => {
   it('keeps its progress and opens none of the chests it was already paid for', () => {
     const s = parseSave(JSON.stringify(LIVE));
     const { opened, hardOpened, ...rest } = s;
-    expect(rest).toEqual({ ...LIVE, challenge: '' });
+    expect(rest).toEqual({ ...LIVE, challenge: '', weeks: [] });
     expect(opened).toEqual(LIVE.chests);
     expect(hardOpened).toEqual([0, 0, 0, 0, 0]);
     expect(anyChestWaiting(s)).toBe(false);

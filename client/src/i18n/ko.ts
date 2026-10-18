@@ -133,6 +133,14 @@ export const ko: Table<typeof en> = {
     checking: '기록 확인 중…',
     top: '상위 {n}%',
   },
+  weekly: {
+    tab: '주간', title: '주간 챌린지', tileOpen: '{d}일 {h}시간 남음', loadout: '이번 주의 판', rule1: '모두 같은 승려, 유물, 경전으로 플레이', rule2: '장비, 수련, 부활 없음',
+    rule3: '몇 번이든 도전: 최고 기록이 남아요', rewards: '주가 끝나면 보상', part: '한 판 끝까지 플레이', half: '상위 50%', tenth: '상위 10%', three: '톱 3', ends: '{d}일 {h}시간 후 종료',
+    best: '내 최고: {wave}웨이브', noBest: '이번 주 기록 없음', update: '이번 주 챌린지를 하려면 게임을 업데이트하세요', newBest: '새 최고 기록!', bestStands: '최고 기록 유지: {wave}웨이브',
+    rank: '{total}명 중 {rank}위', after: '보상은 주가 끝나면 드려요', watch: '보기', picks: '{name}의 선택', replayOf: '{name}의 판', loading: '불러오는 중…', failed: '다시 시도',
+    seeking: '빨리 감는 중…', ended: '리플레이 끝', play: '재생', pause: '일시정지', again: '다시', prevWave: '‹ 웨이브', nextWave: '웨이브 ›', speed: '{n}배',
+    claimTitle: '주간 챌린지', claimRank: '지난주: {total}명 중 {rank}위', claimNoRank: '지난주 참여해 주셔서 감사해요', claim: '받기',
+  },
   tutorial: {
     move: '아무 곳이나 드래그해서 이동',
     keys: 'WASD 또는 방향키로 이동',

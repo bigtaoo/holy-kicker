@@ -97,8 +97,10 @@ export interface SceneOptions {
   bare: boolean;
   /** Dev: the run plays hard mode whatever the lobby shows (?hard). */
   hard: boolean;
-  /** Dev: offline, the lobby shows a daily challenge made up on the device (?challenge; online the server's record wins). */
+  /** Dev: offline, the lobby shows a daily and a weekly challenge made up on the device (?challenge; online the server's records win). */
   challenge: boolean;
+  /** Dev: the weeks in the save count as closed, so their rewards are claimed now (?challenge=settle; offline: rank 2 of 10). */
+  settleWeeks: boolean;
   /** Dev: the monk for every run, whatever the save says (?monk=fat); null keeps the save's. */
   monk: MonkId | null;
   /** Dev: the balance bot plays (?autoplay), for videos and soak tests. */
@@ -144,6 +146,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   bare: false,
   hard: false,
   challenge: false,
+  settleWeeks: false,
   monk: null,
   autoplay: false,
   record: 0,
@@ -210,6 +213,7 @@ export function parseScene(query: string): SceneOptions {
     bare: q.has('bare'),
     hard: q.has('hard'),
     challenge: q.has('challenge'),
+    settleWeeks: q.get('challenge') === 'settle',
     monk: MONK_IDS.find((m) => m === q.get('monk')) ?? DEFAULT_SCENE.monk,
     autoplay: q.has('autoplay'),
     record: num(q.get('record'), 1, 120, DEFAULT_SCENE.record),

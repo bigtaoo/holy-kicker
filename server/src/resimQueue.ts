@@ -1,5 +1,6 @@
 import { Resim, type Verdict } from './resim';
-import type { ChallengeDoc, ChallengeEntry, Store } from './store';
+import { jobOf, type ResimJob as Job } from './challengeDocs';
+import type { Store } from './store';
 
 // The re-simulation queue: challenge runs kept pending wait here and are stepped one at a time,
 // a slice of ticks per turn of the event loop, so the server keeps answering while a long run
@@ -9,8 +10,6 @@ import type { ChallengeDoc, ChallengeEntry, Store } from './store';
 
 /** Ticks stepped per turn (a few milliseconds of simulation). */
 export const SLICE_TICKS = 300;
-
-type Job = Pick<ChallengeEntry, 'board' | 'tag' | 'challenge' | 'run' | 'replay'>;
 
 export class ResimQueue {
   private readonly jobs: Job[] = [];
@@ -27,7 +26,10 @@ export class ResimQueue {
 
   /** Queues the runs the store still has pending (call once at startup). */
   async start(): Promise<void> {
-    for (const d of await this.store.pendingChallengeRuns()) if (d.replay) this.push(jobOf(d));
+    for (const d of await this.store.pendingChallengeRuns()) {
+      const job = jobOf(d);
+      if (job) this.push(job);
+    }
   }
 
   push(job: Job): void {
@@ -63,7 +65,7 @@ export class ResimQueue {
 
   private async settle(job: Job, v: Verdict): Promise<void> {
     try {
-      await this.store.settleChallengeRun(job.board, job.tag, v.ok ? v.picks : null);
+      await this.store.settleChallengeRun(job.board, job.tag, job.at, v.ok ? v.picks : null);
       if (v.ok) return;
       this.log(`challenge run refused on ${job.board}: ${v.why}`);
       const r = job.run;
@@ -75,8 +77,4 @@ export class ResimQueue {
       this.log(`challenge settle failed on ${job.board}: ${err}`);
     }
   }
-}
-
-function jobOf(d: ChallengeDoc): Job {
-  return { board: d.board, tag: d.tag, challenge: d.challenge, run: d.run, replay: d.replay! };
 }

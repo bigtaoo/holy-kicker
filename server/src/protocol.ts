@@ -278,6 +278,8 @@ export interface BoardRow {
   level: number;
   monk: string;
   relic: string;
+  /** Last week's weekly challenge tier (challengeWire.ts weekTier), worn as a mark beside the name; absent for none. */
+  mark?: number;
 }
 
 export interface BoardReply {

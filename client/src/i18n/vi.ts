@@ -133,6 +133,17 @@ export const vi: Table<typeof en> = {
     checking: 'Đang kiểm tra lượt chơi…',
     top: 'Top {n}%',
   },
+  weekly: {
+    tab: 'Hằng tuần', title: 'Thử thách tuần', tileOpen: 'còn {d} ngày {h} giờ', loadout: 'Lượt chơi của tuần',
+    rule1: 'Mọi người cùng chơi một nhà sư, bảo vật và kinh', rule2: 'Không trang bị, không tu luyện, không hồi sinh',
+    rule3: 'Chơi bao nhiêu lần tùy thích: lượt tốt nhất được tính', rewards: 'Phần thưởng khi hết tuần', part: 'Hoàn thành một lượt', half: 'Top 50%',
+    tenth: 'Top 10%', three: 'Top 3', ends: 'Kết thúc sau {d} ngày {h} giờ', best: 'Tốt nhất: đợt {wave}', noBest: 'Tuần này chưa chơi lượt nào',
+    update: 'Cập nhật game để chơi thử thách tuần này', newBest: 'Kỷ lục mới!', bestStands: 'Kỷ lục giữ nguyên: đợt {wave}',
+    rank: 'Hạng {rank} trên {total}', after: 'Phần thưởng đến khi hết tuần', watch: 'Xem', picks: 'Thẻ của {name}', replayOf: 'Lượt của {name}',
+    loading: 'Đang tải…', failed: 'Thử lại', seeking: 'Đang tua…', ended: 'Hết phát lại', play: 'Phát', pause: 'Tạm dừng', again: 'Xem lại',
+    prevWave: '‹ Đợt', nextWave: 'Đợt ›', speed: '{n}x', claimTitle: 'Thử thách tuần', claimRank: 'Tuần trước: hạng {rank} trên {total}',
+    claimNoRank: 'Cảm ơn bạn đã tham gia tuần trước', claim: 'Nhận',
+  },
   tutorial: {
     move: 'Kéo ở bất kỳ đâu để di chuyển',
     keys: 'Di chuyển bằng WASD hoặc phím mũi tên',

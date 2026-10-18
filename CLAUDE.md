@@ -59,7 +59,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   the run with that relic whatever the save says; `?sutras` gives every run all four sutras;
   `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode;
   `?monk=fat` (or `novice`) plays as that monk whatever the save says; `?challenge` shows a daily
-  challenge made up on the device when offline (online the server's record wins).
+  and a weekly challenge made up on the device when offline (online the server's record wins);
+  `?challenge=settle` treats the weeks in the save as closed, so their reward card shows now.
   `?autoplay` lets the balance bot play (`&from=N` rushes it to wave N first); `?record=SECONDS` records the run to a
   video (`&shape=landscape|portrait|phone`, `src/dev/recorder.ts`); store videos: `tools/record_video.mjs` → `tools/store_video.py` (`docs/store.md`).
 - `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay) at

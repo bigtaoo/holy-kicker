@@ -134,6 +134,7 @@
       { "wave": 10, "copper": 100, "jade": 1 },
       { "wave": 15, "copper": 150, "jade": 2 },
       { "wave": 20, "copper": 200, "jade": 3 }
-    ]
+    ],
+    "weekly": { "participation": 10, "tiers": [10, 30, 80] }
   }
 }

@@ -1,9 +1,11 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
 import { challengeFor, misfit, openChallenges } from './challenge';
+import { marked } from './marks';
 import { BEACONS, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, loadBucket, type Beacon, type Host } from './protocol';
 import { checkBatch, checkChallengeRun, checkNameEntry, checkReport, checkRun } from './rules';
-import type { ChallengeEntry, Store } from './store';
+import type { ResimJob } from './challengeDocs';
+import type { Store } from './store';
 
 // The HTTP API (server/README.md), as a function from a parsed request to a reply so the tests
 // drive it without sockets; index.ts does the networking. Every player route is anonymous and
@@ -34,12 +36,15 @@ export interface Deps {
   /** Rate limit: false when `key` asked for `route` too often. */
   allow(route: string, key: string): boolean;
   /** Where pending challenge runs go to be re-simulated (resimQueue.ts). */
-  resim: { push(job: ChallengeEntry): void };
+  resim: { push(job: ResimJob): void };
+  /** Last week's weekly tiers by tag, for the marks beside the names on the boards (marks.ts WeekMarks); none without. */
+  marks?: { current(): Promise<ReadonlyMap<string, number>> };
 }
 
 export const BOARD_ROWS = 50;
 const BOARD = /^c[1-9]h?$/;
 const REPORT = /^\/v1\/reports\/[0-9a-f]{16}$/;
+const TAG = /^[A-Za-z0-9_-]{10}$/;
 
 export function tagOf(install: string, salt: string): string {
   return createHmac('sha256', salt).update(install).digest('base64url').slice(0, 10);
@@ -106,7 +111,7 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
   if (method === 'GET' && board !== null) {
     if (!d.allow('boards', req.ip)) return { status: 429 };
     if (!BOARD.test(board) || Number(board[1]) > LIMITS.chapters) return bad('bad board');
-    return { status: 200, body: await d.store.board(board, BOARD_ROWS, installTag(req, d)) };
+    return { status: 200, body: marked(await d.store.board(board, BOARD_ROWS, installTag(req, d)), (await d.marks?.current()) ?? new Map()) };
   }
 
   if (method === 'GET' && path === '/v1/challenge') {
@@ -125,16 +130,24 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     if (why) return bad(why);
     const tag = tagOf(run.install, d.tagSalt);
     const entry = { board: challengeBoardId(challenge.id, challenge.engine, run.chapter), tag, challenge: challenge.id, run, replay };
-    const r = await d.store.challengeRun(entry, d.now());
-    if (r.status === 'pending') d.resim.push(entry);
+    const now = d.now();
+    const r = await d.store.challengeRun(entry, now);
+    if (r.status === 'pending') d.resim.push({ ...entry, at: now });
     return { status: 200, body: { ...r, tag } };
   }
 
   const cboard = path.startsWith('/v1/challenge/boards/') ? path.slice('/v1/challenge/boards/'.length) : null;
   if (method === 'GET' && cboard !== null) {
     if (!d.allow('boards', req.ip)) return { status: 429 };
-    if (!CHALLENGE_BOARD.test(cboard)) return bad('bad board');
-    return { status: 200, body: await d.store.challengeBoard(cboard, BOARD_ROWS, installTag(req, d)) };
+    // a weekly top run's replay, to watch: <board>/replays/<tag>
+    const [name, replays, tag, ...rest] = cboard.split('/');
+    if (!CHALLENGE_BOARD.test(name)) return bad('bad board');
+    if (replays !== undefined) {
+      if (replays !== 'replays' || !TAG.test(tag ?? '') || rest.length) return { status: 404 };
+      const replay = await d.store.challengeReplay(name, tag);
+      return replay ? { status: 200, body: replay } : { status: 404 };
+    }
+    return { status: 200, body: marked(await d.store.challengeBoard(name, BOARD_ROWS, installTag(req, d)), (await d.marks?.current()) ?? new Map()) };
   }
 
   if (method === 'POST' && path === '/v1/reports') {

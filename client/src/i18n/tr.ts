@@ -133,6 +133,17 @@ export const tr: Table<typeof en> = {
     checking: 'Oyunun kontrol ediliyor…',
     top: 'İlk %{n}',
   },
+  weekly: {
+    tab: 'Haftalık', title: 'Haftalık Meydan Okuma', tileOpen: '{d} g {h} sa kaldı', loadout: 'Haftanın oyunu',
+    rule1: 'Herkes aynı keşiş, kalıntı ve sutralarla oynar', rule2: 'Ekipman, antrenman ve dirilme yok',
+    rule3: 'İstediğin kadar oyna: en iyi oyunun sayılır', rewards: 'Ödüller hafta bitince', part: 'Bir oyunu bitir', half: 'İlk %50', tenth: 'İlk %10',
+    three: 'İlk 3', ends: '{d} g {h} sa sonra biter', best: 'En iyin: dalga {wave}', noBest: 'Bu hafta henüz oyun yok',
+    update: 'Bu haftanın meydan okuması için oyunu güncelle', newBest: 'Yeni rekor!', bestStands: 'Rekorun duruyor: dalga {wave}',
+    rank: '{total} kişide {rank}.', after: 'Ödüller hafta bitince gelir', watch: 'İzle', picks: '{name} kartları', replayOf: '{name} oyunu',
+    loading: 'Yükleniyor…', failed: 'Tekrar dene', seeking: 'İleri sarılıyor…', ended: 'Tekrar bitti', play: 'Oynat', pause: 'Duraklat', again: 'Yeniden',
+    prevWave: '‹ Dalga', nextWave: 'Dalga ›', speed: '{n}x', claimTitle: 'Haftalık Meydan Okuma', claimRank: 'Geçen hafta: {total} kişide {rank}.',
+    claimNoRank: 'Geçen haftaki katılımın için teşekkürler', claim: 'Al',
+  },
   tutorial: {
     move: 'Hareket için herhangi bir yeri sürükle',
     keys: 'WASD ya da ok tuşlarıyla yürü',

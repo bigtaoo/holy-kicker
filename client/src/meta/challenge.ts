@@ -7,6 +7,7 @@ import { chapterMul, earnedSutras, playableChapters } from './progress';
 import type { SaveData } from './save';
 import { trainingStats } from './training';
 import type { RunSetup } from '../game/runSetup';
+import { weeklySetup, type WeeklyBalance } from './weekly';
 
 // The daily challenge (docs/design.md "Challenges"): one shared run a UTC day, built from the
 // server's record (net/backend.ts challenges) with the player's own loadout. The first finished
@@ -25,6 +26,8 @@ export interface ChallengeBalance {
   unlockLevel: number;
   /** Copper grows with the chapter played (progress.ts chapterMul); together about one full clear's copper. */
   milestones: Milestone[];
+  /** The weekly's rewards (weekly.ts). */
+  weekly: WeeklyBalance;
 }
 
 /** Where the daily stands for this player: closed below the level, on another engine version, counted, or open. */
@@ -41,8 +44,9 @@ export function challengeChapter(save: SaveData, c: Challenge): number {
   return c.chapter === 'furthest' ? playableChapters(save, false) : c.chapter;
 }
 
-/** What a run of `c` is set up with: the record's seed and waves, no revives, the player's relic, monk, sutras, gear and training (no grit or head start: they are not the same for everyone at a level). */
+/** What a run of `c` is set up with (a weekly: its fixed loadout, weekly.ts): the record's seed and waves, no revives, the player's relic, monk, sutras, gear and training (no grit or head start: they are not the same for everyone at a level). */
 export function challengeSetup(save: SaveData, c: Challenge): RunSetup {
+  if (c.loadout) return weeklySetup(c);
   return {
     chapter: challengeChapter(save, c), waves: c.waves, revives: 0, relic: save.relic, sutras: earnedSutras(save),
     bonus: challengeBonus(save), hard: false, monk: save.monk, firstRun: false, seed: c.seed,

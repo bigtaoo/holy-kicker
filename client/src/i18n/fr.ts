@@ -133,6 +133,18 @@ export const fr: Table<typeof en> = {
     checking: 'Vérification de ta partie…',
     top: 'Top {n} %',
   },
+  weekly: {
+    tab: 'Hebdo', title: 'Défi de la semaine', tileOpen: '{d} j {h} h restants', loadout: 'La partie de la semaine',
+    rule1: 'Tout le monde joue le même moine, la même relique et les mêmes sutras', rule2: "Pas d'équipement, pas d'entraînement, pas de réanimation",
+    rule3: 'Jouez autant que vous voulez : votre meilleure partie compte', rewards: 'Récompenses à la fin de la semaine', part: 'Finir une partie',
+    half: 'Top 50 %', tenth: 'Top 10 %', three: 'Top 3', ends: 'Fin dans {d} j {h} h', best: 'Votre record : vague {wave}',
+    noBest: 'Aucune partie cette semaine', update: 'Mettez le jeu à jour pour le défi de la semaine', newBest: 'Nouveau record !',
+    bestStands: 'Votre record tient : vague {wave}', rank: 'Rang {rank} sur {total}', after: 'Récompenses à la fin de la semaine', watch: 'Regarder',
+    picks: 'Cartes de {name}', replayOf: 'Partie de {name}', loading: 'Chargement…', failed: 'Réessayer', seeking: 'Avance rapide…',
+    ended: 'Fin du replay', play: 'Lecture', pause: 'Pause', again: 'Revoir', prevWave: '‹ Vague', nextWave: 'Vague ›', speed: '{n}x',
+    claimTitle: 'Défi de la semaine', claimRank: 'Semaine dernière : rang {rank} sur {total}', claimNoRank: "Merci d'avoir participé la semaine dernière",
+    claim: 'Récupérer',
+  },
   tutorial: {
     move: 'Fais glisser n’importe où pour bouger',
     keys: 'Déplace-toi avec WASD ou les flèches',

@@ -133,6 +133,17 @@ export const de: Table<typeof en> = {
     checking: 'Dein Lauf wird geprüft…',
     top: 'Top {n} %',
   },
+  weekly: {
+    tab: 'Woche', title: 'Wochen-Challenge', tileOpen: 'noch {d} T {h} Std', loadout: 'Der Lauf der Woche',
+    rule1: 'Alle spielen denselben Mönch, dasselbe Relikt und dieselben Sutras', rule2: 'Keine Ausrüstung, kein Training, keine Wiederbelebung',
+    rule3: 'Spiel so oft du willst: dein bester Lauf zählt', rewards: 'Belohnungen am Ende der Woche', part: 'Einen Lauf beenden', half: 'Top 50 %',
+    tenth: 'Top 10 %', three: 'Top 3', ends: 'Endet in {d} T {h} Std', best: 'Dein Bestes: Welle {wave}', noBest: 'Diese Woche noch kein Lauf',
+    update: 'Aktualisiere das Spiel für die Challenge dieser Woche', newBest: 'Neuer Rekord!', bestStands: 'Dein Rekord bleibt: Welle {wave}',
+    rank: 'Platz {rank} von {total}', after: 'Belohnungen gibt es am Ende der Woche', watch: 'Ansehen', picks: 'Karten von {name}',
+    replayOf: 'Lauf von {name}', loading: 'Lädt…', failed: 'Nochmal', seeking: 'Spult vor…', ended: 'Wiedergabe zu Ende', play: 'Abspielen',
+    pause: 'Pause', again: 'Nochmal', prevWave: '‹ Welle', nextWave: 'Welle ›', speed: '{n}x', claimTitle: 'Wochen-Challenge',
+    claimRank: 'Letzte Woche: Platz {rank} von {total}', claimNoRank: 'Danke fürs Mitmachen letzte Woche', claim: 'Abholen',
+  },
   tutorial: {
     move: 'Zieh irgendwo, um dich zu bewegen',
     keys: 'Bewege dich mit WASD oder den Pfeiltasten',

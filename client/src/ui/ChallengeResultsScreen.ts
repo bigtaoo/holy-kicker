@@ -13,7 +13,9 @@ import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from 
 // milestones with the ones reached lit, what the counted run paid (a later run of the day is
 // practice and pays nothing), the player's share of the board ("top N %") once the server
 // answers, and the hours to the next challenge. Under the card the rewarded "double copper" offer
-// and Continue side by side at the same size, font and colour, as on the chapter results.
+// and Continue side by side at the same size, font and colour, as on the chapter results. A
+// weekly run's results have no milestones and pay nothing now: a new best or the best that
+// stands, the week's rank once the server answers, and that rewards come when the week ends.
 
 export interface ChallengeResultsActions {
   double(): Promise<boolean>;
@@ -37,6 +39,8 @@ export class ChallengeResultsScreen implements Screen {
   private readonly waves: number;
   /** Hours until the next challenge opens. */
   private readonly hours: number;
+  /** A weekly run: the week's best waves before it. */
+  private readonly weekly: { before: number } | undefined;
 
   constructor(
     run: ChallengeSettled,
@@ -45,7 +49,7 @@ export class ChallengeResultsScreen implements Screen {
     private readonly icons: IconSheet = new Map(),
     private readonly keys = false,
   ) {
-    ({ reward: this.reward, chapter: this.chapter, waves: this.waves, hours: this.hours } = run);
+    ({ reward: this.reward, chapter: this.chapter, waves: this.waves, hours: this.hours, weekly: this.weekly } = run);
     const reward = this.reward;
     void run.reply.then((r) => {
       if (r && !this.view.destroyed) {
@@ -90,12 +94,13 @@ export class ChallengeResultsScreen implements Screen {
       l.y = y;
       c.addChild(l);
     };
-    add(t('challenge.title'), 68, COLORS.saffron, 20);
+    add(t(this.weekly ? 'weekly.title' : 'challenge.title'), 68, COLORS.saffron, 20);
     add(t('lobby.chapterTitle', { n: this.chapter, name: t(`chapter.${this.chapter}` as never) }), 44, COLORS.dim, 95);
     const big = label(String(this.waves), 170, COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
     big.y = 230;
     c.addChild(big);
     add(t('results.waves'), 40, COLORS.dim, 335);
+    if (this.weekly) return this.weeklyBody(c, add, this.weekly.before);
     c.addChild(this.milestones(470));
     let y = 610;
     if (r.counted) {
@@ -116,6 +121,26 @@ export class ChallengeResultsScreen implements Screen {
       }
     }
     add(t('challenge.next', { h: this.hours }), 44, COLORS.text, y);
+    return c;
+  }
+
+  /** A weekly run's lines under its waves: a new best or the best that stands, the week's rank, when rewards come. */
+  private weeklyBody(c: Container, add: (text: string, size: number, fill: number, y: number) => void, before: number): Container {
+    const rep = this.reply;
+    let y = 450;
+    if (this.waves > before && rep?.status !== 'lower') add(t('weekly.newBest'), 60, COLORS.saffron, y);
+    else if (before > 0) add(t('weekly.bestStands', { wave: Math.max(before, this.waves) }), 50, COLORS.text, y);
+    y += 100;
+    if (rep && rep.rank > 0) {
+      add(t('weekly.rank', { rank: rep.rank, total: rep.total }), 56, COLORS.saffron, y);
+      add(t('challenge.top', { n: topPercent(rep.rank, rep.total) }), 44, COLORS.dim, y + 70);
+      y += 140;
+      if (rep.status === 'pending') {
+        add(t('challenge.checking'), 38, COLORS.dim, y);
+        y += 60;
+      }
+    }
+    add(t('weekly.after'), 44, COLORS.text, y);
     return c;
   }
 

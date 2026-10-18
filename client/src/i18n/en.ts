@@ -131,6 +131,17 @@ export const en = {
     checking: 'Checking your run…',
     top: 'Top {n}%',
   },
+  weekly: {
+    tab: 'Weekly', title: 'Weekly Challenge', tileOpen: '{d}d {h}h left', loadout: "This week's run",
+    rule1: 'Everyone plays the same monk, relic and sutras', rule2: 'No gear, no training, no revives',
+    rule3: 'Play as often as you like: your best run counts', rewards: 'Rewards when the week ends', part: 'Finish a run', half: 'Top 50%',
+    tenth: 'Top 10%', three: 'Top 3', ends: 'Ends in {d}d {h}h', best: 'Your best: wave {wave}', noBest: 'No run yet this week',
+    update: "Update the game to play this week's challenge", newBest: 'New best!', bestStands: 'Your best stands: wave {wave}',
+    rank: 'Rank {rank} of {total}', after: 'Rewards come when the week ends', watch: 'Watch', picks: "{name}'s picks", replayOf: "{name}'s run",
+    loading: 'Loading…', failed: 'Try again', seeking: 'Skipping…', ended: 'Replay over', play: 'Play', pause: 'Pause', again: 'Again',
+    prevWave: '‹ Wave', nextWave: 'Wave ›', speed: '{n}x', claimTitle: 'Weekly Challenge', claimRank: 'Last week: rank {rank} of {total}',
+    claimNoRank: 'Thanks for taking part last week', claim: 'Claim',
+  },
   tutorial: {
     move: 'Drag anywhere to move',
     keys: 'Move with WASD or the arrow keys',

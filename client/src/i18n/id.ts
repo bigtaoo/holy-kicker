@@ -133,6 +133,17 @@ export const id: Table<typeof en> = {
     checking: 'Memeriksa permainanmu…',
     top: 'Top {n}%',
   },
+  weekly: {
+    tab: 'Mingguan', title: 'Tantangan Mingguan', tileOpen: 'sisa {d} h {h} j', loadout: 'Permainan minggu ini',
+    rule1: 'Semua main dengan biksu, relik, dan sutra yang sama', rule2: 'Tanpa perlengkapan, latihan, atau hidup lagi',
+    rule3: 'Main sesukamu: permainan terbaikmu yang dihitung', rewards: 'Hadiah saat minggu berakhir', part: 'Selesaikan satu permainan', half: 'Top 50%',
+    tenth: 'Top 10%', three: 'Top 3', ends: 'Berakhir dalam {d} h {h} j', best: 'Terbaikmu: gelombang {wave}', noBest: 'Belum ada permainan minggu ini',
+    update: 'Perbarui game untuk main tantangan minggu ini', newBest: 'Rekor baru!', bestStands: 'Rekormu tetap: gelombang {wave}',
+    rank: 'Peringkat {rank} dari {total}', after: 'Hadiah datang saat minggu berakhir', watch: 'Tonton', picks: 'Kartu {name}',
+    replayOf: 'Permainan {name}', loading: 'Memuat…', failed: 'Coba lagi', seeking: 'Mempercepat…', ended: 'Tayangan ulang selesai', play: 'Putar',
+    pause: 'Jeda', again: 'Lagi', prevWave: '‹ Gelombang', nextWave: 'Gelombang ›', speed: '{n}x', claimTitle: 'Tantangan Mingguan',
+    claimRank: 'Minggu lalu: peringkat {rank} dari {total}', claimNoRank: 'Terima kasih sudah ikut minggu lalu', claim: 'Ambil',
+  },
   tutorial: {
     move: 'Geser di mana saja untuk bergerak',
     keys: 'Bergerak dengan WASD atau tombol panah',
