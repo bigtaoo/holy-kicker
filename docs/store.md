@@ -155,7 +155,7 @@ as the law allows:
 | Everywhere else | A toast over the first run, once (no tap): data is sent, turn it off in Settings | Everything, until switched off |
 
 Settings → Play data has the sharing switch, the policy link and the install's play ID (what a
-deletion request names). A problem report is sent only when the player asks, so it always goes.
+deletion request names; tapping it copies it where the host has a clipboard, with a toast). A problem report is sent only when the player asks, so it always goes.
 Offline builds and WeChat (no backend yet) show none of this.
 
 Still to check on the portal itself: upload the zip to the developer portal's QA preview, then
