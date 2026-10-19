@@ -77,6 +77,13 @@ export interface Chain {
   rest: number;
 }
 
+/** A single bone turned so a direction in its own space (`rest`, radians) points the aim's way. */
+export function boneChain(sk: TaoSkeleton, bone: string, rest: number): Chain {
+  const b = sk.bones.find((x) => x.id === bone);
+  if (!b) throw new Error(`${sk.name} has no bone ${bone}`);
+  return { bone, parent: b.parent, bends: [], rest };
+}
+
 export function chainOf(sk: TaoSkeleton, bone: string, tip: string): Chain {
   const byId = new Map(sk.bones.map((b) => [b.id, b]));
   const bends: string[] = [];

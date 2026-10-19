@@ -1,0 +1,8 @@
+Turn this exact character into a parts sheet for 2D cutout animation. Same character, same art style, same colours, same thick black outlines, same size for every piece. Take the drawing apart into separate pieces laid out on the white canvas with clear white space between all of them, nothing overlapping:
+1. the head without ears (face, muzzle, cheeks), with a complete outline all around including under the chin
+2. the left ear and 3. the right ear, each a complete ear with a rounded base
+4. the armoured torso with the backpack and the dark collar ring, no head, no arms, no legs, the collar opening shown as a dark hole
+5. the left arm and 6. the right arm, each complete from the rounded shoulder pad down to the open paw
+7. the left leg and 8. the right leg, each an armoured thigh with its boot
+9. the fluffy tail
+Every piece is whole and complete with its full black outline, flat on white. Pure white background, no labels, no text.

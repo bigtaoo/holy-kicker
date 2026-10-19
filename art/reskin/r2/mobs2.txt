@@ -1,0 +1,7 @@
+Game character design sheet in a bright cheerful cartoon sticker style: thick black outlines, flat colours, one hard cel shadow, chunky chibi proportions, readable at small size. Plain white background, each character standing apart, full body, three-quarter front view, no overlap. No text, no letters, no labels.
+All enemies are alien bugs in cold colours only (teal, purple, grey-blue, dark slate) with glowing red eyes, cute-menacing rather than gross, no gore.
+Enemy types for a horde shooter, in a row:
+1. A cracked shell bug, and next to it the two little grubs it splits into.
+2. A wobbly teal slime blob with a red eye, and next to it the two small slimelets it splits into.
+3. A rhino beetle holding a huge armoured horn-shield in front of it.
+4. A cloud of tiny glowing purple gnats with red dots for eyes.

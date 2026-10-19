@@ -1,0 +1,9 @@
+Game character design sheet in a bright cheerful cartoon sticker style: thick black outlines, flat colours, one hard cel shadow, chunky chibi proportions, readable at small size. Plain white background, each character standing apart, full body, three-quarter front view, no overlap. No text, no letters, no labels.
+All enemies are alien bugs in cold colours only (teal, purple, grey-blue, dark slate) with glowing red eyes, cute-menacing rather than gross, no gore.
+Six small regular enemy types for a horde shooter, in a row, similar size:
+1. A round armoured beetle drone walking on six legs, the basic grunt.
+2. A tiny fast spider-tick with long legs, leaning forward as if sprinting.
+3. A segmented burrowing worm popping half out of a hole in the ground, jaws open.
+4. A fat spitter bug with a bulging acid sac on its back and a nozzle-like mouth.
+5. A lean mantis hunter with scythe arms, crouched to pounce.
+6. A floating jellyfish-like psychic bug with a glowing purple brain dome and dangling tendrils.

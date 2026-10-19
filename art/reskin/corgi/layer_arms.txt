@@ -1,0 +1,4 @@
+Keep exactly the same picture: same canvas, same size, same position, same art style, same colours, same thick black outlines. Make only these changes:
+- Delete the head, ears, body, armour chest, backpack, legs and tail.
+- Keep only the two arms and the paws exactly where they are now, same shape and size, and draw each arm complete up to a rounded shoulder pad with its full black outline, as if each arm were a separate sticker piece. The left arm holds nothing.
+Pure white background, no text.

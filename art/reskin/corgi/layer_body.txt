@@ -1,0 +1,5 @@
+Keep exactly the same picture: same canvas, same size, same position, same art style, same colours, same thick black outlines. Make only these changes:
+- Delete the whole head and both ears. Where the head was, show the round dark-grey armour collar ring complete all the way around, with the empty dark neck opening inside it.
+- Delete both arms and the gun completely. Where they covered the body, draw the chest plate, the shoulder area, the side of the armour and the backpack complete, continuing their existing shapes and outlines.
+- Keep the legs, boots, tail and backpack exactly as they are, and draw the tops of both legs complete where they meet the body.
+Pure white background, no text.

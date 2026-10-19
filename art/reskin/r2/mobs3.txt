@@ -1,0 +1,8 @@
+Game enemy design sheet in a bright cheerful cartoon sticker style: thick black outlines, flat colours, one hard cel shadow, chunky cute proportions, readable at small size. Plain white background, six separate creatures in two rows of three, each standing apart, full body, top-down three-quarter view as seen in a top-down shooter. No text, no letters, no labels.
+All enemies are real insect-like alien bugs with insect anatomy (six legs, segmented bodies, mandibles, antennae, carapace shells), not humanoid, not robots, no arms with hands. Cold colours only (teal, purple, grey-blue, dark slate) with big glowing red eyes. Cute-menacing like a mobile game, no gore.
+1. Beetle Drone: a round teal ladybird-shaped beetle scuttling forward on six short legs, the basic grunt.
+2. Skitter Tick: a tiny purple tick with long thin legs, very fast looking.
+3. Burrow Worm: a fat grey-blue segmented worm bursting half out of a hole in the ground, round mouth with small teeth.
+4. Spitter: a purple bug with a big glowing teal acid sac on its back and a nozzle mouth aimed forward.
+5. Mantis: a slim teal praying mantis with folded scythe arms, crouched to pounce.
+6. Psy-Jelly: a floating purple jellyfish bug with a glowing brain dome and dangling tendrils.

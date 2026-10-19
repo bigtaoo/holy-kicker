@@ -1,0 +1,17 @@
+{
+ "parent": {
+  "tail": "torso",
+  "arm_f": "torso",
+  "thigh_l": null,
+  "foot_l": "thigh_l",
+  "thigh_r": null,
+  "foot_r": "thigh_r",
+  "torso": null,
+  "ear_l": "head",
+  "ear_r": "head",
+  "head": "torso",
+  "gun": "arm_f",
+  "arm_n": "torso",
+  "gun_n": "arm_n"
+ }
+}

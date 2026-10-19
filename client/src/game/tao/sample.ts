@@ -79,3 +79,34 @@ export function blendPoses(from: Map<string, BonePose>, to: Map<string, BonePose
     b.sy = a.sy + (b.sy - a.sy) * w;
   }
 }
+
+/**
+ * Adds an additive clip's pose onto `to`, scaled by w: its keys are offsets from the rest pose
+ * (rotate and translate add, scale multiplies). Bones the clip does not key are left alone.
+ */
+export function addPoses(anim: TaoAnimation, delta: Map<string, BonePose>, to: Map<string, BonePose>, w: number): void {
+  for (const id of Object.keys(anim.bones)) {
+    const d = delta.get(id);
+    const b = to.get(id);
+    if (!d || !b) continue;
+    b.rotate += d.rotate * w;
+    b.x += d.x * w;
+    b.y += d.y * w;
+    b.sx *= 1 + (d.sx - 1) * w;
+    b.sy *= 1 + (d.sy - 1) * w;
+  }
+}
+
+/** Like blendPoses, for the listed bones only: an override layer that owns part of the body. */
+export function blendMasked(from: Map<string, BonePose>, to: Map<string, BonePose>, bones: readonly string[], w: number): void {
+  for (const id of bones) {
+    const a = from.get(id);
+    const b = to.get(id);
+    if (!a || !b) continue;
+    b.rotate += (a.rotate - b.rotate) * w;
+    b.x += (a.x - b.x) * w;
+    b.y += (a.y - b.y) * w;
+    b.sx += (a.sx - b.sx) * w;
+    b.sy += (a.sy - b.sy) * w;
+  }
+}

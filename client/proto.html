@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Corgi rig prototype</title>
+    <style>
+      html, body { margin: 0; height: 100%; overflow: hidden; background: #cfe3ea; font-family: system-ui, sans-serif; }
+      canvas { display: block; }
+      #help { position: fixed; left: 12px; top: 10px; color: #1d3440; font-size: 14px; line-height: 1.5; background: rgba(255, 255, 255, 0.6); padding: 6px 10px; border-radius: 8px; pointer-events: none; }
+    </style>
+  </head>
+  <body>
+    <!-- dev only (not a build input): the corgi rig from art/reskin/corgi, see docs/reskin.md -->
+    <div id="help">
+      WASD move · mouse aim · hold click fire · F auto-fire · Space slow-mo · B show bones · G game size<br />
+      idle a few seconds and it plays a demo
+    </div>
+    <script type="module" src="/src/dev/corgiProto.ts"></script>
+  </body>
+</html>

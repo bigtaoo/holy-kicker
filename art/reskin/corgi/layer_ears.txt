@@ -1,0 +1,4 @@
+Keep exactly the same picture: same canvas, same size, same position, same art style, same colours, same thick black outlines. Make only these changes:
+- Delete everything except the two ears: no head, no face, no body, no armour, no gun, no legs, no tail.
+- Keep both ears exactly where they are now, same shape and size, and draw each ear complete down to a rounded base with its full black outline, as if it were a separate sticker piece.
+Pure white background, no text.

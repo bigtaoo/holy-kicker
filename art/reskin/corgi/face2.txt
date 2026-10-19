@@ -1,0 +1,5 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Make only this change to the face, so it matches a cute chibi mascot:
+- Big round glossy black eyes, each with a large white highlight in the upper part, set wide apart, slightly lower on the face. No eyebrows.
+- A small sweet smile under the nose: a short "w"-shaped mouth, slightly open with a tiny pink tongue. No big open grin, no teeth.
+- Smooth round cream cheeks and muzzle, a clean simple face with less fur detail.
+Everything else stays identical: the head outline, the ears, the white blaze on the forehead, the armour, the arms, the legs, the boots, the tail, the backpack. Pure white background, no ground shadow, no text.
