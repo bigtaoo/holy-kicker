@@ -9,7 +9,7 @@ import { StaffSwing } from './staffView';
 import { FishTaps } from './fishView';
 import { BeadsView } from './beadsView';
 import { BowlView } from './bowlView';
-import { Hero } from './hero';
+import { makeHero, type HeroView } from './heroes';
 import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
@@ -80,7 +80,7 @@ export class Game {
   private readonly playMask = new Graphics();
   private readonly sides: Container;
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
-  private readonly hero: Hero;
+  private readonly hero: HeroView;
   /** World point the camera centres on; trails the hero under the smooth camera. */
   private readonly camPos = { x: 0, y: 0 };
   readonly shake = new Shake(); // the shell turns it off for players who set it so
@@ -166,7 +166,7 @@ export class Game {
     if (this.mist) this.world.addChild(this.mist.view);
     const shadowTex = shadowTexture(app.renderer);
     const monk = setup.monk ?? 'kicker';
-    this.hero = new Hero(monkRig(art, monk), Math.round((HERO_HEIGHT * MONK_HEIGHT[monk]) / 100));
+    this.hero = makeHero(monkRig(art, monk), Math.round((HERO_HEIGHT * MONK_HEIGHT[monk]) / 100));
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view, this.healthBar.view);
     this.healthBar.view.visible = chapter;
     if (scene.ring) this.hero.view.addChildAt(makeRing(app.renderer, 0xffb030), 0);
@@ -442,7 +442,7 @@ export class Game {
     const hx = lerpX(p, alpha);
     const hy = lerpY(p, alpha);
     this.hero.holdStaff(this.staff.advance(dt));
-    this.hero.update(dt, p.facing, p.moving);
+    this.hero.update(dt, p.facing, p.moving, s, alpha);
     this.hero.view.position.set(hx, hy);
     this.hero.view.zIndex = this.scene.heroOnTop ? (this.scene.heroOverFx ? HERO_OVER_FX_Z : HERO_TOP_Z) : hy;
     // a red flash that fades, not a see-through blink: a 10 Hz strobe over the crowd is tiring

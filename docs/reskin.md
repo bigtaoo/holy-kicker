@@ -166,6 +166,17 @@ atlas packs at 0.7 so the close-up renders at full device resolution; G in the p
 out to the in-game size (120 units, about 70 CSS px on desktop), which is the size to judge the
 face at. Springs are `TaoActor.spring` (`src/game/tao/spring.ts`).
 
+**In the game**: `src/game/corgiHero.ts` (the motion in `corgiMotion.ts`, tested) plays the corgi
+when the build's theme is corgi and the hero rig has the twin guns (`heroes.ts` picks it; the
+monks keep `hero.ts`). The game's atlas packs at 0.35: `python tools/pack_tao.py
+art/reskin/corgi/corgi_tao.json - art/reskin/corgi/game/art/hero 0.35`, then `python tools/webp.py
+art/reskin/corgi/game/art/hero/atlas.png`; `corgi.json` maps `art/hero/*` to those files once the
+theme takes it. The sim gives no aim point, so the view re-picks what the relic would hit
+(`kickTarget`) four times a second and eases the aim there; every relic's attack is a shot of the
+raised gun at the relic's strike (the staff shoots on its sweep and the guns follow the staff),
+a hit flinches the body, and the guns drop when the hero goes down. No hurt, death or level-up
+clips yet.
+
 ### Bugs (baked)
 
 Bake from small rigs instead of warping one drawing: six real legs walking in a tripod gait
@@ -231,8 +242,8 @@ entry may point into `client/public` to reuse a monk file on purpose (a UI sound
 - Saves: in the browser the corgi keeps every key under `corgi:` (`src/theme.ts`), so the two games
   on h.gamestao.com never share a save.
 
-Still to do before the corgi build can run as itself: its own hero view (the rig has other bones
-and clips than `art/hero`; port the prototype, and pack the atlas at 0.35 like the monks), the
+Still to do before the corgi build can run as itself: point `art/hero/*` in `corgi.json` at the
+packed corgi (`art/reskin/corgi/game/art/hero`, "Animation › Hero"), the
 i18n tables (names from this page) and the page title in `index.html`, then the art and sounds
 for every list entry.
 
