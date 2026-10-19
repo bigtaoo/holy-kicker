@@ -16,7 +16,7 @@ describe('card text', () => {
     expect(cardText({ kind: 'spell', id: 'cymbal' }, p).lines).toEqual(['Cymbals 2 → 3']);
     p.spells.push({ id: 'palm', level: 2, cd: 0, evolved: false });
     expect(cardText({ kind: 'spell', id: 'palm' }, p)).toMatchObject({
-      tag: 'Lv 2 → 3', fresh: false, lines: ['Area +17%', 'Cooldown 3s → 2.5s'],
+      tag: 'Lv.2 → 3', fresh: false, lines: ['Area +17%', 'Cooldown 3s → 2.5s'],
     });
   });
 
@@ -27,13 +27,13 @@ describe('card text', () => {
     expect(cardText({ kind: 'relic', id: 'ball' }, p).lines).toEqual(['Cooldown 0.9s → 0.7s']);
     expect(cardText({ kind: 'passive', id: 'rice' }, p).lines).toEqual(['Heal 0.4% health per second']);
     setLocale('zh');
-    expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ name: '罗汉腿', tag: '新！', lines: ['移动速度 +8%'] });
+    expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ name: '罗汉腿', tag: '新！', lines: ['移速 +8%'] });
   });
 
   it('shows a passive\'s step as what it gives now and what it will give', () => {
     const p = newPlayer(0, 0, 0);
     p.passives = [{ id: 'rice', level: 3 }, { id: 'calm', level: 2 }, { id: 'karma', level: 1 }];
-    expect(cardText({ kind: 'passive', id: 'rice' }, p)).toMatchObject({ tag: 'Lv 3 → 4', fresh: false, lines: ['Heal 1.2% → 1.6% health/s'] });
+    expect(cardText({ kind: 'passive', id: 'rice' }, p)).toMatchObject({ tag: 'Lv.3 → 4', fresh: false, lines: ['Heal 1.2% → 1.6% health/s'] });
     expect(cardText({ kind: 'passive', id: 'calm' }, p).lines).toEqual(['Spell cooldown −16% → −24%']);
     expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['XP +8% → +16%', 'Pickup range +15% → +30%']);
     setLocale('zh');
@@ -83,7 +83,7 @@ describe('card text', () => {
     expect(awaken).toMatchObject({ name: 'Stunning Bell', tag: 'Awaken!' });
     expect(awaken.lines).toEqual(['Every 4th ring stuns for 1s', expect.stringMatching(/^Reach \+\d+%$/)]);
     setLocale('zh');
-    expect(cardText({ kind: 'evolve', id: 'fish' }, p).lines[0]).toBe('每第 4 圈声波眩晕 1 秒');
+    expect(cardText({ kind: 'evolve', id: 'fish' }, p).lines[0]).toBe('每 4 圈声波有一圈眩晕敌人 1 秒');
   });
 
   it('describes the prayer beads and the 108 Beads', () => {
@@ -102,7 +102,7 @@ describe('card text', () => {
     const p = newPlayer(0, 0, 0, 100, 0, 'bowl');
     const step = cardText({ kind: 'relic', id: 'bowl' }, p);
     expect(step).toMatchObject({ name: 'Alms Bowl', icon: 'bowl', pairs: ['karma'] });
-    expect(step.lines).toEqual(['Drags 3 → 4', 'Reach +8%']);
+    expect(step.lines).toEqual(['Enemies dragged 3 → 4', 'Reach +8%']);
     const awaken = cardText({ kind: 'evolve', id: 'bowl' }, p);
     expect(awaken).toMatchObject({ name: 'Bottomless Bowl', tag: 'Awaken!' });
     expect(awaken.lines).toEqual(['Swallows 8 enemies a throw, XP at once', 'Reach +7%']);
@@ -120,7 +120,7 @@ describe('card text', () => {
     const roar = cardText({ kind: 'evolve', id: 'roar' }, p);
     expect(roar).toMatchObject({ name: 'Thunder Roar', tag: 'Evolve!' });
     expect(roar.lines).toEqual(['Roars all round, shatters bullets', 'Area +8%', 'Damage +12%']);
-    expect(cardText({ kind: 'passive', id: 'focus' }, p).lines).toEqual(['Spell duration +10%, guard after a hit +20%']);
+    expect(cardText({ kind: 'passive', id: 'focus' }, p).lines).toEqual(['Spell duration +10%, invincibility after a hit +20%']);
     expect(sutraName('roar')).toBe("Lion's Roar");
     expect(sutraName('focus')).toBe('Focus');
     expect(sutraGoalText('lotus')).toBe('Reach wave 25 in a chapter');
