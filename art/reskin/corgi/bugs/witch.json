@@ -1,0 +1,170 @@
+{
+ "source": "dune/witch_v1.png",
+ "out": "../game/art/ch3/mobs/witch",
+ "frames": 12,
+ "fps": 9,
+ "flash": false,
+ "height": 380,
+ "fit": {
+  "frame": [
+   337,
+   403
+  ],
+  "anchor": [
+   191.2,
+   397.3
+  ],
+  "height": 325
+ },
+ "ground": [
+  335,
+  795
+ ],
+ "holes": [
+  [
+   0.3615,
+   0.4159
+  ],
+  [
+   0.3691,
+   0.4761
+  ],
+  [
+   0.5583,
+   0.5625
+  ],
+  [
+   0.6081,
+   0.7034
+  ]
+ ],
+ "body": {
+  "dy": {
+   "sin": 5,
+   "bias": -2
+  },
+  "sy": {
+   "sin": 0.012,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "move",
+   "region": {
+    "c": [
+     95,
+     480
+    ],
+    "r": [
+     100,
+     330
+    ],
+    "feather": 0.3
+   },
+   "dy": {
+    "sin": 10,
+    "phase": 0.15
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     540,
+     330
+    ],
+    "r": [
+     150,
+     220
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    420,
+    330
+   ],
+   "angle": {
+    "sin": 6,
+    "phase": 0,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     200,
+     330
+    ],
+    "r": [
+     90,
+     120
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    260,
+    330
+   ],
+   "angle": {
+    "sin": 6,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     250,
+     60
+    ],
+    "r": [
+     110,
+     70
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    300,
+    110
+   ],
+   "dir": [
+    -0.4,
+    -1
+   ],
+   "length": 100,
+   "wavelength": 200,
+   "amp": 6,
+   "cycles": 1
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     440,
+     50
+    ],
+    "r": [
+     100,
+     60
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    360,
+    110
+   ],
+   "dir": [
+    0.7,
+    -0.7
+   ],
+   "length": 120,
+   "wavelength": 200,
+   "amp": 6,
+   "cycles": 1
+  }
+ ]
+}

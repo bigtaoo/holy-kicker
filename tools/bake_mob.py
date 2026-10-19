@@ -18,7 +18,14 @@ spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..
     "height": 160,                  # px of the source cut-out's height in the sheet
     "ground": [x, y],               # the feet; the sheet's anchor
     "pad": [left, top, right, bottom],
+    "fit": {"frame": [w, h], "anchor": [x, y], "height": h},  # optional, in place of "pad": bake
+                                    # into exactly this frame (rim included) with the ground at
+                                    # this anchor, as another theme's sheet of the same mob has
+                                    # them; the cut-out is fit.height px tall, while "height"
+                                    # (the world scale the game reads) stays the other sheet's
     "drop": [{"below": y, "hsv": [[lo, hi], ...]}],  # optional: paint to erase
+    "holes": [[fx, fy], ...],       # optional: paper seen through the figure, cut out too
+                                    # (cutout.py holes, fractions of the source drawing)
     "body": {"dy": f, "sx": f, "sy": f},                     # whole figure, about ground
     "deform": [                                              # applied inside body space
       {"type": "rotate", "region": R, "pivot": [x, y], "angle": f},      # degrees, cw
@@ -128,16 +135,33 @@ def drop_paint(im, rules):
 
 
 def bake(spec, base):
-    src = cutout(os.path.join(base, spec["source"]))
+    src = cutout(os.path.join(base, spec["source"]), spec.get("holes", ()))
     if "drop" in spec:
         src = drop_paint(src, spec["drop"])
-    l, t_, r, b = spec["pad"]
-    W, H = src.width + l + r, src.height + t_ + b
+    fit = spec.get("fit")
+    ol = spec.get("outline")
+    pad = ol["px"] if ol else 0
+    scale = (fit or spec)["height"] / src.height
+    if fit:
+        # the pads that put the ground on the anchor and fill the frame, in source px
+        fw, fh = fit["frame"][0] - 2 * pad, fit["frame"][1] - 2 * pad
+        l = round((fit["anchor"][0] - pad) / scale - spec["ground"][0])
+        t_ = round((fit["anchor"][1] - pad) / scale - spec["ground"][1])
+        W, H = round(fw / scale), round(fh / scale)
+        r, b = W - l - src.width, H - t_ - src.height
+        if min(l, t_, r, b) < 0:
+            print(f"warning: the cut-out sticks out of the frame by {[-min(v, 0) for v in (l, t_, r, b)]} source px (l t r b)")
+    else:
+        l, t_, r, b = spec["pad"]
+        W, H = src.width + l + r, src.height + t_ + b
+        fw, fh = round(W * scale), round(H * scale)
     # premultiplied, so warped and shrunk edges do not pick up the (white) hidden colour
     a = np.array(src).astype(np.float32) / 255
     a[:, :, :3] *= a[:, :, 3:]
     canvas = np.zeros((H, W, 4), np.float32)
-    canvas[t_:t_ + src.height, l:l + src.width] = a
+    y0, x0 = max(t_, 0), max(l, 0)
+    y1, x1 = min(t_ + src.height, H), min(l + src.width, W)
+    canvas[y0:y1, x0:x1] = a[y0 - t_:y1 - t_, x0 - l:x1 - l]
     gx, gy = spec["ground"][0] + l, spec["ground"][1] + t_
     shift = lambda p: [p[0] + l, p[1] + t_]  # noqa: E731
     deform = []
@@ -149,8 +173,6 @@ def bake(spec, base):
                 d[k] = shift(d[k])
         deform.append(d)
 
-    scale = spec["height"] / src.height
-    fw, fh = round(W * scale), round(H * scale)
     ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
     body = spec.get("body", {})
     frames, lift = [], []
@@ -174,8 +196,9 @@ def bake(spec, base):
         white[:, :, :3] = f[:, :, 3:]
         white[:, :, 3] = f[:, :, 3]
         frames.append(white)
-    ol = spec.get("outline")
-    pad = ol["px"] if ol else 0
+    edge = sum(1 for f in frames if max(f[0, :, 3].max(), f[:, 0, 3].max(), f[:, -1, 3].max()) > 0.1)
+    if edge:
+        print(f"warning: {edge} frames touch the frame's top or sides")
     if ol:
         colour = np.array([int(ol["color"][k:k + 2], 16) / 255 for k in (1, 3, 5)], np.float32)
         # the flash copies flash rim and all
@@ -192,7 +215,7 @@ def bake(spec, base):
     out = Image.fromarray((np.clip(sheet, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
     meta = {
         "frames": n, "flash": n if len(frames) > n else 0, "cols": cols, "frameW": fw, "frameH": fh, "fps": spec["fps"],
-        "anchor": [round(gx * scale, 1) + pad, round(gy * scale, 1) + pad],
+        "anchor": fit["anchor"] if fit else [round(gx * scale, 1) + pad, round(gy * scale, 1) + pad],
         # the cut-out's height in sheet px, and how high off the ground each frame floats
         "height": spec["height"], "lift": lift,
     }
@@ -203,7 +226,7 @@ def bake(spec, base):
 
 def debug_overlay(spec, base, path):
     """The cut-out with every deformer region drawn on it, for placing regions."""
-    src = cutout(os.path.join(base, spec["source"]))
+    src = cutout(os.path.join(base, spec["source"]), spec.get("holes", ()))
     im = Image.new("RGBA", src.size, (90, 120, 90, 255))
     im.alpha_composite(src)
     a = np.array(im)

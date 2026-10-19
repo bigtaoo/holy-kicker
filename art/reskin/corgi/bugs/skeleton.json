@@ -1,0 +1,158 @@
+{
+ "source": "dune/skeleton_v1.png",
+ "out": "../game/art/ch3/mobs/skeleton",
+ "frames": 10,
+ "fps": 12,
+ "height": 190,
+ "fit": {
+  "frame": [
+   213,
+   202
+  ],
+  "anchor": [
+   105.4,
+   199.1
+  ],
+  "height": 140
+ },
+ "ground": [
+  430,
+  585
+ ],
+ "body": {
+  "dy": {
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.25,
+     -18
+    ],
+    [
+     0.5,
+     0
+    ],
+    [
+     0.75,
+     -18
+    ]
+   ]
+  },
+  "sy": {
+   "keys": [
+    [
+     0,
+     0.97
+    ],
+    [
+     0.25,
+     1.02
+    ],
+    [
+     0.5,
+     0.97
+    ],
+    [
+     0.75,
+     1.02
+    ]
+   ]
+  }
+ },
+ "deform": [
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     100,
+     470
+    ],
+    "r": [
+     110,
+     90
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    170,
+    390
+   ],
+   "angle": {
+    "sin": 10,
+    "phase": 0,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     360,
+     480
+    ],
+    "r": [
+     140,
+     90
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    380,
+    390
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     680,
+     470
+    ],
+    "r": [
+     160,
+     90
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    660,
+    390
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0.25,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     160,
+     260
+    ],
+    "r": [
+     170,
+     140
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    300,
+    330
+   ],
+   "angle": {
+    "sin": 3,
+    "phase": 0,
+    "cycles": 2
+   }
+  }
+ ]
+}

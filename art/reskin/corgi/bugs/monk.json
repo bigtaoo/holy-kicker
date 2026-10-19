@@ -1,0 +1,150 @@
+{
+ "source": "hive/monk_v1.png",
+ "out": "../game/art/ch5/mobs/monk",
+ "frames": 10,
+ "fps": 10,
+ "height": 180,
+ "fit": {
+  "frame": [
+   140,
+   190
+  ],
+  "anchor": [
+   69.8,
+   185.3
+  ],
+  "height": 130
+ },
+ "ground": [
+  370,
+  712
+ ],
+ "body": {
+  "dy": {
+   "sin": 6,
+   "bias": -3,
+   "cycles": 2
+  },
+  "sx": {
+   "sin": 0.012,
+   "bias": 1,
+   "cycles": 2,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     300,
+     70
+    ],
+    "r": [
+     130,
+     80
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    300,
+    150
+   ],
+   "dir": [
+    0,
+    -1
+   ],
+   "length": 140,
+   "wavelength": 260,
+   "amp": 6,
+   "cycles": 1
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     640,
+     620
+    ],
+    "r": [
+     90,
+     90
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    600,
+    540
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     450,
+     630
+    ],
+    "r": [
+     80,
+     80
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    460,
+    540
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "move",
+   "region": {
+    "c": [
+     180,
+     490
+    ],
+    "r": [
+     190,
+     210
+    ],
+    "feather": 0.3
+   },
+   "dy": {
+    "sin": 6,
+    "phase": 0.25
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     70,
+     680
+    ],
+    "r": [
+     60,
+     40
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    100,
+    640
+   ],
+   "angle": {
+    "sin": 6,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  }
+ ]
+}

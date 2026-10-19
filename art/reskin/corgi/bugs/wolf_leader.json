@@ -1,0 +1,185 @@
+{
+ "source": "dune/wolf_leader_v2.png",
+ "out": "../game/art/ch3/mobs/wolf_leader",
+ "frames": 10,
+ "fps": 9,
+ "outline": {
+  "px": 7,
+  "color": "#e2f2ee",
+  "steps": 12
+ },
+ "height": 240,
+ "fit": {
+  "frame": [
+   306,
+   272
+  ],
+  "anchor": [
+   151.2,
+   261.1
+  ],
+  "height": 230
+ },
+ "ground": [
+  470,
+  772
+ ],
+ "body": {
+  "dy": {
+   "sin": 6,
+   "cycles": 1,
+   "bias": -3
+  },
+  "sy": {
+   "sin": 0.02,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     100,
+     600
+    ],
+    "r": [
+     110,
+     150
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    230,
+    520
+   ],
+   "angle": {
+    "sin": 10,
+    "phase": 0,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     370,
+     650
+    ],
+    "r": [
+     80,
+     120
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    380,
+    540
+   ],
+   "angle": {
+    "sin": 6,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     780,
+     640
+    ],
+    "r": [
+     150,
+     110
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    700,
+    540
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0.25,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     110,
+     80
+    ],
+    "r": [
+     130,
+     100
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    210,
+    170
+   ],
+   "dir": [
+    -0.4,
+    -1
+   ],
+   "length": 180,
+   "wavelength": 240,
+   "amp": 10,
+   "cycles": 1
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     420,
+     160
+    ],
+    "r": [
+     150,
+     150
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    330,
+    250
+   ],
+   "dir": [
+    0.6,
+    -0.8
+   ],
+   "length": 260,
+   "wavelength": 300,
+   "amp": 10,
+   "cycles": 1
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     230,
+     250
+    ],
+    "r": [
+     150,
+     130
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    300,
+    330
+   ],
+   "angle": {
+    "sin": 3,
+    "phase": 0,
+    "cycles": 2
+   }
+  }
+ ]
+}
