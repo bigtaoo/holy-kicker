@@ -2,7 +2,8 @@
 plates wrap across the edges) with dark cracks between them, a lighter cel lip along each plate's
 upper edge, a few hairline cracks and small glowing embers, in flat colours.
 usage: python rock_tile.py <out.png> [--size 512] [--seed 5] [--rgb 50,48,64] [--plates 34]
-       [--ember 150,90,230] [--embers 14]"""
+       [--ember 150,90,230] [--embers 14] [--lava 200,90,30]
+--lava fills the middle of the cracks between plates with a dim glow (lava seen through the gaps)."""
 import argparse
 import math
 import random
@@ -18,6 +19,7 @@ ap.add_argument("--rgb", default="50,48,64", help="the plates' mean colour")
 ap.add_argument("--plates", type=int, default=34)
 ap.add_argument("--ember", default="150,90,230")
 ap.add_argument("--embers", type=int, default=14)
+ap.add_argument("--lava", default="", help="the cracks' glowing core, off by default")
 ap.add_argument("--colors", type=int, default=64)
 a = ap.parse_args()
 
@@ -54,6 +56,8 @@ up = np.take_along_axis(dy, near[..., None], -1)[..., 0] < 0
 lip = (gap >= 5) & (gap < 11) & up
 img[lip] = np.minimum(255, img[lip] * 1.28)
 img[gap < 5] = base * 0.42
+if a.lava:
+    img[gap < 2] = [int(v) for v in a.lava.split(",")]
 
 out = Image.fromarray(img.astype(np.uint8), "RGB")
 dr = ImageDraw.Draw(out)

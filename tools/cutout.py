@@ -26,6 +26,9 @@ def background_mask(rgb, min_light=130, max_chroma=30, holes=()):
 
 def cutout(src, holes=()):
     im = Image.open(src).convert("RGBA")
+    if im.getextrema()[3][0] < 255:
+        # already cut out (split_sheet.py): keep its own alpha
+        return im.crop(im.getchannel("A").getbbox())
     bg = background_mask(im.convert("RGB"), holes=holes)
     # 1px feather so the resized edge is not jagged
     alpha = ImageChops.invert(bg).filter(ImageFilter.GaussianBlur(0.6))
