@@ -1,0 +1,163 @@
+{
+ "source": "forge/doorgod_v1.png",
+ "out": "../game/art/ch4/mobs/doorgod",
+ "frames": 10,
+ "fps": 9,
+ "outline": {
+  "px": 7,
+  "color": "#e2f2ee",
+  "steps": 12
+ },
+ "height": 240,
+ "fit": {
+  "frame": [
+   294,
+   272
+  ],
+  "anchor": [
+   142.6,
+   259.1
+  ],
+  "height": 225
+ },
+ "ground": [
+  426,
+  725
+ ],
+ "body": {
+  "dy": {
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.25,
+     -10
+    ],
+    [
+     0.5,
+     0
+    ],
+    [
+     0.75,
+     -10
+    ]
+   ]
+  },
+  "sy": {
+   "keys": [
+    [
+     0,
+     0.98
+    ],
+    [
+     0.25,
+     1.01
+    ],
+    [
+     0.5,
+     0.98
+    ],
+    [
+     0.75,
+     1.01
+    ]
+   ]
+  }
+ },
+ "deform": [
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     110,
+     150
+    ],
+    "r": [
+     110,
+     150
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    140,
+    300
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     745,
+     150
+    ],
+    "r": [
+     110,
+     150
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    720,
+    300
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     130,
+     570
+    ],
+    "r": [
+     140,
+     150
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    250,
+    470
+   ],
+   "angle": {
+    "sin": 5,
+    "phase": 0,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     700,
+     570
+    ],
+    "r": [
+     150,
+     150
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    600,
+    470
+   ],
+   "angle": {
+    "sin": 5,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  }
+ ]
+}

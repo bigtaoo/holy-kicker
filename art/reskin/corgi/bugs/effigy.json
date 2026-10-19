@@ -1,0 +1,164 @@
+{
+ "source": "forge/effigy_v1.png",
+ "out": "../game/art/ch4/mobs/effigy",
+ "frames": 10,
+ "fps": 12,
+ "height": 190,
+ "fit": {
+  "frame": [
+   134,
+   202
+  ],
+  "anchor": [
+   67.0,
+   198.6
+  ],
+  "height": 185
+ },
+ "ground": [
+  228,
+  785
+ ],
+ "body": {
+  "dy": {
+   "keys": [
+    [
+     0,
+     0
+    ],
+    [
+     0.25,
+     -16
+    ],
+    [
+     0.5,
+     0
+    ],
+    [
+     0.75,
+     -16
+    ]
+   ]
+  },
+  "sy": {
+   "keys": [
+    [
+     0,
+     0.97
+    ],
+    [
+     0.25,
+     1.02
+    ],
+    [
+     0.5,
+     0.97
+    ],
+    [
+     0.75,
+     1.02
+    ]
+   ]
+  }
+ },
+ "deform": [
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     290,
+     60
+    ],
+    "r": [
+     110,
+     90
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    230,
+    150
+   ],
+   "dir": [
+    0.5,
+    -1
+   ],
+   "length": 130,
+   "wavelength": 260,
+   "amp": 10,
+   "cycles": 1
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     40,
+     620
+    ],
+    "r": [
+     60,
+     60
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    60,
+    560
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     400,
+     620
+    ],
+    "r": [
+     60,
+     60
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    390,
+    560
+   ],
+   "angle": {
+    "sin": 8,
+    "phase": 0.5,
+    "cycles": 1
+   }
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     228,
+     350
+    ],
+    "r": [
+     240,
+     380
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    228,
+    780
+   ],
+   "dir": [
+    0,
+    -1
+   ],
+   "length": 780,
+   "wavelength": 1400,
+   "amp": 8,
+   "cycles": 1
+  }
+ ]
+}
