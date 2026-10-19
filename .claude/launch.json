@@ -40,17 +40,6 @@
       "port": 4176
     },
     {
-      "name": "newgrounds-dist",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "preview:newgrounds",
-        "-w",
-        "client"
-      ],
-      "port": 4177
-    },
-    {
       "name": "api",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

@@ -162,24 +162,12 @@ Still to check on the portal itself: upload the zip to the developer portal's QA
 watch a real ad fill, a signed-in save carry over between devices, and the leaderboard button
 hidden for a guest (read from the SDK's `user.isUserAccountAvailable`).
 
-## Newgrounds (2026-10-18)
+## Newgrounds (dropped)
 
-Published 2026-10-18 as https://www.newgrounds.com/portal/view/1057321 (project 8200616, account
-Taowang0); it starts "Under Judgment", where player votes decide whether it stays. The upload is
-`npm run build:newgrounds`, zipped with forward-slash paths and `index.html` at the root; it reports
-to the backend as host `newgrounds` (pick it on the dashboard).
-
-- Fields: genre Action - Shooter - Multidirectional; embed 600×800, Touchscreen friendly; rating T
-  (Violence: Some); tags upgrades, roguelite, survivors, bullet-heaven, horde, monk, kung-fu, ghosts;
-  icon cropped from `art/store/cover_horde_landscape.png`.
-- The submission agreement allows AI as long as the author commentary says what was AI-made and
-  how; ours ends with that paragraph. Its first sentence bans games "generated via an AI prompt",
-  and judging is subjective: the sibling game funny was blammed within a day for its AI art.
-- The edit page autosaves, but the genre, the rating radios and the commentary did not stick the
-  first time: reload and check every field before publishing. Tags need a pause between entries
-  or they merge.
-- A preview from an EEA browser sends the load beacons but no events until the privacy card is
-  answered (see "Privacy"), so a self-test shows up as `open`/`loaded` only.
+Published 2026-10-18 as portal/view/1057321 and un-published by staff a day later with no message
+(the submission agreement bans games "generated via an AI prompt"; the sibling game funny went the
+same way). Little traffic and the wrong audience, so the Newgrounds build was removed; its 15
+installs stay in the backend's data, counted under all hosts.
 
 ## App Store (iOS)
 

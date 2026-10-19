@@ -24,10 +24,9 @@
     "journey": "node build/journey.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
     "check:webp": "node build/checkWebp.mjs",
-    "check": "npm run typecheck && npm run check:filelength && npm run check:webp && npm run test && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run build:playgama && npm run build:newgrounds && npm run build:ios && npm run check:wechatpackage",
+    "check": "npm run typecheck && npm run check:filelength && npm run check:webp && npm run test && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run build:playgama && npm run build:ios && npm run check:wechatpackage",
     "deploy:server": "npm run deploy -w server",
     "build:playgama": "npm run build:playgama -w client",
-    "build:newgrounds": "npm run build:newgrounds -w client",
     "dev:playgama": "npm run dev:playgama -w client"
   },
   "devDependencies": {

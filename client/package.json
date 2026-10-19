@@ -17,9 +17,7 @@
     "preview": "vite preview --port 4173",
     "build:playgama": "tsc --noEmit && vite build --config vite.playgama.config.js",
     "dev:playgama": "vite --config vite.playgama.config.js",
-    "preview:playgama": "vite preview --config vite.playgama.config.js --port 4176 --strictPort",
-    "build:newgrounds": "tsc --noEmit && vite build --config vite.newgrounds.config.js",
-    "preview:newgrounds": "vite preview --config vite.newgrounds.config.js --port 4177 --strictPort"
+    "preview:playgama": "vite preview --config vite.playgama.config.js --port 4176 --strictPort"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.3",
