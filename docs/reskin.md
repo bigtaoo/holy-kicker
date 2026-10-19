@@ -50,6 +50,27 @@ and passive.
 | halo (sutra) | Laser Turret | rotating beam |
 | roar (sutra) | Mega Bark | knockback cone |
 
+Effects that are sprites follow the asset list like any art. The ones drawn in code (Pixi
+`Graphics` baked to textures) take the corgi's look from `client/src/game/corgiFx.ts` when
+`THEME` is corgi, with the same sizes, timings and layers. The palette is orange metal, grey
+steel and cyan glass, taken from the corgi's icons. Each view keeps Holy Kicker's drawing in its
+monk branch, and no build mixes the two:
+
+| Monk effect | Corgi effect |
+|---|---|
+| Mountain Palm print | scorched crater with a crosshair |
+| incense ring (green healing field) | orange plasma puddle (cyan repair pool with a cross) |
+| Golden Bell dome, gold nova | cyan glass bubble, pale cyan nova |
+| cymbals, gold wheel track | steel saw blades, orange track |
+| gold lightning | cyan tesla arcs |
+| lotus seeds | mines: orange dome, cyan dome when they pull (Magnet Mines) |
+| halo beams, roar waves | orange-red laser, white waves |
+| beads | orange drones, steel ones in the second ring; cyan orbit cord |
+| bowl | striped orange disc, steel and cyan for the Saw Storm |
+| wooden fish ring | cyan pulse |
+| staff trail | orange trail, pale gold and white once evolved |
+| zen lotus at rest | orange targeting reticle (4 inward markers) |
+
 | Passive | New | Effect |
 |---|---|---|
 | calm | Coolant | spell cooldown − |
