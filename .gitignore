@@ -34,6 +34,7 @@ client/wechat/project.private.config.json
 # Raw audio downloads (sources listed in art/audio/SOURCES.md)
 art/audio/source/
 art/audio/audition.html
+art/audio/corgi/audition.html
 
 # Tool run logs (art generation and the like)
 *.log
