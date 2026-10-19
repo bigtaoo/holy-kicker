@@ -1,5 +1,5 @@
 {
- "source": "hive/shadow_v1.png",
+ "source": "hive/shadow_v2.png",
  "out": "../game/art/ch5/mobs/shadow",
  "frames": 10,
  "fps": 18,
@@ -16,8 +16,27 @@
   "height": 172
  },
  "ground": [
-  430,
-  690
+  400,
+  645
+ ],
+ "drop": [
+  {
+   "below": 560,
+   "hsv": [
+    [
+     [
+      0,
+      0,
+      100
+     ],
+     [
+      179,
+      45,
+      255
+     ]
+    ]
+   ]
+  }
  ],
  "body": {
   "dy": {
@@ -83,98 +102,216 @@
  },
  "deform": [
   {
-   "type": "rotate",
+   "type": "wave",
    "region": {
     "c": [
-     190,
-     570
+     130,
+     110
     ],
     "r": [
-     190,
-     130
+     90,
+     140
     ],
     "feather": 0.4
    },
-   "pivot": [
-    330,
-    440
+   "root": [
+    110,
+    240
    ],
-   "angle": {
-    "sin": 14,
-    "phase": 0,
-    "cycles": 1
-   }
-  },
-  {
-   "type": "rotate",
-   "region": {
-    "c": [
-     700,
-     570
-    ],
-    "r": [
-     190,
-     120
-    ],
-    "feather": 0.4
-   },
-   "pivot": [
-    620,
-    440
+   "dir": [
+    0.2,
+    -1
    ],
-   "angle": {
-    "sin": 12,
-    "phase": 0.5,
-    "cycles": 1
-   }
+   "length": 240,
+   "wavelength": 300,
+   "amp": 16,
+   "cycles": 1
   },
   {
    "type": "wave",
    "region": {
     "c": [
-     280,
-     90
-    ],
-    "r": [
-     180,
+     360,
      110
     ],
-    "feather": 0.45
+    "r": [
+     150,
+     130
+    ],
+    "feather": 0.4
    },
    "root": [
-    200,
-    180
+    260,
+    250
    ],
    "dir": [
-    0.4,
-    -1
+    0.6,
+    -0.8
    ],
-   "length": 180,
-   "wavelength": 240,
+   "length": 300,
+   "wavelength": 340,
    "amp": 14,
-   "cycles": 1
+   "cycles": 1,
+   "phase": 0.3
   },
   {
    "type": "rotate",
    "region": {
     "c": [
-     190,
-     270
+     500,
+     140
     ],
     "r": [
-     190,
-     170
+     150,
+     90
     ],
     "feather": 0.4
    },
    "pivot": [
-    300,
-    360
+    420,
+    210
    ],
    "angle": {
-    "sin": 3,
-    "phase": 0,
+    "sin": 6,
     "cycles": 2
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     130,
+     360
+    ],
+    "r": [
+     130,
+     120
+    ],
+    "feather": 0.3
+   },
+   "pivot": [
+    240,
+    390
+   ],
+   "angle": {
+    "sin": 2.5,
+    "cycles": 2,
+    "phase": 0.1
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     60,
+     560
+    ],
+    "r": [
+     80,
+     70
+    ],
+    "feather": 0.35
+   },
+   "pivot": [
+    130,
+    490
+   ],
+   "angle": {
+    "sin": 12,
+    "cycles": 1,
+    "phase": 0
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     170,
+     540
+    ],
+    "r": [
+     45,
+     45
+    ],
+    "feather": 0.35
+   },
+   "pivot": [
+    200,
+    490
+   ],
+   "angle": {
+    "sin": 12,
+    "cycles": 1,
+    "phase": 0.5
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     280,
+     590
+    ],
+    "r": [
+     80,
+     80
+    ],
+    "feather": 0.35
+   },
+   "pivot": [
+    320,
+    500
+   ],
+   "angle": {
+    "sin": 12,
+    "cycles": 1,
+    "phase": 0.25
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     540,
+     590
+    ],
+    "r": [
+     80,
+     80
+    ],
+    "feather": 0.35
+   },
+   "pivot": [
+    490,
+    500
+   ],
+   "angle": {
+    "sin": 12,
+    "cycles": 1,
+    "phase": 0.75
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     730,
+     560
+    ],
+    "r": [
+     90,
+     70
+    ],
+    "feather": 0.35
+   },
+   "pivot": [
+    660,
+    480
+   ],
+   "angle": {
+    "sin": 12,
+    "cycles": 1,
+    "phase": 0.5
    }
   }
  ]

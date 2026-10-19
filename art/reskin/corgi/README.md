@@ -28,10 +28,12 @@ holds several objects on white in a grid, and `tools/split_sheet.py` cuts the ce
 
 - `icons/sheet_*`: the 44 icons in `art/icons/icons.png`.
   - `weapons`: the relics' and spells' main pieces.
-  - `spells`, `passives`, `shop` and `lobby`.
+  - `spells`, `passives`, `shop` and `lobby`. The first three came out in uneven rows and are
+    cut with `auto`, which names the objects in reading order and skips the spares.
   - `relics`: bowl, cymbal and fish.
+  - `fix`: iron, karma and sash, redrawn on their own after the first sheets missed them.
 - `items/sheet_*`: the relic and spell pictures drawn in the world.
-  - `tall`: staff, staff_ruyi, bell_relic, palm.
+  - `tall`: staff, staff_ruyi, bell_relic, palm (a bomb drawn nose up, flipped to fall).
   - `round`: cuju, cuju_meteor, fish.
   - `big`: lion, mountain.
 - `planets/deco_*`: six ground props per planet, named after the monk frames they replace.
