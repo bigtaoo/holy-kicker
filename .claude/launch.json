@@ -11,6 +11,15 @@
       "port": 5174
     },
     {
+      "name": "new",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:new"
+      ],
+      "port": 5184
+    },
+    {
       "name": "crazygames",
       "runtimeExecutable": "npm",
       "runtimeArgs": [

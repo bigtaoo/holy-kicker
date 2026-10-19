@@ -230,11 +230,19 @@ entry may point into `client/public` to reuse a monk file on purpose (a UI sound
   tunnel's second public hostname `hk-new.gamestao.com` → `http://api-new:8080`.
 - Saves: in the browser the corgi keeps every key under `corgi:` (`src/theme.ts`), so the two games
   on h.gamestao.com never share a save.
+- Words: `client/src/i18n/corgi/` overrides the strings that name the monk's world (heroes, relics
+  → weapons, spells → gadgets, sutras → blueprints, shrines → supply drops, chapters → planets,
+  copper → bolts, jade → gems, training → Boot Camp, the story lines), key for key over the base
+  tables, in every language; `corgi.test.ts` keeps each table on the base table's keys and
+  placeholders. The overlay is chosen through `__HK_THEME__`, so a monk build carries none of it.
+  The XP pickups are treats there, which leaves "gems" for the premium currency.
+- The page: `build/themeHtml.mjs` gives the corgi's `index.html` its title, colours and loading
+  screen (a corgi head hopping where the cuju ball was); it fails the build if `index.html` loses
+  the text it replaces.
 
 Still to do before the corgi build can run as itself: its own hero view (the rig has other bones
-and clips than `art/hero`; port the prototype, and pack the atlas at 0.35 like the monks), the
-i18n tables (names from this page) and the page title in `index.html`, then the art and sounds
-for every list entry.
+and clips than `art/hero`; port the prototype, and pack the atlas at 0.35 like the monks), then the
+art and sounds for every list entry.
 
 ## Open
 
