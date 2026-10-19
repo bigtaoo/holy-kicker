@@ -1,5 +1,7 @@
 """Pack split rig parts and their animations into a .tao skeleton bundle.
-usage: python pack_tao.py <spec.json> <out.tao> <runtime dir>
+usage: python pack_tao.py <spec.json> <out.tao | -> <runtime dir> [scale]
+A scale argument overrides the spec's (the corgi's close-up rig packs at 0.7 for the prototype and
+at 0.35 for the game); "-" skips the .tao and writes the runtime dir only.
 
 spec.json (paths relative to the spec file):
   {
@@ -9,6 +11,7 @@ spec.json (paths relative to the spec file):
     "origin": [x, y],                    # source pixel that becomes (0, 0): between the feet
     "scale": 0.35,                       # source px -> exported px (atlas resolution)
     "variants": {"face": ["face_hurt"]}, # extra images a slot can swap to
+    "aliases": {"face_hurt": "face"},    # optional: a variant drawn with another image's frame
     "animations": {
       "run": {"duration": 0.6, "loop": true, "ease": "ease-in-out",
               "keys": [{"t": 0, "rotate": {"torso": -4}, "translate": {"root": [0, -10]},
@@ -74,13 +77,13 @@ def bake_animation(anim, bones, scale):
     return {"duration": anim["duration"], "loop": anim.get("loop", False), "bones": tracks}
 
 
-def build(spec_path):
+def build(spec_path, scale=None):
     base = os.path.dirname(os.path.abspath(spec_path))
     spec = json.load(open(spec_path, encoding="utf-8"))
     parts_dir = os.path.join(base, spec["parts"])
     parts = json.load(open(os.path.join(parts_dir, "parts.json")))["parts"]
     parent = json.load(open(os.path.join(base, spec["rig"])))["parent"]
-    s, (ox, oy) = spec["scale"], spec["origin"]
+    s, (ox, oy) = scale or spec["scale"], spec["origin"]
     by_name = {p["name"]: p for p in parts}
 
     # bones: root first, then every part after its parent
@@ -96,9 +99,10 @@ def build(spec_path):
             done.add(p["name"])
 
     # images at export scale; a variant shares its part's rectangle and offset
+    aliases = spec.get("aliases", {})
     names = [p["name"] for p in parts]
     for slot, extra in spec.get("variants", {}).items():
-        names += extra
+        names += [n for n in extra if n not in aliases]
     images = {}
     for n in names:
         im = Image.open(os.path.join(parts_dir, n + ".png")).convert("RGBA")
@@ -108,6 +112,10 @@ def build(spec_path):
     atlas = Image.new("RGBA", size, (0, 0, 0, 0))
     for n, (x, y) in pos.items():
         atlas.paste(images[n], (x, y))
+    frames = {n: {"x": x, "y": y, "w": images[n].width, "h": images[n].height}
+              for n, (x, y) in sorted(pos.items())}
+    for n, target in aliases.items():
+        frames[n] = frames[target]
 
     slots = []
     for p in parts:  # parts.json is back to front, which is the draw order
@@ -119,22 +127,22 @@ def build(spec_path):
         "height": rnd((oy - min(p["y"] for p in parts)) * s),
         "bones": bones,
         "slots": slots,
-        "images": {n: {"x": x, "y": y, "w": images[n].width, "h": images[n].height}
-                   for n, (x, y) in sorted(pos.items())},
+        "images": frames,
         "variants": {k: [k] + v for k, v in spec.get("variants", {}).items()},
         "animations": {k: bake_animation(a, done, s) for k, a in spec["animations"].items()},
     }
     return skeleton, atlas
 
 
-def main(spec_path, out_tao, runtime_dir):
-    skeleton, atlas = build(spec_path)
+def main(spec_path, out_tao, runtime_dir, scale=None):
+    skeleton, atlas = build(spec_path, float(scale) if scale else None)
     text = json.dumps(skeleton, indent=1)
     png = io.BytesIO()
     atlas.save(png, "PNG", optimize=True)
-    with zipfile.ZipFile(out_tao, "w", zipfile.ZIP_DEFLATED) as z:
-        z.writestr("skeleton.json", text)
-        z.writestr("atlas.png", png.getvalue())
+    if out_tao != "-":
+        with zipfile.ZipFile(out_tao, "w", zipfile.ZIP_DEFLATED) as z:
+            z.writestr("skeleton.json", text)
+            z.writestr("atlas.png", png.getvalue())
     os.makedirs(runtime_dir, exist_ok=True)
     open(os.path.join(runtime_dir, "skeleton.json"), "w").write(text)
     open(os.path.join(runtime_dir, "atlas.png"), "wb").write(png.getvalue())
@@ -143,4 +151,4 @@ def main(spec_path, out_tao, runtime_dir):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:5])

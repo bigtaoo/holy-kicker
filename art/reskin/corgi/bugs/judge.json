@@ -1,0 +1,109 @@
+{
+ "source": "forge/judge_v2.png",
+ "out": "../game/art/ch4/mobs/judge",
+ "frames": 12,
+ "fps": 9,
+ "flash": false,
+ "height": 380,
+ "fit": {
+  "frame": [
+   385,
+   406
+  ],
+  "anchor": [
+   200.1,
+   390.9
+  ],
+  "height": 350
+ },
+ "ground": [
+  430,
+  760
+ ],
+ "holes": [
+  [
+   0.2838,
+   0.6864
+  ]
+ ],
+ "body": {
+  "dy": {
+   "sin": 5,
+   "bias": -2
+  },
+  "sy": {
+   "sin": 0.012,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     460,
+     640
+    ],
+    "r": [
+     150,
+     130
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    460,
+    520
+   ],
+   "dir": [
+    0,
+    1
+   ],
+   "length": 250,
+   "wavelength": 260,
+   "amp": 10,
+   "cycles": 1
+  },
+  {
+   "type": "move",
+   "region": {
+    "c": [
+     100,
+     400
+    ],
+    "r": [
+     130,
+     200
+    ],
+    "feather": 0.3
+   },
+   "dy": {
+    "sin": 10,
+    "phase": 0.15
+   }
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     420,
+     250
+    ],
+    "r": [
+     260,
+     230
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    420,
+    450
+   ],
+   "angle": {
+    "sin": 2,
+    "phase": 0.3,
+    "cycles": 1
+   }
+  }
+ ]
+}

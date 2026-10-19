@@ -1,0 +1,3 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Make only this change:
+- Raise both arms so they stick straight out sideways from the shoulders, left arm to the left and right arm to the right, angled down only about 20 degrees, like a scarecrow, symmetric, with wide white space between each arm and the torso all the way from the armpit to the paw. The paws stay open and empty. Draw the sides of the chest armour complete where the arms used to cover them.
+Everything else stays identical: the head, the ears, the scarf, the legs, the boots, the tail, the backpack. Pure white background, no ground shadow, no text.

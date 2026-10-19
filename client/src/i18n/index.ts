@@ -1,5 +1,8 @@
+import { THEME } from '../theme';
+import { CORGI, CORGI_MORE } from './corgi';
 import { en } from './en';
 import { MORE, MORE_NAMES } from './more';
+import { overlay } from './overlay';
 import { zh } from './zh';
 
 // String tables (docs/design.md "Localization"). English is the source: every other table is
@@ -18,8 +21,14 @@ type Paths<T> = {
 
 export type Key = Paths<typeof en>;
 
+/**
+ * The theme's own words (docs/reskin.md): under the corgi theme its tables (i18n/corgi) replace
+ * the base strings key for key. A monk build folds this to null and ships no corgi text.
+ */
+const THEMED = THEME === 'corgi' ? { now: CORGI, more: CORGI_MORE } : null;
+
 /** The tables in hand: en and zh always, the others once loadLocale fetched them. */
-const TABLES: Partial<Record<Locale, Table<typeof en>>> = { en, zh };
+const TABLES: Partial<Record<Locale, Table<typeof en>>> = { en: overlay(en, THEMED?.now.en), zh: overlay(zh, THEMED?.now.zh) };
 /** The languages this build ships (WeChat: en and zh only, i18n/more.ts), in the picker's order. */
 export const LOCALES: readonly Locale[] = ALL.filter((l) => TABLES[l] || MORE[l]);
 
@@ -32,7 +41,8 @@ export async function loadLocale(locale: Locale): Promise<boolean> {
   const load = MORE[locale];
   if (!load) return false;
   try {
-    TABLES[locale] = await load();
+    const [table, over] = await Promise.all([load(), THEMED?.more[locale]?.()]);
+    TABLES[locale] = overlay(table, over);
     return true;
   } catch {
     return false;
@@ -68,7 +78,7 @@ export function detectLocale(languages: readonly string[]): Locale {
 }
 
 function lookup(key: string, locale: Locale): string {
-  let node: unknown = TABLES[locale] ?? en;
+  let node: unknown = TABLES[locale] ?? TABLES.en;
   for (const part of key.split('.')) {
     if (node === null || typeof node !== 'object') return key;
     node = (node as Record<string, unknown>)[part];

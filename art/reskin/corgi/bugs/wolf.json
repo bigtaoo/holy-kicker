@@ -1,0 +1,19 @@
+{
+  "source": "dune/wolf_v1.png",
+  "out": "../game/art/ch3/mobs/wolf",
+  "frames": 10, "fps": 16,
+  "height": 180,
+  "fit": {"frame": [296, 197], "anchor": [145.0, 192.8], "height": 172},
+  "ground": [430, 690],
+  "body": {
+    "dy": {"keys": [[0, 0], [0.25, -40], [0.5, 0], [0.75, -40]]},
+    "sy": {"keys": [[0, 0.95], [0.25, 1.03], [0.5, 0.95], [0.75, 1.03]]},
+    "sx": {"keys": [[0, 1.04], [0.25, 0.98], [0.5, 1.04], [0.75, 0.98]]}
+  },
+  "deform": [
+    {"type": "rotate", "region": {"c": [190, 570], "r": [190, 130], "feather": 0.35}, "pivot": [330, 440], "angle": {"sin": 14, "cycles": 1}},
+    {"type": "rotate", "region": {"c": [700, 570], "r": [190, 120], "feather": 0.35}, "pivot": [620, 440], "angle": {"sin": 12, "cycles": 1, "phase": 0.5}},
+    {"type": "wave", "region": {"c": [280, 90], "r": [180, 110], "feather": 0.4}, "root": [200, 180], "dir": [0.4, -1], "length": 180, "wavelength": 240, "amp": 14, "cycles": 1},
+    {"type": "rotate", "region": {"c": [190, 270], "r": [190, 170], "feather": 0.35}, "pivot": [300, 360], "angle": {"sin": 3, "cycles": 2}}
+  ]
+}

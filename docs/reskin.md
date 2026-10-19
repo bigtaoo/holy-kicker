@@ -166,6 +166,31 @@ atlas packs at 0.7 so the close-up renders at full device resolution; G in the p
 out to the in-game size (120 units, about 70 CSS px on desktop), which is the size to judge the
 face at. Springs are `TaoActor.spring` (`src/game/tao/spring.ts`).
 
+**In the game**: `src/game/corgiHero.ts` (the motion in `corgiMotion.ts`, tested) plays the corgi
+when the build's theme is corgi and the hero rig has the twin guns (`heroes.ts` picks it; the
+monks keep `hero.ts`). The game's atlas packs at 0.35: `python tools/pack_tao.py
+art/reskin/corgi/corgi_tao.json - art/reskin/corgi/game/art/hero 0.35`, then `python tools/webp.py
+art/reskin/corgi/game/art/hero/atlas.png`; `corgi.json` maps `art/hero/*` to those files once the
+theme takes it. The sim gives no aim point, so the view re-picks what the relic would hit
+(`kickTarget`) four times a second and eases the aim there; every relic's attack is a shot of the
+raised gun at the relic's strike (the staff shoots on its sweep and the guns follow the staff),
+a hit flinches the body, and the guns drop when the hero goes down. No hurt, death or level-up
+clips yet.
+
+**Squad rigs**: Brick the bulldog (`art/reskin/bulldog/`, the fat monk's slot) and Ginger the cat
+(`art/reskin/cat/`, the novice's) are made the same way, with the corgi's bone and slot names
+and clips plus one spring candidate each (`plate`, the belly plate, and `scarf`, both under
+`torso`). Each A-pose is fitted to the corgi's scale (`tools/fit_figure.py`: a 704 px figure,
+feet at 505,732 on 1024x768) so the origin and the reused guns match. The bulldog's body is
+`apose_b.png` and its head, ears and stub tail come from `apose_a.png` (`"sources"`,
+`tail_stub.png`). Both pack at 0.35 straight into the corgi theme:
+`python tools/pack_tao.py art/reskin/bulldog/bulldog_tao.json art/reskin/bulldog/bulldog.tao
+art/reskin/corgi/game/art/monks/fat` (the cat into `.../novice`). The portraits
+(`portrait.png` in each folder) are the rigs with both arms down, drawn by
+`python tools/pose_parts.py <parts> <rig.json> <out.png> arm_f=-74 arm_n=74`, then packed
+like the monks' sheet (`pack_icons.py --cell 256 --name monks` with `PAD = 2`, frames
+corgi, bulldog, cat) into `art/reskin/corgi/game/art/icons/monks.png`.
+
 ### Bugs (baked)
 
 Bake from small rigs instead of warping one drawing: six real legs walking in a tripod gait
@@ -230,11 +255,18 @@ entry may point into `client/public` to reuse a monk file on purpose (a UI sound
   tunnel's second public hostname `hk-new.gamestao.com` → `http://api-new:8080`.
 - Saves: in the browser the corgi keeps every key under `corgi:` (`src/theme.ts`), so the two games
   on h.gamestao.com never share a save.
+- Words: `client/src/i18n/corgi/` overrides the strings that name the monk's world (heroes, relics
+  → weapons, spells → gadgets, sutras → blueprints, shrines → supply drops, chapters → planets,
+  copper → bolts, jade → gems, training → Boot Camp, the story lines), key for key over the base
+  tables, in every language; `corgi.test.ts` keeps each table on the base table's keys and
+  placeholders. The overlay is chosen through `__HK_THEME__`, so a monk build carries none of it.
+  The XP pickups are treats there, which leaves "gems" for the premium currency.
+- The page: `build/themeHtml.mjs` gives the corgi's `index.html` its title, colours and loading
+  screen (a corgi head hopping where the cuju ball was); it fails the build if `index.html` loses
+  the text it replaces.
 
-Still to do before the corgi build can run as itself: its own hero view (the rig has other bones
-and clips than `art/hero`; port the prototype, and pack the atlas at 0.35 like the monks), the
-i18n tables (names from this page) and the page title in `index.html`, then the art and sounds
-for every list entry.
+Still to do before the corgi build can run as itself: the files still null in `corgi.json`
+(`npm run check:theme` counts them).
 
 ## Open
 

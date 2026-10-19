@@ -1,0 +1,33 @@
+{
+  "source": "tick_v2.png",
+  "out": "../game/art/mobs/fox",
+  "frames": 10,
+  "fps": 18,
+  "height": 220,
+  "ground": [430, 470],
+  "pad": [30, 40, 30, 10],
+  "drop": [{"below": 280, "islands": true, "hsv": [[[0, 0, 150], [179, 80, 255]]]}],
+  "body": {
+    "dy": {"keys": [[0, 0], [0.25, -14], [0.5, 0], [0.75, -14]]},
+    "sy": {"keys": [[0, 0.97], [0.25, 1.02], [0.5, 0.97], [0.75, 1.02]]},
+    "sx": {"keys": [[0, 1.02], [0.25, 0.99], [0.5, 1.02], [0.75, 0.99]]}
+  },
+  "deform": [
+    {"type": "rotate", "region": {"c": [80, 270], "r": [110, 110], "feather": 0.35}, "pivot": [210, 210],
+     "angle": {"sin": 12, "cycles": 2}},
+    {"type": "rotate", "region": {"c": [150, 340], "r": [80, 80], "feather": 0.35}, "pivot": [240, 265],
+     "angle": {"sin": 12, "cycles": 2, "phase": 0.25}},
+    {"type": "rotate", "region": {"c": [215, 385], "r": [60, 85], "feather": 0.35}, "pivot": [260, 285],
+     "angle": {"sin": 12, "cycles": 2}},
+    {"type": "rotate", "region": {"c": [290, 400], "r": [50, 85], "feather": 0.35}, "pivot": [305, 275],
+     "angle": {"sin": 12, "cycles": 2, "phase": 0.25}},
+    {"type": "rotate", "region": {"c": [545, 400], "r": [50, 85], "feather": 0.35}, "pivot": [520, 275],
+     "angle": {"sin": 12, "cycles": 2}},
+    {"type": "rotate", "region": {"c": [710, 330], "r": [55, 80], "feather": 0.35}, "pivot": [680, 255],
+     "angle": {"sin": 12, "cycles": 2, "phase": 0.25}},
+    {"type": "rotate", "region": {"c": [820, 300], "r": [65, 110], "feather": 0.35}, "pivot": [760, 200],
+     "angle": {"sin": 10, "cycles": 2}},
+    {"type": "rotate", "region": {"c": [450, 160], "r": [330, 170], "feather": 0.3}, "pivot": [430, 470],
+     "angle": {"sin": 2, "cycles": 2, "phase": 0.1}}
+  ]
+}

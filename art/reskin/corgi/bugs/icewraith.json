@@ -1,0 +1,136 @@
+{
+ "source": "dune/icewraith_v1.png",
+ "out": "../game/art/ch3/mobs/icewraith",
+ "frames": 10,
+ "fps": 9,
+ "height": 190,
+ "fit": {
+  "frame": [
+   185,
+   202
+  ],
+  "anchor": [
+   99.1,
+   198.7
+  ],
+  "height": 180
+ },
+ "ground": [
+  258,
+  690
+ ],
+ "body": {
+  "dy": {
+   "sin": 14,
+   "bias": -18
+  },
+  "sy": {
+   "sin": 0.02,
+   "bias": 1,
+   "phase": 0.25
+  }
+ },
+ "deform": [
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     60,
+     560
+    ],
+    "r": [
+     90,
+     140
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    120,
+    440
+   ],
+   "dir": [
+    -0.2,
+    1
+   ],
+   "length": 250,
+   "wavelength": 260,
+   "amp": 12,
+   "cycles": 1
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     460,
+     560
+    ],
+    "r": [
+     90,
+     140
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    400,
+    440
+   ],
+   "dir": [
+    0.2,
+    1
+   ],
+   "length": 250,
+   "wavelength": 300,
+   "amp": 12,
+   "cycles": 1
+  },
+  {
+   "type": "wave",
+   "region": {
+    "c": [
+     260,
+     610
+    ],
+    "r": [
+     130,
+     90
+    ],
+    "feather": 0.45
+   },
+   "root": [
+    260,
+    520
+   ],
+   "dir": [
+    0,
+    1
+   ],
+   "length": 180,
+   "wavelength": 220,
+   "amp": 10,
+   "cycles": 1
+  },
+  {
+   "type": "rotate",
+   "region": {
+    "c": [
+     260,
+     150
+    ],
+    "r": [
+     230,
+     170
+    ],
+    "feather": 0.4
+   },
+   "pivot": [
+    260,
+    260
+   ],
+   "angle": {
+    "sin": 3,
+    "phase": 0.3,
+    "cycles": 1
+   }
+  }
+ ]
+}

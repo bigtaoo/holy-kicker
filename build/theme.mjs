@@ -7,6 +7,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { extname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { themeHtml } from './themeHtml.mjs';
 
 export const ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const PUBLIC = join(ROOT, 'client/public');
@@ -77,7 +78,8 @@ const TYPES = { '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg'
  * The Vite plugin that ships a theme's files in place of client/public. Monk: nothing to do.
  * Others: no public dir; the build emits exactly the listed files and fails while the list is
  * incomplete. The dev server serves the listed files and, for development only, falls back to
- * the monk file for an entry still null, so the game runs while the art comes in.
+ * the monk file for an entry still null, so the game runs while the art comes in. index.html gets
+ * the theme's title and loading screen (build/themeHtml.mjs).
  */
 export function themeAssets(name) {
   themeOf(name);
@@ -89,6 +91,9 @@ export function themeAssets(name) {
     config: () => ({ publicDir: false }),
     configResolved(config) {
       build = config.command === 'build';
+    },
+    transformIndexHtml(html, ctx) {
+      return /(^|[\\/])index\.html$/.test(ctx.filename) ? themeHtml(name, html) : html;
     },
     buildStart() {
       if (!build) return;

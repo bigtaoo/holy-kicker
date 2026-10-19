@@ -1,0 +1,27 @@
+{
+  "source": "bogworm_v2.png",
+  "out": "../game/art/mobs/carp",
+  "frames": 12,
+  "fps": 10,
+  "flash": false,
+  "height": 380,
+  "ground": [470, 690],
+  "pad": [40, 30, 40, 20],
+  "drop": [{"below": 640, "islands": true, "hsv": [[[75, 40, 50], [110, 255, 255]], [[0, 0, 140], [179, 60, 255]]]}],
+  "body": {
+    "sy": {"sin": 0.025, "bias": 1, "cycles": 2},
+    "sx": {"sin": -0.015, "bias": 1, "cycles": 2}
+  },
+  "deform": [
+    {"type": "rotate", "region": {"c": [420, 180], "r": [240, 190], "feather": 0.4}, "pivot": [560, 330],
+     "angle": {"sin": 6, "phase": 0.15}},
+    {"type": "rotate", "region": {"c": [520, 270], "r": [300, 300], "feather": 0.3}, "pivot": [560, 600],
+     "angle": {"sin": 3}},
+    {"type": "wave", "region": {"c": [200, 470], "r": [140, 110], "feather": 0.4}, "root": [330, 480],
+     "dir": [-1, 0], "length": 220, "wavelength": 300, "amp": 10, "cycles": 1},
+    {"type": "wave", "region": {"c": [800, 490], "r": [90, 90], "feather": 0.4}, "root": [720, 500],
+     "dir": [1, 0], "length": 140, "wavelength": 220, "amp": 9, "cycles": 1},
+    {"type": "wave", "region": {"c": [460, 620], "r": [430, 70], "feather": 0.5}, "root": [460, 570],
+     "dir": [0, 1], "length": 100, "wavelength": 260, "amp": 7, "cycles": 2}
+  ]
+}

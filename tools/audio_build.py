@@ -4,22 +4,30 @@ in length, peak-normalised to -1 dBFS and encoded as mono MP3; every picked musi
 stereo MP3. Writes client/public/audio/{sfx,music}/ and audio/sounds.json (audio/samples.ts),
 and prints the authors to credit. Needs ffmpeg and ffprobe on the PATH.
 
-    python tools/audio_build.py [picks.json]
+    python tools/audio_build.py [picks.json] [--theme corgi] [--source DIR]
 
 A cue picked as "synth" (or not picked) keeps its generated voice. A pick may end in "#seconds" to
 cut that effect shorter than MAX_SFX (e.g. a chain zap that fires many times a second). MP3 because it is the one
 format every target decodes: browsers, iOS and WeChat's decodeAudioData and InnerAudioContext.
+A pick may also start at "@seconds" into its file ("path@start#seconds" is a clip of a longer one).
+
+--theme corgi builds the corgi set from art/audio/corgi/picks.json into art/reskin/corgi/game/audio/
+(the same file names and sounds.json; client/themes/corgi.json maps them into the corgi build).
+--source reads the downloads from another folder, e.g. the main checkout's from a worktree.
 """
+import argparse
 import json
 import os
 import re
 import shutil
 import subprocess
-import sys
+
+import audio_corgi
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ART = os.path.join(HERE, '..', 'art', 'audio')
 OUT = os.path.join(HERE, '..', 'client', 'public', 'audio')
+CORGI_OUT = os.path.join(HERE, '..', 'art', 'reskin', 'corgi', 'game', 'audio')
 
 # effects longer than this are cut (with a short fade); the cue gaps are far shorter anyway
 MAX_SFX = 3.0
@@ -84,47 +92,64 @@ def encode(src: str, dst: str, filters: str, channels: str, kbps: str) -> None:
          '-ac', channels, '-ar', SFX_RATE, '-c:a', 'libmp3lame', '-b:a', kbps, dst])
 
 
-def sfx_filters(length: float = MAX_SFX) -> str:
+def clip_filter(start: str, length: str) -> str:
+    """The "@start#seconds" clip of a longer file, before the silence trim."""
+    if not start:
+        return ''
+    return f'atrim=start={start}' + (f':duration={length}' if length else '') + ',asetpts=PTS-STARTPTS,'
+
+
+def sfx_filters(length: float = MAX_SFX, clip: str = '') -> str:
     trim = f'silenceremove=start_periods=1:start_threshold={SILENCE}:start_silence=0.005'
     # trim the tail by trimming the reversed head; then cap the length with a fade out
     fade = min(0.15, length / 3)
-    return (f'{trim},areverse,{trim},areverse,'
+    return (f'{clip}{trim},areverse,{trim},areverse,'
             f'atrim=0:{length},afade=t=out:st={length - fade:.3f}:d={fade:.3f}')
 
 
-def credit(path: str) -> str:
-    return next((who for prefix, who in AUTHORS if path.startswith(prefix)), 'unknown')
+def credit(path: str, authors: list[tuple[str, str]]) -> str:
+    return next((who for prefix, who in authors if path.startswith(prefix)), 'unknown')
 
 
 def main() -> None:
-    picks_path = sys.argv[1] if len(sys.argv) > 1 else os.path.join(ART, 'picks.json')
+    ap = argparse.ArgumentParser()
+    ap.add_argument('picks', nargs='?')
+    ap.add_argument('--theme', choices=['monk', 'corgi'], default='monk')
+    ap.add_argument('--source', default=os.path.join(ART, 'source'))
+    a = ap.parse_args()
+    corgi = a.theme == 'corgi'
+    out = CORGI_OUT if corgi else OUT
+    authors = audio_corgi.AUTHORS if corgi else AUTHORS
+    picks_path = a.picks or os.path.join(ART, 'corgi' if corgi else '', 'picks.json')
     with open(picks_path, encoding='utf-8') as f:
         picks: dict[str, str] = json.load(f)
-    shutil.rmtree(OUT, ignore_errors=True)
-    os.makedirs(os.path.join(OUT, 'sfx'))
-    os.makedirs(os.path.join(OUT, 'music'))
+    shutil.rmtree(out, ignore_errors=True)
+    os.makedirs(os.path.join(out, 'sfx'))
+    os.makedirs(os.path.join(out, 'music'))
     manifest: dict = {'sfx': {}, 'music': {}}
     used: dict[str, list[str]] = {}
     for slot, pick in sorted(picks.items()):
         if not pick or pick == 'synth':
             continue
         pick, _, cut = pick.partition('#')
+        pick, _, start = pick.partition('@')
         rel = pick.removeprefix('source/')
-        src = os.path.join(ART, 'source', rel)
+        src = os.path.join(a.source, rel)
+        clip = clip_filter(start, cut)
         if slot.startswith('music.'):
             track = slot.removeprefix('music.')
             dst = f'music/{track}.mp3'
-            encode(src, os.path.join(OUT, dst), 'anull', '2', MUSIC_KBPS)
-            manifest['music'][track] = {'path': f'audio/{dst}', 'length': round(duration(os.path.join(OUT, dst)), 3)}
+            encode(src, os.path.join(out, dst), clip + 'anull', '2', MUSIC_KBPS)
+            manifest['music'][track] = {'path': f'audio/{dst}', 'length': round(duration(os.path.join(out, dst)), 3)}
         else:
             dst = f'sfx/{slot}.mp3'
-            encode(src, os.path.join(OUT, dst), sfx_filters(min(float(cut or MAX_SFX), MAX_SFX)), '1', SFX_KBPS)
+            encode(src, os.path.join(out, dst), sfx_filters(min(float(cut or MAX_SFX), MAX_SFX), clip), '1', SFX_KBPS)
             manifest['sfx'][slot] = [f'audio/{dst}']
-        used.setdefault(credit(rel), []).append(slot)
-    with open(os.path.join(OUT, 'sounds.json'), 'w', encoding='utf-8') as f:
+        used.setdefault(credit(rel, authors), []).append(slot)
+    with open(os.path.join(out, 'sounds.json'), 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=1)
         f.write('\n')
-    total = sum(os.path.getsize(os.path.join(dp, n)) for dp, _, ns in os.walk(OUT) for n in ns)
+    total = sum(os.path.getsize(os.path.join(dp, n)) for dp, _, ns in os.walk(out) for n in ns)
     print(f'{len(manifest["sfx"])} effects, {len(manifest["music"])} tracks, {total / 1024:.0f} KB')
     for who, slots in sorted(used.items()):
         print(f'  {who}: {", ".join(slots)}')
