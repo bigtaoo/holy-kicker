@@ -177,6 +177,20 @@ raised gun at the relic's strike (the staff shoots on its sweep and the guns fol
 a hit flinches the body, and the guns drop when the hero goes down. No hurt, death or level-up
 clips yet.
 
+**Squad rigs**: Brick the bulldog (`art/reskin/bulldog/`, the fat monk's slot) and Ginger the cat
+(`art/reskin/cat/`, the novice's) are made the same way, with the corgi's bone and slot names
+and clips plus one spring candidate each (`plate`, the belly plate, and `scarf`, both under
+`torso`). Each A-pose is fitted to the corgi's scale (`tools/fit_figure.py`: a 704 px figure,
+feet at 505,732 on 1024x768) so the origin and the reused guns match. The bulldog's body is
+`apose_b.png` and its head, ears and stub tail come from `apose_a.png` (`"sources"`,
+`tail_stub.png`). Both pack at 0.35 straight into the corgi theme:
+`python tools/pack_tao.py art/reskin/bulldog/bulldog_tao.json art/reskin/bulldog/bulldog.tao
+art/reskin/corgi/game/art/monks/fat` (the cat into `.../novice`). The portraits
+(`portrait.png` in each folder) are the rigs with both arms down, drawn by
+`python tools/pose_parts.py <parts> <rig.json> <out.png> arm_f=-74 arm_n=74`, then packed
+like the monks' sheet (`pack_icons.py --cell 256 --name monks` with `PAD = 2`, frames
+corgi, bulldog, cat) into `art/reskin/corgi/game/art/icons/monks.png`.
+
 ### Bugs (baked)
 
 Bake from small rigs instead of warping one drawing: six real legs walking in a tripod gait
