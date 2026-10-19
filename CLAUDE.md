@@ -72,11 +72,18 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `client/src/webpArt.json` also ship a `.webp` twin (`python tools/webp.py` after changing a PNG;
   `check:webp` fails on a missing or mis-sized one); web hosts load it when the browser decodes WebP, falling back
   to the PNG per file; WeChat ships PNG only.
+- `client/themes/corgi.json` — the corgi reskin's asset list: one codebase, two art sets, never
+  mixed in a build (`build/theme.mjs`, docs/reskin.md "Builds"). Every key is a file of
+  `client/public`, mapped to the corgi's file or null while not drawn; `check:theme` keeps it in step
+  (`-- --sync` after adding or removing public files). `npm run dev:new`; `npm run build:new` →
+  h.gamestao.com/new/ and `npm run build:crazygames:new` fail until every entry is drawn. Corgi
+  builds use hk-new.gamestao.com and keep their browser saves under `corgi:`.
 - `art/` — source art and style exploration; `tools/` — art scripts.
 - `build/` — check scripts.
 - `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` ships
   the backend to hk.gamestao.com (`SERVER_DEPLOY_ENABLED`), then publishes the web build to
-  h.gamestao.com (Cloudflare, `wrangler/web.jsonc`, `WEB_DEPLOY_ENABLED`).
+  h.gamestao.com (Cloudflare, `wrangler/web.jsonc`, `WEB_DEPLOY_ENABLED`) and the corgi build to
+  h.gamestao.com/new/ (`wrangler/new.jsonc`, `NEW_WEB_DEPLOY_ENABLED`).
 - `.github/workflows/release-ios.yml` — the iOS app, built only on the macOS runner (no Mac here):
   an unsigned compile on pushes that touch the shell; a tag `ios-v*` or a manual run signs it and
   uploads to TestFlight (`docs/ios.md`).

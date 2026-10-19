@@ -92,6 +92,12 @@ box's ports 80/443 are daydayup's Caddy, so the way in is a Cloudflare Tunnel: `
 dials out to Cloudflare, which serves https://hk.gamestao.com and passes the requests down to
 `http://api:8080`. The client's address arrives in `CF-Connecting-IP`.
 
+The corgi reskin has a backend of its own (docs/reskin.md "Builds"): `hk-api-new`, the same image
+on the database `holykicker_new`, behind https://hk-new.gamestao.com. It stays off until the
+box's `.env` has `COMPOSE_PROFILES=new` (add it to `secrets/holykicker/prod.yaml` and rewrite the
+`.env`, below) and the tunnel has a second public hostname, `hk-new.gamestao.com` →
+`http://api-new:8080`. Its dashboard is https://hk-new.gamestao.com/dash.
+
 Every green push to `main` deploys it (`.github/workflows/ci.yml`, job `deploy-server`, before
 the web build goes out); a push that leaves the bundle unchanged restarts nothing. By hand:
 

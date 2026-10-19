@@ -1,11 +1,24 @@
 import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
+import { themeAssets } from '../build/theme.mjs';
 
-export default defineConfig({
-  // @hk/engine: the deterministic sim, a sibling package at the repo root (build/hkAlias.mjs)
-  resolve: { alias: engineAlias },
-  define: buildDefine(),
-  server: { port: 5174, host: true },
-  build: { target: 'es2020', outDir: 'dist' },
-});
+/**
+ * The web build of one art set (build/theme.mjs). Monk: `npm run build` → client/dist, served at
+ * h.gamestao.com. Corgi: `npm run build:new` (vite.new.config.js) → client/dist-new/new/, served
+ * at h.gamestao.com/new/ (wrangler/new.jsonc), its art from client/themes/corgi.json only.
+ */
+export function webConfig(theme) {
+  const monk = theme === 'monk';
+  return defineConfig(({ command }) => ({
+    base: monk || command !== 'build' ? '/' : '/new/',
+    // @hk/engine: the deterministic sim, a sibling package at the repo root (build/hkAlias.mjs)
+    resolve: { alias: engineAlias },
+    define: buildDefine(theme),
+    plugins: [themeAssets(theme)],
+    server: { port: monk ? 5174 : 5184, host: true },
+    build: { target: 'es2020', outDir: monk ? 'dist' : 'dist-new/new', emptyOutDir: true },
+  }));
+}
+
+export default webConfig('monk');

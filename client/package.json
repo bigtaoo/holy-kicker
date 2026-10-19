@@ -17,7 +17,13 @@
     "preview": "vite preview --port 4173",
     "build:playgama": "tsc --noEmit && vite build --config vite.playgama.config.js",
     "dev:playgama": "vite --config vite.playgama.config.js",
-    "preview:playgama": "vite preview --config vite.playgama.config.js --port 4176 --strictPort"
+    "preview:playgama": "vite preview --config vite.playgama.config.js --port 4176 --strictPort",
+    "build:new": "tsc --noEmit && vite build --config vite.new.config.js",
+    "dev:new": "vite --config vite.new.config.js",
+    "preview:new": "vite preview --config vite.new.config.js --port 4184 --strictPort",
+    "build:crazygames:new": "tsc --noEmit && vite build --config vite.crazygames.new.config.js",
+    "dev:crazygames:new": "vite --config vite.crazygames.new.config.js",
+    "preview:crazygames:new": "vite preview --config vite.crazygames.new.config.js --port 4185 --strictPort"
   },
   "dependencies": {
     "@capacitor/core": "^8.5.3",

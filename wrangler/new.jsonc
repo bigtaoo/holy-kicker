@@ -1,0 +1,23 @@
+{
+  // Static hosting for the corgi reskin's web build (docs/reskin.md "Builds"), served at
+  // h.gamestao.com/new/ next to Holy Kicker. A Worker route on the hostname runs ahead of the
+  // custom domain that wrangler/web.jsonc owns, so /new and everything under it come here and
+  // the rest of h.gamestao.com stays Holy Kicker's.
+  //
+  // Build (outputs client/dist-new/new/):  npm run build:new   (fails until the corgi art is complete)
+  // Deploy (from the repo root):           npx wrangler deploy -c wrangler/new.jsonc
+  //
+  // The files sit under new/ in the assets directory, so /new/art/... is new/art/...; /new
+  // redirects to /new/ (new/index.html). No SPA fallback: a missing file is a 404, never the page.
+  // The game talks to its own backend at hk-new.gamestao.com (build/theme.mjs).
+  "name": "holy-kicker-new",
+  "compatibility_date": "2026-10-05",
+  "workers_dev": false,
+  "assets": {
+    "directory": "../client/dist-new"
+  },
+  "routes": [
+    { "pattern": "h.gamestao.com/new", "zone_name": "gamestao.com" },
+    { "pattern": "h.gamestao.com/new/*", "zone_name": "gamestao.com" }
+  ]
+}

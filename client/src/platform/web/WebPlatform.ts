@@ -4,6 +4,7 @@ import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { Battery, DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
+import { themedStore } from '../../theme';
 import { FAKE_ADS, NO_ADS, fakeStore, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type Attention, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { BannerHost, FAKE_BANNER_FILL } from './banner';
 import { askTextDom } from './textAsk';
@@ -21,10 +22,13 @@ const KEY_DIRS: Record<string, Vec2> = {
   ArrowRight: { x: 1, y: 0 },
 };
 
-/** localStorage, or null where touching it throws (some sandboxed iframes). */
+/**
+ * localStorage, or null where touching it throws (some sandboxed iframes); a theme other than the
+ * monk's keeps its own keys there (src/theme.ts).
+ */
 export function browserStorage(): KeyValueStore | null {
   try {
-    return window.localStorage;
+    return themedStore(window.localStorage);
   } catch {
     return null;
   }

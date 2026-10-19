@@ -200,8 +200,42 @@ timeline editor that authors .tao rigs and clips (Pixi 7, with easing presets); 
 against `pack_tao.py`'s format, then use it for the corgi and the bosses, and key the bug rigs in it
 too before baking.
 
+## Builds
+
+One codebase, two art sets, never mixed in a release (`build/theme.mjs`). Every existing build is
+the `monk` theme and ships `client/public` as before. The `corgi` theme ships only the files
+listed in `client/themes/corgi.json`: each path the game loads (the keys, which are exactly the
+files of `client/public`, the reference for paths, formats and sheet layouts) maps to the corgi's
+file in the repo, or `null` while it is not drawn. A corgi build fails, listing what is left, while
+any entry is null or its file is missing, so `/new` goes live only with the art complete. A list
+entry may point into `client/public` to reuse a monk file on purpose (a UI sound, say).
+
+- `npm run check:theme` (part of `npm run check`) fails when the list and `client/public` drift
+  apart, a source is missing, or a drawn PNG and its WebP twin differ in size; it counts the nulls.
+  After adding or removing a file of `client/public`, `npm run check:theme -- --sync` adds it as
+  null (or drops it).
+- `npm run dev:new` (port 5184): the corgi on the dev server. Entries still null fall back to the
+  monk file there, and only there.
+- `npm run build:new` → `client/dist-new/new/`, served at https://h.gamestao.com/new/ by its own
+  Worker (`wrangler/new.jsonc`, routes on the hostname ahead of Holy Kicker's custom domain). CI's
+  `deploy-new` job ships it on a green push to main once the repository variable
+  `NEW_WEB_DEPLOY_ENABLED` is `true`; the Cloudflare token then also needs Zone → Workers Routes →
+  Edit on gamestao.com.
+- `npm run build:crazygames:new` → `client/dist-crazygames-new/`, the zip for its own CrazyGames
+  game. WeChat, iOS and Playgama build the monk only.
+- Backend apart: corgi builds talk to https://hk-new.gamestao.com (`__HK_API__`), the same server
+  image as `api-new` on the box with the database `holykicker_new`, so players, boards, problem
+  reports and the dashboard numbers stay separate. To switch it on: add `COMPOSE_PROFILES=new` to
+  the box's `.env` (through `secrets/holykicker/prod.yaml`, server/README.md), redeploy, and add the
+  tunnel's second public hostname `hk-new.gamestao.com` → `http://api-new:8080`.
+- Saves: in the browser the corgi keeps every key under `corgi:` (`src/theme.ts`), so the two games
+  on h.gamestao.com never share a save.
+
+Still to do before the corgi build can run as itself: its own hero view (the rig has other bones
+and clips than `art/hero`; port the prototype, and pack the atlas at 0.35 like the monks), the
+i18n tables (names from this page) and the page title in `index.html`, then the art and sounds
+for every list entry.
+
 ## Open
 
 - The title and whether it clashes with an existing game.
-- Build plumbing: a theme switch in the client (art, i18n tables, sounds) or a fork; to decide
-  once the art direction is settled.

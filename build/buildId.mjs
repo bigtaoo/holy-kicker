@@ -3,6 +3,7 @@
 // compare their new players. A tree with uncommitted changes is marked `-dirty`.
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
+import { themeOf } from './theme.mjs';
 
 const git = (args) => {
   try {
@@ -26,8 +27,13 @@ export function buildId() {
  */
 export const bundleVersion = () => process.env.HK_BUNDLE_VERSION || '0.0.0';
 
-/** Vite's `define` for them: `__HK_BUILD__` and `__HK_BUNDLE__` in the client. */
-export const buildDefine = () => ({
+/**
+ * Vite's `define` for them: `__HK_BUILD__` and `__HK_BUNDLE__` in the client, plus the art set
+ * (`__HK_THEME__`) and its backend (`__HK_API__`), build/theme.mjs.
+ */
+export const buildDefine = (theme = 'monk') => ({
   __HK_BUILD__: JSON.stringify(buildId()),
   __HK_BUNDLE__: JSON.stringify(bundleVersion()),
+  __HK_THEME__: JSON.stringify(theme),
+  __HK_API__: JSON.stringify(themeOf(theme).api),
 });

@@ -16,7 +16,8 @@ const TIMEOUT_MS = 8000;
 /** A report carries a replay of up to a few MB, so it gets longer on a slow phone. */
 const REPORT_TIMEOUT_MS = 45_000;
 export const INSTALL_KEY = 'hk.install';
-export const DEFAULT_API = 'https://hk.gamestao.com';
+/** The theme's backend: hk.gamestao.com for Holy Kicker (build/theme.mjs). */
+export const DEFAULT_API = __HK_API__;
 
 /**
  * Where the backend is, or null for none: `?api=` overrides (`off`, or a URL such as

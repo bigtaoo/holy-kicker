@@ -7,6 +7,9 @@ name: ci
 # Cloudflare at h.gamestao.com (wrangler/web.jsonc). Backend first, so a client never goes
 # live talking to routes the server does not have yet. A push that leaves the server bundle
 # unchanged restarts nothing (server/deploy/ci-deploy.sh compares the files).
+# The corgi reskin (docs/reskin.md "Builds") publishes the same way to h.gamestao.com/new/
+# (wrangler/new.jsonc) once NEW_WEB_DEPLOY_ENABLED is set; its build fails while any corgi art
+# is missing, so the switch only goes on with the art complete. Its backend is the box's api-new.
 #
 # The deploys need, in Settings -> Secrets and variables -> Actions:
 #   Secrets    CLOUDFLARE_API_TOKEN   gamestao.com account, at least Workers Scripts:Edit
@@ -15,6 +18,7 @@ name: ci
 #                                     (local copy D:\cloud\holykicker_ci_ed25519; server/README.md)
 #   Variables  WEB_DEPLOY_ENABLED = true, SERVER_DEPLOY_ENABLED = true   (unset: that deploy
 #                                     is skipped, so CI stays green before the secrets are in)
+#              NEW_WEB_DEPLOY_ENABLED = true   the corgi build at h.gamestao.com/new/
 #              SERVER_SSH_KNOWN_HOSTS   the box's pinned host key line
 
 on:
@@ -111,4 +115,36 @@ jobs:
             sleep 3
           done
           echo "h.gamestao.com did not answer" >&2
+          exit 1
+
+  deploy-new:
+    needs: [check, deploy-server]
+    runs-on: ubuntu-latest
+    # like deploy-web, for the corgi reskin; its own switch, so either game ships on its own
+    if: ${{ !cancelled() && needs.check.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.deploy-server.result) && vars.NEW_WEB_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    concurrency:
+      group: new-deploy
+      cancel-in-progress: true
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: build web (corgi)
+        run: npm run build:new
+      - name: deploy to Cloudflare
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx -y wrangler@4.118.0 deploy -c wrangler/new.jsonc
+      - name: verify from the outside
+        run: |
+          set -eu
+          for i in $(seq 1 10); do
+            if curl -fsSL --max-time 10 https://h.gamestao.com/new/ | grep -q '/new/assets/'; then exit 0; fi
+            sleep 3
+          done
+          echo "h.gamestao.com/new/ did not serve the corgi build" >&2
           exit 1

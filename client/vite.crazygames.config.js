@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
+import { themeAssets, themeOf } from '../build/theme.mjs';
 
 // The CrazyGames build: `npm run build:crazygames` writes client/dist-crazygames/, the folder
 // to zip and upload. Adapted from D:\daydayup\client\vite.crazygames.config.js. It differs
@@ -19,9 +20,11 @@ import { buildDefine } from '../build/buildId.mjs';
 // (2) and (3) rewrite index.html on two hooks, because Vite's build reaches the HTML through
 // `transform` (before vite:build-html swaps the entry) and dev through `transformIndexHtml`.
 // The build fails if neither ran, rather than shipping a game without the integration.
+// The corgi reskin builds the same way into client/dist-crazygames-new/ (vite.crazygames.new.config.js),
+// with its own art (build/theme.mjs) and backend.
 
 const SDK_TAG = '<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>';
-const API = (process.env.VITE_HK_API || 'https://hk.gamestao.com').replace(/\/+$/, '');
+const api = (theme) => (process.env.VITE_HK_API || themeOf(theme).api).replace(/\/+$/, '');
 
 /**
  * The inline `open_*` and `quit_*` checkpoints: no id, no storage, nothing from a developer's own
@@ -41,7 +44,7 @@ export function rewritePortalHtml(html, beacon = '') {
   return out;
 }
 
-const portalHtml = () => {
+const portalHtml = (theme) => {
   let applied = false;
   let beacon = '';
   const apply = (html) => {
@@ -53,7 +56,7 @@ const portalHtml = () => {
     name: 'crazygames-html',
     enforce: 'pre',
     configResolved(config) {
-      if (config.command === 'build') beacon = openBeacon(API, JSON.parse(buildDefine().__HK_BUILD__));
+      if (config.command === 'build') beacon = openBeacon(api(theme), JSON.parse(buildDefine(theme).__HK_BUILD__));
     },
     transform(code, id) {
       return id.endsWith('.html') ? apply(code) : null;
@@ -65,11 +68,16 @@ const portalHtml = () => {
   };
 };
 
-export default defineConfig({
-  base: './',
-  resolve: { alias: engineAlias },
-  define: buildDefine(),
-  plugins: [portalHtml()],
-  server: { port: 5175, host: true },
-  build: { target: 'es2020', outDir: 'dist-crazygames', emptyOutDir: true },
-});
+export function crazygamesConfig(theme) {
+  const monk = theme === 'monk';
+  return defineConfig({
+    base: './',
+    resolve: { alias: engineAlias },
+    define: buildDefine(theme),
+    plugins: [portalHtml(theme), themeAssets(theme)],
+    server: { port: monk ? 5175 : 5185, host: true },
+    build: { target: 'es2020', outDir: monk ? 'dist-crazygames' : 'dist-crazygames-new', emptyOutDir: true },
+  });
+}
+
+export default crazygamesConfig('monk');
