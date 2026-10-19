@@ -495,6 +495,12 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
   package). Picked in the lobby's settings or on the pause panel (`ui/languagePanel.ts`); the
   tables and layouts must not assume a language count.
 - Language order: saved setting → platform / browser language → English.
+- **One word per concept, in plain words**, the same in every table: enemies (敌人; not
+  monsters, foes or 怪物; a crowd of them is the horde / 敌群), spells (法术) for the skill
+  cards, including the ones a sutra unlocks (the sutra is the achievement, not a word players
+  see), relic (法器), "Lv." for levels. No design jargon on screen: a challenge is "everyone
+  plays the same run", never a seed. Start buttons say Play (出战); the replay's play is
+  only for watching runs.
 - Layouts leave room for about 30 % longer text (German, Russian). Damage numbers are digits
   only and need no localization.
 - Glyphs: system fonts on web (Japanese, Korean and Thai put their own fonts first, `ui/widgets.ts`); check CJK coverage and size on the WeChat build.
