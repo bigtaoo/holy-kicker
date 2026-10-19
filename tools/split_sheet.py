@@ -1,5 +1,5 @@
 """Cuts a generated sheet of several objects on a white background into one picture per object.
-usage: python split_sheet.py <sheet> <rows>x<cols> <out dir> <name>... [--min 0.002]
+usage: python split_sheet.py <sheet> <rows>x<cols>|auto <out dir> <name>... [--min 0.002]
 The background is removed as in cutout.py, then every connected piece of what is left goes to
 the grid cell holding its centre, so an object made of several pieces (a ring of drones, a
 spark beside a puddle) stays together and one reaching into the next cell keeps its tip. Names
@@ -7,7 +7,10 @@ go row by row; "-" skips a cell. A name may carry hole seeds, fractions of its o
 `pendant@0.5,0.4` (as cutout.py's holes, for closed shapes the background shows through).
 Writes <out dir>/<name>.png, cut out (RGBA), which the packers take as they are (cutout.py
 leaves a picture with transparency alone). Pieces under --min of the sheet's area are dropped
-unless they sit in a cell with a bigger one."""
+unless they sit in a cell with a bigger one.
+"auto" ignores the grid, for a sheet whose rows came out uneven: every piece over --min is an
+object, smaller ones join the nearest object, and the objects are named in reading order (rows
+by their centres, then left to right)."""
 import sys
 from pathlib import Path
 
@@ -30,6 +33,28 @@ def parse_name(arg):
     return name, holes
 
 
+def auto_cells(centres, areas, least):
+    """{object index in reading order: [(label, area)]}: the big pieces, each with the small
+    pieces nearest to it."""
+    big = [k for k, a in enumerate(areas) if a >= least]
+    groups = {k: [(k + 1, areas[k])] for k in big}
+    for k, a in enumerate(areas):
+        if a < least and big:
+            near = min(big, key=lambda b: np.hypot(*np.subtract(centres[k], centres[b])))
+            groups[near].append((k + 1, a))
+    size = np.median([np.sqrt(areas[k]) for k in big]) if big else 0
+    rows = []
+    for k in sorted(big, key=lambda b: centres[b][0]):
+        if rows and centres[k][0] - centres[rows[-1][0]][0] < size:
+            rows[-1].append(k)
+        else:
+            rows.append([k])
+    order = [k for row in rows for k in sorted(row, key=lambda b: centres[b][1])]
+    for i, k in enumerate(order):
+        print(f"  object {i}: centre {int(centres[k][1])},{int(centres[k][0])}")
+    return {i: groups[k] for i, k in enumerate(order)}
+
+
 def main():
     args = sys.argv[1:]
     min_share = 0.002
@@ -38,19 +63,24 @@ def main():
         min_share = float(args[i + 1])
         args = args[:i] + args[i + 2:]
     src, grid, out, names = args[0], args[1], Path(args[2]), args[3:]
-    rows, cols = (int(v) for v in grid.split("x"))
-    if len(names) != rows * cols:
-        sys.exit(f"{rows * cols} cells, {len(names)} names")
     im = Image.open(src).convert("RGBA")
     fg = np.asarray(ImageChops.invert(background_mask(im.convert("RGB")))) > 0
     labels, n = ndimage.label(fg)
     areas = ndimage.sum(fg, labels, range(1, n + 1))
     centres = ndimage.center_of_mass(fg, labels, range(1, n + 1))
     H, W = fg.shape
-    cells = {}
-    for k, ((cy, cx), area) in enumerate(zip(centres, areas), start=1):
-        cell = min(int(cy / H * rows), rows - 1) * cols + min(int(cx / W * cols), cols - 1)
-        cells.setdefault(cell, []).append((k, area))
+    if grid == "auto":
+        cells = auto_cells(centres, areas, min_share * H * W)
+        if len(names) != len(cells):
+            sys.exit(f"{len(cells)} objects, {len(names)} names")
+    else:
+        rows, cols = (int(v) for v in grid.split("x"))
+        if len(names) != rows * cols:
+            sys.exit(f"{rows * cols} cells, {len(names)} names")
+        cells = {}
+        for k, ((cy, cx), area) in enumerate(zip(centres, areas), start=1):
+            cell = min(int(cy / H * rows), rows - 1) * cols + min(int(cx / W * cols), cols - 1)
+            cells.setdefault(cell, []).append((k, area))
     out.mkdir(parents=True, exist_ok=True)
     for cell, arg in enumerate(names):
         if arg == "-":

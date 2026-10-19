@@ -37,30 +37,34 @@ DECO = {
     "art/ground/marsh_deco": ("planets/deco_jungle.png", "reeds puddle lily mossrock log lantern"),
     "art/ch3/ground/snow_deco": ("planets/deco_dune.png", "pine snowrock shrub ice stump cairn"),
     "art/ch4/ground/street_deco": ("planets/deco_forge.png", "lantern_post papers jars crates stall burner"),
-    "art/ch5/ground/cave_deco": ("planets/deco_hive.png", "spikes bones crystals brazier stupa -"),
+    "art/ch5/ground/cave_deco": ("planets/deco_hive.png", "spikes bones - brazier crystals stupa"),
 }
 
-# icon sheets: grid and names in reading order ("-" skips a cell, name@x,y seeds a see-through hole)
+# icon sheets: grid and names in reading order ("-" skips a cell or object, name@x,y seeds a
+# see-through hole); "auto" for the sheets whose rows came out uneven (split_sheet.py)
 ICON_SHEETS = {
     "icons/sheet_weapons.png": ("3x3", "ball staff - - beads - bolt - bell"),
-    "icons/sheet_spells.png": ("3x3", "palm incense lotus halo roar calm iron legs eye"),
-    "icons/sheet_passives.png": ("3x3", "rice wrath karma focus pendant bracers robe sash sandals"),
-    "icons/sheet_shop.png": ("3x3", "chest_free chest_ad chest_jade train_attack train_hp train_xp "
-                                    "train_copper train_magnet train_revive"),
-    "icons/sheet_lobby.png": ("3x3", "jade copper shop codex lock settings patrol tasks chest"),
+    "icons/sheet_spells.png": ("auto", "palm incense lotus halo roar - - legs calm eye"),
+    "icons/sheet_passives.png": ("auto", "rice focus - wrath - pendant - bracers - robe sandals"),
+    "icons/sheet_shop.png": ("auto", "chest_free chest_jade train_attack chest_ad - train_hp train_xp "
+                                     "train_copper - - train_magnet train_revive"),
+    "icons/sheet_lobby.png": ("3x3", "jade copper shop codex lock@0.5,0.14 settings@0.5,0.5 patrol tasks chest"),
+    "icons/sheet_fix.png": ("1x3", "iron karma sash@0.5,0.42"),
     "icons/sheet_relics.png": ("2x2", "bowl cymbal fish -"),
 }
 # the monk sheet's frame order (client/public/art/icons/icons.json), which the corgi sheet keeps
 ICONS = [f["name"] for f in json.loads((PUB / "art/icons/icons.json").read_text())["frames"]]
 
-# item pictures: sheet, grid, names; each fitted into the monk picture's exact size
+# item pictures: sheet, grid, names; each fitted into the monk picture's exact size (the bomb that
+# stands in for the palm is drawn nose up and falls nose down, so it is flipped)
 ITEM_SHEETS = {
     "items/sheet_tall.png": ("1x4", "staff staff_ruyi bell_relic palm"),
     "items/sheet_round.png": ("1x3", "cuju cuju_meteor fish"),
     "items/sheet_big.png": ("1x2", "lion mountain"),
 }
 
-PROPS = ("ui/props.png", "2x3", "pine lantern rocks bamboo sign bush")
+PROPS = ("ui/props.png", "2x3", "pine lantern sign bamboo rocks bush")
+FLIP = {"palm"}
 FAR = ("ui/far.png", "0.22-0.85")
 LOBBY = "ui/bg_lobby.png"
 
@@ -134,6 +138,8 @@ def fit(src, key):
     monk = Image.open(PUB / key)
     w, h = monk.size
     im = Image.open(src).convert("RGBA")
+    if Path(key).stem in FLIP:
+        im = im.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
     im = im.crop(im.getchannel("A").getbbox())
     k = min(w / im.width, h / im.height)
     im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
