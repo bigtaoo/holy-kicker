@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
+import { CORGI, CORGI_FX, corgiMine } from './corgiFx';
 import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Lotus, type Player, type SimEvent } from '@hk/engine';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
@@ -11,15 +12,17 @@ import { ViewPool } from './viewPool';
 // way round for the Thunder Roar, under a golden lion's head that rears up over the hero and
 // fades). The monks' passives (engine systems/monks.ts) use the same
 // bursts: the fat monk's Belly Bounce rolls saffron rings out over the ground, and the
-// novice's dodge leaves white speed streaks either side of him.
+// novice's dodge leaves white speed streaks either side of him. The corgi's (corgiFx.ts): mines
+// that blow in orange, a red laser, the Sonic Bark's waves white.
 
 const TAU = Math.PI * 2;
 const BRADS = 65536;
 const BUD = 56;
-const PETAL = 0xf4a0c0;
-const PETAL_RIM = 0xffe0ec;
-const GOLD = 0xffd860;
-const BEAM = 0xfff0b8;
+const PETAL = CORGI ? CORGI_FX.orange : 0xf4a0c0;
+const PETAL_RIM = CORGI ? CORGI_FX.hot : 0xffe0ec;
+const GOLD = CORGI ? CORGI_FX.laser : 0xffd860;
+const BEAM = CORGI ? CORGI_FX.laserCore : 0xfff0b8;
+const WAVE = CORGI ? 0xffffff : BEAM;
 /** The beams leave the hero at chest height. */
 const CHEST = 60;
 /** The Boundless Light's nimbus round the hero's head, from his chest. */
@@ -37,10 +40,10 @@ const DODGE_LIFE = 0.3;
 /** Ground effects are drawn squashed like the spell fields (spellView.ts). */
 const GROUND = 0.45;
 
-function budTexture(renderer: Renderer, fill: number): Texture {
+function budTexture(renderer: Renderer, fill: number, pull: boolean): Texture {
   const r = BUD / 2;
   // three petals over a leaf, thick outline, one hard shade
-  const g = new Graphics()
+  const g = CORGI ? corgiMine(BUD, pull) : new Graphics()
     .ellipse(r, r + 12, r - 4, 9).fill(0x4a8a3a).stroke({ color: 0x24401c, width: 4 })
     .ellipse(r - 10, r, 9, 16).fill(fill).stroke({ color: 0x5a2038, width: 4 })
     .ellipse(r + 10, r, 9, 16).fill(fill).stroke({ color: 0x5a2038, width: 4 })
@@ -74,7 +77,7 @@ export class SutraView {
     private readonly overZ: number,
     private readonly lionTex: Texture,
   ) {
-    this.buds = [budTexture(renderer, PETAL), budTexture(renderer, GOLD)];
+    this.buds = [budTexture(renderer, PETAL, false), budTexture(renderer, GOLD, true)];
     const place = (v: Container) => world.addChild(v);
     this.seedPool = new ViewPool(() => new Sprite({ anchor: { x: 0.5, y: 0.75 } }), place);
     this.lionPool = new ViewPool(() => new Sprite({ texture: lionTex, anchor: 0.5 }), place);
@@ -115,7 +118,7 @@ export class SutraView {
         const kk = k * 1.3 - w * 0.15;
         if (kk <= 0 || kk >= 1) continue;
         const rr = r * kk;
-        const style = { color: BEAM, width: 18 - w * 4, alpha: 0.85 * (1 - kk), cap: 'round' as const };
+        const style = { color: WAVE, width: 18 - w * 4, alpha: 0.85 * (1 - kk), cap: 'round' as const };
         if (full) g.circle(0, 0, rr).stroke(style);
         else g.arc(0, 0, rr, mid - half, mid + half).stroke(style);
       }

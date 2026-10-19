@@ -1,4 +1,5 @@
 import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { CORGI, CORGI_FX } from './corgiFx';
 import { swingAngle, swingArc, type SwingArc } from './swing';
 
 // The staff relic's swing (engine systems/staff.ts): on a sweep the staff appears in the
@@ -6,9 +7,10 @@ import { swingAngle, swingArc, type SwingArc } from './swing';
 // for the Ruyi Staff, which swaps the ringed head for a gold ruyi cloud and leaves a brighter
 // ring), leaving a gold crescent over the ground that fades. advance() gives the
 // staff's angle, which the hero's front arm follows (hero.ts), and draw() puts the staff in
-// that hand. One swing at a time: a new sweep restarts it.
+// that hand. One swing at a time: a new sweep restarts it. The corgi's Plasma Saber leaves an
+// orange plasma arc, the Twin Saber's with a white-hot edge.
 
-const TRAIL = 0xffd860;
+const TRAIL = CORGI ? CORGI_FX.orange : 0xffd860;
 /** The staff is held this far up the sprite (from the top), near its bottom end. */
 const GRIP = 0.88;
 /** Height of the trail's centre above the hero's feet. */
@@ -17,8 +19,8 @@ const TRAIL_Y = 18;
 const LENGTH = 0.82;
 const TRAIL_ALPHA = 0.45;
 /** The Ruyi Staff's ring: paler gold, a bright edge along its outside. */
-const RUYI_TRAIL = 0xffe9a0;
-const RUYI_EDGE = 0xfff8e0;
+const RUYI_TRAIL = CORGI ? CORGI_FX.hot : 0xffe9a0;
+const RUYI_EDGE = CORGI ? 0xffffff : 0xfff8e0;
 
 export class StaffSwing {
   private readonly staff: Sprite;

@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
+import { CORGI, CORGI_FX, corgiBubble, corgiCrater, corgiPuddle, corgiSaw } from './corgiFx';
 import { FP, TICK_RATE, type Cymbal, type Field, type SimEvent } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 import type { FxPool } from './fx';
@@ -13,7 +14,8 @@ import { ViewPool } from './viewPool';
 // the lingering fields and flying cymbals from its lists, and the Golden Bell over the hero.
 // Evolved forms: the Mountain Palm's stone hand and its print, a jade Healing Incense ring, the Golden Body's
 // guard (the dome flickers while the hero is untouchable), the Endless Chain's gold bolts and
-// the Cymbal Wheel's cymbals, which never fade and run on a faint gold track.
+// the Cymbal Wheel's cymbals, which never fade and run on a faint gold track. A corgi build draws
+// them as its gadgets (corgiFx.ts).
 
 const NOVA_LIFE = 0.45;
 /** Cymbals fly at chest height. */
@@ -28,6 +30,12 @@ interface FieldSprite {
 }
 
 const FIELD_R = 128;
+/** The bell's blast, the Cymbal Wheel's track and the fields' motes. */
+const NOVA = CORGI ? CORGI_FX.cyanPale : 0xfff0b8;
+const TRACK = CORGI ? CORGI_FX.orange : 0xffd860;
+const MOTES: Record<'field' | 'heal', readonly [number, number]> = CORGI
+  ? { field: [CORGI_FX.hot, CORGI_FX.orange], heal: [CORGI_FX.cyanPale, CORGI_FX.cyan] }
+  : { field: [0xffc860, 0xfff0a8], heal: [0xffc860, 0xfff0a8] };
 
 function bake(renderer: Renderer, g: Graphics, size: number): Texture {
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
@@ -35,8 +43,9 @@ function bake(renderer: Renderer, g: Graphics, size: number): Texture {
   return tex;
 }
 
-function fieldTexture(renderer: Renderer, fill: number, rim: number): Texture {
+function fieldTexture(renderer: Renderer, fill: number, rim: number, heal: boolean): Texture {
   const r = FIELD_R;
+  if (CORGI) return bake(renderer, corgiPuddle(r, heal), r * 2);
   const g = new Graphics()
     .circle(r, r, r * 0.97).fill({ color: fill, alpha: 0.22 })
     .circle(r, r, r * 0.92).stroke({ color: rim, width: r * 0.07, alpha: 0.9 })
@@ -47,6 +56,7 @@ function fieldTexture(renderer: Renderer, fill: number, rim: number): Texture {
 /** The Mountain Palm's print: a golden hand pressed into the ground, fingers up. */
 function printTexture(renderer: Renderer): Texture {
   const r = FIELD_R;
+  if (CORGI) return bake(renderer, corgiCrater(r), r * 2);
   // it carries the pin alone once the stone hand has sunk, so it reads a little stronger than a field
   const g = new Graphics()
     .circle(r, r, r * 0.97).fill({ color: 0xffd860, alpha: 0.22 })
@@ -65,6 +75,7 @@ function printTexture(renderer: Renderer): Texture {
 
 function cymbalTexture(renderer: Renderer): Texture {
   const r = 64;
+  if (CORGI) return bake(renderer, corgiSaw(r), r * 2);
   const g = new Graphics()
     .circle(r, r, r * 0.92).fill(0xe0b040).stroke({ color: 0x3a2410, width: r * 0.12 })
     .circle(r, r, r * 0.55).stroke({ color: 0xffe9a0, width: r * 0.1 })
@@ -76,6 +87,7 @@ function cymbalTexture(renderer: Renderer): Texture {
 /** The Golden Bell: a see-through golden dome with a rim, drawn around the hero. */
 function bellDome(): Graphics {
   const r = BELL_R;
+  if (CORGI) return corgiBubble(r);
   return new Graphics()
     .ellipse(0, 0, r, r * 1.15).fill({ color: 0xffd860, alpha: 0.18 })
     .ellipse(0, 0, r, r * 1.15).stroke({ color: 0xffe9a0, width: 9, alpha: 0.85 })
@@ -111,8 +123,8 @@ export class SpellView {
   ) {
     this.palms = new PalmFalls(layer, palm.tex, palm.mountain, palm.z, (x, y, r) => rubble(pool, rand, x, y, r));
     this.discs = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => layer.addChild(s));
-    this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0);
-    this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8);
+    this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0, false);
+    this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8, true);
     this.printTex = printTexture(renderer);
     this.cymbalTex = cymbalTexture(renderer);
     this.bell.visible = false;
@@ -194,7 +206,7 @@ export class SpellView {
     if (orbit === this.wheelR) return;
     this.wheelR = orbit;
     this.wheel.clear().circle(0, 0, orbit).stroke({ color: 0x3a2410, width: 20, alpha: 0.18 })
-      .circle(0, 0, orbit).stroke({ color: 0xffd860, width: 10, alpha: 0.4 });
+      .circle(0, 0, orbit).stroke({ color: TRACK, width: 10, alpha: 0.4 });
   }
 
   /** A cast, or a palm on its way down (positions in FP). */
@@ -203,7 +215,7 @@ export class SpellView {
     const y = e.y / FP;
     const r = e.radius / FP;
     if (e.type === 'palm') this.palms.drop(x, y, r, e.fall / TICK_RATE, e.print / TICK_RATE);
-    else if (e.kind === 'nova') nova(this.pool, x, y, 60, r, NOVA_LIFE, 0xfff0b8, this.ring);
+    else if (e.kind === 'nova') nova(this.pool, x, y, 60, r, NOVA_LIFE, NOVA, this.ring);
     else if (e.kind === 'meteor') explosion(this.pool, this.rand, x, y, r, this.ring);
   }
 
@@ -240,7 +252,7 @@ export class SpellView {
       s.seen = true;
       const age = (f.age + alpha) / TICK_RATE;
       s.sprite.alpha = Math.max(0, Math.min(1, (life - age) / 0.3, age / 0.15));
-      if (!f.pin) fieldMotes(this.pool, this.rand, f.x / FP, f.y / FP, r, Math.round(dt * 60));
+      if (!f.pin) fieldMotes(this.pool, this.rand, f.x / FP, f.y / FP, r, Math.round(dt * 60), MOTES[f.heal > 0 ? 'heal' : 'field']);
     }
     for (const [id, s] of this.sprites) {
       if (s.seen) continue;

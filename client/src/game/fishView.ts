@@ -1,16 +1,17 @@
 import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import { FISH, FP, TICK_RATE } from '@hk/engine';
+import { CORGI, CORGI_FX } from './corgiFx';
 import { FISH_SHOW, fishPop, rippleAt } from './ripple';
 
 // The wooden fish relic (engine systems/fish.ts): on a tap the fish pops up under the hand
 // that knocks it (hero.ts "knock") and a gold ring grows from where he stood to the ring's
 // reach, then fades. Awakened, the fish becomes the Morning Bell: a bronze bell hanging from
 // the hand that swings when struck, its stunning ring a white double band. Rings stay where
-// they were tapped, like the sim's.
+// they were tapped, like the sim's. The corgi's Pulse Emitter sends cyan rings.
 
-const GOLD = 0xffd860;
+const GOLD = CORGI ? CORGI_FX.cyan : 0xffd860;
 const STUN = 0xffffff;
-const OUTLINE = 0x3a2410;
+const OUTLINE = CORGI ? CORGI_FX.outline : 0x3a2410;
 /** World units per second, the sim's ring speed. */
 const SPEED = (FISH.ringSpeed * TICK_RATE) / FP;
 /** The fish's height, and how far under the knocking hand its top shows. */

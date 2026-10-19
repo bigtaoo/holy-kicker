@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
+import { CORGI, CORGI_FX, corgiDrone } from './corgiFx';
 import { FP, type Bead, type BeadsRing } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 import { ViewPool } from './viewPool';
@@ -7,21 +8,22 @@ import { ViewPool } from './viewPool';
 // The prayer beads relic (engine systems/beads.ts): the sim's beads circling the hero, on a
 // faint cord at their orbit so the ring reads as one string of beads. They draw over the horde
 // they hit, the near half in front of the hero and the far half behind him. The 108 Beads'
-// outer ring is gold.
+// outer ring is gold. The corgi's Orbit Drones are drones on a faint cyan orbit, the Drone
+// Swarm's second ring steel.
 
 /** Beads circle at chest height. */
 const LIFT = 45;
 const BEAD_D = 64;
 const OUTLINE = 0x3a2410;
-const CORD = 0x5a3018;
+const CORD = CORGI ? CORGI_FX.cyan : 0x5a3018;
 const LOOKS = [
   { fill: 0xb8452e, shade: 0x7e2a1c },
   { fill: 0xf0b030, shade: 0xb87818 },
 ];
 
-function beadTexture(renderer: Renderer, fill: number, shade: number): Texture {
+function beadTexture(renderer: Renderer, fill: number, shade: number, ring: number): Texture {
   const r = BEAD_D / 2;
-  const g = new Graphics()
+  const g = CORGI ? corgiDrone(BEAD_D, ring > 0) : new Graphics()
     .circle(r, r, r - 1).fill(OUTLINE)
     .circle(r, r, r - 6).fill(fill)
     // one hard cel shadow on the lower right, a small highlight on the upper left
@@ -40,7 +42,7 @@ export class BeadsView {
   private readonly pool: ViewPool<Sprite>;
 
   constructor(renderer: Renderer, world: Container) {
-    this.textures = LOOKS.map((l) => beadTexture(renderer, l.fill, l.shade));
+    this.textures = LOOKS.map((l, i) => beadTexture(renderer, l.fill, l.shade, i));
     this.pool = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => world.addChild(s));
     this.cord.visible = false;
     world.addChild(this.cord);
@@ -52,7 +54,7 @@ export class BeadsView {
     if (key !== this.cordKey) {
       this.cordKey = key;
       this.cord.clear();
-      for (const r of rings) this.cord.circle(0, 0, r.orbit / FP).stroke({ color: CORD, width: 6, alpha: 0.55 });
+      for (const r of rings) this.cord.circle(0, 0, r.orbit / FP).stroke({ color: CORD, width: CORGI ? 4 : 6, alpha: CORGI ? 0.35 : 0.55 });
     }
     this.cord.visible = rings.length > 0;
     this.cord.position.set(hx, hy - LIFT);

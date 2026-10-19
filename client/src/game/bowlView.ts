@@ -1,5 +1,6 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
+import { CORGI, corgiDisc } from './corgiFx';
 import type { Bowl } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
 import { makeShadow } from './shadow';
@@ -7,7 +8,8 @@ import { ViewPool } from './viewPool';
 
 // The alms bowl relic (engine systems/bowl.ts): thrown bowls in flight, drawn from the sim's
 // bowl list as a spinning bowl seen from above over a ground shadow. The mobs it drags are
-// ordinary mobs the sim moves along with it. The Bottomless Bowl's opening is a dark void.
+// ordinary mobs the sim moves along with it. The Bottomless Bowl's opening is a dark void. The
+// corgi throws a striped disc, steel and cyan for the Saw Storm.
 
 /** Drawn this far above its ground point. */
 const LIFT = 45;
@@ -21,9 +23,9 @@ const LOOKS = [
 ];
 const RIM = 0xf0b030;
 
-function bowlTexture(renderer: Renderer, look: (typeof LOOKS)[number]): Texture {
+function bowlTexture(renderer: Renderer, look: (typeof LOOKS)[number], storm: boolean): Texture {
   const r = SIZE / 2;
-  const g = new Graphics()
+  const g = CORGI ? corgiDisc(SIZE, storm) : new Graphics()
     .circle(r, r, r - 1).fill(OUTLINE)
     .circle(r, r, r - 7).fill(look.body)
     // one hard cel shadow on the lower right of the outer wall
@@ -54,7 +56,7 @@ export class BowlView {
   private readonly shadows: ViewPool<Sprite>;
 
   constructor(renderer: Renderer, layer: Container, shadowTex: Texture) {
-    this.textures = LOOKS.map((l) => bowlTexture(renderer, l));
+    this.textures = LOOKS.map((l, i) => bowlTexture(renderer, l, i > 0));
     this.shadows = new ViewPool(() => makeShadow(shadowTex, SIZE * 0.4, SIZE * 0.14), (s) => layer.addChild(s));
     this.bowls = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => layer.addChild(s));
   }

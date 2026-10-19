@@ -1,20 +1,27 @@
 import { Container, Graphics } from 'pixi.js';
+import { CORGI, CORGI_FX } from './corgiFx';
 import { SHADOW_Z } from './shadow';
 
 // Stillness (engine systems/players.ts): while the hero stands in Zen a gold lotus ring lies on
 // the ground at his feet, its petals sliding slowly round; it blooms in with a pulse as he
 // enters and is gone the moment he moves, so "stop to burst" reads at a glance without text.
+// The corgi's is a targeting ring: four markers pointing in instead of the petals.
 
-const GOLD = 0xffd24a;
-const PALE = 0xfff0b0;
+const GOLD = CORGI ? CORGI_FX.orange : 0xffd24a;
+const PALE = CORGI ? CORGI_FX.hot : 0xfff0b0;
 /** World units across the ring, squashed onto the ground like the aura. */
 const RADIUS = 120;
 const SQUASH = 0.38;
-const PETALS = 8;
+const PETALS = CORGI ? 4 : 8;
 const TURN = 0.6;
 const FADE_IN = 0.15;
 const FADE_OUT = 0.08;
 const PULSE = 0.35;
+
+/** A point of the ring at angle a + da, k radii out, squashed onto the ground. */
+function marker(a: number, k: number, da: number): [number, number] {
+  return [Math.cos(a + da) * RADIUS * k, Math.sin(a + da) * RADIUS * k * SQUASH];
+}
 
 export class ZenRing {
   private readonly view = new Container();
@@ -50,7 +57,8 @@ export class ZenRing {
     const g = this.petals.clear();
     for (let i = 0; i < PETALS; i++) {
       const a = this.time * TURN + (i / PETALS) * Math.PI * 2;
-      g.ellipse(Math.cos(a) * RADIUS, Math.sin(a) * RADIUS * SQUASH, 16, 10);
+      if (CORGI) g.poly([...marker(a, 0.8, 0), ...marker(a, 1.12, -0.13), ...marker(a, 1.12, 0.13)]);
+      else g.ellipse(Math.cos(a) * RADIUS, Math.sin(a) * RADIUS * SQUASH, 16, 10);
     }
     g.fill({ color: GOLD });
   }

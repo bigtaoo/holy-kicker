@@ -1,3 +1,4 @@
+import { CORGI, CORGI_FX } from './corgiFx';
 import type { FxPool } from './fx';
 
 // Spell effects for the area-damage stress test, emitted as pool particles. Pure, so their
@@ -67,9 +68,9 @@ export function rubble(pool: FxPool, rand: () => number, x: number, y: number, r
   }
 }
 
-/** The Endless Chain's bolts are gold and thicker. */
+/** The Endless Chain's bolts are gold and thicker (the corgi's Tesla Storm: white-hot cyan). */
 const BOLT = { color: 0xc8f0ff, spark: 0xe0f8ff, width: 16 };
-const GOLD_BOLT = { color: 0xffe070, spark: 0xfff4c0, width: 24 };
+const GOLD_BOLT = CORGI ? { color: CORGI_FX.cyan, spark: CORGI_FX.cyanPale, width: 24 } : { color: 0xffe070, spark: 0xfff4c0, width: 24 };
 
 /**
  * A lightning bolt from (x0, y0) to (x1, y1): a few jagged bar segments and a spark at the end;
@@ -99,14 +100,14 @@ export function bolt(pool: FxPool, rand: () => number, x0: number, y0: number, x
   pool.emit({ shape: 'glow', x: x1, y: y1, vx: 0, vy: 0, life: 0.16, size0: 70 * spark, size1: 110 * spark, rotation: 0, spin: 0, drag: 1, color: look.spark, alpha: 0.9 });
 }
 
-/** Light motes rising from a ground field of radius r. */
-export function fieldMotes(pool: FxPool, rand: () => number, x: number, y: number, r: number, n: number): void {
+/** Light motes rising from a ground field of radius r, in two alternating colours. */
+export function fieldMotes(pool: FxPool, rand: () => number, x: number, y: number, r: number, n: number, colors: readonly [number, number] = [0xffc860, 0xfff0a8]): void {
   for (let i = 0; i < n; i++) {
     const a = rand() * Math.PI * 2;
     const d = Math.sqrt(rand()) * r;
     pool.emit({
       shape: 'glow', x: x + Math.cos(a) * d, y: y + Math.sin(a) * d * 0.45, vx: 0, vy: -120 - rand() * 120, life: 0.6 + rand() * 0.4,
-      size0: 28, size1: 8, rotation: 0, spin: 0, drag: 1, color: i % 2 ? 0xfff0a8 : 0xffc860, alpha: 0.9,
+      size0: 28, size1: 8, rotation: 0, spin: 0, drag: 1, color: colors[i % 2], alpha: 0.9,
     }, true);
   }
 }
