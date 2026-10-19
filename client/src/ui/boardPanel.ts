@@ -1,6 +1,7 @@
 import { Container } from 'pixi.js';
 import { boardId, DICE, packDice, topPercent, unpackDice, type BoardReply, type BoardRow, type ChallengeBoardReply, type TopRun } from '@hk/protocol';
 import { t } from '../i18n';
+import { THEME } from '../theme';
 import type { IconSheet } from './buildBar';
 import { chosenTimeline, markMedal, topRows, watchButton, type WatchTop, type WeeklyBoardState } from './weeklyBoard';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
@@ -71,7 +72,7 @@ export class BoardUi {
   button(chapter: number, hard: boolean): Container | null {
     if (!this.fetchBoard) return null;
     const name = t(`chapter.${chapter}` as never);
-    const view = { id: boardId(chapter, hard), title: t('board.title', { n: chapter, name }), sub: hard ? t('lobby.hard') : t('lobby.normal'), color: hard ? COLORS.danger : COLORS.text };
+    const view = { id: boardId(chapter, hard, THEME), title: t('board.title', { n: chapter, name }), sub: hard ? t('lobby.hard') : t('lobby.normal'), color: hard ? COLORS.danger : COLORS.text };
     return button(t('board.button'), 200, 80, () => this.show(view), { fill: COLORS.panelLocked, size: 44 });
   }
 

@@ -175,7 +175,7 @@ describe('Backend', () => {
     const net = new Backend(platform(), 'https://api.test', '1.0.0', () => 'en');
     const run = { chapter: 2, hard: true, won: false, wave: 12, tenths: 4000, level: 9, kills: 500, monk: 'kicker', relic: 'staff' };
     expect(await net.submitRun(run)).toEqual({ board: 'c2h', rank: 4, best: true });
-    expect(sent(calls[0])).toEqual({ ...run, install: net.install, host: 'crazygames', build: '1.0.0' });
+    expect(sent(calls[0])).toEqual({ ...run, install: net.install, host: 'crazygames', build: '1.0.0', game: 'monk' });
     expect(await net.submitRun(run)).toBeNull();
     expect(await net.submitRun(run)).toBeNull();
   });

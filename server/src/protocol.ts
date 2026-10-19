@@ -2,6 +2,8 @@
 // leaderboard runs and problem reports. Shared as source by the client (`@hk/protocol`) and the server, so both
 // sides agree on names and limits. Pure: no Node or browser APIs.
 
+import { boardSuffix, type Game } from './game';
+
 /** Hosts the game ships on. */
 export const HOSTS = ['web', 'crazygames', 'poki', 'playgama', 'wechat', 'ios'] as const;
 export type Host = (typeof HOSTS)[number];
@@ -68,11 +70,13 @@ export interface EventBatch {
   host: Host;
   build: string;
   locale: string;
+  /** The game sending (game.ts); none from builds before the corgi, which were all Holy Kicker. */
+  game?: Game;
   events: ClientEvent[];
 }
 
 /**
- * Anonymous load checkpoints (GET /v1/beacon?h=<host>&s=<step>&b=<build>): `open_*` from the
+ * Anonymous load checkpoints (GET /v1/beacon?h=<host>&s=<step>&b=<build>, and `&g=<game>` from a game but the first): `open_*` from the
  * portal page's inline script before anything else downloads, `loaded_*` once the game's first
  * screen is up; `touch` is a coarse pointer (phones and tablets). They carry no install id and go
  * whatever the privacy answer, so they count every launch: the share that never got past loading.
@@ -238,6 +242,8 @@ export interface RunEntry {
   install: string;
   host: Host;
   build: string;
+  /** The game the run was played in: each has its own boards (boardId). */
+  game?: Game;
   chapter: number;
   hard: boolean;
   won: boolean;
@@ -254,9 +260,9 @@ export interface RunEntry {
   dice?: number;
 }
 
-/** A board's id: the chapter and the mode. */
-export function boardId(chapter: number, hard: boolean): string {
-  return `c${chapter}${hard ? 'h' : ''}`;
+/** A board's id: the chapter, the mode and, for a game but the first, the game (`c3h-corgi`). */
+export function boardId(chapter: number, hard: boolean, game?: Game): string {
+  return `c${chapter}${hard ? 'h' : ''}${boardSuffix(game)}`;
 }
 
 /**
@@ -312,6 +318,7 @@ export interface Report {
   host: Host;
   build: string;
   locale: string;
+  game?: Game;
   /** What the player wrote (may be empty: the replay alone says something). */
   text: string;
   /** The browser's user agent or the phone's model and system. */
@@ -411,3 +418,4 @@ export function checkName(raw: string): NameCheck {
 }
 
 export * from './challengeWire';
+export * from './game';

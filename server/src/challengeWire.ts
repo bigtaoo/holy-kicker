@@ -1,3 +1,4 @@
+import { BOARD_SUFFIX, boardSuffix, type Game } from './game';
 import type { BoardReply, ReplayWire, RunEntry } from './protocol';
 
 // The challenges' wire format (docs/design.md "Challenges"), re-exported by protocol.ts so the
@@ -98,9 +99,9 @@ export const RESIM_TOP = 100;
 /** A weekly board's top this many runs publish their pick timeline and replay. */
 export const WATCH_TOP = 3;
 
-/** A challenge board: one per challenge, engine version and chapter. */
-export function challengeBoardId(challenge: string, engine: number, chapter: number): string {
-  return `${challenge}-e${engine}-c${chapter}`;
+/** A challenge board: one per challenge, engine version, chapter and game (game.ts boardSuffix). */
+export function challengeBoardId(challenge: string, engine: number, chapter: number, game?: Game): string {
+  return `${challenge}-e${engine}-c${chapter}${boardSuffix(game)}`;
 }
 
 export const DAY_MS = 86_400_000;
@@ -122,7 +123,7 @@ export function weekIdOf(ms: number): string {
 }
 
 export const CHALLENGE_ID = /^(d\d{8}|w\d{4}-\d{2})$/;
-export const CHALLENGE_BOARD = /^(d\d{8}|w\d{4}-\d{2})-e\d{1,6}-c[1-9]$/;
+export const CHALLENGE_BOARD = new RegExp(String.raw`^(d\d{8}|w\d{4}-\d{2})-e\d{1,6}-c[1-9]${BOARD_SUFFIX}$`);
 
 /** "Top N %": the share of the board at or above `rank`, rounded up, at least 1. */
 export function topPercent(rank: number, total: number): number {

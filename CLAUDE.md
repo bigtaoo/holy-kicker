@@ -78,7 +78,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `client/public`, mapped to the corgi's file or null while not drawn; `check:theme` keeps it in step
   (`-- --sync` after adding or removing public files). `npm run dev:new`; `npm run build:new` →
   h.gamestao.com/new/ and `npm run build:crazygames:new` fail until every entry is drawn. Corgi
-  builds use hk-new.gamestao.com and keep their browser saves under `corgi:`.
+  builds share hk.gamestao.com, tagged `game: 'corgi'` with boards of their own (`server/src/game.ts`),
+  and keep their browser saves under `corgi:`.
 - `art/` — source art and style exploration; `tools/` — art scripts.
 - `build/` — check scripts.
 - `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` ships

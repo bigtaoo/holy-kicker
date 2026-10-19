@@ -6,6 +6,7 @@ import { challengeChapter, challengeState, hoursLeft, settleChallenge, type Chal
 import type { SaveData } from '../meta/save';
 import { claimWeek, closedWeeks, settleWeekly, weekClaim, weekOf, weeklyState, type WeekClaim, type WeekEntry, type WeeklyState } from '../meta/weekly';
 import type { Backend, RunResult } from '../net/backend';
+import { THEME } from '../theme';
 import type { ChallengeLobby } from './challengePanel';
 import type { ReplayView } from './replayWatch';
 
@@ -124,7 +125,7 @@ export class ChallengeFlow {
     if (!c || !state || state === 'locked') return null;
     const h = hoursLeft(c.end, this.serverNow());
     return {
-      challenge: c, state, board: challengeBoardId(c.id, c.engine, c.loadout!.chapter), best: weekOf(save, c.id)?.best ?? 0,
+      challenge: c, state, board: challengeBoardId(c.id, c.engine, c.loadout!.chapter, THEME), best: weekOf(save, c.id)?.best ?? 0,
       days: Math.floor(h / 24), hours: h % 24, reply: this.replies.get(c.id) ?? null,
     };
   }
@@ -223,7 +224,7 @@ export class ChallengeFlow {
       return reply;
     };
     if (c.loadout) {
-      const week = settleWeekly(save, c, challengeBoardId(c.id, c.engine, chapter), result);
+      const week = settleWeekly(save, c, challengeBoardId(c.id, c.engine, chapter, THEME), result);
       const reward = { counted: true, reached: [], copper: 0, jade: 0 };
       return { save: week.save, reward, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(waves >= week.before), weekly: { before: week.before } };
     }

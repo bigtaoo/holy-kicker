@@ -21,17 +21,19 @@ import { themeAssets, themeOf } from '../build/theme.mjs';
 // `transform` (before vite:build-html swaps the entry) and dev through `transformIndexHtml`.
 // The build fails if neither ran, rather than shipping a game without the integration.
 // The corgi reskin builds the same way into client/dist-crazygames-new/ (vite.crazygames.new.config.js),
-// with its own art (build/theme.mjs) and backend.
+// with its own art (build/theme.mjs), on the same backend under its own game tag (server/src/game.ts).
 
 const SDK_TAG = '<script src="https://sdk.crazygames.com/crazygames-sdk-v3.js"></script>';
 const api = (theme) => (process.env.VITE_HK_API || themeOf(theme).api).replace(/\/+$/, '');
 
 /**
  * The inline `open_*` and `quit_*` checkpoints: no id, no storage, nothing from a developer's own
- * machine. Loading is over once the body is in and the loading screen (#boot) is gone.
+ * machine. Loading is over once the body is in and the loading screen (#boot) is gone. A game but
+ * the first (the corgi) names itself (`&g=`), so the shared backend counts its loads apart.
  */
-export function openBeacon(api, build, host = 'crazygames') {
-  return `<script>(function(){try{var h=location.hostname;if(h==='localhost'||h==='[::1]'||h.indexOf('127.')===0)return;var t=matchMedia('(pointer: coarse)').matches?'touch':'desktop';var u='${api}/v1/beacon?h=${host}&b='+encodeURIComponent(${JSON.stringify(build)})+'&s=';var send=function(s){fetch(u+s,{mode:'no-cors',keepalive:true}).catch(function(){})};send('open_'+t);var gone=false;var quit=function(){if(gone||(document.body&&!document.getElementById('boot')))return;gone=true;send('quit_'+t+'&ms='+Math.round(performance.now()))};addEventListener('pagehide',quit);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')quit()})}catch(e){}})()</script>`;
+export function openBeacon(api, build, host = 'crazygames', game = 'monk') {
+  const g = game === 'monk' ? '' : `&g=${game}`;
+  return `<script>(function(){try{var h=location.hostname;if(h==='localhost'||h==='[::1]'||h.indexOf('127.')===0)return;var t=matchMedia('(pointer: coarse)').matches?'touch':'desktop';var u='${api}/v1/beacon?h=${host}${g}&b='+encodeURIComponent(${JSON.stringify(build)})+'&s=';var send=function(s){fetch(u+s,{mode:'no-cors',keepalive:true}).catch(function(){})};send('open_'+t);var gone=false;var quit=function(){if(gone||(document.body&&!document.getElementById('boot')))return;gone=true;send('quit_'+t+'&ms='+Math.round(performance.now()))};addEventListener('pagehide',quit);document.addEventListener('visibilitychange',function(){if(document.visibilityState==='hidden')quit()})}catch(e){}})()</script>`;
 }
 
 const DEFAULT_ENTRY = '/src/main.ts';
@@ -56,7 +58,7 @@ const portalHtml = (theme) => {
     name: 'crazygames-html',
     enforce: 'pre',
     configResolved(config) {
-      if (config.command === 'build') beacon = openBeacon(api(theme), JSON.parse(buildDefine(theme).__HK_BUILD__));
+      if (config.command === 'build') beacon = openBeacon(api(theme), JSON.parse(buildDefine(theme).__HK_BUILD__), 'crazygames', theme);
     },
     transform(code, id) {
       return id.endsWith('.html') ? apply(code) : null;

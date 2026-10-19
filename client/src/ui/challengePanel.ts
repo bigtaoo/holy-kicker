@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { milestonePay } from '../meta/challenge';
 import type { WeekClaim } from '../meta/weekly';
+import { THEME } from '../theme';
 import { rowName, type BoardUi, type FetchBoard } from './boardPanel';
 import { iconSprite, type IconSheet } from './buildBar';
 import type { DailyView, WeeklyView } from './challengeFlow';
@@ -182,7 +183,7 @@ export class ChallengeUi {
     const fetchBoard = lobby.board;
     if (fetchBoard) {
       buttons.push(button(t('board.button'), 360, 140, () => {
-        const id = challengeBoardId(d.challenge.id, d.challenge.engine, d.chapter);
+        const id = challengeBoardId(d.challenge.id, d.challenge.engine, d.chapter, THEME);
         this.boards.show({ id, title: t('challenge.title'), sub: t('lobby.chapterTitle', { n: d.chapter, name: t(`chapter.${d.chapter}` as never) }), color: COLORS.saffron }, fetchBoard);
       }, { fill: COLORS.panelLocked, size: 52 }));
     }

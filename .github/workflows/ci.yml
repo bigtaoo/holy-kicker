@@ -9,7 +9,7 @@ name: ci
 # unchanged restarts nothing (server/deploy/ci-deploy.sh compares the files).
 # The corgi reskin (docs/reskin.md "Builds") publishes the same way to h.gamestao.com/new/
 # (wrangler/new.jsonc) once NEW_WEB_DEPLOY_ENABLED is set; its build fails while any corgi art
-# is missing, so the switch only goes on with the art complete. Its backend is the box's api-new.
+# is missing, so the switch only goes on with the art complete. It shares hk.gamestao.com (server/src/game.ts).
 #
 # The deploys need, in Settings -> Secrets and variables -> Actions:
 #   Secrets    CLOUDFLARE_API_TOKEN   gamestao.com account, at least Workers Scripts:Edit

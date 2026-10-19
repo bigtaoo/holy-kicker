@@ -2,7 +2,7 @@ import { MongoBulkWriteError, MongoClient, type Collection, type Db, type Object
 import type { Audience } from './audience';
 import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { challengeUpdate, freshDoc, settleDoc, standing, topRuns, waiting } from './challengeDocs';
-import { RESIM_TOP, WATCH_TOP, boardId, runScore, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { RESIM_TOP, WATCH_TOP, boardId, keptGame, runScore, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type Game, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
@@ -21,7 +21,10 @@ import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summa
 //            keeps the install's best, a better run waiting for its check in `next`
 //   names    one per install that has a name, by its tag: a portal account's name or a dice name
 //   reports  problem reports with their replays, dropped after REPORTS_DAYS
-//   beacons  anonymous load checkpoints, one counter per day, host, build and step
+//   beacons  anonymous load checkpoints, one counter per day, host, build, step and game
+// Holy Kicker and its corgi reskin share them (game.ts): a document of the corgi's carries
+// `game: 'corgi'`, Holy Kicker's carry none (as everything from before the corgi), and the corgi's
+// boards have ids of their own (`c3-corgi`).
 //   meta     bookkeeping: `prune`, when perf and anomaly events were last pruned (store.ts prune)
 
 const EVENTS_DAYS = 90;
@@ -37,6 +40,7 @@ interface EventDoc {
   host: string;
   build: string;
   locale: string;
+  game?: Game;
   e: string;
   t: Date;
   p: Record<string, PropValue>;
@@ -65,11 +69,11 @@ export class MongoStore implements Store {
     private readonly client: MongoClient,
     private readonly events: Collection<EventDoc>,
     private readonly installs: Collection<Player>,
-    private readonly active: Collection<{ _id: string; day: string; install: string; host: Host }>,
+    private readonly active: Collection<{ _id: string; day: string; install: string; host: Host; game?: Game }>,
     private readonly best: Collection<BestDoc>,
     private readonly reportDocs: Collection<ReportDoc>,
     private readonly names: Collection<{ _id: string; name?: string; dice?: number; at: Date }>,
-    private readonly beacons: Collection<{ _id: string; day: string; host: string; build: string; step: string; n: number; t?: Record<string, number> }>,
+    private readonly beacons: Collection<{ _id: string; day: string; host: string; build: string; step: string; game?: Game; n: number; t?: Record<string, number> }>,
     private readonly meta: Collection<{ _id: string; at: Date }>,
     private readonly challenges: Collection<ChallengeRow>,
   ) {}
@@ -109,9 +113,10 @@ export class MongoStore implements Store {
   async addEvents(sent: EventBatch, now: number, aud?: Audience): Promise<void> {
     const at = new Date(now);
     const day = dayOf(now);
+    const game = sent.game ? { game: sent.game } : {};
     const docs = sent.events.map((e): EventDoc => ({
       ...(e.n !== undefined ? { _id: `${sent.session}/${e.n}` } : {}),
-      at, day, install: sent.install, session: sent.session, host: sent.host, build: sent.build, locale: sent.locale, e: e.e, t: new Date(e.t), p: e.p ?? {},
+      at, day, install: sent.install, session: sent.session, host: sent.host, build: sent.build, locale: sent.locale, ...game, e: e.e, t: new Date(e.t), p: e.p ?? {},
     }));
     const dupes = new Set<number>();
     try {
@@ -127,8 +132,8 @@ export class MongoStore implements Store {
     const b = { ...sent, events: sent.events.filter((_, i) => !dupes.has(i)) };
     if (b.events.length === 0) return;
     const [p, seen] = await Promise.all([
-      this.installs.findOneAndUpdate({ _id: b.install }, { $setOnInsert: { first: day, host: b.host, build: b.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() } }, { upsert: true, returnDocument: 'after' }),
-      this.active.updateOne({ _id: `${day}/${b.install}` }, { $setOnInsert: { day, install: b.install, host: b.host } }, { upsert: true }),
+      this.installs.findOneAndUpdate({ _id: b.install }, { $setOnInsert: { first: day, host: b.host, ...game, build: b.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() } }, { upsert: true, returnDocument: 'after' }),
+      this.active.updateOne({ _id: `${day}/${b.install}` }, { $setOnInsert: { day, install: b.install, host: b.host, ...game } }, { upsert: true }),
     ]);
     if (!p) return;
     const offset = dayOffset(p.first, day);
@@ -139,9 +144,10 @@ export class MongoStore implements Store {
     await this.installs.updateOne({ _id: b.install }, { ...(Object.keys(set).length ? { $set: set } : {}), ...(fresh ? { $addToSet: { back: offset } } : {}) });
   }
 
-  async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void> {
+  async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null, game?: Game): Promise<void> {
     const day = dayOf(now);
-    await this.beacons.updateOne({ _id: `${day}/${host}/${build}/${step}` }, { $setOnInsert: { day, host, build, step }, $inc: { n: 1, ...(bucket ? { [`t.${bucket}`]: 1 } : {}) } }, { upsert: true });
+    const g = keptGame(game);
+    await this.beacons.updateOne({ _id: `${day}/${host}/${build}/${step}${g ? `/${g}` : ''}` }, { $setOnInsert: { day, host, build, step, ...(g ? { game: g } : {}) }, $inc: { n: 1, ...(bucket ? { [`t.${bucket}`]: 1 } : {}) } }, { upsert: true });
   }
 
   private async rankOf(doc: BestDoc): Promise<number> {
@@ -150,7 +156,7 @@ export class MongoStore implements Store {
   }
 
   async submitRun(run: RunEntry, tag: string, now: number) {
-    const board = boardId(run.chapter, run.hard);
+    const board = boardId(run.chapter, run.hard, run.game);
     const _id = `${board}/${tag}`;
     const score = runScore(run);
     const old = await this.best.findOne({ _id });
@@ -249,11 +255,13 @@ export class MongoStore implements Store {
     await this.names.replaceOne({ _id: tag }, { ...name, at: new Date(now) }, { upsert: true });
   }
 
-  async stats(days: number, now: number, host: Host | null, to?: string): Promise<Stats> {
+  async stats(days: number, now: number, host: Host | null, to?: string, game: Game = 'monk'): Promise<Stats> {
     const today = dayOf(now);
     const list = windowOf(days, today, to);
     const window = { $gte: list[0], $lte: list[list.length - 1] };
-    const mine = host ? { host } : {};
+    // the first game's documents carry no `game` (game.ts keptGame)
+    const g = keptGame(game);
+    const mine = { ...(host ? { host } : {}), game: g ?? { $exists: false } };
     const fold = new StatsFold(list, today);
     // one small document per new install, streamed: memory stays flat however many there are
     for await (const p of this.installs.find({ first: window, ...mine }, { projection: { first: 1, build: 1, aud: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
@@ -297,7 +305,7 @@ export class MongoStore implements Store {
       day: d.day, host: d.host, build: d.build, device: auds.get(d.install)?.device ?? 'unknown', os: auds.get(d.install)?.os ?? 'unknown', ...(devices.get(d.session) ?? sessionDevice(undefined)), p: d.p ?? {},
     }));
     const anomalies: AnomalyCount[] = trouble.map(({ _id: { day, build, ...p }, n }) => ({ ...anomalyKey(day, build ?? 'unknown', p as Record<string, PropValue>), n }));
-    return fold.result(host, counts, outcomes, loads, snaps, anomalies);
+    return fold.result(host, game, counts, outcomes, loads, snaps, anomalies);
   }
 
   async addReport(report: Report, now: number): Promise<string> {

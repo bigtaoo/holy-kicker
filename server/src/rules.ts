@@ -1,4 +1,4 @@
-import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, checkName, isDice, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
+import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, checkName, isDice, isGame, keptGame, type Game, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
 
 // Checks what clients send before anything is stored. Pure: each check takes the parsed JSON
 // (unknown) and returns the clean value or the reason it was refused. Anything unexpected is
@@ -27,6 +27,14 @@ function isInt(v: unknown, min: number, max: number): v is number {
 
 function isHost(v: unknown): v is Host {
   return typeof v === 'string' && (HOSTS as readonly string[]).includes(v);
+}
+
+/** The game a request names, as kept (game.ts keptGame): nothing for the first game or none named, null for one unknown. */
+function gameOf(v: unknown): { game?: Game } | null {
+  if (v === undefined) return {};
+  if (!isGame(v)) return null;
+  const g = keptGame(v);
+  return g ? { game: g } : {};
 }
 
 function checkProps(v: unknown): Record<string, PropValue> | null {
@@ -58,6 +66,8 @@ export function checkBatch(v: unknown, now: number): Checked<EventBatch> {
   if (!isId(v.install) || !isId(v.session)) return { ok: false, reason: 'bad id' };
   if (!isHost(v.host)) return { ok: false, reason: 'bad host' };
   if (!isShort(v.build, LIMITS.build) || !isShort(v.locale, LIMITS.locale)) return { ok: false, reason: 'bad build or locale' };
+  const game = gameOf(v.game);
+  if (!game) return { ok: false, reason: 'bad game' };
   if (!Array.isArray(v.events) || v.events.length === 0 || v.events.length > LIMITS.batchEvents) return { ok: false, reason: 'bad events' };
   const events: ClientEvent[] = [];
   for (const raw of v.events) {
@@ -65,13 +75,15 @@ export function checkBatch(v: unknown, now: number): Checked<EventBatch> {
     if (!e) return { ok: false, reason: 'bad event' };
     events.push(e);
   }
-  return { ok: true, value: { install: v.install, session: v.session, host: v.host, build: v.build, locale: v.locale, events } };
+  return { ok: true, value: { install: v.install, session: v.session, host: v.host, build: v.build, locale: v.locale, ...game, events } };
 }
 
 /** A run for the leaderboard; a run that could not have happened is refused. */
 export function checkRun(v: unknown): Checked<RunEntry> {
   if (!isObj(v)) return { ok: false, reason: 'not an object' };
   if (!isId(v.install) || !isHost(v.host) || !isShort(v.build, LIMITS.build)) return { ok: false, reason: 'bad id' };
+  const game = gameOf(v.game);
+  if (!game) return { ok: false, reason: 'bad game' };
   if (!isInt(v.chapter, 1, LIMITS.chapters) || typeof v.hard !== 'boolean' || typeof v.won !== 'boolean') return { ok: false, reason: 'bad board' };
   if (!isInt(v.wave, 1, LIMITS.waves) || (v.won && v.wave !== LIMITS.waves)) return { ok: false, reason: 'bad wave' };
   if (!isInt(v.tenths, v.wave * LIMITS.minSecondsPerWave * 10, LIMITS.maxSeconds * 10)) return { ok: false, reason: 'bad time' };
@@ -82,7 +94,7 @@ export function checkRun(v: unknown): Checked<RunEntry> {
   return {
     ok: true,
     value: {
-      install: v.install, host: v.host, build: v.build, chapter: v.chapter, hard: v.hard, won: v.won, wave: v.wave,
+      install: v.install, host: v.host, build: v.build, ...game, chapter: v.chapter, hard: v.hard, won: v.won, wave: v.wave,
       tenths: v.tenths, level: v.level, kills: v.kills, monk: v.monk, relic: v.relic, ...(name ?? {}),
     },
   };
@@ -131,6 +143,8 @@ export function checkChallengeRun(v: unknown): Checked<ChallengeRun> {
 export function checkReport(v: unknown): Checked<Report> {
   if (!isObj(v)) return { ok: false, reason: 'not an object' };
   if (!isId(v.install) || !isHost(v.host) || !isShort(v.build, LIMITS.build) || !isShort(v.locale, LIMITS.locale)) return { ok: false, reason: 'bad id' };
+  const game = gameOf(v.game);
+  if (!game) return { ok: false, reason: 'bad game' };
   if (typeof v.text !== 'string' || v.text.length > LIMITS.reportText) return { ok: false, reason: 'bad text' };
   if (typeof v.device !== 'string' || v.device.length > LIMITS.device) return { ok: false, reason: 'bad device' };
   if (!isInt(v.chapter, 0, LIMITS.chapters) || !isInt(v.wave, 0, LIMITS.waves)) return { ok: false, reason: 'bad run' };
@@ -138,7 +152,7 @@ export function checkReport(v: unknown): Checked<Report> {
   if (replay === undefined) return { ok: false, reason: 'bad replay' };
   return {
     ok: true,
-    value: { install: v.install, host: v.host, build: v.build, locale: v.locale, text: v.text, device: v.device, chapter: v.chapter, wave: v.wave, replay },
+    value: { install: v.install, host: v.host, build: v.build, locale: v.locale, ...game, text: v.text, device: v.device, chapter: v.chapter, wave: v.wave, replay },
   };
 }
 

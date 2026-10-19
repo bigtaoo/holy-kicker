@@ -248,11 +248,15 @@ entry may point into `client/public` to reuse a monk file on purpose (a UI sound
   Edit on gamestao.com.
 - `npm run build:crazygames:new` → `client/dist-crazygames-new/`, the zip for its own CrazyGames
   game. WeChat, iOS and Playgama build the monk only.
-- Backend apart: corgi builds talk to https://hk-new.gamestao.com (`__HK_API__`), the same server
-  image as `api-new` on the box with the database `holykicker_new`, so players, boards, problem
-  reports and the dashboard numbers stay separate. To switch it on: add `COMPOSE_PROFILES=new` to
-  the box's `.env` (through `secrets/holykicker/prod.yaml`, server/README.md), redeploy, and add the
-  tunnel's second public hostname `hk-new.gamestao.com` → `http://api-new:8080`.
+- One backend, kept apart: corgi builds talk to https://hk.gamestao.com like Holy Kicker, and name
+  themselves on everything they send (`game: 'corgi'`, the beacon's `&g=corgi`;
+  `server/src/game.ts`). The server keeps that tag on the corgi's events, installs, daily actives,
+  load beacons and problem reports, and Holy Kicker's documents carry none (as everything from
+  before the corgi). The corgi's boards have ids of their own, `c3-corgi`, `c3h-corgi` and
+  `w2026-43-e39-c1-corgi`, so no run of one game ranks on the other's. The dashboard and
+  `/v1/stats` show one game at a time (`?game=corgi`; Holy Kicker's when not given), and
+  `tools/launch_check.mjs` takes `--game corgi`. Install ids, and so tags and names, differ
+  anyway: the corgi keeps its install id under `corgi:` like the rest of its save.
 - Saves: in the browser the corgi keeps every key under `corgi:` (`src/theme.ts`), so the two games
   on h.gamestao.com never share a save.
 - Words: `client/src/i18n/corgi/` overrides the strings that name the monk's world (heroes, relics

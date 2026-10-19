@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
 import { ahead, challengeUpdate, freshDoc, settleDoc, standing, topRuns, waiting, type Best, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
-import { RESIM_TOP, WATCH_TOP, boardId, runScore, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { RESIM_TOP, WATCH_TOP, boardId, keptGame, runScore, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Game, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
@@ -13,17 +13,19 @@ import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, t
 export interface Store {
   /** Keeps a checked batch received at `now` (ms); `aud` is kept on a new install. */
   addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void>;
-  /** Counts one anonymous load checkpoint for its day, host and build, and its load-time bucket (protocol loadBucket) if it has one. */
-  beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void>;
+  /** Counts one anonymous load checkpoint for its day, host, build and game, and its load-time bucket (protocol loadBucket) if it has one. */
+  beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null, game?: Game): Promise<void>;
   /** Keeps the run if it is the install's best on its board; returns the run's board and the install's rank there. */
   submitRun(run: RunEntry, tag: string, now: number): Promise<{ board: string; rank: number; best: boolean }>;
   /** Keeps the name the boards show for `tag`: a portal account's or a dice name. */
   setName(tag: string, name: BoardName, now: number): Promise<void>;
   /** The top `limit` rows of a board, and the row of `tag` (may be null). */
   board(board: string, limit: number, tag: string | null): Promise<BoardReply>;
-  /** The last `days` days of numbers for the operator, for one host or (null) all of them. */
-  /** The `days` days ending on `to` (a UTC day) or today, whichever is earlier. */
-  stats(days: number, now: number, host: Host | null, to?: string): Promise<Stats>;
+  /**
+   * The operator's numbers for one game (Holy Kicker's when not named) and one host or (null) all
+   * of them, over the `days` days ending on `to` (a UTC day) or today, whichever is earlier.
+   */
+  stats(days: number, now: number, host: Host | null, to?: string, game?: Game): Promise<Stats>;
   /** Keeps a problem report received at `now`; returns its id. */
   addReport(report: Report, now: number): Promise<string>;
   /** The newest `limit` reports, without their replays' commands. */
@@ -101,7 +103,7 @@ export class MemoryStore implements Store {
   private readonly best = new Map<string, Best>();
   /** The boards' names by tag. */
   readonly names = new Map<string, BoardName>();
-  /** Load checkpoints by `day/host/build/step`: the count, and the counts by load-time bucket. */
+  /** Load checkpoints by `day/host/build/step/game` (game empty for the first): the count, and the counts by load-time bucket. */
   readonly beacons = new Map<string, { n: number; t: Record<string, number> }>();
   /** When prune() last ran (ms), null before the first. */
   lastPrune: number | null = null;
@@ -110,8 +112,8 @@ export class MemoryStore implements Store {
   /** Challenge runs by `board/tag`. */
   readonly challenges = new Map<string, ChallengeDoc>();
 
-  async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null): Promise<void> {
-    const key = `${dayOf(now)}/${host}/${build}/${step}`;
+  async beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null, game?: Game): Promise<void> {
+    const key = `${dayOf(now)}/${host}/${build}/${step}/${keptGame(game) ?? ''}`;
     const b = this.beacons.get(key) ?? this.beacons.set(key, { n: 0, t: {} }).get(key)!;
     b.n++;
     if (bucket) b.t[bucket] = (b.t[bucket] ?? 0) + 1;
@@ -124,7 +126,7 @@ export class MemoryStore implements Store {
     const batch = { ...sent, events };
     this.events.push({ ...batch, at: now });
     const day = dayOf(now);
-    const p = this.players.get(batch.install) ?? { _id: batch.install, first: day, host: batch.host, build: batch.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() };
+    const p = this.players.get(batch.install) ?? { _id: batch.install, first: day, host: batch.host, ...(batch.game ? { game: batch.game } : {}), build: batch.build, ...(aud ? { aud } : {}), back: [], d0: emptyDayZero() };
     if (p.first === day) p.d0 = foldDayZero(p.d0, batch.events);
     const key = `${day}/${batch.install}`;
     const offset = dayOffset(p.first, day);
@@ -140,7 +142,7 @@ export class MemoryStore implements Store {
   }
 
   async submitRun(run: RunEntry, tag: string, now: number) {
-    const board = boardId(run.chapter, run.hard);
+    const board = boardId(run.chapter, run.hard, run.game);
     const key = `${board}/${tag}`;
     const score = runScore(run);
     const old = this.best.get(key);
@@ -162,18 +164,20 @@ export class MemoryStore implements Store {
     this.names.set(tag, name);
   }
 
-  async stats(days: number, now: number, host: Host | null, to?: string): Promise<Stats> {
+  async stats(days: number, now: number, host: Host | null, to?: string, game: Game = 'monk'): Promise<Stats> {
     const today = dayOf(now);
     const list = windowOf(days, today, to);
     const fold = new StatsFold(list, today);
     const last = list[list.length - 1];
-    const mine = (h: Host) => host === null || h === host;
-    for (const p of this.players.values()) if (mine(p.host)) fold.add(p);
+    const g = keptGame(game);
+    const mine = (h: Host, of: Game | undefined) => (host === null || h === host) && of === g;
+    for (const p of this.players.values()) if (mine(p.host, p.game)) fold.add(p);
     const counts: DayCounts = { active: new Map(), runs: new Map(), ended: new Map() };
     const inc = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
     for (const key of this.active) {
       const [day, install] = key.split('/');
-      if (day <= last && mine(this.players.get(install)!.host)) inc(counts.active, day);
+      const p = this.players.get(install)!;
+      if (day <= last && mine(p.host, p.game)) inc(counts.active, day);
     }
     const ends: EndCount[] = [];
     const snaps: PerfSnap[] = [];
@@ -182,7 +186,7 @@ export class MemoryStore implements Store {
     const anomalies: AnomalyCount[] = [];
     for (const b of this.events) {
       const day = dayOf(b.at);
-      if (!mine(b.host) || day < list[0] || day > last) continue;
+      if (!mine(b.host, b.game) || day < list[0] || day > last) continue;
       const aud = this.players.get(b.install)?.aud;
       for (const e of b.events) {
         if (e.e === 'perf') snaps.push({ day, host: b.host, build: b.build, device: aud?.device ?? 'unknown', os: aud?.os ?? 'unknown', ...sessionDevice(launches.get(b.session)), p: e.p ?? {} });
@@ -196,10 +200,10 @@ export class MemoryStore implements Store {
     }
     const beacons: BeaconCount[] = [];
     for (const [key, { n, t }] of this.beacons) {
-      const [day, h, build, step] = key.split('/');
-      if (day >= list[0] && day <= last && mine(h as Host)) beacons.push({ day, build, step, n, ...(Object.keys(t).length ? { t: { ...t } } : {}) });
+      const [day, h, build, step, of] = key.split('/');
+      if (day >= list[0] && day <= last && mine(h as Host, (of || undefined) as Game | undefined)) beacons.push({ day, build, step, n, ...(Object.keys(t).length ? { t: { ...t } } : {}) });
     }
-    return fold.result(host, counts, ends, beacons, snaps, anomalies);
+    return fold.result(host, game, counts, ends, beacons, snaps, anomalies);
   }
 
   async addReport(report: Report, now: number): Promise<string> {

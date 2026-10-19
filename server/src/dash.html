@@ -50,6 +50,7 @@ svg text { fill: var(--dim); font-size: 10px; }
 <body>
 <header>
   <h1>Holy Kicker</h1>
+  <select id="game" title="Each game's numbers stand apart (server/src/game.ts)"><option value="monk">Holy Kicker</option><option value="corgi">corgi</option></select>
   <select id="host"><option value="">all hosts</option><option>crazygames</option><option>ios</option><option>playgama</option><option>poki</option><option>web</option><option>wechat</option></select>
   <select id="days"><option value="1">1 day</option><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option><option value="60">60 days</option><option value="90">90 days</option></select>
   <input id="to" type="date" title="Last day of the window (UTC); empty is today. Returns still count up to today.">
@@ -69,18 +70,19 @@ const GOAL = { 1: [20, 30], 3: [10, 18], 7: [5, 10], 14: [3, 6], 30: [1.5, 3] };
 const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch {} } };
 
 $('key').value = store.get('hk.dash.key') || '';
+$('game').value = store.get('hk.dash.game') || 'monk';
 $('host').value = store.get('hk.dash.host') || '';
 $('days').value = store.get('hk.dash.days') || '30';
 $('go').onclick = load;
-$('host').onchange = $('days').onchange = load;
+$('game').onchange = $('host').onchange = $('days').onchange = load;
 if ($('key').value) load();
 
 async function load() {
   const key = $('key').value.trim();
   if (!key) return;
-  store.set('hk.dash.key', key); store.set('hk.dash.host', $('host').value); store.set('hk.dash.days', $('days').value);
+  store.set('hk.dash.key', key); store.set('hk.dash.game', $('game').value); store.set('hk.dash.host', $('host').value); store.set('hk.dash.days', $('days').value);
   $('msg').textContent = 'loading…';
-  const q = new URLSearchParams({ days: $('days').value });
+  const q = new URLSearchParams({ days: $('days').value, game: $('game').value });
   if ($('host').value) q.set('host', $('host').value);
   if ($('to').value) q.set('to', $('to').value);
   try {
@@ -113,7 +115,7 @@ function render(s) {
   const today = s.days[s.days.length - 1], yday = s.days[s.days.length - 2] || today;
   const live = today.day === s.today;
   $('out').innerHTML = [
-    section(`Overview · ${esc(s.host || 'all hosts')} · ${esc(s.days[0].day)} to ${esc(today.day)} (UTC)`, 'Retention pools every cohort whose return day is over. Colours: green beats a good casual web game, amber is average, red is below.',
+    section(`Overview · ${esc(s.game === 'corgi' ? 'corgi' : 'Holy Kicker')} · ${esc(s.host || 'all hosts')} · ${esc(s.days[0].day)} to ${esc(today.day)} (UTC)`, 'Retention pools every cohort whose return day is over. Colours: green beats a good casual web game, amber is average, red is below.',
       `<div class="kpis">${kpi(fresh, 'new installs in the window')}${s.days.length > 1 ? kpi(yday.active, `active on ${yday.day}`) : ''}${kpi(today.active, live ? 'active today so far' : `active on ${today.day}`)}
       ${ret.map((r) => kpi(fmt(r.p), `D${r.n} of ${r.fresh} installs`, shade(r.p, r.n))).join('')}</div>`),
     section('What to look at', 'Rules of thumb from the numbers below; each points at the lever most likely to move retention.', diagnose(s, ret)),

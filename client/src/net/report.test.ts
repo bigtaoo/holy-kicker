@@ -35,7 +35,7 @@ describe('Backend.report', () => {
     expect(calls[0].init.method).toBe('POST');
     // keepalive bodies are capped at 64 kB, and a replay can be larger
     expect(calls[0].init.keepalive).toBe(false);
-    expect(JSON.parse(calls[0].init.body as string)).toEqual({ ...draft, install: net.install, host: 'web', build: '1.2.3', locale: 'de' });
+    expect(JSON.parse(calls[0].init.body as string)).toEqual({ ...draft, install: net.install, host: 'web', build: '1.2.3', locale: 'de', game: 'monk' });
   });
 
   it('says no when the server refuses it, the network fails or there is no backend', async () => {

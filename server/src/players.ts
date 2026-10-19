@@ -1,5 +1,5 @@
 import type { Audience } from './audience';
-import { LIMITS, boardId, type ClientEvent, type Host } from './protocol';
+import { LIMITS, boardId, type ClientEvent, type Game, type Host } from './protocol';
 
 // What the backend remembers about each install for retention: the day it was first seen, the
 // later days it came back, what it did on its first day (day 0) and how it got through each board.
@@ -39,6 +39,8 @@ export interface Player {
   /** The first day seen, YYYY-MM-DD (UTC). */
   first: string;
   host: Host;
+  /** The game it plays (game.ts), none for the first. */
+  game?: Game;
   /** The build the install first played (version+commit), to compare releases' new players. */
   build?: string;
   /** Its device, browser, system and country, from the first batch (audience.ts). Missing before it was kept. */

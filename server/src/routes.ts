@@ -2,7 +2,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
 import { challengeFor, misfit, openChallenges } from './challenge';
 import { marked } from './marks';
-import { BEACONS, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, loadBucket, type Beacon, type Host } from './protocol';
+import { BEACONS, BOARD_SUFFIX, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, isGame, keptGame, loadBucket, type Beacon, type Game, type Host } from './protocol';
 import { checkBatch, checkChallengeRun, checkNameEntry, checkReport, checkRun } from './rules';
 import type { ResimJob } from './challengeDocs';
 import type { Store } from './store';
@@ -42,7 +42,7 @@ export interface Deps {
 }
 
 export const BOARD_ROWS = 50;
-const BOARD = /^c[1-9]h?$/;
+const BOARD = new RegExp(`^c[1-9]h?${BOARD_SUFFIX}$`);
 const REPORT = /^\/v1\/reports\/[0-9a-f]{16}$/;
 const TAG = /^[A-Za-z0-9_-]{10}$/;
 
@@ -86,7 +86,10 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     // the load time, if any: whole milliseconds, under an hour
     const ms = req.query.get('ms');
     if (ms !== null && !/^\d{1,7}$/.test(ms)) return bad('bad ms');
-    await d.store.beacon(host as Host, step as Beacon, build, d.now(), ms === null ? null : loadBucket(Number(ms)));
+    // the game, from any but the first (game.ts)
+    const game = req.query.get('g');
+    if (game !== null && !isGame(game)) return bad('bad game');
+    await d.store.beacon(host as Host, step as Beacon, build, d.now(), ms === null ? null : loadBucket(Number(ms)), keptGame(game ?? undefined));
     return { status: 204 };
   }
 
@@ -129,7 +132,7 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     const why = misfit(challenge, run, replay);
     if (why) return bad(why);
     const tag = tagOf(run.install, d.tagSalt);
-    const entry = { board: challengeBoardId(challenge.id, challenge.engine, run.chapter), tag, challenge: challenge.id, run, replay };
+    const entry = { board: challengeBoardId(challenge.id, challenge.engine, run.chapter, run.game), tag, challenge: challenge.id, run, replay };
     const now = d.now();
     const r = await d.store.challengeRun(entry, now);
     if (r.status === 'pending') d.resim.push({ ...entry, at: now });
@@ -173,7 +176,10 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     // the window's last day (UTC), for a past week or a single finished day; later than today means today
     const to = req.query.get('to') || undefined;
     if (to !== undefined && !isDay(to)) return bad('bad to');
-    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null, to) };
+    // one game's numbers at a time, Holy Kicker's unless asked
+    const game = req.query.get('game') || 'monk';
+    if (!isGame(game)) return bad('bad game');
+    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null, to, game as Game) };
   }
 
   return { status: 404 };

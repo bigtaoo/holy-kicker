@@ -12,10 +12,13 @@ import { themeHtml } from './themeHtml.mjs';
 export const ROOT = fileURLToPath(new URL('..', import.meta.url));
 export const PUBLIC = join(ROOT, 'client/public');
 
-/** Per theme: its backend (analytics, leaderboards, reports and saves apart) and its asset list. */
+/**
+ * Per theme: its backend and its asset list. Both games share one backend, each naming itself on
+ * every request (server/src/game.ts), so their numbers, boards and reports stay apart there.
+ */
 export const THEMES = {
   monk: { api: 'https://hk.gamestao.com' },
-  corgi: { api: 'https://hk-new.gamestao.com', list: 'client/themes/corgi.json' },
+  corgi: { api: 'https://hk.gamestao.com', list: 'client/themes/corgi.json' },
 };
 
 export function themeOf(name) {

@@ -2,8 +2,11 @@
 // Compares the first-hours numbers of a host's newest build with the one before it, so a
 // regression after an upload shows within hours (docs/retention.md "Checking a new upload").
 //
-//   node tools/launch_check.mjs --host crazygames [--since 2026-10-14] [--builds aa727bc,baee706]
+//   node tools/launch_check.mjs --host crazygames [--game corgi] [--since 2026-10-14] [--builds aa727bc,baee706]
 //        [--all] [--ssh blightbloom] [--save dump.json | --load dump.json]
+//
+// Both games share the backend and a commit's build id (server/src/game.ts): --game picks one,
+// Holy Kicker's (`monk`) when not given.
 //
 // Reads production MongoDB through the hk-api container on the backend box (ssh, then
 // `docker exec`; read only). Without --builds it compares the two newest builds that sent a
@@ -20,7 +23,7 @@ const HOUR = 60 * MIN;
 const LIVE_MS = 15 * MIN;
 
 function parseArgs(argv) {
-  const a = { host: 'crazygames', since: null, builds: null, all: false, ssh: 'blightbloom', save: null, load: null };
+  const a = { host: 'crazygames', game: 'monk', since: null, builds: null, all: false, ssh: 'blightbloom', save: null, load: null };
   for (let i = 0; i < argv.length; i++) {
     const k = argv[i].replace(/^--/, '');
     if (k === 'all') a.all = true;
@@ -42,9 +45,11 @@ async function remote(A) {
     const db = c.db(process.env.HK_MONGO_DB);
     const since = new Date(A.since);
     const ev = db.collection('events');
+    // the first game's documents carry no `game`
+    const mine = { host: A.host, game: A.game === 'monk' ? { $exists: false } : A.game };
     // a build's first launch by receive time: one device with its clock behind would move it
     const seen = await ev.aggregate([
-      { $match: { host: A.host, e: 'session', at: { $gte: since } } },
+      { $match: { ...mine, e: 'session', at: { $gte: since } } },
       { $group: { _id: '$build', n: { $sum: 1 }, first: { $min: '$at' } } },
       { $sort: { first: 1 } },
     ]).toArray();
@@ -54,14 +59,14 @@ async function remote(A) {
       if (builds.some((b) => !b)) throw new Error(`no sessions of ${A.builds} since ${A.since}; seen: ${seen.map((s) => s._id)}`);
       builds = builds.sort((a, b) => a.first - b.first).map((s) => s._id);
     }
-    const installs = await db.collection('installs').find({ host: A.host, build: { $in: builds } }).toArray();
+    const installs = await db.collection('installs').find({ ...mine, build: { $in: builds } }).toArray();
     const ids = installs.map((i) => i._id);
     const events = await ev.find(
-      { at: { $gte: since }, $or: [{ install: { $in: ids } }, { host: A.host, build: { $in: builds } }] },
+      { at: { $gte: since }, $or: [{ install: { $in: ids } }, { ...mine, build: { $in: builds } }] },
       { projection: { at: 0, day: 0, host: 0, locale: 0 } },
     ).toArray();
-    const beacons = await db.collection('beacons').find({ host: A.host, build: { $in: builds } }).toArray();
-    const reports = await db.collection('reports').find({ host: A.host, build: { $in: builds } }, { projection: { replay: 0 } }).toArray();
+    const beacons = await db.collection('beacons').find({ ...mine, build: { $in: builds } }).toArray();
+    const reports = await db.collection('reports').find({ ...mine, build: { $in: builds } }, { projection: { replay: 0 } }).toArray();
     process.stdout.write(JSON.stringify({ now: Date.now(), seen, builds, installs, events, beacons, reports }));
   } finally {
     await c.close();
@@ -69,7 +74,7 @@ async function remote(A) {
 }
 
 function fetchData(args) {
-  const A = { host: args.host, since: args.since, builds: args.builds };
+  const A = { host: args.host, game: args.game, since: args.since, builds: args.builds };
   const script = `(${remote.toString()})(${JSON.stringify(A)}).catch((e) => { console.error(e.message); process.exit(1); });\n`;
   const file = `/tmp/hk_launch_check_${process.pid}.cjs`;
   const cmd = `docker exec -i hk-api sh -c "cat > ${file} && node ${file}; s=\\$?; rm -f ${file}; exit \\$s"`;

@@ -1,7 +1,7 @@
 import { AUDIENCE_KEYS, type Audience } from './audience';
 import { diagnose, type Finding } from './diagnose';
 import { anomaliesOf, perfOf, type AnomalyCount, type AnomalyStats, type PerfSnap, type PerfStats } from './perf';
-import { boardId, type Host } from './protocol';
+import { boardId, type Game, type Host } from './protocol';
 import { RETURN_DAYS, counted, dayAfter, emptyDayZero, type DayZero, type Player, type Progress } from './players';
 
 // The operator's numbers (GET /v1/stats, the /dash page): daily actives, retention cohorts, the
@@ -14,6 +14,8 @@ export interface Stats {
   today: string;
   /** The host the numbers are for, or null for all of them. */
   host: Host | null;
+  /** The game they are for (game.ts): each game's numbers stand apart. */
+  game: Game;
   days: { day: string; active: number; fresh: number; runs: number; ended: number }[];
   /**
    * Per board: runs ended, won, the median wave of the lost ones, and the waves they ended on
@@ -160,11 +162,12 @@ export class StatsFold {
     if (z.ends > 0) bump(this.firstRun, z.firstWave, d1);
   }
 
-  result(host: Host | null, counts: DayCounts, ends: EndCount[], beacons: BeaconCount[] = [], snaps: PerfSnap[] = [], anomalies: AnomalyCount[] = []): Stats {
+  result(host: Host | null, game: Game, counts: DayCounts, ends: EndCount[], beacons: BeaconCount[] = [], snaps: PerfSnap[] = [], anomalies: AnomalyCount[] = []): Stats {
     const at = (m: Map<string, number>, day: string) => m.get(day) ?? 0;
     return {
       today: this.today,
       host,
+      game,
       days: this.days.map((day) => ({ day, active: at(counts.active, day), fresh: at(this.fresh, day), runs: at(counts.runs, day), ended: at(counts.ended, day) })),
       boards: boardsOf(ends),
       returnDays: [...RETURN_DAYS],

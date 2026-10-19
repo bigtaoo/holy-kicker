@@ -1,6 +1,7 @@
 import type { BoardName, BoardReply, ChallengeBoardReply, ChallengeList, ChallengeRun, ChallengeRunReply, EventBatch, EventName, Host, NameEntry, PropValue, ReplayWire, Report, RunEntry } from '@hk/protocol';
 import type { Sharing } from '../meta/privacy';
 import type { Platform } from '../platform/types';
+import { THEME } from '../theme';
 import { EventQueue, newId } from './events';
 
 // The game's link to its backend (server/README.md): analytics batches, leaderboard runs and
@@ -16,7 +17,7 @@ const TIMEOUT_MS = 8000;
 /** A report carries a replay of up to a few MB, so it gets longer on a slow phone. */
 const REPORT_TIMEOUT_MS = 45_000;
 export const INSTALL_KEY = 'hk.install';
-/** The theme's backend: hk.gamestao.com for Holy Kicker (build/theme.mjs). */
+/** The backend, hk.gamestao.com (build/theme.mjs); both games share it, each naming itself (`game`, THEME). */
 export const DEFAULT_API = __HK_API__;
 
 /**
@@ -32,8 +33,8 @@ export function apiBase(host: Host, dev: boolean, query: URLSearchParams, config
   return (configured || DEFAULT_API).replace(/\/+$/, '');
 }
 
-export type RunResult = Omit<RunEntry, 'install' | 'host' | 'build'>;
-export type ReportDraft = Omit<Report, 'install' | 'host' | 'build' | 'locale'>;
+export type RunResult = Omit<RunEntry, 'install' | 'host' | 'build' | 'game'>;
+export type ReportDraft = Omit<Report, 'install' | 'host' | 'build' | 'locale' | 'game'>;
 
 /** The server's answer to a run: the install's rank on the board, and whether this run is its new best there. */
 export interface RunRank {
@@ -125,6 +126,7 @@ export class Backend {
     const steps: [string, number][] = [['script', phases.script], ['art', phases.art], ['loaded', timed ? performance.now() : 0]];
     for (const [step, ms] of timed ? steps : steps.slice(2)) {
       const q = new URLSearchParams({ h: this.platform.host, s: `${step}_${kind}`, b: this.build });
+      if (THEME !== 'monk') q.set('g', THEME);
       if (timed) q.set('ms', String(Math.round(ms)));
       void fetch(`${this.base}/v1/beacon?${q}`, { mode: 'no-cors', keepalive: true }).catch(() => {});
     }
@@ -161,13 +163,13 @@ export class Backend {
   }
 
   private batch(events: EventBatch['events']): EventBatch {
-    return { install: this.install, session: this.session, host: this.platform.host, build: this.build, locale: this.locale(), events };
+    return { install: this.install, session: this.session, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME, events };
   }
 
   /** Enters a finished run on its board; the reply has the install's rank there, or null offline. */
   async submitRun(run: RunResult): Promise<RunRank | null> {
     if (this.sharing !== 'send') return null;
-    const entry: RunEntry = { ...run, install: this.install, host: this.platform.host, build: this.build };
+    const entry: RunEntry = { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME };
     const r = (await this.send('POST', '/v1/runs', entry)) as Partial<RunRank> | null;
     return r && typeof r.rank === 'number' && r.rank > 0 ? (r as RunRank) : null;
   }
@@ -181,7 +183,7 @@ export class Backend {
 
   /** Sends a problem report with its replay; whether the server kept it. */
   async report(draft: ReportDraft): Promise<boolean> {
-    const report: Report = { ...draft, install: this.install, host: this.platform.host, build: this.build, locale: this.locale() };
+    const report: Report = { ...draft, install: this.install, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME };
     return (await this.send('POST', '/v1/reports', report, REPORT_TIMEOUT_MS)) !== null;
   }
 
@@ -199,7 +201,7 @@ export class Backend {
   /** Sends a counted challenge run with its replay, which the server re-simulates when it would rank high. */
   async submitChallengeRun(challenge: string, run: RunResult, replay: ReplayWire): Promise<ChallengeRunReply | null> {
     if (this.sharing !== 'send') return null;
-    const body: ChallengeRun = { challenge, run: { ...run, install: this.install, host: this.platform.host, build: this.build }, replay };
+    const body: ChallengeRun = { challenge, run: { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME }, replay };
     const r = (await this.send('POST', '/v1/challenge/runs', body, REPORT_TIMEOUT_MS)) as Partial<ChallengeRunReply> | null;
     return r && typeof r.rank === 'number' && typeof r.total === 'number' && typeof r.board === 'string' ? (r as ChallengeRunReply) : null;
   }

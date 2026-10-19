@@ -1,9 +1,10 @@
 # Retention: reading the numbers and moving them
 
 The dashboard is **https://hk.gamestao.com/dash** (admin key: `HK_ADMIN_KEY`, see
-server/README.md). It reads `GET /v1/stats` and shows one host or all of them. Pick the host
-you shipped to: CrazyGames, Poki and our own web build bring different players, and our own test
-installs land on `web`.
+server/README.md). It reads `GET /v1/stats` and shows one game and one host or all of them.
+Holy Kicker and its corgi reskin share the backend but never their numbers: pick the game first
+(`?game=corgi`; Holy Kicker's when not given). Then pick the host you shipped to: CrazyGames, Poki
+and our own web build bring different players, and our own test installs land on `web`.
 
 Playgama's sandbox (Bridge platform `playgama_sandbox`) admits no request outside Playgama's own
 hosts, so the game plays offline there and its players never reach this dashboard (no boards, no
@@ -86,7 +87,8 @@ before believing a change, and never read a single day.
 
 The dashboard needs days; a broken upload should show within hours. `tools/launch_check.mjs`
 compares a host's newest build with the one before it, each over the same age (the hours the
-newest has been up), split desktop / touch:
+newest has been up), split desktop / touch; `--game corgi` looks at the corgi's (both games' builds
+of one commit share its name):
 
 ```bash
 node tools/launch_check.mjs --host crazygames --since 2026-10-14

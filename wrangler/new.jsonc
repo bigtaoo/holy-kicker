@@ -9,7 +9,7 @@
   //
   // The files sit under new/ in the assets directory, so /new/art/... is new/art/...; /new
   // redirects to /new/ (new/index.html). No SPA fallback: a missing file is a 404, never the page.
-  // The game talks to its own backend at hk-new.gamestao.com (build/theme.mjs).
+  // The game talks to Holy Kicker's backend, hk.gamestao.com, under its own game tag (build/theme.mjs).
   "name": "holy-kicker-new",
   "compatibility_date": "2026-10-05",
   "workers_dev": false,

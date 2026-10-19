@@ -6,7 +6,7 @@
 name: holykicker
 
 services:
-  api: &api
+  api:
     build: .
     image: holykicker-api
     container_name: hk-api
@@ -24,17 +24,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-
-  # The corgi reskin's backend (docs/reskin.md "Builds"): the same image on a database of its
-  # own, so its players, boards, reports and numbers never mix with Holy Kicker's. Off until the
-  # box's .env says COMPOSE_PROFILES=new; the tunnel then needs a second public hostname,
-  # hk-new.gamestao.com -> http://api-new:8080.
-  api-new:
-    <<: *api
-    container_name: hk-api-new
-    environment:
-      HK_MONGO_DB: holykicker_new
-    profiles: [new]
 
   # A remotely managed tunnel: its route (hk.gamestao.com -> http://api:8080) is set on
   # Cloudflare's side; the token in .env is all it needs here.
