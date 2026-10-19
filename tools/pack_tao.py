@@ -11,6 +11,7 @@ spec.json (paths relative to the spec file):
     "origin": [x, y],                    # source pixel that becomes (0, 0): between the feet
     "scale": 0.35,                       # source px -> exported px (atlas resolution)
     "variants": {"face": ["face_hurt"]}, # extra images a slot can swap to
+    "aliases": {"face_hurt": "face"},    # optional: a variant drawn with another image's frame
     "animations": {
       "run": {"duration": 0.6, "loop": true, "ease": "ease-in-out",
               "keys": [{"t": 0, "rotate": {"torso": -4}, "translate": {"root": [0, -10]},
@@ -98,9 +99,10 @@ def build(spec_path, scale=None):
             done.add(p["name"])
 
     # images at export scale; a variant shares its part's rectangle and offset
+    aliases = spec.get("aliases", {})
     names = [p["name"] for p in parts]
     for slot, extra in spec.get("variants", {}).items():
-        names += extra
+        names += [n for n in extra if n not in aliases]
     images = {}
     for n in names:
         im = Image.open(os.path.join(parts_dir, n + ".png")).convert("RGBA")
@@ -110,6 +112,10 @@ def build(spec_path, scale=None):
     atlas = Image.new("RGBA", size, (0, 0, 0, 0))
     for n, (x, y) in pos.items():
         atlas.paste(images[n], (x, y))
+    frames = {n: {"x": x, "y": y, "w": images[n].width, "h": images[n].height}
+              for n, (x, y) in sorted(pos.items())}
+    for n, target in aliases.items():
+        frames[n] = frames[target]
 
     slots = []
     for p in parts:  # parts.json is back to front, which is the draw order
@@ -121,8 +127,7 @@ def build(spec_path, scale=None):
         "height": rnd((oy - min(p["y"] for p in parts)) * s),
         "bones": bones,
         "slots": slots,
-        "images": {n: {"x": x, "y": y, "w": images[n].width, "h": images[n].height}
-                   for n, (x, y) in sorted(pos.items())},
+        "images": frames,
         "variants": {k: [k] + v for k, v in spec.get("variants", {}).items()},
         "animations": {k: bake_animation(a, done, s) for k, a in spec["animations"].items()},
     }

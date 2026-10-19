@@ -1,0 +1,14 @@
+{
+ "parent": {
+  "leg_l": "torso",
+  "leg_r": "torso",
+  "arm_l": "torso",
+  "arm_r": "torso",
+  "fore_l": "arm_l",
+  "fore_r": "arm_r",
+  "torso": null,
+  "head": "torso",
+  "ant_l": "head",
+  "ant_r": "head"
+ }
+}
