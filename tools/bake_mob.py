@@ -8,6 +8,7 @@ shrunk to game size and packed into one sheet, followed by white copies for hit 
 spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..1):
   {
     "source": "../style_r3/enemy_jiangshi_fix.png",  # relative to the spec file
+    "holes": [[fx, fy]],            # optional: enclosed paper to clear (cutout.py holes)
     "out": "../../../client/public/art/mobs/jiangshi", # writes <out>.png and <out>.json
     "frames": 8, "fps": 14,
     "flash": false,                 # optional: no white hit-flash copies (a boss flashes
@@ -18,7 +19,8 @@ spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..
     "height": 160,                  # px of the source cut-out's height in the sheet
     "ground": [x, y],               # the feet; the sheet's anchor
     "pad": [left, top, right, bottom],
-    "drop": [{"below": y, "hsv": [[lo, hi], ...]}],  # optional: paint to erase
+    "drop": [{"below": y, "hsv": [[lo, hi], ...]}],  # optional: paint to erase; with
+                                    # "islands": true, bits cut off from the figure go too
     "body": {"dy": f, "sx": f, "sy": f},                     # whole figure, about ground
     "deform": [                                              # applied inside body space
       {"type": "rotate", "region": R, "pivot": [x, y], "angle": f},      # degrees, cw
@@ -124,11 +126,16 @@ def drop_paint(im, rules):
         _, labels = cv2.connectedComponents((m | outside).astype(np.uint8), connectivity=4)
         touching = np.unique(labels[outside])
         a[m & np.isin(labels, touching[touching > 0]), 3] = 0
+        if r.get("islands"):
+            # the ground's own outline and pebbles, left floating once its paint is gone
+            n, labels, stats, _ = cv2.connectedComponentsWithStats((a[:, :, 3] > 0).astype(np.uint8))
+            if n > 2:
+                a[labels != 1 + int(np.argmax(stats[1:, cv2.CC_STAT_AREA])), 3] = 0
     return Image.fromarray(a)
 
 
 def bake(spec, base):
-    src = cutout(os.path.join(base, spec["source"]))
+    src = cutout(os.path.join(base, spec["source"]), spec.get("holes", ()))
     if "drop" in spec:
         src = drop_paint(src, spec["drop"])
     l, t_, r, b = spec["pad"]
@@ -203,7 +210,7 @@ def bake(spec, base):
 
 def debug_overlay(spec, base, path):
     """The cut-out with every deformer region drawn on it, for placing regions."""
-    src = cutout(os.path.join(base, spec["source"]))
+    src = cutout(os.path.join(base, spec["source"]), spec.get("holes", ()))
     im = Image.new("RGBA", src.size, (90, 120, 90, 255))
     im.alpha_composite(src)
     a = np.array(im)

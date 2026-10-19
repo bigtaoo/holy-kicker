@@ -1,0 +1,32 @@
+{
+  "source": "brood_v2.png",
+  "out": "../game/art/mobs/toad_king",
+  "frames": 10,
+  "fps": 8,
+  "outline": {"px": 7, "color": "#e2f2ee", "steps": 12},
+  "height": 210,
+  "ground": [470, 710],
+  "pad": [20, 40, 20, 10],
+  "holes": [[0.8545, 0.6667], [0.8506, 0.7526], [0.8467, 0.8542]],
+  "drop": [{"below": 440, "islands": true, "hsv": [[[0, 0, 140], [179, 60, 255]]]}],
+  "body": {
+    "sy": {"sin": 0.03, "bias": 1, "cycles": 2},
+    "sx": {"sin": -0.02, "bias": 1, "cycles": 2}
+  },
+  "deform": [
+    {"type": "rotate", "region": {"c": [110, 580], "r": [100, 150], "feather": 0.35}, "pivot": [160, 440],
+     "angle": {"sin": 6, "phase": 0}},
+    {"type": "move", "region": {"c": [110, 660], "r": [90, 60], "feather": 0.4},
+     "dy": {"keys": [[0, 0], [0.25, -14], [0.5, 0]]}},
+    {"type": "move", "region": {"c": [575, 650], "r": [80, 80], "feather": 0.4},
+     "dy": {"keys": [[0.5, 0], [0.75, -14], [1.0, 0]]}},
+    {"type": "move", "region": {"c": [810, 640], "r": [90, 80], "feather": 0.4},
+     "dy": {"keys": [[0, 0], [0.25, -14], [0.5, 0]]}},
+    {"type": "move", "region": {"c": [345, 640], "r": [60, 60], "feather": 0.4},
+     "dy": {"keys": [[0.5, 0], [0.75, -10], [1.0, 0]]}},
+    {"type": "wave", "region": {"c": [265, 470], "r": [100, 140], "feather": 0.4}, "root": [265, 350],
+     "dir": [0, 1], "length": 250, "wavelength": 300, "amp": 9, "cycles": 1},
+    {"type": "rotate", "region": {"c": [450, 250], "r": [380, 260], "feather": 0.3}, "pivot": [470, 710],
+     "angle": {"sin": 1.5, "cycles": 2, "phase": 0.15}}
+  ]
+}

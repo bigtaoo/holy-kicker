@@ -1,0 +1,28 @@
+{
+  "source": "beetle_v2.png",
+  "out": "../game/art/mobs/jiangshi",
+  "frames": 12,
+  "fps": 18,
+  "height": 160,
+  "ground": [330, 578],
+  "pad": [30, 30, 30, 10],
+  "body": {
+    "sy": {"sin": 0.025, "bias": 1, "cycles": 2},
+    "sx": {"sin": -0.015, "bias": 1, "cycles": 2}
+  },
+  "deform": [
+    {"type": "rotate", "region": {"c": [115, 485], "r": [60, 100], "feather": 0.35}, "pivot": [130, 400], "angle": {"sin": 10, "phase": 0.75}},
+    {"type": "move", "region": {"c": [115, 520], "r": [60, 70], "feather": 0.4}, "dy": {"keys": [[0, 0], [0.25, -16], [0.5, 0]]}},
+    {"type": "rotate", "region": {"c": [520, 485], "r": [52, 100], "feather": 0.35}, "pivot": [520, 400], "angle": {"sin": 10, "phase": 0.75}},
+    {"type": "move", "region": {"c": [520, 520], "r": [52, 70], "feather": 0.4}, "dy": {"keys": [[0, 0], [0.25, -16], [0.5, 0]]}},
+    {"type": "rotate", "region": {"c": [300, 505], "r": [42, 60], "feather": 0.35}, "pivot": [300, 455], "angle": {"sin": 10, "phase": 0.75}},
+    {"type": "rotate", "region": {"c": [430, 490], "r": [55, 100], "feather": 0.35}, "pivot": [430, 400], "angle": {"sin": 10, "phase": 0.25}},
+    {"type": "move", "region": {"c": [430, 525], "r": [55, 70], "feather": 0.4}, "dy": {"keys": [[0.5, 0], [0.75, -16], [1.0, 0]]}},
+    {"type": "rotate", "region": {"c": [615, 470], "r": [48, 90], "feather": 0.35}, "pivot": [600, 390], "angle": {"sin": 10, "phase": 0.25}},
+    {"type": "move", "region": {"c": [615, 505], "r": [48, 65], "feather": 0.4}, "dy": {"keys": [[0.5, 0], [0.75, -14], [1.0, 0]]}},
+    {"type": "rotate", "region": {"c": [240, 510], "r": [45, 60], "feather": 0.35}, "pivot": [245, 460], "angle": {"sin": 10, "phase": 0.25}},
+    {"type": "rotate", "region": {"c": [45, 95], "r": [60, 70], "feather": 0.4}, "pivot": [100, 160], "angle": {"sin": 9, "cycles": 2}},
+    {"type": "rotate", "region": {"c": [450, 85], "r": [65, 70], "feather": 0.4}, "pivot": [385, 160], "angle": {"sin": 9, "cycles": 2, "phase": 0.3}},
+    {"type": "rotate", "region": {"c": [330, 280], "r": [400, 330], "feather": 0.2}, "pivot": [330, 578], "angle": {"sin": 1.5, "cycles": 2, "phase": 0.15}}
+  ]
+}
