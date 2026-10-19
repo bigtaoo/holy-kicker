@@ -244,8 +244,9 @@ entry may point into `client/public` to reuse a monk file on purpose (a UI sound
 - `npm run build:new` → `client/dist-new/new/`, served at https://h.gamestao.com/new/ by its own
   Worker (`wrangler/new.jsonc`, routes on the hostname ahead of Holy Kicker's custom domain). CI's
   `deploy-new` job ships it on a green push to main once the repository variable
-  `NEW_WEB_DEPLOY_ENABLED` is `true`; the Cloudflare token then also needs Zone → Workers Routes →
-  Edit on gamestao.com.
+  `NEW_WEB_DEPLOY_ENABLED` is `true`, with a Cloudflare token of its own, the secret
+  `CLOUDFLARE_API_TOKEN_NEW` (`holy-kicker-new-ci`: Workers Scripts → Edit, and Zone → Workers
+  Routes → Edit on gamestao.com only), so Holy Kicker's token keeps no zone rights.
 - `npm run build:crazygames:new` → `client/dist-crazygames-new/`, the zip for its own CrazyGames
   game. WeChat, iOS and Playgama build the monk only.
 - One backend, kept apart: corgi builds talk to https://hk.gamestao.com like Holy Kicker, and name
