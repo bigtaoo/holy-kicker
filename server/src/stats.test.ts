@@ -17,11 +17,17 @@ const end = (wave: number, won = false, chapter = 1, gaveUp = false): ClientEven
 describe('day 0', () => {
   it('folds the first day into a profile', () => {
     const z = foldDayZero(undefined, [
-      session, { e: 'run_start', t: DAY0 }, { e: 'tutorial', t: DAY0 }, end(7), { e: 'run_start', t: DAY0 }, end(12),
+      session, { e: 'run_start', t: DAY0 }, { e: 'tutorial', t: DAY0, p: { step: 'move', secs: 0 } }, { e: 'tutorial', t: DAY0 }, end(7), { e: 'run_start', t: DAY0 }, end(12),
       { e: 'buy', t: DAY0, p: { item: 'train' } }, { e: 'leave', t: DAY0, p: { place: 'run', secs: 300, chapter: 1, wave: 4 } },
       { e: 'leave', t: DAY0, p: { place: 'nowhere', secs: 60 } },
     ]);
     expect(z).toMatchObject({ sessions: 1, starts: 2, ends: 2, best: 12, firstWave: 7, tutorial: true, buys: 1, secs: 360, left: 'other', leftWave: 0 });
+  });
+
+  it('counts the tutorial finished only at its done step (or a bare one from an older build)', () => {
+    const step = (s: string): ClientEvent => ({ e: 'tutorial', t: DAY0, p: { step: s, secs: 4 } });
+    expect(foldDayZero(undefined, [session, { e: 'run_start', t: DAY0 }, step('move'), step('auto'), step('gems')]).tutorial).toBe(false);
+    expect(foldDayZero(undefined, [session, { e: 'run_start', t: DAY0 }, step('move'), step('done')]).tutorial).toBe(true);
   });
 
   it('keeps a run whose page died with no leave as left in the run, at its last beat', () => {

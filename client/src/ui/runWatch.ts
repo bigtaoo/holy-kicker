@@ -11,7 +11,7 @@ import { cardText } from './cardText';
 import { deathCause, nearestGoal, type DownInfo } from './deathInfo';
 import type { RunHud } from './RunHud';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
-import { newTutorial, stepTutorial, type Tutorial } from './tutorial';
+import { newTutorial, stepTutorial, type Tutorial, type TutorialStep } from './tutorial';
 
 // One run as the shell sees it, frame by frame: it watches the engine's state for a new wave (a
 // banner), experience and level-up offers (the card panel), the hero going down (the death panel,
@@ -65,6 +65,10 @@ export class RunWatch {
   fall: DownInfo | null = null;
   /** Seconds of play since the last `alive` beat. */
   private sinceAlive = 0;
+  /** Seconds on screen since the run began, the pause panel left out (each frame capped at a second). */
+  private runSecs = 0;
+  /** The tutorial step last reported (null until the first one goes out). */
+  private toldStep: TutorialStep | null = null;
 
   constructor(
     private readonly game: Game,
@@ -113,11 +117,15 @@ export class RunWatch {
       this.sinceAlive = 0;
       d.net.track('alive', runLeave(s, d.chapter, d.kills(), this.tutorial?.step ?? null));
     }
+    if (!game.paused) this.runSecs += Math.min(dt, 1);
     if (this.tutorial && !game.paused && p.offer.length === 0) {
-      const step = this.tutorial.step;
       this.tutorial = stepTutorial(this.tutorial, dt, p.moving);
       hud.setTutorial(this.tutorial.step);
-      if (step !== 'done' && this.tutorial.step === 'done') d.net.track('tutorial');
+    }
+    // each step as it is reached, so a funnel shows which one first runs end on, and how long in
+    if (this.tutorial && this.tutorial.step !== this.toldStep) {
+      this.toldStep = this.tutorial.step;
+      d.net.track('tutorial', { step: this.toldStep, secs: Math.round(this.runSecs) });
     }
     hud.setXp(p.level, p.xp / xpToNext(p.level));
     hud.setBuild(buildSlots(p));

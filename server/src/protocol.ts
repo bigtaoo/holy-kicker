@@ -12,7 +12,7 @@ export type Device = (typeof DEVICES)[number];
 
 /**
  * Analytics event names. `session` opens a play session; `run_start` / `run_end` bracket a
- * chapter run; `tutorial` marks the first run's hints done; `buy` a lobby purchase; `ad` a
+ * chapter run; `tutorial` a first-run hint step reached; `buy` a lobby purchase; `ad` a
  * rewarded ad watched to the end; `claim` a daily task, achievement or patrol paid out; `share`
  * the host's share sheet answered (WeChat: the player picked a forward); `leave` the game going to
  * the background (tab hidden, app switched), the last one of a day being where the player stopped;
@@ -27,6 +27,9 @@ export type Device = (typeof DEVICES)[number];
  * with `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`
  * and `double`). Chests and patrols also carry their haul: `copper`, `jade` and `drops`. `share`
  * has `to` (`chat` or `moments`) and `from` (`lobby`, `run` or `results`, where the player was).
+ * `tutorial` has `step` (`move` as the run starts, then `auto`, `gems` and `done` once the hints
+ * are over) and `secs` (seconds on screen since the run began, the pause panel left out); builds
+ * before it sent a bare `tutorial` when done.
  * `leave` has `place` (`lobby`, `run`, `results` or `other`), `secs` (seconds on screen since
  * the previous `leave`) and, in a run, `chapter`, `wave`, the hero's `level`, the run's `kills`,
  * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached) and, in a browser, `focus` (the game ever had the keys since launch) and `input` (any key or click reached it). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,

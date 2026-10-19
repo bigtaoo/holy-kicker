@@ -52,15 +52,23 @@ describe('RunWatch', () => {
     expect(w.tutorial?.step).toBe('move');
   });
 
-  it('moves the tutorial on once the hero has walked, and reports it when done', () => {
+  it('moves the tutorial on once the hero has walked, and reports each step as it is reached', () => {
     const { game, net, w } = watch(true);
+    const told = () => vi.mocked(net.track).mock.calls.filter(([e]) => e === 'tutorial').map(([, p]) => p);
+    w.update(1 / 30);
+    expect(told()).toEqual([{ step: 'move', secs: 0 }]);
+    // standing still for a while, the pause panel left out of the run's seconds
+    for (let i = 0; i < 30 * 4; i++) w.update(1 / 30);
+    game.paused = true;
+    w.update(20);
+    game.paused = false;
     game.engine.state.players[0].moving = true;
     const frames = Math.ceil((TUTORIAL_MOVE * 30) + 1);
     for (let i = 0; i < frames; i++) w.update(1 / 30);
     expect(w.tutorial?.step).toBe('auto');
     for (let i = 0; i < 30 * 8; i++) w.update(1 / 30);
     expect(w.tutorial?.step).toBe('done');
-    expect(net.track).toHaveBeenCalledWith('tutorial');
+    expect(told()).toEqual([{ step: 'move', secs: 0 }, { step: 'auto', secs: 5 }, { step: 'gems', secs: 8 }, { step: 'done', secs: 12 }]);
   });
 
   it("takes the first run's opening cards, spells first, then deals them once the player moved", () => {

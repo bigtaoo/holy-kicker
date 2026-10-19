@@ -1,7 +1,7 @@
 import type { EventName, PropValue } from '@hk/protocol';
 
 // What goes to Playgama's own telemetry (get_game_telemetry_guide): a progression funnel made from
-// the game's run events, and a `performance_sample` of the battle frames about every 30 active
+// the game's run events, the first run's tutorial funnel, and a `performance_sample` of the battle frames about every 30 active
 // seconds. Bridge itself already counts sessions, playtime, ads and purchases, so nothing of
 // that is repeated. Pure, so the mapping and the sample's numbers are tested without Bridge.
 
@@ -13,9 +13,25 @@ function step(p: Props): Props {
   return { step_id: `chapter_${chapter}${p.hard ? '_hard' : ''}`, step_index: chapter, mode: p.hard ? 'hard' : 'normal' };
 }
 
+/** The first run's hint steps in order (ui/tutorial.ts), `done` once the last one is over. */
+const TUTORIAL_STEPS = ['move', 'auto', 'gems', 'done'] as const;
+
+/**
+ * A first-run `tutorial` event as the step reached and the seconds into the run: `tutorial_step`
+ * for each hint as it comes up (`move` as the run starts), `tutorial_completed` once they are all
+ * over, so counting each step's users shows the step the first runs end on. Older builds send no
+ * step, which means done.
+ */
+function tutorialEvent(p: Props): [string, Props] {
+  const index = TUTORIAL_STEPS.indexOf((p.step ?? 'done') as (typeof TUTORIAL_STEPS)[number]);
+  const step_id = TUTORIAL_STEPS[index < 0 ? TUTORIAL_STEPS.length - 1 : index];
+  const fields = { step_id, step_index: TUTORIAL_STEPS.indexOf(step_id) + 1, seconds: Number(p.secs) || 0 };
+  return [step_id === 'done' ? 'tutorial_completed' : 'tutorial_step', fields];
+}
+
 /** The Playgama event for one of the game's own, or null for one Playgama does not get. */
 export function progressionEvent(e: EventName, p: Props = {}): [string, Props] | null {
-  if (e === 'tutorial') return ['tutorial_completed', {}];
+  if (e === 'tutorial') return tutorialEvent(p);
   const build = { monk: String(p.monk ?? ''), relic: String(p.relic ?? '') };
   if (e === 'run_start') return ['progression_started', { ...step(p), ...build }];
   if (e !== 'run_end') return null;

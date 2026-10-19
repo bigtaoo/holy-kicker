@@ -99,7 +99,8 @@ export function foldDayZero(d: DayZero | undefined, events: readonly ClientEvent
         break;
       }
       case 'tutorial':
-        z.tutorial = true;
+        // sent as each hint step is reached; older builds sent one bare event when done
+        if (p.step === undefined || p.step === 'done') z.tutorial = true;
         break;
       case 'buy':
         z.buys++;

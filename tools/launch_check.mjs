@@ -86,6 +86,8 @@ const touchOf = (d) => (d == null ? null : d === 'desktop' ? 'desktop' : 'touch'
 const DEVICES = ['desktop', 'touch'];
 const ENDS = new Set(['run_end', 'leave']);
 const isRun = (e) => e.e === 'run_start' || e.e === 'run_resume';
+// builds before per-step tutorial events sent one bare `tutorial` when the hints were done
+const tutorialDone = (e) => e.e === 'tutorial' && (e.p?.step ?? 'done') === 'done';
 
 function median(xs) {
   if (!xs.length) return null;
@@ -243,7 +245,7 @@ function firstRun(c, evs) {
   if (onScreen >= 60) c.on60++;
 
   const lastLeave = leaves[leaves.length - 1];
-  if (!end && run.length > 1 && lastLeave?.p.tutorial === 'move' && !run.some((e) => e.e === 'tutorial')) {
+  if (!end && run.length > 1 && lastLeave?.p.tutorial === 'move' && !run.some(tutorialDone)) {
     c.move++;
     if (+lastLeave.p.kills > 0) c.moveK++;
     else c.move0++;

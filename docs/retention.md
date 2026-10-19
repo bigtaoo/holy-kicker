@@ -9,8 +9,13 @@ Playgama's sandbox (Bridge platform `playgama_sandbox`) admits no request outsid
 hosts, so the game plays offline there and its players never reach this dashboard (no boards, no
 problem reports either). Their numbers are in Playgama's telemetry only: Bridge's own session and
 ad events, plus ours through `bridge.analytics.send` (`client/src/platform/playgama/telemetry.ts`):
-`progression_started` / `_completed` / `_failed` per chapter and mode, `tutorial_completed`, and a
-`performance_sample` every 30 s of battle. They go out unless the player turned sharing off (a held
+`progression_started` / `_completed` / `_failed` per chapter and mode, the first run's tutorial
+funnel (`tutorial_step` as each hint comes up, `step_id` `move` / `auto` / `gems` with `step_index`
+1–3, then `tutorial_completed`, `done` and 4, each with `seconds` into the run), and a
+`performance_sample` every 30 s of battle. The users per `step_id`
+(`get_game_telemetry_event_analytics`, event `tutorial_step`, field `step_id`) against
+`tutorial_completed` show the step first runs end on; a resumed run teaches nothing, so a player
+who relaunches mid-run never completes it. They go out unless the player turned sharing off (a held
 EEA answer still sends, as Bridge's own telemetry does). The catalog (platform `playgama`) still
 talks to the backend as host `playgama`; whether its page lets that through is not yet known.
 
@@ -114,6 +119,33 @@ look for a step change, a share halving or a count going from 0 to many, not for
 | first clears of chapters 4–5 take far longer than the 2 / 3–4 weeks the design aims for | The last chapters are too hard for the gear players have by then | `HORDE.chapterHp`, `HURT.chapterPercent`, grit; compare with the bots' numbers in docs/design.md |
 | chapter 1 clear rate very low | The first win comes too late | Ease chapter 1's last waves, or make the first clear reachable within the first 3–4 runs with training |
 | bought in the lobby: big D1 gap | Meta progress is the hook | Make the first purchase happen on day 0 (start with enough copper for one training node) |
+
+## First run: where players leave (2026-10-19)
+
+Backend events of the 262 CrazyGames installs first seen 10-14..10-17 (builds 6a16373 to baee706,
+ordered by the device's `t`), Newgrounds build 81b1aee (10-18) and Playgama build 012848d (10-18):
+
+- **Loading** (desktop): 239 page opens, 199 first screens (17% of desktop visits lost, 15 of them
+  quit within 1–3 s); touch 145 → 142. 32b530e (WebP art, languages on demand) trims the first load.
+- **In the run**: every install started one; 73% stayed 60 s or more (desktop 70%, mobile 81%,
+  tablet 63%), 84% finished the tutorial (median 22 s on desktop, 17 s on phones). Of the 72 first
+  runs under 60 s, **30 left with a level-up card open, at levels 2–6** (desktop 17 of 47, mobile
+  11 of 14): 11.5% of installs, the biggest single drop. Next: 15 at the `move` hint with no card
+  (10 of them desktop, gone within 5 s), 12 whose page died with no `leave` (8 after the tutorial), ~6 after the
+  tutorial at level 5 (40–49 s).
+- **Fix**: cb3217d (a level-up before the player moved takes its card) and c40c5b8 (the first run's
+  5 opening cards take themselves, seed 92). On Newgrounds 81b1aee, which has both, none of the 11
+  desktop first runs under 60 s ended at a card (17 of 47 on CrazyGames before). Expected on
+  CrazyGames: if half of those 30 stay past a minute, first runs of 60 s or more go 73% → ~78%,
+  desktop 70% → ~75%, and with 83% of desktop visits loading, desktop conversion reaches about the
+  63% Basic Launch bar. The first card the player picks now comes at level 7, about a minute in;
+  cards left open at levels 7–9 (61–100 s) were 9 of the 25 first runs left between 60 and 120 s.
+- **Next drop**: the `move` hint on desktop. 10 of 15 Newgrounds desktop first runs ended there,
+  7 with the page focused but no key or click ever, 6 within 6 s: players who looked and left, not
+  players who could not steer. CrazyGames builds from e5c62db say the same with `focus` / `input`.
+- **Playgama** (ad traffic, 012848d with the fix): 326 started a run, 44% finished the tutorial,
+  39% passed 60 s; Bridge's session facts are too coarse to name the step, so builds from this
+  commit send `tutorial_step`. Read it before changing the hints.
 
 ## Performance
 

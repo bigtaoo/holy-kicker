@@ -19,8 +19,12 @@ describe('progressionEvent', () => {
     expect(progressionEvent('run_end', { ...run, won: false, gaveUp: true })).toEqual(['progression_failed', expect.objectContaining({ reason: 'gave_up' })]);
   });
 
-  it('sends the tutorial, and nothing Bridge already counts', () => {
-    expect(progressionEvent('tutorial')).toEqual(['tutorial_completed', {}]);
+  it('sends each tutorial step with its seconds into the run, and nothing Bridge already counts', () => {
+    expect(progressionEvent('tutorial', { step: 'move', secs: 0 })).toEqual(['tutorial_step', { step_id: 'move', step_index: 1, seconds: 0 }]);
+    expect(progressionEvent('tutorial', { step: 'gems', secs: 14 })).toEqual(['tutorial_step', { step_id: 'gems', step_index: 3, seconds: 14 }]);
+    expect(progressionEvent('tutorial', { step: 'done', secs: 19 })).toEqual(['tutorial_completed', { step_id: 'done', step_index: 4, seconds: 19 }]);
+    // an older build's bare event meant done
+    expect(progressionEvent('tutorial')).toEqual(['tutorial_completed', { step_id: 'done', step_index: 4, seconds: 0 }]);
     for (const e of ['session', 'ad', 'iap', 'leave', 'perf', 'anomaly', 'buy'] as const) expect(progressionEvent(e, {})).toBeNull();
   });
 });
