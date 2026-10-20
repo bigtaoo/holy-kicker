@@ -178,7 +178,8 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
   }
   m.hp = mobHp(s.wave, m.kind, s.config.chapter, s.config.hard);
   resetMob(s, m);
-  respawnPoint(s.ai, by, m);
+  // the opening's frail crowd comes back close, so the screen stays full
+  respawnPoint(s.ai, by, m, pct < 100 && !fewKind(m.kind));
 }
 
 function aim(b: Ball, tx: number, ty: number): void {

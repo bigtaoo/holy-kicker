@@ -1,4 +1,4 @@
-import { CASTER, ELITE, HORDE, SHOOTER, VIEW } from '../config';
+import { CASTER, ELITE, HORDE, SHOOTER, VIEW, WAVES } from '../config';
 import { SpatialGrid } from '../grid';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -126,16 +126,22 @@ export function ringPoint(rand: Prng, cx: number, cy: number, b: Body, min = HOR
 /**
  * Puts mob `m` on the respawn ring around player `p` (ringPoint); while he runs, on the half
  * of it ahead of him (HORDE.aheadArc either side of his heading), so the horde he leaves
- * behind comes back in his way and running off is no escape.
+ * behind comes back in his way and running off is no escape. `close`: just off a phone's screen
+ * that way instead (WAVES.openingBack).
  */
-export function respawnPoint(rand: Prng, p: Player, m: Body): void {
-  if (!p.moving) {
-    ringPoint(rand, p.x, p.y, m);
-    return;
-  }
-  const a = (p.moveBrad + rand.range(-HORDE.aheadArc, HORDE.aheadArc)) & 65535;
-  const r = rand.range(HORDE.ringMin, HORDE.ringMax);
-  teleport(m, p.x + Math.trunc((cosB(a) * r) / TRIG_ONE), p.y + Math.trunc((sinB(a) * r) / TRIG_ONE));
+export function respawnPoint(rand: Prng, p: Player, m: Body, close = false): void {
+  const a = p.moving ? (p.moveBrad + rand.range(-HORDE.aheadArc, HORDE.aheadArc)) & 65535 : rand.int(65536);
+  const c = cosB(a);
+  const sn = sinB(a);
+  const r = close ? screenEdge(c, sn) + rand.range(0, WAVES.openingBackDepth) : rand.range(HORDE.ringMin, HORDE.ringMax);
+  teleport(m, p.x + Math.trunc((c * r) / TRIG_ONE), p.y + Math.trunc((sn * r) / TRIG_ONE));
+}
+
+/** How far from the hero the edge of the WAVES.openingBack box lies along (c, sn) / TRIG_ONE. */
+function screenEdge(c: number, sn: number): number {
+  const side = c === 0 ? WAVES.openingBackH : Math.trunc((WAVES.openingBackW * TRIG_ONE) / Math.abs(c));
+  const end = sn === 0 ? WAVES.openingBackW : Math.trunc((WAVES.openingBackH * TRIG_ONE) / Math.abs(sn));
+  return Math.min(side, end);
 }
 
 /** Mobs inside a pinning field (the Mountain Palm's print) stay where they were. */

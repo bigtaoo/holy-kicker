@@ -44,7 +44,7 @@ describe('crowd blows', () => {
     const s = e.state;
     const p = s.players[0];
     // past chapter 1's opening, where the crowd hits for its share
-    s.wave = 9;
+    s.wave = 15;
     s.mobs.forEach((m, i) => {
       m.x = p.x + 5_000_000 + i * 200_000;
       m.y = p.y;
@@ -59,9 +59,11 @@ describe('crowd blows', () => {
   }
 
   it('hurts more for every mob pressing in, up to a cap', () => {
-    expect(blow(0)).toBe(HURT.mob);
-    expect(blow(2)).toBe(Math.trunc((HURT.mob * (100 + 2 * HURT.crowdPercent)) / 100));
-    expect(blow(HURT.crowdMax + 3)).toBe(Math.trunc((HURT.mob * (100 + HURT.crowdMax * HURT.crowdPercent)) / 100));
+    // wave 15's blow: grown once (HURT.mobPerTenWaves)
+    const one = HURT.mob + HURT.mobPerTenWaves;
+    expect(blow(0)).toBe(one);
+    expect(blow(2)).toBe(Math.trunc((one * (100 + 2 * HURT.crowdPercent)) / 100));
+    expect(blow(HURT.crowdMax + 3)).toBe(Math.trunc((one * (100 + HURT.crowdMax * HURT.crowdPercent)) / 100));
   });
 });
 

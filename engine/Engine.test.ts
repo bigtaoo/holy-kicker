@@ -95,9 +95,9 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-20 for ENGINE_VERSION 40 (flying gems are pulled in like a magnet, DROPS.grow).
+    // Recorded 2026-10-20 for ENGINE_VERSION 41 (chapter 1 opens with a horde of 50 that comes back close, WAVES.openingHorde, openingBack).
     // A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(40);
+    expect(ENGINE_VERSION).toBe(41);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -123,8 +123,8 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 385782362;
-const GOLDEN_CHAPTER = 2135399124;
+const GOLDEN = 2305670306;
+const GOLDEN_CHAPTER = 647188778;
 const GOLDEN_MARSH = 1772696092;
 const GOLDEN_SNOW = 883118720;
 const GOLDEN_GHOST = 1526221990;

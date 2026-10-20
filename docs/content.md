@@ -31,12 +31,22 @@ Names are working names; every name ships through the string table (en / zh-CN s
   attack spells (`OPENING_DEAL`: cymbals, bolt, palm, incense), so the first picks show on
   screen. The first level costs 5 experience, the next ones at least 12 (`LEVELING.least`),
   about one card every 8 s in the first minute instead of every 5. Chapter 1 opens with a horde
-  of at least 30 (`WAVES.openingHorde`, the usual size from wave 7 on), the first wave's mobs
+  of at least 50 (`WAVES.openingHorde`, the usual size from wave 14 on; 30 before 2026-10-20, 40 in engine 40), the first wave's mobs
   starting 560–1200 from the hero, partly in view; while the opening horde is bigger than the
   wave's own, only that share of the kills leaves a gem (`gemPercent`). Fox runners join once
-  the horde grows past 30, from wave 8. Bare chapter 1, 40 runs: casual 5/40 (4/40 before),
+  the horde grows past the opening's, from wave 8 then. Bare chapter 1, 40 runs: casual 5/40 (4/40 before),
   skilled 18/40 (14/40); a casual bot standing still now loses health in the first minute (it
   never did) but lives.
+  **Busier opening** (2026-10-20): the first minute should show the game's horde, not a few
+  stragglers, at no more risk. The opening horde is 50 (the usual size from wave 14 on); the
+  share rule keeps the crowd as strong in all as the wave's own horde, so each mob is just
+  frailer. Those frail mobs fall fast, so while the opening horde is on the field (waves 1–13)
+  one that falls comes back just off a phone's screen (`WAVES.openingBack`: 600 to the side,
+  1020 up or down, plus up to 200) rather than on the far ring 900–1400 out. First minute,
+  20 seeds, a casual bot: mobs in the phone view by 10 s span 29 26 23 21 19 17 with the far
+  ring, 30 33 31 30 28 24 with it; 20 % more kills, level 6.8 → 7.2 at 60 s, health lost
+  4.3 → 4.7 %. Fox runners now join from wave 15. Whole chapter 1, 30 runs: casual 4/30, skilled
+  13/30 (3/30 and 14/30 at 30 mobs), health at wave 11 84 % (84).
 - About 30 level-ups plus 5 shrines per full run, against 45 picks to max everything, so
   not everything can be maxed and choices matter.
 - **Evolution:** spell at level 5 + its paired passive (any level) → the next level-up offers

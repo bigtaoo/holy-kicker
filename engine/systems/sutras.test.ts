@@ -128,6 +128,8 @@ describe('Lotus Steps', () => {
     s.lotuses.push({ id: 999, owner: 0, x: 2_000_000, y: 0, radius: 200_000, damage: 100, age: LOTUS.arm, life: 1000, pull: true });
     post(e, 2_000_000, 30_000);
     s.mobs[0].hp = 1;
+    // past chapter 1's opening, so every fallen mob leaves a gem (openingShare)
+    s.wave = 30;
     // the bloom fells the mob; its gem and one dropped near the seed fly in
     steps(e, 1);
     expect(s.gems.length).toBeGreaterThan(0);

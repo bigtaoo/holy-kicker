@@ -164,11 +164,13 @@ describe('chapter run', () => {
     expect(e.step([still(e)])).toContainEqual(expect.objectContaining({ type: 'hurt', owner: 0, value: Math.trunc((HURT.mob * openingShare(1, 1)) / 100) }));
     p.hp = HERO.hp;
     p.hurtCd = 0;
-    s.wave = 9;
+    // past the opening the full blow, grown once by wave 15 (HURT.mobPerTenWaves)
+    s.wave = 15;
     touch(e);
     const ev = e.step([still(e)]);
-    expect(ev).toContainEqual(expect.objectContaining({ type: 'hurt', owner: 0, value: HURT.mob }));
-    expect(p.hp).toBe(HERO.hp - HURT.mob);
+    const blow = HURT.mob + HURT.mobPerTenWaves;
+    expect(ev).toContainEqual(expect.objectContaining({ type: 'hurt', owner: 0, value: blow }));
+    expect(p.hp).toBe(HERO.hp - blow);
 
     p.hp = 1;
     p.hurtCd = 0;

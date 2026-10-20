@@ -353,15 +353,17 @@ export const WAVES = {
    * from the first wave, and the first wave's mobs start on the nearer openingRing, partly in view,
    * so the first seconds already show a crowd closing in rather than a few stragglers.
    */
-  openingHorde: 40,
+  openingHorde: 50,
   openingRingMin: toFp(560),
   openingRingMax: toFp(1200),
   /**
-   * The opening crowd's mobs have the wave's share of health and of the contact blow
-   * (systems/waves.ts openingShare) times openingThreat percent; at 100 the crowd would be no
-   * harder than the wave's own horde. Its gems keep the plain share, so the levels come no faster.
+   * While the opening horde is on the field (openingShare under 100) its frail mobs fall fast, so
+   * one that falls comes back just off a phone's screen, past this half width and height plus up
+   * to openingBackDepth (systems/horde.ts respawnPoint), not on the far ring: the screen stays full.
    */
-  openingThreat: 150,
+  openingBackW: toFp(600),
+  openingBackH: toFp(1020),
+  openingBackDepth: toFp(200),
   /** Every this many waves an elite comes (not on boss waves). */
   eliteEvery: 5,
   /**

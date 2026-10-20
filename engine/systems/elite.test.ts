@@ -44,9 +44,9 @@ describe('horde mix', () => {
     const pack = s.mobs.filter((m) => m.kind === 'swarm');
     for (const m of pack) expect(dist(m.x - pack[0].x, m.y - pack[0].y)).toBeLessThanOrEqual(MIX.spread * 3);
     // runners join once the horde grows past chapter 1's opening (WAVES.openingHorde)
-    for (let w = MIX.from + 1; w <= 10; w++) beginWave(s, w);
+    for (let w = MIX.from + 1; w <= 15; w++) beginWave(s, w);
     expect(count('runner')).toBeGreaterThan(0);
-    expect(count('chaser') + count('runner')).toBe(hordeSize(10));
+    expect(count('chaser') + count('runner')).toBe(hordeSize(15));
     for (let w = 11; w <= 50; w++) beginWave(s, w);
     expect(count('swarm')).toBe(MIX.max);
     expect(isPackWave(1, 50, 50)).toBe(false);
