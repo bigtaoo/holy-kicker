@@ -516,6 +516,9 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
   package). Picked in the lobby's settings or on the pause panel (`ui/languagePanel.ts`); the
   tables and layouts must not assume a language count.
 - Language order: saved setting → platform / browser language → English.
+- The tables in `client/src/i18n/<lang>.ts` are shared by both games; the strings that name a
+  game's world (heroes, relics, chapters, currencies, the story) sit in its theme's own tables,
+  `i18n/monk/` and `i18n/corgi/`, and a build carries only its own (docs/reskin.md "Words").
 - **One word per concept, in plain words**, the same in every table: enemies (敌人; not
   monsters, foes or 怪物; a crowd of them is the horde / 敌群), spells (法术) for the skill
   cards, including the ones a sutra unlocks (the sutra is the achievement, not a word players
