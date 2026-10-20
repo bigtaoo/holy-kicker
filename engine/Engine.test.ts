@@ -95,9 +95,9 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-20 for ENGINE_VERSION 42 (from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*).
+    // Recorded 2026-10-20 for ENGINE_VERSION 43 (42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
     // A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(42);
+    expect(ENGINE_VERSION).toBe(43);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
