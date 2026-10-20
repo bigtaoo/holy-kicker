@@ -204,6 +204,11 @@ at least 30 battle seconds with their device details. Worrying numbers:
   is amber. Look at the worst list for the GPU class, memory and mob count they share.
 - **long/min** above a few, or many `stall` anomalies: hitches big enough to feel (loading art
   mid-battle, garbage collection, shader compiles).
+- **hitches/min** (pacing columns, the `hitches` rule): frames that missed a refresh of the
+  display the game runs at (`hz`). A long frame is judged with the one after it, so iOS's late
+  then early callbacks, which add up to whole refreshes, are not counted. Builds before 5d8db2f
+  over-counted them hugely on iOS (a smooth run read 230–440/min with `hz` 63–115 on a 60 Hz
+  phone); for those, read long/min and p5 instead.
 - **below phone** high on a device class: the automatic quality drop is doing a lot of work
   there; the effects budget on that class may be too high.
 - **texture MB** and **nodes** climbing between builds, any `webgl_lost`, memory warnings and a
