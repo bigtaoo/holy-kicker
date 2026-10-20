@@ -1,0 +1,5 @@
+This is a close-up of a character's head. Keep exactly the same head, same canvas, same framing, same size, same position, same art style, same colours and thick black outlines. Do not zoom or crop the picture. Do not move, resize or redraw the head, the ears, the jowls or the body: only repaint the eyes, brows and mouth. Make only this change to the face:
+- A fierce battle cry: the eyes narrowed into determined, angled shapes (still black and glossy with a small white highlight), heavy angry brows pulled down toward the nose.
+- The mouth wide open in a roaring shout between the jowls, showing a pink tongue and the two small white lower fangs of the underbite, like a tough bulldog barking a war cry.
+- The open mouth is small: it stays inside the cream muzzle, well above the chin, no wider than the smile was.
+Everything else stays pixel-identical: the head outline and size, the folded ears, the forehead wrinkles, the cream muzzle and jowls, the black nose. Pure white background, no text.

@@ -107,7 +107,7 @@ for path in SPECS:
         spec = json.load(f)
     with open(os.path.join(os.path.dirname(path), spec['rig']), encoding='utf-8') as f:
         rig = json.load(f)
-    spec['animations'] = clips('fore_f' in rig)
+    spec['animations'] = clips('fore_f' in rig['parent'])
     with open(path, 'w', encoding='utf-8', newline='\n') as f:
         json.dump(spec, f, indent=1)
         f.write('\n')

@@ -1,0 +1,4 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Do not zoom or crop the picture. Do not move, resize or redraw the head, the ears, the whiskers, the scarf or the body: only repaint the eyes, brows and mouth. Make only this change to the face:
+- A fierce battle cry: the green eyes narrowed into determined, angled shapes (still glossy with a small white highlight), short angry brows tilted down toward the nose.
+- The mouth wide open in a hissing shout, showing a pink tongue and two small sharp white fangs, like a brave little cat yowling a war cry.
+Everything else stays pixel-identical: the head outline and size, the pointed ears, the forehead stripes, the cream muzzle, the nose, the whiskers, the black scarf, the armour, the arms held out, the legs, the boots, the striped tail. Pure white background, no text.

@@ -1,0 +1,5 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Do not zoom or crop the picture. Do not move, resize or redraw the head, the ears, the whiskers, the scarf or the body: only repaint the eyes and mouth. Make only this change to the face:
+- The eyes squeezed tightly shut in pain: each eye becomes a thick black closed line slanting down toward the outside, like eyes squeezed shut.
+- The mouth becomes a small wavy, wobbly grimace of pain, slightly open with clenched white teeth, no tongue.
+- A small blue sweat drop beside the right eye.
+Everything else stays pixel-identical: the head outline and size, the pointed ears, the forehead stripes, the cream muzzle, the nose, the whiskers, the black scarf, the armour, the arms held out, the legs, the boots, the striped tail. Pure white background, no text.
