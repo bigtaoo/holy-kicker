@@ -1,6 +1,7 @@
 import { getLocale } from '../i18n';
 import { policyUrl, privacyRegion, sharingOf, type PrivacyRegion } from '../meta/privacy';
 import { loadSettings, updateSettings } from '../meta/settings';
+import { THEME } from '../theme';
 import type { Platform } from '../platform/types';
 import { INSTALL_KEY, type Backend } from './backend';
 
@@ -67,7 +68,7 @@ export class PrivacyChoice implements PrivacyUi {
   }
 
   openPolicy(): void {
-    this.platform.openUrl(policyUrl(this.base, getLocale()));
+    this.platform.openUrl(policyUrl(this.base, getLocale(), THEME));
   }
 
   id(): string | null {

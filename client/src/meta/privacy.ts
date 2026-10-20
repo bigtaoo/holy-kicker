@@ -35,7 +35,14 @@ export function sharingOf(region: PrivacyRegion, choice: SharingChoice): Sharing
   return region === 'consent' ? 'hold' : 'send';
 }
 
-/** The privacy policy on the backend's host, in Chinese for a Chinese player, else in English. */
-export function policyUrl(base: string, locale: string): string {
-  return `${base}/privacy${locale.startsWith('zh') ? '?lang=zh' : ''}`;
+/**
+ * The privacy policy on the backend's host, in Chinese for a Chinese player, else in English;
+ * for the corgi (`theme`) under its own game's name (server/src/privacyPage.ts).
+ */
+export function policyUrl(base: string, locale: string, theme = 'monk'): string {
+  const q = new URLSearchParams();
+  if (theme !== 'monk') q.set('g', theme);
+  if (locale.startsWith('zh')) q.set('lang', 'zh');
+  const s = q.toString();
+  return `${base}/privacy${s ? `?${s}` : ''}`;
 }

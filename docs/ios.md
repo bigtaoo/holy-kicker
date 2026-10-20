@@ -419,13 +419,22 @@ Kicker's at build time.
   deploy).
 - **Ads**: until the corgi has its own AdMob app, `adMob` is `null` and the build carries Google's
   test ids with `live = false` (the workflow warns). Fine for TestFlight, never for review.
-- **Icon**: `art/reskin/corgi/ios/AppIcon.png`, 1024 px, a placeholder made by
-  `python tools/corgi_ios_icon.py` from `face_fire.png`; it still shows the old orange armour and
-  wants real art before review.
-- **Review risk**: guideline 4.3 (spam) looks at near-identical apps from one developer. The corgi
-  differs in art, hero, enemies, sound and name, but the same game loop under two listings is the
-  case 4.3 is written for; answer a rejection by pointing at the separate art and audience, and
-  keep the listings' screenshots and text distinct.
+- **Icon**: `art/reskin/corgi/ios/AppIcon.png`, 1024 px: the corgi in white armour, blasters
+  firing at two bugs, on a navy sky with a yellow-green ring. Generated with
+  `tools/edit_image.sh art/reskin/corgi/ios/ref_hero.png <out> art/reskin/corgi/ios/AppIcon.txt`
+  (the reference is the hero from `parts/preview.png`, so the model keeps the same dog).
+- **Review risk**: guideline 4.3 (spam) looks at near-identical apps from one developer. The same
+  game loop under two listings is the case it is written for, so nothing the reviewer or a player
+  sees is shared:
+  - its own name, icon, art, hero, enemies, sound and words in every language;
+  - its own listing text and screenshots (docs/store.md "App Store: Corgi Commando");
+  - its own privacy policy page, `https://hk.gamestao.com/privacy?g=corgi`, which never names Holy
+    Kicker (`server/src/privacyPage.ts`); the app's own link carries `?g=corgi`;
+  - its own leaderboards, ad-free product, AdMob app and hot-update host.
+
+  What stays shared is the developer account, the support site and the server behind the scenes.
+  The owner submits it **a few weeks after Holy Kicker's review is through**, not alongside it.
+  If 4.3 rejects it anyway, answer by pointing at the separate art, setting and audience.
 
 Owner setup, the same steps as Holy Kicker's above:
 

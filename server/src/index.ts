@@ -5,6 +5,7 @@ import DASH from './dash.html';
 import { ipOf, maxBody, pageLang, readBody } from './http';
 import PRIVACY_EN from './privacy.en.html';
 import PRIVACY_ZH from './privacy.zh.html';
+import { pageGame, privacyPage } from './privacyPage';
 import { WeekMarks } from './marks';
 import { MongoStore } from './mongoStore';
 import { ResimQueue } from './resimQueue';
@@ -54,9 +55,11 @@ async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store', 'x-frame-options': 'DENY', 'referrer-policy': 'no-referrer' }).end(DASH);
     return;
   }
-  // the game's privacy policy, linked from its settings and the consent card (en, or zh by ?lang= or the browser)
+  // the game's privacy policy, linked from its settings and the consent card (en, or zh by ?lang= or
+  // the browser), the corgi's under its own name by ?g=corgi
   if (req.method === 'GET' && url.pathname === '/privacy') {
-    const page = pageLang(url.searchParams, req.headers['accept-language']) === 'zh' ? PRIVACY_ZH : PRIVACY_EN;
+    const lang = pageLang(url.searchParams, req.headers['accept-language']);
+    const page = privacyPage(lang === 'zh' ? PRIVACY_ZH : PRIVACY_EN, lang, pageGame(url.searchParams));
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600', 'referrer-policy': 'no-referrer' }).end(page);
     return;
   }

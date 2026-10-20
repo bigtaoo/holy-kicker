@@ -241,10 +241,92 @@ Action and Casual, free, every storefront but mainland China.
 
 Five per language in `art/store/ios/` (`en_*`, `zh_*`): a chapter 1 horde at wave 30, the level-up
 cards, the wave 20 twin jiangshi, chapter 3's snow at wave 12, and the lobby of a save two
-chapters in. Each was taken from the dev build with Playwright (system Chrome, headless, 430×932
-at 3×, so 1290×2796): the balance bot plays (`?direct&autoplay&from=N&chapter=C&seed=S`) until a
-condition on `__shell.game.engine.state` holds, the dev fps readout (`game.label`) is hidden, and
-the page is captured; the lobby seeds `hk.save` before the page loads. A bot that falls on the
-way never reaches the wave, so a take that times out is retried with another seed. App Store
-Connect's required size is the 6.1"/6.3" iPhone (1179×2556, the same aspect), so the uploads are
-scaled to it.
+chapters in. These were taken from the dev build with Playwright at 430×932 and 3×, then scaled to App Store
+Connect's 6.1"/6.3" iPhone size (1179×2556, the same aspect). `node tools/store_shots.mjs
+<monk|corgi> <en|zh>` now takes such a set straight at 1179×2556 (393×852 at 3×): the balance bot
+plays each scene (`?direct&autoplay&from=N&chapter=C&seed=S`) until its moment, the dev fps
+readout is hidden and the page is captured; the lobby seeds a save two chapters in. A bot that
+falls on the way fails the take, so it is run again with another `--seed`. `--only iap` takes
+App Review's screenshot of the ad-free card (the Shop tab with `?store=fake`).
+
+## App Store: Corgi Commando
+
+The corgi reskin's own iPhone app (`docs/ios.md` "Second app: Corgi Commando"), to be entered a
+few weeks after Holy Kicker's review is through. Against guideline 4.3 nothing here repeats Holy
+Kicker's listing: its own name, icon, text, screenshots and privacy page. en-US is the primary
+language and zh-Hans the second, as for Holy Kicker.
+
+| Field | en-US | zh-Hans |
+|---|---|---|
+| Name (30) | Corgi Commando: Bug Blaster | 柯基突击队 |
+| Subtitle (30) | Corgi trooper vs bug swarms | 单手割草，柯基大战外星虫群 |
+| Keywords (100) | roguelite,horde,survivor,bullet heaven,dog,puppy,space,alien,shooter,offline,one hand,action,rpg | 割草,肉鸽,幸存者,弹幕,柯基,狗狗,小狗,太空,外星,虫子,射击,单机,离线,单手,动作,休闲 |
+| Promotional text (170) | One thumb, one corgi, one ricochet blaster and a galaxy full of bugs. Pick your upgrades, evolve your gadgets and survive 50 waves. | 一根手指、一只柯基、一把弹射枪，对上满星系的虫子。三选一升级、进化装备，撑过 50 波！ |
+
+Privacy policy `https://hk.gamestao.com/privacy?g=corgi` (Corgi Commando's own page, en and zh).
+Support URL `https://gamestao.com/`, copyright `2026 Tao Wang`, category Games → Action and
+Casual, free, every storefront but mainland China, as for Holy Kicker.
+
+### Description
+
+**en**
+
+> Corgi Commando is a one-thumb horde survivor. Biscuit, a brave little corgi in space armour,
+> lands on planets overrun by alien bugs, and every shot is automatic: you only steer.
+>
+> • Every level up, pick one of three upgrades: Orbital Strike, Tesla Coil, Saw Blades and more.
+> • Max a gadget and pair it with the right passive to evolve it into something much bigger.
+> • Survive 50 waves, elite bugs and two bosses to clear a planet.
+> • Between runs, merge the gear you find, train at Boot Camp and unlock new weapons: a plasma
+>   saber, a pulse emitter, orbit drones and a disc launcher, each of which changes how you play.
+> • Recruit the squad: Brick the bouncy bulldog and Ginger the nimble cat fight their own way.
+> • Five planets lead from the Frost Moon to the Hive Core, where the last enemy is a robot copy
+>   of yourself.
+> • Plays offline, with no account and no sign-up. Climb each planet's leaderboard under your
+>   Game Center nickname.
+>
+> Ads are optional videos for bonuses, plus a short break between runs. The one-time Ad-free card
+> pays every ad reward at once and removes all ads; the daily limits stay the same.
+
+**zh**
+
+> 《柯基突击队》是一款单手操作的割草肉鸽游戏。勇敢的小柯基饼干穿上太空战甲，降落在被外星虫群
+> 占领的星球上。射击全是自动的，你只管走位。
+>
+> • 每次升级三选一：轨道打击、特斯拉线圈、飞锯……
+> • 把技能升满，再配上对应的被动强化，就能进化成更强的形态。
+> • 撑过 50 波虫子、精英和两个 Boss，才算拿下一颗星球。
+> • 局外合成装备、去训练营练兵、解锁新武器：等离子光剑、脉冲发射器、环绕无人机、飞盘发射器，
+>   每件都会改变打法。
+> • 招募小队：会弹人的斗牛犬砖头、身手轻盈的猫咪姜糖，各有各的打法。
+> • 五颗星球从冰霜月一路打到虫巢核心，最后的敌人是机器版的你自己。
+> • 支持离线游玩，无需账号和注册。用 Game Center 昵称冲击每颗星球的排行榜。
+>
+> 广告都是可选的奖励视频，另有两局之间的短广告。一次性购买的去广告卡让所有广告奖励直接到账、
+> 不再播放任何广告；每日次数上限不变。
+
+### Review notes
+
+> No account or sign-in is needed. The first launch goes straight into a short first run on the
+> first planet: drag anywhere to move, attacks are automatic. When the run ends (or Pause → Give
+> up), the lobby opens.
+>
+> In-app purchase: the Ad-free card (com.gamestao.corgi.adfree, non-consumable) is on the lobby's
+> Shop tab, which is open from the first lobby, with Restore on the same card. It pays every
+> rewarded-ad bonus at once and stops all ads; it unlocks nothing else.
+>
+> Ads: Google AdMob, rewarded videos for optional bonuses (double bolts after a run, a revive)
+> and an interstitial between runs from the second run on. Non-personalised ads only; the app does
+> not track, so there is no App Tracking Transparency prompt. Google's consent form appears in the
+> EEA, the UK and Switzerland.
+>
+> Game Center is optional: when signed in, the nickname shows in the lobby and on the planet
+> leaderboards; otherwise the game rolls a random name.
+
+### Screenshots
+
+Five per language in `art/reskin/corgi/ios/store/` (`en_*`, `zh_*`), 1179×2556, taken with
+`node tools/store_shots.mjs corgi <en|zh>` from `npm run dev:new` (the Dune World take with
+`--only ch3 --seed 3`; seed 7 falls on the way): a Frost Moon horde at wave 30, the level-up
+cards, the wave 20 Twin Ram Beetles, Dune World at wave 12, and the lobby of a save two planets
+in. App Review's purchase screenshot is `iap_adfree_review_en.png` (`--only iap`).

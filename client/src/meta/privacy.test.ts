@@ -26,5 +26,7 @@ describe('privacy', () => {
   it('links the policy in Chinese for Chinese players only', () => {
     expect(policyUrl('https://hk.test', 'zh')).toBe('https://hk.test/privacy?lang=zh');
     expect(policyUrl('https://hk.test', 'de')).toBe('https://hk.test/privacy');
+    expect(policyUrl('https://hk.test', 'zh', 'corgi')).toBe('https://hk.test/privacy?g=corgi&lang=zh');
+    expect(policyUrl('https://hk.test', 'en', 'corgi')).toBe('https://hk.test/privacy?g=corgi');
   });
 });
