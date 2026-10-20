@@ -37,7 +37,7 @@ export const pt: Table<typeof en> = {
   },
   tab: {
     shop: 'Loja',
-    gear: 'Equipamento',
+    gear: 'Equip.',
     play: 'Jogar',
     train: 'Treinar',
     codex: 'Códice',

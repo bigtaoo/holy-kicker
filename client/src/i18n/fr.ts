@@ -39,7 +39,7 @@ export const fr: Table<typeof en> = {
     shop: 'Boutique',
     gear: 'Équipement',
     play: 'Jouer',
-    train: 'Entraînement',
+    train: 'Entraîn.',
     codex: 'Codex',
     unlockLevel: 'Débloqué au Nv.{level}',
     unlockChapter: 'Débloqué après le chapitre {n}',
