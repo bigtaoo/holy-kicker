@@ -113,9 +113,10 @@ export function useMsaa(mode: QualityMode, d: DeviceInfo): boolean {
 
 /** A frame passes the gate once this many refreshes short of the cap's interval have gone by. */
 const GATE_SLACK = 0.6;
-/** The refresh estimate creeps up this much per animation frame, so a screen that slows its
- *  refresh (a phone's battery saver) is followed within a couple of seconds. */
-const VSYNC_CREEP = 1.005;
+/** Animation-frame gaps the refresh estimate is the median of (odd, so the median is one of them). */
+const VSYNC_WINDOW = 31;
+/** The estimate is worked out again every this many gaps. */
+const VSYNC_EVERY = 4;
 
 /**
  * Frame limiter for a requestAnimationFrame loop, locked to the display: it runs every n-th
@@ -124,16 +125,25 @@ const VSYNC_CREEP = 1.005;
  * would alternate one and two refreshes on 90 or 144 Hz, drift off a 60.1 Hz screen into a
  * skipped refresh every few seconds, and squeeze a short frame in after a late one.
  *
- * The refresh is read from the animation frames themselves: the shortest gap lately (a late
- * frame only ever makes a gap longer). A frame passes once the time since the last one passed
- * is within GATE_SLACK refreshes of the cap's interval, which leaves over half a refresh of
- * room for timestamp jitter either way; after a late frame the count starts again from it.
+ * The refresh is read from the animation frames themselves: the last VSYNC_WINDOW gaps' time
+ * over the refreshes they span, each gap a whole number of their median. iOS stamps a frame
+ * when its callback runs, so a late callback is followed by an early one (24 ms then 9 on a
+ * 60 Hz screen); the shortest gap would read that as a 110 Hz screen, call every ordinary frame
+ * a missed refresh and tighten the gate. This estimate stays on the refresh through that
+ * jitter and the odd missed refresh, and follows a screen that really slows down (a phone's
+ * battery saver) within about a second. A frame passes
+ * once the time since the last one passed is within GATE_SLACK refreshes of the cap's
+ * interval, which leaves over half a refresh of room for timestamp jitter either way; after a
+ * late frame the count starts again from it.
  */
 export class FrameGate {
   /** The display's refresh interval estimate, ms. */
   vsync = 1000 / 60;
   private lastCall = -Infinity;
   private lastPass = -Infinity;
+  private readonly recent = new Float64Array(VSYNC_WINDOW);
+  private readonly sorted = new Float64Array(VSYNC_WINDOW);
+  private seen = 0;
 
   constructor(public fps: number) {}
 
@@ -141,7 +151,7 @@ export class FrameGate {
     const gap = nowMs - this.lastCall;
     this.lastCall = nowMs;
     // a gap over 100 ms is a pause or a stall, not a refresh rate
-    if (gap > 1 && gap < 100) this.vsync = Math.min(gap, this.vsync * VSYNC_CREEP);
+    if (gap > 1 && gap < 100) this.note(gap);
     if (nowMs - this.lastPass < 1000 / this.fps - this.vsync * GATE_SLACK) return false;
     this.lastPass = nowMs;
     return true;
@@ -150,6 +160,24 @@ export class FrameGate {
   /** What one frame should last at this cap and refresh: a whole number of refreshes. */
   get frameMs(): number {
     return Math.max(1, Math.ceil(1000 / this.fps / this.vsync - GATE_SLACK)) * this.vsync;
+  }
+
+  private note(gap: number): void {
+    this.recent[this.seen % VSYNC_WINDOW] = gap;
+    this.seen++;
+    if (this.seen >= VSYNC_WINDOW && this.seen % VSYNC_EVERY) return;
+    // filling up, the gaps so far, so a 120 Hz screen is locked to from its first frames
+    const n = Math.min(this.seen, VSYNC_WINDOW);
+    const sorted = n === VSYNC_WINDOW ? this.sorted : this.sorted.subarray(0, n);
+    sorted.set(n === VSYNC_WINDOW ? this.recent : this.recent.subarray(0, n));
+    const median = sorted.sort()[n >> 1];
+    // the window's time over the refreshes it spans: a late and an early gap make two
+    let ms = 0, refreshes = 0;
+    for (let i = 0; i < n; i++) {
+      ms += sorted[i];
+      refreshes += Math.max(1, Math.round(sorted[i] / median));
+    }
+    this.vsync = ms / refreshes;
   }
 }
 

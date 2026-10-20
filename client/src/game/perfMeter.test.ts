@@ -2,6 +2,7 @@ import { PERF_MID_MAX, PERF_MID_SECS } from '@hk/protocol';
 import { describe, expect, it } from 'vitest';
 import type { BattleFrame } from './frameWork';
 import { CTX_BOSS, CTX_WAVE, gpuClass, PerfMeter } from './perfMeter';
+import { FrameGate } from './quality';
 
 /** A battle frame of `ms` on `level` on a 60 Hz screen, with light work unless `more` says otherwise. */
 function fr(ms: number, level = 4, more: Partial<BattleFrame> = {}): BattleFrame {
@@ -97,6 +98,21 @@ describe('PerfMeter pacing', () => {
     const m = new PerfMeter();
     for (let i = 0; i < 600; i++) m.frame(fr(i % 2 ? 1000 / 60 + 6 : 1000 / 60 - 6), 0);
     expect(m.snapshot('end')).toMatchObject({ hitch: 0, miss: 0 });
+  });
+
+  it('reads iOS callback jitter on a 60 Hz screen as no hitch, through the frame gate, and still counts a missed refresh', () => {
+    // as QualityRuntime: animation frames through the gate, each passed one measured against its target
+    const m = new PerfMeter(), gate = new FrameGate(60);
+    let last = 0;
+    for (let i = 0; i < 1800; i++) {
+      // every 100th refresh never gets a callback (a missed one); every 4th callback runs 8 ms late
+      if (i % 100 === 52) continue;
+      const t = 1000 + i * (1000 / 60) + (i % 4 === 1 ? 8 : 0) + ((i * 7) % 5) * 0.6 - 1.2;
+      if (!gate.pass(t)) continue;
+      if (last > 0) m.frame(fr(t - last, 4, { target: gate.frameMs, vsync: gate.vsync }), 0);
+      last = t;
+    }
+    expect(m.snapshot('end')).toMatchObject({ hz: 60, hitch: 18, miss: 18 });
   });
 
   it('puts a hitch down to our work when the frame before took most of a frame, and notes the context', () => {

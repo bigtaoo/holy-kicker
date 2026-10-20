@@ -89,9 +89,29 @@ describe('FrameGate', () => {
     const gate = new FrameGate(60);
     expect(gaps(gate, 60, 1000 / 50).length).toBe(59);
     expect(gate.frameMs).toBeCloseTo(20, 1);
-    expect(gate.pass(5000)).toBe(true);
-    expect(gate.pass(5000 + 8)).toBe(false);
-    expect(gate.pass(5000 + 20)).toBe(true);
+    const at60 = new FrameGate(60);
+    gaps(at60, 60, 1000 / 60);
+    expect(at60.pass(5000)).toBe(true);
+    expect(at60.pass(5000 + 5)).toBe(false);
+    expect(at60.pass(5000 + 1000 / 60)).toBe(true);
+  });
+
+  it('reads a 60 Hz screen through iOS callback jitter: a late callback, then an early one', () => {
+    const gate = new FrameGate(60);
+    // every 4th callback runs 8 ms late, so its gap is 25 ms and the next one's 8.7
+    const g = gaps(gate, 1800, 1000 / 60, (i) => (i % 4 === 1 ? 8 : 0) + ((i * 7) % 5) * 0.6 - 1.2);
+    expect(g.length).toBe(1799);
+    expect(Math.abs(1000 / gate.vsync - 60)).toBeLessThan(2);
+    expect(gate.frameMs).toBeCloseTo(1000 / 60, 0);
+  });
+
+  it('follows a screen that drops from 60 to 30 Hz within about a second, and back', () => {
+    const gate = new FrameGate(60);
+    gaps(gate, 120, 1000 / 60);
+    gaps(gate, 36, 1000 / 30, () => 0, 2000);
+    expect(gate.vsync).toBeCloseTo(1000 / 30, 1);
+    gaps(gate, 36, 1000 / 60, () => 0, 3200);
+    expect(gate.vsync).toBeCloseTo(1000 / 60, 1);
   });
 });
 

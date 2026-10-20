@@ -8,7 +8,10 @@ import { LEVELS, SOFTWARE_GPU, WEAK_GPU } from './quality';
 // work times go into quarter-ms buckets the same way. Nothing is allocated per frame.
 //
 // A hitch is a frame that missed at least one of the display's refreshes it should have shown
-// (BattleFrame.target, so 60 and 120 Hz screens compare fairly). It is put down to our own work
+// (BattleFrame.target, so 60 and 120 Hz screens compare fairly). A long frame is judged with the
+// one after it: iOS stamps a frame when its callback runs, so a callback that runs late (a long
+// gap) and the next on time (a short one) add up to whole refreshes and nothing was missed, while
+// a refresh really missed leaves the pair a refresh or more over. It is put down to our own work
 // when the frame before took WORK_SLOW of a frame's time or more (engine steps, view update and
 // Pixi's render), else to something outside it: a garbage collection, the compositor or the GPU
 // falling behind, the system.
@@ -55,6 +58,11 @@ export class PerfMeter {
   private hitchBoss = 0;
   private hitchWave = 0;
   private vsync = 0;
+  /** A long frame waiting for the next to tell a missed refresh from a late callback; 0 for none. */
+  private pendMs = 0;
+  private pendTarget = 0;
+  private pendWork = false;
+  private pendCtx = 0;
   private ms = 0;
   /** Battle ms of the whole run, for the `mid` schedule. */
   private runMs = 0;
@@ -72,7 +80,10 @@ export class PerfMeter {
     this.lv = level;
     this.mobs = Math.max(this.mobs, mobs);
     if (ms >= LONG_MS) this.long++;
-    if (!(ms > 0 && ms < PAUSE_MS)) return;
+    if (!(ms > 0 && ms < PAUSE_MS)) {
+      this.settle(0, 0);
+      return;
+    }
     this.hist[Math.min(TOP_FPS, Math.round(1000 / ms))]++;
     this.frames++;
     this.ms += ms;
@@ -83,13 +94,28 @@ export class PerfMeter {
     bucket(this.view, f.view);
     bucket(this.draw, f.draw);
     this.workMax = Math.max(this.workMax, f.work);
-    const missed = f.target > 0 ? Math.round(ms / f.target) - 1 : 0;
+    this.settle(ms, f.target);
+    if (!(f.target > 0 && ms >= f.target * 1.5)) return;
+    this.pendMs = ms;
+    this.pendTarget = f.target;
+    this.pendWork = f.work >= f.target * WORK_SLOW;
+    this.pendCtx = ctx;
+  }
+
+  /** Counts the waiting long frame's missed refreshes against the frame after it (`next` ms, 0 for none). */
+  private settle(next: number, target: number): void {
+    const ms = this.pendMs, t = this.pendTarget;
+    if (!ms) return;
+    this.pendMs = 0;
+    const alone = Math.round(ms / t) - 1;
+    // the pair's refreshes over two; a long frame after counts its own when its turn comes
+    const missed = next > 0 ? Math.min(alone, Math.round((ms + next) / (target || t)) - 2) : alone;
     if (missed <= 0) return;
     this.miss += missed;
     this.hitch++;
-    if (f.work >= f.target * WORK_SLOW) this.hitchWork++;
-    if (ctx & CTX_BOSS) this.hitchBoss++;
-    if (ctx & CTX_WAVE) this.hitchWave++;
+    if (this.pendWork) this.hitchWork++;
+    if (this.pendCtx & CTX_BOSS) this.hitchBoss++;
+    if (this.pendCtx & CTX_WAVE) this.hitchWave++;
   }
 
   /** Battle seconds measured since the last snapshot. */
@@ -110,6 +136,7 @@ export class PerfMeter {
   snapshot(why: PerfSnapshot['why'], keep = false): PerfSnapshot | null {
     if (why === 'mid') this.mids++;
     if (this.secs < PERF_MIN_SECS) return null;
+    if (!keep) this.settle(0, 0);
     const snap: PerfSnapshot = {
       why, secs: Math.round(this.secs), fps: this.rate(0.5), p5: this.rate(0.05), long: this.long,
       lv0: LEVELS[this.lv0].name, lvMin: LEVELS[this.lvMin].name, lv: LEVELS[this.lv].name, mobs: this.mobs,
@@ -124,7 +151,7 @@ export class PerfMeter {
   reset(): void {
     for (const h of [this.hist, this.work, this.sim, this.view, this.draw]) h.fill(0);
     this.frames = this.long = this.ms = this.workMax = 0;
-    this.miss = this.hitch = this.hitchWork = this.hitchBoss = this.hitchWave = 0;
+    this.miss = this.hitch = this.hitchWork = this.hitchBoss = this.hitchWave = this.pendMs = 0;
   }
 
   /** The fps the slowest `share` of frames are at or under. */
