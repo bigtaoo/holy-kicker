@@ -110,7 +110,7 @@ tutorial and keep the plain clock):
   hero, like one left too far behind, at most one a second. Circling the pile no longer keeps
   the path clear. Moving them all at once walled every play style in: the casual bot died
   around wave 30 in chapters 3–5, whatever the mob health or contact damage.
-- **Hurt by chapter** went from 125/180/180 % to 115/160/150 % for chapters 3–5, so the
+- **Hurt by chapter** went from 125/180/180 % to 115/150/150 % for chapters 3–5, so the
   mobs coming back ahead do not make the chapters harder for a player who fights.
 
 Balance bots (24 seeds each, no revives, journey bonuses for each chapter, `circle` kites the
@@ -119,14 +119,18 @@ whole horde round one loop; won and median wave, before → after):
 | Chapter | Casual | Skilled | Circle |
 |---|---|---|---|
 | 3 | 4/24, 40 → 4/24, 40 | 9/24, 47 → 11/24, 50 | 0/24, 18 → 0/24, 19 |
-| 4 | 4/24, 43 → 2/24, 40 | 6/24, 50 → 8/24, 50 | 0/24, 18 → 0/24, 20 |
+| 4 | 4/24, 43 → 5/24, 41 | 6/24, 50 → 14/24, 50 | 0/24, 18 → 0/24, 22 |
 | 5 | 1/24, 34 → 3/24, 37 | 11/24, 50 → 9/24, 50 | 4/24, 50 → 1/24, 33 |
 
-Before, circling was the best way through chapter 5 (more wins than the casual bot, its
-median run reached the boss); now it is the worst. The price is time: waves in chapters 4–5
-mostly run to the 22.5 s cap, so a skilled chapter 5 run takes about 26 minutes instead of 20
-and gains about one level. Hard mode (fixed waves, its own hurt) with the chapter 5 bonuses:
-chapter 3 casual stays at median wave 29, circle falls from 35 to 20; chapter 1 is unchanged.
+Before, circling was the best way through chapter 5 (more wins than the casual bot, its median
+run reached the boss); now it is the worst. The price is time: waves in chapters 4–5 mostly run
+to the 22.5 s cap, so a skilled chapter 5 run takes about 26 minutes instead of 20 and gains
+about one level. Chapter 4 hurt was first 160 %: the casual bot with the weaker bonuses of its
+first days there fell from median wave 37 to 33 and the journey took three days longer; at 150
+% it wins as often as before or more (first days 2/24 → 4/24, median wave 37 → 35; clearing
+bonuses 4/24 → 5/24), the skilled bot clearly more. Hard mode (fixed waves, its own hurt) with
+the chapter 5 bonuses: chapter 3 casual stays at median wave 29, circle falls from 35 to 20;
+chapter 1 is unchanged.
 
 ### Hard mode
 

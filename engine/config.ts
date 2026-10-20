@@ -139,7 +139,7 @@ export const HURT = {
   demonSpell: 14,
   demonLeap: 20,
   /** Every hurt by chapter, percent (later chapters play the last), so health from gear does not make them safe (125, 180, 180 for 3–5 before PACE). */
-  chapterPercent: [100, 100, 115, 160, 150],
+  chapterPercent: [100, 100, 115, 150, 150],
 };
 
 export const HORDE = {

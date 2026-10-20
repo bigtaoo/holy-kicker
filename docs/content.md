@@ -452,7 +452,7 @@ or a new single image is cheap; elites and bosses cost a rig each.
   levels stopped while the waves ran on. From chapter 3 a normal-mode wave waits until half its
   horde has fallen (15–22.5 s, `PACE.gate*`), and a mob kept off screen for 3 s that got no
   nearer comes back ahead of the hero, one a second (`PACE.lag*`, `outrun` in systems/horde.ts).
-  To keep the bots' results, hurt by chapter is 100/100/115/160/150 % (was 125/180/180 for 3–5).
+  To keep the bots' results, hurt by chapter is 100/100/115/150/150 % (was 125/180/180 for 3–5).
 
 ## Chapters (5)
 
