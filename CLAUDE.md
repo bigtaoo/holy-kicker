@@ -93,5 +93,6 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `corgi-ios-v*`, `npm run build:ios:new`; `client/src/platform/ios/apps.json` holds each app's
   ids, `build/setIosApp.mjs` writes them over the shell in CI; docs/ios.md "Second app").
 - `.github/workflows/ota-ios.yml` — a hot update of an iOS app's web layer (theme monk or corgi),
-  run by hand: zips the iOS web build and deploys it with a manifest to hk-ota.gamestao.com (`wrangler/ota.jsonc`);
+  run by hand: zips the iOS web build and deploys it with a manifest to the app's host, hk-ota.gamestao.com
+  (`wrangler/ota.jsonc`) or the corgi's corgi-ota.gamestao.com (`wrangler/ota-corgi.jsonc`);
   shells fetch it once the game is up and switch at the next launch (`docs/ios.md` "Hot updates").

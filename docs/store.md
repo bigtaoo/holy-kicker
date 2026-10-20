@@ -326,7 +326,7 @@ Casual, free, every storefront but mainland China, as for Holy Kicker.
 ### Screenshots
 
 Five per language in `art/reskin/corgi/ios/store/` (`en_*`, `zh_*`), 1179×2556, taken with
-`node tools/store_shots.mjs corgi <en|zh>` from `npm run dev:new` (the Dune World take with
-`--only ch3 --seed 3`; seed 7 falls on the way): a Frost Moon horde at wave 30, the level-up
+`node tools/store_shots.mjs corgi <en|zh>` from `npm run dev:new` (seed 7, but the Dune World
+takes with `--only ch3 --seed 3`, as seed 7 falls on the way, and the English horde with `--seed 5`): a Frost Moon horde at wave 30, the level-up
 cards, the wave 20 Twin Ram Beetles, Dune World at wave 12, and the lobby of a save two planets
 in. App Review's purchase screenshot is `iap_adfree_review_en.png` (`--only iap`).

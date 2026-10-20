@@ -98,6 +98,11 @@ try {
       });
     }
     await page.waitForTimeout(scene.settle);
+    // a battle scene never catches level-up cards that came up while it settled
+    if (scene.ready && !scene.hold) {
+      await page.waitForFunction(() => __shell.run.engine.state.players[0].offer.length === 0, null, { polling: 100, timeout: 30000 });
+      await page.waitForTimeout(300);
+    }
     if (scene.tap) {
       await page.mouse.click(...scene.tap);
       await page.waitForTimeout(1500);
