@@ -146,28 +146,38 @@ motion read as alive. All of it is view-side; the engine is untouched.
 - **Layered clips**: legs play run or idle while fire plays on top, additive or by bone mask
   (`TaoActor.layer`).
 - **Twin pistols, no mirror**: turns come so often in a horde game that a mirror flip makes the
-  screen shake, so the body never flips. Each paw holds a pistol; aiming left raises the left gun
-  and lowers the right one, aiming right the other way round, with a short blend and a dead zone
-  so the aim does not flicker it. The raised arm and then its gun aim at the target
-  (`TaoActor.aim`, weighted by the blend), the head follows part of the way. Each gun reaches
-  past vertical, so shots go straight up and down; the arm stops at 55° and the wrist turns the
-  rest, so a gun aimed up stays beside the head.
+  screen shake, so the body never flips. Each paw holds a pistol, carried at the side (the
+  clips' pose) until an attack: the gun on the aim's side comes up in 0.08 s, stays up 0.6 s
+  after the last attack and goes back down over 0.25 s; aiming the other way swaps guns with a
+  short blend and a dead zone so the aim does not flicker it. The raised arm and then its gun aim
+  at the target (`TaoActor.aim`, weighted by the raise and the swap), the head follows part of
+  the way. Each gun reaches past vertical, so shots go straight up and down; the arm stops at 55°
+  and the wrist turns the rest, so a gun aimed up stays beside the head.
 - **Calm by default**: the hero is on screen the whole run and the camera follows it, so every
-  motion is small: a short bob and step, a 3° lean, light recoil. Big swings read as shaking.
-- **Speed-matched run**: the cycle rate follows actual velocity so feet do not slide; a backpedal
-  when moving away from the aim.
+  motion is small: a step of 4% of the height, a 2% bob and 3.5° roll in the trot, a 3° lean,
+  a 4° kick per shot. Big swings read as shaking.
+- **Front-view trot**: the run faces the camera (each foot lifts in turn while the body rises,
+  rolls and shifts over the other, the head counter-rolls an eighth of a cycle late, the arms
+  swing a little), so it plays forwards whichever way the hero goes, at 0.75–1.2x as the ground
+  speed rises.
 - **Procedural life**: lean into acceleration, squash on each footfall, random blinks, breathing.
 - **Springs** (secondary motion): ears, tail, cheeks or belly, backpack antenna, the cat's scarf,
   each a damped spring driven by the root's acceleration. Cheap, and the main source of
   "natural".
 - **Weapon motion**: recoil kick per shot (arm and body), muzzle flash, ejected casings; saber
   swing, ground pound (pulse), throw (disc) mapped from today's swing, knock and throw.
+- **Hurt**: a hit layers `hurt` on top (the body squashes, the head tips, a small rebound) in
+  0.3 s, whatever the hero is doing.
 - **New clips**: spawn (drop-pod landing), dash/dodge (the cat's *Light Feet*), belly bounce
-  (bulldog), hurt with a helmet wobble, death (flops over, helmet rolls off), level-up cheer,
+  (bulldog), a helmet wobble on hurt, death (flops over, helmet rolls off), level-up cheer,
   victory, and lobby idles (scratch an ear, wag, yawn, check the gun).
 
 **Prototype** (dev only): `client/proto.html` (`/proto.html` on the dev server, driven by
-`src/dev/corgiProto.ts`) plays the corgi rig with all of the above except blinks and the new clips.
+`src/dev/corgiProto.ts`) plays the corgi rig with the game's motion (`corgiMotion.ts`) and all of
+the above except blinks and the new clips; H plays a hit. The clips (idle, run, fire_l, fire_r,
+hurt) come from `python tools/hero_clips.py`, which writes the same set into the corgi's, the
+bulldog's and the cat's specs (its parameters, such as the step's height, can be overridden on
+the command line); repack each rig after it.
 The rig comes from `art/reskin/corgi/`: `python tools/split_parts.py art/reskin/corgi/parts_spec.json
 art/reskin/corgi/parts`, then `python tools/pack_tao.py art/reskin/corgi/corgi_tao.json
 art/reskin/corgi/corgi.tao art/reskin/corgi/runtime`. The split works from `apose2.png`, the
@@ -194,9 +204,9 @@ art/reskin/corgi/corgi_tao.json - art/reskin/corgi/game/art/hero 0.35`, then `py
 art/reskin/corgi/game/art/hero/atlas.png`; `corgi.json` maps `art/hero/*` to those files once the
 theme takes it. The sim gives no aim point, so the view re-picks what the relic would hit
 (`kickTarget`) four times a second and eases the aim there; every relic's attack is a shot of the
-raised gun at the relic's strike (the staff shoots on its sweep and the guns follow the staff),
-a hit flinches the body, and the guns drop when the hero goes down. No hurt, death or level-up
-clips yet.
+raised gun at the relic's strike (the staff shoots on its sweep and the guns follow the staff
+while it is out; the beads' orbit is no shot, so the guns stay down), a hit plays `hurt`, and the
+guns drop when the hero goes down. No death or level-up clips yet.
 
 **Squad rigs**: Brick the bulldog (`art/reskin/bulldog/`, the fat monk's slot) and Ginger the cat
 (`art/reskin/cat/`, the novice's) are made the same way, with the corgi's bone and slot names

@@ -5,10 +5,11 @@ import { CorgiMotion, RUN_SPEED, follow, headTurn, pawAim, runRate } from './cor
 import { TaoActor, type TaoAsset } from './tao/TaoActor';
 
 // The corgi theme's hero (docs/reskin.md "Animation › Hero"), ported from the prototype
-// (src/dev/corgiProto.ts): twin pistols and no mirror flip, the gun on the aim's side raised,
-// a slow head, springy ears and tail, a run that follows the ground speed and a light recoil.
-// The sim decides when it attacks and gets hurt; the view picks what to aim at the way the
-// relic picks its target, and every relic's attack goes off as a shot of the raised gun.
+// (src/dev/corgiProto.ts): twin pistols and no mirror flip, carried at the sides until an attack
+// raises the one on the aim's side, a slow head, springy ears and tail, a trot that follows the
+// ground speed, a light recoil and a hurt flinch. The sim decides when it attacks and gets hurt;
+// the view picks what to aim at the way the relic picks its target, and every relic's attack
+// but the beads' goes off as a shot of the raised gun.
 
 /** The atlas's pack scale (tools/pack_tao.py ... 0.35); the rig's offsets below are in its units. */
 const PACK = 0.35;
@@ -27,9 +28,6 @@ const DEAD_ZONE = 0.12;
 /** Seconds the muzzle flash shows, and its size in world units. */
 const FLASH = 0.06;
 const FLASH_SIZE = 12;
-const HURT = 0.3;
-/** Degrees the body flinches away from the aim when hit. */
-const FLINCH = 7;
 /** Share of the body's travel the springs feel: the game moves the hero faster than the prototype, so the ears would flap. */
 const TRAVEL = 0.5;
 /** Seconds the guns take to drop when the hero goes down, and to come back up. */
@@ -71,7 +69,6 @@ export class CorgiHero {
   /** Seconds until a started attack's shot, or -1. */
   private pending = -1;
   private flashT = 0;
-  private hurtT = 0;
   /** 1 with the guns up, 0 while down. */
   private ready = 1;
 
@@ -89,10 +86,15 @@ export class CorgiHero {
     this.view.addChild(this.held, this.actor.view, this.flash);
   }
 
-  /** An attack starts: it aims at the relic's target now and shoots as the relic goes off (the staff's sweep shoots on swing()). */
+  /**
+   * An attack starts: the guns come up, aimed at the relic's target, and shoot as the relic goes
+   * off (the staff's sweep shoots on swing()). The beads' orbit is no shot, so they stay down.
+   */
   attack(relic: RelicId): void {
+    if (relic === 'beads') return;
     this.retarget = 0;
-    if (relic !== 'staff' && relic !== 'beads') this.pending = HERO.strikeAt / TICK_RATE;
+    this.motion.alert();
+    if (relic !== 'staff') this.pending = HERO.strikeAt / TICK_RATE;
   }
 
   /** The staff's sweep lands: a shot along it. */
@@ -112,8 +114,9 @@ export class CorgiHero {
     return { x: p.x * this.k, y: p.y * this.k };
   }
 
+  /** A hit: the body squashes and the head tips, on top of whatever it is doing. */
   hurt(): void {
-    this.hurtT = HURT;
+    this.actor.layer('hurt', { additive: true });
   }
 
   update(dt: number, facing: number, _moving: boolean, s: SimState, alpha: number): void {
@@ -130,19 +133,17 @@ export class CorgiHero {
     const speed = Math.hypot(vx, vy);
     if (speed > RUN_SPEED && !p.dead) {
       this.actor.play('run');
-      this.actor.rate = runRate(vx, speed, full);
+      this.actor.rate = runRate(speed, full);
     } else {
       this.actor.play('idle');
       this.actor.rate = 1;
     }
 
-    // a hit tips the body away from the aim and lets go over HURT
-    this.hurtT = Math.max(0, this.hurtT - dt);
-    const flinch = -this.motion.side * FLINCH * (this.hurtT / HURT) ** 2;
-    this.actor.offset('torso', this.motion.lean + flinch);
+    if (this.staffAngle !== null) this.motion.alert(); // the guns follow the staff while it is out
+    this.actor.offset('torso', this.motion.lean);
 
-    // each paw aims from its own shoulder, clamped to its side; a shot climbs the muzzle and
-    // shoves the arm back
+    // each paw aims from its own shoulder, clamped to its side, blended over the clip's carry by
+    // how far it is up; a shot climbs the muzzle and shoves the arm back
     let head = 0;
     PAWS.forEach((paw, i) => {
       const w = this.motion.weight(i as 0 | 1) * this.ready;
@@ -196,6 +197,7 @@ export class CorgiHero {
   /** The raised gun goes off: recoil, the fire clip on top and a flash at its muzzle. */
   private shoot(): void {
     if (this.ready < 1) return;
+    this.motion.alert();
     const paw = PAWS[this.motion.fire()];
     this.actor.layer(paw.fire, { additive: true });
     const m = this.actor.local(paw.gun, paw.muzzle.x, paw.muzzle.y);

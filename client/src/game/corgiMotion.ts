@@ -1,6 +1,6 @@
 // The corgi hero's procedural motion (docs/reskin.md "Animation › Hero"), free of Pixi so it can
-// be tested: which of the twin pistols is up, how each paw aims, the lean, the head's slow look,
-// the run clip's rate and the recoil. corgiHero.ts applies it to the rig. Angles are radians with
+// be tested: whether the guns are up at all, which of the twin pistols is, how each paw aims, the
+// lean, the head's slow look, the run clip's rate and the recoil. corgiHero.ts applies it to the rig. Angles are radians with
 // y down; speeds are world units per second.
 
 const DEG = Math.PI / 180;
@@ -21,8 +21,15 @@ const LOOK_RATE = 4;
 /** Per second: how fast a shot's kick wears off. */
 const RECOIL_FADE = 7;
 /** The run clip's rate at a standstill's edge and at full speed; it follows the ground speed between. */
-const RUN_RATE_MIN = 0.6;
-const RUN_RATE_MAX = 1.5;
+const RUN_RATE_MIN = 0.75;
+const RUN_RATE_MAX = 1.2;
+/**
+ * The guns hang at the corgi's sides (the clips' pose) until an attack: they come up over
+ * RAISE seconds, stay up for HOLD after the last one and go back down over LOWER.
+ */
+const RAISE = 0.08;
+const HOLD = 0.6;
+const LOWER = 0.25;
 /** Below this speed (units/s) the corgi stands. */
 export const RUN_SPEED = 40;
 
@@ -56,12 +63,10 @@ export function headTurn(dev: number): number {
 
 /**
  * The run clip's rate for a ground speed `speed` out of `full`: the cycle follows the speed, so
- * feet slide less, within a calm range. The clip runs left (the art's way), so it plays
- * backwards going right.
+ * feet slide less, within a calm range. The trot faces the camera, so it plays forwards either way.
  */
-export function runRate(vx: number, speed: number, full: number): number {
-  const rate = Math.max(RUN_RATE_MIN, Math.min(RUN_RATE_MAX, (speed / full) * RUN_RATE_MAX));
-  return vx > RUN_SPEED ? -rate : rate;
+export function runRate(speed: number, full: number): number {
+  return Math.max(RUN_RATE_MIN, Math.min(RUN_RATE_MAX, (speed / full) * RUN_RATE_MAX));
 }
 
 /** Eases a value toward a target at `rate` per second (exponential, steady under any frame time). */
@@ -69,8 +74,12 @@ export function follow(v: number, target: number, rate: number, dt: number): num
   return v + (target - v) * Math.min(1, dt * rate);
 }
 
-/** The state that carries from frame to frame: the guns' swap, lean, head and recoil. */
+/** The state that carries from frame to frame: the guns' raise and swap, lean, head and recoil. */
 export class CorgiMotion {
+  /** How far the guns are up out of the clips' carry, 0..1 (linear; `raise` eases it). */
+  private lift = 0;
+  /** Seconds the guns stay up. */
+  private hold = 0;
   /** The aim's side: -1 left (the far paw's gun), 1 right (the near paw's). */
   side = -1;
   /** 0 with the left gun up, 1 with the right one. */
@@ -90,9 +99,19 @@ export class CorgiMotion {
     return this.up > 0.5 ? 1 : 0;
   }
 
+  /** Eased: how far the guns are up at all, 0 at the sides, 1 aiming. */
+  get raise(): number {
+    return this.lift * this.lift * (3 - 2 * this.lift);
+  }
+
   /** How much paw `i` (0 left, 1 right) is raised, 0..1. */
   weight(i: 0 | 1): number {
-    return i === 0 ? 1 - this.up : this.up;
+    return (i === 0 ? 1 - this.up : this.up) * this.raise;
+  }
+
+  /** An attack: the guns come up (or stay up) for another HOLD seconds. */
+  alert(): void {
+    this.hold = HOLD;
   }
 
   /**
@@ -102,6 +121,8 @@ export class CorgiMotion {
   step(dt: number, aimDx: number, dead: number, vx: number, full: number): void {
     this.side = aimSide(this.side, aimDx, dead);
     this.swap = approach(this.swap, this.side > 0 ? 1 : 0, dt / SWAP);
+    this.hold = Math.max(0, this.hold - dt);
+    this.lift = this.hold > 0 ? Math.min(1, this.lift + dt / RAISE) : Math.max(0, this.lift - dt / LOWER);
     const run = Math.max(-1, Math.min(1, vx / full));
     this.lean = follow(this.lean, run * LEAN, LEAN_RATE, dt);
     for (const i of [0, 1]) this.recoil[i] = Math.max(0, this.recoil[i] - dt * RECOIL_FADE);

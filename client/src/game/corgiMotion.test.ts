@@ -34,10 +34,10 @@ describe('corgi motion', () => {
     expect(headTurn(-90 * DEG)).toBe(-6);
   });
 
-  it('matches the run cycle to the speed, backwards going right', () => {
-    expect(runRate(-420, 420, 420)).toBeCloseTo(1.5);
-    expect(runRate(420, 420, 420)).toBeCloseTo(-1.5);
-    expect(runRate(-50, 50, 420)).toBeCloseTo(0.6); // slow steps do not crawl
+  it('matches the run cycle to the speed, within a calm range', () => {
+    expect(runRate(420, 420)).toBeCloseTo(1.2);
+    expect(runRate(2000, 420)).toBeCloseTo(1.2);
+    expect(runRate(50, 420)).toBeCloseTo(0.75); // slow steps do not crawl
   });
 
   it('follows a target steadily', () => {
@@ -45,8 +45,30 @@ describe('corgi motion', () => {
     expect(follow(0, 10, 4, 1)).toBe(10); // a long frame does not overshoot
   });
 
+  it('carries the guns down until an attack, holds them up a while, then lowers them', () => {
+    const m = new CorgiMotion();
+    m.step(0.1, -100, 14, 0, 420);
+    expect(m.weight(0)).toBe(0);
+    m.alert();
+    m.step(0.04, -100, 14, 0, 420);
+    expect(m.raise).toBeCloseTo(0.5);
+    m.step(0.04, -100, 14, 0, 420);
+    expect(m.weight(0)).toBe(1);
+    expect(m.weight(1)).toBe(0);
+    for (let i = 0; i < 10; i++) m.step(0.05, -100, 14, 0, 420); // 0.58s up in all
+    expect(m.raise).toBe(1);
+    m.alert(); // another attack keeps them up
+    for (let i = 0; i < 11; i++) m.step(0.05, -100, 14, 0, 420);
+    expect(m.raise).toBe(1);
+    for (let i = 0; i < 2; i++) m.step(0.05, -100, 14, 0, 420);
+    expect(m.raise).toBeLessThan(1); // lowering
+    for (let i = 0; i < 6; i++) m.step(0.05, -100, 14, 0, 420);
+    expect(m.raise).toBe(0);
+  });
+
   it('raises the gun on the aim side over a short blend and kicks the raised one', () => {
     const m = new CorgiMotion();
+    m.alert();
     expect(m.raised).toBe(0);
     m.step(0.05, 100, 14, 0, 420);
     expect(m.side).toBe(1);
