@@ -463,7 +463,7 @@ export const id: Table<typeof en> = {
     saver: 'Baterai',
     autoHint: 'Menjaga game tetap mulus; hemat daya saat baterai lemah',
     highHint: 'Efek terbaik; ponsel bisa jadi hangat',
-    saverHint: '30 fps dan efek lebih sedikit, hemat baterai',
+    saverHint: 'Resolusi lebih rendah dan efek lebih sedikit, hemat baterai',
     shakeOn: 'Getar layar: Aktif',
     shakeOff: 'Getar layar: Mati',
     data: 'Data main',

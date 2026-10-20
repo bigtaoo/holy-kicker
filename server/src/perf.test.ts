@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { anomaliesOf, anomalyKey, droppedBelowPhone, middle, perfOf, sessionDevice, type PerfSnap } from './perf';
+import { anomaliesOf, anomalyKey, droppedBelowPhone, middle, pacingOf, perfOf, sessionDevice, type PerfSnap } from './perf';
 import type { ClientEvent, EventBatch, PropValue } from './protocol';
 import { MemoryStore, PERF_KEEP_DAYS, PRUNE_EVERY_DAYS } from './store';
 
@@ -34,18 +34,32 @@ describe('perf', () => {
       snap({ device: 'desktop' }, { secs: 0, fps: 1, p5: 1 }),
     ]);
     expect(r.byDevice).toEqual([
-      { label: 'mobile', snaps: 3, minutes: 4, fps: 50, p5: 20, longPerMin: 9, low: 2, heap: 200, tex: 320, texMB: 110, nodes: 4000, mids: 1 },
-      { label: 'desktop', snaps: 1, minutes: 1, fps: 60, p5: 59, longPerMin: 0, low: 0, heap: null, tex: null, texMB: null, nodes: null, mids: 0 },
+      { label: 'mobile', snaps: 3, minutes: 4, fps: 50, p5: 20, longPerMin: 9, low: 2, heap: 200, tex: 320, texMB: 110, nodes: 4000, mids: 1, pacing: null },
+      { label: 'desktop', snaps: 1, minutes: 1, fps: 60, p5: 59, longPerMin: 0, low: 0, heap: null, tex: null, texMB: null, nodes: null, mids: 0, pacing: null },
     ]);
     expect(r.byOs.map((o) => [o.label, o.snaps])).toEqual([['Android', 3], ['Windows', 1]]);
     expect(r.byBuild.map((b) => [b.label, b.snaps])).toEqual([['10', 1], ['2', 1], ['1', 2]]);
+  });
+
+  it('sums pacing over the snapshots that carry it, older builds left out', () => {
+    const pace = { hz: 60, miss: 30, hitch: 20, hitchWork: 5, hitchBoss: 10, hitchWave: 2, work95: 9, sim95: 4, view95: 2, draw95: 3 };
+    expect(pacingOf([snap({}, {})])).toBeNull();
+    const r = pacingOf([
+      snap({}, pace),
+      snap({}, { ...pace, secs: 120, hz: 120, hitch: 0, miss: 0, hitchWork: 0, hitchBoss: 0, hitchWave: 0, work95: 5, sim95: 2, view95: 1, draw95: 2 }),
+      snap({}, { ...pace, work95: 14, sim95: 9 }),
+      snap({}, { secs: 600 }),
+    ]);
+    // 40 hitches and 60 misses over 4 battle minutes
+    expect(r).toEqual({ hz: 60, hitchPerMin: 10, missPerMin: 15, work: 25, boss: 50, wave: 10, work95: 9, sim95: 4, view95: 2, draw95: 3 });
+    expect(perfOf([snap({}, pace)]).worst[0].pacing).toMatchObject({ hitchPerMin: 20, work: 25 });
   });
 
   it('lists the worst long-enough snapshots, lowest p5 first', () => {
     const many = Array.from({ length: 14 }, (_, i) => snap({ day: `2026-10-${String(i + 1).padStart(2, '0')}` }, { p5: 40 - i }));
     const r = perfOf([...many, snap({}, { secs: 10, p5: 1 })]);
     expect(r.worst).toHaveLength(10);
-    expect(r.worst[0]).toEqual({ day: '2026-10-14', host: 'web', build: '1', device: 'mobile', os: 'Android', gpu: 'other', mem: 4, cores: 8, secs: 60, fps: 60, p5: 27, lvMin: 'high', mobs: 100, texMB: null, nodes: null });
+    expect(r.worst[0]).toEqual({ day: '2026-10-14', host: 'web', build: '1', device: 'mobile', os: 'Android', gpu: 'other', mem: 4, cores: 8, secs: 60, fps: 60, p5: 27, lvMin: 'high', mobs: 100, texMB: null, nodes: null, pacing: null });
     expect(r.worst.map((w) => w.p5)).toEqual([27, 28, 29, 30, 31, 32, 33, 34, 35, 36]);
   });
 
@@ -84,7 +98,7 @@ describe('perf', () => {
     await s.addEvents(batch('install-p', 'session01', 'crazygames', [perf, lost]), DAY0);
     await s.addEvents(batch('install-w', 'session02', 'web', [perf]), DAY0);
     const r = await s.stats(1, DAY0, 'crazygames');
-    expect(r.perf.byDevice).toEqual([{ label: 'tablet', snaps: 1, minutes: 1.5, fps: 55, p5: 33, longPerMin: 2, low: 1, heap: 90, tex: 40, texMB: 60, nodes: 900, mids: 0 }]);
+    expect(r.perf.byDevice).toEqual([{ label: 'tablet', snaps: 1, minutes: 1.5, fps: 55, p5: 33, longPerMin: 2, low: 1, heap: 90, tex: 40, texMB: 60, nodes: 900, mids: 0, pacing: null }]);
     expect(r.perf.worst[0]).toMatchObject({ device: 'tablet', os: 'iOS', gpu: 'weak', mem: 2, cores: 4, lvMin: 'mid', texMB: 60, nodes: 900 });
     expect(r.anomalies.days).toEqual([{ day: '2026-10-01', kind: 'webgl_lost', n: 1 }]);
     expect(r.anomalies.builds).toEqual([{ build: '7', kind: 'webgl_lost', n: 1 }]);

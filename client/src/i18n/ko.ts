@@ -460,7 +460,7 @@ export const ko: Table<typeof en> = {
     saver: '절전',
     autoHint: '부드럽게 자동 조절, 배터리가 적으면 절전',
     highHint: '최고 효과, 폰이 뜨거워질 수 있어요',
-    saverHint: '30fps, 효과 줄임, 배터리 절약',
+    saverHint: '해상도 낮춤, 효과 줄임, 배터리 절약',
     shakeOn: '화면 흔들림: 켬',
     shakeOff: '화면 흔들림: 끔',
     data: '플레이 데이터',

@@ -1,10 +1,16 @@
 import { PERF_MID_MAX, PERF_MID_SECS } from '@hk/protocol';
 import { describe, expect, it } from 'vitest';
-import { gpuClass, PerfMeter } from './perfMeter';
+import type { BattleFrame } from './frameWork';
+import { CTX_BOSS, CTX_WAVE, gpuClass, PerfMeter } from './perfMeter';
+
+/** A battle frame of `ms` on `level` on a 60 Hz screen, with light work unless `more` says otherwise. */
+function fr(ms: number, level = 4, more: Partial<BattleFrame> = {}): BattleFrame {
+  return { ms, level, target: 1000 / 60, vsync: 1000 / 60, work: 4, sim: 1, view: 1, draw: 2, ...more };
+}
 
 /** Feeds `n` frames of `ms` on `level` with `mobs` alive. */
 function feed(m: PerfMeter, n: number, ms: number, level = 4, mobs = 100): void {
-  for (let i = 0; i < n; i++) m.frame(ms, level, mobs);
+  for (let i = 0; i < n; i++) m.frame(fr(ms, level), mobs);
 }
 
 describe('PerfMeter', () => {
@@ -21,7 +27,7 @@ describe('PerfMeter', () => {
   it('counts a pause as long but leaves it out of the rates and the seconds', () => {
     const m = new PerfMeter();
     feed(m, 600, 1000 / 60);
-    m.frame(30_000, 4, 0);
+    m.frame(fr(30_000), 0);
     const s = m.snapshot('leave')!;
     expect(s).toMatchObject({ secs: 10, fps: 60, p5: 60, long: 1 });
   });
@@ -54,7 +60,7 @@ describe('PerfMeter', () => {
     const m = new PerfMeter();
     let mids = 0;
     for (let i = 0; i < 60 * PERF_MID_SECS * (PERF_MID_MAX + 2); i++) {
-      m.frame(1000 / 60, 4, 0);
+      m.frame(fr(1000 / 60), 0);
       if (i === 60 * PERF_MID_SECS - 10) expect(m.midDue()).toBe(false);
       if (m.midDue()) {
         mids++;
@@ -66,12 +72,49 @@ describe('PerfMeter', () => {
 
   it('keeps measuring through a mid snapshot looked at and not sent', () => {
     const m = new PerfMeter();
-    for (let i = 0; i < 60 * PERF_MID_SECS + 1; i++) m.frame(1000 / 60, 4, 0);
+    for (let i = 0; i < 60 * PERF_MID_SECS + 1; i++) m.frame(fr(1000 / 60), 0);
     expect(m.midDue()).toBe(true);
     expect(m.snapshot('mid', true)!.secs).toBe(PERF_MID_SECS);
     expect(m.midDue()).toBe(false);
-    for (let i = 0; i < 600; i++) m.frame(1000 / 60, 4, 0);
+    for (let i = 0; i < 600; i++) m.frame(fr(1000 / 60), 0);
     expect(m.snapshot('end')!.secs).toBe(PERF_MID_SECS + 10);
+  });
+});
+
+describe('PerfMeter pacing', () => {
+  it('counts missed refreshes against the frame target, so 60 and 120 Hz screens compare alike', () => {
+    const m = new PerfMeter();
+    for (let i = 0; i < 600; i++) m.frame(fr(i % 100 === 0 ? 2000 / 60 : i % 100 === 50 ? 3000 / 60 : 1000 / 60), 0);
+    // the same frames on a 120 Hz screen drawing every other refresh
+    const fast = new PerfMeter();
+    for (let i = 0; i < 600; i++) fast.frame(fr(i % 100 === 0 ? 2000 / 60 : i % 100 === 50 ? 3000 / 60 : 1000 / 60, 4, { vsync: 1000 / 120 }), 0);
+    const a = m.snapshot('end')!, b = fast.snapshot('end')!;
+    expect(a).toMatchObject({ hz: 60, hitch: 12, miss: 18, long: 6 });
+    expect(b).toMatchObject({ hz: 120, hitch: 12, miss: 18 });
+  });
+
+  it('a jittery but on-time frame is no hitch', () => {
+    const m = new PerfMeter();
+    for (let i = 0; i < 600; i++) m.frame(fr(i % 2 ? 1000 / 60 + 6 : 1000 / 60 - 6), 0);
+    expect(m.snapshot('end')).toMatchObject({ hitch: 0, miss: 0 });
+  });
+
+  it('puts a hitch down to our work when the frame before took most of a frame, and notes the context', () => {
+    const m = new PerfMeter();
+    for (let i = 0; i < 600; i++) m.frame(fr(1000 / 60), 0);
+    m.frame(fr(2000 / 60, 4, { work: 15, sim: 9, view: 2, draw: 4 }), 0, CTX_BOSS);
+    m.frame(fr(2000 / 60, 4, { work: 3 }), 0, CTX_WAVE);
+    m.frame(fr(2000 / 60, 4, { work: 3 }), 0, CTX_BOSS | CTX_WAVE);
+    expect(m.snapshot('end')).toMatchObject({ hitch: 3, hitchWork: 1, hitchBoss: 2, hitchWave: 2, workMax: 15 });
+  });
+
+  it('gives the 95th percentile of each part of the work', () => {
+    const m = new PerfMeter();
+    for (let i = 0; i < 1000; i++) m.frame(fr(1000 / 60, 4, i < 940 ? {} : { work: 12.3, sim: 6, view: 2.5, draw: 3.8 }), 0);
+    expect(m.snapshot('end')).toMatchObject({ work95: 12.3, sim95: 6, view95: 2.5, draw95: 3.8, workMax: 12.3 });
+    // the next snapshot starts afresh
+    feed(m, 600, 1000 / 60);
+    expect(m.snapshot('end')).toMatchObject({ work95: 4, workMax: 4, hitch: 0 });
   });
 });
 
