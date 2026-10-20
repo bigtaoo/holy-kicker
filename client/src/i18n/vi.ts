@@ -463,7 +463,7 @@ export const vi: Table<typeof en> = {
     saver: 'Pin',
     autoHint: 'Giữ game mượt; tiết kiệm điện khi pin yếu',
     highHint: 'Hiệu ứng đẹp nhất; máy có thể nóng',
-    saverHint: '30 fps, ít hiệu ứng hơn, đỡ tốn pin',
+    saverHint: 'Độ phân giải thấp hơn, ít hiệu ứng hơn, đỡ tốn pin',
     shakeOn: 'Rung màn hình: Bật',
     shakeOff: 'Rung màn hình: Tắt',
     data: 'Dữ liệu chơi',

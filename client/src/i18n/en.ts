@@ -461,7 +461,7 @@ export const en = {
     saver: 'Battery',
     autoHint: 'Keeps the game smooth; saves power on low battery',
     highHint: 'Best effects; phones may get warm',
-    saverHint: '30 fps and fewer effects, saves battery',
+    saverHint: 'Lower resolution and fewer effects, saves battery',
     shakeOn: 'Screen shake: On',
     shakeOff: 'Screen shake: Off',
     data: 'Play data',

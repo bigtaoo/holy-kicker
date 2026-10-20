@@ -1,11 +1,13 @@
 import type { Application, Renderer } from 'pixi.js';
+import { frameWork, type BattleFrame } from './frameWork';
 import { FrameGate, FrameGovernor, LEVELS, targetFps, type LevelRange, type LevelSettings } from './quality';
 
 // Drives the frame loop and applies quality levels. Pixi's own ticker.maxFPS cannot be used:
 // it still measures each frame's delta from the last skipped animation frame, so a 60 fps cap
 // on a 120 Hz screen would run the game at half speed. Instead the ticker is stopped and
 // stepped from our own requestAnimationFrame loop behind a FrameGate. Calm screens (no run
-// stepping) get a lower cap, and their frames are left out of the governor's measure.
+// stepping) get a lower cap, and their frames are left out of the governor's measure. Each
+// update is timed for the perf telemetry (frameWork.ts).
 
 /** The WebGL renderer string, '' when the browser hides it. */
 export function gpuName(renderer: Renderer): string {
@@ -20,8 +22,10 @@ export class QualityRuntime {
   private readonly gate: FrameGate;
   private readonly maxResolution: number;
   private last = 0;
-  /** Each battle frame's length (ms) and the level it ran on (perf telemetry); calm frames never come here. */
-  onBattleFrame: (ms: number, level: number) => void = () => {};
+  private wasCalm = true;
+  private readonly frame: BattleFrame = { ms: 0, target: 0, vsync: 0, level: 0, work: 0, sim: 0, view: 0, draw: 0 };
+  /** Each battle frame (perf telemetry; the object is reused); calm frames never come here. */
+  onBattleFrame: (f: BattleFrame) => void = () => {};
   /** onBattleFrame threw once (logged then, not every frame after). */
   private faulted = false;
 
@@ -35,7 +39,7 @@ export class QualityRuntime {
   ) {
     this.governor = new FrameGovernor(range);
     this.maxResolution = app.renderer.resolution;
-    this.gate = new FrameGate(LEVELS[range.start].fps);
+    this.gate = new FrameGate(targetFps(true));
     // a later ticker.add() would otherwise start the ticker's own loop again
     app.ticker.autoStart = false;
     app.ticker.stop();
@@ -43,22 +47,34 @@ export class QualityRuntime {
     const loop = (now: number) => {
       requestAnimationFrame(loop);
       const calm = this.calm();
-      this.gate.fps = targetFps(this.settings, calm);
+      this.gate.fps = targetFps(calm);
       if (!this.gate.pass(now)) return;
-      // calm frames come slower on purpose and say nothing about the load
-      if (this.last > 0 && !calm) {
-        const level = this.governor.level;
+      const f = this.frame;
+      // calm frames come slower on purpose and say nothing about the load, nor does the first
+      // battle frame after them (its time runs from a calm frame)
+      if (this.last > 0 && !calm && !this.wasCalm) {
+        f.level = this.governor.level;
         if (this.governor.sample((now - this.last) / 1000)) this.apply();
+        f.ms = now - this.last;
+        f.target = this.gate.frameMs;
+        f.vsync = this.gate.vsync;
         // telemetry only watches: a fault in it must never stop the game's frame below
         try {
-          this.onBattleFrame(now - this.last, level);
+          this.onBattleFrame(f);
         } catch (err) {
           if (!this.faulted) console.error(err);
           this.faulted = true;
         }
       }
       this.last = now;
+      this.wasCalm = calm;
+      frameWork.sim = frameWork.run = 0;
+      const start = performance.now();
       app.ticker.update(now);
+      f.work = performance.now() - start;
+      f.sim = frameWork.sim;
+      f.view = frameWork.run - frameWork.sim;
+      f.draw = f.work - frameWork.run;
     };
     requestAnimationFrame(loop);
   }

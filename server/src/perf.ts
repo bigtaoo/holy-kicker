@@ -62,6 +62,26 @@ export interface PerfRow {
   nodes: number | null;
   /** `mid` snapshots among them: sent only on trouble (protocol perfTrouble), so a group with many is a group in trouble. */
   mids: number;
+  /** Pacing (protocol PerfProps; null without snapshots that carry it, builds before 2026-10-20). */
+  pacing: Pacing | null;
+}
+
+/** What a group's snapshots with pacing fields say: how often frames came late and why. */
+export interface Pacing {
+  /** Median display refresh, Hz. */
+  hz: number;
+  /** Hitches (frames that missed a refresh) and refreshes missed, per battle minute. */
+  hitchPerMin: number;
+  missPerMin: number;
+  /** Percent of the hitches after our own slow work, with a boss or elite standing, in a wave's first seconds. */
+  work: number;
+  boss: number;
+  wave: number;
+  /** Medians of the frame work's 95th percentile (ms): all of it, engine steps, view update, draw. */
+  work95: number;
+  sim95: number;
+  view95: number;
+  draw95: number;
 }
 
 export interface WorstSnap {
@@ -81,6 +101,8 @@ export interface WorstSnap {
   /** MB of GPU textures and display objects then, null from builds before they were sent. */
   texMB: number | null;
   nodes: number | null;
+  /** Its pacing (as PerfRow), null from builds before it was sent. */
+  pacing: Pacing | null;
 }
 
 export interface PerfStats {
@@ -110,6 +132,28 @@ export const has = (v: PropValue | undefined): v is number => typeof v === 'numb
 export const newestFirst = (a: string, b: string) => b.localeCompare(a, undefined, { numeric: true });
 const str = (v: PropValue | undefined) => (typeof v === 'string' && v ? v : 'unknown');
 const tenth = (x: number) => Math.round(x * 10) / 10;
+const share = (n: number, of: number) => (of > 0 ? Math.round((n * 100) / of) : 0);
+
+/** The pacing of snapshots, from those that carry it (`hitch`); null for none. */
+export function pacingOf(all: PerfSnap[]): Pacing | null {
+  const snaps = all.filter((x) => has(x.p.hitch));
+  if (!snaps.length) return null;
+  const sum = (k: string) => snaps.reduce((t, x) => t + num(x.p[k]), 0);
+  const secs = sum('secs'), hitch = sum('hitch');
+  const mid = (k: string) => middle(snaps.map((x) => num(x.p[k])));
+  return {
+    hz: mid('hz'),
+    hitchPerMin: secs > 0 ? tenth((hitch * 60) / secs) : 0,
+    missPerMin: secs > 0 ? tenth((sum('miss') * 60) / secs) : 0,
+    work: share(sum('hitchWork'), hitch),
+    boss: share(sum('hitchBoss'), hitch),
+    wave: share(sum('hitchWave'), hitch),
+    work95: mid('work95'),
+    sim95: mid('sim95'),
+    view95: mid('view95'),
+    draw95: mid('draw95'),
+  };
+}
 
 /** The middle value, the upper of two; 0 for none. */
 export function middle(xs: number[]): number {
@@ -145,6 +189,7 @@ function rowOf(label: string, snaps: PerfSnap[]): PerfRow {
     texMB: mid('texMB'),
     nodes: mid('nodes'),
     mids: snaps.filter((x) => x.p.why === 'mid').length,
+    pacing: pacingOf(snaps),
   };
 }
 
@@ -182,7 +227,7 @@ export function perfOf(all: PerfSnap[]): PerfStats {
       .map((s) => ({
         day: s.day, host: s.host, build: s.build, device: s.device, os: s.os, gpu: s.gpu, mem: s.mem, cores: s.cores,
         secs: num(s.p.secs), fps: num(s.p.fps), p5: num(s.p.p5), lvMin: str(s.p.lvMin), mobs: num(s.p.mobs),
-        texMB: has(s.p.texMB) ? s.p.texMB : null, nodes: has(s.p.nodes) ? s.p.nodes : null,
+        texMB: has(s.p.texMB) ? s.p.texMB : null, nodes: has(s.p.nodes) ? s.p.nodes : null, pacing: pacingOf([s]),
       })),
   };
 }

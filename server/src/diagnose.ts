@@ -1,4 +1,4 @@
-import { droppedBelowPhone, errorMsg, groupBy, has, middle, newestFirst, num, type AnomalyCount, type PerfSnap } from './perf';
+import { droppedBelowPhone, errorMsg, groupBy, has, middle, newestFirst, num, pacingOf, type AnomalyCount, type PerfSnap } from './perf';
 
 // The /dash "Diagnosis": rules over the window's perf snapshots and anomaly counts (perf.ts) that
 // name what looks wrong, where, with the numbers, and where in the client to look. Pure, so both
@@ -8,7 +8,7 @@ import { droppedBelowPhone, errorMsg, groupBy, has, middle, newestFirst, num, ty
 
 export interface Finding {
   level: 'bad' | 'warn';
-  /** Which rule fired (leak_in_run, leak_across_runs, heap_high, memory_warning, webgl_lost, stalls, errors, slow_device, fps_regression). */
+  /** Which rule fired (leak_in_run, leak_across_runs, heap_high, memory_warning, webgl_lost, stalls, errors, slow_device, hitches, fps_regression). */
   rule: string;
   /** The build, device class, device + GPU or error source it is about. */
   where: string;
@@ -54,6 +54,10 @@ export const ERROR_WARN = 2;
 export const TOP_ERRORS = 5;
 /** slow_device: a device + GPU group whose median p5 is under this. */
 export const SLOW_P5 = 30;
+/** hitches: a device + GPU group with this many frames missing a refresh per battle minute (protocol PerfProps `hitch`). */
+export const HITCHES_PER_MIN = 6;
+/** hitches: over this percent of them after our own slow work puts them down to the work. */
+export const HITCH_WORK_SHARE = 50;
 /** fps_regression: snapshots each build needs, and the p5 drop that counts. */
 export const REGRESSION_MIN = 10;
 export const REGRESSION_P5 = 5;
@@ -194,6 +198,33 @@ function slowDevices(snaps: PerfSnap[]): Finding[] {
     }));
 }
 
+/** Where a frame's work goes, by the part with the largest 95th percentile. */
+const WORK_PARTS = {
+  sim95: 'engine steps (engine/: mob counts, collisions, spells; with the view reacting to their events in client/src/game/Game.ts react)',
+  view95: 'the view update (client/src/game/*View.ts: horde, fx, damage numbers)',
+  draw95: 'the draw (Pixi render: sprites on stage, filters, the effects budget per quality level in client/src/game/quality.ts)',
+} as const;
+
+/** Device + GPU groups whose battle frames often miss a refresh, with the cause the clients measured. */
+function hitches(snaps: PerfSnap[]): Finding[] {
+  const out: Finding[] = [];
+  for (const [where, all] of groupBy(finals(snaps), (s) => `${s.device} / gpu ${s.gpu}`)) {
+    const xs = all.filter((s) => has(s.p.hitch));
+    const p = pacingOf(xs);
+    if (xs.length < MIN_SNAPS || !p || p.hitchPerMin < HITCHES_PER_MIN) continue;
+    const top = (Object.keys(WORK_PARTS) as (keyof typeof WORK_PARTS)[]).reduce((a, b) => (p[b] > p[a] ? b : a));
+    const own = p.work > HITCH_WORK_SHARE;
+    out.push({
+      level: 'warn', rule: 'hitches', where, n: xs.length,
+      detail: `${p.hitchPerMin} hitches (${p.missPerMin} missed refreshes) per battle minute over ${xs.length} runs on a ${p.hz} Hz screen; ${p.work}% after our own slow work, ${p.boss}% with a boss or elite up, ${p.wave}% in a wave's first seconds. Frame work p95 ${p.work95} ms: engine ${p.sim95}, view ${p.view95}, draw ${p.draw95}.`,
+      hint: own
+        ? `Our frame work runs past the frame: the largest part is ${WORK_PARTS[top]}.`
+        : 'Frames come late while our work is short: garbage collections (allocations per frame in the views), the GPU falling behind (resolution and effects per quality level) or the compositor. Hitches bunched with bosses or wave starts point at what those add.',
+    });
+  }
+  return out;
+}
+
 /** Per device class, the newest two builds with REGRESSION_MIN snapshots each: a p5 drop after a deploy. */
 function fpsRegression(snaps: PerfSnap[]): Finding[] {
   const out: Finding[] = [];
@@ -217,6 +248,6 @@ export function diagnose(snaps: PerfSnap[], anomalies: AnomalyCount[]): Finding[
   const measured = snaps.filter((s) => num(s.p.secs) > 0);
   return [
     ...leakInRun(measured), ...leakAcrossRuns(measured), ...heapHigh(measured), ...deviceTrouble(anomalies),
-    ...stalls(measured, anomalies), ...errors(anomalies), ...slowDevices(measured), ...fpsRegression(measured),
+    ...stalls(measured, anomalies), ...errors(anomalies), ...slowDevices(measured), ...hitches(measured), ...fpsRegression(measured),
   ].sort((a, b) => (a.level === b.level ? 0 : a.level === 'bad' ? -1 : 1) || b.n - a.n || a.rule.localeCompare(b.rule) || a.where.localeCompare(b.where));
 }
