@@ -420,13 +420,16 @@ export const fr: Table<typeof en> = {
       sash: 'Ceinture de soie',
       sandals: 'Sandales de paille',
     },
+    drop: '{item} {tier}',
+    // The tier forms: as named | masc. | fem. | masc. plural | fem. plural; gear.form picks one per item.
+    form: { pendant: '1', bracers: '3', robe: '2', sash: '2', sandals: '4', ball: '2', staff: '1', fish: '1', beads: '1', bowl: '1' },
   },
   tier: {
-    0: 'Commun',
-    1: 'Fin',
-    2: 'Raffiné',
-    3: 'Précieux',
-    4: 'Sacré',
+    0: 'Commun|commun|commune|communs|communes',
+    1: 'Fin|fin|fine|fins|fines',
+    2: 'Raffiné|raffiné|raffinée|raffinés|raffinées',
+    3: 'Précieux|précieux|précieuse|précieux|précieuses',
+    4: 'Sacré|sacré|sacrée|sacrés|sacrées',
   },
   stat: {
     attack: 'Attaque +{n}%',

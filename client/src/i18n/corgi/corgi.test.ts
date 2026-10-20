@@ -18,7 +18,7 @@ function at(node: object, key: string): string | undefined {
   return typeof n === 'string' ? n : undefined;
 }
 
-const holes = (s: string | undefined) => (s?.match(/\{\w+\}/g) ?? []).sort().join();
+const holes = (s: string | undefined) => (s?.match(/\{\w+(?=[:}])/g) ?? []).sort().join();
 
 const TABLES: Record<string, object> = { ...CORGI };
 

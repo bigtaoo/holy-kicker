@@ -86,11 +86,18 @@ function lookup(key: string, locale: Locale): string {
   return typeof node === 'string' ? node : key;
 }
 
-/** The text for `key` in the current locale, with {name} placeholders filled from `vars`. */
+/**
+ * The text for `key` in the current locale, with {name} placeholders filled from `vars`;
+ * {name:lower} starts the value with a small letter, for a name inside a phrase.
+ */
 export function t(key: Key, vars?: Record<string, string | number>): string {
   const text = lookup(key, current);
   if (!vars) return text;
-  return text.replace(/\{(\w+)\}/g, (whole, name: string) => (name in vars ? String(vars[name]) : whole));
+  return text.replace(/\{(\w+)(:lower)?\}/g, (whole, name: string, lower?: string) => {
+    if (!(name in vars)) return whole;
+    const v = String(vars[name]);
+    return lower ? v.charAt(0).toLocaleLowerCase(current) + v.slice(1) : v;
+  });
 }
 
 /** A language's own name for itself, for the language picker. */

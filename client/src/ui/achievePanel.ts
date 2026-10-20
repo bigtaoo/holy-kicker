@@ -3,7 +3,9 @@ import { formatAmount, t, type Key } from '../i18n';
 import { achievementOrder, achievementProgress, achievementState, achievementsClaimed, achievementsReady, readyJade, type AchievementGoal } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { claimable } from '../meta/daily';
+import type { Tier } from '../meta/gear';
 import type { SaveData } from '../meta/save';
+import { tierName } from './gearText';
 import { COLORS, button, dot, fit, label, meter } from './widgets';
 
 // The achievements page of the tasks panel (meta/achievements.ts), and the Daily /
@@ -50,7 +52,7 @@ export function achievePages(): number {
 /** What the goal asks for, in the player's words. */
 function goalText(g: AchievementGoal): string {
   const n = g.kind === 'kills' ? formatAmount(g.n) : String(g.n);
-  return t(`achieve.${g.kind}`, { n, tier: t(`tier.${Math.min(4, g.n) as 0 | 1 | 2 | 3 | 4}`) });
+  return t(`achieve.${g.kind}`, { n, tier: tierName(Math.min(4, g.n) as Tier) });
 }
 
 /** The rows of page `page` (ready ones first), the claim-all offer and the pager, from the box top `top`. */

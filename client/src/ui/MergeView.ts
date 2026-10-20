@@ -6,7 +6,7 @@ import { itemStats, slotOf, type Drop, type ItemId, type Tier } from '../meta/ge
 import { FxLayer } from '../game/fxView';
 import type { IconSheet } from './buildBar';
 import { gearIcon } from './gearIcons';
-import { itemName, TIER_COLORS, tierName } from './gearText';
+import { dropName, TIER_COLORS } from './gearText';
 import { COPIES, mergeFrame, mergeTiming, skipTo, type MergeTiming } from './mergeTimeline';
 import { statText } from './statText';
 import { COLORS, backdrop, fit, label, panel } from './widgets';
@@ -195,7 +195,7 @@ export class MergeView {
       const rows = [...made].sort((a, b) => Number(b[0][0]) - Number(a[0][0])).slice(0, 7);
       for (const [key, n] of rows) {
         const [k, id] = key.split(':') as [string, ItemId];
-        lines.push({ text: `${tierName(Number(k) as Tier)} ${itemName(id)} ${t('gear.count', { n })}`, fill: TIER_COLORS[Number(k)] });
+        lines.push({ text: `${dropName({ item: id, tier: Number(k) as Tier })} ${t('gear.count', { n })}`, fill: TIER_COLORS[Number(k)] });
       }
     }
     const statRows = all ? [] : Object.entries(itemStats(item, tier)) as [Stat, number][];
@@ -204,7 +204,7 @@ export class MergeView {
     const boxH = 200 + (all ? lines.length : statRows.length) * 66;
     this.card.x = this.w / 2;
     this.card.addChild(panel(900, boxH));
-    const head = fit(label(all ? t('gear.merged', { n: all.length }) : `${tierName(tier)} ${itemName(item)}`, 60, TIER_COLORS[tier]), 820);
+    const head = fit(label(all ? t('gear.merged', { n: all.length }) : dropName({ item, tier }), 60, TIER_COLORS[tier]), 820);
     head.y = -boxH / 2 + 70;
     this.card.addChild(head);
     let y = -boxH / 2 + 160;
