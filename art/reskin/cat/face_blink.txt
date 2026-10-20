@@ -1,0 +1,4 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Make only this change to the face:
+- Both eyes closed in a calm blink: each eye becomes a short, thick, gently curved black line (a downward arc), at the same place and width as the open eye.
+- The mouth stays exactly the same happy little smile.
+Everything else stays pixel-identical: the head outline and size, the pointed ears, the forehead stripes, the cream muzzle, the nose, the whiskers, the black scarf, the armour, the arms held out, the legs, the boots, the striped tail. Pure white background, no text.

@@ -178,10 +178,11 @@ motion read as alive. All of it is view-side; the engine is untouched.
   a straight arm hanging at 65°; in the trot the forearms swing a beat after the upper arms.
   Aiming straightens the elbow (`TaoActor.aim` brings the bones between the arm and the gun to
   zero by its weight), so the aiming code is the same with or without elbows. The bulldog and
-  the cat still have straight arms.
+  the cat have the same elbows.
 - **Faces**: like the monk, the head swaps drawings (`corgiFace.ts`, tested): a battle cry as a
   gun goes off, a wince on a hit (the wince wins), and otherwise the smile with a blink, sometimes
-  a double, every few seconds.
+  a double, every few seconds. The bulldog and the cat carry the same three faces; the view
+  shows only the variants a rig has.
 - **Calm by default**: the hero is on screen the whole run and the camera follows it, so every
   motion is small: a step of 4% of the height, a 2% bob and 3.5° roll in the trot, a 3° lean,
   a 4° kick per shot. Big swings read as shaking.
@@ -250,7 +251,13 @@ and clips plus one spring candidate each (`plate`, the belly plate, and `scarf`,
 `torso`). Each A-pose is fitted to the corgi's scale (`tools/fit_figure.py`: a 704 px figure,
 feet at 505,732 on 1024x768) so the origin and the reused guns match. The bulldog's body is
 `apose_b.png` and its head, ears and stub tail come from `apose_a.png` (`"sources"`,
-`tail_stub.png`). Both pack at 0.35 straight into the corgi theme:
+`tail_stub.png`). Both have the corgi's elbows (`fore_f`, `fore_n`, cut at the bracer as on
+the corgi) and its three faces (`face_fire.png`, `face_hurt.png`, `face_blink.png` in each
+folder). The faces are drawn on the canvas of the head's own drawing (`apose_a.png` for the bulldog,
+`apose3.png` for the cat): the image edit redraws a close-up of the head more faithfully than the
+whole figure, so each take was pasted back and aligned to the drawing (a similarity fit on the
+head outside the face zone) before `"faces"` cut it. Their prompts are the `face_*.txt` next to
+them (the bulldog's take a crop of the head). Both pack at 0.35 straight into the corgi theme:
 `python tools/pack_tao.py art/reskin/bulldog/bulldog_tao.json art/reskin/bulldog/bulldog.tao
 art/reskin/corgi/game/art/monks/fat` (the cat into `.../novice`). The portraits
 (`portrait.png` in each folder) are the rigs with both arms down, drawn by
