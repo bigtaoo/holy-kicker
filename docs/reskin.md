@@ -260,10 +260,11 @@ head outside the face zone) before `"faces"` cut it. Their prompts are the `face
 them (the bulldog's take a crop of the head). Both pack at 0.35 straight into the corgi theme:
 `python tools/pack_tao.py art/reskin/bulldog/bulldog_tao.json art/reskin/bulldog/bulldog.tao
 art/reskin/corgi/game/art/monks/fat` (the cat into `.../novice`). The portraits
-(`portrait.png` in each folder) are the rigs with both arms down, drawn by
-`python tools/pose_parts.py <parts> <rig.json> <out.png> arm_f=-74 arm_n=74`, then packed
-like the monks' sheet (`pack_icons.py --cell 256 --name monks` with `PAD = 2`, frames
-corgi, bulldog, cat) into `art/reskin/corgi/game/art/icons/monks.png`.
+(`portrait.png` in each folder) are the rigs in the idle carry, guns at the hips, drawn by
+`python tools/pose_parts.py <parts> <rig.json> <out.png> arm_f=-55 arm_n=55 fore_f=-35
+fore_n=35 gun=55 gun_n=-55` (`hero_clips.py`'s elbow carry), then packed like the monks' sheet
+(`pack_icons.py --cell 256 --name monks --pad 2`, frames `monk_kicker`, `monk_fat`,
+`monk_novice` for the corgi, the bulldog and the cat) into `art/reskin/corgi/game/art/icons/monks.png`.
 
 ### Bugs (baked)
 

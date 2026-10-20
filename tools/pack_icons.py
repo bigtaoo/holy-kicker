@@ -1,11 +1,11 @@
 """Packs the build icons (relic, spells, passives) into one sheet for the HUD and the cards.
-usage: python pack_icons.py [--cell N --name NAME] <out dir> <img>...
+usage: python pack_icons.py [--cell N --name NAME --pad N] <out dir> <img>...
 Each image is cut out (cutout.py), trimmed, scaled to fit a CELL px square keeping its shape,
 centred in that cell, and laid out in a grid in <out dir>/icons.png with <out dir>/icons.json:
   {"frames": [{"name", "x", "y", "w", "h"}, ...]}   (the same layout as deco.json)
 The frame name is the file stem, which is the item id in the engine (or the gear slot).
 --cell and --name make another sheet the same way, e.g. the monks' portraits at 256 px
-(<out dir>/monks.png, art/monk/monks/README.md)."""
+(<out dir>/monks.png, art/monk/monks/README.md); --pad sets the gap round each cell."""
 import json
 import sys
 from pathlib import Path
@@ -28,13 +28,15 @@ PAD = 4
 
 
 def main():
-    global CELL
+    global CELL, PAD
     args, name = sys.argv[1:], "icons"
     while args[0].startswith("--"):
         if args[0] == "--cell":
             CELL = int(args[1])
         elif args[0] == "--name":
             name = args[1]
+        elif args[0] == "--pad":
+            PAD = int(args[1])
         args = args[2:]
     out, srcs = Path(args[0]), args[1:]
     rows = (len(srcs) + COLS - 1) // COLS
