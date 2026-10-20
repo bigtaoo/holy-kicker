@@ -4,7 +4,7 @@ import {
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
-import { BALL_LIFT, Balls } from './ballView';
+import { Balls } from './ballView';
 import { StaffSwing } from './staffView';
 import { FishTaps } from './fishView';
 import { BeadsView } from './beadsView';
@@ -17,11 +17,12 @@ import { FxLayer } from './fxView';
 import { Corpses } from './mobView';
 import { HealthBar } from './healthBar';
 import { blockFx, howlFx, nearestElite, type EliteCrowd } from './eliteView';
-import { HordeView, MOB_HEIGHT } from './hordeView';
+import { HordeView } from './hordeView';
+import { HitFeedback } from './hitFeedback';
 import { AuraStack } from './aura';
 import { ZenRing } from './zenView';
 import type { BossStage } from './bossStage';
-import { ELITE_HEIGHT, hordeLooks, makeBosses, makeElites } from './cast';
+import { hordeLooks, makeBosses, makeElites } from './cast';
 import { summonFx } from './witchView';
 import { SpellView } from './spellView';
 import { SutraView } from './sutraView';
@@ -65,8 +66,6 @@ const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
 const SCREEN_AREA = 1080 * 1920;
 const DOWN_TINT = 0x8a8a8a;
-/** Damage-number keys for elites, by id, clear of the target indices. */
-const ELITE_KEY = 1e6;
 /** The local player's owner id; online play would get it from the match. */
 const LOCAL = 0;
 
@@ -101,6 +100,7 @@ export class Game {
   private readonly beads: BeadsView;
   private readonly bowls: BowlView;
   private readonly boss: BossStage | null;
+  private readonly feedback: HitFeedback;
   private readonly spells: SpellView;
   private readonly sutras: SutraView;
   private readonly aura: AuraStack;
@@ -191,6 +191,8 @@ export class Game {
     // in a chapter the elite and boss arrive later, so their views wait hidden
     this.elites = s.elites.length > 0 || chapter ? makeElites(app.renderer, this.world, art, scene, chapter, shadowTex, HERO_TOP_Z) : null;
     this.boss = makeBosses(app.renderer, this.world, art, scene, chapter ? setup.chapter : 0, !!s.boss, shadowTex, this.fx.pool);
+    const { fx, damage, shake, horde, elites, boss, corpses, balls } = this;
+    this.feedback = new HitFeedback({ fx, damage, shake, horde, elites, boss, corpses, balls });
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
@@ -312,7 +314,6 @@ export class Game {
   /** One tick's events: animations, effects and numbers. Positions arrive in FP. */
   private react(events: readonly SimEvent[]): void {
     const s = this.engine.state;
-    let kills = 0;
     for (const e of events) {
       switch (e.type) {
         case 'kick':
@@ -343,37 +344,15 @@ export class Game {
         case 'revive':
           if (e.owner === LOCAL) [this.downCam, this.lowHp].forEach((v) => v.reset());
           break;
-        case 'hit': {
-          if (e.ball) this.fx.hit(e.bx / FP, e.by / FP - BALL_LIFT);
-          const x = e.x / FP;
-          const y = e.y / FP;
-          if (e.kind === 'boss' && this.boss && s.boss) {
-            this.damage.spawn(x, y - this.boss.hit(s.boss) - 10, e.value, e.crit, e.index);
-          } else if (e.kind === 'elite') {
-            // the elite hit is the one standing nearest the hit (one in front may have fallen since)
-            const hit = nearestElite(s.elites, e.x, e.y);
-            if (hit) this.elites?.byId(hit.id)?.mob.flinch();
-            this.damage.spawn(x, y - ELITE_HEIGHT - 10, e.value, e.crit, ELITE_KEY + (hit?.id ?? 0));
-          } else {
-            this.horde.at(e.index)?.flinch();
-            this.damage.spawn(x, y - MOB_HEIGHT[s.mobs[e.index]?.kind ?? 'chaser'] - 10, e.value, e.crit);
-          }
+        case 'hit':
+          this.feedback.hit(e, s);
           break;
-        }
-        case 'eliteDown': {
-          const v = this.elites?.byId(e.id);
-          if (v) this.corpses.spawn(v.mob, 0, -1);
-          this.fx.down(e.x / FP, e.y / FP);
+        case 'eliteDown':
+          this.feedback.eliteDown(e);
           break;
-        }
-        case 'mobDown': {
-          const v = this.horde.at(e.index);
-          if (v) this.corpses.spawn(v, e.dx, e.dy);
-          this.fx.down(e.x / FP, e.y / FP);
-          kills++;
-          if (s.mobs[e.index]?.kind === 'effigy') this.horde.tear(e.x / FP, e.y / FP);
+        case 'mobDown':
+          this.feedback.mobDown(e, s);
           break;
-        }
         case 'block': {
           // a door god's shield, or a fallen monk's gong (held toward the hero)
           const g = e.index < s.mobs.length ? null : nearestElite(s.elites, e.x, e.y);
@@ -432,7 +411,7 @@ export class Game {
           break;
       }
     }
-    this.shake.kills(kills);
+    this.feedback.tick(s);
   }
 
   /** Draws the sim state `alpha` of the way through its last tick; dt is the frame's view time, real its real time. */
@@ -441,6 +420,7 @@ export class Game {
     const p = s.players[0];
     const hx = lerpX(p, alpha);
     const hy = lerpY(p, alpha);
+    this.feedback.frame(dt, hx, hy, p.moving && !p.dead, p.facing);
     this.hero.holdStaff(this.staff.advance(dt));
     this.hero.update(dt, p.facing, p.moving, s, alpha);
     this.hero.view.position.set(hx, hy);

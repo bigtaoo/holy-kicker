@@ -52,6 +52,8 @@ export function sliceSheet(meta: SheetMeta, sheet: Texture, x0 = 0, y0 = 0): Mob
 const KNOCK_SPEED = 640;
 const SQUASH_TIME = 0.15;
 const FLASH_TIME = 0.09;
+/** Seconds a struck mob's drawing holds still (hit-stop); the sim keeps moving it meanwhile. */
+export const HOLD_TIME = 0.05;
 export class MobView {
   readonly sprite: Sprite;
   private readonly shadow: Sprite;
@@ -64,6 +66,7 @@ export class MobView {
   private lastY = 0;
   private squash = 0;
   private flash = 0;
+  private hold = 0;
   /** 1 while looking right, -1 left. */
   private side = 1;
   private frame = 0;
@@ -117,10 +120,19 @@ export class MobView {
     this.sprite.tint = greyTint(k * this.tone, this.base);
   }
 
-  /** A hit that does not kill: a white flash and a short squash. */
-  flinch(): void {
+  /**
+   * A hit that does not kill: a white flash, a short squash, and for `hold` seconds the drawing
+   * freezes its walk frame and place (0 for none, e.g. late in a run), then catches up.
+   */
+  flinch(hold = HOLD_TIME): void {
     this.squash = SQUASH_TIME;
     this.flash = FLASH_TIME;
+    this.hold = Math.max(this.hold, hold);
+  }
+
+  /** True while the drawing holds still after a flinch, so things drawn with it can hold too. */
+  get held(): boolean {
+    return this.hold > 0;
   }
 
   /** The current frame, plain or as its white flash copy. */
@@ -142,11 +154,13 @@ export class MobView {
       this.lastX = x;
       this.lastY = y;
     }
-    if (!(walk > 0 && holdsStill(meta, this.frame, this.pace))) this.time += dt * speed;
+    const held = this.hold > 0 && !Number.isNaN(this.drawX);
+    this.hold = Math.max(0, this.hold - dt);
+    if (!held && !(walk > 0 && holdsStill(meta, this.frame, this.pace))) this.time += dt * speed;
     const f = (this.frame = frameAt(meta, this.time, this.phase));
     this.flash = Math.max(0, this.flash - dt);
     this.sprite.texture = textures[f + (this.flash > 0 ? meta.flash : 0)];
-    this.side = faceSide(this.side, faceX, FACE_DEAD);
+    if (!held) this.side = faceSide(this.side, faceX, FACE_DEAD);
     const flip = (this.side < 0) === this.look.facesLeft ? 1 : -1;
     let sx = this.scale * (1 + this.swell);
     let sy = this.scale * (1 + this.swell);
@@ -164,7 +178,10 @@ export class MobView {
       sy *= 1 + b;
     }
     this.sprite.scale.set(sx * flip, sy);
-    if (this.calm && !Number.isNaN(this.drawX) && Math.hypot(x - this.drawX, y - this.drawY) < DRAW_SNAP) {
+    if (held) {
+      x = this.drawX;
+      y = this.drawY;
+    } else if (this.calm && !Number.isNaN(this.drawX) && Math.hypot(x - this.drawX, y - this.drawY) < DRAW_SNAP) {
       const k = 1 - Math.exp(-dt / DRAW_EASE);
       x = this.drawX += (x - this.drawX) * k;
       y = this.drawY += (y - this.drawY) * k;

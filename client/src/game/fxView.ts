@@ -44,7 +44,7 @@ function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
 
 export class FxLayer {
   readonly pool = new FxPool(MAX_PARTICLES);
-  readonly hit = (x: number, y: number) => this.pool.hit(x, y);
+  readonly hit = (x: number, y: number, dx = 0, dy = 0) => this.pool.hit(x, y, dx, dy);
   readonly puff = (x: number, y: number) => this.pool.puff(x, y);
   readonly down = (x: number, y: number) => this.pool.down(x, y);
   readonly view = new ParticleContainer({

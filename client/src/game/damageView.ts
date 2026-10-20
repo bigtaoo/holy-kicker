@@ -53,6 +53,15 @@ export class DamageLayer {
   private readonly particles: Particle[] = [];
   private readonly crit: number;
 
+  /** How full the run is, 0..1: plain mob numbers shrink, fade and stop as it rises. */
+  get heat(): number {
+    return this.pool.heat;
+  }
+
+  set heat(v: number) {
+    this.pool.heat = v;
+  }
+
   /** `clearHero` fades numbers that float over the hero's figure. */
   constructor(renderer: Renderer, crit: CritLook = 'gold', private readonly clearHero = false) {
     this.crit = CRIT[crit];

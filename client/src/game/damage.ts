@@ -4,6 +4,11 @@
 // Numbers merge so a big spell does not print a wall of digits: hits that land close
 // together within a few frames add up into one number, and repeated hits on a target that
 // survives (an elite, a boss) keep adding to that target's number while they keep coming.
+//
+// Plain numbers (no crit, no target key: ordinary mobs) answer the run's heat, 0 on an
+// empty opening screen to 1 in a late game full of kills: they punch a little harder early,
+// shrink and fade as the screen fills, and stop spawning near the top. Crits and the
+// numbers of elites and bosses always show in full.
 
 export interface DamageNumber {
   x: number;
@@ -18,6 +23,9 @@ export interface DamageNumber {
   /** Decimal digits, most significant first. */
   digits: number[];
   crit: boolean;
+  /** Size and alpha factors fixed at spawn from the heat (1 for crits and keyed numbers). */
+  size: number;
+  fade: number;
 }
 
 /** Crit looks compared for readability: gold is the hero's own colour. */
@@ -37,8 +45,17 @@ export const MERGE_AGE = 0.1;
 export const KEY_MERGE_GAP = 0.35;
 const MAX_CELLS = 4096;
 
+/** Plain numbers at heat 0 are this much bigger than the base size. */
+export const PLAIN_PUNCH = 1.15;
+/** From this heat plain numbers shrink and fade, down to the floor below at the cut-off... */
+export const HEAT_TAPER = 0.3;
+/** ...and from this heat on they are not spawned at all. */
+export const HEAT_CUTOFF = 0.6;
+const PLAIN_MIN_SIZE = 0.7;
+const PLAIN_MIN_FADE = 0.45;
+
 function blank(): DamageNumber {
-  return { x: 0, y: 0, vx: 0, vy: 0, age: 0, value: 0, cell: 0, key: -1, digits: [], crit: false };
+  return { x: 0, y: 0, vx: 0, vy: 0, age: 0, value: 0, cell: 0, key: -1, digits: [], crit: false, size: 1, fade: 1 };
 }
 
 function cellOf(x: number, y: number): number {
@@ -46,8 +63,28 @@ function cellOf(x: number, y: number): number {
   return (Math.floor(x / MERGE_CELL) + 32768) * 65536 + Math.floor(y / MERGE_CELL) + 32768;
 }
 
+/** 0 below the taper, easing to 1 at the cut-off. */
+function taper(heat: number): number {
+  const t = Math.min(1, Math.max(0, (heat - HEAT_TAPER) / (HEAT_CUTOFF - HEAT_TAPER)));
+  return t * t * (3 - 2 * t);
+}
+
+/** Size factor of a plain number spawned at this heat (0 from the cut-off on: not spawned). */
+export function plainSize(heat: number): number {
+  if (heat >= HEAT_CUTOFF) return 0;
+  return PLAIN_PUNCH + (PLAIN_MIN_SIZE - PLAIN_PUNCH) * taper(heat);
+}
+
+/** Alpha factor of a plain number spawned at this heat (0 from the cut-off on). */
+export function plainFade(heat: number): number {
+  if (heat >= HEAT_CUTOFF) return 0;
+  return 1 + (PLAIN_MIN_FADE - 1) * taper(heat);
+}
+
 export class DamagePool {
   readonly live: DamageNumber[] = [];
+  /** How full the run is, 0..1; the game sets it every frame. */
+  heat = 0;
   private readonly free: DamageNumber[] = [];
   /** Freshest number per merge cell and per target key; entries are checked on use. */
   private readonly cells = new Map<number, DamageNumber>();
@@ -73,6 +110,7 @@ export class DamagePool {
       if (d && d.key === key && d.age < KEY_MERGE_GAP) {
         // the number follows its target and pops again with each hit
         this.launch(d, x, y, d.value + value, d.crit || crit);
+        d.size = d.fade = 1;
         return;
       }
     }
@@ -80,13 +118,21 @@ export class DamagePool {
     const near = key < 0 ? this.cells.get(cell) : undefined;
     if (near && near.cell === cell && near.key < 0 && near.age < MERGE_AGE) {
       near.value += value;
-      near.crit ||= crit;
+      if (crit && !near.crit) {
+        // a crit joining makes it a crit number, which heat never dims
+        near.crit = true;
+        near.size = near.fade = 1;
+      }
       digitsOf(near.value, near.digits);
       return;
     }
+    const plain = !crit && key < 0;
+    if (plain && this.heat >= HEAT_CUTOFF) return;
     if (this.live.length >= this.max) return;
     const d = this.free.pop() ?? blank();
     this.launch(d, x, y, value, crit);
+    d.size = plain ? plainSize(this.heat) : 1;
+    d.fade = plain ? plainFade(this.heat) : 1;
     d.cell = cell;
     d.key = key;
     this.live.push(d);
@@ -143,13 +189,13 @@ export function digitsOf(value: number, out: number[] = []): number[] {
 /** Size multiplier: pops in large, settles; crits stay bigger. */
 export function damageScale(d: DamageNumber): number {
   const t = d.age / POP_TIME;
-  return (d.crit ? CRIT_SCALE : 1) * (t < 1 ? 1.8 - 0.8 * t : 1);
+  return (d.crit ? CRIT_SCALE : d.size) * (t < 1 ? 1.8 - 0.8 * t : 1);
 }
 
 /** Solid for most of its life, then fading out. */
 export function damageAlpha(d: DamageNumber): number {
   const t = d.age / DAMAGE_LIFE;
-  return t < 0.6 ? 1 : Math.max(0, (1 - t) / 0.4);
+  return d.fade * (t < 0.6 ? 1 : Math.max(0, (1 - t) / 0.4));
 }
 
 /** Half-width and height of the box over the hero that numbers fade inside, world units. */

@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { DAMAGE_LIFE, DamagePool, KEY_MERGE_GAP, MERGE_AGE, MERGE_CELL, damageAlpha, damageScale, digitsOf, heroClear } from './damage';
+import {
+  DAMAGE_LIFE, DamagePool, HEAT_CUTOFF, HEAT_TAPER, KEY_MERGE_GAP, MERGE_AGE, MERGE_CELL, PLAIN_PUNCH,
+  damageAlpha, damageScale, digitsOf, heroClear, plainFade, plainSize,
+} from './damage';
 
 describe('digitsOf', () => {
   it('splits a rounded value into digits', () => {
@@ -17,10 +20,10 @@ describe('DamagePool', () => {
     const pool = new DamagePool(10, () => 0.5);
     pool.spawn(0, 0, 42, false);
     const d = pool.live[0];
-    expect(damageScale(d)).toBeCloseTo(1.8);
+    expect(damageScale(d)).toBeCloseTo(1.8 * PLAIN_PUNCH);
     pool.step(0.2);
     expect(d.y).toBeLessThan(-50);
-    expect(damageScale(d)).toBe(1);
+    expect(damageScale(d)).toBe(PLAIN_PUNCH);
     expect(damageAlpha(d)).toBe(1);
     pool.step(DAMAGE_LIFE * 0.9 - 0.2);
     expect(damageAlpha(d)).toBeLessThan(0.3);
@@ -81,6 +84,66 @@ describe('DamagePool', () => {
     pool.step(KEY_MERGE_GAP);
     pool.spawn(500, 0, 1, false, 7);
     expect(pool.live.length).toBe(4);
+  });
+});
+
+describe('heat', () => {
+  it('stops plain numbers at high heat but always shows crits and keyed numbers', () => {
+    const pool = new DamagePool(10, () => 0.5);
+    pool.heat = HEAT_CUTOFF;
+    pool.spawn(0, 0, 5, false);
+    expect(pool.live.length).toBe(0);
+    pool.spawn(0, 0, 5, true);
+    pool.spawn(MERGE_CELL * 2, 0, 5, false, 3);
+    expect(pool.live.length).toBe(2);
+    for (const d of pool.live) {
+      expect(d.size).toBe(1);
+      expect(d.fade).toBe(1);
+    }
+    pool.heat = 1;
+    pool.spawn(MERGE_CELL * 4, 0, 5, true);
+    expect(pool.live.length).toBe(3);
+  });
+
+  it('fixes size and alpha at spawn so numbers on screen do not flicker', () => {
+    const pool = new DamagePool(10, () => 0.5);
+    pool.heat = (HEAT_TAPER + HEAT_CUTOFF) / 2;
+    pool.spawn(0, 0, 5, false);
+    const d = pool.live[0];
+    pool.step(0.2);
+    const scale = damageScale(d);
+    const alpha = damageAlpha(d);
+    expect(scale).toBeLessThan(PLAIN_PUNCH);
+    expect(alpha).toBeLessThan(1);
+    pool.heat = 0;
+    expect(damageScale(d)).toBe(scale);
+    expect(damageAlpha(d)).toBe(alpha);
+  });
+
+  it('a crit joining a plain number makes it full size', () => {
+    const pool = new DamagePool(10, () => 0.5);
+    pool.heat = 0.5;
+    pool.spawn(0, 0, 5, false);
+    pool.spawn(10, 10, 5, true);
+    expect(pool.live.length).toBe(1);
+    expect(pool.live[0].size).toBe(1);
+    expect(pool.live[0].fade).toBe(1);
+  });
+
+  it('tapers plain numbers monotonically', () => {
+    expect(plainSize(0)).toBe(PLAIN_PUNCH);
+    expect(plainSize(HEAT_TAPER)).toBe(PLAIN_PUNCH);
+    expect(plainFade(HEAT_TAPER)).toBe(1);
+    let size = Infinity;
+    let fade = Infinity;
+    for (let h = 0; h <= 1.0001; h += 0.02) {
+      expect(plainSize(h)).toBeLessThanOrEqual(size);
+      expect(plainFade(h)).toBeLessThanOrEqual(fade);
+      size = plainSize(h);
+      fade = plainFade(h);
+    }
+    expect(plainSize(HEAT_CUTOFF - 0.01)).toBeGreaterThan(0.5);
+    expect(plainSize(HEAT_CUTOFF)).toBe(0);
   });
 });
 
