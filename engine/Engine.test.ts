@@ -95,10 +95,9 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-12 for ENGINE_VERSION 36 (chapter 1's opening crowd has the wave's share of health and contact blow), still
-    // the same for 37 (a first run's first wave pulls gems from further, FIRST_RUN), 38 (its first waves do) and 39 (a run can end
-    // on a mid-boss wave; the mutators, recorded then). A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(39);
+    // Recorded 2026-10-20 for ENGINE_VERSION 40 (flying gems are pulled in like a magnet, DROPS.grow).
+    // A change here is a rules change: bump the version.
+    expect(ENGINE_VERSION).toBe(40);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -124,13 +123,13 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 405462346;
-const GOLDEN_CHAPTER = 1006749619;
-const GOLDEN_MARSH = 1134109751;
-const GOLDEN_SNOW = 1645388717;
-const GOLDEN_GHOST = 1107240594;
-const GOLDEN_PEAK = 1972422506;
-const GOLDEN_HARD = 1081030800;
-const GOLDEN_FAT = 1041512001;
-const GOLDEN_NOVICE = 2791305082;
-const GOLDEN_MUTATED = [139697308, 439380575, 4051788227];
+const GOLDEN = 385782362;
+const GOLDEN_CHAPTER = 2135399124;
+const GOLDEN_MARSH = 1772696092;
+const GOLDEN_SNOW = 883118720;
+const GOLDEN_GHOST = 1526221990;
+const GOLDEN_PEAK = 1539278011;
+const GOLDEN_HARD = 1281908811;
+const GOLDEN_FAT = 2907905741;
+const GOLDEN_NOVICE = 3370404863;
+const GOLDEN_MUTATED = [2225679449, 532698202, 3680346628];

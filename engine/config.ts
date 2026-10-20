@@ -353,9 +353,15 @@ export const WAVES = {
    * from the first wave, and the first wave's mobs start on the nearer openingRing, partly in view,
    * so the first seconds already show a crowd closing in rather than a few stragglers.
    */
-  openingHorde: 30,
+  openingHorde: 40,
   openingRingMin: toFp(560),
   openingRingMax: toFp(1200),
+  /**
+   * The opening crowd's mobs have the wave's share of health and of the contact blow
+   * (systems/waves.ts openingShare) times openingThreat percent; at 100 the crowd would be no
+   * harder than the wave's own horde. Its gems keep the plain share, so the levels come no faster.
+   */
+  openingThreat: 150,
   /** Every this many waves an elite comes (not on boss waves). */
   eliteEvery: 5,
   /**
@@ -452,10 +458,14 @@ export const DROPS = {
   pickup: toFp(45),
   /** Values at which a gem grows to the next look. */
   tiers: [10, 50],
-  /** A flying gem first hops away from the hero, then accelerates past his top speed. */
+  /**
+   * A flying gem first hops away from the hero, then is pulled in like a magnet: a small steady
+   * push plus `grow` per mille of its own speed each tick, so it creeps off and snaps in at the end.
+   */
   hop: perTick(380),
-  accel: Math.round((4200 * FP) / (TICK_RATE * TICK_RATE)),
-  maxSpeed: perTick(2000),
+  accel: Math.round((1800 * FP) / (TICK_RATE * TICK_RATE)),
+  grow: 400,
+  maxSpeed: perTick(3200),
   /** Share of the velocity turned toward the hero per tick, per mille. */
   turn: 333,
 };

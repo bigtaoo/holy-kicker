@@ -117,11 +117,12 @@ export function dropSystem(s: SimState, events: SimEvent[]): void {
         best.set(p.owner, Math.max(best.get(p.owner) ?? 0, g.tier));
         continue;
       }
-      // steer the velocity toward the player while the speed builds up
+      // steer the velocity toward the player while the speed builds up, faster the faster it goes
       const dx = p.x - g.x;
       const dy = p.y - g.y;
       const d = isqrt(d2) || 1;
-      const speed = Math.min(DROPS.maxSpeed, dist(g.vx, g.vy) + DROPS.accel);
+      const v = dist(g.vx, g.vy);
+      const speed = Math.min(DROPS.maxSpeed, v + Math.trunc((v * DROPS.grow) / 1000) + DROPS.accel);
       g.vx += Math.trunc(((Math.trunc((dx * speed) / d) - g.vx) * DROPS.turn) / 1000);
       g.vy += Math.trunc(((Math.trunc((dy * speed) / d) - g.vy) * DROPS.turn) / 1000);
       g.x += g.vx;
