@@ -11,13 +11,16 @@ export function itemName(item: ItemId): string {
   return isRelic(item) ? t(`relic.${item}.name`) : t(`gear.item.${item}`);
 }
 
+/** A tier's name standing alone, as in the gear tab's columns (the first of its '|' forms). */
 export function tierName(tier: Tier): string {
-  return t(`tier.${tier}`);
+  return t(`tier.${tier}`).split('|')[0]!;
 }
 
-/** One item, as "Refined Pendant". */
+/** One item, as "Refined Jade Pendant": in each language's word order, the tier agreeing with the item. */
 export function dropName(d: Drop): string {
-  return `${tierName(d.tier)} ${itemName(d.item)}`;
+  const forms = t(`tier.${d.tier}`).split('|');
+  const tier = forms[Number(t(`gear.form.${d.item}`))] ?? forms[0]!;
+  return t('gear.drop', { tier, item: itemName(d.item) });
 }
 
 /** One line per item and tier found, the best first, with its colour. */

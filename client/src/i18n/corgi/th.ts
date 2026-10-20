@@ -224,6 +224,7 @@ export const corgiTh: Table<typeof corgiEn> = {
       sash: 'เข็มขัดอเนกประสงค์',
       sandals: 'รองเท้าบู๊ต',
     },
+    form: { pendant: '0', bracers: '0', robe: '0', sash: '0', sandals: '0', ball: '0', staff: '0', fish: '0', beads: '0', bowl: '0' },
   },
   tier: {
     0: 'ธรรมดา',

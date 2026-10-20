@@ -48,7 +48,7 @@ describe('i18n', () => {
   });
 
   it('keeps the same placeholders in every language', () => {
-    const holes = (s: string) => (s.match(/\{\w+\}/g) ?? []).sort().join();
+    const holes = (s: string) => (s.match(/\{\w+(?=[:}])/g) ?? []).sort().join();
     setLocale('en');
     const english = leaves(en).map((k) => holes(t(k as never)));
     for (const l of LOCALES) {

@@ -419,6 +419,8 @@ export const id: Table<typeof en> = {
       sash: 'Selempang Sutra',
       sandals: 'Sandal Jerami',
     },
+    drop: '{item} {tier}',
+    form: { pendant: '0', bracers: '0', robe: '0', sash: '0', sandals: '0', ball: '0', staff: '0', fish: '0', beads: '0', bowl: '0' },
   },
   tier: {
     0: 'Biasa',
