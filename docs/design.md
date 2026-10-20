@@ -523,7 +523,13 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
   plays the same run", never a seed. Start buttons say Play (出战); the replay's play is
   only for watching runs.
 - Layouts leave room for about 30 % longer text (German, Russian). Damage numbers are digits
-  only and need no localization.
+  only and need no localization. Text that does not fit wraps and its box grows (the squad
+  panel's rows do); `fit()` shrinking is for short labels, and a label it would squeeze far
+  below its size gets a shorter word in that language (the bottom tabs' "Equip.", "Entraîn.").
+- Names put together from parts never assume English order: a gear item of a tier is
+  `gear.drop` ('{tier} {item}' in English, '{item} {tier}' in the Romance languages), and the
+  tier picks the form that agrees with the item from its '|' forms by `gear.form` (gender and
+  number in es/fr/it/pt, gender in de/ru/pl; the first form is the tier standing alone).
 - Glyphs: system fonts on web (Japanese, Korean and Thai put their own fonts first, `ui/widgets.ts`); check CJK coverage and size on the WeChat build.
 - Wrapping breaks only at spaces (else between characters), so the Thai table leaves a space
   between phrases where Thai writing allows one.
