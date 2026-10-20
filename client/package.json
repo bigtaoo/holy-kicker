@@ -13,6 +13,7 @@
     "preview:crazygames": "vite preview --config vite.crazygames.config.js --port 4174 --strictPort",
     "build:wechat": "tsc --noEmit && vite build --config vite.wechat.config.js",
     "build:ios": "tsc --noEmit && vite build --config vite.ios.config.js",
+    "build:ios:new": "tsc --noEmit && vite build --config vite.ios.new.config.js",
     "build:wechat:debug": "tsc --noEmit && vite build --config vite.wechat.config.js --mode development",
     "preview": "vite preview --port 4173",
     "build:playgama": "tsc --noEmit && vite build --config vite.playgama.config.js",

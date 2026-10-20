@@ -1,0 +1,2 @@
+/* The home-screen name in Chinese: homeNameZh in client/src/platform/ios/apps.json, which build/iosApp.mjs writes here for each app. */
+"CFBundleDisplayName" = "Holy Kicker";

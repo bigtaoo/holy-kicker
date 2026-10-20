@@ -14,7 +14,16 @@ design, so each role gets its own picture in production. The art rules in CLAUDE
 cream), enemies cold (teal, purple, grey) with red eyes, thick outlines, flat colours, one hard
 cel shadow.
 
-Working title: **Corgi Commando** (name not checked yet).
+Title: **Corgi Commando**, in Chinese **柯基突击队** (decided 2026-10-20; no game of that name
+found on the App Store or itch.io). On iOS it ships as its own app:
+- the store name is **Corgi Commando: Bug Blaster** (27 of 30 characters; "bug" and "blaster" are
+  search words);
+- the home-screen name (`CFBundleDisplayName`) is **Commando**, since "Corgi Commando" is about
+  95 pt wide at the label's 12 pt and gets cut to "Corgi Comma…" (Holy Kicker is about 60 pt);
+- the corgi on the icon supplies the rest; the Chinese home-screen name is the full 柯基突击队,
+  which fits.
+The iOS app's plumbing (bundle id `com.gamestao.corgi`, its workflows and the owner's steps) is in
+docs/ios.md "Second app: Corgi Commando".
 
 ## Heroes
 

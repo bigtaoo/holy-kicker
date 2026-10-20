@@ -275,8 +275,9 @@ cloud (`capacitor.config.ts`: `autoUpdate: false`, `statsUrl: ''`).
   every update for the one before (`resetWhenUpdate` drops them after an App Store update).
   Builds outside the iOS workflows stamp `0.0.0` and never update. Shells up to build 17 have
   no plugin.
-- **Publishing**: Actions → `ota-ios` → Run workflow on a commit whose ci run is green. It works
-  the version out from the newest release-ios run and the live manifest, builds, zips, writes
+- **Publishing**: Actions → `ota-ios` → Run workflow (theme `monk`; `corgi` for Corgi Commando,
+  see below) on a commit whose ci run is green. It works the version out from the newest run of
+  the app's release workflow and the live manifest, builds, zips, writes
   the manifest with the zip's sha256 (Capgo v8 refuses a download without one) and deploys
   `client/dist-ota` to the `holy-kicker-ota` worker (`wrangler/ota.jsonc`, Workers static assets,
   the Cloudflare secrets of the web deploy). A deploy replaces the whole set, so only the latest
@@ -374,7 +375,7 @@ Connect refuses every submission until then).
    | `P12_PASSWORD` | its export password (KeePass `apple-p12`) | 2026-10-08, typed by the owner |
    | `KEYCHAIN_PASSWORD` | random; the runner's temporary keychain | 2026-10-08 |
    | `BUILD_PROVISION_PROFILE_BASE64` | `material/holykicker.mobileprovision`, base64 | 2026-10-08 |
-   | `PROVISIONING_PROFILE_NAME` | `Holy Kicker App Store` | 2026-10-08 |
+   | `PROVISIONING_PROFILE_NAME` | `Holy Kicker App Store`; no longer read (apps.json `profile`), safe to delete | 2026-10-08 |
    | `APPLE_TEAM_ID` | `C677KJH544` | 2026-10-08 |
    | `ASC_API_KEY_ID`, `ASC_API_ISSUER_ID` | key `deutsch-ci` (`K4Q4TH8MV2`) | 2026-10-08 |
    | `ASC_API_KEY_CONTENT_BASE64` | `material/AuthKey_K4Q4TH8MV2.p8`, base64 | 2026-10-08 |
@@ -388,6 +389,55 @@ Connect refuses every submission until then).
 4. AdMob: a new app (iOS, not yet on the store) and two ad units, rewarded and interstitial;
    HolyKicker added to the GDPR message (Privacy & messaging); the developer website for
    `app-ads.txt`. App and units created 2026-10-08 (ids in `Info.plist` and `AdMob.swift`).
+
+## Second app: Corgi Commando
+
+The corgi reskin (docs/reskin.md) ships as its own app from the same shell: store name **Corgi
+Commando: Bug Blaster**, home-screen name **Commando** (柯基突击队 in Chinese), bundle id
+**`com.gamestao.corgi`**. Nothing native is copied; the corgi's values are written over Holy
+Kicker's at build time.
+
+- **The app table**: `client/src/platform/ios/apps.json`, one entry per theme: bundle id, names,
+  marketing version, ad-free product, AdMob ids, hot-update host, profile name, launch background
+  and icon. The web side reads its own entry (`ios/app.ts`, folded at build time, so neither
+  app's bundle names the other); the native side gets it from `build/iosApp.mjs`.
+- **The shell stays Holy Kicker's** in git. `node build/setIosApp.mjs corgi` rewrites the bundle
+  id and version (pbxproj), the display names (`Info.plist`, `zh-Hans.lproj/InfoPlist.strings`),
+  the AdMob ids, the StoreKit product, the launch screen colour, `capacitor.config.ts` and the
+  icon, in place. Every edit must hit its anchor an exact number of times, so a changed shell
+  fails loudly. It is meant for CI: run on the shared checkout it leaves the shell as the corgi
+  (`git checkout client/ios client/capacitor.config.ts` undoes it). `iosApp.test.ts` checks in
+  every ci run that monk over monk changes nothing and that the corgi's patch leaves no Holy
+  Kicker id behind.
+- **Web build**: `npm run build:ios:new` (corgi art, `vite.ios.new.config.js`) into the same
+  `client/dist-ios`.
+- **Workflows**: `ios-app.yml` is the reusable build (compile or release, per theme);
+  `release-ios.yml` calls it for Holy Kicker and `release-ios-corgi.yml` for the corgi (tags
+  `corgi-ios-v*` or a manual run), so each app has its own run numbers, which are its build
+  numbers. Pushes compile Holy Kicker only. Hot updates: `ota-ios` with theme `corgi` deploys to
+  `corgi-ota.gamestao.com` (`wrangler/ota-corgi.jsonc`; the custom domain is made on the first
+  deploy).
+- **Ads**: until the corgi has its own AdMob app, `adMob` is `null` and the build carries Google's
+  test ids with `live = false` (the workflow warns). Fine for TestFlight, never for review.
+- **Icon**: `art/reskin/corgi/ios/AppIcon.png`, 1024 px, a placeholder made by
+  `python tools/corgi_ios_icon.py` from `face_fire.png`; it still shows the old orange armour and
+  wants real art before review.
+- **Review risk**: guideline 4.3 (spam) looks at near-identical apps from one developer. The corgi
+  differs in art, hero, enemies, sound and name, but the same game loop under two listings is the
+  case 4.3 is written for; answer a rejection by pointing at the separate art and audience, and
+  keep the listings' screenshots and text distinct.
+
+Owner setup, the same steps as Holy Kicker's above:
+
+1. Apple Developer: an App ID `com.gamestao.corgi` with **Game Center**, and an **App Store**
+   profile for it on the account's certificate, named exactly `Corgi Commando App Store`, saved
+   as `D:\cloud\ios\material\corgi.mobileprovision`; repository secret
+   **`CORGI_BUILD_PROVISION_PROFILE_BASE64`** = that file, base64. The other secrets are shared.
+2. App Store Connect: the app record (store name `Corgi Commando: Bug Blaster`), the product
+   `com.gamestao.corgi.adfree` (non-consumable), Game Center, storefronts without mainland China.
+3. AdMob: a new app with rewarded and interstitial units, added to the GDPR message; their ids go
+   into `apps.json` `corgi.adMob`.
+4. Then: Actions → `ios-corgi` → Run workflow, or push a tag `corgi-ios-v1.0.0`.
 
 ## Later
 

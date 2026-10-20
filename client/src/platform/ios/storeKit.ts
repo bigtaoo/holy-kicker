@@ -1,6 +1,7 @@
 import type { KeyValueStore } from '../../meta/saveStore';
 import type { BuyOutcome, RestoreOutcome, Store } from '../types';
 import type { HKNative, StoreResult, StoreState } from './bridge';
+import { IOS_APP } from './app';
 
 // The ad-free card through the shell's StoreKit (docs/ios.md "The ad-free card"). Ownership is
 // StoreKit's: the shell reads the entitlements at every launch and pushes each change (a purchase,
@@ -8,8 +9,8 @@ import type { HKNative, StoreResult, StoreState } from './bridge';
 // frame of an offline launch is already right. One buy or restore at a time; Apple's sheet stays
 // up as long as the player wants, so neither has a timeout.
 
-/** The card's product id in App Store Connect (Store.swift sells the same). */
-export const AD_FREE_ID = 'com.gamestao.holykicker.adfree';
+/** The card's product id in App Store Connect, per app (Store.swift sells the same, build/iosApp.mjs). */
+export const AD_FREE_ID = IOS_APP.adFree;
 /** Where the last answer is kept: '1' owned, '0' not. */
 export const AD_FREE_KEY = 'hk.adFree';
 

@@ -1,14 +1,16 @@
 name: ota-ios
 
-# A hot update of the iOS app's web layer (docs/ios.md "Hot updates"): the iOS web build of this
-# commit, zipped, with a manifest, published to hk-ota.gamestao.com (wrangler/ota.jsonc). Shells
-# with the updater download it once the game is up and switch to it at their next launch. No App
-# Review, no macOS runner. Native changes (Swift, Info.plist, the Podfile, capacitor.config.ts)
-# never travel this way: they need release-ios.yml and a new build.
+# A hot update of one iOS app's web layer (docs/ios.md "Hot updates"): the app's iOS web build of
+# this commit, zipped, with a manifest, published to its own host (apps.json `ota`): Holy Kicker's
+# hk-ota.gamestao.com (wrangler/ota.jsonc) or Corgi Commando's corgi-ota.gamestao.com
+# (wrangler/ota-corgi.jsonc). Shells with the updater download it once the game is up and switch to
+# it at their next launch. No App Review, no macOS runner. Native changes (Swift, Info.plist, the
+# Podfile, capacitor.config.ts) never travel this way: they need the app's release workflow
+# (release-ios.yml, release-ios-corgi.yml) and a new build.
 #
 # Run it by hand (Actions -> ota-ios -> Run workflow) on a commit whose ci run is green. The
-# version is worked out, never typed: <shell>.<n>, where <shell> is the newest release-ios.yml
-# build's bundle version (<MARKETING_VERSION>.<run number>, the one baked into that shell) and n
+# version is worked out, never typed: <shell>.<n>, where <shell> is the bundle version of the newest
+# build of the app's release workflow (<version>.<run number>, the one baked into that shell) and n
 # counts up from the live manifest. So an update always outranks the shell it was made for, and
 # the next shell outranks every update made for the one before.
 #
@@ -17,6 +19,12 @@ name: ota-ios
 on:
   workflow_dispatch:
     inputs:
+      theme:
+        description: 'the app: monk is Holy Kicker, corgi is Corgi Commando'
+        required: true
+        default: 'monk'
+        type: choice
+        options: [monk, corgi]
       min_native:
         description: 'oldest shell version (CFBundleShortVersionString) the update needs'
         required: true
@@ -24,21 +32,31 @@ on:
         type: string
 
 concurrency:
-  group: ota-deploy
+  group: ota-deploy-${{ inputs.theme }}
   cancel-in-progress: false
 
 permissions:
   contents: read
   actions: read
 
+# Per app; the run checks OTA_HOST against apps.json, and ota.test.ts the rest.
 env:
-  MANIFEST_URL: https://hk-ota.gamestao.com/manifest.json
+  THEME: ${{ inputs.theme }}
+  OTA_HOST: ${{ inputs.theme == 'monk' && 'https://hk-ota.gamestao.com' || 'https://corgi-ota.gamestao.com' }}
+  RELEASE_WORKFLOW: ${{ inputs.theme == 'monk' && 'release-ios.yml' || 'release-ios-corgi.yml' }}
+  RELEASE_TAG: ${{ inputs.theme == 'monk' && 'ios-v' || 'corgi-ios-v' }}
+  BUILD_SCRIPT: ${{ inputs.theme == 'monk' && 'build:ios' || 'build:ios:new' }}
+  WRANGLER_CONFIG: ${{ inputs.theme == 'monk' && 'wrangler/ota.jsonc' || 'wrangler/ota-corgi.jsonc' }}
 
 jobs:
   publish:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
 
       - name: Resolve the version
         id: ver
@@ -46,17 +64,18 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -eu
+          if [ "$(node build/setIosApp.mjs "$THEME" --print ota)" != "$OTA_HOST" ]; then echo "apps.json names another host for $THEME"; exit 1; fi
           GREEN=$(gh run list -R "$GITHUB_REPOSITORY" --workflow ci.yml --commit "$GITHUB_SHA" --status success --limit 1 --json databaseId -q length)
           if [ "$GREEN" != "1" ]; then echo "ci has not passed on $GITHUB_SHA"; exit 1; fi
-          MV=$(grep -o 'MARKETING_VERSION = [^;]*' client/ios/App/App.xcodeproj/project.pbxproj | sort -u | sed 's/.* = //')
-          if ! echo "$MV" | grep -Eq '^[0-9]+\.[0-9]+$'; then echo "MARKETING_VERSION must be one X.Y (got: $MV)"; exit 1; fi
-          # release runs only: the push-triggered compile runs share the run counter
-          BUILD=$(gh run list -R "$GITHUB_REPOSITORY" --workflow release-ios.yml --status success --limit 100 \
+          MV=$(node build/setIosApp.mjs "$THEME" --print version)
+          if ! echo "$MV" | grep -Eq '^[0-9]+\.[0-9]+$'; then echo "the app's version must be X.Y (got: $MV)"; exit 1; fi
+          # release runs only: Holy Kicker's push-triggered compile runs share its run counter
+          BUILD=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$RELEASE_WORKFLOW" --status success --limit 100 \
             --json number,event,headBranch \
-            -q '[.[] | select(.event == "workflow_dispatch" or (.headBranch | startswith("ios-v")))][0].number')
-          if [ -z "$BUILD" ] || [ "$BUILD" = "null" ]; then echo "no successful release-ios.yml run"; exit 1; fi
+            -q "[.[] | select(.event == \"workflow_dispatch\" or (.headBranch | startswith(\"$RELEASE_TAG\")))][0].number")
+          if [ -z "$BUILD" ] || [ "$BUILD" = "null" ]; then echo "no successful $RELEASE_WORKFLOW run"; exit 1; fi
           SHELL_V="$MV.$BUILD"
-          LIVE=$(curl -fsS --max-time 10 "$MANIFEST_URL" | jq -r .version || true)
+          LIVE=$(curl -fsS --max-time 10 "$OTA_HOST/manifest.json" | jq -r .version || true)
           case "$LIVE" in
             "$SHELL_V".*) N=$(( ${LIVE##*.} + 1 )) ;;
             *) N=1 ;;
@@ -66,17 +85,13 @@ jobs:
             echo "$V would not outrank the live $LIVE"; exit 1
           fi
           echo "version=$V" >> "$GITHUB_OUTPUT"
-          echo "Publishing $V for shell $SHELL_V (live: ${LIVE:-none})" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "Publishing $THEME $V for shell $SHELL_V (live: ${LIVE:-none})" | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/setup-node@v5
-        with:
-          node-version: 22
-          cache: npm
       - run: npm ci
       - name: Build the bundle
         env:
           HK_BUNDLE_VERSION: ${{ steps.ver.outputs.version }}
-        run: npm run build:ios
+        run: npm run "$BUILD_SCRIPT"
 
       - name: Zip it with the manifest
         env:
@@ -91,7 +106,7 @@ jobs:
           # Workers static assets take files up to 25 MiB
           if [ "$SIZE" -gt 25000000 ]; then echo "$V.zip is $SIZE bytes, over the 25 MB asset limit"; exit 1; fi
           SUM=$(sha256sum "$OUT/$V.zip" | cut -d' ' -f1)
-          jq -n --arg v "$V" --arg url "https://hk-ota.gamestao.com/$V.zip" --arg sum "$SUM" --arg min "$MIN_NATIVE" \
+          jq -n --arg v "$V" --arg url "$OTA_HOST/$V.zip" --arg sum "$SUM" --arg min "$MIN_NATIVE" \
             '{version: $v, url: $url, checksum: $sum, minNativeVersion: $min}' > "$OUT/manifest.json"
           # the app's page (capacitor://localhost) reads the manifest; it must never come from a cache
           printf '/*\n  Access-Control-Allow-Origin: *\n/manifest.json\n  Cache-Control: no-cache, must-revalidate\n' > "$OUT/_headers"
@@ -101,7 +116,7 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx -y wrangler@4.118.0 deploy -c wrangler/ota.jsonc
+        run: npx -y wrangler@4.118.0 deploy -c "$WRANGLER_CONFIG"
 
       - name: Verify from the outside
         env:
@@ -109,11 +124,11 @@ jobs:
         run: |
           set -eu
           for i in $(seq 1 20); do
-            GOT=$(curl -fsS --max-time 10 -H 'Origin: capacitor://localhost' "$MANIFEST_URL?v=check$i" | jq -r .version || true)
+            GOT=$(curl -fsS --max-time 10 -H 'Origin: capacitor://localhost' "$OTA_HOST/manifest.json?v=check$i" | jq -r .version || true)
             [ "$GOT" = "$V" ] && break
             sleep 5
           done
           if [ "$GOT" != "$V" ]; then echo "the manifest says ${GOT:-nothing}, not $V"; exit 1; fi
-          curl -fsSI -H 'Origin: capacitor://localhost' "$MANIFEST_URL" | grep -qi '^access-control-allow-origin:'
-          curl -fsS --max-time 60 -o /tmp/got.zip "https://hk-ota.gamestao.com/$V.zip"
+          curl -fsSI -H 'Origin: capacitor://localhost' "$OTA_HOST/manifest.json" | grep -qi '^access-control-allow-origin:'
+          curl -fsS --max-time 60 -o /tmp/got.zip "$OTA_HOST/$V.zip"
           [ "$(sha256sum /tmp/got.zip | cut -d' ' -f1)" = "$(jq -r .checksum client/dist-ota/manifest.json)" ]

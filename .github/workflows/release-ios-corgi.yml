@@ -1,0 +1,45 @@
+name: ios-corgi
+
+# Corgi Commando, the corgi reskin's iOS app (docs/ios.md "Second app: Corgi Commando"): Holy
+# Kicker's shell with apps.json's corgi values written over it, built by ios-app.yml with theme
+# corgi. Its own workflow, so its runs and build numbers stay apart from Holy Kicker's (ota-ios.yml
+# finds the newest corgi shell here).
+#
+#   release  a tag corgi-ios-v* (e.g. corgi-ios-v1.0.0) or a manual run: archive, sign, export,
+#            upload to App Store Connect (TestFlight). The build number is this workflow's run number.
+#
+# A push compiles Holy Kicker only (release-ios.yml); the corgi's edits are checked as text by
+# client/src/platform/ios/iosApp.test.ts in every ci run.
+#
+# Needs the account's secrets ios-app.yml lists, and the corgi's own profile:
+#   CORGI_BUILD_PROVISION_PROFILE_BASE64  App Store profile for com.gamestao.corgi, base64,
+#                                         named "Corgi Commando App Store" (apps.json `profile`)
+
+on:
+  push:
+    tags: ['corgi-ios-v*']
+  workflow_dispatch:
+    inputs:
+      destination:
+        description: 'testflight uploads; none builds and signs the IPA only'
+        required: true
+        default: 'testflight'
+        type: choice
+        options: [testflight, none]
+
+jobs:
+  release:
+    uses: ./.github/workflows/ios-app.yml
+    with:
+      theme: corgi
+      job: release
+      destination: ${{ inputs.destination || 'testflight' }}
+    secrets:
+      BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+      P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+      KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+      BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.CORGI_BUILD_PROVISION_PROFILE_BASE64 }}
+      APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+      ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
+      ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
+      ASC_API_KEY_CONTENT_BASE64: ${{ secrets.ASC_API_KEY_CONTENT_BASE64 }}

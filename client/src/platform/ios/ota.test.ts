@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import releaseWorkflow from '../../../../.github/workflows/release-ios.yml?raw';
+import releaseWorkflow from '../../../../.github/workflows/ios-app.yml?raw';
 import otaWorkflow from '../../../../.github/workflows/ota-ios.yml?raw';
 import wrangler from '../../../../wrangler/ota.jsonc?raw';
+import wranglerCorgi from '../../../../wrangler/ota-corgi.jsonc?raw';
+import APPS from './apps.json';
 import capConfig from '../../../capacitor.config.ts?raw';
 import podfile from '../../../ios/App/Podfile?raw';
 import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
@@ -97,8 +99,15 @@ describe('the shell and the pipeline agree', () => {
   it('stamps the bundle version in both workflows and hosts the manifest where the app reads it', () => {
     expect(releaseWorkflow).toContain('HK_BUNDLE_VERSION: ${{ steps.ver.outputs.version }}');
     expect(otaWorkflow).toContain('HK_BUNDLE_VERSION: ${{ steps.ver.outputs.version }}');
-    expect(otaWorkflow).toContain(`MANIFEST_URL: ${MANIFEST_URL}`);
-    expect(wrangler).toContain(`"pattern": "${new URL(MANIFEST_URL).host}"`);
-    expect(otaWorkflow).toContain('wrangler deploy -c wrangler/ota.jsonc'.replace('wrangler deploy', 'wrangler@4.118.0 deploy'));
+    expect(MANIFEST_URL).toBe(`${APPS.monk.ota}/manifest.json`);
+    // each app on its own host, deployed with its own config
+    const configs = { monk: ['wrangler/ota.jsonc', wrangler], corgi: ['wrangler/ota-corgi.jsonc', wranglerCorgi] } as const;
+    for (const theme of ['monk', 'corgi'] as const) {
+      const [path, config] = configs[theme];
+      expect(otaWorkflow).toContain(`'${APPS[theme].ota}'`);
+      expect(otaWorkflow).toContain(`'${path}'`);
+      expect(config).toContain(`"pattern": "${new URL(APPS[theme].ota).host}"`);
+    }
+    expect(otaWorkflow).toContain('npx -y wrangler@4.118.0 deploy -c "$WRANGLER_CONFIG"');
   });
 });

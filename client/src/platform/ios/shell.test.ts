@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import workflow from '../../../../.github/workflows/release-ios.yml?raw';
+import iosAppWorkflow from '../../../../.github/workflows/ios-app.yml?raw';
 import capConfig from '../../../capacitor.config.ts?raw';
 import indexHtml from '../../../index.html?raw';
 import podfile from '../../../ios/App/Podfile?raw';
@@ -14,12 +15,14 @@ import sceneDelegate from '../../../ios/App/App/SceneDelegate.swift?raw';
 import storeSwift from '../../../ios/App/App/Store.swift?raw';
 import storyboard from '../../../ios/App/App/Base.lproj/Main.storyboard?raw';
 import { AD_FREE_ID } from './storeKit';
+import APPS from './apps.json';
 
 // Nothing on the Windows machine compiles the Swift side (only the macOS CI runner does), so these
 // pin the native project to the web side as text: the names both sides must agree on, and the
-// settings a review or a device test would otherwise be the first to catch (docs/ios.md).
+// settings a review or a device test would otherwise be the first to catch (docs/ios.md). The
+// committed shell is Holy Kicker's; iosApp.test.ts covers the corgi's.
 
-const BUNDLE = 'com.gamestao.holykicker';
+const BUNDLE = APPS.monk.bundleId;
 
 describe('iOS shell', () => {
   it('names one bundle id everywhere', () => {
@@ -28,9 +31,10 @@ describe('iOS shell', () => {
       `PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE};`,
       `PRODUCT_BUNDLE_IDENTIFIER = ${BUNDLE};`,
     ]);
-    expect(workflow).toContain(`BUNDLE_ID: ${BUNDLE}`);
+    expect(workflow).toContain('theme: monk');
+    expect(iosAppWorkflow).toContain('node build/setIosApp.mjs "$THEME"');
     // the account's certificate (D:\cloud\ios): funny's workflow names the retired iPhone one
-    expect(workflow).toContain('CODE_SIGN_IDENTITY="Apple Distribution"');
+    expect(iosAppWorkflow).toContain('CODE_SIGN_IDENTITY="Apple Distribution"');
   });
 
   it('compiles every Swift file and ships the privacy manifest', () => {

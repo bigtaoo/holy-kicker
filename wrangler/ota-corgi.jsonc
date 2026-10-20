@@ -1,0 +1,15 @@
+{
+  // Hot updates for Corgi Commando, the corgi's iOS app: the same as wrangler/ota.jsonc (Holy
+  // Kicker's), on a host of its own, since a deploy replaces the whole set and each app has its own
+  // manifest. .github/workflows/ota-ios.yml with theme corgi writes client/dist-ota and deploys it.
+  //
+  // Deploy (from the repo root, after the workflow's build):   npx wrangler deploy -c wrangler/ota-corgi.jsonc
+  "name": "corgi-commando-ota",
+  "compatibility_date": "2026-10-20",
+  "assets": {
+    "directory": "../client/dist-ota"
+  },
+  "routes": [
+    { "pattern": "corgi-ota.gamestao.com", "custom_domain": true }
+  ]
+}

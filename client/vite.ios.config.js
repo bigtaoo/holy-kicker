@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
+import { themeAssets } from '../build/theme.mjs';
 
-// The iOS build: `npm run build:ios` writes client/dist-ios/, which `npx cap sync ios` copies into
-// the Capacitor shell (capacitor.config.ts, docs/ios.md). The same page as the web build with
+// The iOS build of one art set: `npm run build:ios` (Holy Kicker) or `npm run build:ios:new` (the
+// corgi's Corgi Commando, vite.ios.new.config.js) writes client/dist-ios/, which `npx cap sync ios`
+// copies into the Capacitor shell (capacitor.config.ts, docs/ios.md; build/setIosApp.mjs makes the
+// shell the corgi's). The same page as the web build with
 // src/main.ios.ts as its entry, rewritten on both hooks for the reason vite.crazygames.config.js
 // gives; the build fails if the rewrite never ran rather than shipping the browser entry.
 
@@ -30,12 +33,16 @@ const iosHtml = () => {
   };
 };
 
-export default defineConfig({
-  base: './',
-  resolve: { alias: engineAlias },
-  define: buildDefine(),
-  plugins: [iosHtml()],
-  server: { port: 5176, host: true },
-  // Safari 15 is the oldest web view the shell runs in (iOS 15)
-  build: { target: ['es2020', 'safari15'], outDir: 'dist-ios', emptyOutDir: true },
-});
+export function iosConfig(theme) {
+  return defineConfig({
+    base: './',
+    resolve: { alias: engineAlias },
+    define: buildDefine(theme),
+    plugins: [iosHtml(), themeAssets(theme)],
+    server: { port: theme === 'monk' ? 5176 : 5186, host: true },
+    // Safari 15 is the oldest web view the shell runs in (iOS 15)
+    build: { target: ['es2020', 'safari15'], outDir: 'dist-ios', emptyOutDir: true },
+  });
+}
+
+export default iosConfig('monk');

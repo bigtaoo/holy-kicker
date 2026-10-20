@@ -1,0 +1,32 @@
+{
+  "monk": {
+    "bundleId": "com.gamestao.holykicker",
+    "name": "Holy Kicker",
+    "homeName": "Holy Kicker",
+    "homeNameZh": "Holy Kicker",
+    "version": "1.0",
+    "adFree": "com.gamestao.holykicker.adfree",
+    "adMob": {
+      "app": "ca-app-pub-5437693117291100~7644915595",
+      "rewarded": "ca-app-pub-5437693117291100/1896010873",
+      "interstitial": "ca-app-pub-5437693117291100/7607502555"
+    },
+    "ota": "https://hk-ota.gamestao.com",
+    "profile": "Holy Kicker App Store",
+    "background": "#141816",
+    "icon": "client/ios/App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-512@2x.png"
+  },
+  "corgi": {
+    "bundleId": "com.gamestao.corgi",
+    "name": "Corgi Commando",
+    "homeName": "Commando",
+    "homeNameZh": "柯基突击队",
+    "version": "1.0",
+    "adFree": "com.gamestao.corgi.adfree",
+    "adMob": null,
+    "ota": "https://corgi-ota.gamestao.com",
+    "profile": "Corgi Commando App Store",
+    "background": "#10122a",
+    "icon": "art/reskin/corgi/ios/AppIcon.png"
+  }
+}

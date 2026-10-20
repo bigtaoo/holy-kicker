@@ -1,5 +1,6 @@
 import { Capacitor } from '@capacitor/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
+import { IOS_APP } from './app';
 
 // Hot updates of the web layer (docs/ios.md "Hot updates"), after D:\funny's platform/ota.ts: the
 // Capgo plugin in the shell, driven by hand from here against our own static manifest, never
@@ -12,7 +13,8 @@ import { CapacitorUpdater } from '@capgo/capacitor-updater';
 // away from. Instead `applyDownloaded`, first thing at the next launch, switches to it before
 // anything is drawn.
 
-export const MANIFEST_URL = 'https://hk-ota.gamestao.com/manifest.json';
+/** Each app updates from its own host (apps.json `ota`, ota-ios.yml). */
+export const MANIFEST_URL = `${IOS_APP.ota}/manifest.json`;
 const FETCH_TIMEOUT_MS = 8000;
 
 export interface OtaManifest {
