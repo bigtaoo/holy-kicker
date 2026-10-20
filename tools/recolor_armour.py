@@ -28,6 +28,9 @@ from PIL import Image
 sys.path.insert(0, os.path.dirname(__file__))
 from recolor_cold import to_hsv, to_rgb  # noqa: E402
 
+# the squad's guns, as the parts specs paint them (also the gun icons, tools/corgi_art.py)
+GUNMETAL = [215, 0.15, 0.4, 0.0]
+
 
 def recolor(im: Image.Image, to: list[float]) -> Image.Image:
     """Returns `im` (RGBA) with its saturated orange moved to `to` (see the module docstring)."""

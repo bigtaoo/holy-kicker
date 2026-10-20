@@ -26,6 +26,7 @@ and passive.
 parts specs repaint them as the parts are cut (`"recolor"` in each `parts_spec.json`,
 `tools/recolor_armour.py`): the saturated orange of the body parts turns off-white and the guns'
 orange turns gunmetal; the cream, the glow, the undersuit and the fur parts keep their colour.
+The gun icons (`ball`, `bowl`) take the same gunmetal as `tools/corgi_art.py icons` packs them.
 Dark grey and navy were tried and lost the body on the dark planets and sat next to the bugs'
 blue-greys; white reads on every ground. Changing the paint means re-running the whole chain:
 `split_parts.py`, `pack_tao.py` (and `webp.py` for the corgi) and the portraits (below, "Squad

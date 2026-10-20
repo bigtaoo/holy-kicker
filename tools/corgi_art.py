@@ -12,6 +12,9 @@ from pathlib import Path
 
 from PIL import Image
 
+sys.path.insert(0, str(Path(__file__).parent))
+from recolor_armour import GUNMETAL, recolor  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "art/reskin/corgi"
 OUT = SRC / "game"
@@ -52,6 +55,9 @@ ICON_SHEETS = {
     "icons/sheet_fix.png": ("1x3", "iron karma sash@0.5,0.42"),
     "icons/sheet_relics.png": ("2x2", "bowl cymbal fish -"),
 }
+# the guns among the icons take the squad's gunmetal (tools/recolor_armour.py), so the HUD's
+# relic matches the pistols the hero holds
+GUN_ICONS = ("ball", "bowl")
 # the monk sheet's frame order (client/public/art/icons/icons.json), which the corgi sheet keeps
 ICONS = [f["name"] for f in json.loads((PUB / "art/icons/icons.json").read_text())["frames"]]
 
@@ -121,6 +127,8 @@ def icons(cut):
     if gone:
         print(f"  icons not cut yet: {' '.join(gone)}")
         return
+    for n in GUN_ICONS:
+        recolor(Image.open(cut / f"{n}.png"), GUNMETAL).save(cut / f"{n}.png")
     (OUT / "art/icons").mkdir(parents=True, exist_ok=True)
     run(TOOLS / "pack_icons.py", OUT / "art/icons", *[cut / f"{n}.png" for n in ICONS])
     for ext in ("png", "json"):
