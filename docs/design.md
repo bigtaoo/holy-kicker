@@ -112,6 +112,27 @@ The endgame after chapter 5, so a player who has cleared everything still has a 
   the first uncleared hard one.
 - Relics and sutras come from the normal chapters only.
 
+### Combat feedback (view only)
+
+The opening should feel lively and every blow should read; the late game, with hundreds of
+mobs, must stay clear. So the screen's total effect noise is held roughly level: the fewer
+blows land, the bigger each one is drawn. None of this touches the engine.
+
+- **Heat** (`client/src/game/fxHeat.ts`): 0 in a quiet opening, 1 in a crowded late chapter,
+  measured from hits per second (8 → 60) and mobs on screen (50 → 110); it rises in about a
+  second and cools over about four. `hitFeedback.ts` measures it and hands it to every effect.
+- **Cold**: big hit sparks sprayed along the blow, a short hit-stop on the struck mob, a small
+  camera punch, the ball's gold trail and kick crescent, wider staff and fish swings, bead and
+  bowl streaks, dust at the hero's feet, damage numbers 1.15× their size.
+- **Hot**: all of that shrinks or goes. Plain damage numbers fade out from heat 0.3 and are not
+  shown at all from 0.6; **crits and elite and boss numbers always show in full.** Kills close
+  together in place and time share one pop, and kills far from the hero pop smaller.
+- **Tiers** (`fx.ts` `FX_TIER`): must (hurt, elite, boss, warnings) ignores the fill budget;
+  the hero's own blow may use all of it, hit and kill garnish 75 %, ambient dust 35 %, so on a
+  full screen the dust goes first and the hero's blow last.
+- Colours keep the art rule: hero effects warm (gold, saffron), enemy effects cold (teal, grey).
+  Every new colour has a corgi variant (`CORGI_FX`).
+
 ## Meta progression
 
 ### A. Stat line (kept shallow)
