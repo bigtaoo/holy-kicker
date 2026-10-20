@@ -31,7 +31,10 @@ spec.json:
                                           #   the silhouette (round joint ends)
        "fill": [r, g, b],                 # optional: flat colour for hidden areas (else inpaint)
        "edge": 6,                         # optional: outline drawn along cuts into the figure
-       "pivot": [x, y]},                  # joint position in source pixels
+       "pivot": [x, y],                   # joint position in source pixels
+       "faces": {"head_hurt": "face_hurt.png"},  # optional: variants of the part from redraws
+       "face_zone": [x, y, rx, ry]},      #   of its drawing (same canvas), taking only what
+                                          #   changed inside this ellipse (eyes, mouth)
       {"name": "gun",                     # or a prop drawn on its own sheet: cut out, scaled
        "image": "gun.png", "scale": 0.2,  #   and placed so its `grip` (own pixels) lands on
        "grip": [800, 500], "pivot": [x, y]}  #   the pivot
@@ -153,19 +156,27 @@ def split(spec_path, out_dir):
             save_part(out_dir, part, part["pivot"], im, x0, y0, meta, layers)
             continue
         im = cuts[part["name"]]
-        x0, y0, x1, y1 = im.getbbox()
-        x0, y0 = max(0, x0 - PAD), max(0, y0 - PAD)
-        x1, y1 = min(im.width, x1 + PAD), min(im.height, y1 + PAD)
-        im = im.crop((x0, y0, x1, y1))
+        box = im.getbbox()
+        box = (max(0, box[0] - PAD), max(0, box[1] - PAD), min(im.width, box[2] + PAD), min(im.height, box[3] + PAD))
+        x0, y0 = box[:2]
         pivot = part["pivot"]
+        k = 1
         if "source" in part and part["source"] != main:
             place = spec["sources"][part["source"]]
             k, (fx, fy), (tx, ty) = place["scale"], place["from"], place["to"]
-            im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
             x0, y0 = round(tx + (x0 - fx) * k), round(ty + (y0 - fy) * k)
             pivot = [round(tx + (pivot[0] - fx) * k), round(ty + (pivot[1] - fy) * k)]
-        im = repaint(spec, part, im)
-        save_part(out_dir, part, pivot, im, x0, y0, meta, layers)
+
+        def placed(im):
+            im = im.crop(box)
+            if k != 1:
+                im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
+            return repaint(spec, part, im)
+
+        save_part(out_dir, part, pivot, placed(im), x0, y0, meta, layers)
+        for name in part.get("faces", {}):
+            # a variant shares its part's frame (tools/pack_tao.py "variants")
+            placed(cuts[name]).save(os.path.join(out_dir, name + ".png"), optimize=True)
     json.dump({"source": main, "parts": meta},
               open(os.path.join(out_dir, "parts.json"), "w"), indent=2)
     preview(size, layers).save(os.path.join(out_dir, "preview.png"))
@@ -238,7 +249,28 @@ def cut(path, parts, spec, background):
         if spec.get("clean_edges"):
             alpha = np.minimum(cv2.GaussianBlur(alpha, (3, 3), 0).astype(np.float32), edge_alpha)
         out[part["name"]] = Image.fromarray(np.dstack([rgba, alpha]).astype(np.uint8), "RGBA")
+        for name, face in part.get("faces", {}).items():
+            redraw = np.array(Image.open(os.path.join(os.path.dirname(path), face)).convert("RGB"))
+            out[name] = Image.fromarray(np.dstack([refaced(rgba, rgb, redraw, part["face_zone"]),
+                                                   alpha]).astype(np.uint8), "RGBA")
     return out
+
+
+def refaced(rgba, rgb, redraw, zone):
+    """The part's pixels with what the redraw changed inside the zone ellipse, blended in with a
+    soft edge. The redraw must sit on the same canvas; a shifted one is reported."""
+    x, y, rx, ry = zone
+    inside = np.zeros(rgb.shape[:2], np.uint8)
+    cv2.ellipse(inside, (x, y), (rx, ry), 0, 0, 360, 255, -1)
+    diff = np.abs(rgb.astype(np.int16) - redraw.astype(np.int16)).max(axis=2)
+    ring = (cv2.dilate(inside, disc(60)) > 0) & (inside == 0)
+    drift = diff[ring].mean()
+    if drift > 25:
+        print(f"warning: a face redraw differs by {drift:.0f} around its zone; is it aligned?")
+    changed = ((diff > 40) & (inside > 0)).astype(np.uint8)
+    changed = cv2.dilate(cv2.morphologyEx(changed, cv2.MORPH_CLOSE, disc(12)), disc(8))
+    w = cv2.GaussianBlur(changed.astype(np.float32), (0, 0), 3)[..., None] * (inside[..., None] > 0)
+    return (rgba * (1 - w) + redraw * w).round()
 
 
 def prop(path, part, clean=False):

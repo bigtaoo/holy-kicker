@@ -1,15 +1,16 @@
 import { Container, Graphics } from 'pixi.js';
 import { FP, HERO, TICK_RATE, kickTarget, targetAt, type RelicId, type SimState } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
+import { CorgiFace, type CorgiFaceId } from './corgiFace';
 import { CorgiMotion, RUN_SPEED, follow, headTurn, pawAim, runRate } from './corgiMotion';
 import { TaoActor, type TaoAsset } from './tao/TaoActor';
 
 // The corgi theme's hero (docs/reskin.md "Animation › Hero"), ported from the prototype
-// (src/dev/corgiProto.ts): twin pistols and no mirror flip, carried at the sides until an attack
+// (src/dev/corgiProto.ts): twin pistols and no mirror flip, carried at the hips until an attack
 // raises the one on the aim's side, a slow head, springy ears and tail, a trot that follows the
-// ground speed, a light recoil and a hurt flinch. The sim decides when it attacks and gets hurt;
-// the view picks what to aim at the way the relic picks its target, and every relic's attack
-// but the beads' goes off as a shot of the raised gun.
+// ground speed, a light recoil, a hurt flinch and faces (corgiFace.ts). The sim decides when it
+// attacks and gets hurt; the view picks what to aim at the way the relic picks its target, and
+// every relic's attack but the beads' goes off as a shot of the raised gun.
 
 /** The atlas's pack scale (tools/pack_tao.py ... 0.35); the rig's offsets below are in its units. */
 const PACK = 0.35;
@@ -60,6 +61,10 @@ export class CorgiHero {
   private readonly actor: TaoActor;
   private readonly k: number;
   private readonly motion = new CorgiMotion();
+  private readonly face = new CorgiFace();
+  /** The head variants this rig carries (the corgi's; the bulldog and the cat have none yet). */
+  private readonly faces: ReadonlySet<string>;
+  private shown: CorgiFaceId | null = null;
   private readonly flash = new Graphics().star(0, 0, 7, FLASH_SIZE, FLASH_SIZE * 0.4).fill({ color: 0xfff27a }).circle(0, 0, FLASH_SIZE * 0.35).fill({ color: 0xffffff });
   private aimX = -IDLE_AIM.x;
   private aimY = IDLE_AIM.y;
@@ -74,6 +79,7 @@ export class CorgiHero {
 
   constructor(asset: TaoAsset, private readonly height: number) {
     this.actor = new TaoActor(asset);
+    this.faces = new Set(asset.skeleton.variants.head ?? []);
     this.k = height / this.actor.height;
     this.actor.view.scale.set(this.k);
     this.actor.play('idle');
@@ -117,6 +123,7 @@ export class CorgiHero {
   /** A hit: the body squashes and the head tips, on top of whatever it is doing. */
   hurt(): void {
     this.actor.layer('hurt', { additive: true });
+    this.face.hurt();
   }
 
   update(dt: number, facing: number, _moving: boolean, s: SimState, alpha: number): void {
@@ -157,6 +164,7 @@ export class CorgiHero {
     });
     this.motion.lookAt(head, dt);
     this.actor.offset('head', this.motion.look);
+    this.showFace(this.face.step(dt));
     this.actor.update(dt);
 
     if (this.pending >= 0) {
@@ -165,6 +173,13 @@ export class CorgiHero {
     }
     this.flashT = Math.max(0, this.flashT - dt);
     this.flash.visible = this.flashT > 0;
+  }
+
+  private showFace(face: CorgiFaceId | null): void {
+    const next = face && this.faces.has(face) ? face : null;
+    if (next === this.shown) return;
+    this.shown = next;
+    this.actor.setImage('head', next);
   }
 
   /** Follows what the relic would go for (the boss or an elite in reach first), eased; along the staff while it is out. */
@@ -200,6 +215,7 @@ export class CorgiHero {
     this.motion.alert();
     const paw = PAWS[this.motion.fire()];
     this.actor.layer(paw.fire, { additive: true });
+    this.face.fire();
     const m = this.actor.local(paw.gun, paw.muzzle.x, paw.muzzle.y);
     const n = this.actor.local(paw.gun, paw.muzzle.x + 10 * paw.dir, paw.muzzle.y);
     this.flash.position.set(m.x * this.k, m.y * this.k);

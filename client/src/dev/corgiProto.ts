@@ -1,12 +1,13 @@
 import { Application, Assets, Container, Graphics, type Texture } from 'pixi.js';
 import { sliceAtlas, TaoActor } from '../game/tao/TaoActor';
 import type { TaoSkeleton } from '../game/tao/types';
+import { CorgiFace } from '../game/corgiFace';
 import { CorgiMotion, RUN_SPEED, approach, headTurn, pawAim, runRate } from '../game/corgiMotion';
 import skeletonUrl from '../../../art/reskin/corgi/runtime/skeleton.json?url';
 import atlasUrl from '../../../art/reskin/corgi/runtime/atlas.png?url';
 
 // Dev-only page (client/proto.html): the reskin's corgi rig with the game's motion (guns carried
-// until it shoots, then aimed), layered fire and hurt, recoil, lean and spring ears and tail.
+// until it shoots, then aimed), layered fire and hurt, faces, recoil, lean and spring ears and tail.
 // WASD moves, the mouse aims and holds to shoot; F autofire, H a hit, Space slow motion, B bones,
 // G the game's size. Not part of any build.
 
@@ -55,6 +56,7 @@ class Corgi {
   vy = 0;
   /** The guns' raise and swap, lean, head and recoil: the game's own (src/game/corgiMotion.ts). */
   private readonly motion = new CorgiMotion();
+  private readonly face = new CorgiFace();
   private cooldown = 0;
 
   constructor(asset: ReturnType<typeof sliceAtlas>) {
@@ -113,6 +115,7 @@ class Corgi {
     this.motion.lookAt(head, dt);
     this.actor.offset('head', this.motion.look);
 
+    this.actor.setImage('head', this.face.step(dt));
     this.actor.update(dt);
 
     // the raised gun shoots from its drawn muzzle along its drawn barrel; none on the way up or mid-swap
@@ -121,6 +124,7 @@ class Corgi {
       this.cooldown = FIRE_GAP;
       const h = this.hands[this.motion.fire()];
       this.actor.layer(h.fire, { additive: true });
+      this.face.fire();
       const world = this.view.parent!;
       const m = world.toLocal(this.actor.local(h.gun, h.muzzle.x, h.muzzle.y), this.actor.view);
       const n = world.toLocal(this.actor.local(h.gun, h.muzzle.x + 10 * h.dir, h.muzzle.y), this.actor.view);
@@ -131,6 +135,7 @@ class Corgi {
   /** A hit: the hurt clip on top of whatever it is doing. */
   hurt(): void {
     this.actor.layer('hurt', { additive: true });
+    this.face.hurt();
   }
 }
 

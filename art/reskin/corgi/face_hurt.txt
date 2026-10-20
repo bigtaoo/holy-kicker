@@ -1,0 +1,4 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Keep the closed eyes exactly as they are, but tilt each closed-eye line so it slants down toward the outside, like eyes squeezed shut in pain. Make only these other changes to the face:
+- The mouth becomes a small wavy, wobbly grimace of pain, slightly open with clenched white teeth, no tongue.
+- A small blue sweat drop beside the right eye.
+Everything else stays pixel-identical: the head outline and size, the ears, the white blaze on the forehead, the cream cheeks, the nose, the armour, the arms, the legs, the boots, the tail, the backpack. Pure white background, no text.

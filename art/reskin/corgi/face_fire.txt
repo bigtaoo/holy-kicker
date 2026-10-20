@@ -1,0 +1,4 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Do not move, resize or redraw the head, the ears or the body: only repaint the eyes, brows and mouth. Make only this change to the face:
+- A fierce battle cry: the eyes narrowed into determined, angled shapes (still black and glossy with a small white highlight), short angry brows tilted down toward the nose.
+- The mouth wide open in a shout, showing the pink tongue and two small white fangs, like a brave little dog barking a war cry.
+Everything else stays pixel-identical: the head outline and size, the ears, the white blaze on the forehead, the cream cheeks, the nose, the armour, the arms, the legs, the boots, the tail, the backpack. Pure white background, no text.

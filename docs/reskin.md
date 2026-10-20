@@ -71,7 +71,7 @@ monk branch, and no build mixes the two:
 |---|---|
 | Mountain Palm print | scorched crater with a crosshair |
 | incense ring (green healing field) | orange plasma puddle (cyan repair pool with a cross) |
-| Golden Bell dome, gold nova | cyan glass bubble, pale cyan nova |
+| Golden Bell dome, gold nova | cyan energy bubble (glows at its rim, clear inside), pale cyan nova |
 | cymbals, gold wheel track | steel saw blades, orange track |
 | gold lightning | cyan tesla arcs |
 | lotus seeds | mines: orange dome, cyan dome when they pull (Magnet Mines) |
@@ -164,6 +164,15 @@ motion read as alive. All of it is view-side; the engine is untouched.
   at the target (`TaoActor.aim`, weighted by the raise and the swap), the head follows part of
   the way. Each gun reaches past vertical, so shots go straight up and down; the arm stops at 55°
   and the wrist turns the rest, so a gun aimed up stays beside the head.
+- **Bent arms**: the corgi's arms have elbows (`fore_f`, `fore_n` between the upper arm and the
+  gun), so the carry is a bent arm with the gun at the hip, as in the character sheet, instead of
+  a straight arm hanging at 65°; in the trot the forearms swing a beat after the upper arms.
+  Aiming straightens the elbow (`TaoActor.aim` brings the bones between the arm and the gun to
+  zero by its weight), so the aiming code is the same with or without elbows. The bulldog and
+  the cat still have straight arms.
+- **Faces**: like the monk, the head swaps drawings (`corgiFace.ts`, tested): a battle cry as a
+  gun goes off, a wince on a hit (the wince wins), and otherwise the smile with a blink, sometimes
+  a double, every few seconds.
 - **Calm by default**: the hero is on screen the whole run and the camera follows it, so every
   motion is small: a step of 4% of the height, a 2% bob and 3.5° roll in the trot, a 3° lean,
   a 4° kick per shot. Big swings read as shaking.
@@ -171,7 +180,7 @@ motion read as alive. All of it is view-side; the engine is untouched.
   rolls and shifts over the other, the head counter-rolls an eighth of a cycle late, the arms
   swing a little), so it plays forwards whichever way the hero goes, at 0.75–1.2x as the ground
   speed rises.
-- **Procedural life**: lean into acceleration, squash on each footfall, random blinks, breathing.
+- **Procedural life**: lean into acceleration, squash on each footfall, breathing.
 - **Springs** (secondary motion): ears, tail, cheeks or belly, backpack antenna, the cat's scarf,
   each a damped spring driven by the root's acceleration. Cheap, and the main source of
   "natural".
@@ -185,10 +194,11 @@ motion read as alive. All of it is view-side; the engine is untouched.
 
 **Prototype** (dev only): `client/proto.html` (`/proto.html` on the dev server, driven by
 `src/dev/corgiProto.ts`) plays the corgi rig with the game's motion (`corgiMotion.ts`) and all of
-the above except blinks and the new clips; H plays a hit. The clips (idle, run, fire_l, fire_r,
-hurt) come from `python tools/hero_clips.py`, which writes the same set into the corgi's, the
-bulldog's and the cat's specs (its parameters, such as the step's height, can be overridden on
-the command line); repack each rig after it.
+the above except the new clips; H plays a hit. The clips (idle, run, fire_l, fire_r,
+hurt) come from `python tools/hero_clips.py`, which writes the set into the corgi's, the
+bulldog's and the cat's specs, the bent-arm carry for a rig with elbows and the straight-armed one
+otherwise (its parameters, such as the step's height, can be overridden on the command line);
+repack each rig after it.
 The rig comes from `art/reskin/corgi/`: `python tools/split_parts.py art/reskin/corgi/parts_spec.json
 art/reskin/corgi/parts`, then `python tools/pack_tao.py art/reskin/corgi/corgi_tao.json
 art/reskin/corgi/corgi.tao art/reskin/corgi/runtime`. The split works from `apose2.png`, the
@@ -204,6 +214,12 @@ outlined tops, so a step shows no cut edge. The head and ears come from `face_a.
 corgi's face redrawn closer to the character sheet (big glossy eyes, a smaller smile); the spec's
 `"sources"` scales and places that drawing onto `apose2.png`, and the torso fills the old head's
 area dark so the new chin sits on the collar (`face_c.png`, `face_d.png` are other takes). The
+expressions are `face_fire.png`, `face_hurt.png` and `face_blink.png`, `face_a.png` redrawn (by
+image edit) with another eye and mouth; the head's `"faces"` cuts each into a variant
+(`head_fire`, ...) of the same shape, taking only the `face_zone` box from it so the outline and
+the fur round the face stay identical and a swap never jumps. The elbows are cut along the bracer's
+edge: `fore_f` and `fore_n` are the forearms and paws, and the upper arms keep a round elbow cap
+under them so a bend opens no gap. The
 atlas packs at 0.7 so the close-up renders at full device resolution; G in the prototype zooms
 out to the in-game size (120 units, about 70 CSS px on desktop), which is the size to judge the
 face at. Springs are `TaoActor.spring` (`src/game/tao/spring.ts`).
@@ -314,7 +330,3 @@ entry may point into `client/public` to reuse a monk file on purpose (a UI sound
 
 Still to do before the corgi build can run as itself: the files still null in `corgi.json`
 (`npm run check:theme` counts them).
-
-## Open
-
-- The title and whether it clashes with an existing game.

@@ -4,7 +4,7 @@ import { THEME } from '../theme';
 // The corgi reskin's spell and relic effects (docs/reskin.md): the same timings, sizes and
 // layers as Holy Kicker's, drawn as the corgi's gadgets in the colours of its icons, orange
 // metal, grey steel and cyan glass. Each view keeps Holy Kicker's look and takes these in a
-// corgi build; no build mixes the two. The Golden Bell becomes a glass bubble, the cymbals saw
+// corgi build; no build mixes the two. The Golden Bell becomes an energy bubble, the cymbals saw
 // blades, the beads drones, the bowl a striped disc, the lotus seeds mines, the incense ring a
 // plasma puddle (a cyan repair pool when evolved), the Mountain Palm's print a scorched crater.
 
@@ -78,14 +78,25 @@ export function corgiSaw(r: number): Graphics {
     .moveTo(r * 0.5, r * 0.62).lineTo(r * 0.72, r * 0.5).stroke({ color: 0xffffff, width: r * 0.08, alpha: 0.8 });
 }
 
-/** The Bubble Shield round the hero, centred on (0, 0): see-through cyan glass with a gloss. */
+/** The Bubble Shield round the hero, centred on (0, 0): an energy skin that glows at its edge and
+ * fades inward, so the hero inside stays clear; the gloss runs along the rim, off the face. */
 export function corgiBubble(r: number): Graphics {
-  return new Graphics()
-    .ellipse(0, 0, r, r * 1.15).fill({ color: C.cyan, alpha: 0.14 })
-    .ellipse(0, 0, r, r * 1.15).stroke({ color: C.cyanPale, width: 8, alpha: 0.85 })
-    .ellipse(0, 0, r * 0.92, r * 1.06).stroke({ color: C.cyan, width: 3, alpha: 0.5 })
-    .ellipse(-r * 0.42, -r * 0.52, r * 0.16, r * 0.3).fill({ color: 0xffffff, alpha: 0.45 })
-    .circle(-r * 0.12, -r * 0.86, r * 0.07).fill({ color: 0xffffff, alpha: 0.55 });
+  const g = new Graphics().ellipse(0, 0, r, r * 1.15).fill({ color: C.cyan, alpha: 0.05 });
+  // the edge glow: rings stepping inward, fainter each step
+  for (const [k, w, a] of [[0.95, 12, 0.08], [0.97, 8, 0.14], [0.985, 5, 0.22]] as const) {
+    g.ellipse(0, 0, r * k, r * 1.15 * k).stroke({ color: C.cyan, width: w, alpha: a });
+  }
+  g.ellipse(0, 0, r, r * 1.15).stroke({ color: C.cyanPale, width: 4, alpha: 0.8 });
+  // a crescent of gloss on the upper left of the rim, and a glint on the far side
+  for (let i = 0; i <= 12; i++) {
+    const a = Math.PI * (1.08 + 0.3 * (i / 12));
+    const x = Math.cos(a) * r * 0.88;
+    const y = Math.sin(a) * r * 1.15 * 0.88;
+    if (i) g.lineTo(x, y);
+    else g.moveTo(x, y);
+  }
+  g.stroke({ color: 0xffffff, width: 6, alpha: 0.5, cap: 'round' });
+  return g.circle(r * 0.62, r * 0.7, r * 0.04).fill({ color: 0xffffff, alpha: 0.5 });
 }
 
 /** A drone in a d box: a round body with a cyan eye under two rotors; `steel` for the second ring. */

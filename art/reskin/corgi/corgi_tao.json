@@ -7,7 +7,13 @@
   728
  ],
  "scale": 0.7,
- "variants": {},
+ "variants": {
+  "head": [
+   "head_fire",
+   "head_hurt",
+   "head_blink"
+  ]
+ },
  "animations": {
   "idle": {
    "duration": 2.0,

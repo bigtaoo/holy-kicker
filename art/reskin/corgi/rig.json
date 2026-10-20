@@ -10,8 +10,10 @@
   "ear_l": "head",
   "ear_r": "head",
   "head": "torso",
-  "gun": "arm_f",
+  "fore_f": "arm_f",
+  "gun": "fore_f",
   "arm_n": "torso",
-  "gun_n": "arm_n"
+  "fore_n": "arm_n",
+  "gun_n": "fore_n"
  }
 }
