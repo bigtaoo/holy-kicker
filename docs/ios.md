@@ -417,10 +417,9 @@ Kicker's at build time.
   numbers. Pushes compile Holy Kicker only. Hot updates: `ota-ios` with theme `corgi` deploys to
   `corgi-ota.gamestao.com` (`wrangler/ota-corgi.jsonc`; the custom domain is made on the first
   deploy).
-- **Ads**: for now the corgi borrows Holy Kicker's AdMob app and units (the same ids in both
-  `apps.json` entries), so its ads are live but earn under Holy Kicker and the workflow warns. Give it
-  units of its own before review. With `adMob: null` the build carries Google's test ids with
-  `live = false` instead.
+- **Ads**: the corgi has its own AdMob app (`~2063788999`) with rewarded and interstitial units, in
+  `apps.json` `corgi.adMob`. With `adMob: null` a build carries Google's test ids with
+  `live = false` instead; an app that borrows another's ids gets a warning in the workflow.
 - **Icon**: `art/reskin/corgi/ios/AppIcon.png`, 1024 px: the corgi in white armour, blasters
   firing at two bugs, on a navy sky with a yellow-green ring. Generated with
   `tools/edit_image.sh art/reskin/corgi/ios/ref_hero.png <out> art/reskin/corgi/ios/AppIcon.txt`
@@ -446,8 +445,8 @@ Owner setup, the same steps as Holy Kicker's above:
    **`CORGI_BUILD_PROVISION_PROFILE_BASE64`** = that file, base64. The other secrets are shared.
 2. App Store Connect: the app record (store name `Corgi Commando: Bug Blaster`), the product
    `com.gamestao.corgi.adfree` (non-consumable), Game Center, storefronts without mainland China.
-3. AdMob: a new app with rewarded and interstitial units, added to the GDPR message; their ids go
-   into `apps.json` `corgi.adMob`.
+3. AdMob: a new app with rewarded and interstitial units (done 2026-10-20, ids in `apps.json`),
+   added to the GDPR message.
 4. Then: Actions → `ios-corgi` → Run workflow, or push a tag `corgi-ios-v1.0.0`.
 
 ## Later

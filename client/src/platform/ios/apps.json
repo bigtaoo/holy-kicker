@@ -24,9 +24,9 @@
     "version": "1.0",
     "adFree": "com.gamestao.corgi.adfree",
     "adMob": {
-      "app": "ca-app-pub-5437693117291100~7644915595",
-      "rewarded": "ca-app-pub-5437693117291100/1896010873",
-      "interstitial": "ca-app-pub-5437693117291100/7607502555"
+      "app": "ca-app-pub-5437693117291100~2063788999",
+      "rewarded": "ca-app-pub-5437693117291100/5330834754",
+      "interstitial": "ca-app-pub-5437693117291100/9722787160"
     },
     "ota": "https://corgi-ota.gamestao.com",
     "profile": "Corgi Commando App Store",
