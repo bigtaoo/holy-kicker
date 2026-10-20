@@ -26,7 +26,7 @@ and passive.
 parts specs repaint them as the parts are cut (`"recolor"` in each `parts_spec.json`,
 `tools/recolor_armour.py`): the saturated orange of the body parts turns off-white and the guns'
 orange turns gunmetal; the cream, the glow, the undersuit and the fur parts keep their colour.
-The gun icons (`ball`, `bowl`) take the same gunmetal as `tools/corgi_art.py icons` packs them.
+The gun icons (`ball`, `bowl`) take the same gunmetal as `tools/corgi_art.py icons` packs them; the blaster's slots, button and muzzle ring glow in the pistols' yellow-green (regions in `GUN_ICONS`), and the sheet white left inside both trigger guards is cleared, since the dark HUD showed it. The icon sheet's shared 256-colour palette has no entry at the pistols' hue 60, so the glow lands on its nearest yellow (hue 55); a hue past ~75 snaps to lime instead.
 Dark grey and navy were tried and lost the body on the dark planets and sat next to the bugs'
 blue-greys; white reads on every ground. Changing the paint means re-running the whole chain:
 `split_parts.py`, `pack_tao.py` (and `webp.py` for the corgi) and the portraits (below, "Squad

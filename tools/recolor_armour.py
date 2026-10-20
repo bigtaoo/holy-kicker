@@ -23,13 +23,15 @@ import os
 import sys
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 sys.path.insert(0, os.path.dirname(__file__))
 from recolor_cold import to_hsv, to_rgb  # noqa: E402
 
 # the squad's guns, as the parts specs paint them (also the gun icons, tools/corgi_art.py)
 GUNMETAL = [215, 0.15, 0.4, 0.0]
+# the hue of the guns' yellow-green glow
+GLOW = 66
 
 
 def recolor(im: Image.Image, to: list[float]) -> Image.Image:
@@ -41,6 +43,25 @@ def recolor(im: Image.Image, to: list[float]) -> Image.Image:
     h = np.where(paint, hue, h)
     s = np.where(paint, s * sat, s)
     v = np.where(paint, np.clip(v * val + lift, 0, 1), v)
+    out = np.concatenate([to_rgb(h, s, v), a[..., 3:]], -1)
+    return Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
+
+
+def glow(im: Image.Image, regions: list[list]) -> Image.Image:
+    """Returns `im` (RGBA) lit in the guns' yellow-green inside `regions` (["rect" | "ellipse",
+    x0, y0, x1, y1] in its pixels): the grey and blue fill there (slots, lenses) glows, keeping
+    its shading, a white highlight stays pale, and the outline and the orange are left alone."""
+    zone = Image.new("L", im.size)
+    d = ImageDraw.Draw(zone)
+    for kind, *box in regions:
+        (d.ellipse if kind == "ellipse" else d.rectangle)(box, fill=255)
+    a = np.asarray(im.convert("RGBA")).astype(np.float64) / 255
+    h, s, v = to_hsv(a[..., :3])
+    lit = (np.asarray(zone) > 0) & (v > 0.18) & (((h >= 150) & (h <= 260)) | (s < 0.2))
+    shine = lit & (s < 0.12) & (v > 0.85)
+    h = np.where(lit, GLOW, h)
+    s = np.where(shine, 0.3, np.where(lit, 0.85, s))
+    v = np.where(lit, np.clip(0.5 + 0.6 * v, 0, 1), v)
     out = np.concatenate([to_rgb(h, s, v), a[..., 3:]], -1)
     return Image.fromarray((np.clip(out, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
 

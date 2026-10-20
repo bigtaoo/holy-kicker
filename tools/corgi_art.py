@@ -10,10 +10,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).parent))
-from recolor_armour import GUNMETAL, recolor  # noqa: E402
+from recolor_armour import GUNMETAL, glow, recolor  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "art/reskin/corgi"
@@ -56,8 +56,15 @@ ICON_SHEETS = {
     "icons/sheet_relics.png": ("2x2", "bowl cymbal fish -"),
 }
 # the guns among the icons take the squad's gunmetal (tools/recolor_armour.py), so the HUD's
-# relic matches the pistols the hero holds
-GUN_ICONS = ("ball", "bowl")
+# relic matches the pistols the hero holds; "glow" lights the blaster's slots, button and muzzle
+# ring in the pistols' yellow-green (regions in the cut icon's pixels), and "paper" names a point
+# in each trigger guard, whose enclosed sheet white the cut keeps and the dark HUD shows
+GUN_ICONS = {
+    "ball": {"glow": [], "paper": [(142, 98)]},
+    "bowl": {"glow": [["ellipse", 16, 40, 42, 102], ["rect", 200, 28, 220, 48], ["rect", 204, 88, 219, 110],
+                      ["rect", 268, 28, 356, 46], ["rect", 240, 83, 308, 101], ["ellipse", 318, 53, 346, 81]],
+             "paper": [(258, 140)]},
+}
 # the monk sheet's frame order (client/public/art/icons/icons.json), which the corgi sheet keeps
 ICONS = [f["name"] for f in json.loads((PUB / "art/icons/icons.json").read_text())["frames"]]
 
@@ -119,6 +126,19 @@ def deco(_):
             shutil.copy(Path(tmp) / "deco.json", dst.with_suffix(".json"))
 
 
+def clear_paper(im, seeds):
+    """Makes the near-white patch around each seed point transparent, with its pale rim."""
+    pale = im.convert("L").point(lambda v: 255 if v > 230 else 0)
+    for seed in seeds:
+        ImageDraw.floodfill(pale, seed, 128)
+    hole = pale.point(lambda v: 255 if v == 128 else 0).filter(ImageFilter.MaxFilter(5))
+    rim = im.convert("L").point(lambda v: 255 if v > 170 else 0)
+    gone = Image.composite(hole, Image.new("L", im.size), rim)
+    alpha = Image.composite(Image.new("L", im.size), im.getchannel("A"), gone)
+    im.putalpha(alpha)
+    return im
+
+
 def icons(cut):
     for sheet, (grid, names) in ICON_SHEETS.items():
         if not missing(sheet):
@@ -127,8 +147,9 @@ def icons(cut):
     if gone:
         print(f"  icons not cut yet: {' '.join(gone)}")
         return
-    for n in GUN_ICONS:
-        recolor(Image.open(cut / f"{n}.png"), GUNMETAL).save(cut / f"{n}.png")
+    for n, gun in GUN_ICONS.items():
+        im = clear_paper(Image.open(cut / f"{n}.png").convert("RGBA"), gun["paper"])
+        recolor(glow(im, gun["glow"]), GUNMETAL).save(cut / f"{n}.png")
     (OUT / "art/icons").mkdir(parents=True, exist_ok=True)
     run(TOOLS / "pack_icons.py", OUT / "art/icons", *[cut / f"{n}.png" for n in ICONS])
     for ext in ("png", "json"):
