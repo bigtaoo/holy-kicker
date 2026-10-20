@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite, type Renderer, type Texture } from 'pixi.j
 import { CARP, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
+import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -21,7 +22,6 @@ const SPLASH = 0x9fe0e6;
 const OUTLINE = 0x140c18;
 const ZONE_TEX = 128;
 const HURT_TINT_TIME = 0.15;
-const FADE = 0.5;
 /** Seconds it takes to come up out of the water after surfacing. */
 const POP = 0.25;
 /** The empowered carp's multiply tint. */
@@ -39,6 +39,7 @@ export class CarpView {
   private aura: DarkAura | null = null;
   private facing = -1;
   private tint = 0;
+  private readonly fall = new BossFall();
   private time = 0;
   /** Seconds since it surfaced (it rises out of the water over POP). */
   private popped = POP;
@@ -67,9 +68,8 @@ export class CarpView {
     const under = b.phase === 'dive' || b.phase === 'rise';
     this.time += dt;
     this.popped += dt;
-    this.view.alpha = b.phase === 'down' ? Math.max(0, 1 - (b.t + alpha) / TICK_RATE / FADE) : 1;
-    this.view.visible = !under;
-    this.shadow.visible = !under && this.view.alpha > 0;
+    const pose = this.fall.step(b.phase === 'down', dt);
+    this.view.visible = this.shadow.visible = !under;
     if (b.phase === 'walk' && Math.abs(hx - x) > 30) this.facing = hx < x ? -1 : 1;
     const m = this.sheet.meta;
     this.sprite.texture = this.sheet.textures[Math.floor(this.time * m.fps) % m.frames];
@@ -82,8 +82,7 @@ export class CarpView {
       this.view.addChildAt(this.aura.view, 0);
     }
     this.aura?.update(dt);
-    this.view.position.set(x, y);
-    this.shadow.position.set(x, y);
+    placeFallen(this.view, this.shadow, pose, x, y);
     this.drawWake(under ? x : NaN, y);
     this.drawZone(b, alpha);
     this.bar.rename(t(b.empowered ? 'boss.carpEmpowered' : 'boss.carp'));

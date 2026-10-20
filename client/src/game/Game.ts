@@ -275,7 +275,9 @@ export class Game {
     const real = Math.min(frameMs / 1000, 0.05);
     if (!this.stepping) {
       // a stopped run stands still, but for the kill cam's slow motion after the hero goes down
-      const dt = this.downCam.step(this.paused ? 0 : real, this.stick.presses);
+      // and a won run, where the last boss falls and the fx play out under the closing line
+      const cam = this.downCam.step(this.paused ? 0 : real, this.stick.presses);
+      const dt = s.outcome === 'won' && !this.paused && !this.watchEnd ? real : cam;
       this.draw(this.loop.alpha, dt, this.paused ? 0 : this.downCam.busy ? dt : real);
       return;
     }
@@ -349,6 +351,9 @@ export class Game {
         case 'eliteDown':
           this.feedback.eliteDown(e);
           break;
+        case 'cleared':
+          this.feedback.rout(s);
+          break;
         case 'mobDown':
           this.feedback.mobDown(e, s);
           break;
@@ -373,6 +378,7 @@ export class Game {
         case 'bossSlam':
         case 'bossDown':
         case 'bossBack':
+          if (e.type === 'bossDown') this.shake.blow();
           if (s.boss) this.boss?.react(e, s.boss);
           break;
         case 'blast':
@@ -436,7 +442,7 @@ export class Game {
     this.lowHp.update(real, p.hp, p.maxHp, s.config.waves > 0 && s.outcome === 'playing' && !p.dead);
 
     this.horde.draw(s.mobs, alpha, dt, hx, hy);
-    this.elites?.draw(s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), 2 * twinHp(s.config.chapter, s.wave, s.config.hard));
+    this.elites?.draw(this.horde.routed ? [] : s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), 2 * twinHp(s.config.chapter, s.wave, s.config.hard));
     this.corpses.update(dt);
     this.mist?.update(dt);
     this.balls.sync(s.balls, alpha, dt);

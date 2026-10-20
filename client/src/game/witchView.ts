@@ -1,7 +1,8 @@
 import { ColorMatrixFilter, Container, Sprite, type Renderer, type Texture } from 'pixi.js';
-import { FP, JUDGE, TICK_RATE, WITCH, type Boss as BossState } from '@hk/engine';
+import { FP, JUDGE, WITCH, type Boss as BossState } from '@hk/engine';
 import { t, type Key } from '../i18n';
 import { BossBar } from './bossBar';
+import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -19,7 +20,6 @@ import { makeShadow } from './shadow';
 
 const VIOLET = 0xb04cff;
 const HURT_TINT_TIME = 0.15;
-const FADE = 0.5;
 
 export interface StaffBossStyle {
   /** The bar's string keys, plain and empowered. */
@@ -58,6 +58,7 @@ export class StaffBossView {
   private aura: DarkAura | null = null;
   private facing = -1;
   private tint = 0;
+  private readonly fall = new BossFall();
   private time = 0;
   private glow = 0;
   /** The hit flash, for a sheet baked without white copies (they would double its memory). */
@@ -82,8 +83,7 @@ export class StaffBossView {
   draw(b: BossState, alpha: number, dt: number, hx: number): void {
     const x = lerpX(b, alpha);
     const y = lerpY(b, alpha);
-    this.view.alpha = b.phase === 'down' ? Math.max(0, 1 - (b.t + alpha) / TICK_RATE / FADE) : 1;
-    this.shadow.visible = this.view.alpha > 0;
+    const pose = this.fall.step(b.phase === 'down', dt);
     if (b.phase === 'walk' && Math.abs(hx - x) > 30) this.facing = hx < x ? -1 : 1;
     const m = this.sheet.meta;
     // it slows and sways in place while winding up
@@ -102,8 +102,7 @@ export class StaffBossView {
       this.view.addChildAt(this.aura.view, 0);
     }
     this.aura?.update(dt);
-    this.view.position.set(x, y);
-    this.shadow.position.set(x, y);
+    placeFallen(this.view, this.shadow, pose, x, y);
     if (k > 0) this.gather(x, y, k, dt);
     this.bar.rename(t(b.empowered ? this.style.empoweredName : this.style.name));
     this.bar.set(b.hp, b.maxHp);

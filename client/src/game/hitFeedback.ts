@@ -1,4 +1,4 @@
-import { FP, type RelicId, type SimEvent, type SimState } from '@hk/engine';
+import { FP, underground, type RelicId, type SimEvent, type SimState } from '@hk/engine';
 import { BALL_LIFT, type Balls } from './ballView';
 import type { BeadsView } from './beadsView';
 import type { BossStage } from './bossStage';
@@ -124,6 +124,23 @@ export class HitFeedback {
     this.v.fx.down(e.x / FP, e.y / FP);
     this.kills++;
     if (s.mobs[e.index]?.kind === 'effigy') this.v.horde.tear(e.x / FP, e.y / FP);
+  }
+
+  /** The run was won: every mob and elite still standing falls with the last boss, away from the hero. */
+  rout(s: SimState): void {
+    const hero = s.players[0];
+    s.mobs.forEach((m, i) => {
+      const v = this.v.horde.at(i);
+      if (!v || underground(m)) return;
+      this.v.corpses.spawn(v, m.x - hero.x, m.y - hero.y);
+      this.v.fx.down(m.x / FP, m.y / FP);
+    });
+    for (const e of s.elites) {
+      const v = this.v.elites?.byId(e.id);
+      if (v) this.v.corpses.spawn(v.mob, e.x - hero.x, e.y - hero.y);
+      this.v.fx.down(e.x / FP, e.y / FP);
+    }
+    this.v.horde.routed = true;
   }
 
   eliteDown(e: Extract<SimEvent, { type: 'eliteDown' }>): void {

@@ -1,7 +1,8 @@
 import { Container, Sprite, type Renderer, type Texture } from 'pixi.js';
-import { DEMON, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
+import { DEMON, FP, type Boss as BossState } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
+import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -16,7 +17,6 @@ import { TaoActor, type TaoAsset } from './tao/TaoActor';
 
 const VIOLET = 0xb04cff;
 const HURT_TINT_TIME = 0.15;
-const FADE = 0.5;
 /** The motes it gathers while winding up: cold, not the hero's gold. */
 const GATHER = 0x8fd0ff;
 /** Below half its health it throbs between white and this. */
@@ -32,6 +32,7 @@ export class DemonView {
   private readonly aura: DarkAura;
   private facing = -1;
   private tint = 0;
+  private readonly fall = new BossFall();
   private time = 0;
   private glow = 0;
 
@@ -51,8 +52,7 @@ export class DemonView {
     const x = lerpX(b, alpha);
     const y = lerpY(b, alpha);
     this.time += dt;
-    this.view.alpha = b.phase === 'down' ? Math.max(0, 1 - (b.t + alpha) / TICK_RATE / FADE) : 1;
-    this.shadow.visible = this.view.alpha > 0;
+    const pose = this.fall.step(b.phase === 'down', dt);
     if (Math.abs(hx - x) > 30) this.facing = hx < x ? -1 : 1;
     // drawn facing left, like the hero; mirror to face right
     this.body.scale.x = -this.facing;
@@ -64,8 +64,7 @@ export class DemonView {
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
     const rage = b.hp * 100 <= b.maxHp * DEMON.ragePercent;
     this.actor.view.tint = this.tint > 0 ? 0xc3c3ff : rage ? throb(this.time) : 0xffffff;
-    this.view.position.set(x, y);
-    this.shadow.position.set(x, y);
+    placeFallen(this.view, this.shadow, pose, x, y);
     if (b.phase === 'windup') this.gather(x, y - this.height * 0.5, Math.min(1, (b.t + alpha) / DEMON.windup), dt);
     this.bar.set(b.hp, b.maxHp);
   }

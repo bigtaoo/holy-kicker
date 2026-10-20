@@ -45,6 +45,8 @@ export interface HordeOptions {
 export class HordeView {
   private readonly mobs: MobView[] = [];
   private readonly marks = new Graphics();
+  /** The run was won: the horde fell with the last boss and is drawn no more. */
+  routed = false;
 
   constructor(
     private readonly world: Container,
@@ -88,6 +90,10 @@ export class HordeView {
       this.mobs.push(v);
     }
     const g = this.marks.clear();
+    if (this.routed) {
+      for (const v of this.mobs) v.setVisible(false);
+      return;
+    }
     for (let i = 0; i < this.mobs.length; i++) {
       const m = mobs[i];
       const v = this.mobs[i];

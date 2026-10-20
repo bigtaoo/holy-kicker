@@ -2,6 +2,7 @@ import { Container, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { BOSS, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
+import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -21,7 +22,6 @@ const HURT_TINT_TIME = 0.15;
 /** The empowered boss's multiply tint. */
 const EMPOWERED_TINT = 0xb8a0e8;
 /** Seconds it takes to fade out once defeated. */
-const FADE = 0.5;
 
 export class Boss {
   readonly view = new Container();
@@ -35,6 +35,7 @@ export class Boss {
   private aura: DarkAura | null = null;
   private facing = -1;
   private tint = 0;
+  private readonly fall = new BossFall();
 
   constructor(
     private readonly renderer: Renderer,
@@ -64,13 +65,7 @@ export class Boss {
   draw(b: BossState, alpha: number, dt: number, hx: number): void {
     const x = lerpX(b, alpha);
     const y = lerpY(b, alpha);
-    if (b.phase === 'down') {
-      this.view.alpha = Math.max(0, 1 - (b.t + alpha) / TICK_RATE / FADE);
-      this.shadow.visible = this.view.alpha > 0;
-    } else {
-      this.view.alpha = 1;
-      this.shadow.visible = true;
-    }
+    const pose = this.fall.step(b.phase === 'down', dt);
     if (b.phase === 'walk') {
       if (Math.abs(hx - x) > 30) this.facing = hx < x ? -1 : 1;
       if (this.actor.current !== 'hurt' || this.actor.finished) this.actor.play('walk');
@@ -83,8 +78,7 @@ export class Boss {
       this.view.addChildAt(this.aura.view, 0);
     }
     this.aura?.update(dt);
-    this.view.position.set(x, y);
-    this.shadow.position.set(x, y);
+    placeFallen(this.view, this.shadow, pose, x, y);
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
     this.actor.view.tint = flash(this.tint / HURT_TINT_TIME, b.empowered ? EMPOWERED_TINT : 0xffffff);
     this.drawZone(b, alpha);
