@@ -472,7 +472,7 @@ export class Game {
     this.fpsTimer -= dt;
     if (this.fpsTimer <= 0) {
       this.fpsTimer = 0.5;
-      this.label.text = `Holy Kicker  ${Math.round(this.app.ticker.FPS)} fps  ${this.levelName}
+      this.label.text = `${Math.round(this.app.ticker.FPS)} fps  ${this.levelName}
 Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
     }
   }

@@ -335,12 +335,16 @@ entry may point into `client/public` to reuse a monk file on purpose (a UI sound
   anyway: the corgi keeps its install id under `corgi:` like the rest of its save.
 - Saves: in the browser the corgi keeps every key under `corgi:` (`src/theme.ts`), so the two games
   on h.gamestao.com never share a save.
-- Words: `client/src/i18n/corgi/` overrides the strings that name the monk's world (heroes, relics
-  → weapons, spells → gadgets, sutras → blueprints, shrines → supply drops, chapters → planets,
-  copper → bolts, jade → gems, training → Boot Camp, the story lines), key for key over the base
-  tables, in every language; `corgi.test.ts` keeps each table on the base table's keys and
-  placeholders. The overlay is chosen through `__HK_THEME__`, so a monk build carries none of it.
-  The XP pickups are treats there, which leaves "gems" for the premium currency.
+- Words: the shared tables (`client/src/i18n/<lang>.ts`) hold only the strings both games use.
+  The ones that name a game's world (heroes, relics → weapons, spells → gadgets, sutras →
+  blueprints, shrines → supply drops, chapters → planets, copper → bolts, jade → gems, training →
+  Boot Camp, the story lines) live in the theme's own tables, `client/src/i18n/monk/` and
+  `client/src/i18n/corgi/`, with the same keys in every language and theme (`monk/en.ts` is the
+  source); `i18n/themes.test.ts` holds them to those keys and placeholders, and keeps the monk's
+  words out of the shared English and Chinese. `i18n/index.ts` picks the set through
+  `__HK_THEME__`, so neither build carries a word of the other game. A new string naming the
+  world goes into both themes' tables, never the shared ones. The XP pickups are treats in the
+  corgi's, which leaves "gems" for the premium currency.
 - The page: `build/themeHtml.mjs` gives the corgi's `index.html` its title, colours and loading
   screen (a corgi head hopping where the cuju ball was); it fails the build if `index.html` loses
   the text it replaces.

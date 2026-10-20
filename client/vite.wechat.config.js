@@ -27,12 +27,13 @@ const stripWebGPU = {
 };
 
 // WeChat's players read Chinese and the main package is capped at 4 MB, so the languages past
-// en and zh (src/i18n/more.ts) are left out: the module becomes an empty table.
+// en and zh (src/i18n/more.ts, and the theme's words in them: i18n/monk/more.ts,
+// i18n/corgi/more.ts) are left out: each of those modules becomes an empty table.
 const onlyEnZh = {
   name: 'only-en-zh',
   enforce: 'pre',
   resolveId(source, importer) {
-    if (source === './more' && importer && /[\\/]i18n[\\/]index\.ts$/.test(importer)) return '\0i18n-more-stub';
+    if (/^\.\/((monk|corgi)\/)?more$/.test(source) && importer && /[\\/]i18n[\\/]index\.ts$/.test(importer)) return '\0i18n-more-stub';
     return null;
   },
   load(id) {

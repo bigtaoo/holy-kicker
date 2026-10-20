@@ -1,13 +1,19 @@
 import { THEME } from '../theme';
-import { CORGI, CORGI_MORE } from './corgi';
+import { CORGI } from './corgi';
+import { MORE as CORGI_MORE } from './corgi/more';
 import { en } from './en';
+import { MONK } from './monk';
+import type { monkEn } from './monk/en';
+import { MORE as MONK_MORE } from './monk/more';
 import { MORE, MORE_NAMES } from './more';
-import { overlay } from './overlay';
+import { type Merge, overlay } from './overlay';
 import { zh } from './zh';
 
 // String tables (docs/design.md "Localization"). English is the source: every other table is
 // typed as Table<typeof en>, so a missing or extra key is a compile error. Keys are dotted
-// paths checked at compile time: t('lobby.play').
+// paths checked at compile time: t('lobby.play'). The strings that name a game's world are not
+// here but in its theme's tables (i18n/monk, i18n/corgi; docs/reskin.md "Words"), typed the
+// same way after monk/en.ts; a build carries its own theme's and never the other's.
 
 export type Locale = 'en' | 'zh' | 'de' | 'fr' | 'es' | 'it' | 'pt' | 'pl' | 'ru' | 'ja' | 'ko' | 'vi' | 'tr' | 'th' | 'id';
 const ALL: readonly Locale[] = ['en', 'zh', 'de', 'fr', 'es', 'it', 'pt', 'pl', 'ru', 'ja', 'ko', 'vi', 'tr', 'th', 'id'];
@@ -19,16 +25,16 @@ type Paths<T> = {
   [K in keyof T & (string | number)]: T[K] extends string ? `${K}` : `${K}.${Paths<T[K]>}`;
 }[keyof T & (string | number)];
 
-export type Key = Paths<typeof en>;
+/** A whole table: the shared strings and the theme's. */
+type Full = Table<Merge<typeof en, typeof monkEn>>;
 
-/**
- * The theme's own words (docs/reskin.md): under the corgi theme its tables (i18n/corgi) replace
- * the base strings key for key. A monk build folds this to null and ships no corgi text.
- */
-const THEMED = THEME === 'corgi' ? { now: CORGI, more: CORGI_MORE } : null;
+export type Key = Paths<Full>;
+
+/** The theme's own words: the build folds the choice, so the other theme's are left out. */
+const THEMED = THEME === 'corgi' ? { now: CORGI, more: CORGI_MORE } : { now: MONK, more: MONK_MORE };
 
 /** The tables in hand: en and zh always, the others once loadLocale fetched them. */
-const TABLES: Partial<Record<Locale, Table<typeof en>>> = { en: overlay(en, THEMED?.now.en), zh: overlay(zh, THEMED?.now.zh) };
+const TABLES: Partial<Record<Locale, Full>> = { en: overlay(en, THEMED.now.en), zh: overlay(zh, THEMED.now.zh) };
 /** The languages this build ships (WeChat: en and zh only, i18n/more.ts), in the picker's order. */
 export const LOCALES: readonly Locale[] = ALL.filter((l) => TABLES[l] || MORE[l]);
 
@@ -39,10 +45,11 @@ export const LOCALES: readonly Locale[] = ALL.filter((l) => TABLES[l] || MORE[l]
 export async function loadLocale(locale: Locale): Promise<boolean> {
   if (TABLES[locale]) return true;
   const load = MORE[locale];
-  if (!load) return false;
+  const words = THEMED.more[locale];
+  if (!load || !words) return false;
   try {
-    const [table, over] = await Promise.all([load(), THEMED?.more[locale]?.()]);
-    TABLES[locale] = overlay(table, over);
+    const [table, own] = await Promise.all([load(), words()]);
+    TABLES[locale] = overlay(table, own);
     return true;
   } catch {
     return false;

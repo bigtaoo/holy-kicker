@@ -14,8 +14,9 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - **`npm run check` must pass before every commit**: typecheck, file length, tests, WeChat,
   CrazyGames and iOS web builds and the 4 MB main-package gate.
 - **No literal player-facing text in code**: every string goes through `t()` and the tables
-  in `client/src/i18n/` (en is the source, zh must match key for key). Balance numbers live
-  in `client/src/meta/balance.json`, never in code.
+  in `client/src/i18n/` (en is the source, zh must match key for key; a word that names the
+  game's world goes into both themes' tables, `i18n/monk/` and `i18n/corgi/`, not the shared
+  ones). Balance numbers live in `client/src/meta/balance.json`, never in code.
 - **Game logic lives in `engine/` (`@hk/engine`)**: a deterministic simulation at a fixed
   30 Hz on integer state, fed only by player commands, so it can run in lockstep online later.
   Follow `engine/README.md` (integers only, no `Math.sin/sqrt/random`, no clocks, no imports

@@ -1,12 +1,12 @@
-import type { en } from '../en';
-import type { Override } from '../overlay';
+import type { Table } from '../index';
+import type { monkEn } from '../monk/en';
 
 // Corgi Commando's words in English, the source of the corgi tables (docs/reskin.md has the
-// mapping): only the strings that name the monk's world, each at the base table's key. Every
-// corgi table has exactly these keys (corgi.test.ts); the rest of the game reads the base table.
+// mapping): Holy Kicker's words (monk/en.ts) retold, key for key. Every corgi table has exactly
+// these keys (i18n/themes.test.ts); the rest of the game reads the shared tables.
 // Tone: cute, light sci-fi, no gore. The XP pickups are treats (the Treat Magnet passive), so
 // "gems" is free for the premium currency.
-export const corgiEn = {
+export const corgiEn: Table<typeof monkEn> = {
   lobby: {
     guest: 'Cadet',
     chapterTitle: 'Planet {n}: {name}',
@@ -189,7 +189,7 @@ export const corgiEn = {
     price: '{jade} gems',
     noJade: 'Not enough gems',
   },
-  // English keeps the patrol as it was; the base Chinese sends the monk round the mountain
+  // English keeps the patrol as it was; Holy Kicker's Chinese sends the monk round the mountain
   patrol: {
     title: 'Patrol',
     stored: 'On patrol: {time} of {cap}h',
@@ -256,4 +256,4 @@ export const corgiEn = {
   share: {
     title: 'One corgi, one blaster, a planet full of bugs. How many waves can you last?',
   },
-} satisfies Override<typeof en>;
+};
