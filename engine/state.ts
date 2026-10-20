@@ -93,6 +93,9 @@ export interface Mob extends Body {
   t: number;
   /** Ticks left running fast (the wolf leader's howl). */
   haste: number;
+  /** Ticks off every hero's screen (PACE.lagTicks), and its distance to its hero when they began. */
+  lag: number;
+  gap: number;
 }
 
 /**
@@ -359,6 +362,8 @@ export interface SimState {
   wave: number;
   /** Ticks into the wave. */
   waveT: number;
+  /** Horde mobs felled this wave (PACE.gatePercent): not the swarm kinds nor the summoned. */
+  waveKills: number;
   outcome: Outcome;
   readonly ai: Prng;
   readonly combat: Prng;
@@ -383,14 +388,14 @@ export function createState(config: RunConfig): SimState {
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [], spawns: [],
     gems: [], gemCells: new Map(), resting: 0, fields: [], palms: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
-    volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, outcome: 'playing',
+    volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, waveKills: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),
   };
 }
 
 export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser', t = 0): Mob {
-  return { ...body(x, y), kind, hp, stun: 0, t, haste: 0 };
+  return { ...body(x, y), kind, hp, stun: 0, t, haste: 0, lag: 0, gap: 0 };
 }
 
 export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball', bonus: StatBonus = {}, monk: MonkId = 'kicker'): Player {

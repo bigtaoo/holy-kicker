@@ -19,18 +19,22 @@ import { laneDistance } from '../systems/elite';
 // `skilled` re-decides every tenth of a second, `casual` every 0.4 s and holds the stick in
 // between; `still` never moves: the floor of what a build alone survives; `straight` holds
 // on one way the whole run (swerving at most 60 degrees round what is in the way), the player
-// who outruns the horde instead of fighting it.
+// who outruns the horde instead of fighting it; `circle` runs round and round where the run
+// began, whatever is in the way, the player who kites the whole horde in one loop.
 
-export type BotStyle = 'skilled' | 'casual' | 'still' | 'straight';
+export type BotStyle = 'skilled' | 'casual' | 'still' | 'straight' | 'circle';
 
 /** Ticks between a style's decisions: a skilled player reacts at once, a casual one late. */
-const REACTION: Record<BotStyle, number> = { skilled: 3, casual: 12, still: 0, straight: 3 };
+const REACTION: Record<BotStyle, number> = { skilled: 3, casual: 12, still: 0, straight: 3, circle: 3 };
 
 /** How far ahead a step is judged, and the reach of each kind of danger. */
 const LOOK = toFp(260);
 const NEAR_MOB = toFp(300);
 const NEAR_ELITE = toFp(450);
 const NEAR_BOSS = toFp(500);
+/** The `circle` style's loop round the start: its radius, and how far ahead on it the bot aims. */
+const LOOP = toFp(900);
+const LOOP_AHEAD = BRAD_FULL / 12;
 /**
  * A close relic lets the big ones come `near`, inside its reach; being further than `chase`
  * from one counts as danger too (the bot goes after it). null: keep away (the cuju).
@@ -139,6 +143,7 @@ export class Bot {
   private heading(s: SimState, p: Player): [number, number] {
     const close = CLOSE_IN[p.relicId];
     if (this.style === 'straight') return this.onward(s, p, close);
+    if (this.style === 'circle') return loop(p);
     const here = danger(s, p.x, p.y, close);
     if (here < CALM) return this.toGem(s, p);
     let best = here * 2;
@@ -218,4 +223,10 @@ export class Bot {
     if (c.kind === 'spell') return p.spells.some((sp) => sp.id === c.id) ? 80 : 90;
     return p.passives.some((ps) => ps.id === c.id) ? 50 : 40;
   }
+}
+
+/** The `circle` style: toward a point a little ahead on the loop round the start. */
+function loop(p: Player): [number, number] {
+  const a = (atan2B(p.y, p.x) + LOOP_AHEAD) & 65535;
+  return [Math.trunc((cosB(a) * LOOP) / TRIG_ONE) - p.x, Math.trunc((sinB(a) * LOOP) / TRIG_ONE) - p.y];
 }

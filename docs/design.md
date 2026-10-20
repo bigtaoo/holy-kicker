@@ -40,8 +40,9 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
 
 ## Chapters (the run)
 
-A chapter is one map with 50 waves of about 15 s each. Dying restarts the chapter; the best
-wave reached is recorded.
+A chapter is one map with 50 waves of about 15 s each (from chapter 3 a normal-mode wave also
+waits for kills, "Pace from chapter 3" below). Dying restarts the chapter; the best wave reached
+is recorded.
 
 | Wave | Content |
 |---|---|
@@ -91,6 +92,41 @@ otherwise taking Insight):
   meta upgrades and revives make the target easier, so a first clear of chapter 1 is a few
   tries for a new player.
 - Relics, spells, passives, shrines, enemies and chapter themes: see [content.md](content.md).
+
+### Pace from chapter 3
+
+A recorded chapter 5 run (2026-10-20) showed the late chapters going flat: the hero circled the
+horde, the pile followed about 750 behind with nothing ahead of him, and as mob health outgrew
+his damage his kills fell to single digits a wave, so his levels and spells stopped while the
+waves ran on by the clock. Two rules, from chapter 3 on only (chapters 1 and 2 are the
+tutorial and keep the plain clock):
+
+- **Kill-gated waves** (normal mode only; hard mode keeps the fixed 15 s): a wave lasts until
+  half its horde has been felled (`PACE.gatePercent`; the swarm kinds and the summoned do not
+  count), at least 15 s and at most 22.5 s (`gateTicks`). A strong build sees no change; one
+  that falls behind gets up to half a wave more of the same mobs, so its XP catches up.
+- **Outrun mobs come back ahead** (`PACE.lag*`, also in hard mode): a mob kept off every
+  hero's screen for 3 s that got no nearer in that time comes back on the ring ahead of the
+  hero, like one left too far behind, at most one a second. Circling the pile no longer keeps
+  the path clear. Moving them all at once walled every play style in: the casual bot died
+  around wave 30 in chapters 3–5, whatever the mob health or contact damage.
+- **Hurt by chapter** went from 125/180/180 % to 115/160/150 % for chapters 3–5, so the
+  mobs coming back ahead do not make the chapters harder for a player who fights.
+
+Balance bots (24 seeds each, no revives, journey bonuses for each chapter, `circle` kites the
+whole horde round one loop; won and median wave, before → after):
+
+| Chapter | Casual | Skilled | Circle |
+|---|---|---|---|
+| 3 | 4/24, 40 → 4/24, 40 | 9/24, 47 → 11/24, 50 | 0/24, 18 → 0/24, 19 |
+| 4 | 4/24, 43 → 2/24, 40 | 6/24, 50 → 8/24, 50 | 0/24, 18 → 0/24, 20 |
+| 5 | 1/24, 34 → 3/24, 37 | 11/24, 50 → 9/24, 50 | 4/24, 50 → 1/24, 33 |
+
+Before, circling was the best way through chapter 5 (more wins than the casual bot, its
+median run reached the boss); now it is the worst. The price is time: waves in chapters 4–5
+mostly run to the 22.5 s cap, so a skilled chapter 5 run takes about 26 minutes instead of 20
+and gains about one level. Hard mode (fixed waves, its own hurt) with the chapter 5 bonuses:
+chapter 3 casual stays at median wave 29, circle falls from 35 to 20; chapter 1 is unchanged.
 
 ### Hard mode
 

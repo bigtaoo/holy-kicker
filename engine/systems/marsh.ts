@@ -20,6 +20,7 @@ export function resetMob(s: SimState, m: Mob): void {
   else if (m.kind === 'monk') m.t = MONK.blocks;
   else m.t = 0;
   m.haste = 0;
+  m.lag = 0;
 }
 
 /**

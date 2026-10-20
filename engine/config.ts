@@ -138,8 +138,8 @@ export const HURT = {
   /** The Inner Demon's dark spell (a zone going off) and its landing after a staff leap. */
   demonSpell: 14,
   demonLeap: 20,
-  /** Every hurt by chapter, percent (later chapters play the last), so health from gear does not make them safe. */
-  chapterPercent: [100, 100, 125, 180, 180],
+  /** Every hurt by chapter, percent (later chapters play the last), so health from gear does not make them safe (125, 180, 180 for 3–5 before PACE). */
+  chapterPercent: [100, 100, 115, 160, 150],
 };
 
 export const HORDE = {
@@ -495,3 +495,4 @@ export const SPELLS = {
 };
 
 export * from './foes';
+export * from './pace';

@@ -95,9 +95,9 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-20 for ENGINE_VERSION 41 (chapter 1 opens with a horde of 50 that comes back close, WAVES.openingHorde, openingBack).
+    // Recorded 2026-10-20 for ENGINE_VERSION 42 (from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*).
     // A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(41);
+    expect(ENGINE_VERSION).toBe(42);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -123,13 +123,13 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 2305670306;
-const GOLDEN_CHAPTER = 647188778;
-const GOLDEN_MARSH = 1772696092;
-const GOLDEN_SNOW = 883118720;
-const GOLDEN_GHOST = 1526221990;
-const GOLDEN_PEAK = 1539278011;
-const GOLDEN_HARD = 1281908811;
-const GOLDEN_FAT = 2907905741;
-const GOLDEN_NOVICE = 3370404863;
-const GOLDEN_MUTATED = [2225679449, 532698202, 3680346628];
+const GOLDEN = 21623313;
+const GOLDEN_CHAPTER = 1460871118;
+const GOLDEN_MARSH = 1664698160;
+const GOLDEN_SNOW = 4113789230;
+const GOLDEN_GHOST = 1096880559;
+const GOLDEN_PEAK = 1491124180;
+const GOLDEN_HARD = 4281313640;
+const GOLDEN_FAT = 3374695690;
+const GOLDEN_NOVICE = 1466955329;
+const GOLDEN_MUTATED = [1204400661, 3547699642, 3664264146];

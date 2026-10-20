@@ -1,9 +1,9 @@
-import { CASTER, ELITE, HORDE, SHOOTER, VIEW, WAVES } from '../config';
+import { CASTER, ELITE, HORDE, PACE, SHOOTER, VIEW, WAVES } from '../config';
 import { SpatialGrid } from '../grid';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Prng } from '../math/prng';
-import { teleport, underground, type Body, type Player, type SimState } from '../state';
+import { teleport, underground, type Body, type Mob, type Player, type SimState } from '../state';
 import { mutatorSpeed } from '../mutators';
 import { mobSpeed } from './snow';
 
@@ -11,7 +11,8 @@ import { mobSpeed } from './snow';
 // of any neighbour closer than the separation radius (resolving overlap in position holds up
 // however hard the crowd presses in). A mob with a neighbour right ahead waits instead of
 // pressing on, so a jammed crowd stands still rather than churning. Neighbours come from a
-// spatial hash, so a step is O(n). Mobs left far behind respawn on a ring around the player.
+// spatial hash, so a step is O(n). Mobs left far behind respawn on a ring around the player,
+// and in later chapters so do those he keeps off his screen (outrun).
 
 /** A neighbour counts as ahead within 50 degrees of the way to the target (cos, per mille). */
 const AHEAD_COS = 640;
@@ -172,23 +173,55 @@ function stunned(s: SimState): void {
 /**
  * The horde step (each kind at its own speed, shooters and casters stopping at their range,
  * those under the ground staying put), then mobs left far behind come back around their player
- * (ahead of him while he runs, respawnPoint).
+ * (ahead of him while he runs, respawnPoint), and from chapter PACE.from those outrun too.
  */
 export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   const c = s.config;
   const speedOf = (i: number) => mutatorSpeed(mobSpeed(s.mobs[i]), c.mutator);
-  const stopOf = (i: number) => {
-    const k = s.mobs[i].kind;
-    return k === 'shooter' ? SHOOTER.stopDist : k === 'caster' ? CASTER.stopDist : HORDE.stopDist;
-  };
+  const stopOf = (i: number) => stopDist(s.mobs[i]);
   const still = (i: number) => underground(s.mobs[i]);
   stepHorde(s.mobs, s.players, { speed: HORDE.speed, speedOf, stopDist: HORDE.stopDist, stopOf, still, sep: grid.cell, queue: c.queue }, grid);
   pin(s);
   stunned(s);
   const far = HORDE.respawnDist * HORDE.respawnDist;
+  const lagging = c.chapter >= PACE.from;
+  let back = lagging && s.tick % PACE.lagEvery === 0;
   for (const m of s.mobs) {
     if (underground(m)) continue;
     const t = nearestPlayer(s.players, m.x, m.y);
-    if (dist2(m.x - t.x, m.y - t.y) > far) respawnPoint(s.ai, t, m);
+    if (dist2(m.x - t.x, m.y - t.y) > far) {
+      respawnPoint(s.ai, t, m);
+      m.lag = 0;
+    } else if (lagging && outrun(s, m, t, back)) back = false;
   }
+}
+
+/** How near mob `m` walks to its hero: shooters and casters stop at their range. */
+function stopDist(m: Mob): number {
+  return m.kind === 'shooter' ? SHOOTER.stopDist : m.kind === 'caster' ? CASTER.stopDist : HORDE.stopDist;
+}
+
+/**
+ * Counts the ticks mob `m` stays off every living hero's screen; after PACE.lagTicks, if it came
+ * less than PACE.lagGain nearer to `t` (its nearest) all that time, it comes back ahead of him
+ * once `back` allows (true when it did). A mob walking up to a hero who stands gains its speed's
+ * worth and is left alone, and so is one standing at its range (a caster's lies just off a
+ * phone's screen).
+ */
+function outrun(s: SimState, m: Mob, t: Player, back: boolean): boolean {
+  const gap = s.players.some((p) => !p.dead && inView(p, m.x, m.y)) ? 0 : dist(m.x - t.x, m.y - t.y);
+  if (gap <= stopDist(m) + PACE.lagGain) {
+    m.lag = 0;
+    return false;
+  }
+  if (m.lag === 0) m.gap = gap;
+  if (m.lag < PACE.lagTicks && ++m.lag < PACE.lagTicks) return false;
+  if (gap <= m.gap - PACE.lagGain) {
+    m.lag = 0;
+    return false;
+  }
+  if (!back) return false;
+  respawnPoint(s.ai, t, m);
+  m.lag = 0;
+  return true;
 }

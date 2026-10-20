@@ -1,6 +1,6 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
 import {
-  beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, TICK_RATE, twinHp, WAVES, quantizeMove, type MonkId, type SimEvent, type SimState,
+  beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, TICK_RATE, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState,
 } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
@@ -148,10 +148,7 @@ export class Game {
     const chapter = setup.waves > 0;
     const s = this.engine.state;
     // dev: skip ahead, so the next tick begins the asked-for wave
-    if (chapter && scene.wave > 1 && !restored) {
-      s.wave = Math.min(scene.wave, setup.waves) - 1;
-      s.waveT = WAVES.ticks - 1;
-    }
+    if (chapter && scene.wave > 1 && !restored) startAt(s, Math.min(scene.wave, setup.waves));
     Object.assign(this.camPos, { x: lerpX(s.players[0], 1), y: lerpY(s.players[0], 1) }); // a resumed or sought run opens on its hero
 
     this.world.sortableChildren = true;

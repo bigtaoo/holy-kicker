@@ -18,4 +18,4 @@ export { tierOf } from './systems/drops';
 export { spellCooldown } from './systems/spells';
 export { DASH_TICKS } from './systems/elite';
 export { haloLength, haloSpin } from './systems/sutras';
-export { chapterBoss, chapterElite, eliteKinds, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, twinHp, waveFoeHp, chapterPack, isPackWave, mobHp } from './systems/waves';
+export { chapterBoss, chapterElite, eliteKinds, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, twinHp, waveFoeHp, chapterPack, isPackWave, mobHp, startAt } from './systems/waves';

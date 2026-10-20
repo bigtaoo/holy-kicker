@@ -164,6 +164,7 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
   const pct = fewKind(m.kind) ? MIX.swarmGemPercent : openingShare(s.wave, s.config.chapter);
   if (gem && (pct >= 100 || s.drop.chance(pct, 100))) dropGem(s, m.x, m.y, MOB_GEM);
   m.stun = 0;
+  if (!fewKind(m.kind) && !tempKind(m.kind)) s.waveKills++;
   if (tempKind(m.kind)) {
     if (m.kind === 'skeleton') split(s, m.x, m.y);
     m.hp = 0;

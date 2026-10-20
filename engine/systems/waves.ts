@@ -1,5 +1,5 @@
 import {
-  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HARD, HORDE, MOB_KINDS, SHRINE,
+  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HARD, HORDE, MOB_KINDS, PACE, SHRINE,
   rampChapter, tempKind, TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
@@ -187,6 +187,7 @@ export function beginWave(s: SimState, wave: number): void {
   const p = s.players[0];
   s.wave = wave;
   s.waveT = 0;
+  s.waveKills = 0;
   // newcomers come from just outside the view, like respawns (an emerger waits under the
   // ground there, to rise next to the hero later); packs and summons are on top
   const k = chapterPack(s.config.chapter);
@@ -261,8 +262,24 @@ export function waveSystem(s: SimState, events: SimEvent[]): void {
     events.push({ type: 'cleared' });
     return;
   }
-  if (s.waveT < WAVES.ticks) return;
+  if (s.waveT < WAVES.ticks || holds(s)) return;
   beginWave(s, s.wave + 1);
   events.push({ type: 'wave', wave: s.wave });
   if (isShrineWave(s.wave, last)) openShrine(s);
+}
+
+/**
+ * A wave of a normal chapter from PACE.from waits on its kills: until the horde has been
+ * felled PACE.gatePercent percent over, up to PACE.gateTicks.
+ */
+export function holds(s: SimState): boolean {
+  const c = s.config;
+  if (c.hard || c.chapter < PACE.from || s.waveT >= PACE.gateTicks) return false;
+  return s.waveKills * 100 < hordeSize(s.wave, c.chapter) * PACE.gatePercent;
+}
+
+/** Sets a run up so its next tick begins wave `wave` (a replay or a dev start from there). */
+export function startAt(s: SimState, wave: number): void {
+  s.wave = wave - 1;
+  s.waveT = PACE.gateTicks - 1;
 }

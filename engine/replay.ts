@@ -1,7 +1,8 @@
-import { WAVES, type RunConfig } from './config';
+import type { RunConfig } from './config';
 import { Engine, ENGINE_VERSION } from './Engine';
 import { hashState } from './hash';
 import { ReplayInputSource, type PlayerCommand } from './input';
+import { startAt } from './systems/waves';
 
 // A run as a replay: the config and the commands, enough to play it again tick for tick (the
 // sim is deterministic). Sent with a problem report, so the run can be watched or stepped
@@ -59,10 +60,7 @@ export function takeReplay(engine: Engine, history: readonly PlayerCommand[], wa
 /** A new engine that will play `r` back; step it with advance() up to r.tick. */
 export function replayEngine(r: Replay): Engine {
   const e = new Engine(r.config, new ReplayInputSource(unpackCommands(r.cmds)));
-  if (r.wave > 1) {
-    e.state.wave = r.wave - 1;
-    e.state.waveT = WAVES.ticks - 1;
-  }
+  if (r.wave > 1) startAt(e.state, r.wave);
   return e;
 }
 
