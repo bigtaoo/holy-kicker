@@ -1,6 +1,9 @@
 """Draws a seamless flagstone ground tile: staggered rows of uneven slabs with dark seams,
 a few cracks, puddles and paper scraps, in flat colours (no generated picture needed).
 usage: python flagstone_tile.py <out.png> [--size 512] [--seed 4] [--rgb 70,78,96] [--seam 0.55]
+       [--relief 1]
+--relief scales every tone's distance from the slab colour (seams, lips, puddles, scraps): below 1
+flattens the street so the characters on it read first.
 Everything is drawn on a 3x3 canvas and the middle cut out, so slabs that cross an edge
 wrap round to the other side."""
 import argparse
@@ -14,20 +17,23 @@ ap.add_argument("--size", type=int, default=512)
 ap.add_argument("--seed", type=int, default=4)
 ap.add_argument("--rgb", default="70,78,96", help="the slabs' mean colour")
 ap.add_argument("--seam", type=float, default=0.55, help="the seams' and cracks' share of the slab colour")
+ap.add_argument("--relief", type=float, default=1.0, help="how far the other tones stray from the slab colour")
 ap.add_argument("--colors", type=int, default=64)
 a = ap.parse_args()
 
 rnd = random.Random(a.seed)
 N = a.size
 base = tuple(int(v) for v in a.rgb.split(","))
-SEAM = tuple(max(0, int(c * a.seam)) for c in base)
-ROWS = 5
-row_h = N // ROWS
 
 
 def jitter(c, k):
+    k = 1 + (k - 1) * a.relief if a.relief != 1 else k
     return tuple(max(0, min(255, int(v * k))) for v in c)
 
+
+SEAM = jitter(base, a.seam)
+ROWS = 5
+row_h = N // ROWS
 
 img = Image.new("RGB", (3 * N, 3 * N), SEAM)
 d = ImageDraw.Draw(img)
@@ -89,7 +95,8 @@ for _ in range(9):
     s = rnd.randint(7, 11)
     t = rnd.uniform(-0.5, 0.5)
     quad = [(x - s, y - s * 0.6 + t * s), (x + s, y - s * 0.6 - t * s), (x + s, y + s * 0.6 - t * s), (x - s, y + s * 0.6 + t * s)]
-    paper = jitter((124, 130, 146), rnd.uniform(0.85, 1.0))
+    k = rnd.uniform(0.85, 1.0)
+    paper = tuple(int(b + (int(p * k) - b) * a.relief) for b, p in zip(base, (124, 130, 146)))
     each(lambda ox, oy, quad=quad, paper=paper: d.polygon([(px + ox, py + oy) for px, py in quad], fill=paper))
 
 tile = img.crop((N, N, 2 * N, 2 * N))
