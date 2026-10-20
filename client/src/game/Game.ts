@@ -18,6 +18,7 @@ import { Corpses } from './mobView';
 import { HealthBar } from './healthBar';
 import { blockFx, howlFx, nearestElite, type EliteCrowd } from './eliteView';
 import { HordeView } from './hordeView';
+import { guardAlpha } from './guardPulse';
 import { HitFeedback } from './hitFeedback';
 import { AuraStack } from './aura';
 import { ZenRing } from './zenView';
@@ -427,7 +428,8 @@ export class Game {
     this.hurtFlash = Math.max(0, this.hurtFlash - dt);
     // a downed hero lies greyed out until revived
     this.hero.view.tint = p.dead ? DOWN_TINT : hurtTint(this.hurtFlash / HURT_FLASH);
-    this.hero.view.alpha = p.dead ? 0.6 : 1;
+    // untouchable (after a blow, a revive, a pick or the bell) pulses softly
+    this.hero.view.alpha = p.dead ? 0.6 : guardAlpha(p.hurtCd, alpha);
     this.healthBar.update(dt, p.hp, p.maxHp);
     this.healthBar.view.position.set(hx, hy + 22);
     this.healthBar.view.zIndex = this.hero.view.zIndex + 0.25;

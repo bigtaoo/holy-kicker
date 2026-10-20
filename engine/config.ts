@@ -79,6 +79,7 @@ export const HERO = {
   /** After a revive: untouchable this long, and the horde this close is sent back to the ring. */
   reviveGuard: ticks(2),
   reviveClear: toFp(600),
+  pickGuard: ticks(0.5), // untouchable after the last card of an offer, while the thumb finds the stick
 };
 
 /**

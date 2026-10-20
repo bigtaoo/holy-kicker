@@ -82,6 +82,28 @@ describe('levelling', () => {
     expect(p.offer.length).toBe(OFFER_SIZE);
   });
 
+  it('keeps the hero untouchable a moment after the last card of a chain of offers', () => {
+    const e = new Engine(CHAPTER);
+    e.state.mobs.length = 0;
+    const p = e.state.players[0];
+    p.xp = xpToNext(1) + xpToNext(2);
+    e.step([cmd(e)]);
+    // a pick that opens the next offer gives no guard yet
+    e.step([cmd(e, { pick: 0 })]);
+    expect(p.offer.length).toBe(OFFER_SIZE);
+    expect(p.hurtCd).toBe(0);
+    // the last pick does; the same tick already counts one down
+    e.step([cmd(e, { pick: 0 })]);
+    expect(p.offer).toEqual([]);
+    expect(p.hurtCd).toBe(HERO.pickGuard - 1);
+    // a longer guard is never cut short
+    p.hurtCd = 100;
+    p.xp = xpToNext(p.level);
+    e.step([cmd(e)]);
+    e.step([cmd(e, { pick: 0 })]);
+    expect(p.hurtCd).toBe(98);
+  });
+
   it('does not level up in the sandbox', () => {
     const e = new Engine({ ...DEFAULT_RUN, waves: 0 });
     const p = e.state.players[0];

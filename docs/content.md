@@ -453,6 +453,13 @@ or a new single image is cheap; elites and bosses cost a rig each.
   horde has fallen (15–22.5 s, `PACE.gate*`), and a mob kept off screen for 3 s that got no
   nearer comes back ahead of the hero, one a second (`PACE.lag*`, `outrun` in systems/horde.ts).
   To keep the bots' results, hurt by chapter is 100/100/115/150/150 % (was 125/180/180 for 3–5).
+- **Guard after a pick** (ENGINE_VERSION 44). Picking a card takes the thumb off the stick, and
+  the horde stood frozen right next to the hero, so the first tick after the pick could land a
+  blow nobody could dodge. Closing the last offer now leaves the hero untouchable for 0.5 s
+  (`HERO.pickGuard`, through `hurtCd`, never shortening a longer guard). Any guard (after a blow,
+  a revive, a pick or the bell) shows as a soft 3 Hz pulse of the hero's alpha down to 55 %
+  (`client/src/game/guardPulse.ts`), not a hard strobe. Bots, 12 seeds, before → after: chapter 1
+  skilled 5 → 6, casual 3 → 2, still 0 → 0; chapter 3 all 0 → 0, same median waves.
 
 ## Chapters (5)
 

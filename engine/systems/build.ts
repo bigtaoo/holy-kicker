@@ -186,6 +186,8 @@ export function pickCard(s: SimState, events: SimEvent[], p: Player, index: numb
   }
   events.push({ type: 'pick', owner: p.owner, kind: card.kind, id: card.id });
   levelUp(s, events, p);
+  // the pick took the thumb off the stick: the horde gets no free blow while it comes back
+  if (p.offer.length === 0) p.hurtCd = Math.max(p.hurtCd, HERO.pickGuard);
 }
 
 function evolve(p: Player, id: string): void {
