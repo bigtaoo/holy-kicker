@@ -77,6 +77,20 @@ describe('diagnose', () => {
     expect(f[0].detail).toContain('3 dropped below the phone quality level');
   });
 
+  it('flags frequent hitches per device and GPU, and tells our slow work from late frames', () => {
+    // 300 s runs: 40 hitches is 8 a minute
+    const pace = (p: Record<string, PropValue>) => ({ hz: 60, miss: 50, hitch: 40, hitchWork: 4, hitchBoss: 20, hitchWave: 0, work95: 6, sim95: 2, view95: 1, draw95: 3, ...p });
+    const late = diagnose(times(5, () => snap({}, pace({}))), []);
+    expect(late).toMatchObject([{ level: 'warn', rule: 'hitches', where: 'mobile / gpu other', n: 5 }]);
+    expect(late[0].detail).toContain('8 hitches (10 missed refreshes) per battle minute');
+    expect(late[0].hint).toMatch(/^Frames come late/);
+    const own = diagnose(times(5, () => snap({}, pace({ hitchWork: 30, sim95: 12, work95: 15 }))), []);
+    expect(own[0].hint).toContain('engine steps');
+    expect(rules(times(4, () => snap({}, pace({}))))).toEqual([]);
+    expect(rules(times(5, () => snap({}, pace({ hitch: 25 }))))).toEqual([]);
+    expect(rules(times(5, () => snap({}, { hz: 60, work95: 6 })))).toEqual([]);
+  });
+
   it('flags a frame-rate drop against the previous build with enough runs', () => {
     const old = times(10, () => snap({ build: '9' }, { p5: 50 }));
     const fresh = times(10, () => snap({ build: '10' }, { p5: 44 }));

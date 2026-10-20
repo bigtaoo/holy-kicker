@@ -120,6 +120,14 @@ export const GPU_CLASSES = ['software', 'weak', 'other', 'hidden'] as const;
  * run's first battle frame (`...Up`, may be negative; nodes also grow as the horde does). The
  * start value is the current one minus the change, so later runs of a launch starting higher
  * than the first means something survives a run.
+ *
+ * The pacing fields (builds from 2026-10-20 on; older ones lack them) tell a hitch's cause from
+ * the logs. A hitch is a frame that missed one or more of the display's refreshes it should have
+ * shown: one refresh at 60 fps on a 60 or 120 Hz screen, so every level compares alike, unlike
+ * `long`. A hitch after a frame whose own work (engine steps, view update, Pixi's render) took
+ * 75% of a frame's time or more is put down to the work (`hitchWork`); the rest came late while
+ * the work was short: a garbage collection, the compositor or GPU falling behind, the system.
+ * Work times are ms of the main thread measured with performance.now (1 ms steps on Safari).
  */
 export interface PerfProps {
   why: (typeof PERF_WHY)[number];
@@ -136,6 +144,22 @@ export interface PerfProps {
   lv: string;
   /** Most mobs alive at once. */
   mobs: number;
+  /** The display's refresh rate as the frame loop measured it, Hz. */
+  hz?: number;
+  /** Refreshes missed in all (a frame two refreshes late counts 2), and frames that missed any. */
+  miss?: number;
+  hitch?: number;
+  /** Hitches after our own slow work; with a boss or an elite standing; in a wave's first seconds (its spawns). */
+  hitchWork?: number;
+  hitchBoss?: number;
+  hitchWave?: number;
+  /** A frame's work in ms: the 95th percentile and the longest, then the 95th percentile of its
+   *  engine steps (with the view's reactions to their events), view update, and draw (Pixi's render, the shell's ticker). */
+  work95?: number;
+  workMax?: number;
+  sim95?: number;
+  view95?: number;
+  draw95?: number;
   /** Runs started since launch, this one included. */
   nth: number;
   /** JS heap in use and its change since the run started, MB; only where the host exposes it (Chrome's performance.memory). */
@@ -195,20 +219,23 @@ export const PERF_MID_MAX = 5;
 /**
  * Whether a `mid` snapshot is worth sending: a healthy stretch is not, it is folded into the
  * run's next snapshot instead, which saves the player's data. Trouble is a slow 5th percentile,
- * frequent long frames (50 ms or longer, per battle minute), or memory climbing since the run
- * started (PERF_TROUBLE).
+ * frequent long frames (50 ms or longer, per battle minute) or hitches (per battle minute), or
+ * memory climbing since the run started (PERF_TROUBLE).
  */
-export const PERF_TROUBLE = { p5: 40, longPerMin: 6, heapUp: 50, texUp: 30, nodesUp: 3000 } as const;
-export function perfTrouble(p: Pick<PerfProps, 'secs' | 'p5' | 'long' | 'heapUp' | 'texUp' | 'nodesUp'>): boolean {
+export const PERF_TROUBLE = { p5: 40, longPerMin: 6, hitchPerMin: 12, heapUp: 50, texUp: 30, nodesUp: 3000 } as const;
+export function perfTrouble(p: Pick<PerfProps, 'secs' | 'p5' | 'long' | 'hitch' | 'heapUp' | 'texUp' | 'nodesUp'>): boolean {
   const t = PERF_TROUBLE;
-  return p.p5 < t.p5 || (p.secs > 0 && (p.long * 60) / p.secs > t.longPerMin) || (p.heapUp ?? 0) >= t.heapUp || p.texUp >= t.texUp || p.nodesUp >= t.nodesUp;
+  const perMin = (n: number) => (p.secs > 0 ? (n * 60) / p.secs : 0);
+  return p.p5 < t.p5 || perMin(p.long) > t.longPerMin || perMin(p.hitch ?? 0) > t.hitchPerMin || (p.heapUp ?? 0) >= t.heapUp || p.texUp >= t.texUp || p.nodesUp >= t.nodesUp;
 }
 
 export const LIMITS = {
   idMin: 8,
   idMax: 64,
   batchEvents: 50,
-  props: 20,
+  /** Props an event may carry: raised from 20 when `perf` grew its pacing fields; a server
+   *  older than that drops a `perf` with them, so the server deploys before the clients. */
+  props: 40,
   propKey: 24,
   propString: 64,
   build: 32,

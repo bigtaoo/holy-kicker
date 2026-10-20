@@ -3,7 +3,7 @@ import { loadArt, useWebp, webpDecodes } from './art';
 import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale } from './i18n';
 import { watchAnomalies } from './net/anomaly';
 import { apiBase, Backend } from './net/backend';
-import { liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
+import { hitchContext, liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
 import { deviceTimeZone, PrivacyChoice } from './net/privacyChoice';
 import { levelRange, lowBattery, useMsaa } from './game/quality';
 import { QualityRuntime, gpuName } from './game/qualityRuntime';
@@ -61,11 +61,11 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     const s = shell.run?.engine.state;
     return place === 'run' && s ? { place, wave: Math.max(1, s.wave) } : { place };
   });
-  quality.onBattleFrame = (ms, level) => {
+  quality.onBattleFrame = (f) => {
     const s = shell.run?.engine.state;
-    perf.frame(ms, level, s ? liveMobs(s) : 0);
-    anomalies.frame(ms);
-    platform.analytics?.frame(ms);
+    perf.frame(f, s ? liveMobs(s) : 0, s ? hitchContext(s) : 0);
+    anomalies.frame(f.ms);
+    platform.analytics?.frame(f.ms);
   };
   // a ?quality= dev switch pins the mode for the session
   if (!scene.quality) shell.onQualityMode = (m) => quality.setRange(levelRange((mode = m), device, low));

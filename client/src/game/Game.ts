@@ -39,6 +39,8 @@ import { releaseBaked } from './bake';
 import { KillCamView } from './killCamView';
 import { LowHealthView } from './lowHealthView';
 import { runConfig, runSeed, type RunSetup } from './runSetup';
+import { monkRig, type Art } from './artTypes';
+import { frameWork } from './frameWork';
 import { drawStick, heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
@@ -49,8 +51,6 @@ import { drawStick, heroBacking, hurtTint, makeGround, makeRing, makeTiledGround
 // and can later run in lockstep online. This class turns the screen's frames into sim ticks
 // (FixedStep), draws every sim body interpolated between its last two tick positions, and
 // turns the sim's events into animations, effects and numbers.
-
-import { monkRig, type Art } from './artTypes';
 
 export type { Art, GhostArt, PeakArt } from './artTypes';
 
@@ -125,7 +125,7 @@ export class Game {
   /** Whether the last frame stepped the sim: false while paused, on an open offer or once over. */
   stepping = false;
   speed = 1; // sim time per real time: 2 fast-forwards the run (ticks and animations), 1 is normal
-  private readonly onTick = (t: { deltaMS: number }) => this.frame(t.deltaMS);
+  private readonly onTick = (t: { deltaMS: number }, start = performance.now()) => (this.frame(t.deltaMS), (frameWork.run += performance.now() - start));
   /** Dev: the bot playing instead of the stick (?autoplay). */
   private readonly autoplay: Autoplay | null;
 
@@ -279,8 +279,7 @@ export class Game {
       this.draw(this.loop.alpha, dt, this.paused ? 0 : this.downCam.busy ? dt : real);
       return;
     }
-    const speed = this.rushing ? RUSH_SPEED : this.speed;
-    const steps = this.loop.advance(frameMs, speed);
+    const speed = this.rushing ? RUSH_SPEED : this.speed, steps = this.loop.advance(frameMs, speed), start = performance.now();
     for (let i = 0; i < steps && !(this.watchEnd && s.tick >= this.watchEnd); i++) {
       this.engine.submit(this.command());
       const events = this.engine.advance();
@@ -289,6 +288,7 @@ export class Game {
       this.react(events);
       this.onEvents(events);
     }
+    frameWork.sim += performance.now() - start; // engine steps, with the reactions to their events
     this.draw(this.loop.alpha, real * speed, real);
   }
 

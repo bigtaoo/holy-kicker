@@ -464,7 +464,7 @@ export const fr: Table<typeof en> = {
     saver: 'Batterie',
     autoHint: 'Garde le jeu fluide ; économise si batterie faible',
     highHint: 'Meilleurs effets ; le téléphone peut chauffer',
-    saverHint: '30 fps et moins d’effets, économise la batterie',
+    saverHint: 'Résolution réduite et moins d’effets, économise la batterie',
     shakeOn: 'Secousses : oui',
     shakeOff: 'Secousses : non',
     data: 'Données de jeu',

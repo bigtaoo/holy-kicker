@@ -1,8 +1,9 @@
-import type { SimState } from '@hk/engine';
+import { TICK_RATE, type SimState } from '@hk/engine';
 import { perfTrouble, type PerfProps, type PropValue, type SessionDeviceProps } from '@hk/protocol';
 import type { Application, TextureSource } from 'pixi.js';
 import { countNodes, textureStats, type MemSample } from '../game/memProbe';
-import { gpuClass, PerfMeter, type PerfSnapshot } from '../game/perfMeter';
+import type { BattleFrame } from '../game/frameWork';
+import { CTX_BOSS, CTX_WAVE, gpuClass, PerfMeter, type PerfSnapshot } from '../game/perfMeter';
 import type { DeviceInfo } from '../game/quality';
 import type { Backend } from './backend';
 
@@ -18,6 +19,14 @@ export function liveMobs(s: SimState): number {
   let n = s.elites.length;
   for (const m of s.mobs) if (m.hp > 0) n++;
   return n;
+}
+
+/** A wave's first seconds, while its opening spawns pour in. */
+const WAVE_START_TICKS = 3 * TICK_RATE;
+
+/** What a hitch happened during (perfMeter CTX_ bits): a boss or elite standing, a wave just begun. */
+export function hitchContext(s: SimState): number {
+  return (s.boss || s.elites.length ? CTX_BOSS : 0) | (s.wave > 0 && s.waveT < WAVE_START_TICKS ? CTX_WAVE : 0);
 }
 
 /** Chrome's JS heap in MB; undefined where the host has no performance.memory (WeChat, Safari, Firefox). */
@@ -64,10 +73,10 @@ export class PerfReport {
     this.base = null;
   }
 
-  frame(ms: number, level: number, mobs: number): void {
+  frame(f: BattleFrame, mobs: number, ctx = 0): void {
     if (!this.meter) return;
     this.base ??= this.probe();
-    this.meter.frame(ms, level, mobs);
+    this.meter.frame(f, mobs, ctx);
     if (!this.meter.midDue()) return;
     const props = this.props(this.meter.snapshot('mid', true));
     if (props && perfTrouble(props)) {

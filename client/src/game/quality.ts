@@ -6,7 +6,10 @@
 // heat. Phones start conservatively and auto never climbs above the start level. A cool phone
 // still drains its battery, so auto also drops to saver while the battery runs low.
 //
-// Levels only change looks, never gameplay: hit tests, damage and mob counts stay the same.
+// Levels only change looks, never gameplay: hit tests, damage and mob counts stay the same. Nor
+// do they change the battle frame rate: every level, saver too, draws battles at the display's
+// rate up to BATTLE_FPS. A 30 fps cap shows every slipped refresh as a 50 ms frame (a visible
+// hitch) where at 60 it is 33 ms, so saver saves its power on resolution and effects instead.
 
 export type QualityMode = 'auto' | 'high' | 'saver';
 export const QUALITY_MODES: readonly QualityMode[] = ['auto', 'high', 'saver'];
@@ -19,26 +22,28 @@ export interface LevelSettings {
   fxBudget: number;
   /** Damage numbers on screen at once. */
   numbers: number;
-  fps: number;
 }
 
 // Each step down gives up what is least visible first: optional smoke and sparks, then the
-// damage-number density, then resolution, and the frame rate last.
+// damage-number density, then resolution.
 export const LEVELS: readonly LevelSettings[] = [
-  { name: 'saver', resolution: 1.5, fxBudget: 0.3, numbers: 120, fps: 30 },
-  { name: 'low', resolution: 1.5, fxBudget: 0.3, numbers: 150, fps: 60 },
-  { name: 'mid', resolution: 2, fxBudget: 0.3, numbers: 150, fps: 60 },
-  { name: 'phone', resolution: 2, fxBudget: 0.5, numbers: 300, fps: 60 },
-  { name: 'high', resolution: 2, fxBudget: 1.5, numbers: 600, fps: 60 },
+  { name: 'saver', resolution: 1.5, fxBudget: 0.3, numbers: 120 },
+  { name: 'low', resolution: 1.5, fxBudget: 0.3, numbers: 150 },
+  { name: 'mid', resolution: 2, fxBudget: 0.3, numbers: 150 },
+  { name: 'phone', resolution: 2, fxBudget: 0.5, numbers: 300 },
+  { name: 'high', resolution: 2, fxBudget: 1.5, numbers: 600 },
 ];
 const TOP = LEVELS.length - 1;
 
-/** Frame rate cap off the battlefield (lobby, results, pause, level-up cards): those screens
- *  barely move, and a phone that never gets hot never steps its level down for the battery. */
+/** Battle frame rate cap on every level: a 120 Hz screen draws every other refresh. */
+export const BATTLE_FPS = 60;
+/** Frame rate cap off the battlefield (lobby, results, pause, level-up cards). Those screens
+ *  barely move, so the uneven step a slipped refresh makes at 30 fps cannot be seen there, and
+ *  a phone sitting in the lobby spends half the power. */
 export const CALM_FPS = 30;
 
-export function targetFps(s: LevelSettings, calm: boolean): number {
-  return calm ? Math.min(CALM_FPS, s.fps) : s.fps;
+export function targetFps(calm: boolean): number {
+  return calm ? CALM_FPS : BATTLE_FPS;
 }
 const PHONE = 3;
 
@@ -106,21 +111,45 @@ export function useMsaa(mode: QualityMode, d: DeviceInfo): boolean {
   return mode === 'high' || (mode === 'auto' && !d.mobile);
 }
 
+/** A frame passes the gate once this many refreshes short of the cap's interval have gone by. */
+const GATE_SLACK = 0.6;
+/** The refresh estimate creeps up this much per animation frame, so a screen that slows its
+ *  refresh (a phone's battery saver) is followed within a couple of seconds. */
+const VSYNC_CREEP = 1.005;
+
 /**
- * Frame limiter for a requestAnimationFrame loop: on a 120 Hz screen a 60 fps cap runs every
- * other frame. Keeps a fixed schedule with a quarter-interval tolerance for timer jitter,
- * and resyncs after a stall instead of bursting to catch up.
+ * Frame limiter for a requestAnimationFrame loop, locked to the display: it runs every n-th
+ * refresh, n the most whole refreshes that fit in the cap's interval (one on a 60 or 90 Hz
+ * screen at 60 fps, two on 120 or 144 Hz), so every frame lasts the same. A fixed schedule
+ * would alternate one and two refreshes on 90 or 144 Hz, drift off a 60.1 Hz screen into a
+ * skipped refresh every few seconds, and squeeze a short frame in after a late one.
+ *
+ * The refresh is read from the animation frames themselves: the shortest gap lately (a late
+ * frame only ever makes a gap longer). A frame passes once the time since the last one passed
+ * is within GATE_SLACK refreshes of the cap's interval, which leaves over half a refresh of
+ * room for timestamp jitter either way; after a late frame the count starts again from it.
  */
 export class FrameGate {
-  private next = -Infinity;
+  /** The display's refresh interval estimate, ms. */
+  vsync = 1000 / 60;
+  private lastCall = -Infinity;
+  private lastPass = -Infinity;
 
   constructor(public fps: number) {}
 
   pass(nowMs: number): boolean {
-    const interval = 1000 / this.fps;
-    if (nowMs < this.next - interval * 0.25) return false;
-    this.next = nowMs - this.next > interval ? nowMs + interval : this.next + interval;
+    const gap = nowMs - this.lastCall;
+    this.lastCall = nowMs;
+    // a gap over 100 ms is a pause or a stall, not a refresh rate
+    if (gap > 1 && gap < 100) this.vsync = Math.min(gap, this.vsync * VSYNC_CREEP);
+    if (nowMs - this.lastPass < 1000 / this.fps - this.vsync * GATE_SLACK) return false;
+    this.lastPass = nowMs;
     return true;
+  }
+
+  /** What one frame should last at this cap and refresh: a whole number of refreshes. */
+  get frameMs(): number {
+    return Math.max(1, Math.ceil(1000 / this.fps / this.vsync - GATE_SLACK)) * this.vsync;
   }
 }
 
@@ -137,7 +166,7 @@ export interface GovernorOptions {
 }
 
 export const GOVERNOR: GovernorOptions = { window: 2, slowWindows: 2, upAfter: 30, maxUpAfter: 240, probe: 10 };
-/** Under this share of the level's frame rate a window is slow; over the second, stable. */
+/** Under this share of BATTLE_FPS a window is slow; over the second, stable. */
 const SLOW = 0.8;
 const STABLE = 0.9;
 
@@ -169,8 +198,7 @@ export class FrameGovernor {
     const fps = this.frames / this.time;
     const span = this.time;
     this.frames = this.time = 0;
-    const target = LEVELS[this.level].fps;
-    if (fps < target * SLOW) {
+    if (fps < BATTLE_FPS * SLOW) {
       this.stable = 0;
       if (++this.slow < this.opts.slowWindows || this.level <= this.range.min) return false;
       if (this.sinceUp < this.opts.probe) this.upAfter = Math.min(this.upAfter * 2, this.opts.maxUpAfter);
@@ -179,7 +207,7 @@ export class FrameGovernor {
       return true;
     }
     this.slow = 0;
-    this.stable = fps >= target * STABLE ? this.stable + span : 0;
+    this.stable = fps >= BATTLE_FPS * STABLE ? this.stable + span : 0;
     if (this.stable < this.upAfter || this.level >= this.range.max) return false;
     this.stable = 0;
     this.sinceUp = 0;
