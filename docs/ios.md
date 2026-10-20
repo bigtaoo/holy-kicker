@@ -417,8 +417,10 @@ Kicker's at build time.
   numbers. Pushes compile Holy Kicker only. Hot updates: `ota-ios` with theme `corgi` deploys to
   `corgi-ota.gamestao.com` (`wrangler/ota-corgi.jsonc`; the custom domain is made on the first
   deploy).
-- **Ads**: until the corgi has its own AdMob app, `adMob` is `null` and the build carries Google's
-  test ids with `live = false` (the workflow warns). Fine for TestFlight, never for review.
+- **Ads**: for now the corgi borrows Holy Kicker's AdMob app and units (the same ids in both
+  `apps.json` entries), so its ads are live but earn under Holy Kicker and the workflow warns. Give it
+  units of its own before review. With `adMob: null` the build carries Google's test ids with
+  `live = false` instead.
 - **Icon**: `art/reskin/corgi/ios/AppIcon.png`, 1024 px: the corgi in white armour, blasters
   firing at two bugs, on a navy sky with a yellow-green ring. Generated with
   `tools/edit_image.sh art/reskin/corgi/ios/ref_hero.png <out> art/reskin/corgi/ios/AppIcon.txt`

@@ -23,7 +23,11 @@
     "homeNameZh": "柯基突击队",
     "version": "1.0",
     "adFree": "com.gamestao.corgi.adfree",
-    "adMob": null,
+    "adMob": {
+      "app": "ca-app-pub-5437693117291100~7644915595",
+      "rewarded": "ca-app-pub-5437693117291100/1896010873",
+      "interstitial": "ca-app-pub-5437693117291100/7607502555"
+    },
     "ota": "https://corgi-ota.gamestao.com",
     "profile": "Corgi Commando App Store",
     "background": "#10122a",

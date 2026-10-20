@@ -29,7 +29,9 @@ describe('iOS apps', () => {
     for (const text of Object.values(corgi)) {
       expect(text).not.toContain('holykicker');
       expect(text).not.toContain('Holy Kicker');
-      expect(text).not.toContain('5437693117291100');
+      // the corgi may borrow Holy Kicker's ad units until it has its own (apps.json)
+      const corgiAds = Object.values(apps.corgi.adMob ?? {});
+      for (const id of Object.values(apps.monk.adMob ?? {})) if (!corgiAds.includes(id)) expect(text).not.toContain(id);
     }
     expect(corgi[F.pbx].match(/PRODUCT_BUNDLE_IDENTIFIER = ([^;]+);/g)).toEqual([
       'PRODUCT_BUNDLE_IDENTIFIER = com.gamestao.corgi;',

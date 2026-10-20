@@ -26,5 +26,7 @@ if (flag === '--print') {
   for (const p of paths) if (out[p] !== texts[p]) writeFileSync(join(ROOT, p), out[p]);
   if (app.icon !== ICON) copyFileSync(join(ROOT, app.icon), join(ROOT, ICON));
   if (!app.adMob) console.log(`::warning::${theme} has no AdMob units in apps.json: this build shows Google's test ads (TestFlight only)`);
+  const lender = Object.keys(APPS).find((k) => k !== theme && APPS[k].adMob && APPS[k].adMob.app === app.adMob?.app);
+  if (lender) console.log(`::warning::${theme} borrows ${lender}'s AdMob units: its earnings count as ${lender}'s until it has units of its own`);
   console.log(`iOS shell set to ${theme}: ${app.bundleId} ${app.version}, "${app.homeName}" / "${app.homeNameZh}"`);
 }
