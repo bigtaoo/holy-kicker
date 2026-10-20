@@ -16,7 +16,13 @@ export function webConfig(theme) {
     resolve: { alias: engineAlias },
     define: buildDefine(theme),
     plugins: [themeAssets(theme)],
-    server: { port: monk ? 5174 : 5184, host: true },
+    server: {
+      port: monk ? 5174 : 5184,
+      host: true,
+      // Build outputs inside the root: `build:wechat` deletes and rewrites client/wechat/art, and on
+      // Windows a watch on a deleted folder spins the dev server at full CPU until it restarts.
+      watch: { ignored: ['**/wechat/**', '**/dist*/**', '**/ios/**'] },
+    },
     build: { target: 'es2020', outDir: monk ? 'dist' : 'dist-new/new', emptyOutDir: true },
   }));
 }
