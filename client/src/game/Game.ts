@@ -191,8 +191,8 @@ export class Game {
     // in a chapter the elite and boss arrive later, so their views wait hidden
     this.elites = s.elites.length > 0 || chapter ? makeElites(app.renderer, this.world, art, scene, chapter, shadowTex, HERO_TOP_Z) : null;
     this.boss = makeBosses(app.renderer, this.world, art, scene, chapter ? setup.chapter : 0, !!s.boss, shadowTex, this.fx.pool);
-    const { fx, damage, shake, horde, elites, boss, corpses, balls } = this;
-    this.feedback = new HitFeedback({ fx, damage, shake, horde, elites, boss, corpses, balls });
+    const { fx, damage, shake, horde, elites, boss, corpses, balls, staff, fish, beads, bowls } = this;
+    this.feedback = new HitFeedback({ fx, damage, shake, horde, elites, boss, corpses, balls, staff, fish, beads, bowls });
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
@@ -320,6 +320,7 @@ export class Game {
           if (e.owner === LOCAL) this.hero.attack(s.players[0].relicId);
           break;
         case 'sweep': {
+          this.feedback.sweep(e);
           const p = s.players.find((q) => q.owner === e.owner);
           if (e.owner !== LOCAL || !p) break;
           this.staff.swing(e.brad, e.reach / FP, e.full, p.facing);

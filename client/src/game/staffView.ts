@@ -1,5 +1,6 @@
 import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import { CORGI, CORGI_FX } from './corgiFx';
+import { relicAlpha, relicExtra, relicSize } from './relicBlow';
 import { swingAngle, swingArc, type SwingArc } from './swing';
 
 // The staff relic's swing (engine systems/staff.ts): on a sweep the staff appears in the
@@ -8,7 +9,8 @@ import { swingAngle, swingArc, type SwingArc } from './swing';
 // ring), leaving a gold crescent over the ground that fades. advance() gives the
 // staff's angle, which the hero's front arm follows (hero.ts), and draw() puts the staff in
 // that hand. One swing at a time: a new sweep restarts it. The corgi's Plasma Saber leaves an
-// orange plasma arc, the Twin Saber's with a white-hot edge.
+// orange plasma arc, the Twin Saber's with a white-hot edge. `heat` (relicBlow.ts, set every
+// frame) makes the crescent wider and brighter, with a bright edge, while the screen is quiet.
 
 const TRAIL = CORGI ? CORGI_FX.orange : 0xffd860;
 /** The staff is held this far up the sprite (from the top), near its bottom end. */
@@ -21,8 +23,12 @@ const TRAIL_ALPHA = 0.45;
 /** The Ruyi Staff's ring: paler gold, a bright edge along its outside. */
 const RUYI_TRAIL = CORGI ? CORGI_FX.hot : 0xffe9a0;
 const RUYI_EDGE = CORGI ? 0xffffff : 0xfff8e0;
+/** The plain staff's edge, bright in the opening and faint late. */
+const EDGE = CORGI ? CORGI_FX.hot : 0xfff4c0;
 
 export class StaffSwing {
+  /** 0 the empty opening screen .. 1 a full late-game one; set by HitFeedback every frame. */
+  heat = 0;
   private readonly staff: Sprite;
   private readonly trail = new Graphics();
   private arc: SwingArc | null = null;
@@ -85,11 +91,16 @@ export class StaffSwing {
     this.trail.visible = true;
     this.trail.zIndex = this.trailZ;
     const g = this.trail.clear();
+    // wider and brighter on a quiet screen, its outer edge kept at the reach
+    const w = a.reach * 0.4 * relicSize(this.heat);
+    const mid = r + a.reach * 0.2 - w / 2;
+    const alpha = 1.3 * relicAlpha(this.heat) * fade;
     if (!this.ruyi) {
-      g.arc(hx, hy - TRAIL_Y, r, from, to).stroke({ color: TRAIL, width: a.reach * 0.4, alpha: TRAIL_ALPHA * fade, cap: 'butt' });
+      g.arc(hx, hy - TRAIL_Y, mid, from, to).stroke({ color: TRAIL, width: w, alpha: TRAIL_ALPHA * alpha, cap: 'butt' });
+      g.arc(hx, hy - TRAIL_Y, r + a.reach * 0.2, from, to).stroke({ color: EDGE, width: 12, alpha: 0.9 * relicExtra(this.heat) * fade, cap: 'butt' });
       return;
     }
-    g.arc(hx, hy - TRAIL_Y, r, from, to).stroke({ color: RUYI_TRAIL, width: a.reach * 0.4, alpha: (TRAIL_ALPHA + 0.1) * fade, cap: 'butt' });
+    g.arc(hx, hy - TRAIL_Y, mid, from, to).stroke({ color: RUYI_TRAIL, width: w, alpha: (TRAIL_ALPHA + 0.1) * alpha, cap: 'butt' });
     g.arc(hx, hy - TRAIL_Y, r + a.reach * 0.2, from, to).stroke({ color: RUYI_EDGE, width: 8, alpha: 0.9 * fade, cap: 'butt' });
   }
 }

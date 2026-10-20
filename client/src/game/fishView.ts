@@ -1,13 +1,16 @@
 import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import { FISH, FP, TICK_RATE } from '@hk/engine';
 import { CORGI, CORGI_FX } from './corgiFx';
+import { relicAlpha, relicExtra, relicSize } from './relicBlow';
 import { FISH_SHOW, fishPop, rippleAt } from './ripple';
 
 // The wooden fish relic (engine systems/fish.ts): on a tap the fish pops up under the hand
 // that knocks it (hero.ts "knock") and a gold ring grows from where he stood to the ring's
 // reach, then fades. Awakened, the fish becomes the Morning Bell: a bronze bell hanging from
 // the hand that swings when struck, its stunning ring a white double band. Rings stay where
-// they were tapped, like the sim's. The corgi's Pulse Emitter sends cyan rings.
+// they were tapped, like the sim's. The corgi's Pulse Emitter sends cyan rings. `heat`
+// (relicBlow.ts, set every frame) widens the band while the screen is quiet and sends a
+// fainter echo after it.
 
 const GOLD = CORGI ? CORGI_FX.cyan : 0xffd860;
 const STUN = 0xffffff;
@@ -20,6 +23,8 @@ const FISH_DROP = 4;
 /** The Morning Bell hangs from the hand by its loop, this tall, and swings this far (radians). */
 const BELL_H = 66;
 const BELL_SWAY = 0.35;
+/** The echo ring trails the band by this far, world units. */
+const ECHO = 60;
 
 interface Ripple {
   g: Graphics;
@@ -31,6 +36,8 @@ interface Ripple {
 }
 
 export class FishTaps {
+  /** 0 the empty opening screen .. 1 a full late-game one; set by HitFeedback every frame. */
+  heat = 0;
   private readonly fish: Sprite;
   private readonly ripples: Ripple[] = [];
   private fishT = FISH_SHOW;
@@ -92,9 +99,12 @@ export class FishTaps {
       }
       r.g.zIndex = this.ringZ;
       r.g.clear();
-      this.band(r.g, r.x, r.y, look.radius, r.stun ? 26 : 18, r.stun ? STUN : GOLD, look.alpha);
+      const size = relicSize(this.heat);
+      const alpha = look.alpha * relicAlpha(this.heat);
+      this.band(r.g, r.x, r.y, look.radius, (r.stun ? 26 : 18) * size, r.stun ? STUN : GOLD, alpha);
       // the stunning ring is a double band, so it reads apart from the ordinary ones
-      if (r.stun && look.radius > 60) this.band(r.g, r.x, r.y, look.radius - 50, 14, STUN, look.alpha);
+      if (r.stun && look.radius > 60) this.band(r.g, r.x, r.y, look.radius - 50, 14 * size, STUN, alpha);
+      else if (look.radius > ECHO) r.g.circle(r.x, r.y, look.radius - ECHO).stroke({ color: GOLD, width: 10 * size, alpha: 0.45 * alpha * relicExtra(this.heat) });
     }
     this.fishT += dt;
     const k = fishPop(this.fishT);
