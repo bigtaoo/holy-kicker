@@ -18,8 +18,18 @@ Working title: **Corgi Commando** (name not checked yet).
 
 ## Heroes
 
-The squad wears matching orange-and-gold armour with an open helmet. Each keeps its monk's stats
+The squad wears matching white armour with an open helmet and dark gunmetal pistols, so the
+warm colour stays on the fur (and the bulldog's gold belly plate). Each keeps its monk's stats
 and passive.
+
+**Armour colour**: the drawings have orange plates, which made each hero one orange block. The
+parts specs repaint them as the parts are cut (`"recolor"` in each `parts_spec.json`,
+`tools/recolor_armour.py`): the saturated orange of the body parts turns off-white and the guns'
+orange turns gunmetal; the cream, the glow, the undersuit and the fur parts keep their colour.
+Dark grey and navy were tried and lost the body on the dark planets and sat next to the bugs'
+blue-greys; white reads on every ground. Changing the paint means re-running the whole chain:
+`split_parts.py`, `pack_tao.py` (and `webp.py` for the corgi) and the portraits (below, "Squad
+rigs").
 
 | Monk | Hero | Look | Stats / passive |
 |---|---|---|---|

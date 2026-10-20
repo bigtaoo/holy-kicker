@@ -35,7 +35,10 @@ spec.json:
       {"name": "gun",                     # or a prop drawn on its own sheet: cut out, scaled
        "image": "gun.png", "scale": 0.2,  #   and placed so its `grip` (own pixels) lands on
        "grip": [800, 500], "pivot": [x, y]}  #   the pivot
-    ]
+    ],
+    "recolor": {"white": {"to": [h, s, v, lift], "parts": ["torso"]}}
+                                          # optional: repaints the orange of the parts named
+                                          #   (tools/recolor_armour.py)
   }
 
 Parts cut from the same drawing claim pixels from each other (exclusive, overlap); parts from
@@ -55,6 +58,7 @@ from PIL import Image, ImageChops, ImageDraw
 
 sys.path.insert(0, os.path.dirname(__file__))
 from cutout import background_mask  # noqa: E402
+from recolor_armour import paint_for, recolor  # noqa: E402
 
 PAD = 4  # transparent margin around each exported part
 DARK = 80  # HSV value below this counts as outline, not paint
@@ -145,6 +149,7 @@ def split(spec_path, out_dir):
     for part in spec["parts"]:
         if "image" in part:
             im, x0, y0 = prop(os.path.join(here, part["image"]), part, spec.get("clean_edges"))
+            im = repaint(spec, part, im)
             save_part(out_dir, part, part["pivot"], im, x0, y0, meta, layers)
             continue
         im = cuts[part["name"]]
@@ -159,6 +164,7 @@ def split(spec_path, out_dir):
             im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
             x0, y0 = round(tx + (x0 - fx) * k), round(ty + (y0 - fy) * k)
             pivot = [round(tx + (pivot[0] - fx) * k), round(ty + (pivot[1] - fy) * k)]
+        im = repaint(spec, part, im)
         save_part(out_dir, part, pivot, im, x0, y0, meta, layers)
     json.dump({"source": main, "parts": meta},
               open(os.path.join(out_dir, "parts.json"), "w"), indent=2)
@@ -251,6 +257,12 @@ def prop(path, part, clean=False):
     im = im.resize((round(im.width * k), round(im.height * k)), Image.LANCZOS)
     gx, gy = (part["grip"][0] - box[0]) * k, (part["grip"][1] - box[1]) * k
     return im, round(part["pivot"][0] - gx), round(part["pivot"][1] - gy)
+
+
+def repaint(spec, part, im):
+    """The part in the paint the spec's "recolor" gives it (tools/recolor_armour.py), if any."""
+    to = paint_for(spec, part["name"])
+    return recolor(im, to) if to else im
 
 
 def save_part(out_dir, part, pivot, im, x0, y0, meta, layers):
