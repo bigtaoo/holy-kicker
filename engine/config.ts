@@ -455,5 +455,6 @@ export const SPELLS = {
 };
 
 export * from './chapters';
+export * from './acts';
 export * from './foes';
 export * from './pace';

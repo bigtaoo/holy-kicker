@@ -22,6 +22,8 @@ const GHOST: RunConfig = { ...MARSH, chapter: 4 };
 const PEAK: RunConfig = { ...MARSH, chapter: 5 };
 /** Chapter 7: the marsh again, a step up the ladder (LADDER). */
 const ACT2: RunConfig = { ...MARSH, chapter: 7 };
+/** Chapter 12: the marsh in act 3, its elites with an affix (acts.ts). */
+const ACT3: RunConfig = { ...MARSH, chapter: 12 };
 /** Hard mode on chapter 5: HARD's health and hurt, and three elites on wave 10. */
 const HARD_PEAK: RunConfig = { ...PEAK, hard: true };
 /** The other monks: their stats and passives (systems/monks.ts). */
@@ -97,9 +99,9 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-21 for ENGINE_VERSION 46 (46: twenty chapters on the five maps in turn, health and hurt by LADDER, hard mode HARD percent more, the hero's lowest health kept for the stars; 45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
+    // Recorded 2026-10-21 for ENGINE_VERSION 47 (47: the acts' rules, acts.ts: the next map's newcomers and paired elites from act 2, elite and boss affixes from act 3, the boss rush from act 4; every foe holds its affixes and shield; 46: twenty chapters on the five maps in turn, health and hurt by LADDER, hard mode HARD percent more, the hero's lowest health kept for the stars; 45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
     // A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(46);
+    expect(ENGINE_VERSION).toBe(47);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -107,6 +109,7 @@ describe('Engine', () => {
     expect(run(GHOST, 4800, 4800).hashes[0]).toBe(GOLDEN_GHOST);
     expect(run(PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_PEAK);
     expect(run(ACT2, 4800, 4800).hashes[0]).toBe(GOLDEN_ACT2);
+    expect(run(ACT3, 4800, 4800).hashes[0]).toBe(GOLDEN_ACT3);
     expect(run(HARD_PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_HARD);
     expect(GOLDEN_HARD).not.toBe(GOLDEN_PEAK);
     expect(run(FAT, 4800, 4800).hashes[0]).toBe(GOLDEN_FAT);
@@ -122,18 +125,19 @@ describe('Engine', () => {
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns']);
   });
 });
 
-const GOLDEN = 585820792;
-const GOLDEN_CHAPTER = 3365241756;
-const GOLDEN_MARSH = 3250187278;
-const GOLDEN_SNOW = 3913215400;
-const GOLDEN_GHOST = 2137824663;
-const GOLDEN_PEAK = 2809488120;
-const GOLDEN_ACT2 = 3897246998;
-const GOLDEN_HARD = 1564969082;
-const GOLDEN_FAT = 3839461079;
-const GOLDEN_NOVICE = 294910533;
-const GOLDEN_MUTATED = [1623467404, 1603208013, 1767731000];
+const GOLDEN = 3426240632;
+const GOLDEN_CHAPTER = 2629457006;
+const GOLDEN_MARSH = 1122048100;
+const GOLDEN_SNOW = 341550898;
+const GOLDEN_GHOST = 270900259;
+const GOLDEN_PEAK = 3124291034;
+const GOLDEN_ACT2 = 3165714347;
+const GOLDEN_ACT3 = 1285247119;
+const GOLDEN_HARD = 3169156024;
+const GOLDEN_FAT = 454423253;
+const GOLDEN_NOVICE = 1501937219;
+const GOLDEN_MUTATED = [2589075814, 2470000581, 338794882];

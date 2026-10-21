@@ -22,7 +22,7 @@ import { stepWitch } from './witch';
 
 export function newBoss(x: number, y: number, hp = BOSS.hp, empowered = false, kind: BossKind = 'abbot'): Boss {
   const cooldown = kind === 'carp' ? CARP.cooldown : kind === 'witch' ? WITCH.cooldown : kind === 'judge' ? JUDGE.cooldown : kind === 'demon' ? DEMON.cooldown : BOSS.cooldown;
-  return { ...body(x, y), kind, phase: 'walk', t: 0, cooldown, zoneX: x, zoneY: y, hp, maxHp: hp, empowered, shots: 0 };
+  return { ...body(x, y), kind, phase: 'walk', t: 0, cooldown, zoneX: x, zoneY: y, hp, maxHp: hp, empowered, shots: 0, affixes: 0, guard: 0, guardT: 0 };
 }
 
 /** Takes damage; true when this blow brings it down. */

@@ -137,6 +137,10 @@ export interface Elite extends Body {
   /** The charge's velocity per tick, set when it aims. */
   vx: number;
   vy: number;
+  /** Its affixes (AFFIXES bits, act 3 on), the hits its shield still blocks and the ticks toward the next. */
+  affixes: number;
+  guard: number;
+  guardT: number;
 }
 
 /** Still going, the chapter boss fell (won) or every hero is down (lost, until a revive). */
@@ -159,7 +163,14 @@ export interface Boss extends Body {
   empowered: boolean;
   /** Attacks made: the witch takes turns between summoning and her bone fan. */
   shots: number;
+  /** Its affixes (AFFIXES bits, act 3 on), the hits its shield still blocks and the ticks toward the next. */
+  affixes: number;
+  guard: number;
+  guardT: number;
 }
+
+/** An elite or the boss: what the affixes work on. */
+export type Foe = Elite | Boss;
 
 /** Under water (the carp diving or rising): out of reach, and nothing to bump into. */
 export function submerged(b: Boss): boolean {
@@ -390,6 +401,8 @@ export interface SimState {
   /** The elites standing (big jiangshi, chargers): one on elite waves, the twins on the mid-boss wave. */
   elites: Elite[];
   boss: Boss | null;
+  /** The bosses still to come on a boss rush's last wave (act 4), in order. */
+  rush: BossKind[];
   balls: Ball[];
   bullets: Bullet[];
   zones: Zone[];
@@ -441,7 +454,7 @@ export function teleport(b: Body, x: number, y: number): void {
 export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
-    config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [], spawns: [],
+    config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, rush: [], balls: [], bullets: [], zones: [], spawns: [],
     gems: [], gemCells: new Map(), resting: 0, fields: [], palms: [], cymbals: [], talismans: [], bombs: [], knives: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, waveKills: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
@@ -463,5 +476,5 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
 }
 
 export function newElite(x: number, y: number, id = 0, hp = ELITE.hp, cd = ELITE.cooldown, kind: EliteKind = 'charger'): Elite {
-  return { ...body(x, y), id, kind, hp, maxHp: hp, stun: 0, phase: 'walk', shots: 0, t: 0, cd, vx: 0, vy: 0 };
+  return { ...body(x, y), id, kind, hp, maxHp: hp, stun: 0, phase: 'walk', shots: 0, t: 0, cd, vx: 0, vy: 0, affixes: 0, guard: 0, guardT: 0 };
 }

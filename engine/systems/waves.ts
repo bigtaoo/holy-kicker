@@ -1,10 +1,11 @@
 import {
-  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HARD, HORDE, ladder, LADDER, mapOf, MOB_KINDS, PACE, SHRINE,
+  ACTS, actRule, BOSS, CHAPTERS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HARD, HORDE, ladder, LADDER, mapOf, MOB_KINDS, PACE, SHRINE,
   rampChapter, tempKind, TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
 import { MUTATORS, type MutatorId } from '../mutators';
 import { body, newElite, newMob, underground, type SimState } from '../state';
+import { arm } from './affixes';
 import { newBoss } from './boss';
 import { openShrine, payBet } from './build';
 import { respawnPoint, ringPoint } from './horde';
@@ -72,6 +73,12 @@ export function foeHp(hp: number, chapter: number, hard: boolean): number {
 export function newcomer(chapter: number, wave: number, n: number): MobKind {
   const rules = CHAPTER_MOBS[mapOf(chapter) - 1];
   for (const r of rules) if (wave >= r.from && n % r.every === r.every - 1) return r.kind;
+  // from act 2 the next map's newcomers join too, ACTS.mixDelay waves after their own start
+  if (actRule(chapter, ACTS.mix)) {
+    for (const r of CHAPTER_MOBS[mapOf(chapter + 1) - 1]) {
+      if (wave >= r.from + ACTS.mixDelay && n % r.every === r.every - 1) return r.kind;
+    }
+  }
   return 'chaser';
 }
 
@@ -112,6 +119,7 @@ export function eliteKinds(chapter: number, wave: number, last: number, hard = f
     kinds = [chapterElite(chapter)];
     if (map > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
   }
+  if (actRule(chapter, ACTS.pairs)) kinds.push(kinds[0]);
   if (hard) kinds.push(kinds[0]);
   if (mutator === 'elites') for (let i = 0; i < MUTATORS.elites.more; i++) kinds.push(kinds[0]);
   return kinds;
@@ -157,11 +165,42 @@ export function isMidBoss(wave: number, last: number): boolean {
   return WAVES.midBosses.includes(wave) && wave <= last;
 }
 
+/**
+ * The bosses of chapter `chapter`'s last wave, in the order they come (ACTS.rush): its map's
+ * alone before act 4; then the next map's (the abbot instead of the Inner Demon) and its own,
+ * and on the last chapter every map's, the Inner Demon last.
+ */
+export function rushOf(chapter: number): BossKind[] {
+  const own = chapterBoss(chapter);
+  if (!actRule(chapter, ACTS.rush)) return [own];
+  if (chapter >= CHAPTERS) return [...CHAPTER_BOSSES];
+  const next = chapterBoss(chapter + 1);
+  return [next === 'demon' ? CHAPTER_BOSSES[0] : next, own];
+}
+
+/** A rush boss of kind `kind` comes in on the ring around the hero, `lead` with ACTS.rushLeadPercent of its health. */
+function rushBoss(s: SimState, kind: BossKind, lead: boolean): void {
+  const p = s.players[0];
+  const at = body(0, 0);
+  ringPoint(s.ai, p.x, p.y, at);
+  const hp = foeHp(bossOf(kind, false).hp, s.config.chapter, s.config.hard);
+  s.boss = newBoss(at.x, at.y, Math.trunc((hp * (lead ? ACTS.rushLeadPercent : 100)) / 100), false, kind);
+  arm(s, s.boss, true);
+}
+
+/** The next boss of the rush comes (the one before has fallen ACTS.rushAfter ago). */
+export function rushNext(s: SimState, events: SimEvent[]): void {
+  const kind = s.rush.shift();
+  if (!kind) return;
+  rushBoss(s, kind, s.rush.length > 0);
+  events.push({ type: 'bossNext', kind });
+}
+
 /** The mid-boss (the twins or the empowered boss) or the chapter boss is standing. */
 export function bossUp(s: SimState): boolean {
   const last = s.config.waves;
   if (!isBossWave(s.wave, last)) return false;
-  return (s.boss !== null && s.boss.phase !== 'down') || (isMidBoss(s.wave, last) && s.elites.length > 0);
+  return (s.boss !== null && s.boss.phase !== 'down') || (s.wave === last && s.rush.length > 0) || (isMidBoss(s.wave, last) && s.elites.length > 0);
 }
 
 /** A boss stands and the standing horde is still above WAVES.bossHordePercent of the wave's. */
@@ -224,6 +263,7 @@ export function beginWave(s: SimState, wave: number): void {
     for (const kind of eliteKinds(s.config.chapter, wave, last, s.config.hard, s.config.mutator ?? null)) {
       const e = newEliteOf(s, kind);
       ringPoint(s.ai, p.x, p.y, e);
+      arm(s, e, false);
       s.elites.push(e);
     }
   }
@@ -232,6 +272,7 @@ export function beginWave(s: SimState, wave: number): void {
     ringPoint(s.ai, p.x, p.y, at);
     const kind = chapterBoss(s.config.chapter - 1);
     s.boss = newBoss(at.x, at.y, waveFoeHp(bossOf(kind, true).hp, s.config.chapter, wave, s.config.hard), true, kind);
+    arm(s, s.boss, true);
   } else if (isMidBoss(wave, last)) {
     // the twins come from opposite sides of the hero
     const hp = twinHp(s.config.chapter, wave, s.config.hard);
@@ -240,9 +281,10 @@ export function beginWave(s: SimState, wave: number): void {
     const b = newElite(2 * p.x - a.x, 2 * p.y - a.y, s.nextId++, hp, ELITE.cooldown + WAVES.twinDelay);
     s.elites.push(a, b);
   } else if (isBossWave(wave, last) && !s.boss) {
-    ringPoint(s.ai, p.x, p.y, at);
-    const kind = chapterBoss(s.config.chapter);
-    s.boss = newBoss(at.x, at.y, foeHp(bossOf(kind, false).hp, s.config.chapter, s.config.hard), false, kind);
+    // the chapter's boss, or the first of its rush with the rest to follow
+    const [first, ...rest] = rushOf(s.config.chapter);
+    s.rush = rest;
+    rushBoss(s, first, rest.length > 0);
   }
 }
 
@@ -257,6 +299,10 @@ export function waveSystem(s: SimState, events: SimEvent[]): void {
   if (isMidBoss(s.wave, last) && (s.elites.length > 0 || (s.boss && s.boss.phase !== 'down'))) return;
   if (s.wave === last) {
     if (s.boss && s.boss.phase !== 'down') return;
+    if (s.rush.length > 0) {
+      if (!s.boss || s.boss.t >= ACTS.rushAfter) rushNext(s, events);
+      return;
+    }
     s.outcome = 'won';
     for (const p of s.players) payBet(p);
     events.push({ type: 'cleared' });

@@ -68,6 +68,26 @@ is recorded.
   chapter to the next is flatter than the old five-chapter one (`twenty-chapters` experiment,
   2026-10-21: a casual player clears chapter 20 around day 40, 2–16 tries a chapter).
 
+### Acts
+
+Every round of the five maps is an act (engine `acts.ts`, `ACTS`); each act from the second
+keeps the earlier acts' rules and adds one, so the same art plays differently. Hard mode plays
+the same rules.
+
+- **Act 2 (chapters 6–10), night**: the view darkens and cools the ground (client only); the
+  next map's newcomers join the horde `ACTS.mixDelay` waves after their own start, and the
+  map's elite comes as a pair, each at full health (the ladder carries the cost).
+- **Act 3 (11–15), affixes** (`AFFIX`, `systems/affixes.ts`): elites carry one, bosses and
+  mid-bosses two, drawn as they arrive: **shield** (blocks whole hits, 3, one back every 2 s),
+  **haste** (cooldowns 1.5× and a wolf-leader howl every 5 s), **split** (bone crawlers at every
+  quarter of health lost) and **explode** (a bullet ring and a marked circle at every quarter).
+  Each shows a code-drawn sticker badge: over an elite's head, beside the boss bar for a boss.
+- **Act 4 (16–20), boss rush**: the last wave brings the next map's boss at half health (the
+  abbot instead of the Inner Demon), then the map's own, each 1.5 s after the one before falls;
+  chapter 20 brings all five, the Inner Demon last.
+- **The story moves with them**: an opening line per act and the act's own mid-boss and boss
+  lines (`story.a{act}.*`, docs/content.md "Story").
+
 ### Stars
 
 A cleared chapter shows up to three stars on the lobby's card (the best run's), the results

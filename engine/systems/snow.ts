@@ -1,7 +1,7 @@
 import { CASTER, HURT, MOB_KINDS, WITCH, WOLF_LEADER, tempKind } from '../config';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
-import { newMob, teleport, underground, type Elite, type Mob, type SimState } from '../state';
+import { newMob, teleport, underground, type Mob, type SimState } from '../state';
 import { splitInto } from './ghost';
 import { nearestPlayer } from './horde';
 import { mobHp } from './waves';
@@ -34,8 +34,8 @@ export function mobSpeed(m: Mob): number {
   return m.haste > 0 ? Math.trunc((v * WOLF_LEADER.hastePercent) / 100) : v;
 }
 
-/** The wolf leader howls: every mob standing within reach of it runs fast for a while. */
-export function howl(s: SimState, e: Elite, events: SimEvent[]): void {
+/** The wolf leader (or a hasted foe, systems/affixes.ts) howls: every mob standing within reach of it runs fast for a while. */
+export function howl(s: SimState, e: { x: number; y: number }, events: SimEvent[]): void {
   const r2 = WOLF_LEADER.howlRadius * WOLF_LEADER.howlRadius;
   for (const m of s.mobs) if (!underground(m) && dist2(m.x - e.x, m.y - e.y) < r2) m.haste = WOLF_LEADER.haste;
   events.push({ type: 'howl', x: e.x, y: e.y, radius: WOLF_LEADER.howlRadius });

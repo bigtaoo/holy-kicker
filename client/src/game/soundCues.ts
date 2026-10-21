@@ -46,6 +46,7 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
     case 'bossDown':
       return 'bossDown';
     case 'bossBack':
+    case 'bossNext':
       return 'splash';
     case 'blast':
       return 'blast';

@@ -3,6 +3,7 @@ import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { submerged, underground, type Ball, type Body, type Elite, type Player, type SimState } from '../state';
+import { foeHurt, guards } from './affixes';
 import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
@@ -117,6 +118,12 @@ export function damage(
     events.push({ type: 'block', index: i, x: t.x, y: t.y });
     return;
   }
+  // an affix shield takes any hit whole (systems/affixes.ts)
+  const foe = i < s.mobs.length ? null : (eliteAt(s, i) ?? s.boss);
+  if (foe && guards(foe)) {
+    events.push({ type: 'block', index: i, x: t.x, y: t.y });
+    return;
+  }
   const crit = s.combat.chance(DAMAGE.critPercent + stat(by, 'crit'), 100);
   const roll = s.combat.range(DAMAGE.min, DAMAGE.max) * (crit ? DAMAGE.critMul : 1);
   const value = Math.max(1, Math.trunc((roll * pct * (100 + stat(by, 'attack'))) / 10000));
@@ -124,7 +131,10 @@ export function damage(
   const kind = i < s.mobs.length ? 'mob' : elite ? 'elite' : 'boss';
   events.push({ type: 'hit', kind, index: i, x: t.x, y: t.y, value, crit, ball: !!ball, bx: ball?.x ?? 0, by: ball?.y ?? 0 });
   if (kind === 'boss') {
-    if (hurtBoss(s.boss!, value)) {
+    const before = s.boss!.hp;
+    const down = hurtBoss(s.boss!, value);
+    foeHurt(s, s.boss!, before);
+    if (down) {
       s.boss!.phase = 'down';
       s.boss!.t = 0;
       events.push({ type: 'bossDown' });
@@ -132,11 +142,14 @@ export function damage(
   } else if (elite) {
     // the sandbox keeps its elite for the readability tests; in a chapter it can fall
     const e = elite;
+    const at = i - s.mobs.length;
+    const before = e.hp;
     if (s.config.waves > 0) e.hp = Math.max(0, e.hp - value);
+    foeHurt(s, e, before);
     if (e.hp === 0) {
       events.push({ type: 'eliteDown', id: e.id, x: e.x, y: e.y });
       dropGem(s, e.x, e.y, ELITE.gem);
-      s.elites.splice(i - s.mobs.length, 1);
+      s.elites.splice(at, 1);
       return;
     }
     if (!knock) return;

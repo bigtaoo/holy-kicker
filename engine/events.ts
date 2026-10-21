@@ -1,4 +1,4 @@
-import type { SpellKind } from './config';
+import type { BossKind, SpellKind } from './config';
 import type { CardKind } from './content';
 
 // One-shot things that happened during a tick, the only channel from the sim to the view
@@ -56,6 +56,8 @@ export type SimEvent =
   | { type: 'bossSlam'; x: number; y: number; radius: number }
   | { type: 'bossDown' }
   | { type: 'bossBack' }
+  /** The next boss of a boss rush (systems/waves.ts rushNext) came in. */
+  | { type: 'bossNext'; kind: BossKind }
   | { type: 'blast'; x: number; y: number; radius: number }
   /** Gems reached a player this tick; `tier` is the biggest of them. */
   | { type: 'pickup'; owner: number; tier: number }

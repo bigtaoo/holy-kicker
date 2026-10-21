@@ -5,6 +5,7 @@ import { LocalInputSource, type InputSource, type PlayerCommand } from './input'
 import { toFp } from './math/fixed';
 import { cosB, sinB, TRIG_ONE } from './math/trig';
 import { createState, newElite, newMob, newPlayer, type SimState } from './state';
+import { affixSystem } from './systems/affixes';
 import { bossSystem, newBoss } from './systems/boss';
 import { buildSystem, choosing, maxHpOf } from './systems/build';
 import { ballSystem } from './systems/combat';
@@ -27,10 +28,10 @@ import { mutatorBonus } from './mutators';
 // The system order below is part of the determinism contract (stepOrder in Engine.test.ts):
 // changing it, or any rule inside a system, changes every replay, so bump ENGINE_VERSION.
 
-export const ENGINE_VERSION = 46;
+export const ENGINE_VERSION = 47;
 
 export const STEP_ORDER = [
-  'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns',
+  'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns',
 ] as const;
 
 export class Engine {
@@ -76,6 +77,7 @@ export class Engine {
     emergeSystem(s, events, hurt);
     eliteSystem(s, events, hurt);
     bossSystem(s, events, hurt);
+    affixSystem(s, events);
     shooterSystem(s);
     casterSystem(s);
     bulletSystem(s, hurt);
