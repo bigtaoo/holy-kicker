@@ -166,6 +166,31 @@ export const corgiId: Table<typeof corgiEn> = {
       bossBefore: 'Kau terbang sejauh ini untuk mencariku. Aku adalah kau, versi upgrade.',
       bossAfter: 'Hanya salinan berwatak buruk. Saatnya terbang pulang untuk camilan.',
     },
+    a2: {
+      open: 'Malam di planet-planet lama. Sinyalnya makin keras dalam gelap.',
+      midBefore: 'Sinyal itu menambal cangkangku lagi. Sekarang ia mau punyamu.',
+      midAfter: 'Sinyal itu melepaskannya. Cuma pinjam sebentar.',
+      bossBefore: 'Saat malam, sinyal itu melihat lewat mataku. Ia melihatmu, anjing kecil.',
+      bossAfter: 'Sinyalnya hilang saat matahari terbit. Baunya seperti Mecha-Biscuit.',
+    },
+    a3: {
+      open: 'Kau pernah menghancurkanku. Sekarang setiap chip-ku punya inang baru.',
+      midBefore: 'Chip Mecha-Biscuit berdengung di dalamku. Tak ada yang bisa menghentikanku!',
+      midAfter: 'Satu chip lagi jadi rongsokan.',
+      bossBefore: 'Chip di cangkangku bernyanyi. Lagu tidak bisa ditembak.',
+      bossAfter: 'Chip-nya retak. Berapa banyak kepingan yang dia sebar?',
+    },
+    a4: {
+      open: 'Kawan-kawan lama, nyalakan diri. Si anjing kecil pulang.',
+      midBefore: 'Dia me-reboot-ku dari tumpukan rongsokan. Satu ronde lagi!',
+      midAfter: 'Matikan dirimu. Kau pantas istirahat.',
+      bossBefore: 'Kami semua kembali demi kau. Satu demi satu.',
+      bossAfter: 'Mereka terus kembali, satu per satu. Dia pasti sudah dekat.',
+    },
+    finale: {
+      bossBefore: 'Setiap serangga yang pernah kau tembak hancur, ada di sini sekaligus. Dan aku memimpin mereka.',
+      bossAfter: 'Semuanya mati, kau juga. Saatnya terbang pulang untuk camilan.',
+    },
   },
   codex: {
     sutra: 'Cetak biru: {goal}',

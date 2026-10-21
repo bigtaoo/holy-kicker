@@ -165,6 +165,31 @@ export const monkId: Table<typeof monkEn> = {
       bossBefore: 'Kau mendaki sejauh ini untuk menemukanku. Aku adalah kau.',
       bossAfter: 'Kegelapan juga ada di dalamku. Saatnya pulang dan menyapu kuil.',
     },
+    a2: {
+      open: 'Malam turun di jalan-jalan tua. Ada sesuatu berjalan di dalam bayangan.',
+      midBefore: 'Sebuah bayangan meminjamkan kekuatannya padaku. Ia menginginkanmu, biksu cilik.',
+      midAfter: 'Bayangan itu menyelinap keluar darinya. Cuma numpang pinjam.',
+      bossBefore: 'Di malam hari, bayangan melihat lewat mataku. Dan ia melihatmu.',
+      bossAfter: 'Bayangan itu kabur sebelum fajar. Baunya seperti Iblis Batin.',
+    },
+    a3: {
+      open: 'Kau pernah menghancurkanku. Kini setiap kepinganku sudah menemukan inang.',
+      midBefore: 'Kepingan iblis membara dalam diriku. Aku belum pernah sekuat ini!',
+      midAfter: 'Satu lagi kepingan iblis, tercerai-berai.',
+      bossBefore: 'Serpihan iblis bernyanyi di dadaku. Lagu tak bisa kau tendang.',
+      bossAfter: 'Serpihannya retak. Pecah jadi berapa keping, ya?',
+    },
+    a4: {
+      open: 'Kawan-kawan lama, bangunlah. Biksu cilik pulang.',
+      midBefore: 'Dia memanggilku kembali dari kegelapan. Aku berutang satu pertarungan lagi padanya.',
+      midAfter: 'Tidurlah lagi. Kau pantas istirahat.',
+      bossBefore: 'Kami semua kembali demi kau. Satu demi satu.',
+      bossAfter: 'Mereka terus kembali, satu per satu. Dia pasti sudah dekat.',
+    },
+    finale: {
+      bossBefore: 'Semua musuh yang pernah kau tendang, di sini sekaligus. Dan akulah pemimpinnya.',
+      bossAfter: 'Semuanya sudah beristirahat, kau juga. Akhirnya aku bisa menyapu kuil.',
+    },
   },
   codex: {
     sutra: 'Syarat buka: {goal}',

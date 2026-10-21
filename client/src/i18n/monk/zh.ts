@@ -165,6 +165,31 @@ export const monkZh: Table<typeof monkEn> = {
       bossBefore: '你一路打上来，要找的就是我。我就是你。',
       bossAfter: '原来黑气也在我心里。好了，回寺里扫地去。',
     },
+    a2: {
+      open: '夜色落在旧路上，影子里有东西在走。',
+      midBefore: '影子借了我力气。它要的是你，小和尚。',
+      midAfter: '影子从他身上溜走了，原来只是借用。',
+      bossBefore: '一入夜，影子就借我的眼睛看。它看见你了。',
+      bossAfter: '天亮前影子逃了，一股心魔的味道。',
+    },
+    a3: {
+      open: '你打碎过我一次。如今我的每一片都找到了宿主。',
+      midBefore: '心魔的碎片在我体内燃烧，我从没这么强过！',
+      midAfter: '又打散了一片心魔。',
+      bossBefore: '心魔碎片在我胸口唱歌。歌声你可踢不走。',
+      bossAfter: '碎片裂了。它到底碎成了多少片？',
+    },
+    a4: {
+      open: '老朋友们，醒醒。小和尚回来了。',
+      midBefore: '他把我从黑暗里唤了回来，我欠他一场架。',
+      midAfter: '睡吧，你该歇歇了。',
+      bossBefore: '我们都为你回来了，一个接一个。',
+      bossAfter: '一个接一个地回来。他就在不远处了。',
+    },
+    finale: {
+      bossBefore: '你踢过的每一个对手都在这里，由我带领。',
+      bossAfter: '他们都安息了，你也是。这回终于能回去扫地了。',
+    },
   },
   codex: {
     sutra: '解锁条件：{goal}',

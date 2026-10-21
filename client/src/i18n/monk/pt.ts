@@ -165,6 +165,31 @@ export const monkPt: Table<typeof monkEn> = {
       bossBefore: 'Você subiu até aqui para me encontrar. Eu sou você.',
       bossAfter: 'As trevas estavam em mim também. Hora de voltar e varrer o templo.',
     },
+    a2: {
+      open: 'A noite cai nas velhas estradas. Algo anda dentro das sombras.',
+      midBefore: 'Uma sombra me emprestou sua força. Ela quer você, monginho.',
+      midAfter: 'A sombra escapou dele. Era só emprestada.',
+      bossBefore: 'À noite, a sombra enxerga pelos meus olhos. E ela vê você.',
+      bossAfter: 'A sombra fugiu antes do amanhecer. Tinha cheiro de Demônio Interior.',
+    },
+    a3: {
+      open: 'Você me quebrou uma vez. Agora cada pedaço meu achou um hospedeiro.',
+      midBefore: 'Um pedaço do demônio queima em mim. Nunca fui tão forte!',
+      midAfter: 'Mais um pedaço do demônio, espalhado.',
+      bossBefore: 'O fragmento do demônio canta no meu peito. Não dá pra chutar uma canção.',
+      bossAfter: 'O fragmento rachou. Em quantos pedaços ele se partiu?',
+    },
+    a4: {
+      open: 'Velhos amigos, acordem. O monginho está voltando pra casa.',
+      midBefore: 'Ele me chamou de volta da escuridão. Devo a ele mais uma luta.',
+      midAfter: 'Volte a dormir. Você mereceu.',
+      bossBefore: 'Todos nós voltamos por você. Um atrás do outro.',
+      bossAfter: 'Eles continuam voltando, um por um. Ele deve estar perto.',
+    },
+    finale: {
+      bossBefore: 'Todo inimigo que você já chutou, aqui de uma vez. E eu os lidero.',
+      bossAfter: 'Todos em paz, e você também. Agora enfim posso varrer o templo.',
+    },
   },
   codex: {
     sutra: 'Desbloqueio: {goal}',

@@ -165,6 +165,31 @@ export const corgiDe: Table<typeof corgiEn> = {
       bossBefore: 'Du bist den ganzen Weg geflogen, um mich zu finden. Ich bin du, verbessert.',
       bossAfter: 'Nur eine Kopie mit schlechter Laune. Zeit, heimzufliegen und Leckerli zu holen.',
     },
+    a2: {
+      open: 'Nacht auf den alten Planeten. Im Dunkeln ist das Signal lauter.',
+      midBefore: 'Das Signal hat meinen Panzer wieder repariert. Jetzt will es deinen.',
+      midAfter: 'Das Signal hat ihn losgelassen. Es war nur geliehen.',
+      bossBefore: 'Nachts sieht das Signal durch meine Augen. Es sieht dich, Welpe.',
+      bossAfter: 'Bei Sonnenaufgang verstummte das Signal. Es roch nach Mecha-Biscuit.',
+    },
+    a3: {
+      open: 'Du hast mich einmal zerschmettert. Jetzt hat jeder Chip von mir einen neuen Wirt.',
+      midBefore: 'Ein Chip von Mecha-Biscuit summt in mir. Ich bin unaufhaltsam!',
+      midAfter: 'Noch ein Chip verschrottet.',
+      bossBefore: 'Der Chip in meinem Panzer singt. Ein Lied kann man nicht abschießen.',
+      bossAfter: 'Der Chip ist gesprungen. Wie viele Teile hat er verstreut?',
+    },
+    a4: {
+      open: 'Alte Freunde, hochfahren. Der Welpe kommt nach Hause.',
+      midBefore: 'Er hat mich vom Schrotthaufen neu gestartet. Noch eine Runde!',
+      midAfter: 'Runterfahren. Du hast es dir verdient.',
+      bossBefore: 'Wir sind alle für dich zurückgekommen. Einer nach dem anderen.',
+      bossAfter: 'Sie kommen immer wieder, einer nach dem anderen. Er muss nah sein.',
+    },
+    finale: {
+      bossBefore: 'Jeder Käfer, den du je weggepustet hast, alle auf einmal. Und ich führe sie an.',
+      bossAfter: 'Alle abgeschaltet, und du auch. Zeit, heimzufliegen und Leckerli zu holen.',
+    },
   },
   codex: {
     sutra: 'Bauplan: {goal}',

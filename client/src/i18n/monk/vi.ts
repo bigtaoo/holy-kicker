@@ -165,6 +165,31 @@ export const monkVi: Table<typeof monkEn> = {
       bossBefore: 'Ngươi leo cả chặng đường để tìm ta. Ta chính là ngươi.',
       bossAfter: 'Bóng tối cũng ở trong con. Về nhà quét chùa thôi.',
     },
+    a2: {
+      open: 'Đêm buông xuống những con đường cũ. Có thứ gì đang đi trong bóng đêm.',
+      midBefore: 'Một cái bóng cho ta mượn sức mạnh. Nó muốn ngươi, chú tiểu.',
+      midAfter: 'Cái bóng đã chuồn khỏi hắn. Hóa ra chỉ là mượn tạm.',
+      bossBefore: 'Đêm xuống, cái bóng nhìn qua mắt ta. Và nó thấy ngươi.',
+      bossAfter: 'Cái bóng trốn mất trước bình minh. Toàn mùi Tâm Ma.',
+    },
+    a3: {
+      open: 'Ngươi đã đập vỡ ta một lần. Giờ mỗi mảnh của ta đều tìm được vật chủ.',
+      midBefore: 'Một mảnh Tâm Ma đang cháy trong ta. Ta chưa bao giờ mạnh thế này!',
+      midAfter: 'Lại thêm một mảnh Tâm Ma tan tác.',
+      bossBefore: 'Mảnh Tâm Ma hát trong ngực ta. Bài hát thì ngươi đá sao được.',
+      bossAfter: 'Mảnh vỡ nứt rồi. Rốt cuộc nó vỡ thành bao nhiêu mảnh?',
+    },
+    a4: {
+      open: 'Các bạn cũ, dậy đi. Chú tiểu sắp về nhà rồi.',
+      midBefore: 'Ngài gọi ta về từ bóng tối. Ta còn nợ ngài một trận.',
+      midAfter: 'Ngủ tiếp đi. Cứ nghỉ cho khỏe.',
+      bossBefore: 'Tất cả chúng ta đều quay lại vì ngươi. Hết kẻ này đến kẻ khác.',
+      bossAfter: 'Cứ lần lượt quay lại từng kẻ một. Hắn ở gần đây thôi.',
+    },
+    finale: {
+      bossBefore: 'Mọi kẻ thù ngươi từng đá, đều ở đây cùng lúc. Và ta dẫn đầu.',
+      bossAfter: 'Tất cả đã yên nghỉ, ngươi cũng vậy. Cuối cùng cũng được về quét chùa.',
+    },
   },
   codex: {
     sutra: 'Mở khóa: {goal}',

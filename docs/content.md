@@ -499,6 +499,13 @@ funny outside, serious threat (as agreed for the art).
   thread: the abbot fell, the darkness leads from the marsh up the snow pass and through the
   ghost market (the judge's book names Demon Peak), and the last boss is the monk himself.
   Hard mode replays the same lines.
+- **The later acts** (chapters 6–20, one act every 5, docs/design.md "Acts") push the story on
+  with one set of lines an act instead of the map's (`story.a2`–`a4`), spoken by the chapter's
+  own foes, plus an opening line on wave 1: in act 2 the Inner Demon's shadows possess the old
+  foes at night (the night tint); in act 3 its fragments corrupt them (the affixes); in act 4 it
+  calls them all back one by one (the boss rush, whose leader speaks first). Chapter 20's boss
+  lines are their own (`story.finale`): the demon leads every old foe into the final battle. The
+  corgi tells the same arc with Mecha-Biscuit's signal and chips.
 
 ## International players
 

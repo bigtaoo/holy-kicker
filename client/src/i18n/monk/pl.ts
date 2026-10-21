@@ -165,6 +165,31 @@ export const monkPl: Table<typeof monkEn> = {
       bossBefore: 'Wspiąłeś się tak wysoko, by mnie znaleźć. Jestem tobą.',
       bossAfter: 'Ciemność była też we mnie. Czas wracać i zamiatać świątynię.',
     },
+    a2: {
+      open: 'Noc zapada nad starymi drogami. Coś chodzi w cieniach.',
+      midBefore: 'Cień użyczył mi siły. Chce ciebie, mały mnichu.',
+      midAfter: 'Cień się z niego wyślizgnął. Tylko go pożyczył.',
+      bossBefore: 'Nocą cień patrzy moimi oczami. I widzi ciebie.',
+      bossAfter: 'Cień uciekł przed świtem. Pachniał Wewnętrznym Demonem.',
+    },
+    a3: {
+      open: 'Raz mnie rozbiłeś. Teraz każdy mój kawałek znalazł żywiciela.',
+      midBefore: 'Kawałek demona płonie we mnie. Nigdy nie byłem tak silny!',
+      midAfter: 'Kolejny kawałek demona rozproszony.',
+      bossBefore: 'Odłamek demona śpiewa w mojej piersi. Piosenki nie kopniesz.',
+      bossAfter: 'Odłamek pękł. Na ile kawałków się rozpadł?',
+    },
+    a4: {
+      open: 'Starzy przyjaciele, pobudka. Mały mnich wraca do domu.',
+      midBefore: 'Przywołał mnie z ciemności. Jestem mu winien jeszcze jedną walkę.',
+      midAfter: 'Wracaj spać. Zasłużyłeś.',
+      bossBefore: 'Wszyscy wróciliśmy po ciebie. Jeden po drugim.',
+      bossAfter: 'Wciąż wracają, jeden po drugim. On musi być blisko.',
+    },
+    finale: {
+      bossBefore: 'Każdy wróg, którego kiedykolwiek kopnąłeś, tu naraz. A ja ich prowadzę.',
+      bossAfter: 'Wszyscy odpoczywają, ty też. Teraz w końcu mogę pozamiatać świątynię.',
+    },
   },
   codex: {
     sutra: 'Odblokowanie: {goal}',

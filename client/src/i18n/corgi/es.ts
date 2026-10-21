@@ -165,6 +165,31 @@ export const corgiEs: Table<typeof corgiEn> = {
       bossBefore: 'Has volado hasta aquí para encontrarme. Soy tú, mejorado.',
       bossAfter: 'Solo una copia con mal carácter. Hora de volver a casa a por golosinas.',
     },
+    a2: {
+      open: 'Anochece en los viejos planetas. La señal suena más fuerte en la oscuridad.',
+      midBefore: 'La señal me volvió a arreglar el caparazón. Ahora quiere el tuyo.',
+      midAfter: 'La señal lo soltó. Solo lo tenía prestado.',
+      bossBefore: 'De noche, la señal ve a través de mis ojos. Te ve a ti, cachorro.',
+      bossAfter: 'La señal se apagó al amanecer. Olía a Mecha-Biscuit.',
+    },
+    a3: {
+      open: 'Ya me hiciste pedazos una vez. Ahora cada chip mío tiene un nuevo anfitrión.',
+      midBefore: '¡Un chip de Mecha-Biscuit zumba dentro de mí! ¡Nadie me para!',
+      midAfter: 'Otro chip al desguace.',
+      bossBefore: 'El chip de mi caparazón canta. A una canción no se le dispara.',
+      bossAfter: 'El chip se rompió. ¿Cuántos pedazos habrá repartido?',
+    },
+    a4: {
+      open: 'Viejos amigos, encendeos. El cachorro vuelve a casa.',
+      midBefore: 'Me reinició desde el chatarrero. ¡Otra ronda!',
+      midAfter: 'Apágate. Te lo has ganado.',
+      bossBefore: 'Todos hemos vuelto por ti. Uno tras otro.',
+      bossAfter: 'Siguen volviendo, uno a uno. Debe de estar cerca.',
+    },
+    finale: {
+      bossBefore: 'Todos los bichos que reventaste, aquí a la vez. Y yo los dirijo.',
+      bossAfter: 'Todos apagados, y tú también. Hora de volver a casa a por golosinas.',
+    },
   },
   codex: {
     sutra: 'Plano: {goal}',

@@ -166,6 +166,31 @@ export const corgiPt: Table<typeof corgiEn> = {
       bossBefore: 'Você voou até aqui para me encontrar. Eu sou você, melhorado.',
       bossAfter: 'Só uma cópia com mau humor. Hora de voltar para casa e ganhar petiscos.',
     },
+    a2: {
+      open: 'Noite nos velhos planetas. O sinal fica mais alto no escuro.',
+      midBefore: 'O sinal consertou minha carapaça de novo. Agora ele quer a sua.',
+      midAfter: 'O sinal soltou ele. Era só emprestado.',
+      bossBefore: 'À noite, o sinal vê pelos meus olhos. Ele vê você, filhote.',
+      bossAfter: 'O sinal sumiu ao nascer do sol. Tinha cheiro de Mecha-Biscoito.',
+    },
+    a3: {
+      open: 'Você me despedaçou uma vez. Agora cada chip meu tem um novo hospedeiro.',
+      midBefore: 'Um chip do Mecha-Biscoito zumbe dentro de mim. Ninguém me segura!',
+      midAfter: 'Mais um chip pro ferro-velho.',
+      bossBefore: 'O chip na minha carapaça canta. Não dá pra atirar numa canção.',
+      bossAfter: 'O chip rachou. Quantos pedaços ele espalhou?',
+    },
+    a4: {
+      open: 'Velhos amigos, liguem-se. O filhote está voltando para casa.',
+      midBefore: 'Ele me reiniciou lá do ferro-velho. Mais uma rodada!',
+      midAfter: 'Desligue. Você mereceu.',
+      bossBefore: 'Todos nós voltamos por você. Um atrás do outro.',
+      bossAfter: 'Eles continuam voltando, um por um. Ele deve estar perto.',
+    },
+    finale: {
+      bossBefore: 'Todo inseto que você já detonou, aqui de uma vez. E eu os comando.',
+      bossAfter: 'Todos desligados, e você também. Hora de voltar para casa e ganhar petiscos.',
+    },
   },
   codex: {
     sutra: 'Projeto: {goal}',

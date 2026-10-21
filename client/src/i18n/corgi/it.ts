@@ -165,6 +165,31 @@ export const corgiIt: Table<typeof corgiEn> = {
       bossBefore: 'Hai volato fin qui per trovarmi. Io sono te, potenziato.',
       bossAfter: 'Solo una copia con un brutto carattere. Ora a casa, a prendere i bocconcini.',
     },
+    a2: {
+      open: 'Notte sui vecchi pianeti. Al buio il segnale è più forte.',
+      midBefore: 'Il segnale mi ha riparato di nuovo il guscio. Ora vuole il tuo.',
+      midAfter: 'Il segnale l’ha lasciato andare. Era solo in prestito.',
+      bossBefore: 'Di notte il segnale vede con i miei occhi. E vede te, cucciolo.',
+      bossAfter: 'All’alba il segnale si è spento. Puzzava di Mecha-Biscuit.',
+    },
+    a3: {
+      open: 'Mi hai già fatto a pezzi una volta. Ora ogni mio chip ha un nuovo ospite.',
+      midBefore: 'Un chip di Mecha-Biscuit ronza dentro di me. Sono inarrestabile!',
+      midAfter: 'Un altro chip rottamato.',
+      bossBefore: 'Il chip nel mio guscio canta. Non puoi sparare a una canzone.',
+      bossAfter: 'Il chip si è incrinato. Quanti pezzi avrà sparso?',
+    },
+    a4: {
+      open: 'Vecchi amici, accendetevi. Il cucciolo torna a casa.',
+      midBefore: 'Mi ha riavviato dal mucchio di rottami. Un altro round!',
+      midAfter: 'Spegniti. Te lo sei meritato.',
+      bossBefore: 'Siamo tornati tutti per te. Uno dopo l’altro.',
+      bossAfter: 'Continuano a tornare, uno alla volta. Dev’essere vicino.',
+    },
+    finale: {
+      bossBefore: 'Ogni insetto che hai fatto saltare, tutti qui insieme. E li guido io.',
+      bossAfter: 'Tutti spenti, e anche tu. Ora a casa, a prendere i bocconcini.',
+    },
   },
   codex: {
     sutra: 'Progetto: {goal}',

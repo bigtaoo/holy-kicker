@@ -165,6 +165,31 @@ export const corgiFr: Table<typeof corgiEn> = {
       bossBefore: 'Tu as volé jusqu’ici pour me trouver. Je suis toi, en mieux.',
       bossAfter: 'Juste une copie de mauvaise humeur. Retour à la maison, des friandises m’attendent.',
     },
+    a2: {
+      open: 'La nuit tombe sur les vieilles planètes. Le signal est plus fort dans le noir.',
+      midBefore: 'Le signal a encore réparé ma carapace. Maintenant, il veut la tienne.',
+      midAfter: 'Le signal l’a lâché. Il ne faisait que l’emprunter.',
+      bossBefore: 'La nuit, le signal voit par mes yeux. Il te voit, toutou.',
+      bossAfter: 'Le signal s’est tu au lever du soleil. Ça sentait le Méca-Biscuit.',
+    },
+    a3: {
+      open: 'Tu m’as brisé une fois. Maintenant, chacune de mes puces a un nouvel hôte.',
+      midBefore: 'Une puce de Méca-Biscuit bourdonne en moi. Rien ne m’arrête !',
+      midAfter: 'Encore une puce à la casse.',
+      bossBefore: 'La puce dans ma carapace chante. On ne tire pas sur une chanson.',
+      bossAfter: 'La puce s’est fendue. Combien de morceaux a-t-il semés ?',
+    },
+    a4: {
+      open: 'Vieux amis, allumez-vous. Le toutou rentre à la maison.',
+      midBefore: 'Il m’a redémarré depuis la casse. Encore un round !',
+      midAfter: 'Extinction. Tu l’as bien mérité.',
+      bossBefore: 'Nous sommes tous revenus pour toi. L’un après l’autre.',
+      bossAfter: 'Ils reviennent encore, un par un. Il ne doit pas être loin.',
+    },
+    finale: {
+      bossBefore: 'Tous les insectes que tu as dégommés, réunis ici. Et c’est moi qui les mène.',
+      bossAfter: 'Tous éteints, et toi aussi. Retour à la maison, des friandises m’attendent.',
+    },
   },
   codex: {
     sutra: 'Plan : {goal}',

@@ -165,6 +165,31 @@ export const monkIt: Table<typeof monkEn> = {
       bossBefore: 'Sei salito fin qui per trovarmi. Io sono te.',
       bossAfter: 'La tenebra era anche in me. Ora a casa, a spazzare il tempio.',
     },
+    a2: {
+      open: 'Cala la notte sulle vecchie strade. Qualcosa cammina nelle ombre.',
+      midBefore: "Un'ombra mi ha prestato la sua forza. Vuole te, piccolo monaco.",
+      midAfter: "L'ombra gli è scivolata via. Era solo in prestito.",
+      bossBefore: "Di notte l'ombra vede attraverso i miei occhi. E vede te.",
+      bossAfter: "L'ombra è fuggita prima dell'alba. Sapeva di Demone Interiore.",
+    },
+    a3: {
+      open: 'Mi hai spezzato una volta. Ora ogni mio pezzo ha trovato un ospite.',
+      midBefore: 'Un pezzo del demone brucia in me. Non sono mai stato così forte!',
+      midAfter: 'Un altro pezzo del demone, disperso.',
+      bossBefore: 'La scheggia del demone canta nel mio petto. Una canzone non si prende a calci.',
+      bossAfter: 'La scheggia si è incrinata. In quanti pezzi si sarà rotta?',
+    },
+    a4: {
+      open: 'Vecchi amici, svegliatevi. Il piccolo monaco torna a casa.',
+      midBefore: "Mi ha richiamato dal buio. Gli devo un'ultima battaglia.",
+      midAfter: 'Torna a dormire. Te lo sei meritato.',
+      bossBefore: "Siamo tornati tutti per te. Uno dopo l'altro.",
+      bossAfter: "Continuano a tornare, uno a uno. Dev'essere vicino.",
+    },
+    finale: {
+      bossBefore: 'Ogni nemico che hai preso a calci, qui tutti insieme. E li guido io.',
+      bossAfter: 'Tutti in pace, e anche tu. Finalmente posso spazzare il tempio.',
+    },
   },
   codex: {
     sutra: 'Sblocco: {goal}',

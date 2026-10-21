@@ -166,6 +166,31 @@ export const corgiVi: Table<typeof corgiEn> = {
       bossBefore: 'Ngươi bay cả chặng đường để tìm ta. Ta chính là ngươi, bản nâng cấp.',
       bossAfter: 'Chỉ là bản sao có tính khí xấu. Đến giờ bay về nhà ăn vặt thôi.',
     },
+    a2: {
+      open: 'Màn đêm phủ các hành tinh cũ. Tín hiệu vang to hơn trong bóng tối.',
+      midBefore: 'Tín hiệu lại vá vỏ cho ta. Giờ nó muốn vỏ của ngươi.',
+      midAfter: 'Tín hiệu buông nó ra rồi. Hóa ra chỉ mượn tạm.',
+      bossBefore: 'Ban đêm, tín hiệu nhìn qua mắt ta. Nó thấy ngươi rồi, cún con.',
+      bossAfter: 'Tín hiệu tắt lúc bình minh. Có mùi Biscuit Cơ Khí.',
+    },
+    a3: {
+      open: 'Ngươi từng đập nát ta một lần. Giờ mỗi con chip của ta đều có vật chủ mới.',
+      midBefore: 'Chip của Biscuit Cơ Khí kêu vù vù trong ta. Không gì cản nổi ta!',
+      midAfter: 'Thêm một con chip ra bãi phế liệu.',
+      bossBefore: 'Con chip trong vỏ ta đang hát. Ngươi không bắn trúng bài hát được đâu.',
+      bossAfter: 'Con chip nứt rồi. Hắn rải bao nhiêu mảnh vậy?',
+    },
+    a4: {
+      open: 'Các bạn cũ, khởi động nào. Cún con về nhà rồi.',
+      midBefore: 'Hắn khởi động lại ta từ đống phế liệu. Thêm một hiệp nữa!',
+      midAfter: 'Tắt máy đi. Ngươi xứng đáng được nghỉ.',
+      bossBefore: 'Bọn ta đều quay lại vì ngươi. Hết kẻ này đến kẻ khác.',
+      bossAfter: 'Chúng cứ lần lượt quay lại. Hắn chắc ở gần đây.',
+    },
+    finale: {
+      bossBefore: 'Mọi con bọ ngươi từng bắn tan, có mặt cùng lúc. Và ta dẫn đầu chúng.',
+      bossAfter: 'Tất cả đã tắt, cả ngươi nữa. Đến giờ bay về nhà ăn vặt thôi.',
+    },
   },
   codex: {
     sutra: 'Bản thiết kế: {goal}',

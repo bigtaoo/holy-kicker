@@ -165,6 +165,31 @@ export const monkTr: Table<typeof monkEn> = {
       bossBefore: 'Beni bulmak için bunca yol tırmandın. Ben senim.',
       bossAfter: 'Karanlık bende de varmış. Eve dönüp tapınağı süpürme vakti.',
     },
+    a2: {
+      open: 'Eski yollara gece çöküyor. Gölgelerin içinde bir şey yürüyor.',
+      midBefore: 'Bir gölge bana gücünü ödünç verdi. Seni istiyor, küçük keşiş.',
+      midAfter: 'Gölge ondan sıyrılıp gitti. Sadece ödünç almış.',
+      bossBefore: 'Geceleri gölge benim gözlerimden bakar. Ve seni görüyor.',
+      bossAfter: 'Gölge şafaktan önce kaçtı. İç Şeytan kokuyordu.',
+    },
+    a3: {
+      open: 'Beni bir kez kırdın. Şimdi her parçam kendine bir beden buldu.',
+      midBefore: 'İçimde şeytanın bir parçası yanıyor. Hiç bu kadar güçlü olmamıştım!',
+      midAfter: 'Şeytanın bir parçası daha dağıldı.',
+      bossBefore: 'Şeytanın kırığı göğsümde şarkı söylüyor. Şarkıya tekme atamazsın.',
+      bossAfter: 'Kırık çatladı. Kaç parçaya bölündü acaba?',
+    },
+    a4: {
+      open: 'Eski dostlar, uyanın. Küçük keşiş eve dönüyor.',
+      midBefore: 'Beni karanlıktan geri çağırdı. Ona bir dövüş daha borçluyum.',
+      midAfter: 'Uykuna dön. Bunu hak ettin.',
+      bossBefore: 'Hepimiz senin için döndük. Birbiri ardına.',
+      bossAfter: 'Birer birer dönmeye devam ediyorlar. Yakında olmalı.',
+    },
+    finale: {
+      bossBefore: 'Tekmelediğin her düşman, hepsi bir arada. Ve onlara ben önderlik ediyorum.',
+      bossAfter: 'Hepsi huzura erdi, sen de. Artık nihayet tapınağı süpürebilirim.',
+    },
   },
   codex: {
     sutra: 'Açmak için: {goal}',

@@ -16,12 +16,20 @@ describe('story', () => {
     expect(clearLine(2, 50, 50)).toEqual({ who: 'story.monk', say: 'story.c2.bossAfter' });
   });
 
-  it("replays the map's lines in the later acts, but none for the Inner Demon as the temple's mid-boss", () => {
-    expect(waveLine(7, 20, 50)).toEqual({ who: 'boss.empowered', say: 'story.c2.midBefore' });
-    expect(waveLine(20, 50, 50)).toEqual({ who: 'boss.demon', say: 'story.c5.bossBefore' });
+  it("pushes the story on in the later acts, spoken by the map's foes, but none for the Inner Demon as the temple's mid-boss", () => {
+    expect(waveLine(1, 1, 50)).toBeNull();
+    expect(waveLine(6, 1, 50)).toEqual({ who: 'story.monk', say: 'story.a2.open' });
+    expect(waveLine(11, 1, 50)).toEqual({ who: 'boss.demon', say: 'story.a3.open' });
+    expect(waveLine(7, 20, 50)).toEqual({ who: 'boss.empowered', say: 'story.a2.midBefore' });
+    expect(waveLine(12, 21, 50)).toEqual({ who: 'story.monk', say: 'story.a3.midAfter' });
     expect(waveLine(6, 20, 50)).toBeNull();
     expect(waveLine(6, 21, 50)).toBeNull();
-    expect(waveLine(6, 50, 50)).toEqual({ who: 'boss.abbot', say: 'story.c1.bossBefore' });
+    expect(waveLine(6, 50, 50)).toEqual({ who: 'boss.abbot', say: 'story.a2.bossBefore' });
+    // the rush's leader speaks first in act 4, the demon in the last chapter
+    expect(waveLine(16, 50, 50)).toEqual({ who: 'boss.carp', say: 'story.a4.bossBefore' });
+    expect(clearLine(17, 50, 50)).toEqual({ who: 'story.monk', say: 'story.a4.bossAfter' });
+    expect(waveLine(20, 50, 50)).toEqual({ who: 'boss.demon', say: 'story.finale.bossBefore' });
+    expect(clearLine(20, 50, 50)).toEqual({ who: 'story.monk', say: 'story.finale.bossAfter' });
   });
 
   it('gives a run that ends on the mid-boss its mid-boss lines, not the chapter boss lines', () => {
@@ -33,8 +41,9 @@ describe('story', () => {
   it('has every line in both languages', () => {
     for (const locale of ['en', 'zh'] as const) {
       setLocale(locale);
-      for (let c = 1; c <= 5; c++) {
-        for (const line of [waveLine(c, 20, 50), waveLine(c, 21, 50), waveLine(c, 50, 50), clearLine(c, 50, 50)]) {
+      for (let c = 1; c <= 20; c++) {
+        for (const line of [waveLine(c, 1, 50), waveLine(c, 20, 50), waveLine(c, 21, 50), waveLine(c, 50, 50), clearLine(c, 50, 50)]) {
+          if (!line) continue;
           expect(t(line!.say)).not.toBe(line!.say);
           expect(t(line!.who)).not.toBe(line!.who);
         }

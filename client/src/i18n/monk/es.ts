@@ -165,6 +165,31 @@ export const monkEs: Table<typeof monkEn> = {
       bossBefore: 'Has subido hasta aquí para encontrarme. Yo soy tú.',
       bossAfter: 'La oscuridad también estaba en mí. Hora de volver y barrer el templo.',
     },
+    a2: {
+      open: 'Cae la noche sobre los viejos caminos. Algo camina entre las sombras.',
+      midBefore: 'Una sombra me prestó su fuerza. Te quiere a ti, pequeño monje.',
+      midAfter: 'La sombra se le escapó. Solo estaba de prestado.',
+      bossBefore: 'De noche, la sombra mira por mis ojos. Y te ve a ti.',
+      bossAfter: 'La sombra huyó antes del alba. Olía al Demonio interior.',
+    },
+    a3: {
+      open: 'Me rompiste una vez. Ahora cada pedazo de mí ha encontrado un huésped.',
+      midBefore: 'Un fragmento del demonio arde en mí. ¡Nunca fui tan fuerte!',
+      midAfter: 'Otro fragmento del demonio, esparcido.',
+      bossBefore: 'El fragmento del demonio canta en mi pecho. A una canción no se la patea.',
+      bossAfter: 'El fragmento se agrietó. ¿En cuántos pedazos se rompió?',
+    },
+    a4: {
+      open: 'Viejos amigos, a despertar. El pequeño monje vuelve a casa.',
+      midBefore: 'Él me trajo de vuelta de la oscuridad. Le debo una pelea más.',
+      midAfter: 'Vuelve a dormir. Te lo has ganado.',
+      bossBefore: 'Todos volvimos por ti. Uno tras otro.',
+      bossAfter: 'Siguen volviendo, uno a uno. Debe de estar cerca.',
+    },
+    finale: {
+      bossBefore: 'Todos los enemigos que pateaste, aquí a la vez. Y yo los guío.',
+      bossAfter: 'Todos descansan, y tú también. Por fin puedo barrer el templo.',
+    },
   },
   codex: {
     sutra: 'Desbloqueo: {goal}',

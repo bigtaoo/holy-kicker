@@ -166,6 +166,31 @@ export const corgiTr: Table<typeof corgiEn> = {
       bossBefore: 'Beni bulmak için bunca yol uçtun. Ben senim, yükseltilmiş hâlimle.',
       bossAfter: 'Sadece huysuz bir kopya. Eve ikram yemeye dönme vakti.',
     },
+    a2: {
+      open: 'Eski gezegenlerde gece. Karanlıkta sinyal daha yüksek.',
+      midBefore: 'Sinyal kabuğumu yine onardı. Şimdi seninkini istiyor.',
+      midAfter: 'Sinyal onu bıraktı. Sadece ödünç almış.',
+      bossBefore: 'Geceleri sinyal benim gözlerimden bakar. Seni görüyor, yavru köpek.',
+      bossAfter: 'Gün doğarken sinyal söndü. Mekanik Bisküvi kokuyordu.',
+    },
+    a3: {
+      open: 'Beni bir kez parçaladın. Şimdi her çipimin yeni bir sahibi var.',
+      midBefore: 'İçimde bir Mekanik Bisküvi çipi vızıldıyor. Kimse beni durduramaz!',
+      midAfter: 'Bir çip daha hurdaya.',
+      bossBefore: 'Kabuğumdaki çip şarkı söylüyor. Bir şarkıyı vuramazsın.',
+      bossAfter: 'Çip çatladı. Acaba kaç parça saçtı?',
+    },
+    a4: {
+      open: 'Eski dostlar, açılın. Yavru köpek eve dönüyor.',
+      midBefore: 'Beni hurda yığınından yeniden başlattı. Bir raunt daha!',
+      midAfter: 'Kapan artık. Bunu hak ettin.',
+      bossBefore: 'Hepimiz senin için geri döndük. Birbiri ardına.',
+      bossAfter: 'Birer birer geri gelmeye devam ediyorlar. Yakında olmalı.',
+    },
+    finale: {
+      bossBefore: 'Patlattığın her böcek, hepsi bir arada. Ve onlara ben önderlik ediyorum.',
+      bossAfter: 'Hepsi kapandı, sen de. Eve ikram yemeye dönme vakti.',
+    },
   },
   codex: {
     sutra: 'Şema: {goal}',

@@ -164,6 +164,31 @@ export const monkEn = {
       bossBefore: 'You climbed all this way to find me. I am you.',
       bossAfter: 'The darkness was in me too. Time to go home and sweep the temple.',
     },
+    a2: {
+      open: 'Night falls on the old roads. Something walks inside the shadows.',
+      midBefore: 'A shadow lent me its strength. It wants you, little monk.',
+      midAfter: 'The shadow slipped out of him. It was only borrowing.',
+      bossBefore: 'At night the shadow sees through my eyes. And it sees you.',
+      bossAfter: 'The shadow fled before dawn. It smelled of the Inner Demon.',
+    },
+    a3: {
+      open: 'You broke me once. Now every piece of me has found a host.',
+      midBefore: 'A piece of the demon burns in me. I have never been so strong!',
+      midAfter: 'One more piece of the demon, scattered.',
+      bossBefore: "The demon's shard sings in my chest. You cannot kick a song.",
+      bossAfter: 'The shard cracked. How many pieces did it break into?',
+    },
+    a4: {
+      open: 'Old friends, wake up. The little monk is coming home.',
+      midBefore: 'He called me back from the dark. I owe him one more fight.',
+      midAfter: 'Go back to sleep. You have earned it.',
+      bossBefore: 'We all came back for you. One after another.',
+      bossAfter: 'They keep coming back, one by one. He must be close.',
+    },
+    finale: {
+      bossBefore: 'Every foe you ever kicked, here at once. And I lead them.',
+      bossAfter: 'All of them at rest, and you too. Now I can finally sweep the temple.',
+    },
   },
   codex: {
     sutra: 'Unlock: {goal}',

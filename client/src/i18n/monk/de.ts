@@ -165,6 +165,31 @@ export const monkDe: Table<typeof monkEn> = {
       bossBefore: 'Den ganzen Weg bist du geklettert, um mich zu finden. Ich bin du.',
       bossAfter: 'Die Finsternis war auch in mir. Zeit, heimzugehen und den Tempel zu fegen.',
     },
+    a2: {
+      open: 'Die Nacht fällt auf die alten Wege. Etwas geht in den Schatten.',
+      midBefore: 'Ein Schatten lieh mir seine Kraft. Er will dich, kleiner Mönch.',
+      midAfter: 'Der Schatten schlüpfte aus ihm heraus. Er war nur geliehen.',
+      bossBefore: 'Nachts sieht der Schatten durch meine Augen. Und er sieht dich.',
+      bossAfter: 'Vor dem Morgengrauen floh der Schatten. Er roch nach dem Inneren Dämon.',
+    },
+    a3: {
+      open: 'Du hast mich einmal zerbrochen. Jetzt hat jedes Stück von mir einen Wirt.',
+      midBefore: 'Ein Stück des Dämons brennt in mir. Nie war ich so stark!',
+      midAfter: 'Wieder ein Stück des Dämons, zerstreut.',
+      bossBefore: 'Der Splitter des Dämons singt in meiner Brust. Ein Lied kann man nicht treten.',
+      bossAfter: 'Der Splitter ist zersprungen. In wie viele Stücke wohl?',
+    },
+    a4: {
+      open: 'Alte Freunde, wacht auf. Der kleine Mönch kommt nach Hause.',
+      midBefore: 'Er rief mich aus der Dunkelheit zurück. Ich schulde ihm noch einen Kampf.',
+      midAfter: 'Schlaf weiter. Das hast du dir verdient.',
+      bossBefore: 'Wir sind alle für dich zurückgekommen. Einer nach dem anderen.',
+      bossAfter: 'Sie kommen immer wieder, einer nach dem anderen. Er muss nah sein.',
+    },
+    finale: {
+      bossBefore: 'Jeder Gegner, den du je getreten hast, hier auf einmal. Und ich führe sie an.',
+      bossAfter: 'Alle ruhen sie, und du auch. Jetzt kann ich endlich den Tempel fegen.',
+    },
   },
   codex: {
     sutra: 'Freischalten: {goal}',

@@ -169,6 +169,31 @@ export const corgiEn: Table<typeof monkEn> = {
       bossBefore: 'You flew all this way to find me. I am you, upgraded.',
       bossAfter: 'Just a copy with a bad attitude. Time to fly home for treats.',
     },
+    a2: {
+      open: 'Night on the old planets. The signal is louder in the dark.',
+      midBefore: 'The signal patched my shell again. Now it wants yours.',
+      midAfter: 'The signal let go of him. It was only borrowing.',
+      bossBefore: 'At night the signal sees through my eyes. It sees you, puppy.',
+      bossAfter: 'The signal faded at sunrise. It smelled of Mecha-Biscuit.',
+    },
+    a3: {
+      open: 'You smashed me once. Now every chip of me has a new host.',
+      midBefore: 'A chip of Mecha-Biscuit hums inside me. I feel unstoppable!',
+      midAfter: 'One more chip, scrapped.',
+      bossBefore: 'The chip in my shell sings. You cannot shoot a song.',
+      bossAfter: 'The chip cracked. How many pieces did he scatter?',
+    },
+    a4: {
+      open: 'Old friends, power up. The puppy is coming home.',
+      midBefore: 'He rebooted me from the scrap heap. One more round!',
+      midAfter: 'Power down. You have earned it.',
+      bossBefore: 'We all came back for you. One after another.',
+      bossAfter: 'They keep coming back, one by one. He must be close.',
+    },
+    finale: {
+      bossBefore: 'Every bug you ever blasted, here at once. And I lead them.',
+      bossAfter: 'All of them switched off, and you too. Time to fly home for treats.',
+    },
   },
   codex: {
     sutra: 'Blueprint: {goal}',

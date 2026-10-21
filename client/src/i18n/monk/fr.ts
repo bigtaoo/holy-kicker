@@ -165,6 +165,31 @@ export const monkFr: Table<typeof monkEn> = {
       bossBefore: 'Tu as grimpé jusqu’ici pour me trouver. Je suis toi.',
       bossAfter: 'Les ténèbres étaient en moi aussi. Il est temps de rentrer balayer le temple.',
     },
+    a2: {
+      open: 'La nuit tombe sur les vieilles routes. Quelque chose marche dans les ombres.',
+      midBefore: 'Une ombre m’a prêté sa force. C’est toi qu’elle veut, petit moine.',
+      midAfter: 'L’ombre s’est échappée de lui. Elle ne faisait qu’emprunter.',
+      bossBefore: 'La nuit, l’ombre voit par mes yeux. Et elle te voit.',
+      bossAfter: 'L’ombre a fui avant l’aube. Elle sentait le Démon intérieur.',
+    },
+    a3: {
+      open: 'Tu m’as brisé une fois. Désormais, chacun de mes éclats a trouvé un hôte.',
+      midBefore: 'Un éclat du démon brûle en moi. Je n’ai jamais été aussi fort !',
+      midAfter: 'Encore un éclat du démon, dispersé.',
+      bossBefore: 'L’éclat du démon chante dans ma poitrine. Une chanson, ça ne se botte pas.',
+      bossAfter: 'L’éclat s’est fendu. En combien de morceaux, cette fois ?',
+    },
+    a4: {
+      open: 'Vieux amis, réveillez-vous. Le petit moine rentre à la maison.',
+      midBefore: 'Il m’a rappelé des ténèbres. Je lui dois un dernier combat.',
+      midAfter: 'Rendors-toi. Tu l’as bien mérité.',
+      bossBefore: 'Nous sommes tous revenus pour toi. L’un après l’autre.',
+      bossAfter: 'Ils reviennent encore, un par un. Il ne doit pas être loin.',
+    },
+    finale: {
+      bossBefore: 'Tous les ennemis que tu as bottés, réunis ici. Et c’est moi qui les mène.',
+      bossAfter: 'Tous en paix, et toi aussi. Je vais enfin pouvoir balayer le temple.',
+    },
   },
   codex: {
     sutra: 'Déblocage : {goal}',

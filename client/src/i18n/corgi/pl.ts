@@ -166,6 +166,31 @@ export const corgiPl: Table<typeof corgiEn> = {
       bossBefore: 'Przyleciałeś tu aż po mnie. Jestem tobą, ulepszonym.',
       bossAfter: 'Tylko kopia ze złym charakterem. Czas lecieć do domu po smakołyki.',
     },
+    a2: {
+      open: 'Noc na starych planetach. W ciemności sygnał jest głośniejszy.',
+      midBefore: 'Sygnał znowu naprawił mój pancerz. Teraz chce twojego.',
+      midAfter: 'Sygnał go puścił. Tylko go pożyczył.',
+      bossBefore: 'Nocą sygnał patrzy moimi oczami. Widzi cię, szczeniaku.',
+      bossAfter: 'O świcie sygnał ucichł. Pachniało Mecha-Herbatnikiem.',
+    },
+    a3: {
+      open: 'Raz mnie roztrzaskałeś. Teraz każdy mój czip ma nowego nosiciela.',
+      midBefore: 'Czip Mecha-Herbatnika brzęczy we mnie. Nikt mnie nie zatrzyma!',
+      midAfter: 'Kolejny czip na złom.',
+      bossBefore: 'Czip w moim pancerzu śpiewa. Do piosenki nie da się strzelić.',
+      bossAfter: 'Czip pękł. Ile kawałków on rozsiał?',
+    },
+    a4: {
+      open: 'Starzy przyjaciele, włączać się. Szczeniak wraca do domu.',
+      midBefore: 'Zrestartował mnie ze złomowiska. Jeszcze jedna runda!',
+      midAfter: 'Wyłącz się. Zasłużyłeś.',
+      bossBefore: 'Wszyscy wróciliśmy po ciebie. Jeden po drugim.',
+      bossAfter: 'Wracają raz za razem, jeden po drugim. Musi być blisko.',
+    },
+    finale: {
+      bossBefore: 'Każdy robal, którego rozwaliłeś, tu naraz. A ja im przewodzę.',
+      bossAfter: 'Wszyscy wyłączeni, ty też. Czas lecieć do domu po smakołyki.',
+    },
   },
   codex: {
     sutra: 'Schemat: {goal}',

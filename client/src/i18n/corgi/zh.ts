@@ -166,6 +166,31 @@ export const corgiZh: Table<typeof corgiEn> = {
       bossBefore: '你一路飞来找的就是我。我就是你，升级版。',
       bossAfter: '不过是个脾气很坏的复制品。好了，回家吃零食去。',
     },
+    a2: {
+      open: '旧星球入夜了。信号在黑暗里更响了。',
+      midBefore: '信号又把我的壳修好了。这回它要你的。',
+      midAfter: '信号放开了他，原来只是借用。',
+      bossBefore: '一入夜，信号就借我的眼睛看。它看见你了，小狗。',
+      bossAfter: '天亮时信号消失了，一股机械饼干的味道。',
+    },
+    a3: {
+      open: '你砸碎过我一次。如今我的每块芯片都找到了新宿主。',
+      midBefore: '机械饼干的芯片在我体内嗡嗡响，我感觉天下无敌！',
+      midAfter: '又报废了一块芯片。',
+      bossBefore: '我壳里的芯片在唱歌。歌声你可打不中。',
+      bossAfter: '芯片裂了。他到底撒了多少块？',
+    },
+    a4: {
+      open: '老朋友们，开机。小狗回来了。',
+      midBefore: '他把我从废料堆里重启了。再来一局！',
+      midAfter: '关机吧，你该歇歇了。',
+      bossBefore: '我们都为你回来了，一个接一个。',
+      bossAfter: '一个接一个地回来。他就在不远处了。',
+    },
+    finale: {
+      bossBefore: '你打过的每一只虫子都在这里，由我带领。',
+      bossAfter: '他们都关机了，你也是。好了，回家吃零食去。',
+    },
   },
   codex: {
     sutra: '蓝图：{goal}',
