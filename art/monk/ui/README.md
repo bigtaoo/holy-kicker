@@ -25,8 +25,9 @@ training icons into the one icon sheet:
   it has `tab_train`, a wooden training post with a red band (`r3/tab_train_b.jpg`; the first
   try, `r3/tab_train_mannequin.jpg`, was a thin mannequin that read as a person).
 - `lock` replaces the 🔒 emoji, which every platform draws differently. `settings` replaces the ⚙
-  glyph; since 2026-10-21 (round 4, `r4/`) it is a warm wooden cog with a red lacquer ring
-  (`r4/settings.txt`), the old cold steel one kept as `r4/settings_steel.jpg`.
+  glyph. A warm wooden cog with a red lacquer ring was tried on 2026-10-21 (`r4/settings_wood.jpg`
+  from `r4/settings.txt`): its red middle read as a flower on the dark button, so the steel cog
+  stayed.
 - `dice` (2026-10-21): the honey-wood die beside the player's name, which rolls a new name; it
   replaced a die drawn in code.
 - `patrol` and `tasks` (a ticked list on a notice board) sit on the Play tab's left rail. Patrol

@@ -621,7 +621,8 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   on screen and pulled the eye off the hero. Inside the card, only the title wears an outline.
 - Icons are all painted objects in the sticker style, one per meaning: no spell or stat icon is
   borrowed for a lobby button (the daily is a trophy, Train a wooden post, the corgi's a kettlebell).
-  The top bar's die and cog are painted too, not drawn in code or a font glyph.
+  The top bar's die and cog are painted too, not drawn in code or a font glyph; the cog stays steel
+  grey, the one thing that must read as "settings" at a glance.
 - Icons share one optical size: the sheet packer shrinks a solid picture (a book, a chest) inside
   its cell until it weighs about what a thin one does (`FILL` in `tools/pack_icons.py`), so
   every caller can size icons by their cell alone.
