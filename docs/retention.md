@@ -57,7 +57,11 @@ talks to the backend as host `playgama`; whether its page lets that through is n
   call (the CrazyGames SDK knows tablets; iPadOS Safari passes for a Mac otherwise), browser and
   system come from the user agent, the country from Cloudflare by address (never kept; checked
   live on 2026-10-10). CrazyGames builds uploaded before that day do not send the device, so
-  their iPads count as desktop (macOS, Safari) until the next upload. "Who the
+  their iPads count as desktop (macOS, Safari) until the next upload. "Browser or app" (from
+  2026-10-21) tells CrazyGames' own Android and iOS apps (`android-app`, `ios-app`) from browsers
+  by the SDK's `applicationType`, which builds send from the first upload after that day; without
+  it a web view is guessed from the user agent (`webview`: Android's `; wv)`, iOS without Safari,
+  WeChat), which on iOS also takes in Facebook's and Instagram's in-app browsers. "Who the
   new players are" shows each group's size, how many finished a run on day 0 and its D1: a device
   or browser far below the rest is a bug or a performance problem there before it is a design one.
 - **Loading** (from 2026-10-14's CrazyGames build): two anonymous counts per launch, no id and
