@@ -29,5 +29,5 @@ npm run check          # typecheck, file length, tests, WeChat build + 4 MB gate
 
 ## Credentials
 
-The image scripts read keys from `~/.vibe/mistral_curl_key{A,B}.conf`; `MISTRAL_KEY=A|B`
-picks one (default B). Keys never go in this repository.
+The image scripts read keys from `~/.vibe/mistral_curl_key{L,M,N,J,K,H,D,F,G}.conf`; `MISTRAL_KEY=L|M|N|J|K|H|D|F|G`
+picks one (default H; `tools/mistral_failover.sh` moves on to the next when one is out). Keys never go in this repository.
