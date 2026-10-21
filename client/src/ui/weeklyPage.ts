@@ -59,8 +59,9 @@ export function ruleLines(keys: readonly string[], width: number): Container {
   return c;
 }
 
-/** Breaks `l` (showing `text`) into two lines after the colon or comma nearest its middle, if both then fit `width`. */
-function breakAtPause(l: Text, text: string, width: number): boolean {
+/** Breaks `l` (showing `text`) into two lines after the colon or comma nearest its middle, if both then fit `width`
+ *  (also the monk panel's stats). */
+export function breakAtPause(l: Text, text: string, width: number): boolean {
   const cuts = [...text.matchAll(/[:：,，]/g)].map((m) => m.index + 1).sort((a, b) => Math.abs(a - text.length / 2) - Math.abs(b - text.length / 2));
   for (const at of cuts) {
     l.text = `${text.slice(0, at).trimEnd()}
@@ -103,8 +104,8 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
     s.position.set((i - (ids.length - 1) / 2) * 150, top + 265);
     box.addChild(s);
   });
-  add(`${t(`relic.${l.relic}.name` as never)} · ${t(`monk.${l.monk}.name` as never)}`, 38, COLORS.saffron, 360);
-  add(l.sutras.map((s) => t(`spell.${s}.name` as never)).join(' · '), 36, COLORS.dim, 408);
+  add(`${t(`relic.${l.relic}.name` as never)} · ${t(`monk.${l.monk}.name` as never)}`, 44, COLORS.saffron, 360);
+  add(l.sutras.map((s) => t(`spell.${s}.name` as never)).join(' · '), 40, COLORS.dim, 412);
   const mutator = mutatorLine(w.challenge.mutator);
   if (mutator) add(mutator, 38, COLORS.saffron, 462);
   rules.view.y = top + (mutator ? 492 : 455);

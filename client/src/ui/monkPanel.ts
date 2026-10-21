@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { monkPrice, ownsMonk } from '../meta/monks';
 import type { SaveData } from '../meta/save';
 import { iconSprite, type IconSheet } from './buildBar';
+import { breakAtPause } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The monk panel, opened from the lobby's avatar (docs/content.md "Monks"): one row per monk
@@ -21,7 +22,7 @@ const W = 940;
 const ROW_H = 380;
 const ROW_GAP = 20;
 /** The novice is drawn smaller, as in the run (Game.ts MONK_HEIGHT). */
-const PORTRAIT: Record<MonkId, number> = { kicker: 330, fat: 330, novice: 290 };
+const PORTRAIT: Record<MonkId, number> = { kicker: 310, fat: 310, novice: 270 };
 
 /** The numbers a monk's stats line shows, all as positive amounts (the text carries the sign). */
 function statArgs(id: MonkId): Record<string, number> {
@@ -34,19 +35,23 @@ function row(save: SaveData, id: MonkId, icons: IconSheet, a: MonkActions): { c:
   const c = new Container();
   const chosen = save.monk === id;
   const owned = ownsMonk(save, id);
-  const textX = -W / 2 + 380;
+  const textX = -W / 2 + 340;
   const textW = W / 2 - 50 - textX;
   const line = (text: string, size: number, fill: number, y: number, wrap = false) => {
-    const style = wrap ? { align: 'left' as const, wordWrap: true, breakWords: true, wordWrapWidth: textW } : { align: 'left' as const };
-    const l = fit(label(text, size, fill, style), textW);
+    const l = label(text, size, fill, { align: 'left' });
+    // the stats break after a comma, never inside "speed +20%"; the passive wraps freely
+    if (wrap && l.width > textW && !breakAtPause(l, text, textW)) {
+      Object.assign(l.style, { wordWrap: true, breakWords: true, wordWrapWidth: textW });
+    }
+    fit(l, textW);
     l.anchor.set(0, 0);
     l.position.set(textX, y);
     c.addChild(l);
     return l;
   };
   const name = line(t(`monk.${id}.name`), 60, chosen ? COLORS.saffron : COLORS.text, 20);
-  const role = line(t(`monk.${id}.role`, statArgs(id)), 38, COLORS.text, name.y + name.height + 8, true);
-  const stats = line(t(`monk.${id}.stats`, statArgs(id)), 38, COLORS.dim, role.y + role.height + 8, true);
+  const role = line(t(`monk.${id}.role`, statArgs(id)), 44, COLORS.text, name.y + name.height + 8, true);
+  const stats = line(t(`monk.${id}.stats`, statArgs(id)), 44, COLORS.dim, role.y + role.height + 10, true);
   // the button (96 high) sits under the text, at the row's foot unless the text runs lower
   const bx = textX + 170;
   const by = Math.max(ROW_H - 62, stats.y + stats.height + 16 + 48);
@@ -57,7 +62,7 @@ function row(save: SaveData, id: MonkId, icons: IconSheet, a: MonkActions): { c:
   if (chosen) c.addChildAt(new Graphics().roundRect(-(W - 60) / 2, 0, W - 60, h, 28).stroke({ color: COLORS.saffron, width: 8 }), 1);
   const portrait = iconSprite(icons, `monk_${id}`, PORTRAIT[id]);
   if (portrait) {
-    portrait.position.set(-W / 2 + 200, h / 2 + (330 - PORTRAIT[id]) / 2);
+    portrait.position.set(-W / 2 + 185, h / 2 + (310 - PORTRAIT[id]) / 2);
     if (!owned) portrait.alpha = 0.6;
     c.addChild(portrait);
   }

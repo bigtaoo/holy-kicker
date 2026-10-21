@@ -40,7 +40,9 @@ export interface ChallengeLobby {
 type Tab = 'daily' | 'weekly';
 
 const BOX_W = 960;
-const BOX_H = 1460;
+/** Each page's box before its rules' grow: Back 40 under the page's own buttons (daily's at 1170, weekly's at 1235). */
+const DAILY_H = 1430;
+const WEEKLY_H = 1490;
 
 export class ChallengeUi {
   private open = false;
@@ -100,11 +102,17 @@ export class ChallengeUi {
     const root = new Container();
     root.addChild(backdrop(w, h));
     const box = new Container();
-    box.position.set(w / 2, h / 2);
-    // each tab's wrapped rules push what follows down; both tabs share the box, grown for the longer
+    // each tab's wrapped rules push what follows down, and each page's box ends under its own
+    // buttons; the box's top stays put when the tab changes, where the taller page's would be
     const daily = lobby.daily ? dailyRules() : null;
     const weekly = lobby.weekly ? weeklyRules(lobby.weekly, BOX_W) : null;
-    const boxH = BOX_H + Math.max(daily?.grow ?? 0, weekly?.grow ?? 0);
+    const dailyH = daily ? DAILY_H + daily.grow : 0;
+    const weeklyH = weekly ? WEEKLY_H + weekly.grow : 0;
+    const boxH = tab === 'weekly' ? weeklyH : dailyH;
+    const tallest = Math.max(dailyH, weeklyH);
+    const scale = Math.min(1, (h - 40) / tallest);
+    box.scale.set(scale);
+    box.position.set(w / 2, h / 2 + ((boxH - tallest) / 2) * scale);
     const top = -boxH / 2;
     box.addChild(panel(BOX_W, boxH));
     const add = (text: string, size: number, fill: number, y: number) => {
@@ -115,7 +123,10 @@ export class ChallengeUi {
     // a tab for each challenge when both are open, else the one's title
     if (lobby.daily && lobby.weekly) {
       (['daily', 'weekly'] as const).forEach((k, i) => {
-        const b = button(t(k === 'daily' ? 'challenge.tile' : 'weekly.tab'), 400, 100, () => this.show(true, k), { fill: k === tab ? COLORS.saffron : COLORS.panelLocked, size: 50 });
+        const on = k === tab;
+        const b = button(t(k === 'daily' ? 'challenge.tile' : 'weekly.tab'), 400, 100, () => this.show(true, k), {
+          fill: on ? COLORS.saffron : COLORS.panelLocked, textFill: on ? COLORS.text : COLORS.dim, size: 50,
+        });
         b.position.set(i === 0 ? -210 : 210, top + 80);
         box.addChild(b);
       });
