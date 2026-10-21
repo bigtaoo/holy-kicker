@@ -641,6 +641,13 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   `menuBackdrop`, since a blur every frame costs a low-end phone its frame rate), so their dark
   panels sit on it as the bars do. Their content hangs from a fixed line under the top bar
   instead of being centred, so a title stays put when the tabs switch.
+- The Train tab's board (`ui/trainTab.ts`, `ui/trainBoard.ts`) is a dark panel of its own, its
+  title on it, so the backdrop never shows between nodes. The 50 nodes snake in rows of ten along
+  one road, lit as far as the training has come. Three states, told apart at a glance: trained is
+  the stat's icon in full colour on a lit badge ringed in its stat's colour; the next one is a
+  bigger lit badge in a saffron ring that slowly breathes; the rest are grey silhouettes
+  (`lockedLook`) on dark discs. A picked node wears a white ring, and its card with the Train
+  button sits under the board. "Stats from training" only appears once something is trained.
 
 The backdrop is a daylight courtyard (the corgi: a sunset desert base), drawn without a dark
 veil so the lobby reads bright and warm. On the Play tab the chosen monk stands centre stage
