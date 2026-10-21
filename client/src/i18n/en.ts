@@ -226,6 +226,7 @@ export const en = {
   patrol: {
     time: '{h}h {m}m',
     full: 'Full',
+    started: 'Just set out',
     rate: 'One gear every {h}h, up to {cap}h',
     collect: 'Collect',
     double: 'Collect ×2',

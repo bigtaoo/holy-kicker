@@ -1,4 +1,4 @@
-import { ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { BlurFilter, ColorMatrixFilter, Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { seeTab, TABS, tabLock, tabNew, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -22,9 +22,33 @@ const TAB_ICONS: Record<Tab, string> = { shop: 'shop', gear: 'robe', play: 'ball
 
 /** How far the backdrop steps back: saturation and contrast change, brightness factor. */
 const STAGE_TONE = { saturate: -0.4, contrast: -0.18, brightness: 1.04 };
+/** Behind the menu tabs (Shop, Gear, Train, Codex) the courtyard goes out of focus and dusk-dark, so their dark panels sit on it like the bars do. */
+const MENU_TONE = { saturate: -0.6, contrast: -0.3, brightness: 0.5, blur: 12 };
 
-/** The painted courtyard in daylight, covering the frame between the bars; the panels on it carry their own dark fill. */
-export function scenery(f: UiFrame, tex: Texture | null): Container {
+function toned(k: typeof STAGE_TONE): ColorMatrixFilter {
+  const tone = new ColorMatrixFilter();
+  tone.saturate(k.saturate, true);
+  tone.contrast(k.contrast, true);
+  tone.brightness(k.brightness, true);
+  return tone;
+}
+
+/** The courtyard for the menu tabs, baked once: a blur every frame would cost a low-end phone its frame rate. */
+export function menuBackdrop(renderer: Renderer, tex: Texture): Texture {
+  const pic = new Sprite(tex);
+  const blur = new BlurFilter({ strength: MENU_TONE.blur, quality: 3 });
+  blur.repeatEdgePixels = true;
+  pic.filters = [blur, toned(MENU_TONE)];
+  const out = renderer.generateTexture({ target: pic, frame: new Rectangle(0, 0, tex.width, tex.height) });
+  pic.destroy();
+  return out;
+}
+
+/**
+ * The painted courtyard in daylight, covering the frame between the bars; `baked` for the menu
+ * tabs' picture (menuBackdrop), which is toned already.
+ */
+export function scenery(f: UiFrame, tex: Texture | null, baked = false): Container {
   const c = new Container();
   if (!tex) return c;
   const room = f.h - TOP_H - TAB_H;
@@ -34,11 +58,7 @@ export function scenery(f: UiFrame, tex: Texture | null): Container {
   // the courtyard's floor meets the tab bar; a taller picture loses sky first
   pic.position.set(f.w / 2, f.h - TAB_H);
   // a stage set, not a second subject: the painting a step greyer and flatter than the figures on it
-  const tone = new ColorMatrixFilter();
-  tone.saturate(STAGE_TONE.saturate, true);
-  tone.contrast(STAGE_TONE.contrast, true);
-  tone.brightness(STAGE_TONE.brightness, true);
-  pic.filters = [tone];
+  if (!baked) pic.filters = [toned(STAGE_TONE)];
   const mask = new Graphics().rect(0, TOP_H, f.w, room).fill(0xffffff);
   pic.mask = mask;
   c.addChild(pic, mask);
@@ -81,12 +101,12 @@ export function topBar(w: number, save: SaveData, shown: string, icons: IconShee
   avatar.on('pointertap', a.monks);
   // the name and level roll a new name, the die next to it says so
   const who = new Container();
-  const name = fit(label(shown, 44, COLORS.text, { align: 'left' }), 290);
+  const name = fit(label(shown, 48, COLORS.text, { align: 'left' }), 290);
   name.anchor.set(0, 0.5);
-  name.position.set(160, TOP_H / 2 - 24);
-  const level = label(t('lobby.level', { level: save.level }), 40, COLORS.dim);
+  name.position.set(160, TOP_H / 2 - 26);
+  const level = label(t('lobby.level', { level: save.level }), 48, COLORS.dim);
   level.anchor.set(0, 0.5);
-  level.position.set(160, TOP_H / 2 + 26);
+  level.position.set(160, TOP_H / 2 + 28);
   who.addChild(name, level);
   if (a.reroll) {
     // the painted die (the sheet's `dice`), tilted the other way on every roll
@@ -128,8 +148,11 @@ export interface TabBarActions {
   locked(lock: Lock): void;
 }
 
-/** The five tabs along the bottom: picture over name, the open one raised in saffron. */
-export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons: IconSheet, a: TabBarActions): Container {
+/**
+ * The five tabs along the bottom: picture over name, the open one raised in saffron. While a new
+ * player's arrow points somewhere (`hint`), only that tab keeps its dot, so there is one next step.
+ */
+export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons: IconSheet, a: TabBarActions, hint: Tab | null = null): Container {
   const c = new Container();
   const tw = w / TABS.length;
   c.addChild(bar(w, h - TAB_H, TAB_H + BLEED, h - TAB_H + 3, true));
@@ -149,16 +172,16 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
       if (lock) lockedLook(pic, true);
       cell.addChild(pic);
     }
-    const name = fit(label(t(`tab.${tab}` as never), 40, active ? COLORS.outline : lock ? COLORS.dim : COLORS.text, {
+    const name = fit(label(t(`tab.${tab}` as never), 48, active ? COLORS.outline : lock ? COLORS.dim : COLORS.text, {
       stroke: active ? undefined : { color: COLORS.outline, width: 6 },
     }), tw - 24);
-    name.y = active ? 48 : 56;
+    name.y = active ? 46 : 54;
     cell.addChild(name);
     if (lock) {
       const l = lockIcon(icons, 52);
       l.position.set(tw / 2 - 40, -TAB_H / 2 + 44);
       cell.addChild(l);
-    } else if (!active && (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save)))) {
+    } else if (!active && (!hint || hint === tab) && (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save)))) {
       // the open tab shows what is waiting itself
       cell.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
     }

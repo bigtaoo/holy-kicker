@@ -227,6 +227,7 @@ export const th: Table<typeof en> = {
   patrol: {
     time: '{h}ชม. {m}น.',
     full: 'เต็ม',
+    started: 'เพิ่งออกเดินทาง',
     rate: 'อุปกรณ์ 1 ชิ้นทุก {h}ชม. สูงสุด {cap}ชม.',
     collect: 'รับ',
     double: 'รับ ×2',

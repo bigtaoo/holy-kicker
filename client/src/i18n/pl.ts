@@ -228,6 +228,7 @@ export const pl: Table<typeof en> = {
   patrol: {
     time: '{h}h {m}m',
     full: 'Pełny',
+    started: 'Właśnie wyruszył',
     rate: 'Jeden ekwipunek co {h}h, do {cap}h',
     collect: 'Odbierz',
     double: 'Odbierz ×2',

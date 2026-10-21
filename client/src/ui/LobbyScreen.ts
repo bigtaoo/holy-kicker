@@ -5,20 +5,20 @@ import { t } from '../i18n';
 import { earnedSutras, hardOpen, playableChapters, track, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
-import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
+import type { EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
 import { gritBonus } from '../meta/loadout';
 import { buyMonk, chooseMonk, monkPrice } from '../meta/monks';
 import { train } from '../meta/training';
 import type { IconSheet } from './buildBar';
 import { chestRow } from './chestRow';
-import { codexHeight, codexTab } from './codexTab';
-import { EconomyUi, shopHeight, type LobbyTrack } from './lobbyEconomy';
+import { codexTab } from './codexTab';
+import { EconomyUi, type LobbyTrack } from './lobbyEconomy';
 import type { PatrolLook } from './economyPanels';
-import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
+import { gearDetail, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
-import { hintArrow, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
-import { hintTab } from './lobbyHint';
+import { hintArrow, menuBackdrop, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
+import { hintTab, nextStep } from './lobbyHint';
 import { RAIL_R, RAIL_STEP } from './lobbyRail';
 import { LobbyDrift, LobbyFigure } from './lobbyStage';
 import { playButton, type PlayButton } from './lobbyPlay';
@@ -26,7 +26,7 @@ import { CARD, CARD_STROKE, RELIC_ROW_H, relicRow, trackSwitch } from './playCar
 import { monkPanel } from './monkPanel';
 import type { PlayerName } from './playerName';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
-import { trainHeight, trainTab } from './trainTab';
+import { trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
 import { BoardUi, type FetchBoard } from './boardPanel';
 import { ChallengeUi, type ChallengeLobby } from './challengePanel';
@@ -63,6 +63,8 @@ export interface LobbyActions {
 }
 
 /** PLAY's size, and the rail buttons' distance from the screen's sides. */
+/** The gap between the top bar and a menu tab's title. */
+const MENU_TOP = 40;
 const PLAY_W = 820;
 const PLAY_H = 210;
 const RAIL_X = 130;
@@ -90,9 +92,8 @@ export class LobbyScreen implements Screen {
   private readonly econ: EconomyUi;
   private readonly boards: BoardUi;
   private readonly challenge: ChallengeUi;
-  /** Whether rewarded ads can be offered, for the shop tab's height. */
-  private adOk = false;
   private hint: Container | null = null;
+  private menuBack: Texture | null = null;
   /** The monk in the courtyard (Play tab) and the specks drifting over it. */
   private figure: LobbyFigure | null = null;
   private play: PlayButton | null = null;
@@ -113,7 +114,6 @@ export class LobbyScreen implements Screen {
     private readonly patrolLook: () => PatrolLook,
   ) {
     const ads = actions.adAvailable();
-    void ads.then((ok) => (this.adOk = ok));
     this.econ = new EconomyUi({
       save: () => this.save,
       change: (s) => {
@@ -140,7 +140,7 @@ export class LobbyScreen implements Screen {
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
     this.econ.reset();
-    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg), scenery(f, this.backdrop));
+    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg), this.scenery(f));
     this.figure = null;
     this.play = null;
     this.drift = new LobbyDrift(f.w, f.h - TOP_H - TAB_H);
@@ -163,12 +163,15 @@ export class LobbyScreen implements Screen {
         this.relayout();
       },
     }));
-    const midY = TOP_H + (f.h - TOP_H - TAB_H) / 2;
+    // the menu tabs hang from a fixed line under the top bar, so switching tabs does not move the titles
+    const top = TOP_H + MENU_TOP;
     if (this.tab === 'play') this.playTab(f.w, f.h);
-    else if (this.tab === 'codex') this.codexTab(f.w, midY);
-    else if (this.tab === 'gear') this.gearTab(f.w, midY);
-    else if (this.tab === 'train') this.trainTab(f.w, midY);
-    else this.shopTab(f.w, midY);
+    else if (this.tab === 'codex') this.codexTab(f.w, top);
+    else if (this.tab === 'gear') this.gearTab(f.w, top);
+    else if (this.tab === 'train') this.trainTab(f.w, top);
+    else this.shopTab(f.w, top);
+    // a new player's next step before chapter 1 is cleared: an arrow bobbing over its tab (lobbyHint.ts)
+    const hint = hintTab(this.save, Date.now(), this.tab);
     this.view.addChild(tabBar(f.w, f.h, this.save, this.tab, this.icons, {
       locked: (lock) => this.showToast(lockText(lock)),
       select: (tab, save) => {
@@ -177,9 +180,7 @@ export class LobbyScreen implements Screen {
         this.gearOpen = null;
         this.relayout();
       },
-    }));
-    // a new player's next step before chapter 1 is cleared: an arrow bobbing over its tab (lobbyHint.ts)
-    const hint = hintTab(this.save, Date.now(), this.tab);
+    }, nextStep(this.save, Date.now())));
     this.hint = hint ? hintArrow(f.w, f.h, hint) : null;
     if (this.hint) this.view.addChild(this.hint);
     // the consent card waits at the foot of the lobby, under every panel, until it is answered
@@ -310,13 +311,20 @@ export class LobbyScreen implements Screen {
     this.relayout();
   }
 
-  private gearTab(w: number, midY: number): void {
+  /** The courtyard: in daylight behind Play, out of focus and dark behind the menu tabs (baked on first use). */
+  private scenery(f: UiFrame): Container {
+    if (this.tab === 'play' || !this.backdrop) return scenery(f, this.backdrop);
+    this.menuBack ??= menuBackdrop(this.renderer, this.backdrop);
+    return scenery(f, this.menuBack, true);
+  }
+
+  private gearTab(w: number, top: number): void {
     const tab = gearTab(this.save, this.icons, this.gearActions());
-    tab.position.set(w / 2, midY - gearHeight(this.save) / 2);
+    tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
 
-  private trainTab(w: number, midY: number): void {
+  private trainTab(w: number, top: number): void {
     const tab = trainTab(this.save, this.icons, this.trainPick, {
       train: () => {
         const next = train(this.save);
@@ -331,7 +339,7 @@ export class LobbyScreen implements Screen {
       },
       toast: (text) => this.showToast(text),
     });
-    tab.position.set(w / 2, midY - trainHeight(this.save) / 2);
+    tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
 
@@ -450,18 +458,18 @@ export class LobbyScreen implements Screen {
     return card;
   }
 
-  private codexTab(w: number, midY: number): void {
+  private codexTab(w: number, top: number): void {
     const tab = codexTab(this.save.codex, earnedSutras(this.save), this.icons, this.codexPick, (id) => {
       this.codexPick = id;
       this.relayout();
     });
-    tab.position.set(w / 2, midY - codexHeight(EVOLVE_IDS.length) / 2);
+    tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
 
-  private shopTab(w: number, midY: number): void {
+  private shopTab(w: number, top: number): void {
     const tab = this.econ.shopTab();
-    tab.position.set(w / 2, midY - shopHeight(this.adOk, !!this.actions.store) / 2);
+    tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
 

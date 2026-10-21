@@ -227,6 +227,7 @@ export const ru: Table<typeof en> = {
   patrol: {
     time: '{h}ч {m}м',
     full: 'Полон',
+    started: 'Только вышел',
     rate: 'Одна вещь каждые {h}ч, максимум {cap}ч',
     collect: 'Забрать',
     double: 'Забрать ×2',

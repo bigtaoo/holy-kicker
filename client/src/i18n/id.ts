@@ -228,6 +228,7 @@ export const id: Table<typeof en> = {
   patrol: {
     time: '{h}j {m}m',
     full: 'Penuh',
+    started: 'Baru berangkat',
     rate: 'Satu perlengkapan tiap {h}j, hingga {cap}j',
     collect: 'Ambil',
     double: 'Ambil ×2',

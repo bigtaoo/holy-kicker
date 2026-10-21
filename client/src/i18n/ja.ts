@@ -226,6 +226,7 @@ export const ja: Table<typeof en> = {
   patrol: {
     time: '{h}時間{m}分',
     full: '満タン',
+    started: '出発したて',
     rate: '{h}時間ごとに装備1個、最大{cap}時間',
     collect: '受け取る',
     double: '2倍で受け取る',

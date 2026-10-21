@@ -610,7 +610,9 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   and a short line under that (hours stored, time left). A saffron ring means "this wants you
   now" (a challenge open, a gift ready); greyed means locked or done for today.
 - A red dot means something can be claimed; the open tab never shows one, since its own screen
-  shows what is waiting.
+  shows what is waiting. While a new player's arrow points at a tab (`ui/lobbyHint.ts`), the other
+  tabs' dots wait, so a fresh save has one next step instead of four. A patrol that has only just
+  set out says so instead of "0h 0m".
 - The chapter arrows come in a pair, the one that cannot move faded, so the card stays centred.
 - The hero takes the height between the card and the relic row, so he stays the picture's subject,
   on a faint pool of light (`ui/lobbyStage.ts`).
@@ -630,6 +632,15 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   locked relics, tabs and rails, gear not owned, codex entries not found. A collected chest
   stays faded, since "already taken" is another meaning.
 - Red dots wear a white ring inside their outline, so they still read on a red picture.
+- A progress chest not reached yet is a muted red, so five of them do not compete with PLAY; the
+  one waiting is full colour on a saffron halo.
+- Lobby text keeps the 48 floor (the rails' second line 44): the tab names, the rails' names, the
+  player's name and level.
+- The menu tabs (Shop, Gear, Train, Codex) are a menu layer over the courtyard: the picture goes
+  out of focus and dusk-dark behind them (`MENU_TONE`, baked once into a texture by
+  `menuBackdrop`, since a blur every frame costs a low-end phone its frame rate), so their dark
+  panels sit on it as the bars do. Their content hangs from a fixed line under the top bar
+  instead of being centred, so a title stays put when the tabs switch.
 
 The backdrop is a daylight courtyard (the corgi: a sunset desert base), drawn without a dark
 veil so the lobby reads bright and warm. On the Play tab the chosen monk stands centre stage

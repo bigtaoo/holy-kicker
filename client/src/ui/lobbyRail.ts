@@ -49,17 +49,17 @@ export function railButton(o: RailOptions, onTap: () => void): Rail {
     top.addChild(o.icon);
   }
   const stroke = { stroke: { color: COLORS.outline, width: 9 } };
-  const name = fit(label(o.name, 40, o.dim ? COLORS.dim : COLORS.text, stroke), TEXT_W);
+  const name = fit(label(o.name, 48, o.dim ? COLORS.dim : COLORS.text, stroke), TEXT_W);
   name.y = RAIL_R + LIP + 30;
-  const sub = fit(label(o.sub ?? '', 34, o.lit ? COLORS.saffron : COLORS.text, stroke), TEXT_W);
-  sub.y = name.y + 42;
+  const sub = fit(label(o.sub ?? '', 44, o.lit ? COLORS.saffron : COLORS.text, stroke), TEXT_W);
+  sub.y = name.y + 52;
   const d = dot(RAIL_R * 0.7, -RAIL_R * 0.7);
   d.visible = !!o.dot;
   top.addChild(d);
   view.addChild(base, top, name, sub);
   view.eventMode = 'static';
   view.cursor = 'pointer';
-  view.hitArea = { contains: (x: number, y: number) => x * x + y * y <= (RAIL_R + 16) ** 2 || (Math.abs(x) <= TEXT_W / 2 && y > 0 && y <= sub.y + 24) };
+  view.hitArea = { contains: (x: number, y: number) => x * x + y * y <= (RAIL_R + 16) ** 2 || (Math.abs(x) <= TEXT_W / 2 && y > 0 && y <= sub.y + 28) };
   let down = false;
   const press = (on: boolean) => (top.y = on ? LIP * 0.7 : 0);
   view.on('pointerdown', () => {

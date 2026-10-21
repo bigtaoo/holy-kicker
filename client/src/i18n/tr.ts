@@ -228,6 +228,7 @@ export const tr: Table<typeof en> = {
   patrol: {
     time: '{h} sa {m} dk',
     full: 'Dolu',
+    started: 'Yeni yola çıktı',
     rate: 'Her {h} saatte bir eşya, en çok {cap} sa',
     collect: 'Topla',
     double: 'Topla ×2',

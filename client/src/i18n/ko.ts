@@ -226,6 +226,7 @@ export const ko: Table<typeof en> = {
   patrol: {
     time: '{h}시간 {m}분',
     full: '가득 참',
+    started: '방금 출발',
     rate: '{h}시간마다 장비 1개, 최대 {cap}시간',
     collect: '받기',
     double: '2배 받기',

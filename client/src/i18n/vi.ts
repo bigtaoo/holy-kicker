@@ -228,6 +228,7 @@ export const vi: Table<typeof en> = {
   patrol: {
     time: '{h}g {m}p',
     full: 'Đầy',
+    started: 'Vừa lên đường',
     rate: 'Mỗi {h}g một trang bị, tối đa {cap}g',
     collect: 'Nhận',
     double: 'Nhận ×2',

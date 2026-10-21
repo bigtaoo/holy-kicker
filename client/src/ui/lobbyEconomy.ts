@@ -65,12 +65,6 @@ export function shopWaiting(save: SaveData, now: number): boolean {
   return chestsLeft(save, now, 'free') === 1;
 }
 
-/** With `store`, the ad-free card under the chests. */
-export function shopHeight(adOk: boolean, store: boolean): number {
-  const n = (adOk ? CHEST_KINDS.length : CHEST_KINDS.length - 1) + (store ? 1 : 0);
-  return n * CARD_H + (n - 1) * CARD_GAP;
-}
-
 export class EconomyUi {
   private modal: Modal = null;
   private haul: Haul | null = null;
@@ -121,7 +115,8 @@ export class EconomyUi {
     const refresh = () => {
       const hours = patrolHours(this.host.save(), this.now());
       const full = open && hours >= BALANCE.patrol.capHours;
-      setRailSub(r, !open ? '' : full ? t('patrol.full') : hoursText(hours));
+      // the first minute after setting out reads as a start, not as "0h 0m"
+      setRailSub(r, !open ? '' : full ? t('patrol.full') : hours < 1 / 60 ? t('patrol.started') : hoursText(hours));
       r.dot.visible = full;
     };
     refresh();
@@ -171,7 +166,7 @@ export class EconomyUi {
     this.pay(openProgressChest(this.host.save(), chapter, hard, index), 'claim', { what: 'progressChest', chapter, hard, index });
   }
 
-  /** The Shop tab, centred on x = 0 from y = 0 down (shopHeight tall). */
+  /** The Shop tab, centred on x = 0 from y = 0 down: the chests, then on iOS the ad-free card. */
   shopTab(): Container {
     const c = new Container();
     const kinds = CHEST_KINDS.filter((k) => k !== 'ad' || this.adOk);

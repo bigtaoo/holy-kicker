@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { ColorMatrixFilter, Container, Graphics } from 'pixi.js';
 import { BALANCE } from '../meta/balance';
 import { track } from '../meta/progress';
 import { chestsWaiting } from '../meta/progressChests';
@@ -9,8 +9,18 @@ import { COLORS, dot, label } from './widgets';
 /**
  * The five progress chests of a chapter over their waves, on the lobby's chapter card: one a run
  * reached waits lit, with a dot, until a tap opens it (`open` with its index); an opened one is
- * dimmed with a tick.
+ * dimmed with a tick; one not reached yet is a muted red, so five of them do not outshout PLAY.
  */
+let muted: ColorMatrixFilter | null = null;
+function mute(): ColorMatrixFilter {
+  if (!muted) {
+    muted = new ColorMatrixFilter();
+    muted.saturate(-0.65, true);
+    muted.brightness(0.88, true);
+  }
+  return muted;
+}
+
 export function chestRow(save: SaveData, chapter: number, icons: IconSheet, open: (index: number) => void): Container {
   const row = new Container();
   const waiting = chestsWaiting(save, chapter, save.hard);
@@ -24,6 +34,7 @@ export function chestRow(save: SaveData, chapter: number, icons: IconSheet, open
     if (chest) {
       chest.position.set(x, 50);
       if (got) chest.alpha = 0.4;
+      else if (!ready) chest.filters = [mute()];
       row.addChild(chest);
     }
     if (ready) {

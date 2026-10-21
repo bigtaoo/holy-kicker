@@ -226,6 +226,7 @@ export const zh: Table<typeof en> = {
   patrol: {
     time: '{h}小时{m}分',
     full: '已满',
+    started: '刚出发',
     rate: '每 {h} 小时一件装备，最多累积 {cap} 小时',
     collect: '领取',
     double: '双倍领取',
