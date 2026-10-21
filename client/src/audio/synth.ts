@@ -144,6 +144,25 @@ export const VOICES: Record<Cue, (k: Kit) => void> = {
     k.noise(0.25, 0.8, { type: 'highpass', cut: 2500 });
     k.tone(1800, 0.25, 0.4, { type: 'triangle', to: 500 });
   },
+  toss: (k) => k.noise(0.22, 0.8, { type: 'bandpass', cut: 500, to: 1800, q: 1.2, attack: 0.06 }),
+  boom: (k) => {
+    k.tone(70, 0.5, 1, { to: 30 });
+    k.noise(0.5, 1, { cut: 2200, to: 150 });
+  },
+  bomblet: (k) => {
+    k.noise(0.1, 0.9, { cut: 2600, to: 500 });
+    k.noise(0.08, 0.6, { cut: 2000, to: 400, at: 0.06 });
+  },
+  // paper fluttering out: quick bandpassed noise ticks
+  talisman: (k) => [0, 0.04, 0.09].forEach((at) => k.noise(0.07, 0.7, { type: 'bandpass', cut: 1800, to: 3200, q: 3, at })),
+  seal: (k) => {
+    k.noise(0.12, 0.7, { cut: 1800, to: 300 });
+    k.metal(980, BELL, 0.25, 0.35);
+  },
+  blades: (k) => {
+    k.noise(0.2, 0.8, { type: 'highpass', cut: 1500, to: 5000, attack: 0.02 });
+    k.metal(2100, [1, 2.3], 0.18, 0.35, 0.02);
+  },
   splash: (k) => k.noise(0.32, 0.9, { cut: 3000, to: 350 }),
   howl: (k) => {
     k.tone(300, 0.35, 0.6, { type: 'triangle', to: 520, attack: 0.08 });

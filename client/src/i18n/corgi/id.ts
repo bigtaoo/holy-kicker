@@ -82,6 +82,9 @@ export const corgiId: Table<typeof corgiEn> = {
     lotus: { name: 'Ranjau Magnet', desc: 'Ranjau tiap langkah, ledakannya menarik camilan' },
     halo: { name: 'Jaring Laser', desc: '{n} laser berputar di sekitarmu' },
     roar: { name: 'Gonggongan Sonik', desc: 'Menggonggong ke segala arah, hancurkan peluru' },
+    talisman: { name: 'Badai Rudal', desc: 'Setiap rudal yang kena meledak, mengenai serangga di sekitar' },
+    bomb: { name: 'Bom Karpet', desc: 'Melempar {n} granat sekaligus ke serangga yang berbeda' },
+    knives: { name: 'Badai Pisau', desc: 'Pisau yang dilempar kembali padamu, memotong saat pergi dan pulang' },
   },
   shrine: {
     heal: { name: 'Kotak P3K' },
@@ -104,6 +107,9 @@ export const corgiId: Table<typeof corgiEn> = {
     lotus: { name: 'Ranjau Jarak Dekat', desc: 'Berjalan menjatuhkan ranjau yang meledak di bawah serangga' },
     halo: { name: 'Menara Laser', desc: 'Laser berputar di sekitarmu, makin panjang saat diam', count: 'Laser {a} → {b}' },
     roar: { name: 'Gonggongan Mega', desc: 'Gonggongan ke serangga terdekat mendorong kawanan mundur' },
+    talisman: { name: 'Rudal Pelacak', desc: '{n} rudal mengejar serangga yang berbeda', count: 'Rudal {a} → {b}' },
+    bomb: { name: 'Granat Cluster', desc: 'Granat yang dilempar pecah jadi {n} bom kecil', count: 'Bom kecil {a} → {b}' },
+    knives: { name: 'Cincin Pisau', desc: 'Hingga {n} pisau berputar di sekitarmu, lalu melesat', count: 'Pisau {a} → {b}' },
   },
   passive: {
     calm: { name: 'Pendingin', desc: 'Jeda gadget −{n}%' },

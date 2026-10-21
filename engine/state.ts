@@ -260,6 +260,56 @@ export interface Cymbal extends Body {
   angle: number;
 }
 
+/** A demon-binding talisman: fans out, then homes on its target and strikes once. */
+export interface Talisman extends Body {
+  id: number;
+  owner: number;
+  /** Heading, brads. */
+  dir: number;
+  /** The target it homes on (combat.ts numbering) and where that target was last tick. */
+  target: number;
+  tx: number;
+  ty: number;
+  radius: number;
+  damage: number;
+  age: number;
+  life: number;
+  /** The Heavenly Seal's radius when it strikes (evolved), 0 for none. */
+  seal: number;
+}
+
+/** A bomb in the air from (x0, y0) to (x, y), landing when `t` runs out; bomblets do not split. */
+export interface Bomb {
+  owner: number;
+  x0: number;
+  y0: number;
+  x: number;
+  y: number;
+  t: number;
+  radius: number;
+  damage: number;
+  /** Bomblets it scatters on landing (0 for a bomblet). */
+  split: number;
+}
+
+/** A knife of the Blade Circle: circles its owner in `slot`, or flies out once volleyed. */
+export interface Knife extends Body {
+  id: number;
+  owner: number;
+  slot: number;
+  /** 0 while circling. */
+  vx: number;
+  vy: number;
+  flying: boolean;
+  /** Thrown by the Thousand Blades: flies back to its owner after KNIVES.life. */
+  returns: boolean;
+  radius: number;
+  damage: number;
+  age: number;
+  /** Targets hit (cleared every KNIVES.rehit while circling). */
+  hit: number[];
+}
+
 /** A wooden fish's sound ring: grows from where it was tapped and hits each target once. */
 export interface Ring {
   id: number;
@@ -350,6 +400,9 @@ export interface SimState {
   fields: Field[];
   palms: Palm[];
   cymbals: Cymbal[];
+  talismans: Talisman[];
+  bombs: Bomb[];
+  knives: Knife[];
   rings: Ring[];
   beads: Bead[];
   bowls: Bowl[];
@@ -387,7 +440,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, balls: [], bullets: [], zones: [], spawns: [],
-    gems: [], gemCells: new Map(), resting: 0, fields: [], palms: [], cymbals: [], rings: [], beads: [], bowls: [], lotuses: [],
+    gems: [], gemCells: new Map(), resting: 0, fields: [], palms: [], cymbals: [], talismans: [], bombs: [], knives: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, waveKills: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),

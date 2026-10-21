@@ -60,6 +60,17 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
       return null;
     case 'bloom':
       return 'bloom';
+    // the bomblets are thrown with their blast, silently
+    case 'bomb':
+      return e.small ? null : 'toss';
+    case 'boom':
+      return e.small ? 'bomblet' : 'boom';
+    case 'talismans':
+      return 'talisman';
+    case 'seal':
+      return 'seal';
+    case 'volley':
+      return 'blades';
     case 'roar':
       return 'roar';
     case 'bounce':

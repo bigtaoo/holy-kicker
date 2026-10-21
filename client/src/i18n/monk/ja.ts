@@ -81,6 +81,9 @@ export const monkJa: Table<typeof monkEn> = {
     lotus: { name: '歩歩生蓮', desc: '一歩ごとに蓮、咲くとジェムを引き寄せる' },
     halo: { name: '普照', desc: '{n}本の光線が周りを回る' },
     roar: { name: '獅子王吼', desc: '全方位に吼え、弾を砕く' },
+    talisman: { name: '天罡符陣', desc: '命中した符が符印となって炸裂する' },
+    bomb: { name: '霹靂雷雨', desc: '一度に{n}個の火雷を別々の敵へ投げる' },
+    knives: { name: '万刃帰宗', desc: '放った刀が戻ってきて、行きも帰りも斬る' },
   },
   shrine: {
     heal: { name: '治療' },
@@ -103,6 +106,9 @@ export const monkJa: Table<typeof monkEn> = {
     lotus: { name: '蓮歩', desc: '歩くと蓮の種をまき、敵の下で咲く' },
     halo: { name: '仏光', desc: '光線が周りを回る、立ち止まると長くなる', count: '光線 {a} → {b}本' },
     roar: { name: '獅子吼', desc: '最も近い敵へ吼え、敵を押し返す' },
+    talisman: { name: '降魔符', desc: '{n} 枚の符がそれぞれ別の敵を追う', count: '符 {a} → {b}' },
+    bomb: { name: '霹靂火', desc: '投げた爆弾が {n} 個の子爆弾に弾ける', count: '子爆弾 {a} → {b}' },
+    knives: { name: '戒刀陣', desc: '最大 {n} 本の刀が周りを回り、揃うと一斉に飛ぶ', count: '刀 {a} → {b}' },
   },
   passive: {
     calm: { name: '禅心', desc: '術のクールダウン −{n}%' },

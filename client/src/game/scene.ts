@@ -93,6 +93,8 @@ export interface SceneOptions {
   relic: RelicId | null;
   /** Dev: every sutra for every run, whatever the save has earned (?sutras). */
   sutras: boolean;
+  /** Dev: the run starts with these spells, e.g. `talisman,bomb:5,knives` (?learn; dev/learn.ts). */
+  learn: string;
   /** Dev: no stats from gear and training, to compare with a fresh account (?bare). */
   bare: boolean;
   /** Dev: the run plays hard mode whatever the lobby shows (?hard). */
@@ -143,6 +145,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   chapter: 0,
   relic: null,
   sutras: false,
+  learn: '',
   bare: false,
   hard: false,
   challenge: false,
@@ -157,7 +160,7 @@ export const DEFAULT_SCENE: SceneOptions = {
 export function rankedRun(s: SceneOptions): boolean {
   const d = DEFAULT_SCENE;
   return s.waves && s.wave === d.wave && s.mobs === d.mobs && s.spells.length === 0 && s.drops === d.drops && !s.threats
-    && s.relic === d.relic && !s.sutras && !s.bare && !s.hard && s.monk === d.monk && !s.autoplay;
+    && s.relic === d.relic && !s.sutras && !s.learn && !s.bare && !s.hard && s.monk === d.monk && !s.autoplay;
 }
 
 export function parseScene(query: string): SceneOptions {
@@ -210,6 +213,7 @@ export function parseScene(query: string): SceneOptions {
     chapter: Math.min(5, intAtLeast(q.get('chapter'), 1, DEFAULT_SCENE.chapter)),
     relic: RELIC_IDS.find((r) => r === q.get('relic')) ?? DEFAULT_SCENE.relic,
     sutras: q.has('sutras'),
+    learn: q.get('learn') ?? '',
     bare: q.has('bare'),
     hard: q.has('hard'),
     challenge: q.has('challenge'),

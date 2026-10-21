@@ -82,6 +82,9 @@ export const corgiTr: Table<typeof corgiEn> = {
     lotus: { name: 'Mıknatıs Mayınlar', desc: 'Her adımda bir mayın, patlamalar ikramları çeker' },
     halo: { name: 'Lazer Ağı', desc: '{n} lazer etrafında döner' },
     roar: { name: 'Sonik Havlama', desc: 'Her yöne havlar, mermileri parçalar' },
+    talisman: { name: 'Füze Fırtınası', desc: 'İsabet eden her füze patlar, etraftaki böcekleri de vurur' },
+    bomb: { name: 'Halı Bombardımanı', desc: 'Aynı anda farklı böceklere {n} el bombası atar' },
+    knives: { name: 'Bıçak Fırtınası', desc: 'Atılan bıçaklar geri döner, gidişte de dönüşte de keser' },
   },
   shrine: {
     heal: { name: 'İlk Yardım' },
@@ -104,6 +107,9 @@ export const corgiTr: Table<typeof corgiEn> = {
     lotus: { name: 'Yakınlık Mayınları', desc: 'Yürürken mayın bırakır, böceklerin altında patlar' },
     halo: { name: 'Lazer Kulesi', desc: 'Bir lazer etrafında döner, dururken uzar', count: 'Lazer {a} → {b}' },
     roar: { name: 'Mega Havlama', desc: 'En yakın böceğe havlamak sürüyü geri iter' },
+    talisman: { name: 'Güdümlü Füzeler', desc: '{n} füze farklı böceklerin peşine düşer', count: 'Füze {a} → {b}' },
+    bomb: { name: 'Misket Bombası', desc: 'Atılan el bombası {n} küçük bombaya ayrılır', count: 'Küçük bomba {a} → {b}' },
+    knives: { name: 'Bıçak Halkası', desc: 'En fazla {n} bıçak etrafında döner, sonra fırlar', count: 'Bıçak {a} → {b}' },
   },
   passive: {
     calm: { name: 'Soğutucu', desc: 'Gadget bekleme −%{n}' },

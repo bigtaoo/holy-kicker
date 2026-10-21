@@ -8,7 +8,8 @@ the game). `gen_all.sh` generates every icon whose image is missing. They are pa
 training icons into the one icon sheet:
 
     python tools/pack_icons.py client/public/art/icons <art/monk/icons ... train_revive.jpg> \
-      art/monk/ui/{jade,copper,shop,codex,lock,settings,patrol,tasks,chest,daily,tab_train}.jpg
+      art/monk/ui/{jade,copper,shop,codex,lock,settings,patrol,tasks,chest,daily,tab_train}.jpg \
+      art/monk/icons/{bomb,knives,talisman}.jpg
 
 - `jade`, `copper`: the currencies in the lobby's top bar. The first jade, a rounded teardrop
   (`r1/jade_drop.jpg`), reads a little like a water drop; the second, a cushion cut with a vein

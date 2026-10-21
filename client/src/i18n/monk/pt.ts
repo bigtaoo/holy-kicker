@@ -81,6 +81,9 @@ export const monkPt: Table<typeof monkEn> = {
     lotus: { name: 'Caminho de Lótus', desc: 'Um lótus a cada passo, as flores puxam gemas' },
     halo: { name: 'Luz Infinita', desc: '{n} raios giram ao seu redor' },
     roar: { name: 'Rugido Trovão', desc: 'Ruge em toda a volta, destrói projéteis' },
+    talisman: { name: 'Selo Celestial', desc: 'Cada talismã que acerta explode num selo' },
+    bomb: { name: 'Chuva de Trovões', desc: 'Lança {n} bombas de uma vez, em inimigos diferentes' },
+    knives: { name: 'Mil Lâminas', desc: 'As facas lançadas voltam para você, cortando na ida e na volta' },
   },
   shrine: {
     heal: { name: 'Cura' },
@@ -103,6 +106,9 @@ export const monkPt: Table<typeof monkEn> = {
     lotus: { name: 'Passos de Lótus', desc: 'Andando, você planta lótus que florescem sob os inimigos' },
     halo: { name: 'Raio de Auréola', desc: 'Um raio gira ao seu redor, maior se você ficar parado', count: 'Raios {a} → {b}' },
     roar: { name: 'Rugido do Leão', desc: 'Um grito ao inimigo mais próximo empurra inimigos' },
+    talisman: { name: 'Talismãs Selantes', desc: '{n} talismãs perseguem inimigos diferentes', count: 'Talismãs {a} → {b}' },
+    bomb: { name: 'Fogo Trovão', desc: 'Uma bomba lançada explode em {n} bombinhas', count: 'Bombinhas {a} → {b}' },
+    knives: { name: 'Círculo de Lâminas', desc: 'Até {n} facas giram ao seu redor e depois disparam', count: 'Facas {a} → {b}' },
   },
   passive: {
     calm: { name: 'Mente Calma', desc: 'Recarga de magias −{n}%' },

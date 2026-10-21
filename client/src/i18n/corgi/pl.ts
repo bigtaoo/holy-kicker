@@ -82,6 +82,9 @@ export const corgiPl: Table<typeof corgiEn> = {
     lotus: { name: 'Miny Magnetyczne', desc: 'Mina przy każdym kroku, wybuchy przyciągają smakołyki' },
     halo: { name: 'Siatka Laserów', desc: 'Lasery ({n}) krążą wokół ciebie' },
     roar: { name: 'Szczekanie Soniczne', desc: 'Szczeka dookoła, rozbija pociski' },
+    talisman: { name: 'Burza Rakiet', desc: 'Każda trafiająca rakieta wybucha, raniąc robale wokół' },
+    bomb: { name: 'Nalot Dywanowy', desc: 'Rzuca {n} granaty naraz w różne robale' },
+    knives: { name: 'Burza Ostrzy', desc: 'Rzucone noże wracają do ciebie i tną w obie strony' },
   },
   shrine: {
     heal: { name: 'Apteczka' },
@@ -104,6 +107,9 @@ export const corgiPl: Table<typeof corgiEn> = {
     lotus: { name: 'Miny Zbliżeniowe', desc: 'Idąc, zrzucasz miny, które wybuchają pod robalami' },
     halo: { name: 'Wieżyczka Laserowa', desc: 'Laser krąży wokół ciebie, dłuższy, gdy stoisz', count: 'Lasery {a} → {b}' },
     roar: { name: 'Mega Szczek', desc: 'Szczeknięcie w stronę najbliższego robala odpycha rój' },
+    talisman: { name: 'Rakiety Samonaprowadzające', desc: '{n} rakiet goni różne robale', count: 'Rakiety {a} → {b}' },
+    bomb: { name: 'Granat Kasetowy', desc: 'Granat rozpada się na {n} bombek', count: 'Bombki {a} → {b}' },
+    knives: { name: 'Pierścień Noży', desc: 'Do {n} noży krąży wokół ciebie, potem wylatują', count: 'Noże {a} → {b}' },
   },
   passive: {
     calm: { name: 'Chłodziwo', desc: 'Odnowienie gadżetów −{n}%' },

@@ -82,6 +82,9 @@ export const corgiZh: Table<typeof corgiEn> = {
     lotus: { name: '磁吸地雷', desc: '每步一颗地雷，爆炸时吸来零食' },
     halo: { name: '激光网', desc: '{n} 道激光绕身旋转' },
     roar: { name: '音爆汪', desc: '四面狂吠，震碎子弹' },
+    talisman: { name: '导弹风暴', desc: '每枚导弹命中后爆开，波及周围的虫子' },
+    bomb: { name: '地毯轰炸', desc: '一次扔出 {n} 颗手雷，砸向不同的虫子' },
+    knives: { name: '刀刃风暴', desc: '射出的飞刀会飞回身边，来回都伤敌' },
   },
   shrine: {
     heal: { name: '急救包' },
@@ -104,6 +107,9 @@ export const corgiZh: Table<typeof corgiEn> = {
     lotus: { name: '感应地雷', desc: '行走时布下地雷，虫子踩中就炸' },
     halo: { name: '激光炮塔', desc: '一道激光绕身旋转，站定时更长', count: '激光 {a} → {b} 道' },
     roar: { name: '超级汪汪', desc: '朝最近的虫子大叫一声，击退虫群' },
+    talisman: { name: '追踪导弹', desc: '{n} 枚导弹各自追向不同的虫子', count: '导弹 {a} → {b} 枚' },
+    bomb: { name: '子母雷', desc: '扔出手雷，炸开 {n} 颗子雷', count: '子雷 {a} → {b} 颗' },
+    knives: { name: '战术飞刀', desc: '最多 {n} 把刀绕身旋转，满了齐射', count: '飞刀 {a} → {b} 把' },
   },
   passive: {
     calm: { name: '冷却液', desc: '技能冷却 −{n}%' },

@@ -6,7 +6,10 @@ import type { Palm, Player, SimState, SpellSlot } from '../state';
 import { lasting, slotStats, stat } from './build';
 import { bossIndex, damage, eliteIndex, targetAt } from './combat';
 import { cymbalSystem, spinWheel, throwCymbals } from './cymbals';
+import { bombSystem, throwBombs } from './bombs';
+import { castKnives, knifeSystem } from './knives';
 import { dropLotus, haloSystem, lotusSystem, roar } from './sutras';
+import { castTalismans, talismanSystem } from './talismans';
 
 // Area spells. Each player casts the spells of their build on their own cooldowns (shrunk by
 // the cooldown stat, grown by the area stat); the sandbox can also cast the stress-test spells
@@ -18,7 +21,8 @@ import { dropLotus, haloSystem, lotusSystem, roar } from './sutras';
 // leaves a print that pins mobs, the Endless Chain forks at every jump,
 // Healing Incense heals the hero standing in it, the Golden Body guards longer after it breaks
 // and the Cymbal Wheel keeps its cymbals circling the hero. The sutra spells (Lotus Steps,
-// Halo Beam, Lion's Roar) are in systems/sutras.ts.
+// Halo Beam, Lion's Roar) are in systems/sutras.ts; the talismans, the cluster bomb and the
+// Blade Circle in systems/talismans.ts, bombs.ts and knives.ts.
 
 /** Bolts leave the caster's chest and land on the target's body. */
 const CHEST = toFp(60);
@@ -170,6 +174,9 @@ function cast(s: SimState, events: SimEvent[], p: Player, slot: SpellSlot): bool
   const life = lasting(p, l.life);
   if (id === 'lotus') return dropLotus(s, p, l.radius, l.life, l.damage, slot.evolved);
   if (id === 'roar') return roar(s, events, p, l.radius, l.damage, slot.evolved);
+  if (id === 'talisman') return castTalismans(s, events, p, l.count, r, life, l.damage, slot.evolved ? scaled(p, EVOLVE.sealRadius) : 0);
+  if (id === 'bomb') return throwBombs(s, events, p, slot.evolved ? EVOLVE.bombVolley : 1, l.count, r, l.damage);
+  if (id === 'knives') return castKnives(s, events, p, l.count, r, l.damage, slot.evolved);
   if (id === 'palm') {
     const cast: Palm[] = [];
     for (let i = 0; i < l.count; i++) {
@@ -268,6 +275,9 @@ export function spellSystem(s: SimState, events: SimEvent[]): void {
   }
   s.fields.length = w;
   cymbalSystem(s, events);
+  talismanSystem(s, events);
+  bombSystem(s, events);
+  knifeSystem(s, events);
   lotusSystem(s, events);
   haloSystem(s, events);
 }

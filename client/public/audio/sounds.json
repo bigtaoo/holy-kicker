@@ -6,11 +6,20 @@
   "bellBreak": [
    "audio/sfx/bellBreak.mp3"
   ],
+  "blades": [
+   "audio/sfx/blades.mp3"
+  ],
   "blast": [
    "audio/sfx/blast.mp3"
   ],
   "bloom": [
    "audio/sfx/bloom.mp3"
+  ],
+  "bomblet": [
+   "audio/sfx/bomblet.mp3"
+  ],
+  "boom": [
+   "audio/sfx/boom.mp3"
   ],
   "bossCast": [
    "audio/sfx/bossCast.mp3"
@@ -72,6 +81,9 @@
   "roar": [
    "audio/sfx/roar.mp3"
   ],
+  "seal": [
+   "audio/sfx/seal.mp3"
+  ],
   "slam": [
    "audio/sfx/slam.mp3"
   ],
@@ -84,11 +96,17 @@
   "swish": [
    "audio/sfx/swish.mp3"
   ],
+  "talisman": [
+   "audio/sfx/talisman.mp3"
+  ],
   "tap": [
    "audio/sfx/tap.mp3"
   ],
   "thump": [
    "audio/sfx/thump.mp3"
+  ],
+  "toss": [
+   "audio/sfx/toss.mp3"
   ],
   "wave": [
    "audio/sfx/wave.mp3"

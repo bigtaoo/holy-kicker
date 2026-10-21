@@ -67,6 +67,15 @@ export type SimEvent =
   | { type: 'bellBreak'; owner: number }
   /** A lightning bolt; `gold` for the evolved Endless Chain. */
   | { type: 'bolt'; x0: number; y0: number; x1: number; y1: number; gold: boolean }
+  /** A bomb (or a bomblet, `small`) was thrown from (x0, y0) to land on (x1, y1) in `flight` ticks. */
+  | { type: 'bomb'; owner: number; x0: number; y0: number; x1: number; y1: number; flight: number; small: boolean }
+  /** A bomb (or a bomblet) went off at (x, y). */
+  | { type: 'boom'; x: number; y: number; radius: number; small: boolean }
+  /** A player's talismans flew out, or their Blade Circle volleyed. */
+  | { type: 'talismans'; owner: number; x: number; y: number; count: number }
+  | { type: 'volley'; owner: number; x: number; y: number; count: number }
+  /** A Heavenly Seal talisman struck and burst. */
+  | { type: 'seal'; x: number; y: number; radius: number }
   /** A lotus seed bloomed at (x, y). */
   | { type: 'bloom'; x: number; y: number; radius: number }
   /** A player's Lion's Roar: a cone around `brad` from (x, y) to `radius`, all round if `full`. */

@@ -81,6 +81,9 @@ export const monkDe: Table<typeof monkEn> = {
     lotus: { name: 'Lotuspfad', desc: 'Ein Lotus bei jedem Schritt, Blüten ziehen Edelsteine an' },
     halo: { name: 'Grenzenloses Licht', desc: '{n} Strahlen drehen sich um dich' },
     roar: { name: 'Donnerbrüllen', desc: 'Brüllt rundum, zerschmettert Geschosse' },
+    talisman: { name: 'Himmelssiegel', desc: 'Jedes treffende Siegel zerplatzt und trifft alles ringsum' },
+    bomb: { name: 'Donnerregen', desc: 'Wirft {n} Bomben auf einmal, auf verschiedene Feinde' },
+    knives: { name: 'Tausend Klingen', desc: 'Geworfene Messer kehren zurück und schneiden auf beiden Wegen' },
   },
   shrine: {
     heal: { name: 'Heilung' },
@@ -103,6 +106,9 @@ export const monkDe: Table<typeof monkEn> = {
     lotus: { name: 'Lotusschritte', desc: 'Beim Gehen säst du Lotussamen, die unter Feinden erblühen' },
     halo: { name: 'Heiligenstrahl', desc: 'Ein Strahl kreist um dich, länger im Stillstand', count: 'Strahlen {a} → {b}' },
     roar: { name: 'Löwengebrüll', desc: 'Ein Schrei zum nächsten Feind stößt Gegner zurück' },
+    talisman: { name: 'Bannsiegel', desc: '{n} Siegel jagen verschiedene Feinde', count: 'Siegel {a} → {b}' },
+    bomb: { name: 'Donnerfeuer', desc: 'Eine geworfene Bombe zerplatzt in {n} Minibomben', count: 'Minibomben {a} → {b}' },
+    knives: { name: 'Klingenkreis', desc: 'Bis zu {n} Messer kreisen um dich, dann fliegen sie los', count: 'Messer {a} → {b}' },
   },
   passive: {
     calm: { name: 'Ruhiger Geist', desc: 'Zauber-Abklingzeit −{n}%' },

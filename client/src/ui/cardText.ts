@@ -79,7 +79,7 @@ function relicLines(id: RelicId, level: number): string[] {
 function spellDesc(id: SpellId): string {
   const l = SPELL_LEVELS[id][0];
   if (id === 'palm') return t('spell.palm.desc');
-  if (id === 'bolt' || id === 'cymbal') return t(`spell.${id}.desc`, { n: l.count });
+  if (id === 'bolt' || id === 'cymbal' || id === 'talisman' || id === 'bomb' || id === 'knives') return t(`spell.${id}.desc`, { n: l.count });
   if (id === 'bell') return t('spell.bell.desc', { s: seconds(l.cooldown) });
   if (id === 'lotus' || id === 'halo' || id === 'roar') return t(`spell.${id}.desc`);
   return t('spell.incense.desc', { s: seconds(l.life) });
@@ -90,7 +90,7 @@ function spellLines(id: SpellId, level: number): string[] {
   const b = SPELL_LEVELS[id][level];
   const lines: string[] = [];
   // the bell, the incense, the lotus and the roar have no count
-  if (b.count !== a.count) lines.push(t(`spell.${id as 'palm' | 'bolt' | 'cymbal' | 'halo'}.count`, { a: a.count, b: b.count }));
+  if (b.count !== a.count) lines.push(t(`spell.${id as 'palm' | 'bolt' | 'cymbal' | 'halo' | 'talisman' | 'bomb' | 'knives'}.count`, { a: a.count, b: b.count }));
   if (b.radius !== a.radius) lines.push(t('card.area', { n: gain(a.radius, b.radius) }));
   // the halo's life is its time for a turn: shorter spins faster
   if (b.life !== a.life && id === 'halo') lines.push(t('card.spin', { n: gain(b.life, a.life) }));
@@ -142,6 +142,8 @@ export function evolveDesc(id: SpellId | RelicId): string {
   if (id === 'cymbal') return t('evolve.cymbal.desc', { n: SPELL_EVOLVED.cymbal.count });
   if (id === 'halo') return t('evolve.halo.desc', { n: SPELL_EVOLVED.halo.count });
   if (id === 'lotus' || id === 'roar') return t(`evolve.${id}.desc`);
+  if (id === 'bomb') return t('evolve.bomb.desc', { n: EVOLVE.bombVolley });
+  if (id === 'talisman' || id === 'knives') return t(`evolve.${id}.desc`);
   return t('evolve.bolt.desc');
 }
 

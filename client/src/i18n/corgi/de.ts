@@ -81,6 +81,9 @@ export const corgiDe: Table<typeof corgiEn> = {
     lotus: { name: 'Magnetminen', desc: 'Eine Mine bei jedem Schritt, Explosionen ziehen Leckerli an' },
     halo: { name: 'Lasergitter', desc: '{n} Laser drehen sich um dich' },
     roar: { name: 'Schallbellen', desc: 'Bellt rundum, zerschmettert Geschosse' },
+    talisman: { name: 'Raketensturm', desc: 'Jede Rakete zerplatzt beim Treffer und trifft Käfer ringsum' },
+    bomb: { name: 'Bombenteppich', desc: 'Wirft {n} Granaten auf einmal, auf verschiedene Käfer' },
+    knives: { name: 'Klingensturm', desc: 'Geworfene Messer kehren zurück und schneiden auf beiden Wegen' },
   },
   shrine: {
     heal: { name: 'Medikit' },
@@ -103,6 +106,9 @@ export const corgiDe: Table<typeof corgiEn> = {
     lotus: { name: 'Annäherungsminen', desc: 'Beim Gehen legst du Minen, die unter Käfern explodieren' },
     halo: { name: 'Lasergeschütz', desc: 'Ein Laser kreist um dich, länger im Stillstand', count: 'Laser {a} → {b}' },
     roar: { name: 'Mega-Bellen', desc: 'Ein Bellen zum nächsten Käfer drängt den Schwarm zurück' },
+    talisman: { name: 'Lenkraketen', desc: '{n} Raketen jagen verschiedene Käfer', count: 'Raketen {a} → {b}' },
+    bomb: { name: 'Splittergranate', desc: 'Eine Granate zerplatzt in {n} Minibomben', count: 'Minibomben {a} → {b}' },
+    knives: { name: 'Messerring', desc: 'Bis zu {n} Messer kreisen um dich, dann fliegen sie los', count: 'Messer {a} → {b}' },
   },
   passive: {
     calm: { name: 'Kühlmittel', desc: 'Gadget-Abklingzeit −{n}%' },

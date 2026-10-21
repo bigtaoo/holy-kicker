@@ -81,6 +81,9 @@ export const monkKo: Table<typeof monkEn> = {
     lotus: { name: '보보생련', desc: '걸음마다 연꽃, 피어나며 보석을 끌어옴' },
     halo: { name: '무량광', desc: '광선 {n}줄이 주위를 돎' },
     roar: { name: '사자왕 포효', desc: '사방으로 포효, 탄환을 부숨' },
+    talisman: { name: '천강부진', desc: '명중한 부적이 부인으로 터진다' },
+    bomb: { name: '벽력뇌우', desc: '화뢰 {n}개를 한 번에 서로 다른 적에게 던진다' },
+    knives: { name: '만인귀종', desc: '날린 칼이 돌아와 오가며 벤다' },
   },
   shrine: {
     heal: { name: '치유' },
@@ -103,6 +106,9 @@ export const monkKo: Table<typeof monkEn> = {
     lotus: { name: '연보', desc: '걸으면 연꽃 씨를 뿌리고, 적 아래서 피어남' },
     halo: { name: '불광', desc: '광선이 주위를 돎, 멈춰 서면 더 길어짐', count: '광선 {a} → {b}줄' },
     roar: { name: '사자후', desc: '가장 가까운 적에게 포효해 적을 밀어냄' },
+    talisman: { name: '항마부', desc: '부적 {n}장이 각기 다른 적을 쫓음', count: '부적 {a} → {b}' },
+    bomb: { name: '벽력화', desc: '던진 폭탄이 자탄 {n}개로 터짐', count: '자탄 {a} → {b}' },
+    knives: { name: '계도진', desc: '칼 최대 {n}자루가 주위를 돌다 한꺼번에 날아감', count: '칼 {a} → {b}' },
   },
   passive: {
     calm: { name: '선심', desc: '술법 재사용 대기 −{n}%' },
