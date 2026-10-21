@@ -66,7 +66,7 @@ is recorded.
 - **Twenty chapters over the five maps** (engine `chapters.ts`): chapter c plays map
   ((c−1) % 5) + 1, five chapters to an act, so a new act costs no new art. The climb from one
   chapter to the next is flatter than the old five-chapter one (`twenty-chapters` experiment,
-  2026-10-21: a casual player clears chapter 20 around day 40, 2–16 tries a chapter).
+  2026-10-21: with the acts a casual player clears chapter 20 around day 60, most chapters in 2–16 tries).
 
 ### Acts
 
