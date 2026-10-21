@@ -152,11 +152,11 @@ function dataRows(
   add(row, 140);
   const id = p.id();
   const style = { wordWrap: true, wordWrapWidth: W - 100, breakWords: true };
-  const notice = label(t('settings.dataNotice'), 36, COLORS.dim, style);
-  if (!id) return add(notice, 190);
-  add(notice, notice.height + 10);
+  const notice = label(t('settings.dataNotice'), 42, COLORS.dim, style);
+  if (!id) return add(notice, notice.height + 40);
+  add(notice, notice.height + 16);
   // the ID on a line of its own, which copies itself when tapped (players quote it in a problem)
-  const line = label(t('settings.playId', { id }), 36, copyId ? COLORS.text : COLORS.dim, style);
+  const line = label(t('settings.playId', { id }), 42, copyId ? COLORS.text : COLORS.dim, style);
   if (copyId) {
     line.eventMode = 'static';
     line.cursor = 'pointer';
@@ -165,27 +165,55 @@ function dataRows(
       void copyId(id);
     });
   }
-  add(line, 180 - notice.height);
+  add(line, line.height + 30);
 }
 
-/** The language (a button to the picker) and, beside it, the screen shake on or off. */
-function topRow(view: Container, w: number, h: number, a: SettingsActions): Container {
+/** An on/off switch, `w` wide: a pill with its knob at the right and saffron when on. */
+function toggle(on: boolean, w: number, set: (on: boolean) => void): Container {
+  const c = new Container();
+  const pw = 200;
+  const ph = 96;
+  const knob = ph / 2 - 12;
+  c.addChild(new Graphics()
+    .roundRect(-pw / 2, -ph / 2, pw, ph, ph / 2)
+    .fill(on ? COLORS.saffron : COLORS.panelLocked)
+    .stroke({ color: COLORS.outline, width: 6 })
+    .circle(on ? pw / 2 - ph / 2 : -pw / 2 + ph / 2, 0, knob)
+    .fill(on ? COLORS.text : COLORS.dim)
+    .stroke({ color: COLORS.outline, width: 6 }));
+  // the whole half row is the hit area
+  c.hitArea = { contains: (px: number, py: number) => Math.abs(px) <= w / 2 && Math.abs(py) <= 60 };
+  c.eventMode = 'static';
+  c.cursor = 'pointer';
+  c.on('pointertap', () => {
+    playTap();
+    set(!on);
+  });
+  return c;
+}
+
+/** The language (a button to the picker) and, beside it, the screen shake as a switch, each
+ *  under a heading of its own (the shake's says whether it is on). */
+function topRow(view: Container, w: number, h: number, a: SettingsActions): { heads: Container; row: Container } {
+  const heads = new Container();
   const row = new Container();
   const bw = (ROW + 160 - 24) / 2;
+  const half = (bw + 24) / 2;
+  const on = a.shake();
+  const left = fit(label(t('settings.language'), 48, COLORS.dim), bw);
+  const right = fit(label(on ? t('settings.shakeOn') : t('settings.shakeOff'), 48, COLORS.dim), bw);
+  left.x = -half;
+  right.x = half;
+  heads.addChild(left, right);
   const lang = button(localeName(getLocale()), bw, 110, () => {
     const picker = languagePanel(w, h, (l) => a.setLanguage(l), () => picker.destroy({ children: true }));
     view.addChild(picker);
   }, { fill: COLORS.panelLocked, size: 48 });
-  lang.x = -(bw + 24) / 2;
-  const on = a.shake();
-  const shake = button(on ? t('settings.shakeOn') : t('settings.shakeOff'), bw, 110, () => a.setShake(!on), {
-    fill: on ? COLORS.saffron : COLORS.panelLocked,
-    textFill: on ? COLORS.outline : COLORS.text,
-    size: 44,
-  });
-  shake.x = (bw + 24) / 2;
+  lang.x = -half;
+  const shake = toggle(on, bw, (v) => a.setShake(v));
+  shake.x = half;
   row.addChild(lang, shake);
-  return row;
+  return { heads, row };
 }
 
 export function settingsPanel(w: number, h: number, a: SettingsActions): Container {
@@ -193,9 +221,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   view.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const boxH = a.privacy ? 1790 : 1370;
-  let y = -boxH / 2;
-  box.addChild(panel(W, boxH));
+  let y = 0;
   const add = (c: Container, step: number) => {
     c.y = y + step / 2;
     box.addChild(c);
@@ -205,8 +231,9 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
 
   y += 30;
   add(label(t('settings.title'), 64), 110);
-  heading(t('settings.language'));
-  add(topRow(view, w, h, a), 150);
+  const top = topRow(view, w, h, a);
+  add(top.heads, 90);
+  add(top.row, 150);
 
   const volume = a.volume();
   heading(volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }));
@@ -218,7 +245,8 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   const mode = a.quality();
   heading(t('settings.quality'));
   add(choices(QUALITY_MODES, (m) => t(`settings.${m}`), mode, (m) => a.setQuality(m)), 140);
-  add(fit(label(t(HINT[mode]), 40, COLORS.dim), W - 80), 90);
+  const hint = label(t(HINT[mode]), 44, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 60, breakWords: true });
+  add(hint, hint.height + 30);
 
   if (a.privacy) dataRows(a.privacy, a.adPrivacy, a.copyId, add, heading);
 
@@ -234,6 +262,11 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
     row.addChild(gc, back);
     add(row, 110);
   } else add(back, 110);
+  // the box is as tall as its rows, centred, and shrinks on a frame too short for it
+  const boxH = y + 50;
+  box.children.forEach((c) => (c.y -= boxH / 2));
+  box.addChildAt(panel(W, boxH), 0);
+  box.scale.set(Math.min(1, (h - 40) / boxH));
   view.addChild(box);
   return view;
 }
