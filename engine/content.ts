@@ -213,6 +213,12 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
 export const OPENING_DEAL = { deals: 2, spells: ['cymbal', 'bolt', 'palm', 'incense', 'talisman', 'bomb', 'knives'] as readonly SpellId[] };
 
 /**
+ * A new player's first run (RunConfig.firstRun) deals these spells, in this order, first in its
+ * first level-ups, so a hero who hardly moves yet already throws, circles and homes in.
+ */
+export const FIRST_RUN_SPELLS: readonly SpellId[] = ['bomb', 'knives', 'talisman'];
+
+/**
  * Spells and passives that start out of the level-up pool: each comes with a sutra
  * (docs/design.md "Content line"), granted by an achievement and handed to the run in
  * RunConfig.sutras.

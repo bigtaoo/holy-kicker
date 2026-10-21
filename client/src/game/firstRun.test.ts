@@ -7,7 +7,8 @@ import { autoPick } from '../ui/runWatch';
 import { runConfig, runSeed, type RunSetup } from './runSetup';
 import { DEFAULT_SCENE } from './scene';
 
-// The first run plays a fixed seed (BALANCE.firstRun), chosen with the balance bots for the cards
+// The first run deals FIRST_RUN_SPELLS first (engine content.ts), then plays a fixed seed
+// (BALANCE.firstRun), chosen with the balance bots for the cards
 // its opening level-ups take. The deals draw from their own random stream, so they follow from
 // the picks alone, wherever the hero walks. If an engine change reshuffles them this test fails:
 // run the seed search again (casual and standing-still bots, spell-first opening picks) and pick
@@ -45,7 +46,7 @@ describe('the first run', () => {
       }
       e.step([{ owner: 0, tick: s.tick, moveBrad: 0, moveMag: 0, pick }]);
     }
-    expect(taken).toEqual(['spell:incense', 'spell:talisman', 'passive:iron', 'spell:bomb', 'spell:bell']);
+    expect(taken).toEqual(['spell:bomb', 'spell:knives', 'spell:talisman', 'passive:iron', 'spell:bell']);
     expect(wave).toBeLessThanOrEqual(3);
   });
 });

@@ -1,6 +1,6 @@
 import { DROPS, HERO, SHRINE, ZEN } from '../config';
 import {
-  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, OPENING_DEAL, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS, SUTRA_IDS,
+  BEADS_AWAKENED, BEADS_LEVELS, BOWL_AWAKENED, BOWL_LEVELS, EVOLVE_PAIR, FIRST_RUN_SPELLS, FISH_AWAKENED, FISH_LEVELS, MAX_LEVEL, RELIC_AWAKENED, RELIC_IDS, SPELL_EVOLVED, STAFF_AWAKENED, STAFF_LEVELS, MAX_PASSIVES, MAX_SPELLS, OFFER_SIZE, OPENING_DEAL, PASSIVE_IDS, PASSIVES, RELIC_LEVELS, SHRINE_IDS, SPELL_CAST, SPELL_IDS, SPELL_LEVELS, SUTRA_IDS,
   xpToNext, type BeadsRing, type Card, type PassiveId, type RelicId, type SpellId, type SpellLevel, type Stat, type SutraId,
 } from '../content';
 import type { SimEvent } from '../events';
@@ -136,7 +136,10 @@ export function cardPool(p: Player, sutras: readonly SutraId[] = []): Card[] {
  */
 function deal(s: SimState, p: Player): Card[] {
   const first = evolutions(p).slice(0, OFFER_SIZE);
-  const pool = p.level <= 1 + OPENING_DEAL.deals ? openingPool(s, p) : cardPool(p, s.config.sutras);
+  const fixed = firstRunSpell(s, p);
+  if (fixed && first.length < OFFER_SIZE) first.push(fixed);
+  const pool = (p.level <= 1 + OPENING_DEAL.deals ? openingPool(s, p) : cardPool(p, s.config.sutras))
+    .filter((c) => !(fixed && c.kind === fixed.kind && c.id === fixed.id));
   const n = Math.min(OFFER_SIZE - first.length, pool.length);
   for (let i = 0; i < n; i++) {
     const j = i + s.cards.int(pool.length - i);
@@ -145,6 +148,13 @@ function deal(s: SimState, p: Player): Card[] {
     pool[j] = t;
   }
   return first.concat(pool.slice(0, n));
+}
+
+/** In a first run's first level-ups, the next of FIRST_RUN_SPELLS the hero lacks; else null. */
+function firstRunSpell(s: SimState, p: Player): Card | null {
+  if (!s.config.firstRun || p.level > 1 + FIRST_RUN_SPELLS.length || p.spells.length >= MAX_SPELLS) return null;
+  const id = FIRST_RUN_SPELLS.find((sp) => !p.spells.some((o) => o.id === sp));
+  return id ? { kind: 'spell', id } : null;
 }
 
 /** The opening spells not yet owned; the whole pool if they cannot fill an offer. */
