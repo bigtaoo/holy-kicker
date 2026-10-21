@@ -16,6 +16,14 @@ describe('story', () => {
     expect(clearLine(2, 50, 50)).toEqual({ who: 'story.monk', say: 'story.c2.bossAfter' });
   });
 
+  it("replays the map's lines in the later acts, but none for the Inner Demon as the temple's mid-boss", () => {
+    expect(waveLine(7, 20, 50)).toEqual({ who: 'boss.empowered', say: 'story.c2.midBefore' });
+    expect(waveLine(20, 50, 50)).toEqual({ who: 'boss.demon', say: 'story.c5.bossBefore' });
+    expect(waveLine(6, 20, 50)).toBeNull();
+    expect(waveLine(6, 21, 50)).toBeNull();
+    expect(waveLine(6, 50, 50)).toEqual({ who: 'boss.abbot', say: 'story.c1.bossBefore' });
+  });
+
   it('gives a run that ends on the mid-boss its mid-boss lines, not the chapter boss lines', () => {
     expect(waveLine(2, 20, 20)).toEqual({ who: 'boss.empowered', say: 'story.c2.midBefore' });
     expect(waveLine(2, 35, 35)).toBeNull();

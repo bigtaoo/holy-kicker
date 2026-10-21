@@ -1,5 +1,5 @@
 import type { Container, Renderer, Texture } from 'pixi.js';
-import { chapterBoss, type BossKind, type EliteKind, type MobKind } from '@hk/engine';
+import { chapterBoss, mapOf, type BossKind, type EliteKind, type MobKind } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
 import { Boss } from './bossView';
@@ -48,26 +48,28 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
     { sheet, height, facesLeft, shadow, shadowTex, tint }
   );
   const jiangshi = fakeMobTypes(renderer, art.jiangshi, scene.types, scene.page, scene.mobRes);
+  // the looks go by the chapter's map (chapter 7 is the marsh again)
+  const map = chapter > 0 ? mapOf(chapter) : 0;
   // chapter 2's walkers are water ghosts, chapter 3's frosted jiangshi, chapter 4's long-tongue
   // ghosts (its emergers too); its shooters are lantern ghosts. Chapter 2's kinds only spawn once
   // its art is loaded; the jiangshi stands in before that
   const waterGhost = art.marsh?.ghost ?? art.jiangshi;
-  const ghost = art.ghost && chapter >= 4 ? art.ghost.tongue : waterGhost;
+  const ghost = art.ghost && map >= 4 ? art.ghost.tongue : waterGhost;
   const snow = art.snow;
   const market = art.ghost;
   const effigy = market?.effigy ?? art.jiangshi;
   // chapter 5's walkers are every earlier chapter's in turn, its runners shadows
-  const peak = chapter >= 5 ? art.peak : null;
+  const peak = map >= 5 ? art.peak : null;
   const walkers = peak ? [look(art.jiangshi, 'chaser', [27, 9]), look(ghost, 'chaser', [27, 9]), look(waterGhost, 'chaser', [27, 9])]
-    : chapter === 2 || (market && chapter >= 4) ? [look(ghost, 'chaser', [27, 9])]
-      : jiangshi.map((sheet) => look(sheet, 'chaser', [27, 9], true, chapter === 3 ? FROST_TINT : undefined));
+    : map === 2 || (market && map >= 4) ? [look(ghost, 'chaser', [27, 9])]
+      : jiangshi.map((sheet) => look(sheet, 'chaser', [27, 9], true, map === 3 ? FROST_TINT : undefined));
   return {
     chaser: walkers,
     // a white tint: the shadow is drawn in its own colours, not the fox's lavender
     runner: [peak ? look(peak.shadow, 'runner', [36, 9], true, 0xffffff) : look(art.fox, 'runner', [36, 9], false)],
     swarm: [look(wispSheet(renderer), 'swarm', [18, 6])],
     emerger: [look(ghost, 'emerger', [27, 9])],
-    shooter: [market && chapter >= 4 ? look(market.lantern, 'shooter', [26, 8], true, undefined, LANTERN_HEIGHT) : look(art.marsh?.toad ?? art.jiangshi, 'shooter', [34, 10])],
+    shooter: [market && map >= 4 ? look(market.lantern, 'shooter', [26, 8], true, undefined, LANTERN_HEIGHT) : look(art.marsh?.toad ?? art.jiangshi, 'shooter', [34, 10])],
     // chapter 3's kinds only spawn once its pack is loaded; the fox stands in before that
     wolf: [look(snow?.wolf ?? art.fox, 'wolf', [38, 10])],
     caster: [look(snow?.wraith ?? art.jiangshi, 'caster', [26, 8])],
@@ -105,8 +107,8 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
 }
 
 /**
- * The boss views a run needs: its chapter's boss and, from chapter 2 on, the last chapter's
- * as the empowered mid-boss; the abbot alone in the sandbox (if it has a boss). Null for none.
+ * The boss views a run needs: its map's boss and, from chapter 2 on, the last chapter's
+ * as the mid-boss (empowered, but the Inner Demon on the temple map from chapter 6); the abbot alone in the sandbox (if it has a boss). Null for none.
  */
 export function makeBosses(renderer: Renderer, world: Container, art: Art, scene: SceneOptions, chapter: number, sandboxBoss: boolean, shadowTex: Texture, fx: FxPool): BossStage | null {
   const kinds = new Set<BossKind>();

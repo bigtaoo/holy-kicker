@@ -2,6 +2,7 @@ import { Container, Graphics, type Renderer, type Texture } from 'pixi.js';
 import type { RelicId } from '@hk/engine';
 import { rollDice } from '@hk/protocol';
 import { t } from '../i18n';
+import { chapterName } from '../i18n/chapterName';
 import { earnedSutras, hardOpen, playableChapters, track, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
@@ -405,7 +406,6 @@ export class LobbyScreen implements Screen {
     }
   }
 
-
   /** The chapter card, top at 0: its name between the chapter arrows, how far it went, its five chests. */
   private chapterCard(n: number, open: boolean): Container {
     const card = new Container();
@@ -420,7 +420,7 @@ export class LobbyScreen implements Screen {
     card.addChild(back);
     const hard = this.save.hard;
     const progress = track(this.save, hard);
-    const name = t(`chapter.${n}` as never);
+    const name = chapterName(n);
     const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text, CARD_STROKE), 640);
     title.y = 70;
     // the save keeps waves cleared (the chests count those); the lobby names the wave the best run

@@ -10,7 +10,7 @@ import { newBoss } from './boss';
 import { damage } from './combat';
 import { demonRage } from './demon';
 import { resetMob } from './marsh';
-import { beginWave, eliteKinds, hordeSize, waveFoeHp } from './waves';
+import { beginWave, eliteKinds, foeHp, hordeSize, waveFoeHp } from './waves';
 
 // Chapter 5, Demon Peak (docs/content.md "Chapters"): fallen monks behind gongs (shielders),
 // shadows (runners) and every earlier kind, wolf packs, two elites at once, the empowered
@@ -93,7 +93,7 @@ describe('two elites at once', () => {
     expect(e.state.boss).toMatchObject({ kind: 'judge', empowered: true, hp: waveFoeHp(EMPOWERED_JUDGE.hp, 5, WAVES.midBosses[0], false) });
     e.state.boss = null;
     beginWave(e.state, 50);
-    expect(e.state.boss).toMatchObject({ kind: 'demon', empowered: false, hp: DEMON.hp });
+    expect(e.state.boss).toMatchObject({ kind: 'demon', empowered: false, hp: foeHp(DEMON.hp, 5, false) });
   });
 });
 
