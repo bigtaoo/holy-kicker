@@ -24,7 +24,7 @@ import { COLORS, fit, label, shade } from './widgets';
 export type Part = [Container, number];
 
 /** A rounded pill with `text` in it, `fill` coloured. */
-function pill(text: string, color: number, size = 40): Container {
+function pill(text: string, color: number, size = 48): Container {
   const c = new Container();
   const l = label(text, size, color);
   l.anchor.set(0.5);
@@ -40,31 +40,31 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   const won = r.stars > 0;
   const title = fit(label(won ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen'), 72, r.firstClear ? COLORS.saffron : COLORS.text), width);
   title.y = 40;
-  const big = label(String(waves), 180, r.newBest ? COLORS.saffron : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
+  const big = label(String(waves), 180, r.newBest ? COLORS.gold : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
   big.y = 180;
-  const caption = label(t('results.waves'), 40, COLORS.dim);
-  caption.y = 290;
+  const caption = label(t('results.waves'), 48, COLORS.dim);
+  caption.y = 294;
   c.addChild(title, big, caption);
   // a won run's stars, and what the next one asks while the chapter lacks it
-  let top = 340;
+  let top = 350;
   if (r.stars > 0) {
     const stars = starRow(r.stars, 90);
-    stars.y = 380;
+    stars.y = 390;
     c.addChild(stars);
-    top = 440;
+    top = 450;
     const next = Math.max(r.stars, r.bestStars) + 1;
     if (next <= 3) {
-      const hint = fit(label(next === 2 ? t('results.starNext2') : t('results.starNext3', { n: BALANCE.stars.lowest }), 40, COLORS.dim), width);
-      hint.y = 470;
+      const hint = fit(label(next === 2 ? t('results.starNext2') : t('results.starNext3', { n: BALANCE.stars.lowest }), 48, COLORS.dim), width);
+      hint.y = 484;
       c.addChild(hint);
-      top = 510;
+      top = 530;
     }
   }
   // the best (or a new one) and the leaderboard place, side by side under the number
   const badges: Container[] = [];
-  if (r.newBest) badges.push(pill(t('results.newBest'), COLORS.saffron, 44));
+  if (r.newBest) badges.push(pill(t('results.newBest'), COLORS.gold, 48));
   else if (!won && r.best > 0) badges.push(pill(t('results.best', { wave: r.best }), COLORS.dim));
-  if (rank) badges.push(pill(t(rank.best ? 'results.rankNew' : 'results.rankShort', { rank: rank.rank }), rank.best ? COLORS.saffron : COLORS.dim));
+  if (rank) badges.push(pill(t(rank.best ? 'results.rankNew' : 'results.rankShort', { rank: rank.rank }), rank.best ? COLORS.gold : COLORS.dim));
   if (badges.length === 0) return [c, top];
   const row = new Container();
   let x = 0;
@@ -75,44 +75,43 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   }
   row.pivot.x = (x - 24) / 2;
   if (row.width > width) row.scale.set(width / row.width);
-  row.y = top + 50;
+  row.y = top + 52;
   c.addChild(row);
-  return [c, top + 96];
+  return [c, top + 100];
 }
 
-/** What felled the hero, the nearest goal with a bar for how near it came, and one short tip. */
+/** What felled the hero (its picture beside it), the nearest goal across the strip with a bar for how near it came, and one short tip. */
 export function fallPart(fall: DownInfo, waves: number, width: number, icons: IconSheet): Part {
   const c = new Container();
   const icon = fallIcon(fall.cause, fallFigures(icons, fall.monk));
   icon.scale.set(0.62);
+  icon.position.set(-width / 2 + 95, 74);
   const textX = -width / 2 + 190;
-  const textW = width / 2 - textX - 30;
-  const cause = fit(label(t(`run.fall.${fall.cause}.cause`, { wave: waves + 1 }), 50, COLORS.saffron), textW);
+  const cause = fit(label(t(`run.fall.${fall.cause}.cause`, { wave: waves + 1 }), 52, COLORS.saffron), width / 2 - textX - 30);
   cause.anchor.set(0, 0.5);
-  cause.position.set(textX, 50);
-  c.addChild(cause);
-  let y = 100;
+  cause.position.set(textX, 74);
+  c.addChild(icon, cause);
+  let y = 140;
   if (fall.goal) {
-    const goal = fit(label(goalText(fall.goal), 38, fall.goal.kind === 'record' ? COLORS.jade : COLORS.trim), textW);
+    // the goal has the strip's whole width, so it reads at full size
+    const left = -width / 2 + 30;
+    const goal = fit(label(goalText(fall.goal), 48, fall.goal.kind === 'record' ? COLORS.jade : COLORS.trim), width - 60);
     goal.anchor.set(0, 0.5);
-    goal.position.set(textX, y + 10);
+    goal.position.set(left, y + 26);
     const share = goalShare(waves, fall.goal);
+    const barW = width - 60;
     const bar = new Graphics()
-      .roundRect(textX, y + 44, textW, 26, 13).fill(shade(COLORS.outline, 0.12))
-      .roundRect(textX, y + 44, Math.max(26, textW * share), 26, 13).fill(fall.goal.kind === 'record' ? COLORS.jade : COLORS.saffron)
-      .roundRect(textX, y + 44, textW, 26, 13).stroke({ color: COLORS.outline, width: 4 });
+      .roundRect(left, y + 62, barW, 26, 13).fill(shade(COLORS.outline, 0.12))
+      .roundRect(left, y + 62, Math.max(26, barW * share), 26, 13).fill(fall.goal.kind === 'record' ? COLORS.jade : COLORS.saffron)
+      .roundRect(left, y + 62, barW, 26, 13).stroke({ color: COLORS.outline, width: 4 });
     c.addChild(goal, bar);
-    y += 90;
+    y += 100;
   }
-  const iconY = Math.max(90, y / 2);
-  icon.position.set(-width / 2 + 95, iconY);
-  c.addChild(icon);
-  y = Math.max(y, iconY + 70);
-  const tip = label(t(`run.fall.${fall.cause}.tip`), 36, COLORS.dim, { wordWrap: true, wordWrapWidth: width - 40, breakWords: true, lineHeight: 46 });
+  const tip = label(t(`run.fall.${fall.cause}.tip`), 48, COLORS.dim, { wordWrap: true, wordWrapWidth: width - 60, breakWords: true, lineHeight: 58 });
   tip.anchor.set(0.5, 0);
-  tip.y = y + 10;
+  tip.y = y + 6;
   c.addChild(tip);
-  y += tip.height + 40;
+  y += tip.height + 36;
   c.addChildAt(new Graphics().roundRect(-width / 2, 0, width, y - 10, 28).fill({ color: COLORS.outline, alpha: 0.35 }), 0);
   return [c, y + 10];
 }
@@ -132,7 +131,7 @@ function gearTiles(drops: readonly Drop[], icons: IconSheet): Container[] {
     c.addChild(new Graphics().roundRect(-62, -62, 124, 124, 22).fill(shade(color, -0.55)).stroke({ color, width: 7 }));
     c.addChild(iconSprite(icons, d.item, 100) ?? fit(label(dropName(d), 24, color), 110));
     if (n > 1) {
-      const k = label(t('gear.count', { n }), 34, COLORS.text, { stroke: { color: COLORS.outline, width: 6 } });
+      const k = label(t('gear.count', { n }), 40, COLORS.text, { stroke: { color: COLORS.outline, width: 7 } });
       k.anchor.set(1, 1);
       k.position.set(58, 62);
       c.addChild(k);
@@ -156,7 +155,9 @@ export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: n
   c.addChild(chip);
   let y = 130;
   const tiles = gearTiles(r.drops, icons);
-  const per = Math.max(1, Math.floor((width + 16) / 140));
+  // as many rows as the width needs, the tiles shared out evenly between them (7 as 4 + 3, not 6 + 1)
+  const fits = Math.max(1, Math.floor((width + 16) / 140));
+  const per = Math.ceil(tiles.length / Math.max(1, Math.ceil(tiles.length / fits)));
   tiles.forEach((tile, i) => {
     const row = Math.floor(i / per);
     const inRow = Math.min(per, tiles.length - row * per);
@@ -181,20 +182,21 @@ export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
   if (doubled) lines.push([t('results.doubled'), 48, COLORS.copper]);
   if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 48, COLORS.danger, CARD_STROKE]);
   if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 48, COLORS.text]);
-  for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 44, COLORS.text]);
-  for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 44, COLORS.text]);
-  if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 44, COLORS.text]);
+  for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 48, COLORS.text]);
+  for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 48, COLORS.text]);
+  if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.text]);
   // the chests reached wait in the lobby (progressChests.ts): one line, however many
-  if (r.chests.length > 0) lines.push([t('results.chests', { n: r.chests.length }), 44, COLORS.jade]);
+  if (r.chests.length > 0) lines.push([t('results.chests', { n: r.chests.length }), 48, COLORS.jade]);
   // the first run's welcome gift, worn in the next run when it is better (so the next try is
   // visibly stronger), and the one waiting tomorrow (welcome.ts)
   const gift = r.gift?.drops[0];
   const gain = r.gift?.gain;
   if (gift && gain) {
-    lines.push([t('results.giftWorn', { gift: dropName(gift) }), 44, TIER_COLORS[gift.tier]]);
-    lines.push([statLines(gain).join('  ·  '), 40, COLORS.text]);
-  } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 44, TIER_COLORS[gift.tier]]);
+    lines.push([t('results.giftWorn', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
+    const stats = statLines(gain);
+    if (stats.length > 0) lines.push([stats.join('  ·  '), 48, COLORS.text]);
+  } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
   const tomorrow = r.gift ? BALANCE.welcome[1] : undefined;
-  if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 44, COLORS.jade]);
+  if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 48, COLORS.jade]);
   return lines;
 }

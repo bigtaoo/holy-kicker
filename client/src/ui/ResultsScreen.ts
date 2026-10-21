@@ -9,7 +9,7 @@ import { fallPart, headerPart, newsLines, rewardsPart, type Part } from './resul
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
 import { panelKey } from './panelKeys';
-import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from './widgets';
+import { COLORS, button, buttonLabel, keyCap, label, panel, playTap } from './widgets';
 
 // Results after a run, in three zones on one card: the header (the title, the waves cleared as
 // one big number, a badge for the best and the leaderboard place once the server answers), after
@@ -101,11 +101,13 @@ export class ResultsScreen implements Screen {
     zones.push(rewards);
     const news = new Container();
     let ny = 0;
+    // a long line (a long translation) wraps rather than shrinking below the card's text size
     for (const [text, size, fill, style] of newsLines(r, this.offer === 'paid')) {
-      const l = fit(label(text, size, fill, style), INNER_W);
-      l.y = ny + size / 2;
+      const l = label(text, size, fill, { ...style, wordWrap: true, wordWrapWidth: INNER_W, breakWords: true });
+      l.anchor.set(0.5, 0);
+      l.y = ny;
       news.addChild(l);
-      ny += size + 24;
+      ny += l.height + 20;
     }
     if (ny > 0) zones.push([news, ny]);
 
@@ -151,7 +153,8 @@ export class ResultsScreen implements Screen {
       y += 185;
     }
     const pair = this.offer === 'offered' || this.offer === 'playing';
-    const w = pair ? 430 : 640;
+    // the pair spans the card's width, so the ad's label (beside its badge) keeps a readable size
+    const w = pair ? 450 : 640;
     const adText = busy ? '…' : t('results.double');
     // the pair share one font size: the size at which the longer label (with the ad's badge) fits
     let size = 52;
@@ -163,17 +166,16 @@ export class ResultsScreen implements Screen {
       other.destroy({ children: true });
     }
     const next = button(t('common.continue'), w, 140, () => this.actions.next(), { fill: second, size });
-    next.position.set(pair ? x + w / 2 + 15 : x, y);
+    next.position.set(pair ? x + w / 2 + 10 : x, y);
     if (busy) next.eventMode = 'none';
     else if (this.keys) keyCap(next, w, 140, t(this.actions.again ? 'common.keyEsc' : 'common.keyEnter'));
     c.addChild(next);
     if (pair) {
       // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
       const ad = button(adText, w, 140, () => void this.playAd(), { fill: busy ? COLORS.panelLocked : second, video: !busy, size });
-      ad.position.set(x - w / 2 - 15, y);
+      ad.position.set(x - w / 2 - 10, y);
       if (busy) ad.eventMode = 'none';
       c.addChild(ad);
-
     }
   }
 
