@@ -264,6 +264,7 @@ export const ru: Table<typeof en> = {
     merge: 'Слить 5 → {tier}',
     mergeAll: 'Слить всё',
     nothing: 'Пока нечего сливать',
+    howMerge: '5 одинаковых одного ранга сливаются в следующий',
     merged: 'Слияний: {n}',
     total: 'Бонусы от вещей',
     next: 'Следующее качество',

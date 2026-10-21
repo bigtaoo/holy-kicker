@@ -265,6 +265,7 @@ export const it: Table<typeof en> = {
     merge: 'Fondi 5 → {tier}',
     mergeAll: 'Fondi tutto',
     nothing: 'Ancora niente da fondere',
+    howMerge: '5 uguali dello stesso grado si fondono nel successivo',
     merged: '{n} fusioni fatte',
     total: 'Statistiche dall\'equip',
     next: 'Grado successivo',

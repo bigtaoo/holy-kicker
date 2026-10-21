@@ -265,6 +265,7 @@ export const pt: Table<typeof en> = {
     merge: 'Fundir 5 → {tier}',
     mergeAll: 'Fundir tudo',
     nothing: 'Nada para fundir ainda',
+    howMerge: '5 iguais do mesmo nível se fundem no seguinte',
     merged: '{n} fusões feitas',
     total: 'Atributos do equipamento',
     next: 'Próximo nível',

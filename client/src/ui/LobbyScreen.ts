@@ -311,7 +311,10 @@ export class LobbyScreen implements Screen {
   }
 
   private gearTab(w: number, midY: number): void {
-    const tab = gearTab(this.save, this.icons, this.gearActions());
+    // the chosen monk stands among his gear: the Play tab's figure, updated and swapped like it
+    const look = this.patrolLook();
+    this.figureRig = look.rig;
+    const tab = gearTab(this.save, this.icons, this.gearActions(), (h) => (this.figure = new LobbyFigure(look.rig, h)).view);
     tab.position.set(w / 2, midY - gearHeight(this.save) / 2);
     this.view.addChild(tab);
   }

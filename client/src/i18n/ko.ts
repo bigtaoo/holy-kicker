@@ -263,6 +263,7 @@ export const ko: Table<typeof en> = {
     merge: '5개 합성 → {tier}',
     mergeAll: '모두 합성',
     nothing: '합성할 장비가 없어요',
+    howMerge: '같은 장비 같은 등급 5개로 다음 등급 합성',
     merged: '{n}회 합성 완료',
     total: '장비 능력치',
     next: '다음 등급',

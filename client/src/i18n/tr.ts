@@ -265,6 +265,7 @@ export const tr: Table<typeof en> = {
     merge: 'Birleştir 5 → {tier}',
     mergeAll: 'Hepsini birleştir',
     nothing: 'Birleştirecek bir şey yok',
+    howMerge: 'Aynı seviyeden 5 eş parça bir üst seviyeye birleşir',
     merged: '{n} birleştirme yapıldı',
     total: 'Eşyadan gelen değerler',
     next: 'Sonraki kademe',
