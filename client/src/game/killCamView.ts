@@ -26,6 +26,8 @@ const NEAR = 60;
 /** The ring's radius around each kind of source, world units (flattened to the ground). */
 const RING = { mob: 55, elite: 85, boss: 140, point: 75 };
 const ASPECT = 0.45;
+/** The cause tag's height, world units. */
+const TAG_H = 84;
 /** How dark the field outside the spotlight gets, and the black bars' height (share of the view). */
 const VEIL = 0.55;
 const BARS = 0.09;
@@ -68,7 +70,8 @@ export class KillCamView {
 
   constructor(world: Container, private readonly targets: KillCamTargets, private readonly shake: Shake) {
     this.veil.zIndex = 1e7 - 2;
-    this.tag.zIndex = 1e7;
+    // over the hit effects (fxView), the damage numbers and the bars, so nothing round covers it
+    this.tag.zIndex = 1e7 + 2;
     this.bars.zIndex = 1e7 + 1;
     for (const g of [this.ring, this.veil, this.tag, this.bars]) {
       g.visible = false;
@@ -109,13 +112,13 @@ export class KillCamView {
     this.hero.y = hy;
     this.hero.dir = this.mark.x > hx ? -1 : 1;
     this.tag.removeChildren().forEach((c) => c.destroy());
-    const words = label(t(`run.fall.${deathCause(b.src, p.level, s.wave)}.cause`, { wave: s.wave }), 44, COLORS.text, {
+    const words = label(t(`run.fall.${deathCause(b.src, p.level, s.wave)}.cause`, { wave: s.wave }), 48, COLORS.text, {
       stroke: { color: COLORS.outline, width: 8 },
     });
     words.anchor.set(0.5);
     const w = words.width + 48;
     this.tag.addChild(
-      new Graphics().roundRect(-w / 2, -40, w, 80, 40).fill({ color: 0x1a1020, alpha: 0.85 }).stroke({ color: RED, width: 6 }),
+      new Graphics().roundRect(-w / 2, -TAG_H / 2, w, TAG_H, TAG_H / 2).fill({ color: 0x1a1020, alpha: 0.85 }).stroke({ color: RED, width: 6 }),
       words,
     );
     this.cam.start();
@@ -182,7 +185,10 @@ export class KillCamView {
     if (flash > 0) this.bars.rect(l, top, w, h).fill({ color: 0xffffff, alpha: 0.75 * flash });
     this.tag.visible = mix > 0;
     this.tag.alpha = mix;
-    this.tag.position.set(this.mark.x, this.mark.y - this.mark.r * ASPECT - (this.foe ? 190 : 110));
+    // over the struck point, and never lower than just above the spotlight, so the rings and
+    // effects around the figures inside it stay clear of the words
+    const over = this.mark.y - this.mark.r * ASPECT - (this.foe ? 190 : 110);
+    this.tag.position.set(this.mark.x, Math.min(over, oy - ry - TAG_H / 2 - 10));
   }
 
   private paint(): void {

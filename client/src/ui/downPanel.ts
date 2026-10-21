@@ -51,9 +51,9 @@ export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: n
   // stacked top down: [view, height it takes]
   const items: [Container, number][] = [[label(t('run.down'), 80, COLORS.text), 120]];
   if (info) items.push(...fallLines(info, wave, TEXT_W, icons));
-  // the way out matches the revive in size, font and colour, so declining the ad never looks
-  // disabled (CrazyGames' rewarded-ad rules)
-  const giveUp = button(t('run.giveUp'), 640, 150, () => actions.giveUp());
+  // the way out matches the revive in size and font, so declining the ad never looks disabled
+  // (CrazyGames' rewarded-ad rules), but wears the lobby's dark secondary fill: gold is the revive's
+  const giveUp = button(t('run.giveUp'), 640, 150, () => actions.giveUp(), { fill: COLORS.panelLocked });
   if (down !== 'none') {
     const playing = down === 'playing';
     const free = down === 'free';
