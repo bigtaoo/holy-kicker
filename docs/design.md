@@ -725,12 +725,10 @@ The battlefield should never look frozen, even on an empty screen:
 - Grass, reeds, bushes, shrubs and (barely) pines lean in a breeze with gusts rolling across the
   field, and part round the hero's feet, springing back after he passes (`game/sway.ts`, drawn in
   `game/decoView.ts`). Only props near the camera move.
-- Each chapter has its own drifting air in world space, over the horde and under the hit effects
-  (`game/stageAmbient.ts`, `game/ambientView.ts`): leaves on the temple grass, fireflies in the
-  marsh, snow on the pass, cold wisps in the ghost market, ash on Demon Peak; the corgi's planets
-  have frost, spores, blowing sand, ash and hive spores, never warm specks that read as his shots.
-  The run's heat (`fxHeat.ts`) thins them to 40 % and dims them, so the opening is lively and a
-  full late screen stays readable.
+- Nothing drifts over the battlefield: no snow, leaves, fireflies or ash across the whole
+  screen, which reads as noise over the horde and the hero. A chapter's feel comes from its
+  ground, props and (chapter 2) the low mist under the figures. Decorative motion belongs where
+  the player is not fighting: the lobby's falling leaves and rising motes (`ui/lobbyAmbient.ts`).
 - All of it is view-side and runs on the real clock; the engine never knows.
 
 ## Pacing targets

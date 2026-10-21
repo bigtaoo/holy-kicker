@@ -28,9 +28,7 @@ import { ArsenalView } from './arsenalView';
 import { learnSpells } from '../dev/learn';
 import { SutraView } from './sutraView';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
-import { makeAmbient } from './ambientView';
 import { makeDeco } from './decoView';
-import { AMBIENT } from './stageAmbient';
 import { Mist } from './mistView';
 import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
@@ -165,7 +163,6 @@ export class Game {
       const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style, this.camPos, () => this.hero.view.position, nightTint(setup.chapter));
       this.world.addChild(deco).zIndex = SHADOW_Z - 1;
     }
-    if (scene.deco === 'props') this.world.addChild(makeAmbient(AMBIENT[stageNo - 1], this.camPos, () => this.feedback.heat.value));
     this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist, this.camPos) : null;
     if (this.mist) this.world.addChild(this.mist.view);
     const shadowTex = shadowTexture(app.renderer);
