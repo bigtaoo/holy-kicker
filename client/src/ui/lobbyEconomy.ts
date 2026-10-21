@@ -59,7 +59,9 @@ const AD_FREE_TOASTS: Record<'buy' | 'restore', Record<string, Key>> = {
 const CARD_W = 1000;
 /** A card's height when the tab is full (iOS's four cards); fewer cards grow towards CARD_TALL. */
 const CARD_H = 290;
-const CARD_TALL = 400;
+const CARD_TALL = 420;
+/** The width of a card's lines, from the chest to its button. */
+const TEXT_W = 420;
 const CARD_GAP = 40;
 /** The refill countdown's line under the cards. */
 const FOOT_H = 110;
@@ -181,6 +183,8 @@ export class EconomyUi {
     const store = this.host.store;
     const n = kinds.length + (store ? 1 : 0);
     const h = Math.round(Math.max(CARD_H, Math.min(CARD_TALL, (room - FOOT_H) / n - CARD_GAP)));
+    // a short list (no ads, no store) sits in the middle of the room rather than leaving it empty below
+    c.y = Math.max(0, Math.round((room - n * (h + CARD_GAP) - FOOT_H) / 3));
     kinds.forEach((kind, i) => {
       const card = this.chestCard(kind, h);
       card.y = i * (h + CARD_GAP) + h / 2;
@@ -329,16 +333,29 @@ export class EconomyUi {
     const info = kind === 'free' ? t('shop.freeInfo', { copper: formatAmount(c.copper), n: c.drops })
       : kind === 'ad' ? t('shop.adInfo', { jade: c.jade, n: c.drops })
       : t('shop.jadeInfo', { n: c.drops, chapter: c.chapter });
+    // a wrapped line keeps a number with its word ("1 gear", "chapter 20")
+    const keep = (text: string) => text.replace(/(\d) /g, '$1 ').replace(/ (\d)/g, ' $1');
     const status = left === null ? '' : left > 0 ? t('shop.left', { n: left }) : t('shop.tomorrow');
     // "come back tomorrow" in red, outlined like the other red words on a dark card
     const out = left === 0;
-    const lines: [string, number, number, boolean][] = [[t(`shop.${kind}`), 56, COLORS.text, false], [info, 40, COLORS.dim, false], [status, 38, out ? COLORS.danger : COLORS.dim, out]];
-    lines.forEach(([text, size, fill, stroke], i) => {
-      const l = fit(label(text, size, fill, stroke ? { align: 'left', stroke: { color: COLORS.outline, width: 6 } } : { align: 'left' }), 420);
-      l.anchor.set(0, 0.5);
-      l.position.set(-260, (i - 1) * (75 + (h - CARD_H) / 4) - 5);
-      card.addChild(l);
+    // the name, what is inside (up to two lines) and today's count, stacked down the middle of the card
+    const lines: [string, number, number, boolean][] = [[t(`shop.${kind}`), 56, COLORS.text, false], [info, 48, COLORS.dim, false], [status, 48, out ? COLORS.danger : COLORS.dim, out]];
+    const views = lines.filter(([text]) => text).map(([text, size, fill, stroke]) => {
+      const l = label(keep(text), size, fill, {
+        align: 'left', wordWrap: true, wordWrapWidth: TEXT_W, breakWords: true, lineHeight: size + 6,
+        ...(stroke ? { stroke: { color: COLORS.outline, width: 6 } } : {}),
+      });
+      if (l.height > 2 * (size + 6)) l.scale.set(2 * (size + 6) / l.height);
+      l.anchor.set(0, 0);
+      return l;
     });
+    const gap = Math.min(24, 8 + (h - CARD_H) / 8);
+    let y = -(views.reduce((sum, l) => sum + l.height, 0) + gap * (views.length - 1)) / 2;
+    for (const l of views) {
+      l.position.set(-260, y);
+      y += l.height + gap;
+      card.addChild(l);
+    }
     const block = chestBlock(save, now, kind);
     const playing = kind === 'ad' && this.playing;
     const text = playing ? '…' : kind === 'jade' ? t('shop.price', { jade: BALANCE.shop.jadeChest.jade }) : t('shop.open');

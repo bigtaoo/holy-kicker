@@ -161,7 +161,7 @@ export function topBar(w: number, save: SaveData, shown: string, icons: IconShee
   // the currencies right-aligned, left of the settings button: a dark pill with the coin over its left end
   let x = w - 160;
   for (const [amount, id, color] of [[save.jade, 'jade', COLORS.jade], [save.copper, 'copper', COLORS.copper]] as const) {
-    const text = label(formatAmount(amount), 46);
+    const text = label(formatAmount(amount), 48);
     text.anchor.set(1, 0.5);
     text.position.set(x - 18, TOP_H / 2);
     const left = x - text.width - 70;

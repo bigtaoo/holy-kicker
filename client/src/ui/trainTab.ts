@@ -66,7 +66,7 @@ function timesChip(page: number, size: number): Container {
   l.anchor.set(0.5);
   const w = l.width + 24;
   const h = size + 14;
-  c.addChild(new Graphics().roundRect(-w / 2, -h / 2, w, h, h / 2).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 4 }), l);
+  c.addChild(new Graphics().roundRect(-w / 2, -h / 2, w, h, h / 2).fill(COLORS.gold).stroke({ color: COLORS.outline, width: 4 }), l);
   return c;
 }
 
@@ -161,14 +161,14 @@ function pageTabs(save: SaveData, page: number, pages: number, actions: TrainAct
   for (let p = 0; p < pages; p++) {
     const { first, last } = pageRange(p, PAGE, BALANCE.training.nodes);
     const on = p === page;
-    const l = label(t('train.page', { from: first, to: last }), 40, on ? COLORS.outline : COLORS.text);
+    const l = label(t('train.page', { from: first, to: last }), 48, on ? COLORS.outline : COLORS.text);
     l.anchor.set(0.5);
     const w = l.width + 56;
     const tab = new Container();
-    tab.addChild(new Graphics().roundRect(-w / 2, -36, w, 72, 36).fill(on ? COLORS.saffron : SLOT).stroke({ color: on ? COLORS.outline : ROAD, width: 5 }), l);
+    tab.addChild(new Graphics().roundRect(-w / 2, -42, w, 84, 42).fill(on ? COLORS.saffron : SLOT).stroke({ color: on ? COLORS.outline : ROAD, width: 5 }), l);
     if (p > 0) {
       const chip = timesChip(p, 30);
-      chip.position.set(w / 2 - 10, -36);
+      chip.position.set(w / 2 - 10, -42);
       tab.addChild(chip);
     }
     tab.x = x + w / 2;
