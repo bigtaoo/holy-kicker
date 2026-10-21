@@ -29,7 +29,7 @@ import { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
-import { freeChapterArt, loadChapterArt } from '../chapterArt';
+import { loadChapterArt, loadRunArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
 import { LobbyScreen } from './LobbyScreen';
 import { LobbyArtLoad } from './lobbyArtLoad';
@@ -280,8 +280,7 @@ export class Shell {
   private withArt(chapter: number, monk: MonkId, then: () => void): Promise<void> {
     if (this.loading) return Promise.resolve();
     this.loading = true;
-    // what no chapter near this one draws goes first, so a phone never holds every chapter's horde
-    return freeChapterArt(this.art, chapter).then(() => Promise.all([loadChapterArt(this.platform, this.scene, this.art, chapter), loadMonkArt(this.platform, this.art, monk)])).then(() => {
+    return loadRunArt(this.app.renderer, this.platform, this.scene, this.art, chapter, monk).then(() => {
       this.loading = false;
       then();
     }, (err: unknown) => {

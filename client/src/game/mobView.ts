@@ -15,6 +15,8 @@ const Z_DEAD = 6;
 const DRAW_EASE = 0.08;
 /** Farther than this and the drawn position jumps (a respawn). */
 const DRAW_SNAP = 120;
+/** Brightness steps of the crowd shading (shade), too fine to see on a moving mob. */
+const SHADE_STEPS = 48;
 /** A mob standing in a jam breathes: this much stretch, this many breaths per second. */
 const BREATH = 0.025;
 const BREATH_RATE = 0.45;
@@ -76,6 +78,8 @@ export class MobView {
   /** Own brightness, so a crowd of one type is not a uniform stamp. */
   private readonly tone: number;
   private base = 0xffffff;
+  /** The tint last given the sprite: Pixi converts the colour (and allocates) on every set. */
+  private shown = 0xffffff;
   /** A fixed draw order (over the horde), instead of following y. */
   private z = NaN;
   /** Extra size, e.g. a toad swelling before it spits (0 for none). */
@@ -112,12 +116,14 @@ export class MobView {
 
   /** A colour the mob is multiplied by, under any shading. */
   tint(color: number): void {
-    this.base = this.sprite.tint = color;
+    this.base = this.shown = this.sprite.tint = color;
   }
 
   /** Brightness from the mob's place in the crowd (see depthShade), times its own tone. */
   shade(k: number): void {
-    this.sprite.tint = greyTint(k * this.tone, this.base);
+    // in SHADE_STEPS steps, so a mob walking in does not need a new tint every frame
+    const tint = greyTint(Math.round(k * this.tone * SHADE_STEPS) / SHADE_STEPS, this.base);
+    if (tint !== this.shown) this.sprite.tint = this.shown = tint;
   }
 
   /**
@@ -149,7 +155,7 @@ export class MobView {
   update(dt: number, x: number, y: number, faceX: number, speed = 1, walk = 0, sway = false): void {
     const { meta, textures } = this.look.sheet;
     if (walk > 0 && dt > 0) {
-      const moved = Number.isNaN(this.lastX) ? walk * dt : Math.hypot(x - this.lastX, y - this.lastY);
+      const moved = Number.isNaN(this.lastX) ? walk * dt : Math.sqrt((x - this.lastX) ** 2 + (y - this.lastY) ** 2);
       this.pace = stepPace(this.pace, moved, walk, dt);
       this.lastX = x;
       this.lastY = y;
@@ -181,7 +187,7 @@ export class MobView {
     if (held) {
       x = this.drawX;
       y = this.drawY;
-    } else if (this.calm && !Number.isNaN(this.drawX) && Math.hypot(x - this.drawX, y - this.drawY) < DRAW_SNAP) {
+    } else if (this.calm && !Number.isNaN(this.drawX) && (x - this.drawX) ** 2 + (y - this.drawY) ** 2 < DRAW_SNAP ** 2) {
       const k = 1 - Math.exp(-dt / DRAW_EASE);
       x = this.drawX += (x - this.drawX) * k;
       y = this.drawY += (y - this.drawY) * k;
@@ -194,7 +200,8 @@ export class MobView {
     // the shadow shrinks while the mob is in the air
     const air = (meta.lift[f] ?? 0) / meta.height;
     this.shadow.position.set(x, y);
-    sizeShadow(this.shadow, ...this.look.shadow, 1 - air * 1.5);
+    const shadow = this.look.shadow;
+    sizeShadow(this.shadow, shadow[0], shadow[1], 1 - air * 1.5);
   }
 }
 

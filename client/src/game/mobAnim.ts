@@ -44,7 +44,7 @@ const GRAVITY = 2600;
 
 /** Starts a corpse, reusing `out` if given. */
 export function knockDown(x: number, y: number, dirX: number, dirY: number, speed: number, out = {} as Corpse): Corpse {
-  const d = Math.hypot(dirX, dirY) || 1;
+  const d = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
   return Object.assign(out, { x, y, vx: (dirX / d) * speed, vy: (dirY / d) * speed, z: 0, vz: 680, tilt: 0, age: 0 });
 }
 
@@ -101,6 +101,6 @@ export function depthShade(d: number, s = DEPTH_SHADE): number {
 /** A grey multiply tint of brightness k (0..1). */
 export function greyTint(k: number, base = 0xffffff): number {
   const f = Math.min(1, Math.max(0, k));
-  const ch = (shift: number) => Math.round(((base >> shift) & 255) * f);
-  return (ch(16) << 16) | (ch(8) << 8) | ch(0);
+  // spelled out: a helper closure here was made anew for every mob every frame
+  return (Math.round(((base >> 16) & 255) * f) << 16) | (Math.round(((base >> 8) & 255) * f) << 8) | Math.round((base & 255) * f);
 }

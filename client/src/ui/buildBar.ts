@@ -1,4 +1,4 @@
-import { ColorMatrixFilter, Container, Graphics, Sprite, type Text, type Texture } from 'pixi.js';
+import { ColorMatrixFilter, Container, Graphics, GraphicsContext, Sprite, type Text, type Texture } from 'pixi.js';
 import { MAX_LEVEL } from '@hk/engine';
 import type { BuildSlot, Charge } from './buildSlots';
 import { COLORS, label } from './widgets';
@@ -60,11 +60,28 @@ export function lockedLook(view: Container, onDark = false): void {
   view.alpha = onDark ? 0.7 : 0.8;
 }
 
-/** A spell badge's recharge overlay, redrawn only when its numbers change. */
+/** Steps of the recharge sweep: a step is 3 degrees of the clock. */
+const SWEEP_STEPS = 120;
+/** The sweep at each step, drawn once and shared by every badge: redrawing it as it moved
+ *  rebuilt its geometry most frames, for each spell recharging. */
+const sweepShapes: GraphicsContext[] = [];
+
+function sweepShape(step: number): GraphicsContext {
+  let g = sweepShapes[step];
+  if (!g) {
+    g = sweepShapes[step] = new GraphicsContext();
+    // the dark part is what is still to wait; the bright part grows clockwise from the top
+    const share = step / SWEEP_STEPS;
+    if (step > 0) g.moveTo(0, 0).arc(0, 0, R - 6, -Math.PI / 2 + (1 - share) * Math.PI * 2, Math.PI * 1.5).closePath().fill({ color: COLORS.outline, alpha: 0.62 });
+  }
+  return g;
+}
+
+/** A spell badge's recharge overlay, changed only when its numbers change. */
 interface Sweep {
   dark: Graphics;
   secs: Text;
-  share: number;
+  step: number;
 }
 
 export class BuildBar {
@@ -108,13 +125,8 @@ export class BuildBar {
     this.sweeps.forEach((w, i) => {
       if (!w) return;
       const c = charges[i];
-      const share = c ? Math.round(c.share * 120) / 120 : 0;
-      if (share !== w.share) {
-        w.share = share;
-        w.dark.clear();
-        // the dark part is what is still to wait; the bright part grows clockwise from the top
-        if (share > 0) w.dark.moveTo(0, 0).arc(0, 0, R - 6, -Math.PI / 2 + (1 - share) * Math.PI * 2, Math.PI * 1.5).closePath().fill({ color: COLORS.outline, alpha: 0.62 });
-      }
+      const step = c ? Math.round(c.share * SWEEP_STEPS) : 0;
+      if (step !== w.step) w.dark.context = sweepShape((w.step = step));
       const secs = c && c.secs > 0 ? String(c.secs) : '';
       if (w.secs.text !== secs) w.secs.text = secs;
     });
@@ -138,7 +150,7 @@ export class BuildBar {
     }
     const icon = slot.icon && iconSprite(this.icons, slot.icon, R * 1.6);
     if (icon) c.addChild(icon);
-    const sweep = slot.kind === 'spell' ? { dark: new Graphics(), secs: label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }), share: 0 } : null;
+    const sweep = slot.kind === 'spell' ? { dark: new Graphics(sweepShape(0)), secs: label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }), step: 0 } : null;
     if (sweep) {
       this.sweeps.push(sweep);
       c.addChild(sweep.dark);

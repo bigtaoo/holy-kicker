@@ -1,5 +1,7 @@
-import { Assets, type Texture } from 'pixi.js';
-import { loadDeco, loadSheet, loadTao } from './art';
+import { Assets, type Renderer, type Texture } from 'pixi.js';
+import type { MonkId } from '@hk/engine';
+import { loadDeco, loadMonkArt, loadSheet, loadTao } from './art';
+import { warmTextures } from './gpuWarm';
 import type { Art } from './game/Game';
 import { CHAPTER_PIECES, piecesFor, piecesKept, type ChapterPiece } from './game/chapterNeeds';
 import { GHOST_DECO, MARSH_DECO, PEAK_DECO, SNOW_DECO } from './game/decoView';
@@ -149,4 +151,15 @@ export async function freeChapterArt(art: Art, chapter: number): Promise<void> {
     PIECES[key].drop(art);
     await Promise.all(entry.urls.map((url) => Assets.unload(url)));
   }
+}
+
+/**
+ * Everything a run of `chapter` as `monk` draws: frees what no chapter near it draws first (so a
+ * phone never holds every chapter's horde), loads the chapter's art and the monk's rig, then
+ * sends them to the GPU now rather than the first time a mob or the boss comes on.
+ */
+export async function loadRunArt(renderer: Renderer, platform: Platform, scene: Scene, art: Art, chapter: number, monk: MonkId): Promise<void> {
+  await freeChapterArt(art, chapter);
+  await Promise.all([loadChapterArt(platform, scene, art, chapter), loadMonkArt(platform, art, monk)]);
+  warmTextures(renderer, art);
 }

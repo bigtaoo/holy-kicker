@@ -114,7 +114,7 @@ export class HordeView {
       // a stunned mob (the Stunning Bell) freezes mid-pose
       const walk = this.opts.settle && m.kind === 'chaser' ? MOB_WALK : 0;
       v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : m.haste > 0 ? HASTE_CYCLE : 1, walk, this.opts.sway);
-      if (this.opts.calm) v.shade(depthShade(Math.hypot(x - hx, y - hy)));
+      if (this.opts.calm) v.shade(depthShade(Math.sqrt((x - hx) * (x - hx) + (y - hy) * (y - hy))));
     }
   }
 

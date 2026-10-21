@@ -1,7 +1,5 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
-import {
-  beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, TICK_RATE, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState,
-} from '@hk/engine';
+import { beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, TICK_RATE, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
 import { Balls } from './ballView';
@@ -48,6 +46,7 @@ import { runConfig, runSeed, type RunSetup } from './runSetup';
 import { monkRig, type Art } from './artTypes';
 import { frameWork } from './frameWork';
 import { drawStick, heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
+import { sortSteadily } from './steadySort';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -158,7 +157,7 @@ export class Game {
     if (scene.learn && !restored) learnSpells(s, scene.learn);
     Object.assign(this.camPos, { x: lerpX(s.players[0], 1), y: lerpY(s.players[0], 1) }); // a resumed or sought run opens on its hero
 
-    this.world.sortableChildren = true;
+    sortSteadily(this.world);
     const stageNo = Math.min(Math.max(setup.chapter, 1), art.stages.length);
     const stage = art.stages[stageNo - 1];
     this.world.addChild(stage.ground ? makeTiledGround(stage.ground, this.camPos) : makeGround());

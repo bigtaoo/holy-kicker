@@ -52,6 +52,8 @@ export class FxLayer {
   });
   private readonly textures: Map<FxShape, Texture>;
   private readonly particles: Particle[] = [];
+  /** Each particle's tint as last set: Pixi converts the colour (and allocates) on every set. */
+  private readonly tints: number[] = [];
 
   constructor(renderer: Renderer) {
     this.textures = drawAtlas(renderer);
@@ -65,6 +67,7 @@ export class FxLayer {
   private grow(count: number): void {
     while (this.particles.length < count) {
       this.particles.push(new Particle({ texture: this.textures.get('spark')!, anchorX: 0.5, anchorY: 0.5 }));
+      this.tints.push(0xffffff);
     }
   }
 
@@ -88,7 +91,7 @@ export class FxLayer {
       p.rotation = f.rotation;
       p.scaleX = fxSize(f) / CELL;
       p.scaleY = p.scaleX * f.aspect;
-      p.tint = f.color;
+      if (this.tints[i] !== f.color) p.tint = this.tints[i] = f.color;
       p.alpha = fxAlpha(f);
     }
   }

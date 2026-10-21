@@ -1,5 +1,6 @@
 import { Assets } from 'pixi.js';
 import { loadArt, useWebp, webpDecodes } from './art';
+import { warmTextures } from './gpuWarm';
 import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale } from './i18n';
 import { watchAnomalies } from './net/anomaly';
 import { apiBase, Backend } from './net/backend';
@@ -50,6 +51,8 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   await lang;
   useWebp(await webp);
   const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k));
+  // on the GPU behind the loading screen, not in the first run's first frame
+  warmTextures(app.renderer, art);
   const artMs = since();
   const shell = new Shell(app, platform, art, scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
