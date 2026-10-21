@@ -264,6 +264,7 @@ export const zh: Table<typeof en> = {
     merge: '合成 5 → {tier}',
     mergeAll: '一键合成',
     nothing: '暂无可合成的装备',
+    howMerge: '5 件同品阶的同一装备可合成下一品阶',
     merged: '完成 {n} 次合成',
     total: '装备属性',
     next: '下一品阶',

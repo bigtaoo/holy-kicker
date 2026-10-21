@@ -7,10 +7,12 @@ import { lockedLook, type IconSheet } from './buildBar';
 import { gearIcon } from './gearIcons';
 import { itemName, TIER_COLORS, tierName } from './gearText';
 import { statLines } from './statText';
-import { COLORS, backdrop, button, fit, label, panel } from './widgets';
+import { DOLL_H, gearDoll, HERO_FEET, HERO_H } from './gearDoll';
+import { CARD, CARD_STROKE } from './playCard';
+import { COLORS, backdrop, button, fit, label, panel, shade } from './widgets';
 
-// The lobby's Gear tab (docs/design.md "Meta progression"): the six worn slots, what they add
-// up to and "Merge all"; tapping a slot opens its item, with its stats now and at the next
+// The lobby's Gear tab (docs/design.md "Meta progression", "Lobby layout"): the six worn slots
+// around the hero (gearDoll.ts), "Merge all" and what they add up to; tapping a slot opens its item, with its stats now and at the next
 // tier and one merge row per tier. The best tier owned is worn, so there is nothing to equip.
 
 export interface GearActions {
@@ -22,21 +24,20 @@ export interface GearActions {
   toast(text: string): void;
 }
 
-const CELL_W = 490;
-const CELL_H = 250;
-const GAP = 20;
-const BADGE_R = 78;
 const LINE_H = 62;
-const STATS_W = CELL_W * 2 + GAP;
-const READY = 0x4fd1a0;
+const STATS_W = 1000;
+/** The stats card's rows: a little tighter than the dark panel's, the card sits under the doll. */
+const ROW_H = 58;
+const MERGE_W = 440;
+const MERGE_H = 110;
 
-function statsHeight(lines: number): number {
-  return 110 + Math.max(1, Math.ceil(lines / 2)) * LINE_H + 40;
+function cardHeight(lines: number): number {
+  return 100 + Math.max(1, Math.ceil(lines / 2)) * ROW_H + 36;
 }
 
-/** Total height of the tab's content, so the lobby can centre it. */
+/** Total height of the tab's content, its top at y = 0. */
 export function gearHeight(save: SaveData): number {
-  return 3 * CELL_H + 2 * GAP + GAP * 2 + statsHeight(statLines(gearStats(save)).length) + GAP * 2 + 150;
+  return DOLL_H + 20 + cardHeight(statLines(gearStats(save)).length);
 }
 
 /** Whether any merge can go ahead now. */
@@ -57,57 +58,49 @@ function badge(icons: IconSheet, item: ItemId, tier: Tier | -1, r: number): Cont
   return c;
 }
 
-/** The tab centred on x = 0 from y = 0 down. */
-export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions): Container {
+/**
+ * The tab centred on x = 0 from y = 0 down: the doll with the hero `hero` makes (the lobby's
+ * figure, as tall as asked, feet at its origin) in the middle, "Merge all" at his feet when anything can merge (a
+ * quiet line saying how merging works when nothing can) and the light card of what gear adds up to.
+ */
+export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, hero?: (height: number) => Container): Container {
   const c = new Container();
-  worn(save).forEach(({ slot, item, tier }, i) => {
-    const cell = slotCell(save, icons, item, tier);
-    cell.position.set((i % 2 - 0.5) * (CELL_W + GAP), Math.floor(i / 2) * (CELL_H + GAP) + CELL_H / 2);
-    cell.on('pointertap', () => actions.open(slot));
-    c.addChild(cell);
-  });
-  let y = 3 * CELL_H + 2 * GAP + GAP * 2;
+  c.addChild(gearDoll(save, icons, worn(save), hero?.(HERO_H) ?? null, (slot) => actions.open(slot)));
+  const feet = HERO_FEET + 30 + MERGE_H / 2;
+  if (anyMerge(save)) {
+    const all = button(t('gear.mergeAll'), MERGE_W, MERGE_H, () => actions.mergeAll(), { size: 52, textFill: COLORS.outline });
+    all.y = feet;
+    c.addChild(all);
+  } else {
+    const how = label(t('gear.howMerge'), 40, COLORS.text, { ...CARD_STROKE, wordWrap: true, wordWrapWidth: MERGE_W, breakWords: true, lineHeight: 46 });
+    how.alpha = 0.8;
+    how.y = feet;
+    c.addChild(how);
+  }
   const lines = statLines(gearStats(save));
-  const h = statsHeight(lines.length);
-  const stats = statsPanel(t('gear.total'), lines, h);
-  stats.y = y + h / 2;
-  c.addChild(stats);
-  y += h + GAP * 2;
-  const ready = anyMerge(save);
-  const all = button(t('gear.mergeAll'), 620, 150, () => (ready ? actions.mergeAll() : actions.toast(t('gear.nothing'))), {
-    fill: ready ? COLORS.saffron : COLORS.panelLocked,
-    textFill: ready ? COLORS.outline : COLORS.dim,
-  });
-  all.y = y + 75;
-  c.addChild(all);
+  const h = cardHeight(lines.length);
+  const card = statsCard(t('gear.total'), lines, h);
+  card.y = DOLL_H + 20 + h / 2;
+  c.addChild(card);
   return c;
 }
 
-function slotCell(save: SaveData, icons: IconSheet, item: ItemId, tier: Tier | -1): Container {
-  const cell = new Container();
-  cell.addChild(panel(CELL_W, CELL_H));
-  const b = badge(icons, item, tier, BADGE_R);
-  b.x = -CELL_W / 2 + BADGE_R + 30;
-  cell.addChild(b);
-  const textX = b.x + BADGE_R + 30;
-  const room = CELL_W / 2 - textX - 24;
-  const left = (text: string, size: number, fill: number, y: number) => {
-    const l = fit(label(text, size, fill), room);
-    l.anchor.set(0, 0.5);
-    l.position.set(textX, y);
-    cell.addChild(l);
-  };
-  left(itemName(item), 48, COLORS.text, -62);
-  left(tier !== -1 ? tierName(tier) : t('gear.none'), 48, tier >= 0 ? TIER_COLORS[tier] : COLORS.dim, 0);
-  const owned = save.gear[item].reduce((a, b) => a + b, 0);
-  if (owned > 0) left(t('gear.count', { n: owned }), 48, COLORS.dim, 62);
-  if ([0, 1, 2, 3].some((k) => canMerge(save, item, k as Tier))) {
-    // on the badge's shoulder, clear of the names
-    cell.addChild(new Graphics().circle(b.x + BADGE_R * 0.72, -BADGE_R * 0.72, 20).fill(READY).stroke({ color: COLORS.outline, width: 6 }));
-  }
-  cell.eventMode = 'static';
-  cell.cursor = 'pointer';
-  return cell;
+/** What the worn gear adds up to: the Play tab's light card, its lines in two columns. */
+function statsCard(title: string, lines: string[], h: number): Container {
+  const c = new Container();
+  c.addChild(panel(STATS_W, h, CARD.fill));
+  const head = label(title, 52, COLORS.text, CARD_STROKE);
+  head.y = -h / 2 + 56;
+  c.addChild(head);
+  if (lines.length === 0) lines = ['—'];
+  const colW = (STATS_W - 80) / 2;
+  lines.forEach((text, i) => {
+    const l = fit(label(text, 48, shade(CARD.quiet, -0.35)), colW - 20);
+    const one = lines.length === 1;
+    l.position.set(one ? 0 : (i % 2 - 0.5) * colW, -h / 2 + 100 + Math.floor(i / 2) * ROW_H + ROW_H / 2);
+    c.addChild(l);
+  });
+  return c;
 }
 
 /** A titled panel with stat lines in two columns. */

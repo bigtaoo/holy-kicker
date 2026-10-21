@@ -266,6 +266,7 @@ export const de: Table<typeof en> = {
     merge: 'Verschmelzen 5 → {tier}',
     mergeAll: 'Alle verschmelzen',
     nothing: 'Noch nichts zu verschmelzen',
+    howMerge: '5 gleiche Teile eines Rangs verschmelzen zum nächsten',
     merged: '{n}-mal verschmolzen',
     total: 'Werte aus Ausrüstung',
     next: 'Nächster Rang',

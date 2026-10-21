@@ -649,6 +649,15 @@ between the chapter card and the relic row, breathing in his idle clip; a tap ma
 tab (the corgi: motes of light rising). The maths is `ui/lobbyAmbient.ts`, the views
 `ui/lobbyStage.ts` and `ui/playCard.ts`.
 
+The Gear tab is a paper doll (`ui/gearDoll.ts`, `ui/gearTab.ts`): the same figure stands in the
+middle, his six slots three a side as light round badges of the rail family (weapon, wrists and
+waist left; neck, body and feet right), the tier's colour as the badge's rim, a jade dot when five
+alike wait to merge. Under each badge the item's name, one size (48) for all, wrapping to a second
+line rather than shrinking (only a single word wider than the column shrinks), and its tier (40).
+"Merge all" stands at the hero's feet only when something can merge; otherwise a quiet line there
+says how merging works. What the gear adds up to is a light card under the doll. The tab's top is
+at y = 0 and `gearHeight` is its whole height.
+
 ## Ambient life
 
 The battlefield should never look frozen, even on an empty screen:

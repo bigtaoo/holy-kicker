@@ -264,6 +264,7 @@ export const en = {
     merge: 'Merge 5 → {tier}',
     mergeAll: 'Merge all',
     nothing: 'Nothing to merge yet',
+    howMerge: '5 alike of one tier merge into the next',
     merged: '{n} merges done',
     total: 'Stats from gear',
     next: 'Next tier',

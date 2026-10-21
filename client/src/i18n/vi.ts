@@ -266,6 +266,7 @@ export const vi: Table<typeof en> = {
     merge: 'Ghép 5 → {tier}',
     mergeAll: 'Ghép hết',
     nothing: 'Chưa có gì để ghép',
+    howMerge: '5 món giống nhau cùng bậc ghép thành bậc kế tiếp',
     merged: 'Đã ghép {n} lần',
     total: 'Chỉ số từ trang bị',
     next: 'Bậc tiếp',

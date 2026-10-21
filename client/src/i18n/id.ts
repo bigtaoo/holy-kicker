@@ -266,6 +266,7 @@ export const id: Table<typeof en> = {
     merge: 'Gabung 5 → {tier}',
     mergeAll: 'Gabung semua',
     nothing: 'Belum ada yang bisa digabung',
+    howMerge: '5 barang sama setingkat digabung jadi tingkat berikutnya',
     merged: '{n} kali digabung',
     total: 'Status dari perlengkapan',
     next: 'Tingkat berikut',
