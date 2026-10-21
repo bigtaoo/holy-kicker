@@ -209,7 +209,10 @@ at least 30 battle seconds with their device details. Worrying numbers:
 - **p5 under 30 on phones** (red in the tables): fights stutter whenever the horde is big. Under 45
   is amber. Look at the worst list for the GPU class, memory and mob count they share.
 - **long/min** above a few, or many `stall` anomalies: hitches big enough to feel (loading art
-  mid-battle, garbage collection, shader compiles).
+  mid-battle, garbage collection, shader compiles). Garbage collection is rarely it: in-run
+  pauses measured at most 12 ms (minor) and 31 ms (major), and since bc6878e a run allocates
+  about 6 MB/s. A run's first frame used to upload every texture (about 200 ms on a Galaxy A16);
+  art is now sent to the GPU behind the loading screen (`client/src/gpuWarm.ts`, about 50 ms).
 - **hitches/min** (pacing columns, the `hitches` rule): frames that missed a refresh of the
   display the game runs at (`hz`). A long frame is judged with the one after it, so iOS's late
   then early callbacks, which add up to whole refreshes, are not counted. Builds before 5d8db2f
