@@ -2,12 +2,15 @@ import { Container, type Texture } from 'pixi.js';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
 import { menuCover } from './lobbyBars';
+import { panelKey } from './panelKeys';
+import { CARD_STROKE } from './playCard';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, button, fit, label, panel } from './widgets';
+import { COLORS, button, fit, keyCap, label, panel, playTap } from './widgets';
 
 // On launch, when the last chapter run was left unfinished (meta/resume.ts): which run it was,
 // and whether to go on with it or give it up. Giving up settles it like the pause panel's
-// give-up, so the waves already cleared still pay.
+// give-up, so the waves already cleared still pay. On a desktop Enter goes on (the button wears
+// the key); giving up has no key, as it cannot be undone.
 
 export interface ResumeActions {
   resume(): void;
@@ -33,6 +36,8 @@ export class ResumeScreen implements Screen {
     private readonly actions: ResumeActions,
     /** The lobby's baked menu courtyard (menuBackdrop) to sit on once it is in; null for the flat background. */
     backdrop: Promise<Texture | null> = Promise.resolve(null),
+    /** A desktop: Enter goes on and the button shows it. */
+    private readonly keys = false,
   ) {
     void backdrop.then((tex) => {
       this.backdrop = tex;
@@ -54,7 +59,8 @@ export class ResumeScreen implements Screen {
     const name = chapterName(n);
     const lines: [Container, number][] = [
       [fit(label(t('run.unfinished'), 72), 760), -320],
-      [fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 56, hard ? COLORS.danger : COLORS.saffron), 760), -200],
+      // hard mode's red wears the outline red always has on the dark card
+      [fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 56, hard ? COLORS.danger : COLORS.saffron, hard ? CARD_STROKE : {}), 760), -200],
       [fit(label(t(hard ? 'run.hardWave' : 'run.wave', { wave, total: waves }), 48, COLORS.dim), 760), -120],
       [label(t('run.unfinishedAsk'), 48, COLORS.text, { wordWrap: true, wordWrapWidth: 720, breakWords: true, align: 'center' }), -10],
     ];
@@ -65,10 +71,17 @@ export class ResumeScreen implements Screen {
     // both ways out are plain to see; going on is the main one
     const resume = button(t('common.continue'), 640, 150, () => this.choose(() => this.actions.resume()));
     resume.y = 140;
+    if (this.keys) keyCap(resume, 640, 150, t('common.keyEnter'));
     const giveUp = button(t('run.giveUp'), 640, 120, () => this.choose(() => this.actions.giveUp()), { fill: COLORS.panelLocked });
     giveUp.y = 310;
     box.addChild(resume, giveUp);
     this.view.addChild(box);
+  }
+
+  key(code: string, repeat: boolean): void {
+    if (!this.keys || this.chosen || panelKey(code, repeat) !== 'ok') return;
+    playTap();
+    this.choose(() => this.actions.resume());
   }
 
   destroy(): void {

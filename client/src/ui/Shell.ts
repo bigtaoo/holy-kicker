@@ -269,7 +269,7 @@ export class Shell {
     };
     // fallen with no revive left, there is nothing to go on with
     if (outcome === 'lost' && players[0].revives === 0) return giveUp();
-    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => menuBackdrop(this.app.renderer, this.art.lobby))));
+    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => menuBackdrop(this.app.renderer, this.art.lobby)), this.device === 'desktop'));
   }
 
   /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
