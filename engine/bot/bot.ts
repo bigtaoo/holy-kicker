@@ -206,7 +206,7 @@ export class Bot {
     let best = 0;
     let bestScore = -1;
     p.offer.forEach((c, i) => {
-      const score = this.score(p, c) + this.rng.int(25);
+      const score = cardScore(p, c) + this.rng.int(25);
       if (score > bestScore) {
         bestScore = score;
         best = i;
@@ -214,15 +214,37 @@ export class Bot {
     });
     return best;
   }
+}
 
-  private score(p: Player, c: Card): number {
-    // at a shrine: heal when hurt, else the free pick (the bot never bets)
-    if (c.kind === 'shrine') return c.id === 'heal' ? (p.hp * 100 < p.maxHp * 60 ? 100 : 0) : c.id === 'insight' ? 60 : -100;
-    if (c.kind === 'evolve') return 120;
-    if (c.kind === 'relic') return 70;
-    if (c.kind === 'spell') return p.spells.some((sp) => sp.id === c.id) ? 80 : 90;
-    return p.passives.some((ps) => ps.id === c.id) ? 50 : 40;
-  }
+/** How much the bot wants card `c`: evolutions, then spells (new ones first), relic levels, passives. */
+export function cardScore(p: Player, c: Card): number {
+  // at a shrine: heal when hurt, else the free pick (the bot never bets)
+  if (c.kind === 'shrine') return c.id === 'heal' ? (p.hp * 100 < p.maxHp * 60 ? 100 : 0) : c.id === 'insight' ? 60 : -100;
+  if (c.kind === 'evolve') return 120;
+  if (c.kind === 'relic') return 70;
+  if (c.kind === 'spell') return p.spells.some((sp) => sp.id === c.id) ? 80 : 90;
+  return p.passives.some((ps) => ps.id === c.id) ? 50 : 40;
+}
+
+/** The level `p` has of what card `c` raises (0 for something new). */
+function ownLevel(p: Player, c: Card): number {
+  if (c.kind === 'relic') return p.relic;
+  if (c.kind === 'spell') return p.spells.find((sp) => sp.id === c.id)?.level ?? 0;
+  if (c.kind === 'passive') return p.passives.find((ps) => ps.id === c.id)?.level ?? 0;
+  return 0;
+}
+
+/**
+ * The card of `p`'s offer to suggest to a player who hesitates: the bot's choice without its
+ * chance, the lower level winning a tie (so a build grows evenly), the first one after that.
+ */
+export function suggestCard(p: Player): number {
+  let best = 0;
+  p.offer.forEach((c, i) => {
+    const d = cardScore(p, c) - cardScore(p, p.offer[best]);
+    if (d > 0 || (d === 0 && ownLevel(p, c) < ownLevel(p, p.offer[best]))) best = i;
+  });
+  return best;
 }
 
 /** The `circle` style: toward a point a little ahead on the loop round the start. */
