@@ -1,6 +1,7 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { wrapNear, type Vec } from './camera';
 import { DECO, scatterDeco, type DecoKind } from './deco';
+import { SOFT, easeLean, pushLean, windLean } from './sway';
 
 // Draws the scattered ground decorations from one sheet (tools/pack_deco.py), in a single
 // container lying on the ground tile under every figure, so it adds one batch and no sorting.
@@ -123,14 +124,27 @@ export function sliceDeco(frames: readonly DecoFrame[], sheet: Texture): DecoShe
   return { frames: out };
 }
 
-/** Patches only, or patches and props. Kinds missing from the sheet are left out. */
 /** Camera travel between two rewraps of the props, world units. */
 const REWRAP = 500;
 
-/** The stage's props and patches; each keeps within half a field of the camera `cam`. */
-export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam: Vec): Container {
+/** Soft props this far from the camera (world units) are on screen or nearly, so they move. */
+const SWAY_NEAR = 1300;
+
+interface Soft {
+  s: Sprite;
+  give: number;
+  lean: number;
+}
+
+/**
+ * The stage's props and patches (patches only when `props` is false; kinds missing from the
+ * sheet are left out); each keeps within half a field of the camera `cam`. Grass, reeds and
+ * bushes sway in the wind and part round the hero at `hero()` (sway.ts).
+ */
+export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam: Vec, hero?: () => Vec): Container {
   const view = new Container();
   const home: { s: Sprite; x: number; y: number }[] = [];
+  const soft: Soft[] = [];
   const kinds = style.kinds.filter((k) => props && sheet.frames.has(k.name));
   const patch = sheet.frames.get('patch');
   for (const d of scatterDeco(kinds)) {
@@ -138,7 +152,6 @@ export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam
     if (!tex) continue;
     const s = new Sprite(tex);
     s.anchor.set(0.5);
-    s.position.set(d.x, d.y);
     const k = d.size / Math.max(tex.width, tex.height);
     if (d.kind < 0) {
       const look = d.dark ? style.dark : style.light;
@@ -148,20 +161,42 @@ export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam
       s.alpha = look.alpha;
     } else {
       s.scale.set(d.flip ? -k : k, k);
+      const give = SOFT[kinds[d.kind].name];
+      if (give) {
+        // stood on its foot, so it bends from there
+        s.anchor.set(0.5, 1);
+        d.y += (tex.height * k) / 2;
+        soft.push({ s, give, lean: 0 });
+      }
       const decal = style.decal[kinds[d.kind].name];
       s.tint = decal?.tint ?? style.tint;
       s.alpha = decal?.alpha ?? 1;
     }
+    s.position.set(d.x, d.y);
     view.addChild(s);
     home.push({ s, x: d.x, y: d.y });
   }
   const period = DECO.field * 2;
   let at = '';
+  let last = performance.now() / 1000;
   view.onRender = () => {
+    const now = performance.now() / 1000;
+    // a long gap (a hidden tab, the pause menu) springs nothing back in one jump
+    const dt = Math.min(0.1, now - last);
+    last = now;
     const key = `${Math.floor(cam.x / REWRAP)},${Math.floor(cam.y / REWRAP)}`;
-    if (key === at) return;
-    at = key;
-    for (const h of home) h.s.position.set(wrapNear(h.x, cam.x, period), wrapNear(h.y, cam.y, period));
+    if (key !== at) {
+      at = key;
+      for (const h of home) h.s.position.set(wrapNear(h.x, cam.x, period), wrapNear(h.y, cam.y, period));
+    }
+    const h = hero?.();
+    for (const f of soft) {
+      const { x, y } = f.s.position;
+      if (Math.abs(x - cam.x) > SWAY_NEAR || Math.abs(y - cam.y) > SWAY_NEAR) continue;
+      f.lean = easeLean(f.lean, h ? pushLean(x, y, h.x, h.y) : 0, dt);
+      // a negative shear leans the top to the right (Pixi's skew.x)
+      f.s.skew.x = -(f.lean + windLean(now, x, y)) * f.give;
+    }
   };
   return view;
 }

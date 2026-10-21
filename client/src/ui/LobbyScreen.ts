@@ -1,8 +1,8 @@
 import { Container, Graphics, type Renderer, type Text, type Texture } from 'pixi.js';
-import { RELIC_IDS, type RelicId } from '@hk/engine';
+import type { RelicId } from '@hk/engine';
 import { rollDice } from '@hk/protocol';
 import { t } from '../i18n';
-import { earnedSutras, hardOpen, playableChapters, track, unlockedRelics, type Lock, type Tab } from '../meta/progress';
+import { earnedSutras, hardOpen, playableChapters, track, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
 import { EVOLVE_IDS, type EvolveId } from '../meta/codex';
@@ -10,7 +10,7 @@ import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/
 import { gritBonus } from '../meta/loadout';
 import { buyMonk, chooseMonk, monkPrice } from '../meta/monks';
 import { train } from '../meta/training';
-import { iconSprite, lockIcon, type IconSheet } from './buildBar';
+import type { IconSheet } from './buildBar';
 import { chestRow } from './chestRow';
 import { codexHeight, codexTab } from './codexTab';
 import { EconomyUi, shopHeight, type LobbyTrack } from './lobbyEconomy';
@@ -19,6 +19,8 @@ import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
 import { hintArrow, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
 import { hintTab } from './lobbyHint';
+import { LobbyDrift, LobbyFigure } from './lobbyStage';
+import { RELIC_ROW_H, relicRow, trackSwitch } from './playCard';
 import { monkPanel } from './monkPanel';
 import type { PlayerName } from './playerName';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
@@ -58,8 +60,6 @@ export interface LobbyActions {
   track: LobbyTrack;
 }
 
-const RELIC_R = 60;
-
 function lockText(lock: Lock): string {
   if (lock.kind === 'firstRun') return t('tab.unlockFirstRun');
   if (lock.kind === 'level') return t('tab.unlockLevel', { level: lock.level });
@@ -86,6 +86,10 @@ export class LobbyScreen implements Screen {
   /** Whether rewarded ads can be offered, for the shop tab's height. */
   private adOk = false;
   private hint: Container | null = null;
+  /** The monk in the courtyard (Play tab) and the specks drifting over it. */
+  private figure: LobbyFigure | null = null;
+  private drift: LobbyDrift | null = null;
+  private figureRig: unknown = null;
   private clock = 0;
 
   constructor(
@@ -98,7 +102,7 @@ export class LobbyScreen implements Screen {
     /** Null if it failed to load: the plain background shows. */
     private readonly backdrop: Texture | null,
     /** What the patrol panel's scene is drawn with (the chosen monk's rig). */
-    patrolLook: () => PatrolLook,
+    private readonly patrolLook: () => PatrolLook,
   ) {
     const ads = actions.adAvailable();
     void ads.then((ok) => (this.adOk = ok));
@@ -129,6 +133,10 @@ export class LobbyScreen implements Screen {
     this.view.scale.set(f.scale);
     this.econ.reset();
     this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg), scenery(f, this.backdrop));
+    this.figure = null;
+    this.drift = new LobbyDrift(f.w, f.h - TOP_H - TAB_H);
+    this.drift.view.y = TOP_H;
+    this.view.addChild(this.drift.view);
     // a portal account names the player and a guest on its host has none; everyone else gets a
     // die to roll a new name with
     const reroll = !this.names.rolls() ? null : () => {
@@ -238,6 +246,11 @@ export class LobbyScreen implements Screen {
     this.econ.update(dt);
     this.clock += dt;
     if (this.hint && !this.hint.destroyed) this.hint.pivot.y = -Math.abs(Math.sin(this.clock * 4)) * 24;
+    if (this.view.destroyed) return;
+    this.drift?.update(dt);
+    this.figure?.update(dt);
+    // the chosen monk's rig loads after the first lobby is up: he steps in once it is there
+    if (this.figure && this.patrolLook().rig !== this.figureRig) this.relayout();
   }
 
   destroy(): void {
@@ -325,64 +338,31 @@ export class LobbyScreen implements Screen {
   private playTab(w: number, midY: number, h: number): void {
     const n = this.save.chapter;
     const open = n <= playableChapters(this.save);
-    const card = new Container();
-    card.position.set(w / 2, midY - 180);
-    // grit on the first uncleared chapter takes a line: the rows below move down and the card grows
-    const grit = gritBonus(this.save, n);
-    const gritLine = open && Object.keys(grit).length > 0
-      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, COLORS.saffron), 840)
-      : null;
-    const shift = gritLine ? 50 : 0;
-    const back = panel(900, 620 + shift);
-    back.y = shift / 2;
-    card.addChild(back);
-    const hard = this.save.hard;
-    const progress = track(this.save, hard);
-    const name = t(`chapter.${n}` as never);
-    const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text), 640);
-    title.y = -245;
-    // the save keeps waves cleared (the chests count those); the lobby names the wave the best run
-    // reached, as the leaderboard and the run's HUD do
-    const best = progress.best[n - 1];
-    const status = label(
-      !open ? t('lobby.unlockAtChapter', { n: n - 1 })
-        : progress.cleared >= n ? t('lobby.cleared')
-        : best > 0 ? t('lobby.best', { wave: best + 1 }) : t('lobby.notPlayed'),
-      48, open ? COLORS.dim : COLORS.danger,
-    );
-    status.y = -145;
-    const ranks = open ? this.boards.button(n, hard) : null;
-    if (ranks) {
-      // under the › arrow, with a gap: it is a smaller button than the arrow (boardPanel.ts)
-      ranks.position.set(340, -140);
-      card.addChild(ranks);
-    }
-    const chests = chestRow(this.save, n, this.icons, (i) => this.econ.progressChest(n, this.save.hard, i));
-    chests.y = -95 + shift;
-    const relics = this.relics();
-    relics.y = 85 + shift;
-    card.addChild(title, status, chests, relics);
-    if (gritLine) {
-      gritLine.y = -85;
-      card.addChild(gritLine);
-    }
-
-    // chapter arrows: through the cleared chapters and the first uncleared one
-    const arrow = (dir: -1 | 1) => {
-      const target = n + dir;
-      if (target < 1 || target > playableChapters(this.save)) return;
-      const b = button(dir < 0 ? '‹' : '›', 90, 100, () => this.actions.selectChapter(target), { fill: COLORS.panelLocked, size: 80 });
-      b.position.set(dir * 385, -245);
-      card.addChild(b);
-    };
-    arrow(-1);
-    arrow(1);
-    if (hardOpen(this.save)) card.addChild(this.trackSwitch(-400));
-    this.view.addChild(card);
-
     // a welcome gift takes a row under Patrol and Tasks; on a short screen the stack moves up for it
     const gift = this.econ.giftRow();
     const playY = Math.min(midY + 300, h - TAB_H - 140 - (gift ? 130 : 0));
+    const hard = hardOpen(this.save);
+    if (hard) {
+      const sw = trackSwitch(this.save, (on) => this.actions.chooseTrack(on));
+      sw.position.set(w / 2, TOP_H + 75);
+      this.view.addChild(sw);
+    }
+    const card = this.chapterCard(n, open);
+    const cardTop = TOP_H + 30 + (hard ? 110 : 0);
+    card.position.set(w / 2, cardTop);
+    this.view.addChild(card);
+
+    // the monk stands on the courtyard between the card and the relic row at his feet
+    const relicTop = playY - 115 - RELIC_ROW_H;
+    const feet = relicTop - 10;
+    const look = this.patrolLook();
+    this.figureRig = look.rig;
+    this.figure = new LobbyFigure(look.rig, Math.max(160, Math.min(360, feet - cardTop - card.height - 30)));
+    this.figure.view.position.set(w / 2, feet);
+    const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id), (text) => this.showToast(text));
+    relics.position.set(w / 2, relicTop);
+    this.view.addChild(this.figure.view, relics);
+
     // the daily challenge's tile beside PLAY, at the card's right edge, PLAY narrower for it
     const tile = open ? this.challenge.tile(190) : null;
     if (tile) {
@@ -404,52 +384,57 @@ export class LobbyScreen implements Screen {
     }
   }
 
-  /** Normal and hard side by side above the card, the shown one lit. */
-  private trackSwitch(y: number): Container {
-    const row = new Container();
-    ([[false, 'lobby.normal'], [true, 'lobby.hard']] as const).forEach(([hard, key], i) => {
-      const on = this.save.hard === hard;
-      const b = button(t(key), 300, 100, () => {
-        if (!on) this.actions.chooseTrack(hard);
-      }, { fill: on ? (hard ? COLORS.danger : COLORS.saffron) : COLORS.panelLocked, size: 52, textFill: on ? COLORS.text : COLORS.dim });
-      b.position.set((i - 0.5) * 320, y);
-      row.addChild(b);
-    });
-    return row;
-  }
-
-  /** The relic for the next run: its name, then one badge per relic (locked ones dimmed). */
-  private relics(): Container {
-    const row = new Container();
-    const chosen = this.save.relic;
-    const head = label(`${t('lobby.relic')}: ${t(`relic.${chosen}.name`)}`, 48);
-    const open = unlockedRelics(this.save);
-    row.addChild(head);
-    RELIC_IDS.forEach((id, i) => {
-      const unlocked = open.includes(id);
-      const c = new Container();
-      c.position.set((i - (RELIC_IDS.length - 1) / 2) * (RELIC_R * 2 + 40), 115);
-      c.addChild(new Graphics().circle(0, 0, RELIC_R).fill(unlocked ? COLORS.panel : COLORS.panelLocked)
-        .stroke({ color: id === chosen ? COLORS.saffron : COLORS.outline, width: id === chosen ? 10 : 6 }));
-      const icon = iconSprite(this.icons, id, RELIC_R * 1.5);
-      if (icon) {
-        if (!unlocked) icon.alpha = 0.35;
-        c.addChild(icon);
-      }
-      if (!unlocked) {
-        const l = lockIcon(this.icons, 48);
-        l.position.set(RELIC_R * 0.6, RELIC_R * 0.6);
-        c.addChild(l);
-      }
-      c.eventMode = 'static';
-      c.cursor = 'pointer';
-      c.on('pointertap', () => {
-        if (!unlocked) return this.showToast(t('tab.unlockChapter', { n: RELIC_IDS.indexOf(id) }));
-        if (id !== chosen) this.actions.selectRelic(id);
-      });
-      row.addChild(c);
-    });
-    return row;
+  /** The chapter card, top at 0: its name between the chapter arrows, how far it went, its five chests. */
+  private chapterCard(n: number, open: boolean): Container {
+    const card = new Container();
+    // grit on the first uncleared chapter takes a line: the chests move down and the card grows
+    const grit = gritBonus(this.save, n);
+    const gritLine = open && Object.keys(grit).length > 0
+      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, COLORS.saffron), 840)
+      : null;
+    const shift = gritLine ? 55 : 0;
+    const back = panel(900, 370 + shift);
+    back.y = (370 + shift) / 2;
+    card.addChild(back);
+    const hard = this.save.hard;
+    const progress = track(this.save, hard);
+    const name = t(`chapter.${n}` as never);
+    const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text), 640);
+    title.y = 70;
+    // the save keeps waves cleared (the chests count those); the lobby names the wave the best run
+    // reached, as the leaderboard and the run's HUD do
+    const best = progress.best[n - 1];
+    const status = label(
+      !open ? t('lobby.unlockAtChapter', { n: n - 1 })
+        : progress.cleared >= n ? t('lobby.cleared')
+        : best > 0 ? t('lobby.best', { wave: best + 1 }) : t('lobby.notPlayed'),
+      48, open ? COLORS.dim : COLORS.danger,
+    );
+    status.y = 155;
+    const ranks = open ? this.boards.button(n, hard) : null;
+    if (ranks) {
+      // under the › arrow, with a gap: it is a smaller button than the arrow (boardPanel.ts)
+      ranks.position.set(340, 160);
+      card.addChild(ranks);
+    }
+    const chests = chestRow(this.save, n, this.icons, (i) => this.econ.progressChest(n, this.save.hard, i));
+    chests.y = 200 + shift;
+    card.addChild(title, status, chests);
+    if (gritLine) {
+      gritLine.y = 215;
+      card.addChild(gritLine);
+    }
+    // chapter arrows: through the cleared chapters and the first uncleared one
+    const arrow = (dir: -1 | 1) => {
+      const target = n + dir;
+      if (target < 1 || target > playableChapters(this.save)) return;
+      const b = button(dir < 0 ? '‹' : '›', 90, 100, () => this.actions.selectChapter(target), { fill: COLORS.panelLocked, size: 80 });
+      b.position.set(dir * 385, 70);
+      card.addChild(b);
+    };
+    arrow(-1);
+    arrow(1);
+    return card;
   }
 
   private codexTab(w: number, midY: number): void {

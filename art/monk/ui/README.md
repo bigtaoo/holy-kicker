@@ -35,8 +35,13 @@ the padlock's shackle and the cog's middle.
 ## Backdrop
 
 `bg_lobby.png` is the lobby's painted temple courtyard behind the tabs, saved as
-`client/public/art/ui/lobby.jpg` (JPEG quality 82, about 70 KB). edit_image keeps the input's
+`client/public/art/ui/lobby.jpg` (JPEG quality 82, about 115 KB). edit_image keeps the input's
 shape, so `bg_ref.png` is a rough 9:16 layout drawn in code (sky, mountains, a hall, a paved
 courtyard). The first edit (`r1/bg_lobby_flat.png`) kept the blocks too literally, as flat vector
 shapes; `bg_lobby.png` is an edit of that one with a prompt that lists the details (lanterns, an
 incense burner, a stone lantern, framing trees, the warm lit door).
+
+Round 2 (2026-10-21, `r2/`): the night picture read dark and muddy behind the tabs, so the
+courtyard was repainted in daylight (`r2/bg_lobby_day.png`, now `bg_lobby.png`) and at dusk
+(`r2/bg_lobby_gold.png`, not used); the old one is kept as `r2/bg_lobby_night.png`. The prompts
+are beside them. The lobby no longer lays a dark veil over the picture.

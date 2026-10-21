@@ -20,7 +20,7 @@ const BLEED = 800;
 /** The picture on each tab (ids in the icon sheet). */
 const TAB_ICONS: Record<Tab, string> = { shop: 'shop', gear: 'robe', play: 'ball', train: 'train_attack', codex: 'codex' };
 
-/** The painted temple courtyard, covering the frame between the bars, a little darkened. */
+/** The painted courtyard in daylight, covering the frame between the bars; the panels on it carry their own dark fill. */
 export function scenery(f: UiFrame, tex: Texture | null): Container {
   const c = new Container();
   if (!tex) return c;
@@ -32,7 +32,7 @@ export function scenery(f: UiFrame, tex: Texture | null): Container {
   pic.position.set(f.w / 2, f.h - TAB_H);
   const mask = new Graphics().rect(0, TOP_H, f.w, room).fill(0xffffff);
   pic.mask = mask;
-  c.addChild(pic, mask, new Graphics().rect(0, TOP_H, f.w, room).fill({ color: 0x000000, alpha: 0.15 }));
+  c.addChild(pic, mask);
   return c;
 }
 

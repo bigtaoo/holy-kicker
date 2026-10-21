@@ -591,12 +591,36 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
 │      best: wave 37               │
 │      ▢ ▢ ▢ ▢ ▢  progress chests   │
 │                                  │
+│            (the monk)            │
+│      Relic: …   ◯ ◯ ◯ ◯          │
 │           [ PLAY ]               │
 │      patrol chest (6 h stored)   │
 ├──────┬──────┬──────┬──────┬──────┤
 │ Shop │ Gear │ Play │ Train│ Codex│
 └──────┴──────┴──────┴──────┴──────┘
 ```
+
+The backdrop is a daylight courtyard (the corgi: a sunset desert base), drawn without a dark
+veil so the lobby reads bright and warm. On the Play tab the chosen monk stands centre stage
+between the chapter card and the relic row, breathing in his idle clip; a tap makes him kick
+(the corgi fires, left and right in turn) with a little hop. Maple leaves drift down over every
+tab (the corgi: motes of light rising). The maths is `ui/lobbyAmbient.ts`, the views
+`ui/lobbyStage.ts` and `ui/playCard.ts`.
+
+## Ambient life
+
+The battlefield should never look frozen, even on an empty screen:
+
+- Grass, reeds, bushes, shrubs and (barely) pines lean in a breeze with gusts rolling across the
+  field, and part round the hero's feet, springing back after he passes (`game/sway.ts`, drawn in
+  `game/decoView.ts`). Only props near the camera move.
+- Each chapter has its own drifting air in world space, over the horde and under the hit effects
+  (`game/stageAmbient.ts`, `game/ambientView.ts`): leaves on the temple grass, fireflies in the
+  marsh, snow on the pass, cold wisps in the ghost market, ash on Demon Peak; the corgi's planets
+  have frost, spores, blowing sand, ash and hive spores, never warm specks that read as his shots.
+  The run's heat (`fxHeat.ts`) thins them to 40 % and dims them, so the opening is lively and a
+  full late screen stays readable.
+- All of it is view-side and runs on the real clock; the engine never knows.
 
 ## Pacing targets
 
