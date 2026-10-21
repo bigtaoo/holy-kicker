@@ -453,9 +453,8 @@ Owner setup, the same steps as Holy Kicker's above:
    added to the GDPR message.
 4. Then: Actions → `ios-corgi` → Run workflow, or push a tag `corgi-ios-v1.0.0`.
 5. When it is time to submit, first add the ad-free product for review on its own page: the first
-   non-consumable must ride with a version. Then add version 1.0 for review. Before that, check
-   the age rating's gun violence answer: it is copied from Holy Kicker as "infrequent", but the
-   corgi fires all the time.
+   non-consumable must ride with a version. Then add version 1.0 for review. The age rating's gun
+   violence answer stays "infrequent", as for Holy Kicker; the owner chose not to change it.
 
 ## Later
 
