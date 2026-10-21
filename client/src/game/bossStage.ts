@@ -1,5 +1,6 @@
 import type { Container } from 'pixi.js';
 import { AffixBadges } from './affixBadge';
+import { BOSS_BAR_H, BOSS_BAR_TOP } from './bossBar';
 import { FP, type Boss as BossState, type BossKind, type SimEvent } from '@hk/engine';
 import type { Boss } from './bossView';
 import type { CarpView } from './carpView';
@@ -42,9 +43,9 @@ export class BossStage {
 
   layout(playW: number, scale: number): void {
     for (const v of this.all) v.layout(playW, scale);
-    // centred under the bar (bossBar.ts: its top at 400, 28 high); its right end is under the run buttons
+    // centred under the bar
     this.badges.view.scale.set(scale);
-    this.badges.view.position.set(playW / 2, (400 + 28 + 52) * scale);
+    this.badges.view.position.set(playW / 2, (BOSS_BAR_TOP + BOSS_BAR_H + 52) * scale);
   }
 
   /** Shows the sim's boss (if any) and hides the rest, then draws it. */
