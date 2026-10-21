@@ -12,6 +12,9 @@ services:
     container_name: hk-api
     restart: unless-stopped
     env_file: .env
+    # collected replays (server/src/replayShelf.ts), kept across deploys
+    volumes:
+      - replays:/data/replays
     mem_limit: 128m
     logging: &logging
       driver: json-file
@@ -39,3 +42,6 @@ services:
         condition: service_healthy
     mem_limit: 128m
     logging: *logging
+
+volumes:
+  replays:

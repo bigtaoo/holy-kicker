@@ -64,7 +64,7 @@ square-cut ends capped by big silver blocks (`r1/train_magnet_a.jpg`, the one us
 `r1/train_magnet_b.*` came out as a ring again).
 
 The talismans, the cluster bomb and the Blade Circle (2026-10-21): `talisman.jpg`, `bomb.jpg` and
-`knives.jpg`, packed last. Each is also the spell's picture in the world
+`knives.jpg`, packed after the lobby icons (art/monk/ui/README.md). Each is also the spell's picture in the world
 (`client/src/game/arsenalView.ts` draws the icon frame, turned to its heading). The first talisman
 (`r1/talisman_plain.jpg`) was a plain yellow strip with two faint strokes; the prompt now asks for
 a red border, a red seal and one bold squiggle (`r1/talisman_a.jpg` put the squiggle at the

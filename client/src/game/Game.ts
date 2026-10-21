@@ -30,7 +30,9 @@ import { ArsenalView } from './arsenalView';
 import { learnSpells } from '../dev/learn';
 import { SutraView } from './sutraView';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
+import { makeAmbient } from './ambientView';
 import { makeDeco } from './decoView';
+import { AMBIENT } from './stageAmbient';
 import { Mist } from './mistView';
 import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
@@ -157,13 +159,15 @@ export class Game {
     Object.assign(this.camPos, { x: lerpX(s.players[0], 1), y: lerpY(s.players[0], 1) }); // a resumed or sought run opens on its hero
 
     this.world.sortableChildren = true;
-    const stage = art.stages[Math.min(Math.max(setup.chapter, 1), art.stages.length) - 1];
+    const stageNo = Math.min(Math.max(setup.chapter, 1), art.stages.length);
+    const stage = art.stages[stageNo - 1];
     this.world.addChild(stage.ground ? makeTiledGround(stage.ground, this.camPos) : makeGround());
     if (stage.deco && scene.deco !== 'none') {
-      const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style, this.camPos);
+      const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style, this.camPos, () => this.hero.view.position);
       deco.zIndex = SHADOW_Z - 1;
       this.world.addChild(deco);
     }
+    if (scene.deco === 'props') this.world.addChild(makeAmbient(AMBIENT[stageNo - 1], this.camPos, () => this.feedback.heat.value));
     this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist, this.camPos) : null;
     if (this.mist) this.world.addChild(this.mist.view);
     const shadowTex = shadowTexture(app.renderer);
@@ -399,11 +403,9 @@ export class Game {
           this.spells.cast(e);
           break;
         case 'bomb':
-          this.arsenal.throw(e);
-          break;
         case 'boom':
         case 'seal':
-          this.arsenal.boom(e);
+          this.arsenal.on(e);
           break;
         case 'bolt':
           this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP, e.gold);
@@ -494,5 +496,4 @@ export class Game {
 Lv ${p.level}  xp ${p.xp}  gems ${s.gems.length}  tick ${s.tick}`;
     }
   }
-
 }

@@ -586,17 +586,61 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
 ```
 ┌──────────────────────────────────┐
 │ avatar Lv.12   copper 12.3k  jade 340  ⚙ │
-│                                  │
-│      [Chapter 3: XX Mountain]    │
+│      ( Normal | Hard )           │
+│   ‹ [Chapter 3: XX Mountain] ›   │
 │      best: wave 37               │
 │      ▢ ▢ ▢ ▢ ▢  progress chests   │
-│                                  │
-│           [ PLAY ]               │
-│      patrol chest (6 h stored)   │
+│ (Patrol)                (Daily)  │
+│  3h 0m      (the monk)   16h left│
+│ (Tasks)                 (Gift)   │
+│      Relic: …   ◯ ◯ ◯ ◯ ◯        │
+│ [            PLAY             ]  │
 ├──────┬──────┬──────┬──────┬──────┤
 │ Shop │ Gear │ Play │ Train│ Codex│
 └──────┴──────┴──────┴──────┴──────┘
 ```
+
+One loud thing per screen: PLAY is the only full-width saffron button, at the thumb, and the
+active tab is the only other saffron surface. Everything else on the Play tab is quiet:
+
+- The side things (Patrol and Tasks left, the daily or weekly challenge and the welcome gift
+  right) are one family of round dark badges, `ui/lobbyRail.ts`: the picture, its name under it
+  and a short line under that (hours stored, time left). A saffron ring means "this wants you
+  now" (a challenge open, a gift ready); greyed means locked or done for today.
+- A red dot means something can be claimed; the open tab never shows one, since its own screen
+  shows what is waiting.
+- The chapter arrows come in a pair, the one that cannot move faded, so the card stays centred.
+- The hero takes the height between the card and the relic row, so he stays the picture's subject,
+  on a faint pool of light (`ui/lobbyStage.ts`).
+- Three value layers, each with one job: the dark bars frame the screen, the backdrop is a stage
+  set (drawn 40% greyer and flatter than painted, `STAGE_TONE` in `ui/lobbyBars.ts`), and the
+  light things on it (the chapter card, the relic and rail badges, `BADGE` in `ui/playCard.ts`)
+  are what the player reads. No dark disc on the bright courtyard: it was the strongest contrast
+  on screen and pulled the eye off the hero. Inside the card, only the title wears an outline.
+- Icons are all painted objects in the sticker style, one per meaning: no spell or stat icon is
+  borrowed for a lobby button (the daily is a trophy, Train a wooden post, the corgi's a kettlebell).
+
+The backdrop is a daylight courtyard (the corgi: a sunset desert base), drawn without a dark
+veil so the lobby reads bright and warm. On the Play tab the chosen monk stands centre stage
+between the chapter card and the relic row, breathing in his idle clip; a tap makes him kick
+(the corgi fires, left and right in turn) with a little hop. Maple leaves drift down over every
+tab (the corgi: motes of light rising). The maths is `ui/lobbyAmbient.ts`, the views
+`ui/lobbyStage.ts` and `ui/playCard.ts`.
+
+## Ambient life
+
+The battlefield should never look frozen, even on an empty screen:
+
+- Grass, reeds, bushes, shrubs and (barely) pines lean in a breeze with gusts rolling across the
+  field, and part round the hero's feet, springing back after he passes (`game/sway.ts`, drawn in
+  `game/decoView.ts`). Only props near the camera move.
+- Each chapter has its own drifting air in world space, over the horde and under the hit effects
+  (`game/stageAmbient.ts`, `game/ambientView.ts`): leaves on the temple grass, fireflies in the
+  marsh, snow on the pass, cold wisps in the ghost market, ash on Demon Peak; the corgi's planets
+  have frost, spores, blowing sand, ash and hive spores, never warm specks that read as his shots.
+  The run's heat (`fxHeat.ts`) thins them to 40 % and dims them, so the opening is lively and a
+  full late screen stays readable.
+- All of it is view-side and runs on the real clock; the engine never knows.
 
 ## Pacing targets
 

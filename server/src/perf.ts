@@ -8,7 +8,7 @@ import type { PropValue } from './protocol';
 // per run, `mid` ones only on trouble), so medians are taken over the snapshots themselves.
 
 /** The client's quality levels, lowest first (client/src/game/quality.ts LEVELS). */
-export const QUALITY_LEVELS = ['saver', 'low', 'mid', 'phone', 'high'] as const;
+export const QUALITY_LEVELS = ['crawl', 'slow', 'saver', 'low', 'mid', 'phone', 'high'] as const;
 /** A run whose lowest level is under this one dropped below what phones are meant to run. */
 const PHONE = QUALITY_LEVELS.indexOf('phone');
 /** Snapshots shorter than this (battle seconds) stay out of the worst list: a hitch is not a device. */

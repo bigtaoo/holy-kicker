@@ -79,6 +79,10 @@ before believing a change, and never read a single day.
    biggest gap in D1 (e.g. 4–6 runs finished: 40%, one run: 16%). That behaviour is the target:
    get more new players to it, sooner. Correlation is not cause (keen players both play more and
    come back), but it says where to push.
+   **Watch the runs behind it.** Until 2026-12-31 every real run's replay is collected (kept 15
+   days; `COLLECT` in `server/src/replayShelf.ts` is the switch): `npm run replays --
+   --collected=200` says per run what hurt the hero, where they died, how they played the stick
+   and which cards they took, so a wall in the funnel comes with the runs that hit it.
 3. **Change one thing** per release, and note the commit.
 4. **Compare builds.** "first build played" splits D1 by the release new players started on. Wait
    for a few hundred installs on the new build before calling it.
@@ -192,7 +196,9 @@ The rules and their thresholds are constants at the top of `diagnose.ts`:
 - **stalls**: 6+ frames of a second or more per battle hour of a build.
 - **errors**: the same message from the same place 2+ times (5+ is a problem).
 - **slow_device**: a device + GPU whose median p5 is under 30, with how many runs fell below the
-  phone quality level.
+  phone quality level. Under `saver` are `slow` (battles capped at an even 30) and `crawl` (30
+  and 0.75 resolution): a `lvMin` of either means the device could not hold saver, and the run
+  kept going on less (`client/src/game/quality.ts`).
 - **fps_regression**: on a device class, the newest build's median p5 is 5+ fps below the build
   before it.
 

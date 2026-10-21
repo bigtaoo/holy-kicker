@@ -8,7 +8,8 @@ the game). `gen_all.sh` generates every icon whose image is missing. They are pa
 training icons into the one icon sheet:
 
     python tools/pack_icons.py client/public/art/icons <art/monk/icons ... train_revive.jpg> \
-      art/monk/ui/{jade,copper,shop,codex,lock,settings,patrol,tasks,chest}.jpg
+      art/monk/ui/{jade,copper,shop,codex,lock,settings,patrol,tasks,chest,daily,tab_train}.jpg \
+      art/monk/icons/{bomb,knives,talisman}.jpg
 
 - `jade`, `copper`: the currencies in the lobby's top bar. The first jade, a rounded teardrop
   (`r1/jade_drop.jpg`), reads a little like a water drop; the second, a cushion cut with a vein
@@ -19,11 +20,16 @@ training icons into the one icon sheet:
   (`r1/jade_bi.jpg`) reads as a tyre or washer and, round with a hole, too close to the copper
   coin. `jade.jpg` stays a copy of the teardrop.
 - `shop` (a red money pouch) and `codex` (a stitched book) are the Shop and Codex tabs; the
-  others reuse the build icons: Gear the robe, Play the cuju, Train the dumbbell.
+  others reuse the build icons: Gear the robe, Play the cuju. Train first reused the attack
+  training's grey dumbbell, the one cold metal thing among warm painted objects; since 2026-10-21
+  it has `tab_train`, a wooden training post with a red band (`r3/tab_train_b.jpg`; the first
+  try, `r3/tab_train_mannequin.jpg`, was a thin mannequin that read as a person).
 - `lock` replaces the 🔒 emoji, which every platform draws differently. `settings` replaces the ⚙
   glyph.
-- `patrol` (a straw hat) and `tasks` (a ticked list on a notice board) sit on the lobby's two
-  buttons under PLAY.
+- `patrol` (a straw hat) and `tasks` (a ticked list on a notice board) sit on the Play tab's left
+  rail.
+- `daily` (a gold trophy on a red lacquer base, 2026-10-21): the daily challenge's button on the
+  Play tab's right rail, which until then borrowed the Lotus Steps spell icon.
 - `chest` (red lacquer, gold bands): the chapter card's five progress chests. It came with a
   white sticker border, which the cutout removes along with the background.
 
@@ -35,8 +41,13 @@ the padlock's shackle and the cog's middle.
 ## Backdrop
 
 `bg_lobby.png` is the lobby's painted temple courtyard behind the tabs, saved as
-`client/public/art/ui/lobby.jpg` (JPEG quality 82, about 70 KB). edit_image keeps the input's
+`client/public/art/ui/lobby.jpg` (JPEG quality 82, about 115 KB). edit_image keeps the input's
 shape, so `bg_ref.png` is a rough 9:16 layout drawn in code (sky, mountains, a hall, a paved
 courtyard). The first edit (`r1/bg_lobby_flat.png`) kept the blocks too literally, as flat vector
 shapes; `bg_lobby.png` is an edit of that one with a prompt that lists the details (lanterns, an
 incense burner, a stone lantern, framing trees, the warm lit door).
+
+Round 2 (2026-10-21, `r2/`): the night picture read dark and muddy behind the tabs, so the
+courtyard was repainted in daylight (`r2/bg_lobby_day.png`, now `bg_lobby.png`) and at dusk
+(`r2/bg_lobby_gold.png`, not used); the old one is kept as `r2/bg_lobby_night.png`. The prompts
+are beside them. The lobby no longer lays a dark veil over the picture.

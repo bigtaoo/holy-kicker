@@ -201,6 +201,8 @@ export const zh: Table<typeof en> = {
   gift: {
     claim: '领取今日礼物：{gift}',
     tomorrow: '明日礼物：{gift}',
+    button: '礼物',
+    later: '明天',
   },
   shop: {
     free: '每日礼包',

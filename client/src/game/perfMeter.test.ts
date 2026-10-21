@@ -2,15 +2,18 @@ import { PERF_MID_MAX, PERF_MID_SECS } from '@hk/protocol';
 import { describe, expect, it } from 'vitest';
 import type { BattleFrame } from './frameWork';
 import { CTX_BOSS, CTX_WAVE, gpuClass, PerfMeter } from './perfMeter';
-import { FrameGate } from './quality';
+import { FrameGate, LEVELS } from './quality';
+
+/** A quality level's index by name. */
+const L = (name: string) => LEVELS.findIndex((l) => l.name === name);
 
 /** A battle frame of `ms` on `level` on a 60 Hz screen, with light work unless `more` says otherwise. */
-function fr(ms: number, level = 4, more: Partial<BattleFrame> = {}): BattleFrame {
+function fr(ms: number, level = L('high'), more: Partial<BattleFrame> = {}): BattleFrame {
   return { ms, level, target: 1000 / 60, vsync: 1000 / 60, work: 4, sim: 1, view: 1, draw: 2, ...more };
 }
 
 /** Feeds `n` frames of `ms` on `level` with `mobs` alive. */
-function feed(m: PerfMeter, n: number, ms: number, level = 4, mobs = 100): void {
+function feed(m: PerfMeter, n: number, ms: number, level = L('high'), mobs = 100): void {
   for (let i = 0; i < n; i++) m.frame(fr(ms, level), mobs);
 }
 
@@ -49,11 +52,11 @@ describe('PerfMeter', () => {
 
   it('starts each snapshot afresh but keeps the levels and the peak mobs for the run', () => {
     const m = new PerfMeter();
-    feed(m, 300, 1000 / 60, 3, 250);
-    feed(m, 300, 1000 / 30, 1, 80);
-    feed(m, 300, 1000 / 60, 2, 80);
+    feed(m, 300, 1000 / 60, L('phone'), 250);
+    feed(m, 300, 1000 / 30, L('low'), 80);
+    feed(m, 300, 1000 / 60, L('mid'), 80);
     expect(m.snapshot('leave')).toMatchObject({ lv0: 'phone', lvMin: 'low', lv: 'mid', mobs: 250 });
-    feed(m, 600, 1000 / 60, 2, 50);
+    feed(m, 600, 1000 / 60, L('mid'), 50);
     expect(m.snapshot('end')).toMatchObject({ secs: 10, fps: 60, long: 0, lv0: 'phone', lvMin: 'low', lv: 'mid', mobs: 250 });
   });
 
@@ -88,7 +91,7 @@ describe('PerfMeter pacing', () => {
     for (let i = 0; i < 600; i++) m.frame(fr(i % 100 === 0 ? 2000 / 60 : i % 100 === 50 ? 3000 / 60 : 1000 / 60), 0);
     // the same frames on a 120 Hz screen drawing every other refresh
     const fast = new PerfMeter();
-    for (let i = 0; i < 600; i++) fast.frame(fr(i % 100 === 0 ? 2000 / 60 : i % 100 === 50 ? 3000 / 60 : 1000 / 60, 4, { vsync: 1000 / 120 }), 0);
+    for (let i = 0; i < 600; i++) fast.frame(fr(i % 100 === 0 ? 2000 / 60 : i % 100 === 50 ? 3000 / 60 : 1000 / 60, L('high'), { vsync: 1000 / 120 }), 0);
     const a = m.snapshot('end')!, b = fast.snapshot('end')!;
     expect(a).toMatchObject({ hz: 60, hitch: 12, miss: 18, long: 6 });
     expect(b).toMatchObject({ hz: 120, hitch: 12, miss: 18 });
@@ -109,7 +112,7 @@ describe('PerfMeter pacing', () => {
       if (i % 100 === 52) continue;
       const t = 1000 + i * (1000 / 60) + (i % 4 === 1 ? 8 : 0) + ((i * 7) % 5) * 0.6 - 1.2;
       if (!gate.pass(t)) continue;
-      if (last > 0) m.frame(fr(t - last, 4, { target: gate.frameMs, vsync: gate.vsync }), 0);
+      if (last > 0) m.frame(fr(t - last, L('high'), { target: gate.frameMs, vsync: gate.vsync }), 0);
       last = t;
     }
     expect(m.snapshot('end')).toMatchObject({ hz: 60, hitch: 18, miss: 18 });
@@ -118,9 +121,9 @@ describe('PerfMeter pacing', () => {
   it('puts a hitch down to our work when the frame before took most of a frame, and notes the context', () => {
     const m = new PerfMeter();
     for (let i = 0; i < 600; i++) m.frame(fr(1000 / 60), 0);
-    m.frame(fr(2000 / 60, 4, { work: 15, sim: 9, view: 2, draw: 4 }), 0, CTX_BOSS);
-    m.frame(fr(2000 / 60, 4, { work: 3 }), 0, CTX_WAVE);
-    m.frame(fr(2000 / 60, 4, { work: 3 }), 0, CTX_BOSS | CTX_WAVE);
+    m.frame(fr(2000 / 60, L('high'), { work: 15, sim: 9, view: 2, draw: 4 }), 0, CTX_BOSS);
+    m.frame(fr(2000 / 60, L('high'), { work: 3 }), 0, CTX_WAVE);
+    m.frame(fr(2000 / 60, L('high'), { work: 3 }), 0, CTX_BOSS | CTX_WAVE);
     expect(m.snapshot('end')).toMatchObject({ hitch: 3, hitchWork: 1, hitchBoss: 2, hitchWave: 2, workMax: 15 });
   });
 

@@ -202,6 +202,8 @@ export const ru: Table<typeof en> = {
   gift: {
     claim: 'Забрать подарок дня: {gift}',
     tomorrow: 'Завтрашний подарок: {gift}',
+    button: 'Подарок',
+    later: 'Завтра',
   },
   shop: {
     free: 'Ежедневный подарок',

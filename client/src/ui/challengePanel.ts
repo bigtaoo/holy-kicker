@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container } from 'pixi.js';
 import { challengeBoardId, topPercent, type Challenge, type TopRun } from '@hk/protocol';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
@@ -8,16 +8,17 @@ import { THEME } from '../theme';
 import { rowName, type BoardUi, type FetchBoard } from './boardPanel';
 import { iconSprite, type IconSheet } from './buildBar';
 import type { DailyView, WeeklyView } from './challengeFlow';
+import { railButton } from './lobbyRail';
 import { claimCard, mutatorLine, weeklyPage } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
-// The challenges in the lobby (docs/design.md "Challenges"): a tile beside PLAY with the daily's
+// The challenges in the lobby (docs/design.md "Challenges"): a round button on the Play tab's right rail with the daily's
 // time left (or Done; the weekly's when there is no daily), which opens a panel with a tab for
 // each. The daily's: its mutator, the rules, the milestones and what they pay, the player's share of the board
 // once their run is in, and Play (Practice once the day's run counted) and Ranks. The weekly's:
 // ui/weeklyPage.ts, its board with the top runs to watch. On another engine version than the
-// record's, the tile says to update and the panel offers no run. A closed week waiting to be paid
-// shows its claim card over the lobby. The lobby shows no tile while there is no challenge
+// record's, the button says to update and the panel offers no run. A closed week waiting to be paid
+// shows its claim card over the lobby. The lobby shows no button while there is no challenge
 // (ui/challengeFlow.ts).
 
 export interface ChallengeLobby {
@@ -37,7 +38,6 @@ export interface ChallengeLobby {
 
 type Tab = 'daily' | 'weekly';
 
-export const TILE_W = 300;
 const BOX_W = 960;
 const BOX_H = 1460;
 
@@ -53,48 +53,33 @@ export class ChallengeUi {
     private readonly relayout: () => void,
   ) {}
 
-  /** The tile beside PLAY (`h` tall), or null when there is no challenge to show. */
-  tile(h: number): Container | null {
+  /** The button on the Play tab's right rail, or null when there is no challenge to show. */
+  rail(): Container | null {
     const lobby = this.current();
     const d = lobby?.daily;
-    if (!d) return lobby?.weekly ? this.weeklyTile(lobby.weekly, h) : null;
-    const face = new Container();
-    const icon = iconSprite(this.icons, 'lotus', 64);
-    if (icon) {
-      icon.y = -h / 2 + 50;
-      face.addChild(icon);
-    }
-    const name = fit(label(t('challenge.tile'), 44, d.state === 'update' ? COLORS.dim : COLORS.text), TILE_W - 40);
-    name.y = 10;
-    const sub = fit(label(
-      d.state === 'update' ? t('challenge.tileUpdate') : d.state === 'done' ? t('challenge.tileDone') : t('challenge.tileOpen', { h: d.hours }),
-      34, d.state === 'done' ? COLORS.jade : d.state === 'open' ? COLORS.text : COLORS.dim,
-    ), TILE_W - 40);
-    sub.y = 58;
-    face.addChild(name, sub);
-    const tile = button('', TILE_W, h, () => this.show(true, 'daily'), { fill: d.state === 'open' ? COLORS.jade : COLORS.panelLocked, icon: face });
+    if (!d) return lobby?.weekly ? this.weeklyRail(lobby.weekly) : null;
     // an open daily (or a weekly not played yet this week) wears a dot, like the tabs with something waiting
-    if (d.state === 'open' || (lobby.weekly?.state === 'open' && lobby.weekly.best === 0)) tile.addChild(new Graphics().circle(TILE_W / 2 - 22, -h / 2 + 14, 16).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 4 }));
-    return tile;
+    return railButton({
+      icon: iconSprite(this.icons, 'daily', 100),
+      name: t('challenge.tile'),
+      sub: d.state === 'update' ? t('challenge.tileUpdate') : d.state === 'done' ? t('challenge.tileDone') : t('challenge.tileOpen', { h: d.hours }),
+      lit: d.state === 'open',
+      dim: d.state !== 'open',
+      dot: d.state === 'open' || (lobby.weekly?.state === 'open' && lobby.weekly.best === 0),
+    }, () => this.show(true, 'daily')).view;
   }
 
-  /** The tile when the weekly is the only challenge: its time left, a dot until played this week. */
-  private weeklyTile(wk: WeeklyView, h: number): Container {
-    const face = new Container();
-    const icon = iconSprite(this.icons, wk.challenge.loadout!.relic, 64);
-    if (icon) {
-      icon.y = -h / 2 + 50;
-      face.addChild(icon);
-    }
+  /** The rail button when the weekly is the only challenge: its time left, a dot until played this week. */
+  private weeklyRail(wk: WeeklyView): Container {
     const open = wk.state === 'open';
-    const name = fit(label(t('weekly.tab'), 44, open ? COLORS.text : COLORS.dim), TILE_W - 40);
-    name.y = 10;
-    const sub = fit(label(open ? (wk.days > 0 ? t('weekly.tileOpen', { d: wk.days, h: wk.hours }) : t('challenge.tileOpen', { h: wk.hours })) : t('challenge.tileUpdate'), 34, open ? COLORS.text : COLORS.dim), TILE_W - 40);
-    sub.y = 58;
-    face.addChild(name, sub);
-    const tile = button('', TILE_W, h, () => this.show(true, 'weekly'), { fill: open ? COLORS.jade : COLORS.panelLocked, icon: face });
-    if (open && wk.best === 0) tile.addChild(new Graphics().circle(TILE_W / 2 - 22, -h / 2 + 14, 16).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 4 }));
-    return tile;
+    return railButton({
+      icon: iconSprite(this.icons, wk.challenge.loadout!.relic, 100),
+      name: t('weekly.tab'),
+      sub: open ? (wk.days > 0 ? t('weekly.tileOpen', { d: wk.days, h: wk.hours }) : t('challenge.tileOpen', { h: wk.hours })) : t('challenge.tileUpdate'),
+      lit: open && wk.best === 0,
+      dim: !open,
+      dot: open && wk.best === 0,
+    }, () => this.show(true, 'weekly')).view;
   }
 
   private show(on: boolean, tab: Tab = this.tab): void {

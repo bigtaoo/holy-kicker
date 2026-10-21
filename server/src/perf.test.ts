@@ -16,7 +16,7 @@ describe('perf', () => {
   });
 
   it('counts a run as dropped only below phone', () => {
-    expect(['saver', 'low', 'mid'].map(droppedBelowPhone)).toEqual([true, true, true]);
+    expect(['crawl', 'slow', 'saver', 'low', 'mid'].map(droppedBelowPhone)).toEqual([true, true, true, true, true]);
     expect(['phone', 'high', 'ultra', undefined].map(droppedBelowPhone)).toEqual([false, false, false, false]);
   });
 

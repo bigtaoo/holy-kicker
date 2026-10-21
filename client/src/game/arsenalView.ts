@@ -88,6 +88,12 @@ export class ArsenalView {
     this.sprites = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => layer.addChild(s));
   }
 
+  /** The sim's bomb, boom and seal events. */
+  on(e: Extract<SimEvent, { type: 'bomb' | 'boom' | 'seal' }>): void {
+    if (e.type === 'bomb') this.throw(e);
+    else this.boom(e);
+  }
+
   /** A bomb or a bomblet thrown: it flies its arc over `flight` ticks. */
   throw(e: Extract<SimEvent, { type: 'bomb' }>): void {
     const sprite = this.sprites.take();

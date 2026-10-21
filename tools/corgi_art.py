@@ -55,6 +55,7 @@ ICON_SHEETS = {
     "icons/sheet_fix.png": ("1x3", "iron karma sash@0.5,0.42"),
     "icons/sheet_relics.png": ("2x2", "bowl cymbal fish -"),
     "icons/sheet_arsenal.png": ("1x3", "talisman bomb knives"),
+    "icons/sheet_tabs.png": ("1x2", "daily tab_train@0.5,0.17"),
 }
 # the guns among the icons take the squad's gunmetal (tools/recolor_armour.py), so the HUD's
 # relic matches the pistols the hero holds; "glow" lights the blaster's slots, button and muzzle

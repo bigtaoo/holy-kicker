@@ -26,7 +26,8 @@ The grounds are drawn in code, with no generated picture:
 Each sheet is generated from the prompt next to it (`<name>.txt`, `tools/generate_image.sh`). It
 holds several objects on white in a grid, and `tools/split_sheet.py` cuts the cells out.
 
-- `icons/sheet_*`: the 44 icons in `art/icons/icons.png`.
+- `icons/sheet_*`: the 46 icons in `art/icons/icons.png` (`sheet_tabs`: the daily challenge's trophy and
+  the Camp tab's kettlebell, 2026-10-21).
   - `weapons`: the relics' and spells' main pieces.
   - `spells`, `passives`, `shop` and `lobby`. The first three came out in uneven rows and are
     cut with `auto`, which names the objects in reading order and skips the spares.
@@ -41,7 +42,7 @@ holds several objects on white in a grid, and `tools/split_sheet.py` cuts the ce
 - `planets/deco_*`: six ground props per planet, named after the monk frames they replace.
 - `ui/far.png`: the patrol panorama.
 - `ui/props.png`: the patrol roadside props.
-- `ui/bg_lobby.png`: the lobby. It is an edit (`tools/edit_image.sh`) of `ui/bg_ref.png`, a layout reference drawn in code, made with `ui/bg_lobby.txt`.
+- `ui/bg_lobby.png`: the lobby. It is an edit (`tools/edit_image.sh`) of `ui/bg_ref.png`, a layout reference drawn in code, made with `ui/bg_lobby.txt`. Round 2 (`ui/r2/`) tried a day, a sunset and a night version; the sunset one (`r2/bg_lobby_gold.png`, sandy ground under pink and lilac hills) is now `ui/bg_lobby.png`, since the day one's pink-red ground was too loud behind the panels.
 
 The cell order and frame names are in `tools/corgi_art.py`.
 

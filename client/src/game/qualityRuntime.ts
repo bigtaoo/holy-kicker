@@ -47,7 +47,7 @@ export class QualityRuntime {
     const loop = (now: number) => {
       requestAnimationFrame(loop);
       const calm = this.calm();
-      this.gate.fps = targetFps(calm);
+      this.gate.fps = targetFps(calm, this.governor.level);
       if (!this.gate.pass(now)) return;
       const f = this.frame;
       // calm frames come slower on purpose and say nothing about the load, nor does the first

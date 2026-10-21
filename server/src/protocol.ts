@@ -364,6 +364,27 @@ export interface ReportSummary extends Omit<Report, 'replay'> {
   ticks: number;
 }
 
+/** How a collected run ended; `hidden`: the game went to the background mid-run (the run so far). */
+export const REPLAY_ENDS = ['won', 'lost', 'quit', 'hidden'] as const;
+export type ReplayEnd = (typeof REPLAY_ENDS)[number];
+
+/**
+ * A run's replay on its own (`POST /v1/replays`), sent only while the server collects them and
+ * says so to this install (`GET /v1/replays/wanted`, replying `{ want }`): at the run's end, and
+ * as the game goes to the background mid-run. A later one of the same run replaces the earlier.
+ */
+export interface RunReplay {
+  install: string;
+  host: Host;
+  build: string;
+  locale: string;
+  game?: Game;
+  /** The run's random id, made as it began: the replays of one run share it. */
+  run: string;
+  end: ReplayEnd;
+  replay: ReplayWire;
+}
+
 /**
  * A player's name on the boards (`POST /v1/name`, and with every run). Nobody types one: a
  * player signed in to a portal account goes by its name (`name`, CrazyGames only, whose names

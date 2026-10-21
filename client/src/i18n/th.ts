@@ -202,6 +202,8 @@ export const th: Table<typeof en> = {
   gift: {
     claim: 'รับของขวัญวันนี้: {gift}',
     tomorrow: 'ของขวัญพรุ่งนี้: {gift}',
+    button: 'ของขวัญ',
+    later: 'พรุ่งนี้',
   },
   shop: {
     free: 'ของขวัญรายวัน',
