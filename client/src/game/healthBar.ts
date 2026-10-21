@@ -1,31 +1,42 @@
 import { Container, Sprite, Texture } from 'pixi.js';
-import { starMarkAlpha } from './starMark';
+import { COLORS } from '../ui/widgets';
+import { BAND_RED, bandColor, redPulse } from './healthBand';
+import { starRimAlpha } from './starMark';
 
 export { starMarkAt } from './starMark';
 
-// The hero's health bar, under his feet so the eye never leaves him (Archero style): green,
-// turning amber then red as it empties, with a pale trail that catches up after a blow. On a run
-// that can still win three stars a gold tick marks the health it must never drop under
-// (starMark.ts); it fades once the run's lowest health went below it.
+// The hero's health bar, under his feet so the eye never leaves him (Archero style): four
+// discrete colour bands, green to red as it empties, the red one pulsing gently (healthBand.ts),
+// with a pale trail that catches up after a blow. On a run that can still win three stars a thin
+// gold rim frames the whole bar; it fades for good once the run's lowest health went under the
+// threshold (starMark.ts).
 
 const W = 110;
 const H = 14;
 const BORDER = 4;
+const RIM = 3;
 /** Share of the bar the trail closes per second. */
 const TRAIL_SPEED = 0.8;
-const MARK_W = 4;
-const MARK_OVER = 5;
-const MARK_GOLD = 0xffd040;
 
 export class HealthBar {
   readonly view = new Container();
   private readonly fill = new Sprite(Texture.WHITE);
   private readonly trail = new Sprite(Texture.WHITE);
-  private readonly mark: Container | null = null;
+  private readonly rim: Sprite | null = null;
   private shown = 1;
+  private time = 0;
 
   /** `markAt`: the three-star threshold, percent of the max health, or null on a run without stars. */
   constructor(private readonly markAt: number | null = null) {
+    if (markAt !== null) {
+      // a frame around the whole bar, outside its dark border
+      this.rim = new Sprite(Texture.WHITE);
+      this.rim.tint = COLORS.gold;
+      this.rim.width = W + (BORDER + RIM) * 2;
+      this.rim.height = H + (BORDER + RIM) * 2;
+      this.rim.position.set(-W / 2 - BORDER - RIM, -BORDER - RIM);
+      this.view.addChild(this.rim);
+    }
     const back = new Sprite(Texture.WHITE);
     back.tint = 0x1a1410;
     back.width = W + BORDER * 2;
@@ -38,23 +49,6 @@ export class HealthBar {
     }
     this.trail.tint = 0xfff2d8;
     this.view.addChild(back, this.trail, this.fill);
-    if (markAt !== null) {
-      // a gold tick in a dark rim, standing out of the bar above and below
-      const x = -W / 2 + (W * markAt) / 100;
-      const rim = new Sprite(Texture.WHITE);
-      rim.tint = 0x1a1410;
-      rim.width = MARK_W + 4;
-      rim.height = H + 2 * MARK_OVER + 4;
-      rim.position.set(x - MARK_W / 2 - 2, -MARK_OVER - 2);
-      const gold = new Sprite(Texture.WHITE);
-      gold.tint = MARK_GOLD;
-      gold.width = MARK_W;
-      gold.height = H + 2 * MARK_OVER;
-      gold.position.set(x - MARK_W / 2, -MARK_OVER);
-      this.mark = new Container();
-      this.mark.addChild(rim, gold);
-      this.view.addChild(this.mark);
-    }
   }
 
   /** `lowest`: the run's lowest health so far, percent (the engine's Player.lowest). */
@@ -63,10 +57,17 @@ export class HealthBar {
     this.shown = k > this.shown ? k : Math.max(k, this.shown - TRAIL_SPEED * dt);
     this.fill.width = W * k;
     this.trail.width = W * this.shown;
-    this.fill.tint = k > 0.5 ? 0x5fd35a : k > 0.25 ? 0xf0b030 : 0xe0303a;
-    if (this.mark && this.markAt !== null) {
-      this.mark.alpha = starMarkAlpha(this.mark.alpha, dt, lowest, this.markAt);
-      this.mark.visible = this.mark.alpha > 0;
+    const band = bandColor(k);
+    if (band === BAND_RED) {
+      this.time += dt;
+      this.fill.tint = redPulse(this.time);
+    } else {
+      this.time = 0;
+      this.fill.tint = band;
+    }
+    if (this.rim && this.markAt !== null) {
+      this.rim.alpha = starRimAlpha(this.rim.alpha, dt, lowest, this.markAt);
+      this.rim.visible = this.rim.alpha > 0;
     }
   }
 }

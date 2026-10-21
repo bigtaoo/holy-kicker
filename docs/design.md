@@ -101,9 +101,12 @@ show the run's own and what the next one asks:
 
 The engine keeps the lowest health (`Player.lowest`, percent); the client counts the stars
 (progress.ts `runStars`) and keeps the best per chapter and mode (`stars`, `hardStars`).
-Three stars on normal chapter n open hard chapter n. On a normal chapter run a gold tick on the
-hero's health bar marks the threshold while the third star is still in reach, and fades out once
-the lowest health went under it (game/starMark.ts; hard mode and challenges have none).
+Three stars on normal chapter n open hard chapter n. On a normal chapter run a thin gold rim
+frames the hero's health bar while the third star is still in reach; it fades out once the lowest
+health went under the threshold and stays gone for the run, even when he heals back
+(game/starMark.ts; hard mode and challenges have none). The bar itself has no marks: its fill
+steps through four colour bands by share of the max health, green from 75 %, yellow-green from
+50 %, amber from 25 % and a gently pulsing red below (game/healthBand.ts).
 
 ### Difficulty
 

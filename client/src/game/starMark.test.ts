@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from '../meta/balance';
-import { MARK_FADE, starMarkAlpha, starMarkAt } from './starMark';
+import { RIM_FADE, starRimAlpha, starMarkAt } from './starMark';
 
 describe('starMarkAt', () => {
   it('marks normal chapter runs only', () => {
@@ -11,16 +11,16 @@ describe('starMarkAt', () => {
   });
 });
 
-describe('starMarkAlpha', () => {
+describe('starRimAlpha', () => {
   it('stays lit while the lowest health holds the threshold', () => {
-    expect(starMarkAlpha(1, 0.1, 50, 50)).toBe(1);
+    expect(starRimAlpha(1, 0.1, 50, 50)).toBe(1);
   });
   it('fades out once the lowest health went under, and stays out', () => {
     let a = 1;
-    a = starMarkAlpha(a, MARK_FADE / 2, 49, 50);
+    a = starRimAlpha(a, RIM_FADE / 2, 49, 50);
     expect(a).toBeCloseTo(0.5);
-    a = starMarkAlpha(a, MARK_FADE, 49, 50);
+    a = starRimAlpha(a, RIM_FADE, 49, 50);
     expect(a).toBe(0);
-    expect(starMarkAlpha(a, 1, 0, 50)).toBe(0);
+    expect(starRimAlpha(a, 1, 0, 50)).toBe(0);
   });
 });
