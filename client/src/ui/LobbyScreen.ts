@@ -165,7 +165,7 @@ export class LobbyScreen implements Screen {
     // the menu tabs hang from a fixed line under the top bar, so switching tabs does not move the titles
     const top = TOP_H + MENU_TOP;
     if (this.tab === 'play') this.playTab(f.w, f.h);
-    else if (this.tab === 'codex') this.codexTab(f.w, top);
+    else if (this.tab === 'codex') this.codexTab(f.w, f.h, top);
     else if (this.tab === 'gear') this.gearTab(f.w, top);
     else if (this.tab === 'train') this.trainTab(f.w, top);
     else this.shopTab(f.w, f.h, top);
@@ -411,11 +411,11 @@ export class LobbyScreen implements Screen {
     }
   }
 
-  private codexTab(w: number, top: number): void {
+  private codexTab(w: number, h: number, top: number): void {
     const tab = codexTab(this.save.codex, earnedSutras(this.save), this.icons, this.codexPick, (id) => {
       this.codexPick = id;
       this.relayout();
-    });
+    }, h - TAB_H - top - 20);
     tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
