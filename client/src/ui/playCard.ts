@@ -17,8 +17,10 @@ const RELIC_R = 60;
  * and spacesuit white for the corgi, its words outlined white (`title`) or plain and dark (`quiet`).
  */
 export const CARD = THEME === 'corgi'
-  ? { fill: 0xe6edf1, quiet: 0x55636e }
-  : { fill: 0xf2e2bf, quiet: 0x7a6248 };
+  ? { fill: 0xe6edf1, quiet: 0x55636e, accent: 0x1f7aa8 }
+  : { fill: 0xf2e2bf, quiet: 0x7a6248, accent: 0xb4501c };
+/** The round badges on the courtyard (relics, the side rails): the card's light, greyer when out of reach. */
+export const BADGE = { fill: CARD.fill, off: THEME === 'corgi' ? 0xb4bec6 : 0xc4b496 };
 /** The outline that keeps a light word readable on the light card. */
 export const CARD_STROKE = { stroke: { color: COLORS.outline, width: 10 } };
 /** The relic row's height: its name over the badges. */
@@ -53,7 +55,7 @@ export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId)
     const unlocked = open.includes(id);
     const c = new Container();
     c.position.set((i - (RELIC_IDS.length - 1) / 2) * (RELIC_R * 2 + 40), 160);
-    c.addChild(new Graphics().circle(0, 0, RELIC_R).fill(unlocked ? COLORS.panel : COLORS.panelLocked)
+    c.addChild(new Graphics().circle(0, 0, RELIC_R).fill(unlocked ? BADGE.fill : BADGE.off)
       .stroke({ color: id === chosen ? COLORS.saffron : COLORS.outline, width: id === chosen ? 10 : 6 }));
     const icon = iconSprite(icons, id, RELIC_R * 1.5);
     if (icon) {

@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
+import { ColorMatrixFilter, Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { seeTab, TABS, tabLock, tabNew, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -20,6 +20,9 @@ const BLEED = 800;
 /** The picture on each tab (ids in the icon sheet). */
 const TAB_ICONS: Record<Tab, string> = { shop: 'shop', gear: 'robe', play: 'ball', train: 'tab_train', codex: 'codex' };
 
+/** How far the backdrop steps back: saturation and contrast change, brightness factor. */
+const STAGE_TONE = { saturate: -0.4, contrast: -0.18, brightness: 1.04 };
+
 /** The painted courtyard in daylight, covering the frame between the bars; the panels on it carry their own dark fill. */
 export function scenery(f: UiFrame, tex: Texture | null): Container {
   const c = new Container();
@@ -30,6 +33,12 @@ export function scenery(f: UiFrame, tex: Texture | null): Container {
   pic.scale.set(Math.max(f.w / tex.width, room / tex.height));
   // the courtyard's floor meets the tab bar; a taller picture loses sky first
   pic.position.set(f.w / 2, f.h - TAB_H);
+  // a stage set, not a second subject: the painting a step greyer and flatter than the figures on it
+  const tone = new ColorMatrixFilter();
+  tone.saturate(STAGE_TONE.saturate, true);
+  tone.contrast(STAGE_TONE.contrast, true);
+  tone.brightness(STAGE_TONE.brightness, true);
+  pic.filters = [tone];
   const mask = new Graphics().rect(0, TOP_H, f.w, room).fill(0xffffff);
   pic.mask = mask;
   c.addChild(pic, mask);

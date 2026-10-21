@@ -9,6 +9,9 @@ import { COLORS } from './widgets';
 // and specks drifting over the picture: maple leaves for the monk, motes of light for the corgi.
 
 /** The clips a tap plays, in turn; each theme's rig has its own. */
+/** The spotlight's colour: warm sun for the monk, a cooler white for the corgi. */
+const LIGHT = THEME === 'corgi' ? 0xf4fbff : 0xfff3d0;
+
 const TAP_CLIPS = THEME === 'corgi' ? ['fire_r', 'fire_l'] : ['kick'];
 
 export class LobbyFigure {
@@ -27,6 +30,7 @@ export class LobbyFigure {
     this.actor.view.scale.set(-s, s);
     this.actor.play('idle');
     this.body.addChild(this.actor.view);
+    this.view.addChild(spotlight(height));
     const shadow = new Graphics().ellipse(0, 0, height * 0.32, height * 0.07).fill({ color: COLORS.outline, alpha: 0.3 });
     this.view.addChild(shadow, this.body);
     // the tap area: his whole figure, a little wider than the drawing
@@ -51,6 +55,17 @@ export class LobbyFigure {
     this.body.scale.set(sx, sy);
     this.body.y = -hop(this.hopAt < 0 ? -1 : this.clock - this.hopAt);
   }
+}
+
+/** A soft pool of light behind a figure `height` tall, feet at 0: the eye's resting place. */
+function spotlight(height: number): Graphics {
+  const g = new Graphics();
+  const rings = 28;
+  for (let i = 0; i < rings; i++) {
+    const k = 1 - i / rings;
+    g.ellipse(0, -height * 0.42, height * 0.7 * k, height * 0.62 * k).fill({ color: LIGHT, alpha: 0.03 });
+  }
+  return g;
 }
 
 /** The drifting specks over a w x h box. */

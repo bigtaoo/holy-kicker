@@ -610,7 +610,13 @@ active tab is the only other saffron surface. Everything else on the Play tab is
 - A red dot means something can be claimed; the open tab never shows one, since its own screen
   shows what is waiting.
 - The chapter arrows come in a pair, the one that cannot move faded, so the card stays centred.
-- The hero takes the height between the card and the relic row, so he stays the picture's subject.
+- The hero takes the height between the card and the relic row, so he stays the picture's subject,
+  on a faint pool of light (`ui/lobbyStage.ts`).
+- Three value layers, each with one job: the dark bars frame the screen, the backdrop is a stage
+  set (drawn 40% greyer and flatter than painted, `STAGE_TONE` in `ui/lobbyBars.ts`), and the
+  light things on it (the chapter card, the relic and rail badges, `BADGE` in `ui/playCard.ts`)
+  are what the player reads. No dark disc on the bright courtyard: it was the strongest contrast
+  on screen and pulled the eye off the hero. Inside the card, only the title wears an outline.
 - Icons are all painted objects in the sticker style, one per meaning: no spell or stat icon is
   borrowed for a lobby button (the daily is a trophy, Train a wooden post, the corgi's a kettlebell).
 

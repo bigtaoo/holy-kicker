@@ -394,7 +394,7 @@ export class LobbyScreen implements Screen {
     // grit on the first uncleared chapter takes a line: the chests move down and the card grows
     const grit = gritBonus(this.save, n);
     const gritLine = open && Object.keys(grit).length > 0
-      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, COLORS.saffron, CARD_STROKE), 840)
+      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, CARD.accent), 840)
       : null;
     const shift = gritLine ? 55 : 0;
     const back = panel(900, 370 + shift, CARD.fill);

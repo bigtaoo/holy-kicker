@@ -1,9 +1,10 @@
 import { Container, Graphics, type Text } from 'pixi.js';
+import { BADGE } from './playCard';
 import { COLORS, dot, fit, label, playTap, shade } from './widgets';
 
 // The round buttons down the Play tab's two sides (docs/design.md "Lobby layout"): Patrol and
 // Tasks on the left, the daily challenge and the welcome gift on the right. Every one is the same
-// dark badge with its picture, its name under it and a short line under that, so the side things
+// light badge with its picture, its name under it and a short line under that, so the side things
 // read as one quiet family and PLAY stays the only loud button on the screen.
 
 export const RAIL_R = 72;
@@ -34,13 +35,13 @@ export interface Rail {
 
 export function railButton(o: RailOptions, onTap: () => void): Rail {
   const view = new Container();
-  const fill = o.dim ? COLORS.panelLocked : COLORS.panel;
+  const fill = o.dim ? BADGE.off : BADGE.fill;
   const base = new Graphics()
     .circle(0, LIP + 6, RAIL_R).fill({ color: 0x000000, alpha: 0.3 })
     .circle(0, LIP, RAIL_R).fill(shade(fill, -0.35)).stroke({ color: COLORS.outline, width: 7 });
   const top = new Container();
   const face = new Graphics().circle(0, 0, RAIL_R).fill(fill).stroke({ color: o.lit ? COLORS.saffron : COLORS.outline, width: o.lit ? 9 : 7 });
-  face.circle(0, 0, RAIL_R - 14).stroke({ color: shade(fill, 0.14), width: 3 });
+  face.circle(0, 0, RAIL_R - 14).stroke({ color: shade(fill, -0.12), width: 3 });
   top.addChild(face);
   if (o.icon) {
     if (o.dim) o.icon.alpha = 0.45;
