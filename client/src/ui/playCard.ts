@@ -3,6 +3,7 @@ import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { t } from '../i18n';
 import { unlockedRelics } from '../meta/progress';
 import type { SaveData } from '../meta/save';
+import { THEME } from '../theme';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { COLORS, button, label } from './widgets';
 
@@ -10,6 +11,16 @@ import { COLORS, button, label } from './widgets';
 // switch over it and the relic row at the monk's feet.
 
 const RELIC_R = 60;
+
+/**
+ * The chapter card's colours: a light card on the bright courtyard, warm parchment for the monk
+ * and spacesuit white for the corgi, its words outlined white (`title`) or plain and dark (`quiet`).
+ */
+export const CARD = THEME === 'corgi'
+  ? { fill: 0xe6edf1, quiet: 0x55636e }
+  : { fill: 0xf2e2bf, quiet: 0x7a6248 };
+/** The outline that keeps a light word readable on the light card. */
+export const CARD_STROKE = { stroke: { color: COLORS.outline, width: 10 } };
 /** The relic row's height: its name over the badges. */
 export const RELIC_ROW_H = 250;
 

@@ -20,7 +20,7 @@ import { MergeView } from './MergeView';
 import { hintArrow, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
 import { hintTab } from './lobbyHint';
 import { LobbyDrift, LobbyFigure } from './lobbyStage';
-import { RELIC_ROW_H, relicRow, trackSwitch } from './playCard';
+import { CARD, CARD_STROKE, RELIC_ROW_H, relicRow, trackSwitch } from './playCard';
 import { monkPanel } from './monkPanel';
 import type { PlayerName } from './playerName';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
@@ -390,16 +390,16 @@ export class LobbyScreen implements Screen {
     // grit on the first uncleared chapter takes a line: the chests move down and the card grows
     const grit = gritBonus(this.save, n);
     const gritLine = open && Object.keys(grit).length > 0
-      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, COLORS.saffron), 840)
+      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, COLORS.saffron, CARD_STROKE), 840)
       : null;
     const shift = gritLine ? 55 : 0;
-    const back = panel(900, 370 + shift);
+    const back = panel(900, 370 + shift, CARD.fill);
     back.y = (370 + shift) / 2;
     card.addChild(back);
     const hard = this.save.hard;
     const progress = track(this.save, hard);
     const name = t(`chapter.${n}` as never);
-    const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text), 640);
+    const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text, CARD_STROKE), 640);
     title.y = 70;
     // the save keeps waves cleared (the chests count those); the lobby names the wave the best run
     // reached, as the leaderboard and the run's HUD do
@@ -408,7 +408,7 @@ export class LobbyScreen implements Screen {
       !open ? t('lobby.unlockAtChapter', { n: n - 1 })
         : progress.cleared >= n ? t('lobby.cleared')
         : best > 0 ? t('lobby.best', { wave: best + 1 }) : t('lobby.notPlayed'),
-      48, open ? COLORS.dim : COLORS.danger,
+      48, open ? CARD.quiet : COLORS.danger, open ? {} : CARD_STROKE,
     );
     status.y = 155;
     const ranks = open ? this.boards.button(n, hard) : null;
