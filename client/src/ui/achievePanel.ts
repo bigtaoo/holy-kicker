@@ -64,11 +64,11 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
 
   const ready = achievementsReady(save).length;
   if (ready > 0) {
-    const all = button(t('achieve.claimAll', { jade: readyJade(save) }), 760, 100, a.claimAll, { fill: COLORS.jade, textFill: COLORS.outline, size: 44 });
+    const all = button(t('achieve.claimAll', { jade: readyJade(save) }), 760, 100, a.claimAll, { fill: COLORS.jade, textFill: COLORS.outline, size: 48 });
     all.y = top + 215;
     c.addChild(all);
   } else {
-    const done = label(t('achieve.claimed', { n: achievementsClaimed(save), total: goals.length }), 40, COLORS.dim);
+    const done = label(t('achieve.claimed', { n: achievementsClaimed(save), total: goals.length }), 44, COLORS.dim);
     done.y = top + 215;
     c.addChild(done);
   }
@@ -98,10 +98,10 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
       row.addChild(pays);
     } else {
       const on = state === 'ready';
-      const b = button(on ? t('achieve.claim', { jade: g.jade }) : t('tasks.done'), 230, 110, () => on && a.claim(i), {
-        fill: on ? COLORS.saffron : COLORS.panelLocked, textFill: on ? COLORS.text : COLORS.dim, size: 40,
+      const b = button(on ? t('achieve.claim', { jade: g.jade }) : t('tasks.done'), 270, 110, () => on && a.claim(i), {
+        fill: on ? COLORS.saffron : COLORS.panelLocked, textFill: on ? COLORS.text : COLORS.dim, size: 46,
       });
-      b.x = 320;
+      b.x = 305;
       row.addChild(b);
     }
     c.addChild(row);
@@ -118,6 +118,8 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
       fill: ok ? COLORS.panel : COLORS.panelLocked, textFill: ok ? COLORS.text : COLORS.dim, size: 72,
     });
     b.position.set(dir * 260, y);
+    // a dead end reads as one: the arrow fades rather than only darkening a shade
+    if (!ok) b.alpha = 0.4;
     c.addChild(b);
   }
   return c;

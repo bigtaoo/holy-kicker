@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { Container, type Text } from 'pixi.js';
 import { boardId, DICE, packDice, topPercent, unpackDice, type BoardReply, type BoardRow, type ChallengeBoardReply, type TopRun } from '@hk/protocol';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
@@ -18,9 +18,11 @@ export type FetchBoard = (id: string) => Promise<BoardReply | null>;
 const BOX_W = 960;
 const BOX_H = 1640;
 const ROWS = 20;
-/** A weekly board lists fewer rows, for the chosen top run's pick timeline under them. */
-const WEEKLY_ROWS = 12;
+/** A weekly board lists fewer, taller rows, for the Watch buttons on its top rows and the chosen
+ *  top run's pick timeline under them. */
+const WEEKLY_ROWS = 10;
 const ROW_H = 58;
+const WEEKLY_ROW_H = 74;
 
 /** A dice name (protocol.ts packDice) in the player's language: "{adj} {noun} {n}" from the string table; '' for none. */
 export function diceName(dice: number): string {
@@ -129,39 +131,43 @@ export class BoardUi {
     const mineTag = r.mine?.tag ?? null;
     const weekly = 'top' in r && r.top && this.watch ? (r as ChallengeBoardReply) : null;
     const n = weekly ? WEEKLY_ROWS : ROWS;
+    const rh = weekly ? WEEKLY_ROW_H : ROW_H;
     const tops = weekly ? topRows(weekly, n) : [];
+    // on a weekly board every row leaves the Watch buttons' room, so the results stay in one column
+    const look = { narrow: !!weekly, h: rh };
     r.rows.slice(0, n).forEach((row, i) => {
       const top = tops.findIndex((x) => x.row === row);
-      const v = rowView(row, row.tag === mineTag, y0 + i * ROW_H, top >= 0);
-      if (top >= 0) this.topRow(v, top, tops[top].row, tops[top].top);
+      const v = rowView(row, row.tag === mineTag, y0 + i * rh, look);
+      if (top >= 0) this.topRow(v, top, tops[top].row, tops[top].top, rh);
       c.addChild(v);
     });
     // the player's own row under the list when it is not on it
     const shown = r.rows.slice(0, n).some((row) => row.tag === mineTag);
-    const footY = y0 + n * ROW_H + 40;
+    const footY = y0 + n * rh + 40;
     if (weekly) {
       const tl = chosenTimeline(weekly, this.weekly, n, this.icons, BOX_W - 100, 360, rowName, (row, top, from) => this.watchTop(row, top, from));
       if (tl) {
-        tl.y = footY + 150;
+        tl.y = footY + 140;
         c.addChild(tl);
       }
     }
-    if (r.mine && !shown) c.addChild(rowView(r.mine, true, footY));
+    // the player's row on a band of its own, wide: no Watch button there, and "(you)" needs the room
+    if (r.mine && !shown) c.addChild(rowView(r.mine, true, footY, { narrow: false, h: rh }));
     // under it, the board's size; on a challenge board the player's share ("top N %"), or that
     // their run still waits for its re-simulation (ChallengeBoardReply.pending)
     const challenge = 'pending' in r;
     const pending = challenge && r.pending === true;
     if (r.mine && !shown && !challenge) return c;
     const text = pending ? t('challenge.checking') : challenge && r.mine ? t('challenge.top', { n: topPercent(r.mine.rank, r.total) }) : t('board.total', { n: r.total });
-    const foot = label(text, 40, challenge && r.mine ? COLORS.saffron : COLORS.dim);
-    foot.y = footY + (r.mine && !shown ? ROW_H + 10 : 0);
+    const foot = label(text, 44, challenge && r.mine ? COLORS.saffron : COLORS.dim);
+    foot.y = footY + (r.mine && !shown ? rh + 10 : 0);
     c.addChild(foot);
     return c;
   }
 
   /** A weekly top row: a tap chooses its timeline (the chosen one sits on a band), and its Watch button. */
-  private topRow(v: Container, i: number, row: BoardRow, top: TopRun): void {
-    if (i === this.weekly.chosen) v.addChildAt(panel(BOX_W - 60, ROW_H - 6, COLORS.panelLocked, 14), 0);
+  private topRow(v: Container, i: number, row: BoardRow, top: TopRun, rh: number): void {
+    if (i === this.weekly.chosen) v.addChildAt(panel(BOX_W - 60, rh - 6, COLORS.panelLocked, 14), 0);
     v.eventMode = 'static';
     v.cursor = 'pointer';
     v.on('pointertap', () => {
@@ -186,28 +192,43 @@ export class BoardUi {
   }
 }
 
-/** A board row; `narrow` leaves room on the right for a Watch button. */
-function rowView(r: BoardRow, mine: boolean, y: number, narrow = false): Container {
+/** A board row `h` high; `narrow` leaves room on the right for a Watch button. The medal has a
+ *  slot of its own, so the names start in one column with or without one. */
+function rowView(r: BoardRow, mine: boolean, y: number, o: { narrow: boolean; h: number } = { narrow: false, h: ROW_H }): Container {
   const c = new Container();
   c.y = y;
-  if (mine) c.addChild(panel(BOX_W - 60, ROW_H - 6, COLORS.panelLocked, 14));
+  if (mine) c.addChild(panel(BOX_W - 60, o.h - 6, COLORS.panelLocked, 14));
   const fill = mine ? COLORS.saffron : r.rank <= 3 ? COLORS.text : COLORS.dim;
   const rank = label(String(r.rank), 44, fill);
   rank.anchor.set(1, 0.5);
   rank.x = -330;
-  const name = rowName(r);
   const medal = markMedal(r.mark, 20);
-  const nameX = medal ? -260 : -300;
   if (medal) {
-    medal.x = -280;
+    medal.x = -290;
     c.addChild(medal);
   }
-  const who = fit(label(mine ? t('board.you', { name }) : name, 44, fill, { align: 'left' }), (narrow ? 300 : 470) - (medal ? 40 : 0));
-  who.anchor.set(0, 0.5);
-  who.x = nameX;
+  const resultX = o.narrow ? 240 : 430;
   const result = label(resultOf(r), 44, r.won ? COLORS.jade : fill);
   result.anchor.set(1, 0.5);
-  result.x = narrow ? 220 : 430;
+  result.x = resultX;
+  const who = nameLabel(rowName(r), (n) => (mine ? t('board.you', { name: n }) : n), fill, resultX - result.width - 30 - NAME_X);
+  who.anchor.set(0, 0.5);
+  who.x = NAME_X;
   c.addChild(rank, who, result);
   return c;
+}
+
+/** Where a row's name starts, past the rank and the medal's slot. */
+const NAME_X = -256;
+
+/** A row's name in `maxW` (`dress` adds "(you)" around it): shrunk to three quarters of its size
+ *  at most, the name cut short with an ellipsis past that. */
+function nameLabel(name: string, dress: (name: string) => string, fill: number, maxW: number): Text {
+  const l = label(dress(name), 44, fill, { align: 'left' });
+  let chars = [...name];
+  while (chars.length > 3 && l.width > maxW / 0.75) {
+    chars = chars.slice(0, -1);
+    l.text = dress(`${chars.join('').trimEnd()}…`);
+  }
+  return fit(l, maxW);
 }
