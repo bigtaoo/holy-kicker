@@ -212,6 +212,7 @@ export const tr: Table<typeof en> = {
     open: 'Aç',
     left: 'Bugün {n} kaldı',
     tomorrow: 'Yarın tekrar gel',
+    refill: 'Günlük sandıklar {time} sonra yenilenir',
     adFree: 'Reklamsız kart',
     adFreeInfo: 'Reklamsız ödüller',
     adFreeCaps: 'Günlük sınırlar aynı kalır',

@@ -212,6 +212,7 @@ export const it: Table<typeof en> = {
     open: 'Apri',
     left: 'Ancora {n} oggi',
     tomorrow: 'Torna domani',
+    refill: 'I forzieri del giorno tornano tra {time}',
     adFree: 'Carta senza pubblicità',
     adFreeInfo: 'Premi senza pubblicità',
     adFreeCaps: 'I limiti giornalieri restano',

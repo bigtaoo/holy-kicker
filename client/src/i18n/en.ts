@@ -210,6 +210,7 @@ export const en = {
     open: 'Open',
     left: '{n} left today',
     tomorrow: 'Come back tomorrow',
+    refill: 'Daily chests refill in {time}',
     adFree: 'Ad-free card',
     adFreeInfo: 'Rewards without the ads',
     adFreeCaps: 'Daily limits stay the same',

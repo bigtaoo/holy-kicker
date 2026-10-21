@@ -210,6 +210,7 @@ export const ja: Table<typeof en> = {
     open: '開ける',
     left: '今日はあと{n}回',
     tomorrow: 'また明日来てね',
+    refill: '毎日の宝箱は{time}後に補充',
     adFree: '広告なしカード',
     adFreeInfo: '広告なしで報酬ゲット',
     adFreeCaps: '1日の回数制限はそのまま',

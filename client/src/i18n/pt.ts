@@ -212,6 +212,7 @@ export const pt: Table<typeof en> = {
     open: 'Abrir',
     left: 'Restam {n} hoje',
     tomorrow: 'Volte amanhã',
+    refill: 'Os baús diários renovam em {time}',
     adFree: 'Cartão sem anúncios',
     adFreeInfo: 'Recompensas sem anúncios',
     adFreeCaps: 'Os limites diários continuam',

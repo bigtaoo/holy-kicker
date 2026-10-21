@@ -3,7 +3,7 @@ import { Container } from 'pixi.js';
 import { formatAmount, t, type Key } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
-import { claimable, claimBonus, claimTask, tasksOpen } from '../meta/daily';
+import { claimable, claimBonus, claimTask, tasksOpen, untilNextDay } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
 import { openProgressChest } from '../meta/progressChests';
@@ -57,8 +57,12 @@ const AD_FREE_TOASTS: Record<'buy' | 'restore', Record<string, Key>> = {
 };
 
 const CARD_W = 1000;
+/** A card's height when the tab is full (iOS's four cards); fewer cards grow towards CARD_TALL. */
 const CARD_H = 290;
+const CARD_TALL = 400;
 const CARD_GAP = 40;
+/** The refill countdown's line under the cards. */
+const FOOT_H = 110;
 
 /** Whether the Shop tab has something free waiting. */
 export function shopWaiting(save: SaveData, now: number): boolean {
@@ -166,25 +170,40 @@ export class EconomyUi {
     this.pay(openProgressChest(this.host.save(), chapter, hard, index), 'claim', { what: 'progressChest', chapter, hard, index });
   }
 
-  /** The Shop tab, centred on x = 0 from y = 0 down: the chests, then on iOS the ad-free card. */
-  shopTab(): Container {
+  /**
+   * The Shop tab, centred on x = 0 from y = 0 down, `room` tall: the chests, then on iOS the
+   * ad-free card, sharing the room (so a host with fewer cards shows them bigger, not a bare
+   * floor), and the refill countdown under them.
+   */
+  shopTab(room: number): Container {
     const c = new Container();
     const kinds = CHEST_KINDS.filter((k) => k !== 'ad' || this.adOk);
+    const store = this.host.store;
+    const n = kinds.length + (store ? 1 : 0);
+    const h = Math.round(Math.max(CARD_H, Math.min(CARD_TALL, (room - FOOT_H) / n - CARD_GAP)));
     kinds.forEach((kind, i) => {
-      const card = this.chestCard(kind);
-      card.y = i * (CARD_H + CARD_GAP) + CARD_H / 2;
+      const card = this.chestCard(kind, h);
+      card.y = i * (h + CARD_GAP) + h / 2;
       c.addChild(card);
     });
-    const store = this.host.store;
     if (store) {
-      const card = adFreeCard(store, this.buying, CARD_W, CARD_H, {
+      const card = adFreeCard(store, this.buying, CARD_W, h, {
         buy: () => void this.adFree('buy', () => store.buy()),
         restore: () => void this.adFree('restore', () => store.restore()),
         toast: (text) => this.host.toast(text),
       });
-      card.y = kinds.length * (CARD_H + CARD_GAP) + CARD_H / 2;
+      card.y = kinds.length * (h + CARD_GAP) + h / 2;
       c.addChild(card);
     }
+    const foot = label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
+    foot.y = n * (h + CARD_GAP) + 30;
+    const refresh = () => {
+      foot.text = t('shop.refill', { time: hoursText(untilNextDay(this.now()) / 3_600_000) });
+      fit(foot, CARD_W);
+    };
+    refresh();
+    this.live.push(refresh);
+    c.addChild(foot);
     return c;
   }
 
@@ -294,14 +313,15 @@ export class EconomyUi {
     this.pay(openChest(this.host.save(), this.now(), kind), 'buy', { item: 'chest', kind });
   }
 
-  private chestCard(kind: ChestKind): Container {
+  private chestCard(kind: ChestKind, h: number): Container {
     const save = this.host.save();
     const now = this.now();
     const card = new Container();
-    card.addChild(panel(CARD_W, CARD_H));
-    const icon = iconSprite(this.host.icons, `chest_${kind}`, 200);
+    card.addChild(panel(CARD_W, h));
+    // a taller card shows a bigger chest and spreads its lines; the text keeps its size
+    const icon = iconSprite(this.host.icons, `chest_${kind}`, Math.min(230, 200 + (h - CARD_H) / 2));
     if (icon) {
-      icon.x = -380;
+      icon.x = -385;
       card.addChild(icon);
     }
     const c = chestContents(save, kind);
@@ -314,7 +334,7 @@ export class EconomyUi {
     lines.forEach(([text, size, fill], i) => {
       const l = fit(label(text, size, fill, { align: 'left' }), 420);
       l.anchor.set(0, 0.5);
-      l.position.set(-270, -80 + i * 75);
+      l.position.set(-260, (i - 1) * (75 + (h - CARD_H) / 4) - 5);
       card.addChild(l);
     });
     const block = chestBlock(save, now, kind);
@@ -328,7 +348,7 @@ export class EconomyUi {
     b.x = 320;
     if (this.playing) b.eventMode = 'none';
     card.addChild(b);
-    if (kind === 'free' && !block) card.addChild(dot(CARD_W / 2 - 20, -CARD_H / 2 + 20));
+    if (kind === 'free' && !block) card.addChild(dot(CARD_W / 2 - 20, -h / 2 + 20));
     return card;
   }
 }

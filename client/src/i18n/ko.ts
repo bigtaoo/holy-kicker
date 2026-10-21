@@ -210,6 +210,7 @@ export const ko: Table<typeof en> = {
     open: '열기',
     left: '오늘 {n}회 남음',
     tomorrow: '내일 다시 와요',
+    refill: '일일 상자 {time} 후 충전',
     adFree: '광고 제거 카드',
     adFreeInfo: '광고 없이 바로 보상',
     adFreeCaps: '일일 횟수 제한은 그대로예요',

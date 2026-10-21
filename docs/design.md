@@ -642,6 +642,11 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   panels sit on it as the bars do. Their content hangs from a fixed line under the top bar
   instead of being centred, so a title stays put when the tabs switch. Gear keeps the daylight
   courtyard: the monk stands on it among his gear, a stage like Play, with no dark panels.
+- The Shop tab's cards share the room down to the tab bar: how many there are depends on the
+  host (no ad chest without an ad, the ad-free card only on iOS), so with fewer cards each one
+  grows (290 up to 400 tall, a bigger chest) instead of leaving a bare floor. Under them a line
+  counts down to the local midnight when the daily chests refill (`untilNextDay`), the thing a
+  player who has used them up wants to know.
 - A lobby toast (a locked tab's reason, a copied id) is a dark pill over the tab bar, so it reads
   as a passing message and not as a loose line of the tab under it.
 - The Train tab's board (`ui/trainTab.ts`, `ui/trainBoard.ts`) is a dark panel of its own, its

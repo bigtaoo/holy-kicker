@@ -210,6 +210,7 @@ export const zh: Table<typeof en> = {
     open: '打开',
     left: '今日剩 {n} 次',
     tomorrow: '明天再来',
+    refill: '每日宝箱 {time}后刷新',
     adFree: '免广告卡',
     adFreeInfo: '不看广告，奖励直接领',
     adFreeCaps: '每日次数不变',

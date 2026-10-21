@@ -47,6 +47,12 @@ export function dayKey(now: number): number {
   return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate();
 }
 
+/** The ms from `now` to the next local midnight, when dayKey turns and the daily counters refill. */
+export function untilNextDay(now: number): number {
+  const d = new Date(now);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + 1).getTime() - now;
+}
+
 export function newDaily(day = 0): Daily {
   return { day, free: 0, adChests: 0, quickAds: 0, quickJade: 0, progress: DAILY.tasks.map(() => 0), claimed: 0, bonus: false };
 }

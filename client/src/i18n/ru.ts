@@ -211,6 +211,7 @@ export const ru: Table<typeof en> = {
     open: 'Открыть',
     left: 'Осталось сегодня: {n}',
     tomorrow: 'Приходи завтра',
+    refill: 'Ежедневные сундуки через {time}',
     adFree: 'Карта без рекламы',
     adFreeInfo: 'Награды без рекламы',
     adFreeCaps: 'Дневные лимиты те же',

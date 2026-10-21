@@ -212,6 +212,7 @@ export const id: Table<typeof en> = {
     open: 'Buka',
     left: 'Sisa {n} hari ini',
     tomorrow: 'Kembali besok',
+    refill: 'Peti harian terisi lagi dalam {time}',
     adFree: 'Kartu bebas iklan',
     adFreeInfo: 'Hadiah tanpa iklan',
     adFreeCaps: 'Batas harian tetap sama',

@@ -212,6 +212,7 @@ export const vi: Table<typeof en> = {
     open: 'Mở',
     left: 'Còn {n} lần hôm nay',
     tomorrow: 'Quay lại vào ngày mai',
+    refill: 'Rương hằng ngày làm mới sau {time}',
     adFree: 'Thẻ không quảng cáo',
     adFreeInfo: 'Nhận thưởng không cần xem quảng cáo',
     adFreeCaps: 'Giới hạn mỗi ngày vẫn giữ nguyên',

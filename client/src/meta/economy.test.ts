@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { bump, claimBonus, claimTask, claimable, dayKey, rollDay, taskState, today } from './daily';
+import { bump, claimBonus, claimTask, claimable, dayKey, rollDay, taskState, today, untilNextDay } from './daily';
 import { canCollect, canDouble, collectPatrol, copperPerHour, fixPatrolClock, patrolHours, quickLeft, quickPatrol, startPatrol } from './patrol';
 import { newSave, parseSave, type SaveData } from './save';
 import { chestBlock, chestsLeft, openChest } from './shop';
@@ -23,6 +23,12 @@ describe('daily', () => {
     expect(today(s, TOMORROW).progress[0]).toBe(0);
     s = rollDay(s, TOMORROW);
     expect(s.daily.day).toBe(20261005);
+  });
+
+  it('counts down to the midnight where the date key turns', () => {
+    expect(untilNextDay(NOON)).toBe(12 * HOUR);
+    expect(dayKey(NOON + untilNextDay(NOON))).toBe(20261005);
+    expect(dayKey(NOON + untilNextDay(NOON) - 1)).toBe(20261004);
   });
 
   it('pays a done task once, and the bonus after all of them', () => {

@@ -213,6 +213,7 @@ export const fr: Table<typeof en> = {
     open: 'Ouvrir',
     left: 'Encore {n} aujourd’hui',
     tomorrow: 'Reviens demain',
+    refill: 'Les coffres du jour reviennent dans {time}',
     adFree: 'Carte sans pub',
     adFreeInfo: 'Récompenses sans pub',
     adFreeCaps: 'Les limites du jour restent',

@@ -212,6 +212,7 @@ export const pl: Table<typeof en> = {
     open: 'Otwórz',
     left: 'Zostało dziś: {n}',
     tomorrow: 'Wróć jutro',
+    refill: 'Dzienne skrzynie wrócą za {time}',
     adFree: 'Karta bez reklam',
     adFreeInfo: 'Nagrody bez reklam',
     adFreeCaps: 'Dzienne limity bez zmian',

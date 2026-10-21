@@ -211,6 +211,7 @@ export const th: Table<typeof en> = {
     open: 'เปิด',
     left: 'เหลือ {n} ครั้งวันนี้',
     tomorrow: 'กลับมาใหม่พรุ่งนี้',
+    refill: 'หีบรายวันเติมใหม่ใน {time}',
     adFree: 'บัตรไร้โฆษณา',
     adFreeInfo: 'รับรางวัลโดยไม่ต้องดูโฆษณา',
     adFreeCaps: 'ขีดจำกัดรายวันยังเท่าเดิม',
