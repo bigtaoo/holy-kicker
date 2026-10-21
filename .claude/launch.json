@@ -11,6 +11,30 @@
       "port": 5174
     },
     {
+      "name": "client-new",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:new"
+      ],
+      "port": 5184
+    },
+    {
+      "name": "client-new-main",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:new",
+        "-w",
+        "client",
+        "--",
+        "--port",
+        "5194",
+        "--strictPort"
+      ],
+      "port": 5194
+    },
+    {
       "name": "crazygames",
       "runtimeExecutable": "npm",
       "runtimeArgs": [
