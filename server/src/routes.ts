@@ -3,7 +3,8 @@ import { audienceOf } from './audience';
 import { challengeFor, misfit, openChallenges } from './challenge';
 import { marked } from './marks';
 import { BEACONS, BOARD_SUFFIX, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, isGame, keptGame, loadBucket, type Beacon, type Game, type Host } from './protocol';
-import { checkBatch, checkChallengeRun, checkNameEntry, checkReport, checkRun } from './rules';
+import { REPLAY_NAME, wantsReplays, type CollectPlan, type ReplayShelf } from './replayShelf';
+import { checkBatch, checkChallengeRun, checkNameEntry, checkReport, checkRun, checkRunReplay } from './rules';
 import type { ResimJob } from './challengeDocs';
 import type { Store } from './store';
 
@@ -39,6 +40,9 @@ export interface Deps {
   resim: { push(job: ResimJob): void };
   /** Last week's weekly tiers by tag, for the marks beside the names on the boards (marks.ts WeekMarks); none without. */
   marks?: { current(): Promise<ReadonlyMap<string, number>> };
+  /** Where collected replays go (replayShelf.ts); none collects nothing. `collect` overrides COLLECT (tests). */
+  replays?: ReplayShelf;
+  collect?: CollectPlan;
 }
 
 export const BOARD_ROWS = 50;
@@ -168,6 +172,34 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     return r ? { status: 200, body: r } : { status: 404 };
   }
 
+  // collected replays: whether this install is asked for them, and one sent (replayShelf.ts)
+  if (method === 'GET' && path === '/v1/replays/wanted') {
+    if (!d.allow('boards', req.ip)) return { status: 429 };
+    const install = req.headers['x-hk-install'];
+    const ok = !!d.replays && !!install && install.length >= LIMITS.idMin && install.length <= LIMITS.idMax;
+    return { status: 200, body: { want: ok && wantsReplays(install, d.now(), d.collect) } };
+  }
+
+  if (method === 'POST' && path === '/v1/replays') {
+    if (!d.allow('replays', req.ip)) return { status: 429 };
+    const c = checkRunReplay(req.body);
+    if (!c.ok) return bad(c.reason);
+    const { install, run, ...doc } = c.value;
+    if (!d.replays || !wantsReplays(install, d.now(), d.collect)) return { status: 403 };
+    const tag = tagOf(install, d.tagSalt);
+    return (await d.replays.put(`${tag}-${run}`, { ...doc, tag, at: d.now() })) ? { status: 204 } : { status: 507 };
+  }
+
+  // the operator's: the newest collected replays, and one whole
+  if (method === 'GET' && path.startsWith('/v1/replays')) {
+    if (!keyMatches(req.headers.authorization, d.adminKey)) return { status: 401 };
+    if (!d.replays) return { status: 404 };
+    if (path === '/v1/replays') return { status: 200, body: await d.replays.list(Math.min(1000, Math.max(1, Number(req.query.get('limit')) || 100))) };
+    const name = path.slice('/v1/replays/'.length);
+    const r = REPLAY_NAME.test(name) ? await d.replays.get(name) : null;
+    return r ? { status: 200, body: r } : { status: 404 };
+  }
+
   if (method === 'GET' && path === '/v1/stats') {
     if (!keyMatches(req.headers.authorization, d.adminKey)) return { status: 401 };
     const days = Math.min(90, Math.max(1, Number(req.query.get('days')) || 14));
@@ -219,6 +251,7 @@ export const RATES = {
   names: { burst: 5, perMinute: 4 },
   reports: { burst: 3, perMinute: 2 },
   challenge: { burst: 3, perMinute: 2 },
+  replays: { burst: 4, perMinute: 3 },
 };
 
 /** A real calendar day written YYYY-MM-DD. */

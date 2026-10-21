@@ -1,4 +1,4 @@
-import type { BoardName, BoardReply, ChallengeBoardReply, ChallengeList, ChallengeRun, ChallengeRunReply, EventBatch, EventName, Host, NameEntry, PropValue, ReplayWire, Report, RunEntry } from '@hk/protocol';
+import type { BoardName, BoardReply, ChallengeBoardReply, ChallengeList, ChallengeRun, ChallengeRunReply, EventBatch, EventName, Host, NameEntry, PropValue, ReplayEnd, ReplayWire, Report, RunEntry, RunReplay } from '@hk/protocol';
 import type { Sharing } from '../meta/privacy';
 import type { Platform } from '../platform/types';
 import { THEME } from '../theme';
@@ -8,14 +8,19 @@ import { EventQueue, newId } from './events';
 // problem reports. Everything here is best effort: a failed send is retried later or dropped,
 // never in the way of the game (only a report says whether it went through). The player's privacy
 // answer (meta/privacy.ts) sets what may go out: with sharing held, events wait on the device; off,
-// they are dropped; either way no run, name or install id leaves it. A problem report, sent only
-// when the player asks for it, always goes.
+// they are dropped; either way no run, name, replay or install id leaves it. A problem report,
+// sent only when the player asks for it, always goes.
 
 /** Seconds between two analytics sends while the game runs. */
 const FLUSH_EVERY = 20;
 const TIMEOUT_MS = 8000;
 /** A report carries a replay of up to a few MB, so it gets longer on a slow phone. */
 const REPORT_TIMEOUT_MS = 45_000;
+/**
+ * A replay up to this goes with keepalive, so it still arrives as the tab closes; browsers allow
+ * 64 kB in flight, and the last event batch (under 32 kB) goes out beside it.
+ */
+const KEEPALIVE_BYTES = 30 * 1024;
 export const INSTALL_KEY = 'hk.install';
 /** The backend, hk.gamestao.com (build/theme.mjs); both games share it, each naming itself (`game`, THEME). */
 export const DEFAULT_API = __HK_API__;
@@ -51,6 +56,7 @@ export class Backend {
   private sending = false;
   private leave: (() => Record<string, PropValue>) | null = null;
   private readonly hidden: (() => void)[] = [];
+  private wanted: Promise<boolean> | null = null;
 
   constructor(
     private readonly platform: Platform,
@@ -187,6 +193,19 @@ export class Backend {
     return (await this.send('POST', '/v1/reports', report, REPORT_TIMEOUT_MS)) !== null;
   }
 
+  /** Whether the server collects this install's run replays (asked once a launch); never while not sharing. */
+  replaysWanted(): Promise<boolean> {
+    if (this.sharing !== 'send' || !this.base) return Promise.resolve(false);
+    return (this.wanted ??= this.send('GET', '/v1/replays/wanted').then((r) => (r as { want?: unknown } | null)?.want === true));
+  }
+
+  /** Sends run `run`'s replay (net/runReplays.ts); a small one still arrives as the tab closes. */
+  async sendReplay(run: string, end: ReplayEnd, replay: ReplayWire): Promise<boolean> {
+    if (this.sharing !== 'send') return false;
+    const body: RunReplay = { install: this.install, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME, run, end, replay };
+    return (await this.send('POST', '/v1/replays', body, REPORT_TIMEOUT_MS, JSON.stringify(body).length <= KEEPALIVE_BYTES)) !== null;
+  }
+
   /** Read as this install (with its own row) only while sharing; the top rows are anyone's. */
   async board(id: string): Promise<BoardReply | null> {
     return (await this.send('GET', `/v1/boards/${id}`)) as BoardReply | null;
@@ -218,7 +237,7 @@ export class Backend {
   }
 
   /** The reply's JSON ({} for an empty one), or null when anything went wrong. */
-  private async send(method: 'GET' | 'POST', path: string, body?: unknown, timeout = TIMEOUT_MS): Promise<unknown> {
+  private async send(method: 'GET' | 'POST', path: string, body?: unknown, timeout = TIMEOUT_MS, keepalive = method === 'POST' && timeout === TIMEOUT_MS): Promise<unknown> {
     if (!this.base || typeof fetch !== 'function') return null;
     const abort = new AbortController();
     const timer = setTimeout(() => abort.abort(), timeout);
@@ -229,7 +248,7 @@ export class Backend {
         body: body ? JSON.stringify(body) : undefined,
         signal: abort.signal,
         // a batch sent as the tab goes away still arrives (browsers cap keepalive bodies at 64 kB)
-        keepalive: method === 'POST' && timeout === TIMEOUT_MS,
+        keepalive,
       });
       if (!res.ok) return null;
       return res.status === 204 ? {} : await res.json();

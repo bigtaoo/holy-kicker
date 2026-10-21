@@ -8,6 +8,7 @@ import PRIVACY_ZH from './privacy.zh.html';
 import { pageGame, privacyPage } from './privacyPage';
 import { WeekMarks } from './marks';
 import { MongoStore } from './mongoStore';
+import { DiskShelf, MemoryShelf } from './replayShelf';
 import { ResimQueue } from './resimQueue';
 import { Limiter, RATES, route } from './routes';
 import { MemoryStore, type Store } from './store';
@@ -18,7 +19,8 @@ import { MemoryStore, type Store } from './store';
 //   HK_MONGO_URI    Atlas connection string; without it the store is in memory (development)
 //   HK_MONGO_DB     database name (default holykicker)
 //   HK_TAG_SALT     secret for the board tags (required with HK_MONGO_URI)
-//   HK_ADMIN_KEY    bearer key for GET /v1/stats and /v1/reports (unset: they answer 401)
+//   HK_ADMIN_KEY    bearer key for GET /v1/stats, /v1/reports and /v1/replays (unset: they answer 401)
+//   HK_REPLAY_DIR   where collected replays are kept (replayShelf.ts); without it, in memory
 
 const env = process.env;
 const port = Number(env.PORT) || 8080;
@@ -31,7 +33,8 @@ const limiter = new Limiter(RATES, Date.now);
 const resim = new ResimQueue(store, ENGINE_VERSION, Date.now, (line) => console.log(line));
 await resim.start();
 const marks = new WeekMarks(store, Date.now);
-const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim, marks };
+const replays = env.HK_REPLAY_DIR ? await DiskShelf.open(env.HK_REPLAY_DIR) : new MemoryShelf();
+const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim, marks, replays };
 
 /** Replies longer than this (bytes of JSON) go gzipped to a client that takes it. */
 const GZIP_FROM = 4096;
@@ -93,12 +96,17 @@ const server = createServer((req, res) => {
 server.listen(port, () => console.log(`holykicker api on :${port} (${uri ? 'mongo' : 'memory'} store)`));
 
 // weekly prune of raw perf telemetry (Store.prune): looked at a minute after start and every few
-// hours, since each deploy restarts the process; the store remembers when it last ran
+// hours, since each deploy restarts the process; the store remembers when it last ran. Collected
+// replays past their days go at the same times.
 const PRUNE_LOOK_MS = 6 * 3600_000;
 function prune(): void {
   store.prune(Date.now()).then(
     (n) => n !== null && console.log(`pruned ${n} perf and anomaly events`),
     (err) => console.error('prune failed', err),
+  );
+  replays.prune(Date.now()).then(
+    (n) => n > 0 && console.log(`pruned ${n} collected replays`),
+    (err) => console.error('replay prune failed', err),
   );
 }
 setTimeout(prune, 60_000).unref();

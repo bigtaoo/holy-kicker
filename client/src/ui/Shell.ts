@@ -25,6 +25,7 @@ import { Sound } from '../audio/Sound';
 import { languageProps, type Backend, type RunRank, type RunResult } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
+import { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
@@ -59,17 +60,14 @@ export class Shell {
   /** Screens draw over the run. */
   private readonly ui = new Container();
   private screen: Screen | null = null;
-  /** Milliseconds on screen since the last `leave` event. */
-  private shownMs = 0;
+  private shownMs = 0; // milliseconds on screen since the last `leave` event
   private game: Game | null = null;
   private hud: RunHud | null = null;
   private watch: RunWatch | null = null;
   private chapter = 1;
-  /** The run in play is hard mode. */
-  private hard = false;
+  private hard = false; // the run in play is hard mode
   private screenKey = '';
-  /** The lobby's banner is up: its band is kept clear like a safe-area inset. */
-  private bannerUp = false;
+  private bannerUp = false; // the lobby's banner is up: its band is kept clear like a safe-area inset
   private quality: LevelSettings | null = null;
   /** Switches the render quality mode (boot.ts wires it to the quality runtime). */
   onQualityMode: (mode: QualityMode) => void = () => {};
@@ -77,12 +75,11 @@ export class Shell {
   perf: PerfReport | null = null;
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
   private freeRevives = 0;
-  /** Enemies defeated in this run, for the daily tasks. */
-  private kills = 0;
-  /** A chapter's art pack is being fetched; taps on play wait for it. */
-  private loading = false;
+  private kills = 0; // enemies defeated in this run, for the daily tasks
+  private loading = false; // a chapter's art pack is being fetched; taps on play wait for it
   private readonly lobbyArt: LobbyArtLoad;
   private readonly challenge: ChallengeFlow; // the challenges: their records, the run in play and its replay, the weeks to pay
+  private readonly replays: RunReplays; // each real run's replay, while the server collects them
   readonly sound: Sound;
   /** The host's ads, with the game silent while one plays. */
   private readonly ads: Ads;
@@ -106,6 +103,7 @@ export class Shell {
   ) {
     this.names = new PlayerName(net, platform.storage, platform.portal);
     this.lobbyArt = new LobbyArtLoad(platform, art);
+    this.replays = new RunReplays(net);
     this.challenge = new ChallengeFlow(net, () => (this.screenKey = ''), scene.challenge, scene.settleWeeks); // the lobby is drawn again when the record comes
     this.save = this.names.withDice(store.load());
     store.save(this.save);
@@ -327,6 +325,7 @@ export class Shell {
       hard: this.hard,
       monk: this.scene.monk ?? this.save.monk, firstRun: !this.save.firstRunDone && this.scene.waves,
     }, left?.state);
+    this.replays.begin(this.game, rankedRun(this.scene) && !this.scene.record);
     this.kills = left?.kills ?? 0;
     this.perf?.start(rankedRun(this.scene) && !this.scene.record);
     if (this.quality) this.game.applyQuality(this.quality);
@@ -409,6 +408,7 @@ export class Shell {
     if (!this.game) return;
     const s = this.game.engine.state;
     this.challenge.capture(this.game);
+    void this.replays.end();
     this.game.destroy();
     this.game = null;
     this.hud = null;

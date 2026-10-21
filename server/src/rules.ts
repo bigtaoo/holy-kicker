@@ -1,4 +1,4 @@
-import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, checkName, isDice, isGame, keptGame, type Game, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry } from './protocol';
+import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, REPLAY_ENDS, checkName, isDice, isGame, keptGame, type Game, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry, type RunReplay } from './protocol';
 
 // Checks what clients send before anything is stored. Pure: each check takes the parsed JSON
 // (unknown) and returns the clean value or the reason it was refused. Anything unexpected is
@@ -154,6 +154,18 @@ export function checkReport(v: unknown): Checked<Report> {
     ok: true,
     value: { install: v.install, host: v.host, build: v.build, locale: v.locale, ...game, text: v.text, device: v.device, chapter: v.chapter, wave: v.wave, replay },
   };
+}
+
+/** A collected run's replay: who sent it, which run and how it ended, and the replay. */
+export function checkRunReplay(v: unknown): Checked<RunReplay> {
+  if (!isObj(v)) return { ok: false, reason: 'not an object' };
+  if (!isId(v.install) || !isHost(v.host) || !isShort(v.build, LIMITS.build) || !isShort(v.locale, LIMITS.locale)) return { ok: false, reason: 'bad id' };
+  const game = gameOf(v.game);
+  if (!game) return { ok: false, reason: 'bad game' };
+  if (!isId(v.run) || !(REPLAY_ENDS as readonly unknown[]).includes(v.end)) return { ok: false, reason: 'bad run' };
+  const replay = checkReplay(v.replay);
+  if (!replay) return { ok: false, reason: 'bad replay' };
+  return { ok: true, value: { install: v.install, host: v.host, build: v.build, locale: v.locale, ...game, run: v.run, end: v.end as RunReplay['end'], replay } };
 }
 
 /** The UTC day of `ms`, as YYYY-MM-DD. */

@@ -22,6 +22,7 @@
     "typecheck": "npm run typecheck --workspaces",
     "check:filelength": "node build/checkFileLength.mjs",
     "balance": "node build/balance.mjs",
+    "replays": "node build/replays.mjs",
     "journey": "node build/journey.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
     "check:webp": "node build/checkWebp.mjs",

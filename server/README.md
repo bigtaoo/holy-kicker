@@ -37,6 +37,9 @@ before names) goes by a dice name made from its tag.
 | `POST /v1/reports` | a `Report`: the player's note, device, chapter and wave, and a replay of the run (up to 3 MB) → `{ id }` |
 | `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /v1/reports/<id>` | one report whole, replay included (same key) |
+| `GET /v1/replays/wanted` | `{ want }`: whether the install in `X-HK-Install` is asked for its run replays (`COLLECT` in src/replayShelf.ts) |
+| `POST /v1/replays` | a `RunReplay`: a run's id, how it ended (`won`, `lost`, `quit`, or `hidden` for the run so far when the game went to the background) and its replay; 403 from an install not asked, 507 when the shelf is full |
+| `GET /v1/replays?limit=100` | the newest collected replays, `{ name, at, bytes }`; `GET /v1/replays/<name>` one whole (admin key) |
 | `GET /v1/stats?days=14&host=crazygames&to=2026-10-09` | operator numbers (src/stats.ts): daily actives, new installs, runs, boards (with the waves lost runs ended on), the first clears of each board (days and runs it took the window's new installs), retention cohorts (D1/3/7/14/30, null until the day is over), the new-player funnel, new installs by device, browser, system and country (src/audience.ts: the user agent, the session's `device` and Cloudflare's `CF-IPCountry`, kept once per install), D1 by what day 0 looked like, battle frame rates by device, system and build with the worst snapshots (`perf` events, src/perf.ts; GPU class, memory and cores from the launch's `session` event) with the textures, texture MB and display objects held, device anomalies by day, by build and kind, with the top errors by message and source (`anomaly`), and a `diagnosis`: findings over both (src/diagnose.ts: leaks within and across runs, memory, lost contexts, stalls, errors, slow devices, a frame-rate drop after a deploy) with the numbers and where in the client to look; `host` optional; `to` (UTC day) ends the window early, for a past week or one finished day (`days=1`), while returns still count up to today; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /privacy` | the game's privacy policy (src/privacy.en.html; `?lang=zh` or a Chinese browser gets src/privacy.zh.html), linked from the game's settings and its consent card |
 | `GET /dash` | the operator's dashboard over `/v1/stats` (src/dash.html; asks for the admin key, keeps it in the browser). How to read it and what to change: docs/retention.md |
@@ -61,6 +64,23 @@ the host's text box (a DOM dialog on the web, `wx.showModal` on WeChat), then th
 back and says whether it lands on the same hash (it needs the same `ENGINE_VERSION`), and
 `replayEngine` gives an engine to step through it. Offline development builds save the report as
 a JSON file instead.
+
+`npm run replays -- --fetch=50` (with `HK_ADMIN_KEY` set), or `npm run replays -- report.json ...`,
+reads replays for the operator (`src/replayStats.ts`, `src/replayReport.ts`): per run the damage by
+source, each death with what was around the hero, a row per wave (kills, health, how many mobs were
+on screen and near, how clumped they stood), how the stick was played (idle, circling, leading the
+horde behind the hero), and across runs how often each card was taken when offered. Each replay
+plays on the engine it was recorded with: an older `ENGINE_VERSION`'s `engine/` is taken from git
+into a temp cache. A run reported twice counts once in the totals.
+
+Collected run replays: for the early days the server asks installs for every real run's replay
+(`COLLECT` in `src/replayShelf.ts`: the percent of installs, by a hash of the id, and the last day;
+now 100% until 2026-12-31; lower it and push to stop sooner). The client asks once per launch and
+sends at the run's end and, for the run so far, when the game goes to the background
+(`client/src/net/runReplays.ts`), only while the player allows statistics. Each is kept under the
+install's tag and the run's id (a later send of the run replaces the earlier) as a gzipped file in
+`HK_REPLAY_DIR` (the `replays` docker volume, `/data/replays`), for 45 days, at most 2 GB; without
+`HK_REPLAY_DIR` in memory. `npm run replays -- --collected=200` reads them.
 
 The client side is `client/src/net/` (`Backend`: queue, flush every 20 s and on hide, best
 effort) and `client/src/ui/boardPanel.ts` (the Ranks button on the lobby's chapter card). A run
