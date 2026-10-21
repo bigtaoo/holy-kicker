@@ -122,18 +122,21 @@ describe('CrazyGamesSdk', () => {
   });
 
   it('reads the portal locale and device, and nothing without the SDK', async () => {
-    const { cg } = make({ environment: 'crazygames', user: { systemInfo: { countryCode: 'de', locale: 'de-DE', device: { type: 'tablet' } } } });
+    const { cg } = make({ environment: 'crazygames', user: { systemInfo: { countryCode: 'de', locale: 'de-DE', device: { type: 'tablet' }, applicationType: 'google_play_store' } } });
     await cg.init();
     expect(cg.locale()).toBe('de-DE');
     expect(cg.deviceType()).toBe('tablet');
+    expect(cg.applicationType()).toBe('google_play_store');
     expect(cg.countryCode()).toBe('DE');
     const bare = make();
     await bare.cg.init();
     expect(bare.cg.locale()).toBeNull();
     expect(bare.cg.deviceType()).toBeNull();
+    expect(bare.cg.applicationType()).toBeNull();
     expect(bare.cg.countryCode()).toBeNull();
-    const odd = make({ environment: 'crazygames', user: { systemInfo: { countryCode: 'unknown' } } });
+    const odd = make({ environment: 'crazygames', user: { systemInfo: { countryCode: 'unknown', applicationType: 'Web App!' } } });
     await odd.cg.init();
     expect(odd.cg.countryCode()).toBeNull();
+    expect(odd.cg.applicationType()).toBeNull();
   });
 });

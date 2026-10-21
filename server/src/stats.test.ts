@@ -112,7 +112,7 @@ describe('stats', () => {
     await s.addEvents(batch('o', [session]), at(1));
     await s.addEvents(batch('p', [session]), at(1));
     const r = await s.stats(3, at(2), null);
-    expect(r.audience.map((a) => a.name)).toEqual(['device', 'browser', 'os', 'country']);
+    expect(r.audience.map((a) => a.name)).toEqual(['device', 'app', 'browser', 'os', 'country']);
     // r and o's next day is still to come
     expect(r.audience.find((a) => a.name === 'country')!.groups).toEqual([
       { label: 'IN', n: 2, tutorial: 1, ran: 1, known: 1, back: 1 },

@@ -79,10 +79,12 @@ export class CrazyGamesPlatform extends WebPlatform {
     return portal ? [portal] : super.languages();
   }
 
-  /** The SDK's start (its end and milliseconds) and environment, and whether ads are held for Basic Launch. */
+  /** The SDK's start (its end and milliseconds) and environment, whether ads are held for Basic
+   *  Launch, and `app`, where the portal runs the game (a browser or one of its own apps). */
   sessionProps(): Record<string, PropValue> {
     const { end, ms } = this.sdk.start();
-    return { sdk: `${this.sdk.environment()}/${end}`, sdkMs: ms, basic: this.basicLaunch() };
+    const app = this.sdk.applicationType();
+    return { sdk: `${this.sdk.environment()}/${end}`, sdkMs: ms, basic: this.basicLaunch(), ...(app ? { app } : {}) };
   }
 
   /** The portal's country, which decides whether the game asks before sending play data. */

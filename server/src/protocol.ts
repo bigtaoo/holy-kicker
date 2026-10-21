@@ -23,7 +23,7 @@ export type Device = (typeof DEVICES)[number];
  * computer) still shows how far it got; `run_resume` a run kept from an earlier launch picked up
  * again (meta/resume.ts), which sends no `run_start`, so its `run_end` has a start in this session.
  *
- * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list), `navLangs` (the browser's), `mem`, `cores` and `gpu` (SessionDeviceProps) and on CrazyGames `sdk` (the SDK's environment and how init ended: `crazygames/ok`, `disabled/timeout`, `disabled/noscript`), `sdkMs` (init's milliseconds) and `basic` (ads held for Basic Launch). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
+ * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list), `navLangs` (the browser's), `mem`, `cores` and `gpu` (SessionDeviceProps) and on CrazyGames `sdk` (the SDK's environment and how init ended: `crazygames/ok`, `disabled/timeout`, `disabled/noscript`), `sdkMs` (init's milliseconds), `basic` (ads held for Basic Launch) and `app` (the SDK's applicationType: `web`, `google_play_store` and `apple_store` for CrazyGames' own apps, `pwa`). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `ad` has `at` (`lobby`, `revive` or
  * `double`) and `free` when the ad-free card paid the reward with no ad. `claim` has `what` (`task`
  * with `task`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`

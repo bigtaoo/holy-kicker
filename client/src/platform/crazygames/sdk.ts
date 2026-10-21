@@ -45,8 +45,8 @@ export interface CgSdkShape {
     prefetchAd?: (type: CgAdType) => unknown;
   };
   user?: {
-    /** e.g. { countryCode: 'DE', locale: 'en-US', device: { type: 'desktop' } } */
-    systemInfo?: { countryCode?: unknown; locale?: unknown; device?: { type?: unknown } };
+    /** e.g. { countryCode: 'DE', locale: 'en-US', device: { type: 'desktop' }, applicationType: 'web' } */
+    systemInfo?: { countryCode?: unknown; locale?: unknown; device?: { type?: unknown }; applicationType?: unknown };
     /** False where the portal has no accounts (some partner sites). */
     isUserAccountAvailable?: unknown;
     getUser?: () => unknown;
@@ -285,6 +285,14 @@ export class CrazyGamesSdk {
     if (!this.isEnabled()) return null;
     const v = this.sdk?.user?.systemInfo?.device?.type;
     return typeof v === 'string' && v !== '' ? v : null;
+  }
+
+  /** Where the portal runs the game: 'web' (a browser), 'google_play_store' or 'apple_store'
+   *  (CrazyGames' own apps) or 'pwa'; null without the SDK or with an odd value. */
+  applicationType(): string | null {
+    if (!this.isEnabled()) return null;
+    const v = this.sdk?.user?.systemInfo?.applicationType;
+    return typeof v === 'string' && /^[a-z_]{1,32}$/.test(v) ? v : null;
   }
 
   /** The portal's mute: called now with the current state, then on every change. */
