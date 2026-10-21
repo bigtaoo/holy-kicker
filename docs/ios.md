@@ -445,9 +445,17 @@ Owner setup, the same steps as Holy Kicker's above:
    **`CORGI_BUILD_PROVISION_PROFILE_BASE64`** = that file, base64. The other secrets are shared.
 2. App Store Connect: the app record (store name `Corgi Commando: Bug Blaster`), the product
    `com.gamestao.corgi.adfree` (non-consumable), Game Center, storefronts without mainland China.
+   Done 2026-10-20, along with the whole 1.0 listing, which mirrors Holy Kicker's answers. That
+   covers the en and zh text and screenshots, build 1, the review notes, the age rating (13+) and
+   App Privacy (published). The app is free in 174 regions, not on Mac, and on Vision Pro. The
+   product has its review screenshot. Nothing is submitted yet.
 3. AdMob: a new app with rewarded and interstitial units (done 2026-10-20, ids in `apps.json`),
    added to the GDPR message.
 4. Then: Actions → `ios-corgi` → Run workflow, or push a tag `corgi-ios-v1.0.0`.
+5. When it is time to submit, first add the ad-free product for review on its own page: the first
+   non-consumable must ride with a version. Then add version 1.0 for review. Before that, check
+   the age rating's gun violence answer: it is copied from Holy Kicker as "infrequent", but the
+   corgi fires all the time.
 
 ## Later
 
