@@ -4,7 +4,7 @@ import { bakeTexture } from './bake';
 import { CORGI } from './corgiFx';
 import { lerpX, lerpY } from './fixedStep';
 import type { FxPool } from './fx';
-import { bladeTrail, explosion, sealBurst, type RingMode } from './spells';
+import { BOOM_SLOW, bladeTrail, explosion, sealBurst, type RingMode } from './spells';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
 
@@ -114,7 +114,7 @@ export class ArsenalView {
     const x = e.x / FP;
     const y = e.y / FP;
     if (e.type === 'boom') {
-      explosion(this.pool, this.rand, x, y, e.radius / FP, this.ring);
+      explosion(this.pool, this.rand, x, y, e.radius / FP, this.ring, BOOM_SLOW);
       return;
     }
     sealBurst(this.pool, this.rand, x, y - LIFT, e.radius / FP, this.ring);

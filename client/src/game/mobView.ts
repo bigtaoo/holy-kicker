@@ -67,6 +67,7 @@ export class MobView {
   private lastX = NaN;
   private lastY = 0;
   private squash = 0;
+  private squashLen = SQUASH_TIME;
   private flash = 0;
   private hold = 0;
   /** 1 while looking right, -1 left. */
@@ -128,11 +129,12 @@ export class MobView {
 
   /**
    * A hit that does not kill: a white flash, a short squash, and for `hold` seconds the drawing
-   * freezes its walk frame and place (0 for none, e.g. late in a run), then catches up.
+   * freezes its walk frame and place (0 for none, e.g. late in a run), then catches up; the flash
+   * and squash last `slow` times as long (the corgi's bomb, spells.ts BOOM_SLOW).
    */
-  flinch(hold = HOLD_TIME): void {
-    this.squash = SQUASH_TIME;
-    this.flash = FLASH_TIME;
+  flinch(hold = HOLD_TIME, slow = 1): void {
+    this.squash = this.squashLen = SQUASH_TIME * slow;
+    this.flash = FLASH_TIME * slow;
     this.hold = Math.max(this.hold, hold);
   }
 
@@ -172,7 +174,7 @@ export class MobView {
     let sy = this.scale * (1 + this.swell);
     if (this.squash > 0) {
       this.squash = Math.max(0, this.squash - dt);
-      const k = Math.sin((this.squash / SQUASH_TIME) * Math.PI) * 0.25;
+      const k = Math.sin((this.squash / this.squashLen) * Math.PI) * 0.25;
       sx *= 1 + k;
       sy *= 1 - k;
     }

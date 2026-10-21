@@ -13,6 +13,7 @@ import { MOB_HEIGHT, type HordeView } from './hordeView';
 import type { Corpses } from './mobView';
 import { impactPoint, relicSource, type RingAt, type SweepAt } from './relicBlow';
 import type { Shake } from './shake';
+import { BOOM_SLOW } from './spells';
 import type { StaffSwing } from './staffView';
 
 // What a blow and a kill look like: the impact, the struck mob's flinch and hit-stop, the
@@ -68,6 +69,8 @@ export class HitFeedback {
   private sweepAt: SweepAt | null = null;
   private lastRings: RingAt[] = [];
   private punchWait = 0;
+  /** This tick's bomb blasts (their hits follow them in the tick's events), while they flinch slower. */
+  private readonly booms: { x: number; y: number; r2: number }[] = [];
 
   constructor(private readonly v: HitViews) {}
 
@@ -84,6 +87,7 @@ export class HitFeedback {
       this.relicHit(e, s, heat);
     }
     const hold = heat < HOLD_HEAT ? undefined : 0;
+    const slow = this.booms.some((b) => (e.x - b.x) ** 2 + (e.y - b.y) ** 2 < b.r2) ? BOOM_SLOW : 1;
     const x = e.x / FP;
     const y = e.y / FP;
     if (e.kind === 'boss' && boss && s.boss) {
@@ -91,10 +95,10 @@ export class HitFeedback {
     } else if (e.kind === 'elite') {
       // the elite hit is the one standing nearest the hit (one in front may have fallen since)
       const hit = nearestElite(s.elites, e.x, e.y);
-      if (hit) elites?.byId(hit.id)?.mob.flinch(hold);
+      if (hit) elites?.byId(hit.id)?.mob.flinch(hold, slow);
       damage.spawn(x, y - ELITE_HEIGHT - 10, e.value, e.crit, ELITE_KEY + (hit?.id ?? 0));
     } else {
-      horde.at(e.index)?.flinch(hold);
+      horde.at(e.index)?.flinch(hold, slow);
       damage.spawn(x, y - MOB_HEIGHT[s.mobs[e.index]?.kind ?? 'chaser'] - 10, e.value, e.crit);
     }
   }
@@ -111,6 +115,11 @@ export class HitFeedback {
     if (heat >= HOLD_HEAT || this.punchWait > 0) return;
     this.punchWait = PUNCH_GAP;
     this.v.shake.punch(dx, dy, byHeat(heat / HOLD_HEAT, PUNCH * RELIC_PUNCH[relic], 0));
+  }
+
+  /** A bomb went off this tick (before its hits in the tick's events). */
+  boom(e: Extract<SimEvent, { type: 'boom' }>): void {
+    if (BOOM_SLOW !== 1) this.booms.push({ x: e.x, y: e.y, r2: e.radius * e.radius });
   }
 
   /** The staff landed this tick (before its hits in the tick's events). */
@@ -160,6 +169,7 @@ export class HitFeedback {
     this.v.shake.kills(this.kills);
     this.hits = this.kills = 0;
     this.sweepAt = null;
+    this.booms.length = 0;
     this.lastRings.length = 0;
     for (const { x, y, radius, reach } of s.rings) this.lastRings.push({ x, y, radius, reach });
   }

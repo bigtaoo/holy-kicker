@@ -33,15 +33,21 @@ export function nova(pool: FxPool, x: number, y: number, r0: number, r1: number,
   }
 }
 
-/** A meteor or bomb landing: a flash, a shock ring, smoke and sparks. */
-export function explosion(pool: FxPool, rand: () => number, x: number, y: number, r: number, mode: RingMode): void {
-  pool.emit({ shape: 'glow', x, y: y - r * 0.2, vx: 0, vy: 0, life: 0.22, size0: r * 1.4, size1: r * 2, rotation: 0, spin: 0, drag: 1, color: 0xffe6a0, alpha: 0.85 });
-  nova(pool, x, y, r * 0.2, r * 1.1, 0.3, 0xfff2c8, mode, 0.16);
+/**
+ * How much longer the corgi's cluster bomb goes off than the monk's, and its mobs flinch: its
+ * blast was over before it could be seen.
+ */
+export const BOOM_SLOW = CORGI ? 2 : 1;
+
+/** A meteor or bomb landing: a flash, a shock ring, smoke and sparks; `slow` times as long (the smoke drifting as far). */
+export function explosion(pool: FxPool, rand: () => number, x: number, y: number, r: number, mode: RingMode, slow = 1): void {
+  pool.emit({ shape: 'glow', x, y: y - r * 0.2, vx: 0, vy: 0, life: 0.22 * slow, size0: r * 1.4, size1: r * 2, rotation: 0, spin: 0, drag: 1, color: 0xffe6a0, alpha: 0.85 });
+  nova(pool, x, y, r * 0.2, r * 1.1, 0.3 * slow, 0xfff2c8, mode, 0.16);
   for (let i = 0; i < 10; i++) {
     const a = rand() * Math.PI * 2;
     const v = r * (0.6 + rand() * 0.8);
     pool.emit({
-      shape: 'puff', x, y: y - r * 0.15, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.6 - r * 0.4, life: 0.5 + rand() * 0.3,
+      shape: 'puff', x, y: y - r * 0.15, vx: (Math.cos(a) * v) / slow, vy: (Math.sin(a) * v * 0.6 - r * 0.4) / slow, life: (0.5 + rand() * 0.3) * slow,
       size0: r * 0.35, size1: r * 0.8, rotation: rand() * Math.PI, spin: (rand() - 0.5) * 2, drag: 0.1, color: i % 2 ? 0x7d6f86 : 0x5d5f73, alpha: 0.7,
     }, true);
   }
@@ -49,7 +55,7 @@ export function explosion(pool: FxPool, rand: () => number, x: number, y: number
     const a = rand() * Math.PI * 2;
     const v = r * (2 + rand() * 2);
     pool.emit({
-      shape: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.3 + rand() * 0.15,
+      shape: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: (0.3 + rand() * 0.15) * slow,
       size0: 34, size1: 6, rotation: rand() * Math.PI, spin: (rand() - 0.5) * 20, drag: 0.03, color: 0xffd36a, alpha: 1,
     }, true);
   }

@@ -402,6 +402,7 @@ export class Game {
         case 'bomb':
         case 'boom':
         case 'seal':
+          if (e.type === 'boom') this.feedback.boom(e);
           this.arsenal.on(e);
           break;
         case 'bolt':
