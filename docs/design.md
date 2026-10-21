@@ -33,7 +33,11 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
   the most of them shown as the move hint shows moving (that way's arrow key or two pressed
   again and again on a desktop, a finger dragging that way on a touch screen), until he moves
   at all; then it keeps quiet 25 seconds, at most three times a run
-  (`client/src/ui/gatherNudge.ts`).
+  (`client/src/ui/gatherNudge.ts`). A player who leaves the level-up cards untouched five
+  seconds sees a hand tapping the card the bot would pick (its scores without the dice, the
+  lower level on a tie), and on a desktop the focus moves there; any tap, pointer move or key
+  hides it for that offer. It never picks for them and has no text (`client/src/ui/cardNudge.ts`,
+  `engine/bot/bot.ts` `suggestCard`).
 - **Lobby features unlock gradually:**
 
 | Unlocks at | Feature |

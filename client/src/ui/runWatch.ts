@@ -1,4 +1,5 @@
 import { FP, isBossWave, isEliteWave, xpToNext, type Card, type HurtSource, type Player, type SimEvent, type SimState } from '@hk/engine';
+import { suggestCard } from '@hk/engine/bot/bot';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import type { Game } from '../game/Game';
@@ -161,7 +162,7 @@ export class RunWatch {
         hud.gained(cardText(p.offer[i], p).name);
       } else {
         const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
-        hud.showOffer(title, p.offer.map((c) => cardText(c, p)));
+        hud.showOffer(title, p.offer.map((c) => cardText(c, p)), suggestCard(p));
       }
     } else if (p.offer.length === 0 && this.shownOffer) {
       this.shownOffer = null;

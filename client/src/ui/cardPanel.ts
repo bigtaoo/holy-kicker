@@ -2,6 +2,8 @@ import { Container, Graphics } from 'pixi.js';
 import type { CardKind } from '@hk/engine';
 import { t } from '../i18n';
 import { iconSprite, type IconSheet } from './buildBar';
+import { cardHand } from './cardHand';
+import { CARD_NUDGE, nudgeOn } from './cardNudge';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
 import { cardKey } from './cardKeys';
 import type { CardText } from './cardText';
@@ -13,7 +15,8 @@ import { COLORS, backdrop, fit, label, panel } from './widgets';
 // evolves with small on the corner), the name, "New!" or the level step, and its effect lines.
 // Shrine blessings have no item and keep a drawn shape. The cards rise in grey and only take taps
 // once a gold line has run round their rims (cardGate.ts). On a desktop the keys pick too
-// (cardKeys.ts): each card wears its number, and a gold ring shows the one Enter takes.
+// (cardKeys.ts): each card wears its number, and a gold ring shows the one Enter takes. A player
+// who does nothing for a while is shown a hand tapping the suggested card (cardNudge.ts).
 
 const CARD_W = 960;
 const CARD_H = 330;
@@ -168,13 +171,20 @@ export interface CardPanel {
 /** The ring round the highlighted card. */
 const FOCUS_PAD = 14;
 
+/** The card nudge's state, kept by the caller across layouts: the card to suggest, and whether the player did anything yet. */
+export interface CardNudgeState {
+  suggest: number;
+  touched: boolean;
+}
+
 /**
  * The modal choice over the run under `title`; `onPick` gets the card's index. `keys` holds the
- * highlighted card on a desktop (kept by the caller across layouts), null on a touch screen.
+ * highlighted card on a desktop (kept by the caller across layouts), null on a touch screen;
+ * `nudge` the hand's state (cardNudge.ts), null for no hand.
  */
 export function cardPanel(
   f: UiFrame, title: string, texts: readonly CardText[], icons: IconSheet, onPick: (index: number) => void,
-  keys: { focus: number } | null = null,
+  keys: { focus: number } | null = null, nudge: CardNudgeState | null = null,
 ): CardPanel {
   const view = new Container();
   view.addChild(backdrop(f.w, f.h, 0.7));
@@ -224,8 +234,27 @@ export function cardPanel(
     return { c, body, rim, ring, y: top + cardH / 2 + i * (cardH + GAP) };
   });
   const showFocus = () => cards.forEach(({ ring }, i) => (ring.visible = !!keys && !locked && keys.focus === i));
+  const hand = nudge && cards[nudge.suggest] ? cardHand() : null;
+  if (hand && nudge) {
+    // the fingertip rests right of the middle, over the effect lines' free end
+    hand.view.position.set(f.w / 2 + CARD_W * 0.3, cards[nudge.suggest].y - 10);
+    hand.view.visible = false;
+    view.addChild(hand.view);
+    const touch = () => (nudge.touched = true);
+    view.on('pointerdown', touch);
+    view.on('pointermove', touch);
+  }
   let settled = false;
   const update = (age: number) => {
+    if (hand && nudge) {
+      const on = nudgeOn(age, nudge.touched);
+      if (on && !hand.view.visible && keys) {
+        keys.focus = nudge.suggest;
+        showFocus();
+      }
+      hand.view.visible = on;
+      if (on) hand.update(age - CARD_NUDGE.after);
+    }
     if (settled) return;
     settled = cardsSettled(age);
     cards.forEach(({ c, body, rim, y }, i) => {
@@ -244,6 +273,7 @@ export function cardPanel(
     showFocus();
   };
   const key = (code: string, repeat: boolean) => {
+    if (nudge) nudge.touched = true;
     if (!keys || locked) return;
     const k = cardKey(code, repeat, keys.focus, cards.length);
     if (k && 'focus' in k) {

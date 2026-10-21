@@ -2,7 +2,7 @@ import { Container, Graphics, type Text } from 'pixi.js';
 import { getLocale, localeName, t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot, type Charge } from './buildSlots';
-import { cardPanel, type CardPanel } from './cardPanel';
+import { cardPanel, type CardNudgeState, type CardPanel } from './cardPanel';
 import { panelKey } from './panelKeys';
 import type { DownInfo } from './deathInfo';
 import { downPanel, type Down } from './downPanel';
@@ -83,6 +83,7 @@ export class RunHud implements Screen {
   private cards: CardPanel | null = null;
   /** The card the keys would take, on a desktop. */
   private cardFocus = { focus: 0 };
+  private cardNudge: CardNudgeState = { suggest: 0, touched: false };
   private picked = false;
   private build: BuildBar | null = null;
   private slots: readonly BuildSlot[] = [];
@@ -138,7 +139,7 @@ export class RunHud implements Screen {
     if (this.banner && !this.paused && !this.down && !this.offer) this.drawBanner(f);
     this.cards = null;
     if (this.offer) {
-      this.cards = cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i), this.keys ? this.cardFocus : null);
+      this.cards = cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i), this.keys ? this.cardFocus : null, this.cardNudge);
       this.cards.update(this.offerAge);
       this.view.addChild(this.cards.view);
     }
@@ -195,8 +196,9 @@ export class RunHud implements Screen {
     if (this.levelText && this.levelText.text !== t('run.level', { level })) this.levelText.text = t('run.level', { level });
   }
 
-  /** The level-up or shrine cards under `title`; they stay until hideOffer. */
-  showOffer(title: string, cards: CardText[]): void {
+  /** The level-up or shrine cards under `title`, a hand tapping card `suggest` for a player who hesitates; they stay until hideOffer. */
+  showOffer(title: string, cards: CardText[], suggest = 0): void {
+    this.cardNudge = { suggest, touched: false };
     this.offer = cards;
     this.offerTitle = title;
     this.offerAge = 0;
