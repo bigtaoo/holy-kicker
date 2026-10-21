@@ -57,6 +57,7 @@ export const monkIt: Table<typeof monkEn> = {
   tutorial: {
     auto: 'I tuoi calci sono automatici',
     gems: 'Raccogli le gemme per salire di livello',
+    gather: 'Gemme ovunque! Passaci sopra',
   },
   card: {
     beads: 'Grani {a} → {b}',

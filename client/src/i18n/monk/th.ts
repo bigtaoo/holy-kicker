@@ -57,6 +57,7 @@ export const monkTh: Table<typeof monkEn> = {
   tutorial: {
     auto: 'เตะอัตโนมัติ',
     gems: 'เก็บอัญมณีเพื่อเลเวลอัป',
+    gather: 'อัญมณีกองเต็มเลย! เดินไปเก็บสิ',
   },
   card: {
     beads: 'ลูกประคำ {a} → {b}',

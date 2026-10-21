@@ -57,6 +57,7 @@ export const monkDe: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Deine Tritte gehen automatisch',
     gems: 'Sammle die Edelsteine zum Aufsteigen',
+    gather: 'Edelsteine liegen herum! Lauf drüber',
   },
   card: {
     beads: 'Perlen {a} → {b}',

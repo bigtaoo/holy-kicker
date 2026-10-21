@@ -57,6 +57,7 @@ export const monkFr: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Tes coups de pied sont automatiques',
     gems: 'Ramasse les gemmes pour monter de niveau',
+    gather: 'Des gemmes partout ! Va les ramasser',
   },
   card: {
     beads: 'Perles {a} → {b}',

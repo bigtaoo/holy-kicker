@@ -58,6 +58,7 @@ export const corgiKo: Table<typeof corgiEn> = {
   tutorial: {
     auto: '무기는 자동으로 발사돼요',
     gems: '간식을 주워 레벨 업',
+    gather: '간식이 쌓였어요! 걸어가서 주워요',
   },
   card: {
     beads: '드론 {a} → {b}대',

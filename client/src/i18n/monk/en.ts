@@ -56,6 +56,7 @@ export const monkEn = {
   tutorial: {
     auto: 'Your kicks are automatic',
     gems: 'Grab the gems to level up',
+    gather: 'Gems piling up! Walk over them',
   },
   card: {
     beads: 'Beads {a} → {b}',

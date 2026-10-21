@@ -57,6 +57,7 @@ export const monkTr: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Tekmelerin otomatik',
     gems: 'Seviye atlamak için taşları topla',
+    gather: 'Taşlar birikti! Üzerinden geç',
   },
   card: {
     beads: 'Boncuk {a} → {b}',

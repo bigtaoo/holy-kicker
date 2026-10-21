@@ -58,6 +58,7 @@ export const corgiPt: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Sua arma dispara sozinha',
     gems: 'Pegue os petiscos para subir de nível',
+    gather: 'Petiscos por toda parte! Vá pegá-los',
   },
   card: {
     beads: 'Drones {a} → {b}',

@@ -57,6 +57,7 @@ export const monkPl: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Twoje kopnięcia są automatyczne',
     gems: 'Zbieraj klejnoty, by awansować',
+    gather: 'Pełno klejnotów! Podejdź i zbierz',
   },
   card: {
     beads: 'Paciorki {a} → {b}',

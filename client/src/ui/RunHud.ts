@@ -9,8 +9,8 @@ import { downPanel, type Down } from './downPanel';
 import { languagePanel } from './languagePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
-import type { TutorialStep } from './tutorial';
-import { tutorialHint, type TutorialHint } from './tutorialHint';
+import type { Dir8 } from './gatherNudge';
+import { tutorialHint, type HintStep, type TutorialHint } from './tutorialHint';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, keyCap, label, meter, panel, playTap } from './widgets';
 import { RECORD_BURST } from './recordBurst';
@@ -88,7 +88,8 @@ export class RunHud implements Screen {
   private slots: readonly BuildSlot[] = [];
   private slotsKey = '';
   /** The first run's hint, and its animated view. */
-  private tutorial: TutorialStep = 'done';
+  private tutorial: HintStep = 'done';
+  private gatherDir: Dir8 = 2;
   private hint: TutorialHint | null = null;
   private clock = 0;
 
@@ -248,10 +249,11 @@ export class RunHud implements Screen {
     this.relayout();
   }
 
-  /** The first run's hint to show ('done' for none). */
-  setTutorial(step: TutorialStep): void {
-    if (step === this.tutorial) return;
+  /** The first run's hint or the gather nudge to show ('done' for none), the nudge pointing `dir`. */
+  setTutorial(step: HintStep, dir: Dir8 = 2): void {
+    if (step === this.tutorial && dir === this.gatherDir) return;
     this.tutorial = step;
+    this.gatherDir = dir;
     this.relayout();
   }
 
@@ -355,8 +357,8 @@ export class RunHud implements Screen {
 
   /** The hint low on the screen, under the fight (tutorialHint.ts). */
   private drawTutorial(f: UiFrame): void {
-    const hint = (this.hint = tutorialHint(this.tutorial, f.w, this.keys ? this.keysReach : null));
-    hint.view.position.set(f.w / 2, f.h * (this.tutorial === 'move' ? 0.78 : 0.88));
+    const hint = (this.hint = tutorialHint(this.tutorial, f.w, this.keys ? this.keysReach : null, this.gatherDir));
+    hint.view.position.set(f.w / 2, f.h * (this.tutorial === 'move' || this.tutorial === 'gather' ? 0.78 : 0.88));
     hint.update(this.clock);
     this.view.addChild(hint.view);
   }

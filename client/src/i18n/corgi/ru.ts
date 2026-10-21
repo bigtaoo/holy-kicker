@@ -58,6 +58,7 @@ export const corgiRu: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Оружие стреляет само',
     gems: 'Собирай лакомства, чтобы расти в уровне',
+    gather: 'Лакомства копятся! Подойди и собери',
   },
   card: {
     beads: 'Дроны {a} → {b}',

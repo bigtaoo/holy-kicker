@@ -58,6 +58,7 @@ export const corgiPl: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Twoja broń strzela sama',
     gems: 'Zbieraj smakołyki, by awansować',
+    gather: 'Pełno smakołyków! Podejdź i zbierz',
   },
   card: {
     beads: 'Drony {a} → {b}',

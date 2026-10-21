@@ -57,6 +57,7 @@ export const monkZh: Table<typeof monkEn> = {
   tutorial: {
     auto: '踢球是自动的',
     gems: '捡起宝石来升级',
+    gather: '宝石堆满了，走过去捡！',
   },
   card: {
     beads: '念珠 {a} → {b} 颗',

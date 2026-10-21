@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
+import type { Dir8 } from './gatherNudge';
 import type { TutorialStep } from './tutorial';
 import { COLORS, fit, label } from './widgets';
 
@@ -8,12 +9,24 @@ import { COLORS, fit, label } from './widgets';
 // track ("drag anywhere"); on a desktop the arrow keys pressed in turn, with the mouse drag as
 // the small second line, since few desktop players think of dragging with the mouse. In a portal's
 // iframe the keys only reach the game after a click in it, so until then a pulsing line over the
-// keys asks for that click and the keys stand dimmed.
+// keys asks for that click and the keys stand dimmed. The gather step is no tutorial step but a
+// nudge for a hero standing still among gems (gatherNudge.ts), on the same line, showing the
+// way to the most of them: the key or two for that way pressed again and again, or the finger
+// dragging that way.
+
+/** A line the HUD shows low on the screen: a tutorial step, or the gather nudge. */
+export type HintStep = TutorialStep | 'gather';
 
 /** The arrow keys in the order the hint presses them, and how long each stays down. */
 export const KEY_ORDER = ['up', 'right', 'down', 'left'] as const;
 export type ArrowKey = (typeof KEY_ORDER)[number];
 export const KEY_HOLD = 0.45;
+
+/** The keys that walk the hero `dir` (an eighth of the circle, 0 right, clockwise). */
+export function dirKeys(dir: Dir8): ArrowKey[] {
+  const ways: ArrowKey[][] = [['right'], ['right', 'down'], ['down'], ['down', 'left'], ['left'], ['left', 'up'], ['up'], ['up', 'right']];
+  return ways[dir];
+}
 
 /** The key the hint holds down `clock` seconds in. */
 export function litKey(clock: number): ArrowKey {
@@ -36,19 +49,45 @@ export interface TutorialHint {
   update(clock: number): void;
 }
 
-/** The hint for `step` (not 'done'), `width` wide; on a desktop `keys` says whether the keys reach the game now. */
-export function tutorialHint(step: TutorialStep, width: number, keys: (() => boolean) | null): TutorialHint {
+/** The hint for `step` (not 'done'), `width` wide; on a desktop `keys` says whether the keys reach the game now; `dir` is the gather nudge's way. */
+export function tutorialHint(step: HintStep, width: number, keys: (() => boolean) | null, dir: Dir8 = 2): TutorialHint {
   const view = new Container();
   view.eventMode = 'none';
   const move = step === 'move';
-  const lines = !move ? [t(step === 'auto' ? 'tutorial.auto' : 'tutorial.gems')] : keys ? [t('tutorial.keys'), t('tutorial.drag')] : [t('tutorial.move')];
+  const lines = !move ? [t(step === 'auto' ? 'tutorial.auto' : step === 'gather' ? 'tutorial.gather' : 'tutorial.gems')] : keys ? [t('tutorial.keys'), t('tutorial.drag')] : [t('tutorial.move')];
   lines.forEach((text, i) => {
     const l = fit(label(text, i === 0 ? 60 : 48, i === 0 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), width - 80);
     l.y = i * 80;
     view.addChild(l);
   });
+  if (step === 'gather') {
+    const ways = dirKeys(dir);
+    return keys ? arrowKeys(view, width, keys, (clock) => (Math.floor(clock / KEY_HOLD) % 2 === 0 ? ways : [])) : draggingFinger(view, dir);
+  }
   if (!move) return { view, update() {} };
-  return keys ? arrowKeys(view, width, keys) : swayingFinger(view);
+  return keys ? arrowKeys(view, width, keys, (clock) => [litKey(clock)]) : swayingFinger(view);
+}
+
+/** A finger dragging from the track's middle out the way `dir` points, again and again. */
+function draggingFinger(view: Container, dir: Dir8): TutorialHint {
+  const turn = (dir * Math.PI) / 4;
+  const pad = new Container();
+  pad.y = -200;
+  pad.addChild(
+    new Graphics().circle(0, 0, 150).fill({ color: COLORS.text, alpha: 0.12 }).stroke({ color: COLORS.text, width: 6, alpha: 0.35 }),
+    new Graphics().roundRect(0, -6, 150, 12, 6).fill({ color: COLORS.text, alpha: 0.35 }),
+  );
+  pad.children[1].rotation = turn;
+  const hand = new Graphics().circle(0, 0, 46).fill({ color: COLORS.text, alpha: 0.85 }).stroke({ color: COLORS.outline, width: 8 });
+  pad.addChild(hand);
+  view.addChild(pad);
+  const update = (clock: number) => {
+    const k = Math.min(1, (clock % 1.1) / 0.7);
+    const d = 120 * (1 - (1 - k) * (1 - k));
+    hand.position.set(Math.cos(turn) * d, Math.sin(turn) * d);
+  };
+  update(0);
+  return { view, update };
 }
 
 function swayingFinger(view: Container): TutorialHint {
@@ -62,7 +101,7 @@ function swayingFinger(view: Container): TutorialHint {
   return { view, update: (clock) => (hand.x = Math.sin(clock * 4) * 120) };
 }
 
-function arrowKeys(view: Container, width: number, reach: () => boolean): TutorialHint {
+function arrowKeys(view: Container, width: number, reach: () => boolean, lit: (clock: number) => readonly ArrowKey[]): TutorialHint {
   const cluster = new Container();
   cluster.y = -110 - 2 * KEY - GAP;
   const caps = new Map<ArrowKey, { up: Container; down: Container }>();
@@ -86,10 +125,10 @@ function arrowKeys(view: Container, width: number, reach: () => boolean): Tutori
     click.visible = off;
     click.scale.set(base * (1 + 0.06 * Math.sin(clock * 6)));
     cluster.alpha = off ? 0.4 : 1;
-    const lit = litKey(clock);
+    const down = lit(clock);
     for (const [key, cap] of caps) {
-      cap.up.visible = key !== lit;
-      cap.down.visible = key === lit;
+      cap.up.visible = !down.includes(key);
+      cap.down.visible = down.includes(key);
     }
   };
   update(0);

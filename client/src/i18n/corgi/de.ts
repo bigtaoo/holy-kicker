@@ -57,6 +57,7 @@ export const corgiDe: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Deine Waffe feuert automatisch',
     gems: 'Sammle die Leckerli zum Aufsteigen',
+    gather: 'Leckerli liegen herum! Lauf drüber',
   },
   card: {
     beads: 'Drohnen {a} → {b}',

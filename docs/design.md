@@ -28,7 +28,12 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
   carry over on sign-in). WeChat: `wx.login` openid, cloud save.
 - **First launch skips the lobby.** The tutorial lives in chapter 1's first waves (only the
   move joystick is prompted; everything else is automatic). The lobby appears after the first
-  run ends.
+  run ends. In any run, a hero who stands still four seconds with a whole level's gems lying
+  near him gets the same line low on the screen telling him to walk over them, with the way to
+  the most of them shown as the move hint shows moving (that way's arrow key or two pressed
+  again and again on a desktop, a finger dragging that way on a touch screen), until he moves
+  at all; then it keeps quiet 25 seconds, at most three times a run
+  (`client/src/ui/gatherNudge.ts`).
 - **Lobby features unlock gradually:**
 
 | Unlocks at | Feature |

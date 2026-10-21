@@ -57,6 +57,7 @@ export const corgiFr: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Ton arme tire toute seule',
     gems: 'Ramasse les friandises pour monter de niveau',
+    gather: 'Des friandises partout ! Va les ramasser',
   },
   card: {
     beads: 'Drones {a} → {b}',

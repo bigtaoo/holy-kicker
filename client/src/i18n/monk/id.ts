@@ -57,6 +57,7 @@ export const monkId: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Tendanganmu otomatis',
     gems: 'Ambil permata untuk naik level',
+    gather: 'Banyak permata! Jalan ke sana untuk ambil',
   },
   card: {
     beads: 'Manik {a} → {b}',

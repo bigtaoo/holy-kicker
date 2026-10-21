@@ -1,4 +1,4 @@
-import { isBossWave, isEliteWave, xpToNext, type Card, type HurtSource, type SimEvent } from '@hk/engine';
+import { FP, isBossWave, isEliteWave, xpToNext, type Card, type HurtSource, type Player, type SimEvent, type SimState } from '@hk/engine';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import type { Game } from '../game/Game';
@@ -10,7 +10,9 @@ import { buildSlots, spellCharges } from './buildSlots';
 import { cardText } from './cardText';
 import { deathCause, nearestGoal, type DownInfo } from './deathInfo';
 import type { RunHud } from './RunHud';
+import { GATHER, GatherNudge, gatherDir } from './gatherNudge';
 import { CLEAR_LINE_TIME, clearLine, waveLine } from './story';
+import type { HintStep } from './tutorialHint';
 import { newTutorial, stepTutorial, type Tutorial, type TutorialStep } from './tutorial';
 
 // One run as the shell sees it, frame by frame: it watches the engine's state for a new wave (a
@@ -23,6 +25,14 @@ import { newTutorial, stepTutorial, type Tutorial, type TutorialStep } from './t
 
 /** Seconds of play between two `alive` beats: a run whose page dies with no `leave` still says how far it got. */
 export const ALIVE_EVERY = 60;
+
+/** The experience in the gems resting within GATHER.reach of `p`, as a share of the next level's. */
+export function lyingShare(s: SimState, p: Player): number {
+  const r2 = (GATHER.reach * FP) ** 2;
+  let xp = 0;
+  for (const g of s.gems) if (!g.flying && (g.x - p.x) ** 2 + (g.y - p.y) ** 2 <= r2) xp += g.value;
+  return xp / Math.max(1, xpToNext(p.level) - p.xp);
+}
 
 export interface RunWatchDeps {
   chapter: number;
@@ -69,6 +79,10 @@ export class RunWatch {
   private runSecs = 0;
   /** The tutorial step last reported (null until the first one goes out). */
   private toldStep: TutorialStep | null = null;
+  /** The nudge to walk over the gems piling up around a hero who stands still. */
+  private readonly gather = new GatherNudge();
+  /** The line low on the screen the HUD was last told to show. */
+  private hint: HintStep = 'done';
 
   constructor(
     private readonly game: Game,
@@ -79,7 +93,7 @@ export class RunWatch {
   ) {
     this.tutorial = teach ? newTutorial() : null;
     this.autoPicks = teach ? BALANCE.firstRun.autoPicks : 0;
-    if (teach) hud.setTutorial('move');
+    if (teach) hud.setTutorial((this.hint = 'move'));
   }
 
   /** The run's events (Shell feeds them in from Game.onEvents): remembers the last blow that hurt. */
@@ -120,8 +134,11 @@ export class RunWatch {
     if (!game.paused) this.runSecs += Math.min(dt, 1);
     if (this.tutorial && !game.paused && p.offer.length === 0) {
       this.tutorial = stepTutorial(this.tutorial, dt, p.moving);
-      hud.setTutorial(this.tutorial.step);
     }
+    const teaching = this.tutorial !== null && this.tutorial.step !== 'done';
+    const nudge = !teaching && !game.paused && p.offer.length === 0 && s.outcome === 'playing' && this.gather.step(dt, p.moving, p.moving ? 1 : lyingShare(s, p));
+    const hint = teaching ? this.tutorial!.step : nudge ? 'gather' : 'done';
+    if (hint !== this.hint) hud.setTutorial((this.hint = hint), hint === 'gather' ? gatherDir(s.gems.filter((g) => !g.flying), p.x, p.y, GATHER.reach * FP) : 2);
     // each step as it is reached, so a funnel shows which one first runs end on, and how long in
     if (this.tutorial && this.tutorial.step !== this.toldStep) {
       this.toldStep = this.tutorial.step;

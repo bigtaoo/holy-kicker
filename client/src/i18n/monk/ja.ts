@@ -57,6 +57,7 @@ export const monkJa: Table<typeof monkEn> = {
   tutorial: {
     auto: 'キックは自動で出る',
     gems: 'ジェムを拾ってレベルアップ',
+    gather: 'ジェムがたまってる！歩いて拾おう',
   },
   card: {
     beads: '数珠玉 {a} → {b}個',

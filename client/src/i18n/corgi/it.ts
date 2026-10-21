@@ -57,6 +57,7 @@ export const corgiIt: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'La tua arma spara da sola',
     gems: 'Raccogli i bocconcini per salire di livello',
+    gather: 'Bocconcini ovunque! Passaci sopra',
   },
   card: {
     beads: 'Droni {a} → {b}',

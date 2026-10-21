@@ -61,6 +61,7 @@ export const corgiEn: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Your weapon fires on its own',
     gems: 'Grab the treats to level up',
+    gather: 'Treats piling up! Walk over them',
   },
   card: {
     beads: 'Drones {a} → {b}',

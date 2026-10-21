@@ -57,6 +57,7 @@ export const monkRu: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Удары наносятся сами',
     gems: 'Собирай самоцветы, чтобы расти в уровне',
+    gather: 'Самоцветы копятся! Подойди и собери',
   },
   card: {
     beads: 'Бусины {a} → {b}',

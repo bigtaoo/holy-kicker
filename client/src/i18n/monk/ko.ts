@@ -57,6 +57,7 @@ export const monkKo: Table<typeof monkEn> = {
   tutorial: {
     auto: '발차기는 자동이에요',
     gems: '보석을 주워 레벨 업',
+    gather: '보석이 쌓였어요! 걸어가서 주워요',
   },
   card: {
     beads: '염주알 {a} → {b}개',

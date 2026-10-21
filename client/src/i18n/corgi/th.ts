@@ -58,6 +58,7 @@ export const corgiTh: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'อาวุธยิงอัตโนมัติ',
     gems: 'เก็บขนมเพื่อเลเวลอัป',
+    gather: 'ขนมกองเต็มเลย! เดินไปเก็บสิ',
   },
   card: {
     beads: 'โดรน {a} → {b}',

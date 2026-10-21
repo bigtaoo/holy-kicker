@@ -58,6 +58,7 @@ export const corgiId: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Senjatamu menembak otomatis',
     gems: 'Ambil camilan untuk naik level',
+    gather: 'Banyak camilan! Jalan ke sana untuk ambil',
   },
   card: {
     beads: 'Drone {a} → {b}',

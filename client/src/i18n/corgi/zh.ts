@@ -58,6 +58,7 @@ export const corgiZh: Table<typeof corgiEn> = {
   tutorial: {
     auto: '武器会自动开火',
     gems: '捡起零食来升级',
+    gather: '零食堆满了，走过去捡！',
   },
   card: {
     beads: '无人机 {a} → {b} 架',

@@ -58,6 +58,7 @@ export const corgiTr: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Silahın kendiliğinden ateş eder',
     gems: 'Seviye atlamak için ikramları topla',
+    gather: 'İkramlar birikti! Üzerinden geç',
   },
   card: {
     beads: 'Dron {a} → {b}',

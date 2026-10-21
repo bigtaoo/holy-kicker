@@ -57,6 +57,7 @@ export const monkVi: Table<typeof monkEn> = {
   tutorial: {
     auto: 'Cú đá của bạn là tự động',
     gems: 'Nhặt đá quý để lên cấp',
+    gather: 'Đá quý đầy đất! Đi nhặt đi',
   },
   card: {
     beads: 'Hạt {a} → {b}',

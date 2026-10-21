@@ -58,6 +58,7 @@ export const corgiJa: Table<typeof corgiEn> = {
   tutorial: {
     auto: '武器は自動で撃つ',
     gems: 'おやつを拾ってレベルアップ',
+    gather: 'おやつがたまってる！歩いて拾おう',
   },
   card: {
     beads: 'ドローン {a} → {b}機',

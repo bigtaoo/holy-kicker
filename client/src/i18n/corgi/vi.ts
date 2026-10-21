@@ -58,6 +58,7 @@ export const corgiVi: Table<typeof corgiEn> = {
   tutorial: {
     auto: 'Vũ khí tự động nổ súng',
     gems: 'Nhặt đồ ăn vặt để lên cấp',
+    gather: 'Đồ ăn vặt đầy đất! Đi nhặt đi',
   },
   card: {
     beads: 'Drone {a} → {b}',
