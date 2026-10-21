@@ -35,7 +35,9 @@ function pill(text: string, color: number, size = 40): Container {
 
 export function headerPart(r: Reward, waves: number, rank: RunRank | null, width: number): Part {
   const c = new Container();
-  const title = fit(label(r.firstClear ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen'), 72, r.firstClear ? COLORS.saffron : COLORS.text), width);
+  // a won run (a replay too: it may bring a star) is a clear, gold on the first one
+  const won = r.stars > 0;
+  const title = fit(label(won ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen'), 72, r.firstClear ? COLORS.saffron : COLORS.text), width);
   title.y = 40;
   const big = label(String(waves), 180, r.newBest ? COLORS.saffron : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
   big.y = 180;
@@ -60,7 +62,7 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   // the best (or a new one) and the leaderboard place, side by side under the number
   const badges: Container[] = [];
   if (r.newBest) badges.push(pill(t('results.newBest'), COLORS.saffron, 44));
-  else if (!r.firstClear && r.best > 0) badges.push(pill(t('results.best', { wave: r.best }), COLORS.dim));
+  else if (!won && r.best > 0) badges.push(pill(t('results.best', { wave: r.best }), COLORS.dim));
   if (rank) badges.push(pill(t(rank.best ? 'results.rankNew' : 'results.rankShort', { rank: rank.rank }), rank.best ? COLORS.saffron : COLORS.dim));
   if (badges.length === 0) return [c, top];
   const row = new Container();
@@ -72,9 +74,9 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   }
   row.pivot.x = (x - 24) / 2;
   if (row.width > width) row.scale.set(width / row.width);
-  row.y = top + 40;
+  row.y = top + 50;
   c.addChild(row);
-  return [c, top + 100];
+  return [c, top + 96];
 }
 
 /** What felled the hero, the nearest goal with a bar for how near it came, and one short tip. */
