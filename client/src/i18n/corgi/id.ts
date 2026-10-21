@@ -8,6 +8,7 @@ export const corgiId: Table<typeof corgiEn> = {
     guest: 'Kadet',
     chapterTitle: 'Planet {n}: {name}',
     unlockAtChapter: 'Tamatkan planet {n} untuk membuka',
+    hardLocked: 'Tamatkan planet ini dengan 3 bintang untuk membuka mode sulit',
     relic: 'Senjata',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiId: Table<typeof corgiEn> = {
   results: {
     cleared: 'Planet tamat!',
     hardCleared: 'Planet sulit tamat!',
+    hardUnlocked: '3 bintang! Mode sulit planet ini terbuka',
     copper: 'Baut +{n}',
     nextChapter: 'Planet berikutnya',
     grit: 'Tekad ×{n}: percobaan berikutnya di sini lebih kuat',
@@ -238,6 +240,9 @@ export const corgiId: Table<typeof corgiEn> = {
     2: 'Langka',
     3: 'Epik',
     4: 'Legenda',
+    5: 'Mitos',
+    6: 'Astral',
+    7: 'Kosmik',
   },
   stat: {
     cooldown: 'Jeda gadget −{n}%',

@@ -186,7 +186,8 @@ export const zh: Table<typeof en> = {
   },
   results: {
     waves: '通过波数',
-    hardUnlocked: '困难模式已开启：敌人更强，装备更好',
+    starNext2: '下一颗星：不复活通关',
+    starNext3: '下一颗星：血量始终不低于 {n}%',
     fallen: '本局结束',
     chests: '解锁宝箱 ×{n}：回大厅领取',
     newBest: '新纪录！',

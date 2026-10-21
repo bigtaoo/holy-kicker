@@ -7,6 +7,7 @@ export const monkZh: Table<typeof monkEn> = {
     guest: '小和尚',
     chapterTitle: '第 {n} 章：{name}',
     unlockAtChapter: '通关第 {n} 章解锁',
+    hardLocked: '三星通关本章解锁困难模式',
     relic: '法器',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkZh: Table<typeof monkEn> = {
   results: {
     cleared: '通关！',
     hardCleared: '困难通关！',
+    hardUnlocked: '三星！本章困难模式已解锁',
     copper: '铜钱 +{n}',
     nextChapter: '下一章',
     grit: '愈挫愈勇 ×{n}：下次再打本章更强',
@@ -237,6 +239,9 @@ export const monkZh: Table<typeof monkEn> = {
     2: '精品',
     3: '珍品',
     4: '圣品',
+    5: '仙品',
+    6: '神品',
+    7: '至品',
   },
   stat: {
     cooldown: '法术冷却 −{n}%',

@@ -1,5 +1,6 @@
 import { BALANCE } from './balance';
 import { ITEM_IDS, TIERS } from './gear';
+import { hardClears } from './progress';
 import type { SaveData } from './save';
 
 // Achievements (docs/design.md "Retention"): long-term goals that each pay jade once, claimed
@@ -47,7 +48,7 @@ export function achievementProgress(save: SaveData, kind: AchievementKind): numb
     case 'clear':
       return save.cleared;
     case 'hard':
-      return save.hardCleared;
+      return hardClears(save);
     case 'codex':
       return save.codex.length;
     case 'level':

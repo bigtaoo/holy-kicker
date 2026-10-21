@@ -43,6 +43,8 @@ export interface Player extends Body {
   /** Down at 0 health: no moving, kicking or picking up until revived. */
   dead: boolean;
   revives: number;
+  /** The lowest health over the run, percent of the max health at the time: a clear's stars (docs/design.md "Stars"). */
+  lowest: number;
   /** Health regenerated so far toward the next point, in units of 1 / REGEN_UNIT. */
   regen: number;
   /** The relic played with, and its level, 1..MAX_LEVEL. */
@@ -455,7 +457,7 @@ export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, rev
   return {
     ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, still: 0, moveBrad: 0, moveMag: 0,
     action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0, xpPart: 0,
-    hp, maxHp: hp, dead: false, revives, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
+    hp, maxHp: hp, dead: false, revives, lowest: 100, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
     bet: false, offerings: 0, taps: 0, halo: 0, bonus, monk, dodge: 0,
   };
 }

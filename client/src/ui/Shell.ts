@@ -13,7 +13,7 @@ import { noteFall, runPast } from '../meta/falls';
 import { loadout } from '../meta/loadout';
 import { rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
-import { chooseTrack, doubleCopper, earnedSutras, settleRun, type Reward } from '../meta/progress';
+import { chooseTrack, doubleCopper, earnedSutras, selectChapter, settleRun, type Reward } from '../meta/progress';
 import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import { afterRun } from '../meta/welcome';
@@ -228,7 +228,7 @@ export class Shell {
     const lobby = new LobbyScreen(this.save, this.names, {
       play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => {
-        this.commit({ ...this.save, chapter });
+        this.commit(selectChapter(this.save, chapter));
         this.showLobby();
       },
       chooseTrack: (hard) => {
@@ -435,7 +435,7 @@ export class Shell {
     const rank = name && !this.challenge.run ? this.net.submitRun({ ...run, ...name }) : Promise.resolve(null);
     void this.net.flush();
     if (this.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
-    const { reward, save: played } = settleRun(noteFall(this.save, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills });
+    const { reward, save: played } = settleRun(noteFall(this.save, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
     const { save, gift } = afterRun(played, Date.now(), waves, this.kills);
     // paid before the results show, so closing the tab now keeps the reward
     this.commit(save);

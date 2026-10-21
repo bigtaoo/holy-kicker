@@ -8,6 +8,7 @@ export const corgiZh: Table<typeof corgiEn> = {
     guest: '小柯基',
     chapterTitle: '星球 {n}：{name}',
     unlockAtChapter: '通关星球 {n} 解锁',
+    hardLocked: '三星通关本星球解锁困难模式',
     relic: '武器',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiZh: Table<typeof corgiEn> = {
   results: {
     cleared: '星球通关！',
     hardCleared: '困难星球通关！',
+    hardUnlocked: '三星！本星球困难模式已解锁',
     copper: '螺丝 +{n}',
     nextChapter: '下一颗星球',
     grit: '愈挫愈勇 ×{n}：下次挑战这颗星球更强',
@@ -238,6 +240,9 @@ export const corgiZh: Table<typeof corgiEn> = {
     2: '稀有',
     3: '史诗',
     4: '传说',
+    5: '神话',
+    6: '星辉',
+    7: '宇宙',
   },
   stat: {
     cooldown: '技能冷却 −{n}%',

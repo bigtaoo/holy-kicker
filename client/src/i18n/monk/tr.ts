@@ -7,6 +7,7 @@ export const monkTr: Table<typeof monkEn> = {
     guest: 'Keşiş',
     chapterTitle: 'Bölüm {n}: {name}',
     unlockAtChapter: 'Açmak için {n}. bölümü geç',
+    hardLocked: 'Zor modu açmak için bu bölümü 3 yıldızla geç',
     relic: 'Emanet',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkTr: Table<typeof monkEn> = {
   results: {
     cleared: 'Bölüm geçildi!',
     hardCleared: 'Zor bölüm geçildi!',
+    hardUnlocked: '3 yıldız! Bu bölümün zor modu açıldı',
     copper: 'Bakır +{n}',
     nextChapter: 'Sonraki bölüm',
     grit: 'Azim ×{n}: buradaki sonraki deneme daha güçlü',
@@ -237,6 +239,9 @@ export const monkTr: Table<typeof monkEn> = {
     2: 'Seçkin',
     3: 'Değerli',
     4: 'Kutsal',
+    5: 'Göksel',
+    6: 'İlahi',
+    7: 'Yüce',
   },
   stat: {
     cooldown: 'Büyü bekleme −%{n}',

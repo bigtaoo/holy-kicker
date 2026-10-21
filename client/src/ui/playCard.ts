@@ -5,10 +5,10 @@ import { unlockedRelics } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { THEME } from '../theme';
 import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
-import { COLORS, button, label } from './widgets';
+import { COLORS, label } from './widgets';
 
-// The Play tab's pieces around the chapter card (LobbyScreen.playTab): the normal / hard
-// switch over it and the relic row at the monk's feet.
+// The Play tab's pieces around the chapter card (LobbyScreen.playTab, chapterCard.ts): its
+// colours and the relic row at the monk's feet.
 
 const RELIC_R = 60;
 
@@ -25,20 +25,6 @@ export const BADGE = { fill: CARD.fill, off: THEME === 'corgi' ? 0xb4bec6 : 0xc4
 export const CARD_STROKE = { stroke: { color: COLORS.outline, width: 10 } };
 /** The relic row's height: its name over the badges. */
 export const RELIC_ROW_H = 250;
-
-/** Normal and hard side by side, the shown one lit. */
-export function trackSwitch(save: SaveData, choose: (hard: boolean) => void): Container {
-  const row = new Container();
-  ([[false, 'lobby.normal'], [true, 'lobby.hard']] as const).forEach(([hard, key], i) => {
-    const on = save.hard === hard;
-    const b = button(t(key), 300, 90, () => {
-      if (!on) choose(hard);
-    }, { fill: on ? (hard ? COLORS.danger : COLORS.saffron) : COLORS.panelLocked, size: 52, textFill: on ? COLORS.text : COLORS.dim });
-    b.x = (i - 0.5) * 320;
-    row.addChild(b);
-  });
-  return row;
-}
 
 /**
  * The relic for the next run, top at 0: its name, then one badge per relic (locked ones dimmed).

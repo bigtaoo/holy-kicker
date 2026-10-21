@@ -68,11 +68,12 @@ describe('gear', () => {
   });
 
   it('drops only unlocked relics, and tiers by the chapter', () => {
-    const all = rollDrops(5, 50 * 40, ['ball', 'staff'], false, Math.random);
+    const all = rollDrops(10, 50 * 40, ['ball', 'staff'], false, Math.random);
     const relics = all.map((d) => d.item).filter((i) => !['pendant', 'bracers', 'robe', 'sash', 'sandals'].includes(i));
     expect(new Set(relics)).toEqual(new Set(['ball', 'staff']));
-    expect(rollDrops(1, 500, ['ball'], false, Math.random).every((d) => d.tier === 0)).toBe(true);
-    expect(all.every((d) => d.tier >= 1)).toBe(true);
+    expect(rollDrops(1, 500, ['ball'], false, Math.random).every((d) => d.tier <= 1)).toBe(true);
+    expect(all.every((d) => d.tier >= 1 && d.tier <= 4)).toBe(true);
+    expect(rollDrops(BALANCE.chapters, 500, ['ball'], false, Math.random).some((d) => d.tier === 7)).toBe(true);
   });
 
   it('a run pays its drops into the save, and a first clear brings a copy of the new relic', () => {
@@ -88,8 +89,8 @@ describe('gear', () => {
     const s = parseSave(JSON.stringify({ version: 1, cleared: 2, relic: 'fish' }));
     expect(s.trained).toBe(0);
     expect(s.gear.ball[0] + s.gear.staff[0] + s.gear.fish[0]).toBe(3);
-    expect(s.gear.pendant).toEqual([0, 0, 0, 0, 0]);
-    expect(parseSave(JSON.stringify({ ...s, gear: { robe: [2, 'x', -4, 1] } })).gear.robe).toEqual([2, 0, 0, 1, 0]);
+    expect(s.gear.pendant).toEqual([0, 0, 0, 0, 0, 0, 0, 0]);
+    expect(parseSave(JSON.stringify({ ...s, gear: { robe: [2, 'x', -4, 1] } })).gear.robe).toEqual([2, 0, 0, 1, 0, 0, 0, 0]);
   });
 });
 

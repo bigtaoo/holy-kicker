@@ -188,7 +188,8 @@ export const es: Table<typeof en> = {
   },
   results: {
     waves: 'oleadas superadas',
-    hardUnlocked: 'Modo difícil abierto: enemigos más duros, mejor equipo',
+    starNext2: 'Siguiente estrella: supéralo sin revivir',
+    starNext3: 'Siguiente estrella: no bajes del {n}% de vida',
     fallen: 'Fin de la partida',
     chests: 'Cofres desbloqueados ×{n}: ábrelos en el lobby',
     newBest: '¡Nuevo récord!',

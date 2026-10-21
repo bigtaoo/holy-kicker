@@ -46,7 +46,7 @@ export interface Deps {
 }
 
 export const BOARD_ROWS = 50;
-const BOARD = new RegExp(`^c[1-9]h?${BOARD_SUFFIX}$`);
+const BOARD = new RegExp(`^c([1-9][0-9]?)h?${BOARD_SUFFIX}$`);
 const REPORT = /^\/v1\/reports\/[0-9a-f]{16}$/;
 const TAG = /^[A-Za-z0-9_-]{10}$/;
 
@@ -117,7 +117,7 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
   const board = path.startsWith('/v1/boards/') ? path.slice('/v1/boards/'.length) : null;
   if (method === 'GET' && board !== null) {
     if (!d.allow('boards', req.ip)) return { status: 429 };
-    if (!BOARD.test(board) || Number(board[1]) > LIMITS.chapters) return bad('bad board');
+    if (Number(BOARD.exec(board)?.[1] ?? 0) > LIMITS.chapters || !BOARD.test(board)) return bad('bad board');
     return { status: 200, body: marked(await d.store.board(board, BOARD_ROWS, installTag(req, d)), (await d.marks?.current()) ?? new Map()) };
   }
 

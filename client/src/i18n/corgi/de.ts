@@ -7,6 +7,7 @@ export const corgiDe: Table<typeof corgiEn> = {
     guest: 'Kadett',
     chapterTitle: 'Planet {n}: {name}',
     unlockAtChapter: 'Schaffe Planet {n} zum Freischalten',
+    hardLocked: 'Schaffe diesen Planeten mit 3 Sternen für den schweren Modus',
     relic: 'Waffe',
   },
   monk: {
@@ -175,6 +176,7 @@ export const corgiDe: Table<typeof corgiEn> = {
   results: {
     cleared: 'Planet geschafft!',
     hardCleared: 'Schwerer Planet geschafft!',
+    hardUnlocked: '3 Sterne! Schwerer Modus für diesen Planeten offen',
     copper: 'Schrauben +{n}',
     nextChapter: 'Nächster Planet',
     grit: 'Biss ×{n}: Der nächste Versuch auf diesem Planeten ist stärker',
@@ -237,6 +239,9 @@ export const corgiDe: Table<typeof corgiEn> = {
     2: 'Selten|Seltener|Seltene|Seltenes|Seltene',
     3: 'Episch|Epischer|Epische|Episches|Epische',
     4: 'Legendär|Legendärer|Legendäre|Legendäres|Legendäre',
+    5: 'Mythisch|Mythischer|Mythische|Mythisches|Mythische',
+    6: 'Astral|Astraler|Astrale|Astrales|Astrale',
+    7: 'Kosmisch|Kosmischer|Kosmische|Kosmisches|Kosmische',
   },
   stat: {
     cooldown: 'Gadget-Abklingzeit −{n}%',

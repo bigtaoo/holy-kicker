@@ -186,7 +186,8 @@ export const en = {
   },
   results: {
     waves: 'waves cleared',
-    hardUnlocked: 'Hard mode open: tougher enemies, better gear',
+    starNext2: 'Next star: clear without a revive',
+    starNext3: 'Next star: never drop under {n}% health',
     fallen: 'Run over',
     chests: 'Chests unlocked ×{n}: open them in the lobby',
     newBest: 'New best!',

@@ -188,7 +188,8 @@ export const it: Table<typeof en> = {
   },
   results: {
     waves: 'ondate superate',
-    hardUnlocked: 'Modalità difficile aperta: nemici più duri, equip migliore',
+    starNext2: 'Prossima stella: completalo senza rianimarti',
+    starNext3: 'Prossima stella: mai sotto il {n}% di salute',
     fallen: 'Partita finita',
     chests: 'Forzieri sbloccati ×{n}: aprili nella lobby',
     newBest: 'Nuovo record!',

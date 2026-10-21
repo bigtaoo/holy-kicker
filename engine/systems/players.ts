@@ -90,6 +90,7 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   p.actionT = 0;
   const dealt = s.config.waves > 0 ? Math.min(p.hp, chapterHurt(s.config.chapter, value, s.wave, s.config.hard)) : 0;
   p.hp -= dealt;
+  p.lowest = Math.min(p.lowest, Math.trunc((p.hp * 100) / p.maxHp));
   events.push({ type: 'hurt', owner, value: dealt, src, x, y });
   if (p.hp > 0) return bellyBounce(s, events, p);
   p.dead = true;

@@ -188,7 +188,8 @@ export const vi: Table<typeof en> = {
   },
   results: {
     waves: 'đợt đã vượt',
-    hardUnlocked: 'Mở chế độ Khó: địch mạnh hơn, đồ xịn hơn',
+    starNext2: 'Sao tiếp theo: qua màn không hồi sinh',
+    starNext3: 'Sao tiếp theo: máu không bao giờ dưới {n}%',
     fallen: 'Hết trận',
     chests: 'Mở khóa rương ×{n}: mở ở sảnh',
     newBest: 'Kỷ lục mới!',

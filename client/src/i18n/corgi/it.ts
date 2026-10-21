@@ -7,6 +7,7 @@ export const corgiIt: Table<typeof corgiEn> = {
     guest: 'Cadetto',
     chapterTitle: 'Pianeta {n}: {name}',
     unlockAtChapter: 'Completa il pianeta {n} per sbloccarlo',
+    hardLocked: 'Completa questo pianeta con 3 stelle per aprire la modalità difficile',
     relic: 'Arma',
   },
   monk: {
@@ -175,6 +176,7 @@ export const corgiIt: Table<typeof corgiEn> = {
   results: {
     cleared: 'Pianeta completato!',
     hardCleared: 'Pianeta difficile completato!',
+    hardUnlocked: '3 stelle! Modalità difficile del pianeta aperta',
     copper: 'Bulloni +{n}',
     nextChapter: 'Pianeta successivo',
     grit: 'Tenacia ×{n}: il prossimo tentativo su questo pianeta è più forte',
@@ -237,6 +239,9 @@ export const corgiIt: Table<typeof corgiEn> = {
     2: 'Raro|Raro|Rara|Rari|Rare',
     3: 'Epico|Epico|Epica|Epici|Epiche',
     4: 'Leggendario|Leggendario|Leggendaria|Leggendari|Leggendarie',
+    5: 'Mitico|Mitico|Mitica|Mitici|Mitiche',
+    6: 'Astrale|Astrale|Astrale|Astrali|Astrali',
+    7: 'Cosmico|Cosmico|Cosmica|Cosmici|Cosmiche',
   },
   stat: {
     cooldown: 'Ricarica gadget −{n}%',

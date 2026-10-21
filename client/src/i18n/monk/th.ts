@@ -7,6 +7,7 @@ export const monkTh: Table<typeof monkEn> = {
     guest: 'หลวงจีน',
     chapterTitle: 'บทที่ {n}: {name}',
     unlockAtChapter: 'ผ่านบทที่ {n} เพื่อปลดล็อก',
+    hardLocked: 'ผ่านบทนี้ 3 ดาวเพื่อเปิดโหมดยาก',
     relic: 'อาวุธวิเศษ',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkTh: Table<typeof monkEn> = {
   results: {
     cleared: 'ผ่านบทแล้ว!',
     hardCleared: 'ผ่านบทโหมดยากแล้ว!',
+    hardUnlocked: '3 ดาว! เปิดโหมดยากของบทนี้แล้ว',
     copper: 'ทองแดง +{n}',
     nextChapter: 'บทถัดไป',
     grit: 'ใจสู้ ×{n}: ครั้งหน้าที่นี่จะแกร่งขึ้น',
@@ -237,6 +239,9 @@ export const monkTh: Table<typeof monkEn> = {
     2: 'ประณีต',
     3: 'ล้ำค่า',
     4: 'ศักดิ์สิทธิ์',
+    5: 'สวรรค์',
+    6: 'เทพ',
+    7: 'สูงสุด',
   },
   stat: {
     cooldown: 'คูลดาวน์คาถา −{n}%',

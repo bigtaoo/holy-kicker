@@ -21,6 +21,10 @@ export interface RunResult {
   evolved?: EvolveId[];
   /** Enemies the run defeated, for the lifetime count (achievements.ts). */
   kills?: number;
+  /** The hero went down and was revived. */
+  revived?: boolean;
+  /** The hero's lowest health over the run, percent (the engine's Player.lowest). */
+  lowest?: number;
 }
 
 export interface ChestReward extends Chest {
@@ -38,7 +42,10 @@ export interface Reward {
   levelsGained: number;
   /** The chapter was cleared for the first time (on the run's track). */
   firstClear: boolean;
-  /** That first clear opened hard mode. */
+  /** The run's stars (`runStars`), 0 for a lost run, and the chapter's best before it. */
+  stars: number;
+  bestStars: number;
+  /** The run won the chapter's third star and so opened its hard mode. */
   hardUnlocked: boolean;
   /** The run was hard mode. */
   hard: boolean;
@@ -67,16 +74,37 @@ export function chapterMul(stage: number): number {
 }
 
 /**
- * Where chapter `chapter` sits on the whole climb: 1..5 on the normal track, 6..10 in hard
- * mode. Copper, chests and the gear tiers that drop grow along it.
+ * Where chapter `chapter` sits on the whole climb: its number on the normal track, BALANCE.hardStage
+ * more in hard mode (a hard chapter is about as hard as the normal one that many chapters on).
+ * Copper, chests and the gear tiers that drop grow along it.
  */
 export function stage(chapter: number, hard = false): number {
-  return hard ? BALANCE.chapters + chapter : chapter;
+  return hard ? chapter + BALANCE.hardStage : chapter;
 }
 
-/** Hard mode opens once every chapter is cleared. */
-export function hardOpen(save: SaveData): boolean {
-  return save.cleared >= BALANCE.chapters;
+/**
+ * A run's stars (docs/design.md "Stars"): one for the clear, two without going down, three with
+ * the health never under BALANCE.stars.lowest percent; none for a lost run.
+ */
+export function runStars(won: boolean, revived: boolean, lowest: number): number {
+  if (!won) return 0;
+  if (revived) return 1;
+  return lowest >= BALANCE.stars.lowest ? 3 : 2;
+}
+
+/** Whether chapter `chapter` is cleared on the given track. */
+export function isCleared(save: SaveData, chapter: number, hard = false): boolean {
+  return hard ? (save.hardBest[chapter - 1] ?? 0) >= BALANCE.waves : save.cleared >= chapter;
+}
+
+/** A chapter's hard mode opens with three stars on its normal mode. */
+export function hardOpenAt(save: SaveData, chapter: number): boolean {
+  return (save.stars[chapter - 1] ?? 0) >= 3;
+}
+
+/** Hard chapters cleared, in any order. */
+export function hardClears(save: SaveData): number {
+  return save.hardBest.filter((b) => b >= BALANCE.waves).length;
 }
 
 /** What progress chest `index` holds at stage `at` (`stage`): its wave, copper grown along the climb, jade. */
@@ -85,23 +113,21 @@ export function chestPay(at: number, index: number): Chest {
   return { wave: c.wave, copper: Math.round(c.copper * chapterMul(at)), jade: c.jade };
 }
 
-/** One track's progress: clears, best waves and claimed chests, normal or hard. */
-export function track(save: SaveData, hard: boolean): { cleared: number; best: number[]; chests: number[] } {
+/** One track's progress per chapter: best waves, claimed chests and stars, normal or hard. */
+export function track(save: SaveData, hard: boolean): { best: number[]; chests: number[]; stars: number[] } {
   return hard
-    ? { cleared: save.hardCleared, best: save.hardBest, chests: save.hardChests }
-    : { cleared: save.cleared, best: save.best, chests: save.chests };
+    ? { best: save.hardBest, chests: save.hardChests, stars: save.hardStars }
+    : { best: save.best, chests: save.chests, stars: save.stars };
 }
 
-/** The first uncleared chapter of the climb (where grit gathers), or null with everything cleared. */
-export function frontier(save: SaveData): { chapter: number; hard: boolean } | null {
-  if (!hardOpen(save)) return { chapter: save.cleared + 1, hard: false };
-  return save.hardCleared < BALANCE.chapters ? { chapter: save.hardCleared + 1, hard: true } : null;
+/** The first uncleared chapter (where grit gathers), or null with every chapter cleared. */
+export function frontier(save: SaveData): number | null {
+  return save.cleared < BALANCE.chapters ? save.cleared + 1 : null;
 }
 
-/** Whether chapter `chapter` of the given track is the frontier. */
+/** Whether chapter `chapter` of the given track is the frontier (hard mode never is). */
 export function atFrontier(save: SaveData, chapter: number, hard: boolean): boolean {
-  const f = frontier(save);
-  return f !== null && f.chapter === chapter && f.hard === hard;
+  return !hard && frontier(save) === chapter;
 }
 
 export function copperPerWave(chapter: number): number {
@@ -141,32 +167,35 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   }
 
   const won = waves >= BALANCE.waves;
-  const firstClear = won && was.cleared < run.chapter;
+  const firstClear = won && !isCleared(save, run.chapter, hard);
   const cleared = !hard && firstClear ? run.chapter : save.cleared;
-  const hardCleared = hard && firstClear ? run.chapter : save.hardCleared;
-  const hardUnlocked = !hardOpen(save) && cleared >= BALANCE.chapters;
+  const stars = runStars(won, run.revived === true, run.lowest ?? 0);
+  const bestStars = was.stars[i] ?? 0;
+  const hardUnlocked = !hard && bestStars < 3 && stars >= 3;
   const relics = RELIC_IDS.slice(0, cleared + 1);
   const drops = rollDrops(at, waves, relics, !save.firstRunDone, rand);
   // a real try on the first uncleared chapter that fell short gives grit for the next ones
   const tried = !won && atFrontier(save, run.chapter, hard) && waves >= BALANCE.grit.minWaves && save.grit < BALANCE.grit.max;
-  const grit = firstClear ? 0 : tried ? save.grit + 1 : save.grit;
+  const grit = firstClear && !hard ? 0 : tried ? save.grit + 1 : save.grit;
   const best = was.best.map((b, k) => (k === i ? Math.max(b, waves) : b));
   const claimedAll = was.chests.map((c, k) => (k === i ? claimed : c));
+  const starsAll = was.stars.map((v, k) => (k === i ? Math.max(v, stars) : v));
   const next: SaveData = {
     ...save,
     firstRunDone: true,
     level,
     xp,
     copper: save.copper + copper,
-    // a first clear moves the lobby on to the chapter it just unlocked, the last one to hard mode
-    chapter: hardUnlocked ? 1 : firstClear ? Math.min(BALANCE.chapters, run.chapter + 1) : save.chapter,
-    hard: hardUnlocked || save.hard,
+    // a first clear on the normal track moves the lobby on to the chapter it just unlocked
+    chapter: !hard && firstClear ? Math.min(BALANCE.chapters, run.chapter + 1) : save.chapter,
+    hard: !hard && firstClear ? false : save.hard,
     cleared,
-    hardCleared,
     best: hard ? save.best : best,
     chests: hard ? save.chests : claimedAll,
+    stars: hard ? save.stars : starsAll,
     hardBest: hard ? best : save.hardBest,
     hardChests: hard ? claimedAll : save.hardChests,
+    hardStars: hard ? starsAll : save.hardStars,
     runs: save.runs + 1,
     kills: save.kills + Math.max(0, Math.floor(run.kills ?? 0)),
     codex: mergeCodex(save.codex, run.evolved),
@@ -175,7 +204,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   };
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
-    firstClear, hardUnlocked, hard, newRelic: firstClear ? (unlockedRelics(next).find((r) => !unlockedRelics(save).includes(r)) ?? null) : null,
+    firstClear, stars, bestStars, hardUnlocked, hard, newRelic: firstClear ? (unlockedRelics(next).find((r) => !unlockedRelics(save).includes(r)) ?? null) : null,
     newCodex: next.codex.filter((id) => !save.codex.includes(id)),
     newSutras: earnedSutras(next).filter((id) => !earnedSutras(save).includes(id)),
     newBest: waves > was.best[i],
@@ -251,18 +280,28 @@ export function earnedSutras(save: SaveData): SutraId[] {
   return SUTRA_IDS.filter((id) => reached(save, sutraGoal(id)));
 }
 
-/** The highest cleared stage (`stage`, hard mode counting on), at least 1: what patrol and the shop pay by. */
+/** The highest cleared stage (`stage`, a hard clear counting on), at least 1: what patrol and the shop pay by. */
 export function bestChapter(save: SaveData): number {
-  return Math.max(1, save.cleared + save.hardCleared);
+  let best = Math.max(1, save.cleared);
+  save.hardBest.forEach((b, i) => {
+    if (b >= BALANCE.waves) best = Math.max(best, stage(i + 1, true));
+  });
+  return best;
 }
 
-/** Chapters the player may start on a track: every cleared one and the first uncleared one. */
-export function playableChapters(save: SaveData, hard = save.hard): number {
-  return Math.min(BALANCE.chapters, track(save, hard).cleared + 1);
+/** Chapters the player may start: every cleared one and the first uncleared one (hard mode where open). */
+export function playableChapters(save: SaveData): number {
+  return Math.min(BALANCE.chapters, save.cleared + 1);
 }
 
-/** The lobby switches to the other track, on its first uncleared chapter. */
+/** The lobby's card switches the shown chapter between its normal and hard mode. */
 export function chooseTrack(save: SaveData, hard: boolean): SaveData {
-  if (hard && !hardOpen(save)) return save;
-  return { ...save, hard, chapter: playableChapters(save, hard) };
+  if (hard && !hardOpenAt(save, save.chapter)) return save;
+  return { ...save, hard };
+}
+
+/** The lobby's card shows another chapter, in hard mode only where that is open. */
+export function selectChapter(save: SaveData, chapter: number): SaveData {
+  if (chapter < 1 || chapter > playableChapters(save)) return save;
+  return { ...save, chapter, hard: save.hard && hardOpenAt(save, chapter) };
 }

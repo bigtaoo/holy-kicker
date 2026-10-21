@@ -7,6 +7,7 @@ export const monkKo: Table<typeof monkEn> = {
     guest: '동자승',
     chapterTitle: '{n}장: {name}',
     unlockAtChapter: '{n}장 클리어 시 해금',
+    hardLocked: '이 장을 별 3개로 클리어하면 어려움 모드가 열립니다',
     relic: '법구',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkKo: Table<typeof monkEn> = {
   results: {
     cleared: '장 클리어!',
     hardCleared: '어려움 장 클리어!',
+    hardUnlocked: '별 3개! 이 장의 어려움 모드 열림',
     copper: '동전 +{n}',
     nextChapter: '다음 장',
     grit: '불굴 ×{n}: 여기서 다음 도전은 더 강해져요',
@@ -237,6 +239,9 @@ export const monkKo: Table<typeof monkEn> = {
     2: '정교',
     3: '귀중',
     4: '신성',
+    5: '천상',
+    6: '신품',
+    7: '지고',
   },
   stat: {
     cooldown: '술법 재사용 대기 −{n}%',

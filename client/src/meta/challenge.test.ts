@@ -29,7 +29,7 @@ describe('daily challenge', () => {
 
   it("plays the furthest unlocked chapter on the normal track, or the record's own", () => {
     expect(challengeChapter(player(), daily)).toBe(3);
-    expect(challengeChapter(player({ hard: true, hardCleared: 0 }), daily)).toBe(3);
+    expect(challengeChapter(player({ hard: true }), daily)).toBe(3);
     expect(challengeChapter(player({ cleared: BALANCE.chapters }), daily)).toBe(BALANCE.chapters);
     expect(challengeChapter(player(), { ...daily, chapter: 2 })).toBe(2);
   });

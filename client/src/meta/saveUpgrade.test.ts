@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
 import { anyChestWaiting, openProgressChest } from './progressChests';
-import { parseSave } from './save';
+import { TIERS } from './gear';
+import { parseSave, SAVE_VERSION } from './save';
 
 // A save written by the build live on CrazyGames before progress chests moved to the lobby
 // (baee706): it paid every chest a run reached, so it has `chests` and `hardChests` but no
@@ -24,9 +25,17 @@ describe('a save from the live build before lobby chests', () => {
   it('keeps its progress and opens none of the chests it was already paid for', () => {
     const s = parseSave(JSON.stringify(LIVE));
     const { opened, hardOpened, ...rest } = s;
-    expect(rest).toEqual({ ...LIVE, challenge: '', weeks: [] });
-    expect(opened).toEqual(LIVE.chests);
-    expect(hardOpened).toEqual([0, 0, 0, 0, 0]);
+    // the arrays grow to twenty chapters and eight tiers; the clears read as one star each (save.ts)
+    const pad = (a: number[], n = BALANCE.chapters) => [...a, ...Array(n - a.length).fill(0)];
+    const { hardCleared: _, ...kept } = LIVE;
+    expect(rest).toEqual({
+      ...kept, version: SAVE_VERSION, challenge: '', weeks: [],
+      best: pad(LIVE.best), chests: pad(LIVE.chests), stars: pad([1]), hardBest: pad([]), hardStars: pad([]), hardChests: pad([]),
+      fell: pad([]), hardFell: pad([]),
+      gear: Object.fromEntries(Object.entries(LIVE.gear).map(([k, v]) => [k, pad(v, TIERS)])),
+    });
+    expect(opened).toEqual(pad(LIVE.chests));
+    expect((hardOpened).slice(0, 5)).toEqual([0, 0, 0, 0, 0]);
     expect(anyChestWaiting(s)).toBe(false);
     expect(openProgressChest(s, 1, false, 0)).toBeNull();
     expect(openProgressChest(s, 2, false, 2)).toBeNull();
@@ -35,7 +44,7 @@ describe('a save from the live build before lobby chests', () => {
   it('counts hard mode chests as opened too', () => {
     const all = (1 << BALANCE.chests.length) - 1;
     const s = parseSave(JSON.stringify({ ...LIVE, cleared: BALANCE.chapters, chests: [all, all, all, all, all], hard: true, hardCleared: 1, hardChests: [all, 3, 0, 0, 0] }));
-    expect(s.hardOpened).toEqual([all, 3, 0, 0, 0]);
+    expect((s.hardOpened).slice(0, 5)).toEqual([all, 3, 0, 0, 0]);
     expect(anyChestWaiting(s)).toBe(false);
     expect(openProgressChest(s, 2, true, 0)).toBeNull();
   });

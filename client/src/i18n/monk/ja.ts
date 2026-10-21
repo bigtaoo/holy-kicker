@@ -7,6 +7,7 @@ export const monkJa: Table<typeof monkEn> = {
     guest: '小坊主',
     chapterTitle: '第{n}章：{name}',
     unlockAtChapter: '第{n}章クリアで解放',
+    hardLocked: 'この章を星3でクリアするとハードモード解放',
     relic: '法具',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkJa: Table<typeof monkEn> = {
   results: {
     cleared: '章クリア！',
     hardCleared: 'ハード章クリア！',
+    hardUnlocked: '星3！この章のハードモード解放',
     copper: '銅銭 +{n}',
     nextChapter: '次の章へ',
     grit: '不屈 ×{n}：次の挑戦はもっと強くなる',
@@ -237,6 +239,9 @@ export const monkJa: Table<typeof monkEn> = {
     2: '精品',
     3: '珍品',
     4: '聖品',
+    5: '仙品',
+    6: '神品',
+    7: '至品',
   },
   stat: {
     cooldown: '術のクールダウン −{n}%',

@@ -7,6 +7,7 @@ export const monkPl: Table<typeof monkEn> = {
     guest: 'Mnich',
     chapterTitle: 'Rozdział {n}: {name}',
     unlockAtChapter: 'Ukończ rozdział {n}, by odblokować',
+    hardLocked: 'Ukończ ten rozdział na 3 gwiazdki, by otworzyć tryb trudny',
     relic: 'Relikwia',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkPl: Table<typeof monkEn> = {
   results: {
     cleared: 'Rozdział ukończony!',
     hardCleared: 'Trudny rozdział ukończony!',
+    hardUnlocked: '3 gwiazdki! Tryb trudny tego rozdziału otwarty',
     copper: 'Miedź +{n}',
     nextChapter: 'Następny rozdział',
     grit: 'Zawziętość ×{n}: następna próba tutaj jest silniejsza',
@@ -238,6 +240,9 @@ export const monkPl: Table<typeof monkEn> = {
     2: 'Wyborny|Wyborny|Wyborna|Wyborne|Wyborne',
     3: 'Cenny|Cenny|Cenna|Cenne|Cenne',
     4: 'Święty|Święty|Święta|Święte|Święte',
+    5: 'Niebiański|Niebiański|Niebiańska|Niebiańskie|Niebiańskie',
+    6: 'Boski|Boski|Boska|Boskie|Boskie',
+    7: 'Najwyższy|Najwyższy|Najwyższa|Najwyższe|Najwyższe',
   },
   stat: {
     cooldown: 'Odnowienie zaklęć −{n}%',

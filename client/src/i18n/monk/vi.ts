@@ -7,6 +7,7 @@ export const monkVi: Table<typeof monkEn> = {
     guest: 'Nhà sư',
     chapterTitle: 'Chương {n}: {name}',
     unlockAtChapter: 'Qua chương {n} để mở',
+    hardLocked: 'Qua chương này với 3 sao để mở chế độ Khó',
     relic: 'Pháp khí',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkVi: Table<typeof monkEn> = {
   results: {
     cleared: 'Qua chương!',
     hardCleared: 'Qua chương khó!',
+    hardUnlocked: '3 sao! Đã mở chế độ Khó của chương này',
     copper: 'Đồng +{n}',
     nextChapter: 'Chương tiếp theo',
     grit: 'Kiên cường ×{n}: lần thử tiếp theo ở đây mạnh hơn',
@@ -237,6 +239,9 @@ export const monkVi: Table<typeof monkEn> = {
     2: 'Tinh',
     3: 'Quý',
     4: 'Thánh',
+    5: 'Tiên phẩm',
+    6: 'Thần phẩm',
+    7: 'Chí tôn',
   },
   stat: {
     cooldown: 'Hồi chiêu phép −{n}%',

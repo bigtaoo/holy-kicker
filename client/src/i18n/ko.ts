@@ -186,7 +186,8 @@ export const ko: Table<typeof en> = {
   },
   results: {
     waves: '클리어한 웨이브',
-    hardUnlocked: '어려움 모드 열림: 더 강한 적, 더 좋은 장비',
+    starNext2: '다음 별: 부활 없이 클리어',
+    starNext3: '다음 별: 체력을 항상 {n}% 이상 유지',
     fallen: '판 종료',
     chests: '상자 해금 ×{n}: 로비에서 열기',
     newBest: '최고 기록!',

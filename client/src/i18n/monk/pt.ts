@@ -7,6 +7,7 @@ export const monkPt: Table<typeof monkEn> = {
     guest: 'Monge',
     chapterTitle: 'Capítulo {n}: {name}',
     unlockAtChapter: 'Conclua o capítulo {n} para desbloquear',
+    hardLocked: 'Conclua este capítulo com 3 estrelas para liberar o modo difícil',
     relic: 'Relíquia',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkPt: Table<typeof monkEn> = {
   results: {
     cleared: 'Capítulo concluído!',
     hardCleared: 'Capítulo difícil concluído!',
+    hardUnlocked: '3 estrelas! Modo difícil deste capítulo liberado',
     copper: 'Cobre +{n}',
     nextChapter: 'Próximo capítulo',
     grit: 'Garra ×{n}: a próxima tentativa aqui é mais forte',
@@ -238,6 +240,9 @@ export const monkPt: Table<typeof monkEn> = {
     2: 'Refinado|Refinado|Refinada|Refinados|Refinadas',
     3: 'Precioso|Precioso|Preciosa|Preciosos|Preciosas',
     4: 'Sagrado|Sagrado|Sagrada|Sagrados|Sagradas',
+    5: 'Celestial|Celestial|Celestial|Celestiais|Celestiais',
+    6: 'Divino|Divino|Divina|Divinos|Divinas',
+    7: 'Supremo|Supremo|Suprema|Supremos|Supremas',
   },
   stat: {
     cooldown: 'Recarga de magias −{n}%',

@@ -97,7 +97,7 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-21 for ENGINE_VERSION 46 (46: twenty chapters on the five maps in turn, health and hurt by LADDER, hard mode HARD percent more; 45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
+    // Recorded 2026-10-21 for ENGINE_VERSION 46 (46: twenty chapters on the five maps in turn, health and hurt by LADDER, hard mode HARD percent more, the hero's lowest health kept for the stars; 45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
     // A change here is a rules change: bump the version.
     expect(ENGINE_VERSION).toBe(46);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
@@ -126,14 +126,14 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 2760391922;
-const GOLDEN_CHAPTER = 3307038418;
-const GOLDEN_MARSH = 3474997536;
-const GOLDEN_SNOW = 2905724226;
-const GOLDEN_GHOST = 1410516673;
-const GOLDEN_PEAK = 3590112266;
-const GOLDEN_ACT2 = 3600364104;
-const GOLDEN_HARD = 3064007624;
-const GOLDEN_FAT = 3672492065;
-const GOLDEN_NOVICE = 3111482083;
-const GOLDEN_MUTATED = [1146075938,  228810095,  420044226];
+const GOLDEN = 585820792;
+const GOLDEN_CHAPTER = 3365241756;
+const GOLDEN_MARSH = 3250187278;
+const GOLDEN_SNOW = 3913215400;
+const GOLDEN_GHOST = 2137824663;
+const GOLDEN_PEAK = 2809488120;
+const GOLDEN_ACT2 = 3897246998;
+const GOLDEN_HARD = 1564969082;
+const GOLDEN_FAT = 3839461079;
+const GOLDEN_NOVICE = 294910533;
+const GOLDEN_MUTATED = [1623467404, 1603208013, 1767731000];

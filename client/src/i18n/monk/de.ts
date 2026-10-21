@@ -7,6 +7,7 @@ export const monkDe: Table<typeof monkEn> = {
     guest: 'Mönch',
     chapterTitle: 'Kapitel {n}: {name}',
     unlockAtChapter: 'Schaffe Kapitel {n} zum Freischalten',
+    hardLocked: 'Schaffe dieses Kapitel mit 3 Sternen für den schweren Modus',
     relic: 'Reliquie',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkDe: Table<typeof monkEn> = {
   results: {
     cleared: 'Kapitel geschafft!',
     hardCleared: 'Schweres Kapitel geschafft!',
+    hardUnlocked: '3 Sterne! Schwerer Modus für dieses Kapitel offen',
     copper: 'Kupfer +{n}',
     nextChapter: 'Nächstes Kapitel',
     grit: 'Biss ×{n}: Der nächste Versuch hier ist stärker',
@@ -238,6 +240,9 @@ export const monkDe: Table<typeof monkEn> = {
     2: 'Edel|Edler|Edle|Edles|Edle',
     3: 'Kostbar|Kostbarer|Kostbare|Kostbares|Kostbare',
     4: 'Heilig|Heiliger|Heilige|Heiliges|Heilige',
+    5: 'Himmlisch|Himmlischer|Himmlische|Himmlisches|Himmlische',
+    6: 'Göttlich|Göttlicher|Göttliche|Göttliches|Göttliche',
+    7: 'Erhaben|Erhabener|Erhabene|Erhabenes|Erhabene',
   },
   stat: {
     cooldown: 'Zauber-Abklingzeit −{n}%',

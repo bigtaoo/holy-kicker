@@ -188,7 +188,8 @@ export const pl: Table<typeof en> = {
   },
   results: {
     waves: 'pokonane fale',
-    hardUnlocked: 'Tryb trudny otwarty: silniejsi wrogowie, lepszy ekwipunek',
+    starNext2: 'Następna gwiazdka: ukończ bez wskrzeszenia',
+    starNext3: 'Następna gwiazdka: zdrowie nigdy poniżej {n}%',
     fallen: 'Koniec rozgrywki',
     chests: 'Odblokowane skrzynie ×{n}: otwórz je w lobby',
     newBest: 'Nowy rekord!',

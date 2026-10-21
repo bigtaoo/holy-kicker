@@ -8,6 +8,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     guest: '신병',
     chapterTitle: '행성 {n}: {name}',
     unlockAtChapter: '행성 {n} 클리어 시 해금',
+    hardLocked: '이 행성을 별 3개로 클리어하면 어려움 모드가 열립니다',
     relic: '무기',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiKo: Table<typeof corgiEn> = {
   results: {
     cleared: '행성 클리어!',
     hardCleared: '어려움 행성 클리어!',
+    hardUnlocked: '별 3개! 이 행성의 어려움 모드 열림',
     copper: '볼트 +{n}',
     nextChapter: '다음 행성',
     grit: '불굴 ×{n}: 여기서 다음 도전은 더 강해져요',
@@ -238,6 +240,9 @@ export const corgiKo: Table<typeof corgiEn> = {
     2: '희귀',
     3: '영웅',
     4: '전설',
+    5: '신화',
+    6: '성휘',
+    7: '우주',
   },
   stat: {
     cooldown: '가젯 재사용 대기 −{n}%',
