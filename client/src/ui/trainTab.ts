@@ -3,16 +3,18 @@ import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import type { SaveData } from '../meta/save';
 import { nextNode, trainBlock, trainingStats, trainNode, type TrainStat } from '../meta/training';
-import { iconSprite, type IconSheet } from './buildBar';
+import { iconSprite, lockedLook, type IconSheet } from './buildBar';
 import { statsPanel } from './gearTab';
+import { BADGE } from './playCard';
 import { statLines, statText } from './statText';
+import { boardPos, boardRows, BOARD_ROW, ringPulse } from './trainBoard';
 import { COLORS, button, fit, label, panel } from './widgets';
 
-// The lobby's Train tab (docs/design.md "Training"): the whole line as a grid of nodes in
-// order, each with its stat's icon (bought ones bright on their colour, the next one ringed,
-// the rest faded, those past the player's level more so), the
-// next node with its cost and the Train button, and what the bought nodes add up to. Tapping
-// a node shows what it gives and the level that opens it.
+// The lobby's Train tab (docs/design.md "Training", "Lobby layout"): the whole line on its own
+// dark board as a path of nodes in three plain states (trained: full colour on a lit badge;
+// next: a bigger lit badge in a breathing saffron ring; the rest: grey silhouettes on dark
+// discs), the picked node's card with the Train button, and what the trained nodes add up to
+// (only once there is something). Tapping a node shows what it gives and the level that opens it.
 
 export interface TrainActions {
   train(): void;
@@ -21,11 +23,18 @@ export interface TrainActions {
   toast(text: string): void;
 }
 
-const COLS = 10;
-const STEP = 98;
-const NODE_R = 36;
+const W = 1040;
+/** The board's title band over its first row. */
+const HEAD = 110;
+const BOARD_PAD = 34;
+const NODE_R = 40;
+const NEXT_R = 48;
+const GAP = 30;
 const CARD_H = 380;
 const LINE_H = 62;
+/** The road between future nodes, and the board's dark discs. */
+const ROAD = 0x46524b;
+const SLOT = 0x1c2320;
 
 /** One colour per stat, so the line reads as a pattern. */
 const STAT_COLOR: Partial<Record<TrainStat, number>> = {
@@ -42,64 +51,114 @@ function statIcon(icons: IconSheet, stat: TrainStat, size: number) {
   return id ? iconSprite(icons, id, size) : null;
 }
 
+function boardH(): number {
+  return HEAD + boardRows(BALANCE.training.nodes) * BOARD_ROW + BOARD_PAD;
+}
+
 function statsH(lines: number): number {
   return 110 + Math.max(1, Math.ceil(lines / 2)) * LINE_H + 40;
 }
 
 export function trainHeight(save: SaveData): number {
-  const rows = Math.ceil(BALANCE.training.nodes / COLS);
-  return 110 + rows * STEP + 40 + CARD_H + 40 + statsH(statLines(trainingStats(save)).length);
+  const stats = save.trained > 0 ? GAP + statsH(statLines(trainingStats(save)).length) : 0;
+  return boardH() + GAP + CARD_H + stats;
 }
 
 /** The tab centred on x = 0 from y = 0 down; `picked` is the node shown in the card. */
 export function trainTab(save: SaveData, icons: IconSheet, picked: number | null, actions: TrainActions): Container {
   const c = new Container();
-  const total = BALANCE.training.nodes;
-  const head = label(t('train.progress', { n: save.trained, total }), 64);
-  head.y = 45;
-  c.addChild(head);
-  const next = nextNode(save);
-  for (let n = 1; n <= total; n++) {
-    const node = trainNode(n);
-    const bought = n <= save.trained;
-    const isNext = next?.n === n;
-    const open = save.level >= node.level;
-    const color = STAT_COLOR[node.stat] ?? COLORS.dim;
-    const g = new Graphics();
-    if (n === picked) g.circle(0, 0, NODE_R + 14).fill({ color: 0xffffff, alpha: 0.25 });
-    g.circle(0, 0, NODE_R).fill(bought ? { color, alpha: 0.45 } : COLORS.panelLocked)
-      .stroke({ color: isNext ? COLORS.saffron : bought ? color : open ? 0x56625b : 0x3a443f, width: isNext ? 9 : 6 });
-    const icon = statIcon(icons, node.stat, NODE_R * 1.55);
-    if (icon) {
-      // not yet bought: faded, and more so past the player's level
-      if (!bought && !isNext) {
-        icon.tint = 0x9aa39e;
-        icon.alpha = open ? 0.55 : 0.3;
-      }
-      g.addChild(icon);
-    }
-    g.position.set((((n - 1) % COLS) - (COLS - 1) / 2) * STEP, 110 + Math.floor((n - 1) / COLS) * STEP + STEP / 2);
-    g.eventMode = 'static';
-    g.cursor = 'pointer';
-    g.on('pointertap', () => actions.pick(n));
-    c.addChild(g);
-  }
-  let y = 110 + Math.ceil(total / COLS) * STEP + 40;
-  const card = nodeCard(save, icons, picked ?? next?.n ?? null, actions);
+  const bh = boardH();
+  const shown = picked ?? nextNode(save)?.n ?? null;
+  const board = boardView(save, icons, shown, actions);
+  board.y = bh / 2;
+  c.addChild(board);
+  let y = bh + GAP;
+  const card = nodeCard(save, icons, shown, actions);
   card.y = y + CARD_H / 2;
   c.addChild(card);
-  y += CARD_H + 40;
-  const lines = statLines(trainingStats(save));
-  const h = statsH(lines.length);
-  const stats = statsPanel(t('train.total'), lines, h);
-  stats.y = y + h / 2;
-  c.addChild(stats);
+  y += CARD_H;
+  // nothing trained yet: no card of dashes
+  if (save.trained > 0) {
+    const lines = statLines(trainingStats(save));
+    const h = statsH(lines.length);
+    const stats = statsPanel(t('train.total'), lines, h, W);
+    stats.y = y + GAP + h / 2;
+    c.addChild(stats);
+  }
+  return c;
+}
+
+/** The board centred on (0, 0): its title, then the path of nodes. */
+function boardView(save: SaveData, icons: IconSheet, shown: number | null, actions: TrainActions): Container {
+  const total = BALANCE.training.nodes;
+  const h = boardH();
+  const c = new Container();
+  c.addChild(panel(W, h));
+  const head = label(t('train.progress', { n: save.trained, total }), 56, COLORS.saffron);
+  head.y = -h / 2 + 62;
+  c.addChild(head);
+  const top = -h / 2 + HEAD;
+  const at = (n: number) => {
+    const p = boardPos(n);
+    return { x: p.x, y: top + p.y };
+  };
+  // the road under the nodes: lit as far as the training has come, dark beyond
+  const road = new Graphics();
+  for (const lit of [false, true]) {
+    for (let n = 1; n < total; n++) {
+      if ((n + 1 <= save.trained + 1) !== lit) continue;
+      const a = at(n);
+      const b = at(n + 1);
+      road.moveTo(a.x, a.y).lineTo(b.x, b.y);
+    }
+    road.stroke({ color: lit ? BADGE.fill : ROAD, width: lit ? 12 : 8, cap: 'round' });
+  }
+  c.addChild(road);
+  const next = nextNode(save)?.n ?? null;
+  for (let n = 1; n <= total; n++) {
+    const node = nodeView(icons, trainNode(n).stat, n <= save.trained ? 'trained' : n === next ? 'next' : 'future', n === shown && n !== next);
+    node.position.copyFrom(at(n));
+    node.eventMode = 'static';
+    node.cursor = 'pointer';
+    node.on('pointertap', () => actions.pick(n));
+    c.addChild(node);
+  }
+  return c;
+}
+
+type NodeState = 'trained' | 'next' | 'future';
+
+/** One node: trained full colour on a lit badge, the next bigger and ringed, the rest grey. */
+function nodeView(icons: IconSheet, stat: TrainStat, state: NodeState, picked: boolean): Container {
+  const c = new Container();
+  const r = state === 'next' ? NEXT_R : NODE_R;
+  const color = STAT_COLOR[stat] ?? COLORS.dim;
+  if (picked) c.addChild(new Graphics().circle(0, 0, r + 12).stroke({ color: 0xffffff, width: 6 }));
+  if (state === 'next') {
+    // a saffron ring breathing round the badge, so the next step finds the eye
+    const ring = new Graphics().circle(0, 0, r + 8).stroke({ color: COLORS.saffron, width: 7 });
+    ring.onRender = () => {
+      const p = ringPulse(performance.now() / 1000);
+      ring.scale.set(p.scale);
+      ring.alpha = p.alpha;
+    };
+    c.addChild(ring);
+  }
+  const disc = new Graphics().circle(0, 0, r);
+  if (state === 'future') disc.fill(SLOT).stroke({ color: ROAD, width: 5 });
+  else disc.fill(BADGE.fill).stroke({ color: state === 'next' ? COLORS.saffron : color, width: state === 'next' ? 9 : 7 });
+  c.addChild(disc);
+  const icon = statIcon(icons, stat, r * 1.5);
+  if (icon) {
+    if (state === 'future') lockedLook(icon, true);
+    c.addChild(icon);
+  }
   return c;
 }
 
 function nodeCard(save: SaveData, icons: IconSheet, n: number | null, actions: TrainActions): Container {
   const c = new Container();
-  c.addChild(panel(1000, CARD_H));
+  c.addChild(panel(W, CARD_H));
   if (n === null) {
     c.addChild(label(t('train.done'), 56, COLORS.saffron));
     return c;
