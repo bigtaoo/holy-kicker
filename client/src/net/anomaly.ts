@@ -77,8 +77,12 @@ export function watchAnomalies(app: Application, platform: Platform, net: Backen
   const cap = new AnomalyCap();
   const stalls = new StallWatch();
   const report = (kind: Kind, extra: Partial<AnomalyProps> = {}) => {
-    if (!cap.pass(kind)) return;
     const { place, wave } = where();
+    if (!cap.pass(kind)) {
+      // past the cap nothing goes out; a development build still prints it (backend.ts prints the rest)
+      if (import.meta.env.DEV && import.meta.env.MODE !== 'test') console.info(`[anomaly] ${JSON.stringify({ kind, place, wave, ...extra })}`);
+      return;
+    }
     const props: AnomalyProps = { kind, place, ...extra };
     if (wave !== undefined) props.wave = wave;
     net.track('anomaly', props as unknown as Record<string, PropValue>);

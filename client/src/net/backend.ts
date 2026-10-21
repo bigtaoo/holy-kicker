@@ -114,6 +114,8 @@ export class Backend {
    * the portal collects under its own terms, so it does not wait for the yes our backend waits for.
    */
   track(e: EventName, p?: Record<string, PropValue>): void {
+    // offline in development, so the frame and stall reports would go nowhere: the console keeps them
+    if (import.meta.env.DEV && import.meta.env.MODE !== 'test' && (e === 'perf' || e === 'anomaly')) console.info(`[${e}] ${JSON.stringify(p)}`);
     if (this.sharing !== 'off') this.platform.analytics?.event(e, p);
     if (this.base && this.sharing !== 'off') this.queue.push(e, Date.now(), p);
   }
