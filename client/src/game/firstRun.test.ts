@@ -46,7 +46,7 @@ describe('the first run', () => {
       }
       e.step([{ owner: 0, tick: s.tick, moveBrad: 0, moveMag: 0, pick }]);
     }
-    expect(taken).toEqual(['spell:bomb', 'spell:knives', 'spell:talisman', 'passive:iron', 'spell:bell']);
+    expect(taken).toEqual(['spell:bomb', 'spell:knives', 'spell:talisman', 'spell:incense', 'spell:talisman']);
     expect(wave).toBeLessThanOrEqual(3);
   });
 });

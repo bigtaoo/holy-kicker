@@ -214,9 +214,10 @@ export const OPENING_DEAL = { deals: 2, spells: ['cymbal', 'bolt', 'palm', 'ince
 
 /**
  * A new player's first run (RunConfig.firstRun) deals these spells, in this order, first in its
- * first level-ups, so a hero who hardly moves yet already throws, circles and homes in.
+ * * first level-ups, so a hero who hardly moves yet already throws, circles and homes in, and then
+ * heals behind the incense.
  */
-export const FIRST_RUN_SPELLS: readonly SpellId[] = ['bomb', 'knives', 'talisman'];
+export const FIRST_RUN_SPELLS: readonly SpellId[] = ['bomb', 'knives', 'talisman', 'incense'];
 
 /**
  * Spells and passives that start out of the level-up pool: each comes with a sutra
