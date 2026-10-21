@@ -1,5 +1,6 @@
 import { Graphics, type Container, type Renderer, type Sprite } from 'pixi.js';
 import { DASH_TICKS, DOOR_GOD, ELITE, FP, THREATS, TOAD_KING, WOLF_LEADER, type Elite, type EliteKind } from '@hk/engine';
+import { AffixBadges } from './affixBadge';
 import type { BossBar } from './bossBar';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -34,6 +35,9 @@ const HOWL_SWELL = 0.14;
 export class EliteView {
   readonly mob: MobView;
   private readonly lane = new Graphics();
+  /** Its affixes (act 3 on), over its head. */
+  private readonly badges = new AffixBadges(56);
+  private readonly height: number;
   private time = 0;
 
   /** `onTop` draws it and its ring over the horde, just under `topZ` (the hero). */
@@ -49,7 +53,9 @@ export class EliteView {
     }
     // over the horde, under the elite itself
     this.lane.zIndex = topZ - 3;
-    world.addChild(this.lane);
+    this.badges.view.zIndex = topZ + 1;
+    this.height = look.height;
+    world.addChild(this.lane, this.badges.view);
   }
 
   static ring(renderer: Renderer, color: number, outline: boolean): Sprite {
@@ -59,6 +65,7 @@ export class EliteView {
   draw(e: Elite | null, alpha: number, dt: number, hx: number, hy: number): void {
     this.mob.setVisible(!!e);
     this.ring.visible = !!e;
+    this.badges.set(e?.affixes ?? 0, e?.guard ?? 0);
     const charger = this.kind === 'charger' || this.kind === 'wolfLeader';
     const statue = this.kind === 'doorGod';
     this.lane.visible = !!e && charger && (e.phase === 'aim' || e.phase === 'dash');
@@ -87,6 +94,7 @@ export class EliteView {
     const face = statue || (charger && (e.phase === 'aim' || e.phase === 'dash')) ? e.vx : hx - x;
     this.mob.update(dt, x, y, face, speed);
     this.ring.position.set(x, y);
+    this.badges.view.position.set(x, y - this.height - 40);
     if (this.lane.visible) this.drawLane(e, alpha);
     if (statue) this.drawShield(e, x, y);
   }

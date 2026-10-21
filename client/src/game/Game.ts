@@ -45,7 +45,7 @@ import { LowHealthView } from './lowHealthView';
 import { runConfig, runSeed, type RunSetup } from './runSetup';
 import { monkRig, type Art } from './artTypes';
 import { frameWork } from './frameWork';
-import { drawStick, heroBacking, hurtTint, makeGround, makeRing, makeTiledGround, sideGround, stickSprites } from './stageArt';
+import { drawStick, heroBacking, hurtTint, makeRing, nightTint, sideGround, stageGround, stickSprites } from './stageArt';
 import { sortSteadily } from './steadySort';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
@@ -160,11 +160,10 @@ export class Game {
     sortSteadily(this.world);
     const stageNo = Math.min(mapOf(setup.chapter), art.stages.length);
     const stage = art.stages[stageNo - 1];
-    this.world.addChild(stage.ground ? makeTiledGround(stage.ground, this.camPos) : makeGround());
+    this.world.addChild(stageGround(stage.ground, this.camPos, setup.chapter));
     if (stage.deco && scene.deco !== 'none') {
-      const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style, this.camPos, () => this.hero.view.position);
-      deco.zIndex = SHADOW_Z - 1;
-      this.world.addChild(deco);
+      const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style, this.camPos, () => this.hero.view.position, nightTint(setup.chapter));
+      this.world.addChild(deco).zIndex = SHADOW_Z - 1;
     }
     if (scene.deco === 'props') this.world.addChild(makeAmbient(AMBIENT[stageNo - 1], this.camPos, () => this.feedback.heat.value));
     this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist, this.camPos) : null;
@@ -214,7 +213,7 @@ export class Game {
     if (this.elites?.bar) this.root.addChild(this.elites.bar.view);
     this.root.mask = this.playMask;
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer, STICK_RADIUS);
-    this.sides = sideGround(stage.ground, app.screen, this.root, this.world);
+    this.sides = sideGround(stage.ground, app.screen, this.root, this.world, setup.chapter);
     app.stage.addChild(this.sides, this.playMask, this.root, this.lowHp.view, this.stickBase, this.stickKnob);
 
     // the fps / tick readout is for development only
@@ -387,6 +386,7 @@ export class Game {
         case 'bossSlam':
         case 'bossDown':
         case 'bossBack':
+        case 'bossNext': // the rush's next boss enters as a boss coming back
           if (e.type === 'bossDown') this.shake.blow();
           if (s.boss) this.boss?.react(e, s.boss);
           break;

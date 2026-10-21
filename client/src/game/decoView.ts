@@ -141,8 +141,9 @@ interface Soft {
  * sheet are left out); each keeps within half a field of the camera `cam`. Grass, reeds and
  * bushes sway in the wind and part round the hero at `hero()` (sway.ts).
  */
-export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam: Vec, hero?: () => Vec): Container {
+export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam: Vec, hero?: () => Vec, tint = 0xffffff): Container {
   const view = new Container();
+  view.tint = tint;
   const home: { s: Sprite; x: number; y: number }[] = [];
   const soft: Soft[] = [];
   const kinds = style.kinds.filter((k) => props && sheet.frames.has(k.name));

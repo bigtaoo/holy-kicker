@@ -1,4 +1,5 @@
 import type { Container } from 'pixi.js';
+import { AffixBadges } from './affixBadge';
 import { FP, type Boss as BossState, type BossKind, type SimEvent } from '@hk/engine';
 import type { Boss } from './bossView';
 import type { CarpView } from './carpView';
@@ -22,14 +23,16 @@ type BossLike = Boss | CarpView | StaffBossView | DemonView;
 
 export class BossStage {
   private readonly all: BossLike[];
+  /** The standing boss's affixes (act 3 on), at the right end over its bar. */
+  private readonly badges = new AffixBadges(64);
 
   constructor(private readonly views: BossViews) {
     this.all = Object.values(views) as BossLike[];
   }
 
-  /** The views' bars, to add to the screen. */
+  /** The views' bars and the affix badges, to add to the screen. */
   get huds(): Container[] {
-    return this.all.map((v) => v.hud);
+    return [...this.all.map((v) => v.hud), this.badges.view];
   }
 
   /** Draws the bosses over the horde, at z. */
@@ -39,12 +42,16 @@ export class BossStage {
 
   layout(playW: number, scale: number): void {
     for (const v of this.all) v.layout(playW, scale);
+    // centred under the bar (bossBar.ts: its top at 400, 28 high); its right end is under the run buttons
+    this.badges.view.scale.set(scale);
+    this.badges.view.position.set(playW / 2, (400 + 28 + 52) * scale);
   }
 
   /** Shows the sim's boss (if any) and hides the rest, then draws it. */
   draw(b: BossState | null, alpha: number, dt: number, hx: number): void {
     for (const [kind, v] of Object.entries(this.views) as [BossKind, BossLike][]) v.show(!!b && b.kind === kind);
     if (b) this.views[b.kind]?.draw(b, alpha, dt, hx);
+    this.badges.set(b && b.phase !== 'down' ? b.affixes : 0, b?.guard ?? 0);
   }
 
   /** A hit on boss b; the height to show the number at. */
@@ -71,6 +78,7 @@ export class BossStage {
       case 'bossDown':
         return this.down(b);
       case 'bossBack':
+      case 'bossNext':
         return this.back(b);
     }
   }

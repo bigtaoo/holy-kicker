@@ -5,6 +5,9 @@ import type { DecoSheet, DecoStyle } from './decoView';
 import type { MistLayer } from './mistView';
 import type { DragStick } from './dragStick';
 import { SHADOW_Z } from './shadow';
+import { multiplyTint, nightTint } from './actLook';
+
+export { nightTint };
 
 // Stage pieces the game scene is built from: the ground, rings under figures, the hero's dark
 // backing, the touch stick, and the hero's hurt tint.
@@ -45,6 +48,13 @@ export function makeGround(): Graphics {
   return g;
 }
 
+/** Chapter `chapter`'s ground (tiled, or the plain field), under its act's night (actLook.ts). */
+export function stageGround(tex: Texture | null, cam: Vec, chapter: number): Container {
+  const g = tex ? makeTiledGround(tex, cam) : makeGround();
+  g.tint = nightTint(chapter);
+  return g;
+}
+
 /** The repeating ground, kept under the camera `cam` (the world has no edge). */
 export function makeTiledGround(tex: Texture, cam: Vec): TilingSprite {
   const g = new TilingSprite({ texture: tex, width: FIELD * 2, height: FIELD * 2 });
@@ -60,10 +70,10 @@ export function makeTiledGround(tex: Texture, cam: Vec): TilingSprite {
  * dimmed and scrolling with the play area's, so the stage seems to go on past the frame.
  * It sits on the stage under the play area: `root` is the play area, `world` the scene in it.
  */
-export function sideGround(tex: Texture | null, screen: Rectangle, root: Container, world: Container): Container {
+export function sideGround(tex: Texture | null, screen: Rectangle, root: Container, world: Container, chapter = 1): Container {
   if (!tex) return new Container();
   const g = new TilingSprite({ texture: tex });
-  g.tint = SIDE_TINT;
+  g.tint = multiplyTint(SIDE_TINT, nightTint(chapter));
   g.onRender = () => {
     if (g.width !== screen.width || g.height !== screen.height) g.setSize(screen.width, screen.height);
     const k = world.scale.x;

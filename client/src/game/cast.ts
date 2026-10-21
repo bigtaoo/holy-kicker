@@ -1,5 +1,5 @@
 import type { Container, Renderer, Texture } from 'pixi.js';
-import { chapterBoss, mapOf, type BossKind, type EliteKind, type MobKind } from '@hk/engine';
+import { chapterBoss, mapOf, rushOf, type BossKind, type EliteKind, type MobKind } from '@hk/engine';
 import { t } from '../i18n';
 import { BossBar } from './bossBar';
 import { Boss } from './bossView';
@@ -107,13 +107,13 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
 }
 
 /**
- * The boss views a run needs: its map's boss and, from chapter 2 on, the last chapter's
+ * The boss views a run needs: its map's boss (every boss of its rush from act 4, engine rushOf) and, from chapter 2 on, the last chapter's
  * as the mid-boss (empowered, but the Inner Demon on the temple map from chapter 6); the abbot alone in the sandbox (if it has a boss). Null for none.
  */
 export function makeBosses(renderer: Renderer, world: Container, art: Art, scene: SceneOptions, chapter: number, sandboxBoss: boolean, shadowTex: Texture, fx: FxPool): BossStage | null {
   const kinds = new Set<BossKind>();
   if (chapter > 0) {
-    kinds.add(chapterBoss(chapter));
+    for (const k of rushOf(chapter)) kinds.add(k);
     if (chapter >= 2) kinds.add(chapterBoss(chapter - 1));
   } else if (sandboxBoss) kinds.add('abbot');
   const views: BossViews = {};

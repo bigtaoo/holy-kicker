@@ -14,9 +14,14 @@ describe('piecesFor', () => {
   });
 
   it("draws a later chapter by its map, with the Inner Demon as the temple map's mid-boss", () => {
-    expect(sorted(piecesFor(6))).toEqual(['peak']);
-    expect(sorted(piecesFor(7))).toEqual(['carp', 'marsh']);
-    expect(sorted(piecesFor(20))).toEqual(sorted(piecesFor(5)));
+    expect(sorted(piecesFor(6))).toEqual(['marsh', 'peak']);
+    expect(sorted(piecesFor(7))).toEqual(['carp', 'marsh', 'snow']);
+  });
+
+  it("adds the next map's horde from act 2, the shards from act 3 and the rush's bosses in act 4", () => {
+    expect(sorted(piecesFor(11))).toEqual(['marsh', 'peak', 'snow']);
+    expect(sorted(piecesFor(16))).toEqual(['carp', 'marsh', 'peak', 'snow']);
+    expect(sorted(piecesFor(20))).toEqual(['carp', 'ghost', 'judge', 'marsh', 'peak', 'snow', 'witch']);
   });
 });
 
