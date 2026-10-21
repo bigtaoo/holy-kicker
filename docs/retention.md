@@ -196,7 +196,9 @@ The rules and their thresholds are constants at the top of `diagnose.ts`:
 - **stalls**: 6+ frames of a second or more per battle hour of a build.
 - **errors**: the same message from the same place 2+ times (5+ is a problem).
 - **slow_device**: a device + GPU whose median p5 is under 30, with how many runs fell below the
-  phone quality level.
+  phone quality level. Under `saver` are `slow` (battles capped at an even 30) and `crawl` (30
+  and 0.75 resolution): a `lvMin` of either means the device could not hold saver, and the run
+  kept going on less (`client/src/game/quality.ts`).
 - **fps_regression**: on a device class, the newest build's median p5 is 5+ fps below the build
   before it.
 

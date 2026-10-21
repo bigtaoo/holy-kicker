@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BATTLE_FPS, CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, lowBattery, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
+import { BATTLE_FPS, CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, lowBattery, SAVER, SLOW_FPS, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
 
 const PC: DeviceInfo = { mobile: false, cores: 8, memoryGB: 8, gpu: 'ANGLE (Intel, Intel(R) Arc(TM) Graphics)', modelLevel: 0 };
 const PHONE: DeviceInfo = { mobile: true, cores: 8, memoryGB: 8, gpu: 'Adreno (TM) 740', modelLevel: 0 };
@@ -28,7 +28,7 @@ describe('startLevel', () => {
 
 describe('levelRange and useMsaa', () => {
   it('locks forced modes and lets auto range below the start', () => {
-    expect(levelRange('saver', PC)).toEqual({ start: 0, min: 0, max: 0 });
+    expect(levelRange('saver', PC)).toEqual({ start: SAVER, min: 0, max: SAVER });
     expect(levelRange('high', PHONE).min).toBe(LEVELS.length - 1);
     expect(levelRange('auto', PHONE)).toEqual({ start: startLevel(PHONE), min: 0, max: startLevel(PHONE) });
   });
@@ -125,9 +125,9 @@ describe('lowBattery', () => {
     expect(lowBattery({ level: NaN, charging: false }, false)).toBe(false);
   });
 
-  it('pins auto to saver, leaves a forced mode alone', () => {
+  it('caps auto at saver, leaves a forced mode alone', () => {
     const phone: DeviceInfo = { mobile: true, cores: 8, memoryGB: 8, gpu: '', modelLevel: 0 };
-    expect(levelRange('auto', phone, true)).toEqual({ start: 0, min: 0, max: 0 });
+    expect(levelRange('auto', phone, true)).toEqual({ start: SAVER, min: 0, max: SAVER });
     expect(levelRange('high', phone, true).start).toBe(LEVELS.length - 1);
   });
 });
@@ -137,6 +137,14 @@ describe('targetFps', () => {
     expect(targetFps(false)).toBe(BATTLE_FPS);
     expect(BATTLE_FPS).toBe(60);
     expect(targetFps(true)).toBe(CALM_FPS);
+  });
+
+  it('draws battles at 60 from saver up and at 30 only under it', () => {
+    expect(LEVELS.slice(SAVER).every((l) => l.fps === BATTLE_FPS)).toBe(true);
+    expect(LEVELS.slice(0, SAVER).map((l) => [l.name, l.fps])).toEqual([['crawl', SLOW_FPS], ['slow', SLOW_FPS]]);
+    expect(targetFps(false, SAVER)).toBe(BATTLE_FPS);
+    expect(targetFps(false, 0)).toBe(SLOW_FPS);
+    expect(targetFps(true, SAVER)).toBe(CALM_FPS);
   });
 
   it('halves a 60 Hz screen once the gate drops to the calm rate', () => {
@@ -174,6 +182,23 @@ describe('FrameGovernor', () => {
     expect(run(g, 40, 6)).toEqual([2]);
     expect(run(g, 60, 40)).toEqual([]);
     expect(run(g, 60, 25)).toEqual([3]);
+  });
+
+  it('drops a device that cannot hold saver to an even 30, then fewer pixels, and keeps it there', () => {
+    const g = new FrameGovernor({ start: SAVER, min: 0, max: SAVER });
+    // 40 fps on a 60 target is slow: to slow (30)
+    expect(run(g, 40, 6)).toEqual([SAVER - 1]);
+    // an even 30 there is fine and stays put
+    expect(run(g, 30, 20)).toEqual([]);
+    // a software renderer at 14 fps: on to crawl, and never below it
+    expect(run(g, 14, 10)).toEqual([0]);
+    expect(run(g, 10, 30)).toEqual([]);
+    expect(LEVELS[0].resolution).toBeLessThan(1);
+  });
+
+  it('a saver phone that holds 60 never goes under saver', () => {
+    const g = new FrameGovernor({ start: SAVER, min: 0, max: SAVER });
+    expect(run(g, 58, 120)).toEqual([]);
   });
 
   it('never climbs above its range', () => {

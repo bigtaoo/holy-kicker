@@ -6,10 +6,16 @@
 // heat. Phones start conservatively and auto never climbs above the start level. A cool phone
 // still drains its battery, so auto also drops to saver while the battery runs low.
 //
-// Levels only change looks, never gameplay: hit tests, damage and mob counts stay the same. Nor
-// do they change the battle frame rate: every level, saver too, draws battles at the display's
-// rate up to BATTLE_FPS. A 30 fps cap shows every slipped refresh as a 50 ms frame (a visible
-// hitch) where at 60 it is 33 ms, so saver saves its power on resolution and effects instead.
+// Levels only change looks, never gameplay: hit tests, damage and mob counts stay the same. From
+// saver up every level draws battles at the display's rate up to BATTLE_FPS: a 30 fps cap shows
+// every slipped refresh as a 50 ms frame (a visible hitch) where at 60 it is 33 ms, so those
+// levels save their power on resolution and effects instead. Under saver are two levels for a
+// device that cannot hold even that (a desktop on a software renderer, a weak or hot phone):
+// `slow` draws battles at an even 30 instead of an uneven 40 that runs the device flat out, and
+// `crawl` also draws at a fraction of the screen's pixels. The run keeps going whatever the
+// frame rate (the sim keeps real time down to 6 fps, fixedStep.ts); a blurry picture at 30 beats
+// a sharp one at 12. Only the governor goes there, while saver itself still runs slow; a device
+// that holds saver never sees them.
 
 export type QualityMode = 'auto' | 'high' | 'saver';
 export const QUALITY_MODES: readonly QualityMode[] = ['auto', 'high', 'saver'];
@@ -22,30 +28,40 @@ export interface LevelSettings {
   fxBudget: number;
   /** Damage numbers on screen at once. */
   numbers: number;
+  /** Battle frame rate cap. */
+  fps: number;
 }
 
+/** Battle frame rate cap from saver up: a 120 Hz screen draws every other refresh. */
+export const BATTLE_FPS = 60;
+/** Battle frame rate cap of the two levels under saver. */
+export const SLOW_FPS = 30;
+
 // Each step down gives up what is least visible first: optional smoke and sparks, then the
-// damage-number density, then resolution.
+// damage-number density, then resolution, then (under saver) the frame rate and the pixels.
 export const LEVELS: readonly LevelSettings[] = [
-  { name: 'saver', resolution: 1.5, fxBudget: 0.3, numbers: 120 },
-  { name: 'low', resolution: 1.5, fxBudget: 0.3, numbers: 150 },
-  { name: 'mid', resolution: 2, fxBudget: 0.3, numbers: 150 },
-  { name: 'phone', resolution: 2, fxBudget: 0.5, numbers: 300 },
-  { name: 'high', resolution: 2, fxBudget: 1.5, numbers: 600 },
+  { name: 'crawl', resolution: 0.75, fxBudget: 0.15, numbers: 60, fps: SLOW_FPS },
+  { name: 'slow', resolution: 1, fxBudget: 0.3, numbers: 120, fps: SLOW_FPS },
+  { name: 'saver', resolution: 1.5, fxBudget: 0.3, numbers: 120, fps: BATTLE_FPS },
+  { name: 'low', resolution: 1.5, fxBudget: 0.3, numbers: 150, fps: BATTLE_FPS },
+  { name: 'mid', resolution: 2, fxBudget: 0.3, numbers: 150, fps: BATTLE_FPS },
+  { name: 'phone', resolution: 2, fxBudget: 0.5, numbers: 300, fps: BATTLE_FPS },
+  { name: 'high', resolution: 2, fxBudget: 1.5, numbers: 600, fps: BATTLE_FPS },
 ];
 const TOP = LEVELS.length - 1;
+const level = (name: string) => LEVELS.findIndex((l) => l.name === name);
+export const SAVER = level('saver');
+const PHONE = level('phone');
 
-/** Battle frame rate cap on every level: a 120 Hz screen draws every other refresh. */
-export const BATTLE_FPS = 60;
 /** Frame rate cap off the battlefield (lobby, results, pause, level-up cards). Those screens
  *  barely move, so the uneven step a slipped refresh makes at 30 fps cannot be seen there, and
  *  a phone sitting in the lobby spends half the power. */
 export const CALM_FPS = 30;
 
-export function targetFps(calm: boolean): number {
-  return calm ? CALM_FPS : BATTLE_FPS;
+/** The frame rate cap: calm screens at CALM_FPS, battles at their level's. */
+export function targetFps(calm: boolean, level = TOP): number {
+  return calm ? CALM_FPS : LEVELS[level].fps;
 }
-const PHONE = 3;
 
 export interface DeviceInfo {
   mobile: boolean;
@@ -72,7 +88,7 @@ export const WEAK_GPU = /mali-[t4]|mali-g(31|51|52|57)\b|adreno\D*[2-5]\d\d\b|po
 
 /** Level a device starts on in auto mode. */
 export function startLevel(d: DeviceInfo): number {
-  if (!d.mobile) return SOFTWARE_GPU.test(d.gpu) ? 2 : TOP;
+  if (!d.mobile) return SOFTWARE_GPU.test(d.gpu) ? SAVER : TOP;
   if (d.modelLevel === 1) return PHONE;
   const hints = [
     d.modelLevel === 3,
@@ -85,7 +101,8 @@ export function startLevel(d: DeviceInfo): number {
 
 export function levelRange(mode: QualityMode, d: DeviceInfo, lowBattery = false): LevelRange {
   if (mode === 'high') return { start: TOP, min: TOP, max: TOP };
-  if (mode === 'saver' || lowBattery) return { start: 0, min: 0, max: 0 };
+  // saver is the most a saver phone draws, and it may still go under it when that is too much
+  if (mode === 'saver' || lowBattery) return { start: SAVER, min: 0, max: SAVER };
   const start = startLevel(d);
   return { start, min: 0, max: start };
 }
@@ -194,7 +211,7 @@ export interface GovernorOptions {
 }
 
 export const GOVERNOR: GovernorOptions = { window: 2, slowWindows: 2, upAfter: 30, maxUpAfter: 240, probe: 10 };
-/** Under this share of BATTLE_FPS a window is slow; over the second, stable. */
+/** Under this share of the level's battle frame rate a window is slow; over the second, stable. */
 const SLOW = 0.8;
 const STABLE = 0.9;
 
@@ -226,7 +243,8 @@ export class FrameGovernor {
     const fps = this.frames / this.time;
     const span = this.time;
     this.frames = this.time = 0;
-    if (fps < BATTLE_FPS * SLOW) {
+    const target = LEVELS[this.level].fps;
+    if (fps < target * SLOW) {
       this.stable = 0;
       if (++this.slow < this.opts.slowWindows || this.level <= this.range.min) return false;
       if (this.sinceUp < this.opts.probe) this.upAfter = Math.min(this.upAfter * 2, this.opts.maxUpAfter);
@@ -235,7 +253,7 @@ export class FrameGovernor {
       return true;
     }
     this.slow = 0;
-    this.stable = fps >= BATTLE_FPS * STABLE ? this.stable + span : 0;
+    this.stable = fps >= target * STABLE ? this.stable + span : 0;
     if (this.stable < this.upAfter || this.level >= this.range.max) return false;
     this.stable = 0;
     this.sinceUp = 0;
