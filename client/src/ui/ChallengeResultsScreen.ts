@@ -94,8 +94,9 @@ export class ChallengeResultsScreen implements Screen {
   private body(): Container {
     const c = new Container();
     const r = this.reward;
+    // a line too long for the card wraps (centred on its y) rather than shrinking below the text size
     const add = (text: string, size: number, fill: number, y: number) => {
-      const l = fit(label(text, size, fill), INNER_W);
+      const l = fit(label(text, size, fill, { wordWrap: true, wordWrapWidth: INNER_W, breakWords: true }), INNER_W);
       l.y = y;
       c.addChild(l);
     };
@@ -104,52 +105,53 @@ export class ChallengeResultsScreen implements Screen {
     const big = label(String(this.waves), 170, COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
     big.y = 230;
     c.addChild(big);
-    add(t('results.waves'), 40, COLORS.dim, 335);
+    add(t('results.waves'), 48, COLORS.dim, 340);
     if (this.weekly) return this.weeklyBody(c, add, this.weekly.before);
-    c.addChild(this.milestones(470));
-    let y = 610;
+    c.addChild(this.milestones(480));
+    // under the milestones' pay, clear of it
+    let y = 680;
     if (r.counted) {
       c.addChild(this.paid(y));
       if (this.offer === 'paid') {
-        y += 80;
-        add(t('results.doubled'), 44, COLORS.saffron, y);
+        y += 84;
+        add(t('results.doubled'), 48, COLORS.copper, y);
       }
-    } else add(t('challenge.practiceNote'), 44, COLORS.dim, y);
+    } else add(t('challenge.practiceNote'), 48, COLORS.dim, y);
     y += 100;
     const rep = this.reply;
     if (rep) {
-      add(t('challenge.top', { n: topPercent(rep.rank, rep.total) }), 56, COLORS.saffron, y);
-      y += 70;
+      add(t('challenge.top', { n: topPercent(rep.rank, rep.total) }), 56, COLORS.gold, y);
+      y += 72;
       if (rep.status === 'pending') {
-        add(t('challenge.checking'), 38, COLORS.dim, y);
-        y += 60;
+        add(t('challenge.checking'), 48, COLORS.dim, y);
+        y += 68;
       }
     }
-    add(t('challenge.next', { h: this.hours }), 44, COLORS.text, y);
+    add(t('challenge.next', { h: this.hours }), 48, COLORS.text, y);
     return c;
   }
 
   /** A weekly run's lines under its waves: a new best or the best that stands, the week's rank, when rewards come. */
   private weeklyBody(c: Container, add: (text: string, size: number, fill: number, y: number) => void, before: number): Container {
     const rep = this.reply;
-    let y = 450;
-    if (this.waves > before && rep?.status !== 'lower') add(t('weekly.newBest'), 60, COLORS.saffron, y);
-    else if (before > 0) add(t('weekly.bestStands', { wave: Math.max(before, this.waves) }), 50, COLORS.text, y);
+    let y = 460;
+    if (this.waves > before && rep?.status !== 'lower') add(t('weekly.newBest'), 60, COLORS.gold, y);
+    else if (before > 0) add(t('weekly.bestStands', { wave: Math.max(before, this.waves) }), 52, COLORS.text, y);
     y += 100;
     if (rep && rep.rank > 0) {
-      add(t('weekly.rank', { rank: rep.rank, total: rep.total }), 56, COLORS.saffron, y);
-      add(t('challenge.top', { n: topPercent(rep.rank, rep.total) }), 44, COLORS.dim, y + 70);
-      y += 140;
+      add(t('weekly.rank', { rank: rep.rank, total: rep.total }), 56, COLORS.gold, y);
+      add(t('challenge.top', { n: topPercent(rep.rank, rep.total) }), 48, COLORS.dim, y + 72);
+      y += 148;
       if (rep.status === 'pending') {
-        add(t('challenge.checking'), 38, COLORS.dim, y);
-        y += 60;
+        add(t('challenge.checking'), 48, COLORS.dim, y);
+        y += 68;
       }
     }
-    add(t('weekly.after'), 44, COLORS.text, y);
+    add(t('weekly.after'), 48, COLORS.text, y);
     return c;
   }
 
-  /** The four milestones as round badges, the reached ones lit, each with its copper under it. */
+  /** The four milestones as round badges, the reached ones lit jade (done), each with its copper under it. */
   private milestones(y: number): Container {
     const row = new Container();
     row.y = y;
@@ -158,10 +160,10 @@ export class ChallengeResultsScreen implements Screen {
       const lit = this.waves >= m.wave;
       const b = new Container();
       b.x = (i - (list.length - 1) / 2) * 200;
-      b.addChild(new Graphics().circle(0, 0, BADGE_R).fill(lit ? COLORS.saffron : COLORS.panelLocked).stroke({ color: COLORS.outline, width: 6 }));
+      b.addChild(new Graphics().circle(0, 0, BADGE_R).fill(lit ? COLORS.jade : COLORS.panelLocked).stroke({ color: COLORS.outline, width: 6 }));
       const n = label(String(m.wave), 60, lit ? COLORS.outline : COLORS.dim);
-      const pay = label(`+${milestonePay(m, this.chapter).copper}`, 34, lit ? COLORS.copper : COLORS.dim);
-      pay.y = BADGE_R + 30;
+      const pay = label(`+${milestonePay(m, this.chapter).copper}`, 44, lit ? COLORS.copper : COLORS.dim);
+      pay.y = BADGE_R + 36;
       b.addChild(n, pay);
       row.addChild(b);
     });
@@ -199,7 +201,7 @@ export class ChallengeResultsScreen implements Screen {
   private buttons(x: number, y: number): void {
     const busy = this.offer === 'playing';
     const pair = this.offer === 'offered' || busy;
-    const w = pair ? 430 : 640;
+    const w = pair ? 450 : 640;
     const adText = busy ? '…' : t('results.double');
     let size = 52;
     if (pair) {
@@ -210,14 +212,14 @@ export class ChallengeResultsScreen implements Screen {
       other.destroy({ children: true });
     }
     const next = button(t('common.continue'), w, 140, () => this.leave(), { size });
-    next.position.set(pair ? x + w / 2 + 15 : x, y);
+    next.position.set(pair ? x + w / 2 + 10 : x, y);
     if (busy) next.eventMode = 'none';
     else if (this.keys) keyCap(next, w, 140, t('common.keyEnter'));
     this.view.addChild(next);
     if (pair) {
       // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
       const ad = button(adText, w, 140, () => void this.playAd(), { fill: busy ? COLORS.panelLocked : COLORS.saffron, video: !busy, size });
-      ad.position.set(x - w / 2 - 15, y);
+      ad.position.set(x - w / 2 - 10, y);
       if (busy) ad.eventMode = 'none';
       this.view.addChild(ad);
     }
