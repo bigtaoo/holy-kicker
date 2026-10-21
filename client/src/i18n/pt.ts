@@ -289,6 +289,8 @@ export const pt: Table<typeof en> = {
   train: {
     next: 'Próximo',
     needLevel: 'Alcance o Nv.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: 'Configurações',

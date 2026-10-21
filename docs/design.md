@@ -262,7 +262,8 @@ in-game particle pool (`fx.ts`) and shares no drawing with the world.
 copper. Plain stats only: health, attack, XP gain, copper gain, pickup radius, extra revive.
 No random rolls.
 
-**As built** (`client/src/meta/training.ts`, `balance.json` "training"): 50 nodes; node n opens at
+**As built** (`client/src/meta/training.ts`, `balance.json` "training"): 100 nodes (from node 51,
+`valueStep`, every node gives twice as much); node n opens at
 player level n + 1 and costs 100 + 40 (n − 1) copper. The line repeats attack +2 %, health +3 %,
 XP +2 %, copper +3 %, pickup range +5 %; nodes 12 and 30 give a free revive instead, offered on
 the death panel before the rewarded-ad one.
@@ -669,8 +670,10 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
 - A lobby toast (a locked tab's reason, a copied id) is a dark pill over the tab bar, so it reads
   as a passing message and not as a loose line of the tab under it.
 - The Train tab's board (`ui/trainTab.ts`, `ui/trainBoard.ts`) is a dark panel of its own, its
-  title on it, so the backdrop never shows between nodes. The 50 nodes snake in rows of ten along
-  one road, lit as far as the training has come. Three states, told apart at a glance: trained is
+  title on it, so the backdrop never shows between nodes. The nodes come in pages of 50
+  (`valueStep`), picked by tabs on the title band; the page shown is the next node's. Each page
+  snakes in rows of ten along one road, lit as far as the training has come. The second page's tab
+  and each of its nodes' cards wear a gold ×2, so the doubled values read before anything is bought. Three states, told apart at a glance: trained is
   the stat's icon in full colour on a lit badge ringed in its stat's colour; the next one is a
   bigger lit badge in a saffron ring that slowly breathes; the rest are grey silhouettes
   (`lockedLook`) on dark discs. A picked node wears a white ring, and its card with the Train

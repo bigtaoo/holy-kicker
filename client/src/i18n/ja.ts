@@ -287,6 +287,8 @@ export const ja: Table<typeof en> = {
   train: {
     next: '次',
     needLevel: 'Lv.{level}が必要',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: '設定',

@@ -289,6 +289,8 @@ export const en = {
   train: {
     next: 'Next',
     needLevel: 'Reach Lv.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: 'Settings',

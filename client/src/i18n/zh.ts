@@ -287,6 +287,8 @@ export const zh: Table<typeof en> = {
   train: {
     next: '下一项',
     needLevel: '需达到 Lv.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: '设置',

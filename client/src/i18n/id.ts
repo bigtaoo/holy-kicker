@@ -289,6 +289,8 @@ export const id: Table<typeof en> = {
   train: {
     next: 'Berikutnya',
     needLevel: 'Capai Lv.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: 'Pengaturan',

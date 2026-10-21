@@ -289,6 +289,8 @@ export const vi: Table<typeof en> = {
   train: {
     next: 'Tiếp',
     needLevel: 'Cần Lv.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: 'Cài đặt',

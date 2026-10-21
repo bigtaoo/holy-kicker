@@ -288,6 +288,8 @@ export const th: Table<typeof en> = {
   train: {
     next: 'ถัดไป',
     needLevel: 'ต้องถึง Lv.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: 'ตั้งค่า',

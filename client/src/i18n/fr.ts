@@ -290,6 +290,8 @@ export const fr: Table<typeof en> = {
   train: {
     next: 'Suivant',
     needLevel: 'Atteins le Nv.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: 'Paramètres',

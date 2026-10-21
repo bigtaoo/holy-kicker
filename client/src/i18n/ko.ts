@@ -287,6 +287,8 @@ export const ko: Table<typeof en> = {
   train: {
     next: '다음',
     needLevel: 'Lv.{level} 필요',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: '설정',

@@ -288,6 +288,8 @@ export const ru: Table<typeof en> = {
   train: {
     next: 'Далее',
     needLevel: 'Нужен ур.{level}',
+    page: '{from}–{to}',
+    times: '×{n}',
   },
   settings: {
     title: 'Настройки',
