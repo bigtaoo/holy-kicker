@@ -11,6 +11,8 @@ export type TrainStat = Stat | 'copper' | 'revive';
 
 export interface TrainingBalance {
   nodes: number;
+  /** Every this many nodes the cycle's values grow by their first amount again (node 51 adds twice what node 1 does). */
+  valueStep: number;
   /** The stats the line repeats, with what each node adds. */
   cycle: [TrainStat, number][];
   /** Nodes (1-based) that give a free revive instead of their cycle stat. */
@@ -32,7 +34,8 @@ export interface TrainNode {
 const TRAIN = BALANCE.training;
 
 export function trainNode(n: number): TrainNode {
-  const [stat, value]: [TrainStat, number] = TRAIN.reviveNodes.includes(n) ? ['revive', 1] : TRAIN.cycle[(n - 1) % TRAIN.cycle.length];
+  const [stat, base]: [TrainStat, number] = TRAIN.reviveNodes.includes(n) ? ['revive', 1] : TRAIN.cycle[(n - 1) % TRAIN.cycle.length];
+  const value = stat === 'revive' ? base : base * (1 + Math.floor((n - 1) / TRAIN.valueStep));
   return { n, stat, value, cost: TRAIN.costBase + TRAIN.costStep * (n - 1), level: n + BALANCE.unlocks.trainLevel - 1 };
 }
 

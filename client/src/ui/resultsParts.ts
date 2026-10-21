@@ -12,6 +12,7 @@ import { fallFigures, fallIcon } from './fallIcons';
 import { dropName, TIER_COLORS } from './gearText';
 import { goalShare } from './resultsReveal';
 import { statLines } from './statText';
+import { starRow } from './stars';
 import { COLORS, fit, label, shade } from './widgets';
 
 // The parts of the results screen (ResultsScreen.ts), each a view centred on x 0 with its top at
@@ -41,12 +42,27 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   const caption = label(t('results.waves'), 40, COLORS.dim);
   caption.y = 290;
   c.addChild(title, big, caption);
+  // a won run's stars, and what the next one asks while the chapter lacks it
+  let top = 340;
+  if (r.stars > 0) {
+    const stars = starRow(r.stars, 90);
+    stars.y = 380;
+    c.addChild(stars);
+    top = 440;
+    const next = Math.max(r.stars, r.bestStars) + 1;
+    if (next <= 3) {
+      const hint = fit(label(next === 2 ? t('results.starNext2') : t('results.starNext3', { n: BALANCE.stars.lowest }), 40, COLORS.dim), width);
+      hint.y = 470;
+      c.addChild(hint);
+      top = 510;
+    }
+  }
   // the best (or a new one) and the leaderboard place, side by side under the number
   const badges: Container[] = [];
   if (r.newBest) badges.push(pill(t('results.newBest'), COLORS.saffron, 44));
   else if (!r.firstClear && r.best > 0) badges.push(pill(t('results.best', { wave: r.best }), COLORS.dim));
   if (rank) badges.push(pill(t(rank.best ? 'results.rankNew' : 'results.rankShort', { rank: rank.rank }), rank.best ? COLORS.saffron : COLORS.dim));
-  if (badges.length === 0) return [c, 340];
+  if (badges.length === 0) return [c, top];
   const row = new Container();
   let x = 0;
   for (const b of badges) {
@@ -56,9 +72,9 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   }
   row.pivot.x = (x - 24) / 2;
   if (row.width > width) row.scale.set(width / row.width);
-  row.y = 380;
+  row.y = top + 40;
   c.addChild(row);
-  return [c, 440];
+  return [c, top + 100];
 }
 
 /** What felled the hero, the nearest goal with a bar for how near it came, and one short tip. */

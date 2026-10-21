@@ -7,7 +7,7 @@ import { newElite, newMob, underground, type Mob } from '../state';
 import { bossIndex, downMob, targetAt } from './combat';
 import { laneDistance } from './elite';
 import { newBoss } from './boss';
-import { beginWave, chapterBoss, eliteKinds, newcomer, waveFoeHp } from './waves';
+import { beginWave, chapterBoss, eliteKinds, foeHp, newcomer, waveFoeHp } from './waves';
 
 // Chapter 2's mobs (docs/content.md "Chapters"): water ghosts that rise from a mark next to
 // the hero, and toads that stop at range and spit bullet fans.
@@ -210,11 +210,11 @@ describe('empowered abbot (mid-boss)', () => {
 });
 
 describe('black carp king (boss)', () => {
-  it('is the marsh boss, and later chapters keep it until they get their own', () => {
-    expect([1, 2, 3, 4, 5, 6].map(chapterBoss)).toEqual(['abbot', 'carp', 'witch', 'judge', 'demon', 'demon']);
+  it('is the marsh boss, and later chapters take the boss of their map', () => {
+    expect([1, 2, 3, 4, 5, 6, 7, 20].map(chapterBoss)).toEqual(['abbot', 'carp', 'witch', 'judge', 'demon', 'abbot', 'carp', 'demon']);
     const e = new Engine(MARSH);
     beginWave(e.state, MARSH.waves);
-    expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: false, hp: CARP.hp });
+    expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: false, hp: foeHp(CARP.hp, 2, false) });
   });
 
   it('dives out of reach, locks a circle on the hero, and surfaces there with a ring', () => {

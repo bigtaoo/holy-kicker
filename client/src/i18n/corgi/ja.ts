@@ -8,6 +8,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     guest: '新米隊員',
     chapterTitle: '惑星{n}：{name}',
     unlockAtChapter: '惑星{n}クリアで解放',
+    hardLocked: 'この惑星を星3でクリアするとハードモード解放',
     relic: '武器',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiJa: Table<typeof corgiEn> = {
   results: {
     cleared: '惑星クリア！',
     hardCleared: 'ハード惑星クリア！',
+    hardUnlocked: '星3！この惑星のハードモード解放',
     copper: 'ボルト +{n}',
     nextChapter: '次の惑星へ',
     grit: '不屈 ×{n}：次の挑戦はもっと強くなる',
@@ -238,6 +240,9 @@ export const corgiJa: Table<typeof corgiEn> = {
     2: 'レア',
     3: 'エピック',
     4: 'レジェンド',
+    5: 'ミシック',
+    6: 'アストラル',
+    7: 'コズミック',
   },
   stat: {
     cooldown: 'ガジェットのクールダウン −{n}%',

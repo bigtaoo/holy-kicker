@@ -28,6 +28,8 @@ export interface RunStats {
   elites: (number | null)[];
   bosses: (number | null)[];
   build: string;
+  /** The hero's lowest health over the run, percent (a clear's stars). */
+  lowest: number;
 }
 
 /** Plays one chapter with a bot; stops at the first death or after `maxMinutes`. */
@@ -41,7 +43,7 @@ export function playChapter(
   const bot = new Bot(0, style, seed);
   const stats: RunStats = {
     seed, style, outcome: 'timeout', wave: 1, seconds: 0, level: 1, hpAt: [100], hurt: 0, blocked: 0, kills: 0, dps: 0,
-    elites: [], bosses: [], build: '',
+    elites: [], bosses: [], build: '', lowest: 100,
   };
   // the mid-boss twins count as one mid-boss: from the wave's start until the second falls
   let eliteFrom = -1;
@@ -80,6 +82,7 @@ export function playChapter(
   stats.seconds = secs(s.tick);
   stats.dps = Math.trunc(stats.dps / Math.max(1, stats.seconds));
   stats.level = p.level;
+  stats.lowest = p.lowest;
   stats.build = [
     `${p.relicId}${p.relic}${p.awakened ? '*' : ''}`,
     ...p.spells.map((sp) => `${sp.id}${sp.level}${sp.evolved ? '*' : ''}`),

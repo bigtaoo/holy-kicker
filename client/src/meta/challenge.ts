@@ -41,7 +41,7 @@ export function challengeState(save: SaveData, c: Challenge, engine = ENGINE_VER
 
 /** The chapter the player plays: the record's, or their furthest unlocked one on the normal track. */
 export function challengeChapter(save: SaveData, c: Challenge): number {
-  return c.chapter === 'furthest' ? playableChapters(save, false) : c.chapter;
+  return c.chapter === 'furthest' ? playableChapters(save) : c.chapter;
 }
 
 /** What a run of `c` is set up with (a weekly: its fixed loadout, weekly.ts): the record's seed, waves and mutator, no revives, the player's relic, monk, sutras, gear and training (no grit or head start: they are not the same for everyone at a level). */

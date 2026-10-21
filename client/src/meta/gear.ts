@@ -15,9 +15,9 @@ export const GEAR_SLOTS: readonly GearSlot[] = ['relic', 'pendant', 'bracers', '
 export type ItemId = Exclude<GearSlot, 'relic'> | RelicId;
 export const ITEM_IDS: readonly ItemId[] = ['pendant', 'bracers', 'robe', 'sash', 'sandals', ...RELIC_IDS];
 
-export const TIERS = 5;
-/** Common, Fine, Refined, Treasured, Sacred (tier.0 .. tier.4 in the string tables). */
-export type Tier = 0 | 1 | 2 | 3 | 4;
+export const TIERS = 8;
+/** Common, Fine, Refined, Treasured, Sacred, then three above it (tier.0 .. tier.7 in the string tables). */
+export type Tier = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 /** Owned items: for each item, how many of each tier (index 0 is Common). */
 export type Inventory = Record<ItemId, number[]>;

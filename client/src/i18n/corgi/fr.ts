@@ -7,6 +7,7 @@ export const corgiFr: Table<typeof corgiEn> = {
     guest: 'Cadet',
     chapterTitle: 'Planète {n} : {name}',
     unlockAtChapter: 'Termine la planète {n} pour débloquer',
+    hardLocked: 'Termine cette planète avec 3 étoiles pour ouvrir le mode difficile',
     relic: 'Arme',
   },
   monk: {
@@ -175,6 +176,7 @@ export const corgiFr: Table<typeof corgiEn> = {
   results: {
     cleared: 'Planète terminée !',
     hardCleared: 'Planète difficile terminée !',
+    hardUnlocked: '3 étoiles ! Mode difficile de cette planète ouvert',
     copper: 'Boulons +{n}',
     nextChapter: 'Planète suivante',
     grit: 'Ténacité ×{n} : ton prochain essai sur cette planète sera plus fort',
@@ -237,6 +239,9 @@ export const corgiFr: Table<typeof corgiEn> = {
     2: 'Rare|rare|rare|rares|rares',
     3: 'Épique|épique|épique|épiques|épiques',
     4: 'Légendaire|légendaire|légendaire|légendaires|légendaires',
+    5: 'Mythique|mythique|mythique|mythiques|mythiques',
+    6: 'Astral|astral|astrale|astraux|astrales',
+    7: 'Cosmique|cosmique|cosmique|cosmiques|cosmiques',
   },
   stat: {
     cooldown: 'Recharge des gadgets −{n}%',

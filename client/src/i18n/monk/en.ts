@@ -6,6 +6,7 @@ export const monkEn = {
     guest: 'Little monk',
     chapterTitle: 'Chapter {n}: {name}',
     unlockAtChapter: 'Clear chapter {n} to unlock',
+    hardLocked: 'Clear this chapter with 3 stars to open hard mode',
     relic: 'Relic',
   },
   monk: {
@@ -174,6 +175,7 @@ export const monkEn = {
   results: {
     cleared: 'Chapter cleared!',
     hardCleared: 'Hard chapter cleared!',
+    hardUnlocked: '3 stars! Hard mode open for this chapter',
     copper: 'Copper +{n}',
     nextChapter: 'Next chapter',
     grit: 'Grit ×{n}: the next try here is stronger',
@@ -236,6 +238,9 @@ export const monkEn = {
     2: 'Refined',
     3: 'Treasured',
     4: 'Sacred',
+    5: 'Celestial',
+    6: 'Divine',
+    7: 'Supreme',
   },
   stat: {
     cooldown: 'Spell cooldown −{n}%',

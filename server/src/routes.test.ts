@@ -119,7 +119,7 @@ describe('routes', () => {
     // the install id itself never goes out
     expect(JSON.stringify(b.body)).not.toContain(INSTALL);
     expect(((await route(req('GET', '/v1/boards/c1h'), d)).body as { total: number }).total).toBe(1);
-    expect((await route(req('GET', '/v1/boards/c9'), d)).status).toBe(400);
+    expect((await route(req('GET', '/v1/boards/c21'), d)).status).toBe(400);
   });
 
   it('shows portal names from CrazyGames and dice names from everyone', async () => {

@@ -1,6 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { topPercent, type ChallengeRunReply } from '@hk/protocol';
 import { t } from '../i18n';
+import { chapterName } from '../i18n/chapterName';
 import { BALANCE } from '../meta/balance';
 import { milestonePay, type ChallengeReward } from '../meta/challenge';
 import type { ChallengeSettled } from './challengeFlow';
@@ -95,7 +96,7 @@ export class ChallengeResultsScreen implements Screen {
       c.addChild(l);
     };
     add(t(this.weekly ? 'weekly.title' : 'challenge.title'), 68, COLORS.saffron, 20);
-    add(t('lobby.chapterTitle', { n: this.chapter, name: t(`chapter.${this.chapter}` as never) }), 44, COLORS.dim, 95);
+    add(t('lobby.chapterTitle', { n: this.chapter, name: chapterName(this.chapter) }), 44, COLORS.dim, 95);
     const big = label(String(this.waves), 170, COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
     big.y = 230;
     c.addChild(big);

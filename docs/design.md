@@ -62,8 +62,26 @@ is recorded.
 - **Progress chests** at waves 10/20/30/40/50 of each chapter, claimable once each, so a
   failed push still pays. A run only unlocks them; the player opens them on the lobby's chapter
   card (a lit chest with a dot), which keeps the results short and gives the lobby a first tap.
-- Clearing a chapter unlocks the next. Clearing chapter 5 opens hard mode.
-- **Launch with 5 chapters.** Each needs a ground, 3–4 mob types, 1–2 elites and a boss.
+- Clearing a chapter unlocks the next. Three stars on a chapter open its hard mode ("Stars").
+- **Twenty chapters over the five maps** (engine `chapters.ts`): chapter c plays map
+  ((c−1) % 5) + 1, five chapters to an act, so a new act costs no new art. The climb from one
+  chapter to the next is flatter than the old five-chapter one (`twenty-chapters` experiment,
+  2026-10-21: a casual player clears chapter 20 around day 40, 2–16 tries a chapter).
+
+### Stars
+
+A cleared chapter shows up to three stars on the lobby's card (the best run's), the results
+show the run's own and what the next one asks:
+
+| Stars | The run |
+|---|---|
+| 1 | cleared the chapter |
+| 2 | cleared it without a revive |
+| 3 | and the hero's health never under `BALANCE.stars.lowest` (50%) of the maximum |
+
+The engine keeps the lowest health (`Player.lowest`, percent); the client counts the stars
+(progress.ts `runStars`) and keeps the best per chapter and mode (`stars`, `hardStars`).
+Three stars on normal chapter n open hard chapter n.
 
 ### Difficulty
 
@@ -138,22 +156,21 @@ chapter 1 is unchanged.
 
 ### Hard mode
 
-The endgame after chapter 5, so a player who has cleared everything still has a climb (about
-3 more weeks with ads, 5–6 without; see "Pacing targets").
+Advanced play beside the climb: each chapter has a hard mode of its own, open once the normal
+chapter is cleared with three stars.
 
-- **Opens** when chapter 5 is first cleared: the results say so and the lobby moves to hard
-  chapter 1. A Normal / Hard switch then sits above the chapter card; hard chapters unlock one
-  by one like the normal ones.
-- **The same five chapters, tougher** (engine `HARD`, `RunConfig.hard`): mob health and every
+- **Opens per chapter**: the results of the three-star run say so. From the first clear a
+  Normal / Hard switch sits above the chapter card; it follows the chapter the card shows, and
+  a hard mode still locked shows a lock and says how to open it.
+- **The same chapters, tougher** (engine `HARD`, `RunConfig.hard`): mob health and every
   hurt take hard mode's own percents by chapter (ramped in over the run like the normal ones),
   elites and bosses have 3.5–4.5× their health, and every elite wave brings one elite more.
-- **Its own progress**: clears, best waves and progress chests are kept apart from the normal
-  chapters (`hardCleared`, `hardBest`, `hardChests` in the save).
-- **Better pay**: hard chapter n counts as stage 5 + n (progress.ts `stage`), so its copper,
-  chests and gear drops continue the normal chapters' growth (`dropTiers` rows 6–10 bring
-  more Treasured and Sacred items), and so do patrol and the shop once a hard chapter is cleared.
-- **Grit** gathers on the first uncleared chapter of the whole climb: the last normal one, then
-  the first uncleared hard one.
+- **Its own progress**: best waves, stars and progress chests are kept apart from the normal
+  chapters (`hardBest`, `hardStars`, `hardChests` in the save; a best of 50 waves is a clear).
+- **Better pay**: hard chapter n counts as stage n + `BALANCE.hardStage` (6, progress.ts
+  `stage`), so its copper, chests and gear drops are those of the normal chapter six on (the
+  `dropTiers` rows stop at 20), and so do patrol and the shop once a hard chapter is cleared.
+- **Grit** gathers on the first uncleared normal chapter only; hard mode is never the frontier.
 - Relics and sutras come from the normal chapters only.
 
 ### Combat feedback (view only)

@@ -8,6 +8,7 @@ export const corgiTh: Table<typeof corgiEn> = {
     guest: 'พลทหารใหม่',
     chapterTitle: 'ดาวที่ {n}: {name}',
     unlockAtChapter: 'ผ่านดาวที่ {n} เพื่อปลดล็อก',
+    hardLocked: 'ผ่านดาวเคราะห์นี้ 3 ดาวเพื่อเปิดโหมดยาก',
     relic: 'อาวุธ',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiTh: Table<typeof corgiEn> = {
   results: {
     cleared: 'ผ่านดาวแล้ว!',
     hardCleared: 'ผ่านดาวโหมดยากแล้ว!',
+    hardUnlocked: '3 ดาว! เปิดโหมดยากของดาวเคราะห์นี้แล้ว',
     copper: 'น็อต +{n}',
     nextChapter: 'ดาวถัดไป',
     grit: 'ใจสู้ ×{n}: ครั้งหน้าที่นี่จะแกร่งขึ้น',
@@ -238,6 +240,9 @@ export const corgiTh: Table<typeof corgiEn> = {
     2: 'หายาก',
     3: 'มหากาพย์',
     4: 'ตำนาน',
+    5: 'ปกรณัม',
+    6: 'ดวงดาว',
+    7: 'จักรวาล',
   },
   stat: {
     cooldown: 'คูลดาวน์แกดเจ็ต −{n}%',

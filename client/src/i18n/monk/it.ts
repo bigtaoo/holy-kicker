@@ -7,6 +7,7 @@ export const monkIt: Table<typeof monkEn> = {
     guest: 'Monaco',
     chapterTitle: 'Capitolo {n}: {name}',
     unlockAtChapter: 'Completa il capitolo {n} per sbloccarlo',
+    hardLocked: 'Completa questo capitolo con 3 stelle per aprire la modalità difficile',
     relic: 'Reliquia',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkIt: Table<typeof monkEn> = {
   results: {
     cleared: 'Capitolo completato!',
     hardCleared: 'Capitolo difficile completato!',
+    hardUnlocked: '3 stelle! Modalità difficile del capitolo aperta',
     copper: 'Rame +{n}',
     nextChapter: 'Capitolo successivo',
     grit: 'Tenacia ×{n}: il prossimo tentativo qui è più forte',
@@ -238,6 +240,9 @@ export const monkIt: Table<typeof monkEn> = {
     2: 'Raffinato|Raffinato|Raffinata|Raffinati|Raffinate',
     3: 'Prezioso|Prezioso|Preziosa|Preziosi|Preziose',
     4: 'Sacro|Sacro|Sacra|Sacri|Sacre',
+    5: 'Celeste|Celeste|Celeste|Celesti|Celesti',
+    6: 'Divino|Divino|Divina|Divini|Divine',
+    7: 'Supremo|Supremo|Suprema|Supremi|Supreme',
   },
   stat: {
     cooldown: 'Ricarica incantesimi −{n}%',

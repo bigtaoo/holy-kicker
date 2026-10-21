@@ -7,6 +7,7 @@ export const corgiEs: Table<typeof corgiEn> = {
     guest: 'Cadete',
     chapterTitle: 'Planeta {n}: {name}',
     unlockAtChapter: 'Supera el planeta {n} para desbloquear',
+    hardLocked: 'Supera este planeta con 3 estrellas para abrir el modo difícil',
     relic: 'Arma',
   },
   monk: {
@@ -175,6 +176,7 @@ export const corgiEs: Table<typeof corgiEn> = {
   results: {
     cleared: '¡Planeta superado!',
     hardCleared: '¡Planeta difícil superado!',
+    hardUnlocked: '¡3 estrellas! Modo difícil de este planeta abierto',
     copper: 'Tornillos +{n}',
     nextChapter: 'Siguiente planeta',
     grit: 'Tesón ×{n}: tu próximo intento en este planeta será más fuerte',
@@ -237,6 +239,9 @@ export const corgiEs: Table<typeof corgiEn> = {
     2: 'Raro|raro|rara|raros|raras',
     3: 'Épico|épico|épica|épicos|épicas',
     4: 'Legendario|legendario|legendaria|legendarios|legendarias',
+    5: 'Mítico|mítico|mítica|míticos|míticas',
+    6: 'Astral|astral|astral|astrales|astrales',
+    7: 'Cósmico|cósmico|cósmica|cósmicos|cósmicas',
   },
   stat: {
     cooldown: 'Recarga de gadgets −{n}%',

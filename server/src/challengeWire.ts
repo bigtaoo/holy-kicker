@@ -123,7 +123,7 @@ export function weekIdOf(ms: number): string {
 }
 
 export const CHALLENGE_ID = /^(d\d{8}|w\d{4}-\d{2})$/;
-export const CHALLENGE_BOARD = new RegExp(String.raw`^(d\d{8}|w\d{4}-\d{2})-e\d{1,6}-c[1-9]${BOARD_SUFFIX}$`);
+export const CHALLENGE_BOARD = new RegExp(String.raw`^(d\d{8}|w\d{4}-\d{2})-e\d{1,6}-c[1-9]\d?${BOARD_SUFFIX}$`);
 
 /** "Top N %": the share of the board at or above `rank`, rounded up, at least 1. */
 export function topPercent(rank: number, total: number): number {

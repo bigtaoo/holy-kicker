@@ -20,6 +20,8 @@ const MARSH: RunConfig = { ...DEFAULT_RUN, seed: 78, waves: 50, chapter: 2 };
 const SNOW: RunConfig = { ...MARSH, chapter: 3 };
 const GHOST: RunConfig = { ...MARSH, chapter: 4 };
 const PEAK: RunConfig = { ...MARSH, chapter: 5 };
+/** Chapter 7: the marsh again, a step up the ladder (LADDER). */
+const ACT2: RunConfig = { ...MARSH, chapter: 7 };
 /** Hard mode on chapter 5: HARD's health and hurt, and three elites on wave 10. */
 const HARD_PEAK: RunConfig = { ...PEAK, hard: true };
 /** The other monks: their stats and passives (systems/monks.ts). */
@@ -95,15 +97,16 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-21 for ENGINE_VERSION 45 (45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
+    // Recorded 2026-10-21 for ENGINE_VERSION 46 (46: twenty chapters on the five maps in turn, health and hurt by LADDER, hard mode HARD percent more, the hero's lowest health kept for the stars; 45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
     // A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(45);
+    expect(ENGINE_VERSION).toBe(46);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
     expect(run(SNOW, 4800, 4800).hashes[0]).toBe(GOLDEN_SNOW);
     expect(run(GHOST, 4800, 4800).hashes[0]).toBe(GOLDEN_GHOST);
     expect(run(PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_PEAK);
+    expect(run(ACT2, 4800, 4800).hashes[0]).toBe(GOLDEN_ACT2);
     expect(run(HARD_PEAK, 4800, 4800).hashes[0]).toBe(GOLDEN_HARD);
     expect(GOLDEN_HARD).not.toBe(GOLDEN_PEAK);
     expect(run(FAT, 4800, 4800).hashes[0]).toBe(GOLDEN_FAT);
@@ -123,13 +126,14 @@ describe('Engine', () => {
   });
 });
 
-const GOLDEN = 2760391922;
-const GOLDEN_CHAPTER = 3307038418;
-const GOLDEN_MARSH = 506198948;
-const GOLDEN_SNOW = 3453182910;
-const GOLDEN_GHOST = 2059391412;
-const GOLDEN_PEAK = 503676593;
-const GOLDEN_HARD = 1090118142;
-const GOLDEN_FAT = 1288692088;
-const GOLDEN_NOVICE = 2495846628;
-const GOLDEN_MUTATED = [2136452560, 1846680064, 302120591];
+const GOLDEN = 585820792;
+const GOLDEN_CHAPTER = 3365241756;
+const GOLDEN_MARSH = 3250187278;
+const GOLDEN_SNOW = 3913215400;
+const GOLDEN_GHOST = 2137824663;
+const GOLDEN_PEAK = 2809488120;
+const GOLDEN_ACT2 = 3897246998;
+const GOLDEN_HARD = 1564969082;
+const GOLDEN_FAT = 3839461079;
+const GOLDEN_NOVICE = 294910533;
+const GOLDEN_MUTATED = [1623467404, 1603208013, 1767731000];

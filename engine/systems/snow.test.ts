@@ -7,7 +7,7 @@ import { newElite, newMob, underground, type Mob } from '../state';
 import { downMob, targetAt } from './combat';
 import { newBoss } from './boss';
 import { chapterHurt } from './players';
-import { beginWave, chapterBoss, eliteKinds, hordeSize, isPackWave, waveFoeHp } from './waves';
+import { beginWave, chapterBoss, eliteKinds, foeHp, hordeSize, isPackWave, waveFoeHp } from './waves';
 
 // Chapter 3, the Snow Pass (docs/content.md "Chapters"): ice wraiths that mark frost circles,
 // wolf packs, the howling wolf leader, the empowered carp as mid-boss and the Bone Witch, whose
@@ -130,7 +130,7 @@ describe('mid-boss and boss', () => {
     expect(e.state.boss).toMatchObject({ kind: 'carp', empowered: true, hp: waveFoeHp(EMPOWERED_CARP.hp, 3, WAVES.midBosses[0], false) });
     e.state.boss = null;
     beginWave(e.state, 50);
-    expect(e.state.boss).toMatchObject({ kind: 'witch', empowered: false, hp: WITCH.hp });
+    expect(e.state.boss).toMatchObject({ kind: 'witch', empowered: false, hp: foeHp(WITCH.hp, 3, false) });
   });
 
   it('the empowered carp surfaces with a fuller ring', () => {

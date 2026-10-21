@@ -243,7 +243,7 @@ export const LIMITS = {
   /** A batch may be sent this late (ms; a phone offline for a day) or this early (clock skew). */
   late: 7 * 24 * 3600 * 1000,
   early: 24 * 3600 * 1000,
-  chapters: 5,
+  chapters: 20,
   /** Waves a chapter has; a run can not go further. */
   waves: 50,
   /** A run can not be shorter than this many seconds per wave reached, nor longer than this. */

@@ -22,6 +22,10 @@ export interface Chest {
 
 export interface Balance {
   chapters: number;
+  /** How many chapters on a hard chapter pays and drops as (progress.ts stage). */
+  hardStage: number;
+  /** A run's third star: the hero's health never under `lowest` percent (progress.ts runStars). */
+  stars: { lowest: number };
   waves: number;
   /** Rewarded-ad revives per run; wave length and the wave plan are engine rules (engine/config.ts). */
   revives: number;
@@ -48,7 +52,7 @@ export interface Balance {
   daily: DailyBalance;
   /** A new player's welcome gifts (welcome.ts), one a day from the first run's day. */
   welcome: WelcomeGift[];
-  /** The long-term goals and the jade each pays once (achievements.ts), at most 30. */
+  /** The long-term goals and the jade each pays once (achievements.ts), at most 30 (bits of `achieved`); new ones go last. */
   achievements: AchievementGoal[];
   /** Jade price of each monk (monks.ts); the kicker is free. */
   monks: Record<MonkId, number>;

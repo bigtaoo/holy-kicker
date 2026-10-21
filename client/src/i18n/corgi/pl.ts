@@ -8,6 +8,7 @@ export const corgiPl: Table<typeof corgiEn> = {
     guest: 'Kadet',
     chapterTitle: 'Planeta {n}: {name}',
     unlockAtChapter: 'Ukończ planetę {n}, by odblokować',
+    hardLocked: 'Ukończ tę planetę na 3 gwiazdki, by otworzyć tryb trudny',
     relic: 'Broń',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiPl: Table<typeof corgiEn> = {
   results: {
     cleared: 'Planeta ukończona!',
     hardCleared: 'Trudna planeta ukończona!',
+    hardUnlocked: '3 gwiazdki! Tryb trudny tej planety otwarty',
     copper: 'Śrubki +{n}',
     nextChapter: 'Następna planeta',
     grit: 'Zawziętość ×{n}: następna próba na tej planecie jest silniejsza',
@@ -238,6 +240,9 @@ export const corgiPl: Table<typeof corgiEn> = {
     2: 'Rzadki|Rzadki|Rzadka|Rzadkie|Rzadkie',
     3: 'Epicki|Epicki|Epicka|Epickie|Epickie',
     4: 'Legendarny|Legendarny|Legendarna|Legendarne|Legendarne',
+    5: 'Mityczny|Mityczny|Mityczna|Mityczne|Mityczne',
+    6: 'Astralny|Astralny|Astralna|Astralne|Astralne',
+    7: 'Kosmiczny|Kosmiczny|Kosmiczna|Kosmiczne|Kosmiczne',
   },
   stat: {
     cooldown: 'Odnowienie gadżetów −{n}%',

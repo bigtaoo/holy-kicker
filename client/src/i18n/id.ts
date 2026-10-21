@@ -188,7 +188,8 @@ export const id: Table<typeof en> = {
   },
   results: {
     waves: 'gelombang dilewati',
-    hardUnlocked: 'Mode sulit terbuka: musuh lebih kuat, perlengkapan lebih bagus',
+    starNext2: 'Bintang berikutnya: tamat tanpa hidup kembali',
+    starNext3: 'Bintang berikutnya: darah tak pernah di bawah {n}%',
     fallen: 'Permainan usai',
     chests: 'Peti terbuka ×{n}: buka di lobi',
     newBest: 'Rekor baru!',

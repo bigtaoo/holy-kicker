@@ -1,4 +1,4 @@
-import { BALL, HARD, HERO, HURT, rampChapter, ZEN } from '../config';
+import { BALL, HARD, HERO, HURT, ladder, LADDER, rampChapter, ZEN } from '../config';
 import type { HurtSource, SimEvent } from '../events';
 import { MAG_FULL, type PlayerCommand } from '../input';
 import { dist2, FP } from '../math/fixed';
@@ -73,10 +73,9 @@ export function movePlayers(s: SimState, events: SimEvent[]): void {
   }
 }
 
-/** What a hurt of `value` takes on wave `wave` of chapter `chapter` (HURT.chapterPercent, ramped in over the run). */
+/** What a hurt of `value` takes on wave `wave` of chapter `chapter` (LADDER.hurt, HARD.hurt more in hard mode, ramped in over the run). */
 export function chapterHurt(chapter: number, value: number, wave: number, hard = false): number {
-  const table = hard ? HARD.hurt : HURT.chapterPercent;
-  const pct = rampChapter(table[Math.min(Math.max(chapter, 1), table.length) - 1], wave);
+  const pct = rampChapter(ladder(LADDER.hurt, chapter, hard, HARD.hurt), wave);
   return Math.trunc((value * pct) / 100);
 }
 
@@ -91,6 +90,7 @@ export function hurtPlayer(s: SimState, events: SimEvent[], owner: number, value
   p.actionT = 0;
   const dealt = s.config.waves > 0 ? Math.min(p.hp, chapterHurt(s.config.chapter, value, s.wave, s.config.hard)) : 0;
   p.hp -= dealt;
+  p.lowest = Math.min(p.lowest, Math.trunc((p.hp * 100) / p.maxHp));
   events.push({ type: 'hurt', owner, value: dealt, src, x, y });
   if (p.hp > 0) return bellyBounce(s, events, p);
   p.dead = true;

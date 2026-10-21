@@ -2,7 +2,7 @@
 // &hero=top|overfx|sort&ring=1&elite=1, plus types/page/mobres for the mob-type stress test) so readability variants can be compared side by side. WeChat and a
 // bare URL get the defaults.
 
-import { MONK_IDS, RELIC_IDS, SPELL_KINDS, type MonkId, type RelicId, type SpellKind } from '@hk/engine';
+import { CHAPTERS, MONK_IDS, RELIC_IDS, SPELL_KINDS, type MonkId, type RelicId, type SpellKind } from '@hk/engine';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
 import { GEM_PALETTES, type GemPalette } from './dropView';
@@ -210,7 +210,7 @@ export function parseScene(query: string): SceneOptions {
     seed: intAtLeast(q.get('seed'), 1, DEFAULT_SCENE.seed),
     waves: q.has('waves') ? q.get('waves') === '1' : !mobsSet && DEFAULT_SCENE.waves,
     wave: Math.min(50, intAtLeast(q.get('wave'), 1, DEFAULT_SCENE.wave)),
-    chapter: Math.min(5, intAtLeast(q.get('chapter'), 1, DEFAULT_SCENE.chapter)),
+    chapter: Math.min(CHAPTERS, intAtLeast(q.get('chapter'), 1, DEFAULT_SCENE.chapter)),
     relic: RELIC_IDS.find((r) => r === q.get('relic')) ?? DEFAULT_SCENE.relic,
     sutras: q.has('sutras'),
     learn: q.get('learn') ?? '',

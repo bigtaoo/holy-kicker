@@ -188,7 +188,8 @@ export const tr: Table<typeof en> = {
   },
   results: {
     waves: 'geçilen dalga',
-    hardUnlocked: 'Zor mod açıldı: sert düşmanlar, iyi eşyalar',
+    starNext2: 'Sonraki yıldız: dirilmeden geç',
+    starNext3: 'Sonraki yıldız: can hiç %{n} altına düşmesin',
     fallen: 'Tur bitti',
     chests: 'Açılan sandıklar ×{n}: lobide aç',
     newBest: 'Yeni rekor!',

@@ -186,7 +186,8 @@ export const ja: Table<typeof en> = {
   },
   results: {
     waves: 'クリアしたウェーブ',
-    hardUnlocked: 'ハードモード解放：敵は強く、装備は良く',
+    starNext2: '次の星：復活なしでクリア',
+    starNext3: '次の星：体力を常に{n}%以上に保つ',
     fallen: 'プレイ終了',
     chests: '宝箱解放 ×{n}：ロビーで開けよう',
     newBest: '新記録！',

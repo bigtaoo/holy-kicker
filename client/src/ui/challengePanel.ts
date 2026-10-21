@@ -1,6 +1,7 @@
 import { Container } from 'pixi.js';
 import { challengeBoardId, topPercent, type Challenge, type TopRun } from '@hk/protocol';
 import { t } from '../i18n';
+import { chapterName } from '../i18n/chapterName';
 import { BALANCE } from '../meta/balance';
 import { milestonePay } from '../meta/challenge';
 import type { WeekClaim } from '../meta/weekly';
@@ -134,7 +135,7 @@ export class ChallengeUi {
         lobby.play(wk.challenge, chapter);
       },
       ranks: fetchBoard && (() => this.boards.show(
-        { id: wk.board, title: t('weekly.title'), sub: t('lobby.chapterTitle', { n: chapter, name: t(`chapter.${chapter}` as never) }), color: COLORS.saffron },
+        { id: wk.board, title: t('weekly.title'), sub: t('lobby.chapterTitle', { n: chapter, name: chapterName(chapter) }), color: COLORS.saffron },
         fetchBoard,
         watch && ((row, topRun, from) => watch(wk.board, topRun, rowName(row), from)),
       )),
@@ -142,7 +143,7 @@ export class ChallengeUi {
   }
 
   private daily(box: Container, top: number, add: (text: string, size: number, fill: number, y: number) => void, lobby: ChallengeLobby, d: DailyView): void {
-    add(t('lobby.chapterTitle', { n: d.chapter, name: t(`chapter.${d.chapter}` as never) }), 48, COLORS.text, 165);
+    add(t('lobby.chapterTitle', { n: d.chapter, name: chapterName(d.chapter) }), 48, COLORS.text, 165);
     const mutator = mutatorLine(d.challenge.mutator);
     if (mutator) add(mutator, 42, COLORS.saffron, 232);
     ['challenge.rule1', 'challenge.rule2', 'challenge.rule3'].forEach((key, i) => add(t(key as never), 40, COLORS.dim, (mutator ? 295 : 250) + i * 56));
@@ -169,7 +170,7 @@ export class ChallengeUi {
     if (fetchBoard) {
       buttons.push(button(t('board.button'), 360, 140, () => {
         const id = challengeBoardId(d.challenge.id, d.challenge.engine, d.chapter, THEME);
-        this.boards.show({ id, title: t('challenge.title'), sub: t('lobby.chapterTitle', { n: d.chapter, name: t(`chapter.${d.chapter}` as never) }), color: COLORS.saffron }, fetchBoard);
+        this.boards.show({ id, title: t('challenge.title'), sub: t('lobby.chapterTitle', { n: d.chapter, name: chapterName(d.chapter) }), color: COLORS.saffron }, fetchBoard);
       }, { fill: COLORS.panelLocked, size: 52 }));
     }
     buttons.forEach((b, i) => {

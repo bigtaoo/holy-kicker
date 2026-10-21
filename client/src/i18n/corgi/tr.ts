@@ -8,6 +8,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     guest: 'Harbiyeli',
     chapterTitle: 'Gezegen {n}: {name}',
     unlockAtChapter: 'Açmak için {n}. gezegeni geç',
+    hardLocked: 'Zor modu açmak için bu gezegeni 3 yıldızla geç',
     relic: 'Silah',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiTr: Table<typeof corgiEn> = {
   results: {
     cleared: 'Gezegen geçildi!',
     hardCleared: 'Zor gezegen geçildi!',
+    hardUnlocked: '3 yıldız! Bu gezegenin zor modu açıldı',
     copper: 'Cıvata +{n}',
     nextChapter: 'Sonraki gezegen',
     grit: 'Azim ×{n}: bu gezegendeki sonraki deneme daha güçlü',
@@ -238,6 +240,9 @@ export const corgiTr: Table<typeof corgiEn> = {
     2: 'Nadir',
     3: 'Destansı',
     4: 'Efsanevi',
+    5: 'Mitik',
+    6: 'Astral',
+    7: 'Kozmik',
   },
   stat: {
     cooldown: 'Gadget bekleme −%{n}',

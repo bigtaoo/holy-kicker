@@ -2,16 +2,15 @@ import { Container, Graphics, type Renderer, type Texture } from 'pixi.js';
 import type { RelicId } from '@hk/engine';
 import { rollDice } from '@hk/protocol';
 import { t } from '../i18n';
-import { earnedSutras, hardOpen, playableChapters, track, type Lock, type Tab } from '../meta/progress';
+import { earnedSutras, playableChapters, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
 import type { EvolveId } from '../meta/codex';
 import { merge, mergeAll, type GearSlot, type ItemId, type Tier } from '../meta/gear';
-import { gritBonus } from '../meta/loadout';
 import { buyMonk, chooseMonk, monkPrice } from '../meta/monks';
 import { train } from '../meta/training';
 import type { IconSheet } from './buildBar';
-import { chestRow } from './chestRow';
+import { chapterCard, hasTrackSwitch, trackSwitch, type ChapterCardDeps } from './chapterCard';
 import { codexTab } from './codexTab';
 import { EconomyUi, type LobbyTrack } from './lobbyEconomy';
 import type { PatrolLook } from './economyPanels';
@@ -22,7 +21,7 @@ import { hintTab, nextStep } from './lobbyHint';
 import { RAIL_R, RAIL_STEP } from './lobbyRail';
 import { LobbyDrift, LobbyFigure } from './lobbyStage';
 import { playButton, type PlayButton } from './lobbyPlay';
-import { CARD, CARD_STROKE, RELIC_ROW_H, relicRow, trackSwitch } from './playCard';
+import { RELIC_ROW_H, relicRow } from './playCard';
 import { monkPanel } from './monkPanel';
 import type { PlayerName } from './playerName';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
@@ -31,7 +30,7 @@ import type { Screen, UiFrame } from './uiLayout';
 import { BoardUi, type FetchBoard } from './boardPanel';
 import { ChallengeUi, type ChallengeLobby } from './challengePanel';
 import { consentCard, watched } from './privacyUi';
-import { COLORS, button, fit, label, panel } from './widgets';
+import { COLORS, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
 // chests, the monk on stage with the relic to play with at his feet and PLAY under them, round
@@ -42,7 +41,7 @@ export interface LobbyActions {
   play(chapter: number): void;
   /** Shows another chapter on the card (cleared ones and the first uncleared one). */
   selectChapter(chapter: number): void;
-  /** Switches the card between the normal chapters and hard mode (open once all are cleared). */
+  /** Switches the shown chapter between its normal and hard mode (open with its three stars). */
   chooseTrack(hard: boolean): void;
   selectRelic(relic: RelicId): void;
   /** The settings panel's reads and changes (settingsPanel.ts), all but closing it. */
@@ -362,14 +361,21 @@ export class LobbyScreen implements Screen {
   private playTab(w: number, h: number): void {
     const n = this.save.chapter;
     const open = n <= playableChapters(this.save);
-    const hard = hardOpen(this.save);
-    if (hard) {
-      const sw = trackSwitch(this.save, (on) => this.actions.chooseTrack(on));
+    const deps: ChapterCardDeps = {
+      save: this.save, icons: this.icons, boards: this.boards,
+      selectChapter: (c) => this.actions.selectChapter(c),
+      chooseTrack: (on) => this.actions.chooseTrack(on),
+      progressChest: (c, hard, i) => this.econ.progressChest(c, hard, i),
+      toast: (text) => this.showToast(text),
+    };
+    const switched = hasTrackSwitch(this.save);
+    if (switched) {
+      const sw = trackSwitch(deps);
       sw.position.set(w / 2, TOP_H + 75);
       this.view.addChild(sw);
     }
-    const card = this.chapterCard(n, open);
-    const cardTop = TOP_H + 30 + (hard ? 110 : 0);
+    const card = chapterCard(deps, n, open);
+    const cardTop = TOP_H + 30 + (switched ? 110 : 0);
     const cardBottom = cardTop + card.height;
     card.position.set(w / 2, cardTop);
     this.view.addChild(card);
@@ -403,65 +409,6 @@ export class LobbyScreen implements Screen {
         this.view.addChild(c);
       });
     }
-  }
-
-
-  /** The chapter card, top at 0: its name between the chapter arrows, how far it went, its five chests. */
-  private chapterCard(n: number, open: boolean): Container {
-    const card = new Container();
-    // grit on the first uncleared chapter takes a line: the chests move down and the card grows
-    const grit = gritBonus(this.save, n);
-    const gritLine = open && Object.keys(grit).length > 0
-      ? fit(label(t('lobby.grit', { n: this.save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, CARD.accent), 840)
-      : null;
-    const shift = gritLine ? 55 : 0;
-    const back = panel(900, 370 + shift, CARD.fill);
-    back.y = (370 + shift) / 2;
-    card.addChild(back);
-    const hard = this.save.hard;
-    const progress = track(this.save, hard);
-    const name = t(`chapter.${n}` as never);
-    const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text, CARD_STROKE), 640);
-    title.y = 70;
-    // the save keeps waves cleared (the chests count those); the lobby names the wave the best run
-    // reached, as the leaderboard and the run's HUD do
-    const best = progress.best[n - 1];
-    const status = label(
-      !open ? t('lobby.unlockAtChapter', { n: n - 1 })
-        : progress.cleared >= n ? t('lobby.cleared')
-        : best > 0 ? t('lobby.best', { wave: best + 1 }) : t('lobby.notPlayed'),
-      48, open ? CARD.quiet : COLORS.danger, open ? {} : CARD_STROKE,
-    );
-    status.y = 155;
-    const ranks = open ? this.boards.button(n, hard) : null;
-    if (ranks) {
-      // under the › arrow, with a gap: it is a smaller button than the arrow (boardPanel.ts)
-      ranks.position.set(340, 160);
-      card.addChild(ranks);
-    }
-    const chests = chestRow(this.save, n, this.icons, (i) => this.econ.progressChest(n, this.save.hard, i));
-    chests.y = 200 + shift;
-    card.addChild(title, status, chests);
-    if (gritLine) {
-      gritLine.y = 215;
-      card.addChild(gritLine);
-    }
-    // chapter arrows: through the cleared chapters and the first uncleared one; once there is more
-    // than one, both stand, the one with nowhere to go faded, so the title stays centred between them
-    const arrow = (dir: -1 | 1) => {
-      const target = n + dir;
-      if (playableChapters(this.save) < 2) return;
-      const can = target >= 1 && target <= playableChapters(this.save);
-      const b = button(dir < 0 ? '‹' : '›', 90, 100, () => {
-        if (can) this.actions.selectChapter(target);
-      }, { fill: COLORS.panelLocked, size: 80 });
-      b.position.set(dir * 385, 70);
-      if (!can) b.alpha = 0.3;
-      card.addChild(b);
-    };
-    arrow(-1);
-    arrow(1);
-    return card;
   }
 
   private codexTab(w: number, top: number): void {

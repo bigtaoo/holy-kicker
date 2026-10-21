@@ -1,5 +1,6 @@
 import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
+import { chapterName } from '../i18n/chapterName';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, fit, label, panel } from './widgets';
 
@@ -36,7 +37,7 @@ export class ResumeScreen implements Screen {
     const box = new Container();
     box.position.set(f.w / 2, f.h / 2);
     box.addChild(panel(860, 820));
-    const name = t(`chapter.${n}` as never);
+    const name = chapterName(n);
     const lines: [Container, number][] = [
       [fit(label(t('run.unfinished'), 72), 760), -320],
       [fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 56, hard ? COLORS.danger : COLORS.saffron), 760), -200],

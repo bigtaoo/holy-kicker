@@ -11,7 +11,7 @@ import { damage, downMob, eliteIndex } from './combat';
 import { shielded } from './ghost';
 import { enraged } from './judge';
 import { chapterHurt } from './players';
-import { beginWave, chapterBoss, eliteKinds, hordeSize, waveFoeHp } from './waves';
+import { beginWave, chapterBoss, eliteKinds, foeHp, hordeSize, waveFoeHp } from './waves';
 
 // Chapter 4, the Ghost Market (docs/content.md "Chapters"): lantern ghosts (shooters),
 // long-tongue ghosts (emergers) and paper effigies that tear into scraps, wisp packs, the
@@ -149,7 +149,7 @@ describe('mid-boss and boss', () => {
     expect(e.state.boss).toMatchObject({ kind: 'witch', empowered: true, hp: waveFoeHp(EMPOWERED_WITCH.hp, 4, WAVES.midBosses[0], false) });
     e.state.boss = null;
     beginWave(e.state, 50);
-    expect(e.state.boss).toMatchObject({ kind: 'judge', empowered: false, hp: JUDGE.hp });
+    expect(e.state.boss).toMatchObject({ kind: 'judge', empowered: false, hp: foeHp(JUDGE.hp, 4, false) });
   });
 
   it('the empowered witch summons more and throws wider', () => {

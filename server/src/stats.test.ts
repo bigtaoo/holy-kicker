@@ -157,7 +157,7 @@ describe('stats', () => {
   });
 
   it('keeps progress only for real chapters', () => {
-    const odd: ClientEvent[] = [{ e: 'run_end', t: DAY0, p: { chapter: 9, won: true } }, { e: 'run_end', t: DAY0, p: { chapter: '$x' } }, { e: 'run_end', t: DAY0, p: { chapter: 2, hard: true, won: true } }];
+    const odd: ClientEvent[] = [{ e: 'run_end', t: DAY0, p: { chapter: 21, won: true } }, { e: 'run_end', t: DAY0, p: { chapter: '$x' } }, { e: 'run_end', t: DAY0, p: { chapter: 2, hard: true, won: true } }];
     expect(foldProgress(undefined, odd, 5)).toEqual({ c2h: { tries: 1, day: 5 } });
   });
 });

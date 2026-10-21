@@ -1,5 +1,5 @@
 import {
-  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HARD, HORDE, MOB_KINDS, PACE, SHRINE,
+  BOSS, CARP, CHAPTER_BOSSES, DEMON, ELITE_PAIRS, EMPOWERED_JUDGE, DOOR_GOD, EMPOWERED_WITCH, JUDGE, CHAPTER_ELITES, CHAPTER_MOBS, CHAPTER_PACKS, ELITE, EMPOWERED, EMPOWERED_CARP, extraKind, HARD, HORDE, ladder, LADDER, mapOf, MOB_KINDS, PACE, SHRINE,
   rampChapter, tempKind, TOAD_KING, WAVES, WITCH, WOLF_LEADER, type BossKind, type EliteKind, type MobKind, type Pack,
 } from '../config';
 import type { SimEvent } from '../events';
@@ -11,12 +11,12 @@ import { respawnPoint, ringPoint } from './horde';
 import { resetMob } from './marsh';
 
 // The chapter's waves (docs/design.md "Chapters"): each lasts WAVES.ticks; the horde grows
-// at the start of every wave (the chapter's kinds joining it, CHAPTER_MOBS, and wisp or wolf
-// packs on pack waves, CHAPTER_PACKS), the chapter's elite comes every fifth wave (the last of
-// them brings the previous chapter's elite along), and the boss waves last until their boss
+// at the start of every wave (the map's kinds joining it, CHAPTER_MOBS, and wisp or wolf
+// packs on pack waves, CHAPTER_PACKS), the map's elite comes every fifth wave (the last of
+// them brings the previous map's elite along), and the boss waves last until their boss
 // falls: the mid-bosses (WAVES.midBosses) are two elites, the twin big jiangshi, in chapter 1
-// and the previous chapter's boss empowered after it, and the last wave has the chapter boss
-// (CHAPTER_BOSSES), unless the run ends on a mid-boss wave. Elites and mid-bosses grow tougher wave by wave (waveFoeHp). The last boss falling wins the run;
+// and the previous chapter's boss empowered after it, and the last wave has the map's boss
+// (CHAPTER_BOSSES); the chapter's place on the ladder sets health and hurt (LADDER), unless the run ends on a mid-boss wave. Elites and mid-bosses grow tougher wave by wave (waveFoeHp). The last boss falling wins the run;
 // every hero down loses it until a revive. Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
 
@@ -58,20 +58,19 @@ export function fewKind(kind: MobKind): boolean {
   return kind === 'swarm' || kind === 'shard' || kind === 'scrap';
 }
 
-/** Mob health percent of chapter `chapter` on wave `wave` (HORDE.chapterHp or HARD.hp, ramped in over the run). */
+/** Mob health percent of chapter `chapter` on wave `wave` (LADDER.hp, HARD.hp more in hard mode, ramped in over the run). */
 export function chapterHp(chapter: number, wave: number, hard = false): number {
-  const table = hard ? HARD.hp : HORDE.chapterHp;
-  return rampChapter(table[Math.min(Math.max(chapter, 1), table.length) - 1], wave);
+  return rampChapter(ladder(LADDER.hp, chapter, hard, HARD.hp), wave);
 }
 
-/** Health `hp` of an elite or boss of chapter `chapter`: HARD.foeHp percent of it in hard mode. */
+/** Health `hp` of an elite or boss of chapter `chapter`: LADDER.foe percent of it, HARD.foe more in hard mode. */
 export function foeHp(hp: number, chapter: number, hard: boolean): number {
-  return hard ? Math.trunc((hp * HARD.foeHp[Math.min(Math.max(chapter, 1), HARD.foeHp.length) - 1]) / 100) : hp;
+  return Math.trunc((hp * ladder(LADDER.foe, chapter, hard, HARD.foe)) / 100);
 }
 
 /** The kind of the n-th mob (0-based) of the horde, joining on wave `wave` of chapter `chapter`. */
 export function newcomer(chapter: number, wave: number, n: number): MobKind {
-  const rules = CHAPTER_MOBS[Math.min(Math.max(chapter, 1), CHAPTER_MOBS.length) - 1];
+  const rules = CHAPTER_MOBS[mapOf(chapter) - 1];
   for (const r of rules) if (wave >= r.from && n % r.every === r.every - 1) return r.kind;
   return 'chaser';
 }
@@ -89,37 +88,38 @@ export function twinHp(chapter: number, wave: number, hard: boolean): number {
   return waveFoeHp(WAVES.twinHp, chapter, wave, hard);
 }
 
-/** The elite of chapter `chapter` (CHAPTER_ELITES; before the first, none). */
+/** The elite of chapter `chapter`'s map (CHAPTER_ELITES). */
 export function chapterElite(chapter: number): EliteKind {
-  return CHAPTER_ELITES[Math.min(Math.max(chapter, 1), CHAPTER_ELITES.length) - 1];
+  return CHAPTER_ELITES[mapOf(chapter) - 1];
 }
 
-/** The boss of chapter `chapter` (CHAPTER_BOSSES). */
+/** The boss of chapter `chapter`'s map (CHAPTER_BOSSES). */
 export function chapterBoss(chapter: number): BossKind {
-  return CHAPTER_BOSSES[Math.min(Math.max(chapter, 1), CHAPTER_BOSSES.length) - 1];
+  return CHAPTER_BOSSES[mapOf(chapter) - 1];
 }
 
 /**
- * The elites coming on elite wave `wave`: the chapter's, and on the last one the previous
- * chapter's too; hard mode adds a second of the first, the elites mutator more of it.
+ * The elites coming on elite wave `wave`: the map's, and on the last one the previous
+ * map's too; hard mode adds a second of the first, the elites mutator more of it.
  */
 export function eliteKinds(chapter: number, wave: number, last: number, hard = false, mutator: MutatorId | null = null): EliteKind[] {
   let kinds: EliteKind[];
-  // chapter 5 has none of its own: earlier ones, one on the first elite wave, then the pairs in turn (ELITE_PAIRS)
+  // map 5 has none of its own: earlier ones, one on the first elite wave, then the pairs in turn (ELITE_PAIRS)
   const k = Math.trunc(wave / WAVES.eliteEvery) - 1;
-  if (chapter >= 5) kinds = [...ELITE_PAIRS[k <= 0 ? 0 : 1 + ((k - 1) % (ELITE_PAIRS.length - 1))]];
+  const map = mapOf(chapter);
+  if (map === 5) kinds = [...ELITE_PAIRS[k <= 0 ? 0 : 1 + ((k - 1) % (ELITE_PAIRS.length - 1))]];
   else {
     kinds = [chapterElite(chapter)];
-    if (chapter > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
+    if (map > 1 && !isEliteWave(wave + WAVES.eliteEvery, last)) kinds.push(chapterElite(chapter - 1));
   }
   if (hard) kinds.push(kinds[0]);
   if (mutator === 'elites') for (let i = 0; i < MUTATORS.elites.more; i++) kinds.push(kinds[0]);
   return kinds;
 }
 
-/** Chapter `chapter`'s packs (CHAPTER_PACKS). */
+/** Chapter `chapter`'s packs, its map's (CHAPTER_PACKS). */
 export function chapterPack(chapter: number): Pack {
-  return CHAPTER_PACKS[Math.min(Math.max(chapter, 1), CHAPTER_PACKS.length) - 1];
+  return CHAPTER_PACKS[mapOf(chapter) - 1];
 }
 
 /** Pack waves bring a pack of the chapter's pack mobs (never a boss wave). */
@@ -228,7 +228,7 @@ export function beginWave(s: SimState, wave: number): void {
     }
   }
   if (isMidBoss(wave, last) && s.config.chapter >= 2) {
-    // the previous chapter's boss, empowered
+    // the previous chapter's boss, empowered (the demon, on the temple map from chapter 6, as it is)
     ringPoint(s.ai, p.x, p.y, at);
     const kind = chapterBoss(s.config.chapter - 1);
     s.boss = newBoss(at.x, at.y, waveFoeHp(bossOf(kind, true).hp, s.config.chapter, wave, s.config.hard), true, kind);

@@ -7,6 +7,7 @@ export const monkFr: Table<typeof monkEn> = {
     guest: 'Moine',
     chapterTitle: 'Chapitre {n} : {name}',
     unlockAtChapter: 'Termine le chapitre {n} pour débloquer',
+    hardLocked: 'Termine ce chapitre avec 3 étoiles pour ouvrir le mode difficile',
     relic: 'Relique',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkFr: Table<typeof monkEn> = {
   results: {
     cleared: 'Chapitre terminé !',
     hardCleared: 'Chapitre difficile terminé !',
+    hardUnlocked: '3 étoiles ! Mode difficile de ce chapitre ouvert',
     copper: 'Cuivre +{n}',
     nextChapter: 'Chapitre suivant',
     grit: 'Ténacité ×{n} : ton prochain essai ici sera plus fort',
@@ -238,6 +240,9 @@ export const monkFr: Table<typeof monkEn> = {
     2: 'Raffiné|raffiné|raffinée|raffinés|raffinées',
     3: 'Précieux|précieux|précieuse|précieux|précieuses',
     4: 'Sacré|sacré|sacrée|sacrés|sacrées',
+    5: 'Céleste|céleste|céleste|célestes|célestes',
+    6: 'Divin|divin|divine|divins|divines',
+    7: 'Suprême|suprême|suprême|suprêmes|suprêmes',
   },
   stat: {
     cooldown: 'Recharge des sorts −{n}%',

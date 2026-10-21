@@ -139,8 +139,6 @@ export const HURT = {
   /** The Inner Demon's dark spell (a zone going off) and its landing after a staff leap. */
   demonSpell: 14,
   demonLeap: 20,
-  /** Every hurt by chapter, percent (later chapters play the last), so health from gear does not make them safe (125, 180, 180 for 3–5 before PACE). */
-  chapterPercent: [100, 100, 115, 150, 150],
 };
 
 export const HORDE = {
@@ -158,45 +156,7 @@ export const HORDE = {
   hp: 10,
   hpStep: 300,
   hpSquare: 85,
-  /**
-   * Mob health by chapter, percent (later chapters play the last): the hero comes in with
-   * gear and training (RunConfig.bonus), and the meta game's pacing (`npm run journey`,
-   * docs/design.md "Pacing targets") asks a few days of farming for each later chapter.
-   */
-  chapterHp: [100, 140, 440, 3000, 7000],
 };
-
-/**
- * A later chapter's extra mob health and hurt (over 100 %, HORDE.chapterHp and
- * HURT.chapterPercent) come in over the run: `from` percent of the extra on wave 1, rising to
- * `to` percent on wave `wave` and after. The hero starts every run at level 1, so a flat step
- * makes the first waves the wall and the rest of the run a formality.
- */
-export const CHAPTER_RAMP = {
-  from: 0,
-  to: 180,
-  wave: 50,
-};
-
-/**
- * Hard mode (docs/design.md "Hard mode"), open once chapter 5 is cleared: the same chapters for
- * a hero with endgame gear. Mob health and every hurt take these percents by chapter in place of
- * HORDE.chapterHp and HURT.chapterPercent (ramped in the same way, CHAPTER_RAMP), elites and
- * bosses have foeHp percent of their health, and every elite wave brings one elite more.
- */
-export const HARD = {
-  hp: [8000, 10500, 13000, 16000, 20000],
-  hurt: [240, 255, 270, 285, 300],
-  foeHp: [350, 380, 400, 420, 450],
-};
-
-/** `pct` percent (a chapter's HORDE.chapterHp or HURT.chapterPercent) ramped in for wave `wave` (CHAPTER_RAMP). */
-export function rampChapter(pct: number, wave: number): number {
-  const span = CHAPTER_RAMP.wave - 1;
-  const n = Math.min(Math.max(wave - 1, 0), span);
-  const share = CHAPTER_RAMP.from + Math.trunc(((CHAPTER_RAMP.to - CHAPTER_RAMP.from) * n) / span);
-  return 100 + Math.trunc(((pct - 100) * share) / 100);
-}
 
 export type MobKind = 'chaser' | 'runner' | 'swarm' | 'emerger' | 'shooter' | 'wolf' | 'caster' | 'skeleton' | 'shard' | 'effigy' | 'scrap' | 'monk';
 
@@ -235,14 +195,13 @@ export function tempKind(kind: MobKind): boolean {
 }
 
 /**
- * Who joins each chapter's horde (docs/content.md "Chapters"): from wave `from`, newcomer n
+ * Who joins the horde on each map (docs/content.md "Chapters"; chapter c plays map mapOf(c)): from wave `from`, newcomer n
  * with n % every === every - 1 is of `kind` (the first rule that matches wins), the rest are
  * chasers. Chapter 1 has fox runners; chapter 2 water ghosts that rise next to the hero and
  * toads that shoot; chapter 3 ice wraiths that mark frost circles (its wolves come in packs,
  * CHAPTER_PACKS); chapter 4 lantern ghosts that shoot, long-tongue ghosts that rise next to the
  * hero and paper effigies that tear into scraps; chapter 5 fallen monks behind their gongs (shielders)
- * and shadows (runners) among every earlier kind. Later chapters play the last list until they
- * get their own.
+ * and shadows (runners) among every earlier kind. Chapters 6–20 play these again (CHAPTERS).
  */
 export const CHAPTER_MOBS: readonly (readonly { kind: MobKind; from: number; every: number }[])[] = [
   [{ kind: 'runner', from: 3, every: 4 }],
@@ -270,7 +229,7 @@ export interface Pack {
 
 const WISPS: Pack = { kind: 'swarm', from: 6, every: 4, size: 10, max: 40, spread: toFp(110) };
 
-/** Each chapter's packs; later chapters play the last one until they get their own. */
+/** Each map's packs. */
 export const CHAPTER_PACKS: readonly Pack[] = [
   WISPS,
   WISPS,
@@ -291,7 +250,7 @@ export const MIX = {
 export type EliteKind = 'charger' | 'toadKing' | 'wolfLeader' | 'doorGod';
 
 /**
- * Each chapter's elite; later chapters play the last one until they get their own. Chapter 5
+ * Each map's elite. Map 5
  * has none of its own: its elite waves bring two earlier ones at once (ELITE_PAIRS).
  */
 export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing', 'wolfLeader', 'doorGod', 'doorGod'];
@@ -304,8 +263,8 @@ export const CHAPTER_ELITES: readonly EliteKind[] = ['charger', 'toadKing', 'wol
 export type BossKind = 'abbot' | 'carp' | 'witch' | 'judge' | 'demon';
 
 /**
- * Each chapter's boss (the last wave); later chapters play the last one until they get their
- * own. From chapter 2 on, the mid-boss is the previous chapter's boss, empowered.
+ * Each map's boss (the last wave). From chapter 2 on, the mid-boss is the previous chapter's
+ * boss, empowered (the Inner Demon, on the temple map from chapter 6, as it is).
  */
 export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp', 'witch', 'judge', 'demon'];
 
@@ -495,5 +454,6 @@ export const SPELLS = {
   chainRange: toFp(350),
 };
 
+export * from './chapters';
 export * from './foes';
 export * from './pace';

@@ -188,7 +188,8 @@ export const de: Table<typeof en> = {
   },
   results: {
     waves: 'Wellen geschafft',
-    hardUnlocked: 'Schwerer Modus offen: härtere Feinde, bessere Ausrüstung',
+    starNext2: 'Nächster Stern: ohne Wiederbelebung schaffen',
+    starNext3: 'Nächster Stern: nie unter {n}% Leben fallen',
     fallen: 'Lauf vorbei',
     chests: 'Truhen freigeschaltet ×{n}: in der Lobby öffnen',
     newBest: 'Neuer Rekord!',

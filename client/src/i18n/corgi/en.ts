@@ -11,6 +11,7 @@ export const corgiEn: Table<typeof monkEn> = {
     guest: 'Cadet',
     chapterTitle: 'Planet {n}: {name}',
     unlockAtChapter: 'Clear planet {n} to unlock',
+    hardLocked: 'Clear this planet with 3 stars to open hard mode',
     relic: 'Weapon',
   },
   monk: {
@@ -179,6 +180,7 @@ export const corgiEn: Table<typeof monkEn> = {
   results: {
     cleared: 'Planet cleared!',
     hardCleared: 'Hard planet cleared!',
+    hardUnlocked: '3 stars! Hard mode open for this planet',
     copper: 'Bolts +{n}',
     nextChapter: 'Next planet',
     grit: 'Grit ×{n}: your next try on this planet is stronger',
@@ -242,6 +244,9 @@ export const corgiEn: Table<typeof monkEn> = {
     2: 'Rare',
     3: 'Epic',
     4: 'Legendary',
+    5: 'Mythic',
+    6: 'Astral',
+    7: 'Cosmic',
   },
   stat: {
     cooldown: 'Gadget cooldown −{n}%',

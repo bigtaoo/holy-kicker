@@ -1,5 +1,5 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
-import { beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, TICK_RATE, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState } from '@hk/engine';
+import { beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, mapOf, TICK_RATE, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
 import { Balls } from './ballView';
@@ -158,7 +158,7 @@ export class Game {
     Object.assign(this.camPos, { x: lerpX(s.players[0], 1), y: lerpY(s.players[0], 1) }); // a resumed or sought run opens on its hero
 
     sortSteadily(this.world);
-    const stageNo = Math.min(Math.max(setup.chapter, 1), art.stages.length);
+    const stageNo = Math.min(mapOf(setup.chapter), art.stages.length);
     const stage = art.stages[stageNo - 1];
     this.world.addChild(stage.ground ? makeTiledGround(stage.ground, this.camPos) : makeGround());
     if (stage.deco && scene.deco !== 'none') {

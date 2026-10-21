@@ -7,6 +7,7 @@ export const monkId: Table<typeof monkEn> = {
     guest: 'Biksu',
     chapterTitle: 'Bab {n}: {name}',
     unlockAtChapter: 'Tamatkan bab {n} untuk membuka',
+    hardLocked: 'Tamatkan bab ini dengan 3 bintang untuk membuka mode sulit',
     relic: 'Pusaka',
   },
   monk: {
@@ -175,6 +176,7 @@ export const monkId: Table<typeof monkEn> = {
   results: {
     cleared: 'Bab tamat!',
     hardCleared: 'Bab sulit tamat!',
+    hardUnlocked: '3 bintang! Mode sulit bab ini terbuka',
     copper: 'Tembaga +{n}',
     nextChapter: 'Bab berikutnya',
     grit: 'Tekad ×{n}: percobaan berikutnya di sini lebih kuat',
@@ -237,6 +239,9 @@ export const monkId: Table<typeof monkEn> = {
     2: 'Halus',
     3: 'Berharga',
     4: 'Suci',
+    5: 'Surgawi',
+    6: 'Ilahi',
+    7: 'Agung',
   },
   stat: {
     cooldown: 'Jeda jurus −{n}%',

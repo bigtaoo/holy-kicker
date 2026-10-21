@@ -10,7 +10,9 @@ import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
+/** Chapters a save before version 6 had; clearing them all opened hard mode on every one. */
+const OLD_CHAPTERS = 5;
 
 export interface SaveData {
   version: number;
@@ -27,6 +29,8 @@ export interface SaveData {
   cleared: number;
   /** Best waves cleared per chapter, index 0 is chapter 1. */
   best: number[];
+  /** Best stars per chapter, 0..3 (progress.ts runStars); three open the chapter's hard mode. */
+  stars: number[];
   /** Progress chests reached per chapter, one bit per chest in BALANCE.chests order. */
   chests: number[];
   /** The reached chests already opened in the lobby, the same bits (progressChests.ts). */
@@ -48,11 +52,11 @@ export interface SaveData {
   seen: number;
   /** Lost tries on the first uncleared chapter, each worth BALANCE.grit.bonus there (loadout.ts). */
   grit: number;
-  /** The lobby shows hard mode (open once every chapter is cleared); `chapter` is on that track. */
+  /** The lobby shows `chapter` in hard mode (open with its three stars). */
   hard: boolean;
-  /** Hard mode's own clears, best waves and chests, as `cleared`, `best`, `chests` and `opened`. */
-  hardCleared: number;
+  /** Hard mode's own best waves, stars and chests per chapter, as `best`, `stars`, `chests` and `opened`; a best of BALANCE.waves is a clear. */
   hardBest: number[];
+  hardStars: number[];
   hardChests: number[];
   hardOpened: number[];
   /** The wave the last lost run fell on per chapter, 0 for none (falls.ts), and hard mode's. */
@@ -82,9 +86,9 @@ export function newSave(): SaveData {
   const zeros = () => new Array<number>(BALANCE.chapters).fill(0);
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
-    chapter: 1, cleared: 0, best: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
+    chapter: 1, cleared: 0, best: zeros(), stars: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
-    hard: false, hardCleared: 0, hardBest: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
+    hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [],
   };
 }
@@ -130,6 +134,9 @@ function owned(monks: number, id: unknown): boolean {
  * Version 3 had no achievements: the kills start at 0, and what the progress already reached
  * waits to be claimed.
  * Version 4 had no welcome gifts: a player past the first run gets them from the next lobby.
+ * Version 5 had five chapters, no stars and hard mode open on all of them once all were cleared:
+ * its clears read as one star, its hard clears as a count from chapter 1, and a player who had
+ * hard mode keeps it with three stars on those five chapters.
  * A save without the last falls reads as none fallen yet.
  */
 export function parseSave(text: string | null): SaveData {
@@ -145,9 +152,17 @@ export function parseSave(text: string | null): SaveData {
   }
   const max = Number.MAX_SAFE_INTEGER;
   const cleared = int(raw.cleared, 0, BALANCE.chapters, 0);
-  // hard mode only once every chapter is cleared
-  const hardCleared = cleared >= BALANCE.chapters ? int(raw.hardCleared, 0, BALANCE.chapters, 0) : 0;
-  const hard = cleared >= BALANCE.chapters && raw.hard === true;
+  const old = int(raw.version, 0, SAVE_VERSION, 0) < 6;
+  const best = ints(raw.best, 0, BALANCE.waves);
+  const hardBest = ints(raw.hardBest, 0, BALANCE.waves);
+  // a cleared chapter has at least its one star, an uncleared one none
+  const stars = ints(raw.stars, 0, 3).map((s, i) => (i >= cleared ? 0 : old && cleared >= OLD_CHAPTERS && i < OLD_CHAPTERS ? 3 : Math.max(1, s)));
+  if (old) for (let i = 0; i < int(raw.hardCleared, 0, OLD_CHAPTERS, 0) && cleared >= OLD_CHAPTERS; i++) hardBest[i] = BALANCE.waves;
+  // hard mode only where its three stars are
+  for (let i = 0; i < hardBest.length; i++) if (stars[i] < 3) hardBest[i] = 0;
+  const hardStars = ints(raw.hardStars, 0, 3).map((s, i) => (hardBest[i] >= BALANCE.waves ? Math.max(1, s) : 0));
+  const chapter = int(raw.chapter, 1, Math.min(BALANCE.chapters, cleared + 1), 1);
+  const hard = raw.hard === true && stars[chapter - 1] >= 3;
   const monks = int(raw.monks, 0, (1 << MONK_IDS.length) - 1, 1) | 1;
   const chests = ints(raw.chests, 0, (1 << BALANCE.chests.length) - 1);
   const hardChests = ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1);
@@ -158,10 +173,11 @@ export function parseSave(text: string | null): SaveData {
     xp: int(raw.xp, 0, max, 0),
     copper: int(raw.copper, 0, max, 0),
     jade: int(raw.jade, 0, max, 0),
-    // the shown chapter can never be past the first uncleared one of its track
-    chapter: int(raw.chapter, 1, Math.min(BALANCE.chapters, (hard ? hardCleared : cleared) + 1), 1),
+    // the shown chapter can never be past the first uncleared one
+    chapter,
     cleared,
-    best: ints(raw.best, 0, BALANCE.waves),
+    best,
+    stars,
     chests,
     opened: openedOf(raw.opened, chests),
     runs: int(raw.runs, 0, max, 0),
@@ -176,8 +192,8 @@ export function parseSave(text: string | null): SaveData {
     seen: int(raw.seen, 0, 0xff, 0xff),
     grit: int(raw.grit, 0, BALANCE.grit.max, 0),
     hard,
-    hardCleared,
-    hardBest: ints(raw.hardBest, 0, BALANCE.waves),
+    hardBest,
+    hardStars,
     hardChests,
     hardOpened: openedOf(raw.hardOpened, hardChests),
     fell: ints(raw.fell, 0, BALANCE.waves),

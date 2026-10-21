@@ -8,6 +8,7 @@ export const corgiVi: Table<typeof corgiEn> = {
     guest: 'Tân binh',
     chapterTitle: 'Hành tinh {n}: {name}',
     unlockAtChapter: 'Qua hành tinh {n} để mở',
+    hardLocked: 'Qua hành tinh này với 3 sao để mở chế độ Khó',
     relic: 'Vũ khí',
   },
   monk: {
@@ -176,6 +177,7 @@ export const corgiVi: Table<typeof corgiEn> = {
   results: {
     cleared: 'Qua hành tinh!',
     hardCleared: 'Qua hành tinh khó!',
+    hardUnlocked: '3 sao! Đã mở chế độ Khó của hành tinh này',
     copper: 'Ốc vít +{n}',
     nextChapter: 'Hành tinh tiếp theo',
     grit: 'Kiên cường ×{n}: lần thử tiếp theo ở đây mạnh hơn',
@@ -238,6 +240,9 @@ export const corgiVi: Table<typeof corgiEn> = {
     2: 'Hiếm',
     3: 'Sử thi',
     4: 'Huyền thoại',
+    5: 'Thần thoại',
+    6: 'Tinh tú',
+    7: 'Vũ trụ',
   },
   stat: {
     cooldown: 'Hồi chiêu gadget −{n}%',
