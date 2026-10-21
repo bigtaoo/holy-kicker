@@ -32,6 +32,8 @@ holds several objects on white in a grid, and `tools/split_sheet.py` cuts the ce
     cut with `auto`, which names the objects in reading order and skips the spares.
   - `relics`: bowl, cymbal and fish.
   - `fix`: iron, karma and sash, redrawn on their own after the first sheets missed them.
+  - `arsenal`: the homing missile, grenade and combat knife (talisman, bomb, knives), also drawn in
+    the world from their icon frames.
 - `items/sheet_*`: the relic and spell pictures drawn in the world.
   - `tall`: staff, staff_ruyi, bell_relic, palm (a bomb drawn nose up, flipped to fall).
   - `round`: cuju, cuju_meteor, fish.

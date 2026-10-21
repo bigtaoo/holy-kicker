@@ -199,7 +199,7 @@ export class Game {
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
     this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, mountain: art.mountain, z: HERO_TOP_Z - 2 });
-    this.arsenal = new ArsenalView(app.renderer, this.world, this.fx.pool, scene.ringFx);
+    this.arsenal = new ArsenalView(app.renderer, this.world, this.fx.pool, scene.ringFx, art.icons);
     this.aura = new AuraStack(scene.stack);
     this.zen = new ZenRing(this.world);
     this.downCam = new KillCamView(this.world, { hero: this.hero.view, horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
