@@ -265,7 +265,7 @@ export const id: Table<typeof en> = {
     none: 'Belum ditemukan',
     worn: 'Dipakai: {tier}',
     owned: 'Dimiliki',
-    merge: 'Gabung 5 → {tier}',
+    merge: 'Gabung',
     mergeAll: 'Gabung semua',
     nothing: 'Belum ada yang bisa digabung',
     howMerge: '5 barang sama setingkat digabung jadi tingkat berikutnya',

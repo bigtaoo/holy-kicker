@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { t } from '../i18n';
-import { dropLines, itemName, TIER_COLORS, tierName } from './gearText';
+import { newSave } from '../meta/save';
+import { dropLines, itemName, mergeReady, TIER_COLORS, tierName } from './gearText';
 
 // The results screen's list of gear found: one line per item and tier, the best first.
 
@@ -31,5 +32,15 @@ describe('dropLines', () => {
     dropLines(copy);
     expect(copy).toEqual(drops);
     expect(dropLines([])).toEqual([]);
+  });
+});
+
+describe('mergeReady', () => {
+  it('sees a merge on any tier below the top, not only the first four', () => {
+    const save = newSave();
+    const gear = { ...save.gear, robe: [0, 0, 0, 0, 0, 0, 5, 0] };
+    expect(mergeReady({ ...save, copper: 1e9, gear }, 'robe')).toBe(true);
+    expect(mergeReady({ ...save, copper: 0, gear }, 'robe')).toBe(false);
+    expect(mergeReady({ ...save, copper: 1e9, gear: { ...save.gear, robe: [0, 0, 0, 0, 0, 0, 0, 9] } }, 'robe')).toBe(false);
   });
 });

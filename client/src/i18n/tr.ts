@@ -265,7 +265,7 @@ export const tr: Table<typeof en> = {
     none: 'Henüz bulunmadı',
     worn: 'Kuşanılan: {tier}',
     owned: 'Sahip olunan',
-    merge: 'Birleştir 5 → {tier}',
+    merge: 'Birleştir',
     mergeAll: 'Hepsini birleştir',
     nothing: 'Birleştirecek bir şey yok',
     howMerge: 'Aynı seviyeden 5 eş parça bir üst seviyeye birleşir',

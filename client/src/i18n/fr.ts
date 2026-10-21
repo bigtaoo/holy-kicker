@@ -266,7 +266,7 @@ export const fr: Table<typeof en> = {
     none: 'Pas encore trouvé',
     worn: 'Porté : {tier}',
     owned: 'Possédé',
-    merge: 'Fusionner 5 → {tier}',
+    merge: 'Fusionner',
     mergeAll: 'Tout fusionner',
     nothing: 'Rien à fusionner pour l’instant',
     howMerge: "5 objets identiques d'un rang fusionnent au suivant",

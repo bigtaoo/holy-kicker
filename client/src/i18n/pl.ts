@@ -265,7 +265,7 @@ export const pl: Table<typeof en> = {
     none: 'Jeszcze nieznalezione',
     worn: 'Noszone: {tier}',
     owned: 'Posiadane',
-    merge: 'Połącz 5 → {tier}',
+    merge: 'Połącz',
     mergeAll: 'Połącz wszystko',
     nothing: 'Na razie nie ma czego łączyć',
     howMerge: '5 takich samych jednej rangi łączy się w następną',

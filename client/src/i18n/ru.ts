@@ -264,7 +264,7 @@ export const ru: Table<typeof en> = {
     none: 'Ещё не найдено',
     worn: 'Надето: {tier}',
     owned: 'Есть',
-    merge: 'Слить 5 → {tier}',
+    merge: 'Слить',
     mergeAll: 'Слить всё',
     nothing: 'Пока нечего сливать',
     howMerge: '5 одинаковых одного ранга сливаются в следующий',

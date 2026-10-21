@@ -265,7 +265,7 @@ export const it: Table<typeof en> = {
     none: 'Non ancora trovato',
     worn: 'Indossato: {tier}',
     owned: 'Posseduto',
-    merge: 'Fondi 5 → {tier}',
+    merge: 'Fondi',
     mergeAll: 'Fondi tutto',
     nothing: 'Ancora niente da fondere',
     howMerge: '5 uguali dello stesso grado si fondono nel successivo',

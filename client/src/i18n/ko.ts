@@ -263,7 +263,7 @@ export const ko: Table<typeof en> = {
     none: '아직 못 찾음',
     worn: '착용: {tier}',
     owned: '보유',
-    merge: '5개 합성 → {tier}',
+    merge: '합성',
     mergeAll: '모두 합성',
     nothing: '합성할 장비가 없어요',
     howMerge: '같은 장비 같은 등급 5개로 다음 등급 합성',

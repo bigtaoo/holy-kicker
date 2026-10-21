@@ -1,11 +1,18 @@
 import { t } from '../i18n';
-import { isRelic, type Drop, type ItemId, type Tier } from '../meta/gear';
+import { canMerge, isRelic, TIERS, type Drop, type ItemId, type Tier } from '../meta/gear';
+import type { SaveData } from '../meta/save';
 
 // Names and colours for gear in the UI (docs/design.md "Merge screen and effect": tier
 // colours are UI only, never drawn in the world).
 
 /** Common grey, Fine green, Refined blue, Treasured purple, Sacred gold. */
 export const TIER_COLORS: readonly number[] = [0xa0a8a4, 0x5ccf6a, 0x4f9df0, 0xb06cf0, 0xffd040, 0xff7a3a, 0xff4f8a, 0x6ff2ff];
+
+/** Whether some tier of the item can merge now (the slot's dot, "Merge all"). */
+export function mergeReady(save: SaveData, item: ItemId): boolean {
+  for (let k = 0; k < TIERS - 1; k++) if (canMerge(save, item, k as Tier)) return true;
+  return false;
+}
 
 export function itemName(item: ItemId): string {
   return isRelic(item) ? t(`relic.${item}.name`) : t(`gear.item.${item}`);

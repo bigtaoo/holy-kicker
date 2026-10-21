@@ -263,7 +263,7 @@ export const ja: Table<typeof en> = {
     none: '未入手',
     worn: '装備中：{tier}',
     owned: '所持',
-    merge: '5個合成 → {tier}',
+    merge: '合成',
     mergeAll: '一括合成',
     nothing: '合成できる装備がない',
     howMerge: '同じ装備・同じ等級5個で次の等級に合成',

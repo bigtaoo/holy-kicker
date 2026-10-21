@@ -265,7 +265,7 @@ export const de: Table<typeof en> = {
     none: 'Noch nicht gefunden',
     worn: 'Getragen: {tier}',
     owned: 'Im Besitz',
-    merge: 'Verschmelzen 5 → {tier}',
+    merge: 'Verschmelzen',
     mergeAll: 'Alle verschmelzen',
     nothing: 'Noch nichts zu verschmelzen',
     howMerge: '5 gleiche Teile eines Rangs verschmelzen zum nächsten',

@@ -264,7 +264,7 @@ export const th: Table<typeof en> = {
     none: 'ยังไม่พบ',
     worn: 'สวมอยู่: {tier}',
     owned: 'มีอยู่',
-    merge: 'รวม 5 → {tier}',
+    merge: 'รวม',
     mergeAll: 'รวมทั้งหมด',
     nothing: 'ยังไม่มีอะไรให้รวม',
     howMerge: 'ของชิ้นเดียวกันระดับเดียวกัน 5 ชิ้น รวมเป็นระดับถัดไป',

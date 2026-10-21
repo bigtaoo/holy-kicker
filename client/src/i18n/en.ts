@@ -263,7 +263,7 @@ export const en = {
     none: 'Not found yet',
     worn: 'Worn: {tier}',
     owned: 'Owned',
-    merge: 'Merge 5 → {tier}',
+    merge: 'Merge',
     mergeAll: 'Merge all',
     nothing: 'Nothing to merge yet',
     howMerge: '5 alike of one tier merge into the next',

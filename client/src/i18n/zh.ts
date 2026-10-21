@@ -263,7 +263,7 @@ export const zh: Table<typeof en> = {
     none: '尚未获得',
     worn: '穿戴：{tier}',
     owned: '拥有',
-    merge: '合成 5 → {tier}',
+    merge: '合成',
     mergeAll: '一键合成',
     nothing: '暂无可合成的装备',
     howMerge: '5 件同品阶的同一装备可合成下一品阶',

@@ -5,7 +5,7 @@ import { canMerge, gearStats, itemStats, mergeCost, TIERS, worn, type GearSlot, 
 import type { SaveData } from '../meta/save';
 import { lockedLook, type IconSheet } from './buildBar';
 import { gearIcon } from './gearIcons';
-import { itemName, TIER_COLORS, tierName } from './gearText';
+import { itemName, mergeReady, TIER_COLORS, tierName } from './gearText';
 import { statLines } from './statText';
 import { DOLL_H, gearDoll, HERO_FEET, HERO_H } from './gearDoll';
 import { CARD, CARD_STROKE } from './playCard';
@@ -30,19 +30,41 @@ const STATS_W = 1000;
 const ROW_H = 58;
 const MERGE_W = 440;
 const MERGE_H = 110;
-
-function cardHeight(lines: number): number {
-  return 100 + Math.max(1, Math.ceil(lines / 2)) * ROW_H + 36;
-}
-
-/** Total height of the tab's content, its top at y = 0. */
-export function gearHeight(save: SaveData): number {
-  return DOLL_H + 20 + cardHeight(statLines(gearStats(save)).length);
-}
+/** The item panel's tier rows: one per tier, eight of them, so they stay compact. */
+const TIER_ROW_H = 84;
+const TIER_STEP = 96;
+const MERGE_BTN_W = 380;
 
 /** Whether any merge can go ahead now. */
 function anyMerge(save: SaveData): boolean {
-  return Object.keys(save.gear).some((item) => [0, 1, 2, 3].some((tier) => canMerge(save, item as ItemId, tier as Tier)));
+  return (Object.keys(save.gear) as ItemId[]).some((item) => mergeReady(save, item));
+}
+
+/**
+ * Stat lines in two columns from `top` down, row by row; a line far too long for its column wraps
+ * onto a second line (and its row grows) instead of being squeezed. Returns the grid's height.
+ */
+function statGrid(into: Container, cols: [number, string[], number][], colW: number, rowH: number, top: number): number {
+  const rows = Math.max(...cols.map(([, lines]) => lines.length));
+  let y = top;
+  for (let i = 0; i < rows; i++) {
+    const cells = cols.filter(([, lines]) => lines[i] !== undefined).map(([x, lines, fill]) => {
+      // a little too long squeezes as everywhere else; much too long (invincibility) wraps
+      const one = label(lines[i], 48, fill);
+      const l = one.width * 0.8 <= colW - 20 ? fit(one, colW - 20)
+        : label(lines[i], 48, fill, { wordWrap: true, wordWrapWidth: colW - 20, breakWords: true, lineHeight: 52 });
+      if (l !== one) one.destroy();
+      l.x = x;
+      return l;
+    });
+    const h = Math.max(rowH, ...cells.map((l) => l.height + 6));
+    for (const l of cells) {
+      l.y = y + h / 2;
+      into.addChild(l);
+    }
+    y += h;
+  }
+  return y - top;
 }
 
 function badge(icons: IconSheet, item: ItemId, tier: Tier | -1, r: number): Container {
@@ -72,35 +94,34 @@ export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, 
     all.y = feet;
     c.addChild(all);
   } else {
-    const how = label(t('gear.howMerge'), 40, COLORS.text, { ...CARD_STROKE, wordWrap: true, wordWrapWidth: MERGE_W, breakWords: true, lineHeight: 46 });
+    const how = label(t('gear.howMerge').replace(/(\d) /g, '$1 '), 48, COLORS.text, { ...CARD_STROKE, wordWrap: true, wordWrapWidth: MERGE_W, breakWords: true, lineHeight: 54 });
     how.alpha = 0.8;
     how.y = feet;
     c.addChild(how);
   }
-  const lines = statLines(gearStats(save));
-  const h = cardHeight(lines.length);
-  const card = statsCard(t('gear.total'), lines, h);
+  const [card, h] = statsCard(t('gear.total'), statLines(gearStats(save)));
   card.y = DOLL_H + 20 + h / 2;
   c.addChild(card);
   return c;
 }
 
 /** What the worn gear adds up to: the Play tab's light card, its lines in two columns. */
-function statsCard(title: string, lines: string[], h: number): Container {
+function statsCard(title: string, lines: string[]): [Container, number] {
   const c = new Container();
-  c.addChild(panel(STATS_W, h, CARD.fill));
+  const body = new Container();
   const head = label(title, 52, COLORS.text, CARD_STROKE);
-  head.y = -h / 2 + 56;
-  c.addChild(head);
+  head.y = 56;
   if (lines.length === 0) lines = ['—'];
   const colW = (STATS_W - 80) / 2;
-  lines.forEach((text, i) => {
-    const l = fit(label(text, 48, shade(CARD.quiet, -0.35)), colW - 20);
-    const one = lines.length === 1;
-    l.position.set(one ? 0 : (i % 2 - 0.5) * colW, -h / 2 + 100 + Math.floor(i / 2) * ROW_H + ROW_H / 2);
-    c.addChild(l);
-  });
-  return c;
+  const fill = shade(CARD.quiet, -0.35);
+  const one = lines.length === 1;
+  const left = lines.filter((_, i) => one || i % 2 === 0);
+  const right = one ? [] : lines.filter((_, i) => i % 2 === 1);
+  const h = 100 + statGrid(body, [[one ? 0 : -colW / 2, left, fill], [colW / 2, right, fill]], colW, ROW_H, 100) + 36;
+  body.addChild(head);
+  body.y = -h / 2;
+  c.addChild(panel(STATS_W, h, CARD.fill), body);
+  return [c, h];
 }
 
 /** A titled panel with stat lines in two columns. */
@@ -121,79 +142,83 @@ export function statsPanel(title: string, lines: string[], h: number, w = STATS_
   return c;
 }
 
-/** The item of a slot, full screen: stats now and next, one row per tier with its merge. */
+/**
+ * The item of a slot, full screen: its badge, its stats now and at the next tier side by side,
+ * one row per tier with its count and merge, and Back under them; the panel is as tall as that.
+ */
 export function gearDetail(save: SaveData, slot: GearSlot, icons: IconSheet, w: number, h: number, actions: GearActions): Container {
   const root = new Container();
   root.addChild(backdrop(w, h));
   const { item, tier } = worn(save).find((s) => s.slot === slot)!;
   const boxW = 980;
-  const boxH = 1500;
-  const box = new Container();
-  box.position.set(w / 2, h / 2);
-  box.addChild(panel(boxW, boxH));
-  root.addChild(box);
-  let y = -boxH / 2 + 80;
+  const body = new Container();
+  let y = 75;
   const title = fit(label(itemName(item), 64), boxW - 80);
   title.y = y;
-  const b = badge(icons, item, tier, 100);
-  b.y = y + 170;
-  box.addChild(title, b);
-  y += 300;
+  const b = badge(icons, item, tier, 76);
+  b.y = y + 130;
+  body.addChild(title, b);
+  y += 250;
 
   const colW = (boxW - 60) / 2;
-  const column = (x: number, head: string, fill: number, lines: string[]) => {
-    const hd = fit(label(head, 48, fill), colW - 20);
+  const nextTier = tier < TIERS - 1 ? ((tier + 1) as Tier) : null;
+  const heads: [number, string, number][] = [
+    [-colW / 2, tier !== -1 ? t('gear.worn', { tier: tierName(tier) }) : t('gear.none'), tier >= 0 ? TIER_COLORS[tier] : COLORS.dim],
+  ];
+  if (nextTier !== null) heads.push([colW / 2, `${t('gear.next')}: ${tierName(nextTier)}`, COLORS.dim]);
+  for (const [x, text, fill] of heads) {
+    const hd = fit(label(text, 48, fill), colW - 20);
     hd.position.set(x, y);
-    box.addChild(hd);
-    lines.forEach((text, i) => {
-      const l = fit(label(text, 48, fill === COLORS.dim ? COLORS.dim : COLORS.text), colW - 20);
-      l.position.set(x, y + 70 + i * 60);
-      box.addChild(l);
-    });
-  };
-  const now = tier !== -1 ? statLines(itemStats(item, tier)) : [];
-  column(-colW / 2, tier !== -1 ? t('gear.worn', { tier: tierName(tier) }) : t('gear.none'), tier >= 0 ? TIER_COLORS[tier] : COLORS.dim, now);
-  if (tier < TIERS - 1) {
-    const next = (tier + 1) as Tier;
-    column(colW / 2, `${t('gear.next')}: ${tierName(next)}`, COLORS.dim, statLines(itemStats(item, next)));
+    body.addChild(hd);
   }
-  y += 70 + 4 * 60 + 30;
+  y += 40;
+  const now = tier !== -1 ? statLines(itemStats(item, tier)) : [];
+  const next = nextTier !== null ? statLines(itemStats(item, nextTier)) : [];
+  y += statGrid(body, [[-colW / 2, now, COLORS.text], [colW / 2, next, COLORS.dim]], colW, 58, y) + 36;
 
   for (let k = 0 as Tier; k < TIERS; k = (k + 1) as Tier) {
     const row = tierRow(save, item, k, boxW - 80, actions);
-    row.y = y + 55;
-    box.addChild(row);
-    y += 118;
+    row.y = y + TIER_ROW_H / 2;
+    body.addChild(row);
+    y += TIER_STEP;
   }
-  const back = button(t('common.back'), 400, 120, () => actions.close(), { fill: COLORS.panelLocked });
-  back.y = boxH / 2 - 100;
-  box.addChild(back);
+  const back = button(t('common.back'), 400, 110, () => actions.close(), { fill: COLORS.panelLocked });
+  back.y = y + 20 + 55;
+  body.addChild(back);
+  const boxH = y + 20 + 110 + 45;
+  const box = new Container();
+  // a short screen scales the panel down rather than pushing Back under the edge
+  box.scale.set(Math.min(1, (h - 40) / boxH, (w - 40) / boxW));
+  box.position.set(w / 2, h / 2);
+  body.y = -boxH / 2;
+  box.addChild(panel(boxW, boxH), body);
+  root.addChild(box);
   return root;
 }
 
+/** A tier's row: its name and count on the left, the merge into the next tier and its copper on the right. */
 function tierRow(save: SaveData, item: ItemId, tier: Tier, w: number, actions: GearActions): Container {
   const row = new Container();
   const count = save.gear[item][tier];
-  row.addChild(new Graphics().roundRect(-w / 2, -50, w, 100, 20).fill(count > 0 ? COLORS.panel : COLORS.panelLocked)
+  const rh = TIER_ROW_H;
+  row.addChild(new Graphics().roundRect(-w / 2, -rh / 2, w, rh, 20).fill(count > 0 ? COLORS.panel : COLORS.panelLocked)
     .stroke({ color: TIER_COLORS[tier], width: 5 }));
-  const name = fit(label(tierName(tier), 48, TIER_COLORS[tier]), 230);
+  const name = fit(label(tierName(tier), 48, TIER_COLORS[tier]), 240);
   name.anchor.set(0, 0.5);
   name.x = -w / 2 + 30;
   const n = label(`${count}/${BALANCE.gear.mergeCount}`, 48, count > 0 ? COLORS.text : COLORS.dim);
-  n.x = -w / 2 + 330;
+  n.x = -w / 2 + 350;
   row.addChild(name, n);
   if (tier < TIERS - 1) {
     const enough = count >= BALANCE.gear.mergeCount;
     const ok = canMerge(save, item, tier);
-    const cost = mergeCost(tier);
-    const text = `${t('gear.merge', { tier: tierName((tier + 1) as Tier) })}  ${formatAmount(cost)}`;
-    const m = button(text, 480, 84, () => {
+    const text = `${t('gear.merge')}  ${formatAmount(mergeCost(tier))}`;
+    const m = button(text, MERGE_BTN_W, rh - 12, () => {
       if (ok) actions.merge(item, tier);
       else if (enough) actions.toast(t('gear.noCopper'));
     }, { fill: ok ? COLORS.saffron : COLORS.panelLocked, textFill: ok ? COLORS.outline : COLORS.dim, size: 48 });
-    m.x = w / 2 - 250;
+    m.x = w / 2 - MERGE_BTN_W / 2 - 10;
     row.addChild(m);
   }
   return row;
 }
-

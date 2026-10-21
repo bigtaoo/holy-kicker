@@ -1,10 +1,10 @@
 import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
-import { canMerge, type GearSlot, type ItemId, type Tier } from '../meta/gear';
+import type { GearSlot, ItemId, Tier } from '../meta/gear';
 import type { SaveData } from '../meta/save';
 import { lockedLook, type IconSheet } from './buildBar';
 import { gearIcon } from './gearIcons';
-import { itemName, TIER_COLORS, tierName } from './gearText';
+import { itemName, mergeReady, TIER_COLORS, tierName } from './gearText';
 import { BADGE } from './playCard';
 import { COLORS, label, playTap, shade } from './widgets';
 
@@ -52,7 +52,7 @@ export function gearDoll(save: SaveData, icons: IconSheet, slots: DollSlot[], he
   }
   const place = (side: readonly GearSlot[], x: number) => side.forEach((slot, i) => {
     const s = slots.find((w) => w.slot === slot)!;
-    const ready = [0, 1, 2, 3].some((k) => canMerge(save, s.item, k as Tier));
+    const ready = mergeReady(save, s.item);
     const b = slotBadge(icons, s.item, s.tier, ready, () => open(slot));
     b.position.set(x, SLOT_R + i * SLOT_STEP);
     c.addChild(b);
