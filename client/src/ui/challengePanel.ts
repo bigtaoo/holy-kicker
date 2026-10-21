@@ -10,7 +10,7 @@ import { rowName, type BoardUi, type FetchBoard } from './boardPanel';
 import { iconSprite, type IconSheet } from './buildBar';
 import type { DailyView, WeeklyView } from './challengeFlow';
 import { railButton } from './lobbyRail';
-import { claimCard, mutatorLine, weeklyPage } from './weeklyPage';
+import { claimCard, mutatorLine, ruleLines, weeklyPage, weeklyRules, type Rules } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The challenges in the lobby (docs/design.md "Challenges"): a round button on the Play tab's right rail with the daily's
@@ -101,8 +101,12 @@ export class ChallengeUi {
     root.addChild(backdrop(w, h));
     const box = new Container();
     box.position.set(w / 2, h / 2);
-    const top = -BOX_H / 2;
-    box.addChild(panel(BOX_W, BOX_H));
+    // each tab's wrapped rules push what follows down; both tabs share the box, grown for the longer
+    const daily = lobby.daily ? dailyRules() : null;
+    const weekly = lobby.weekly ? weeklyRules(lobby.weekly, BOX_W) : null;
+    const boxH = BOX_H + Math.max(daily?.grow ?? 0, weekly?.grow ?? 0);
+    const top = -boxH / 2;
+    box.addChild(panel(BOX_W, boxH));
     const add = (text: string, size: number, fill: number, y: number) => {
       const l = fit(label(text, size, fill), BOX_W - 100);
       l.y = top + y;
@@ -116,20 +120,21 @@ export class ChallengeUi {
         box.addChild(b);
       });
     } else add(t(tab === 'daily' ? 'challenge.title' : 'weekly.title'), 68, COLORS.saffron, 80);
-    if (tab === 'weekly' && lobby.weekly) this.weekly(box, top, lobby, lobby.weekly);
-    else if (lobby.daily) this.daily(box, top, add, lobby, lobby.daily);
+    if (tab === 'weekly' && lobby.weekly && weekly) this.weekly(box, top, lobby, lobby.weekly, weekly);
+    else if (lobby.daily && daily) this.daily(box, top, add, lobby, lobby.daily, daily);
+    for (const r of [daily, weekly]) if (r && !r.view.parent) r.view.destroy({ children: true });
     const back = button(t('common.back'), 400, 110, () => this.show(false), { fill: COLORS.panelLocked });
-    back.y = top + BOX_H - 95;
+    back.y = top + boxH - 95;
     box.addChild(back);
     root.addChild(box);
     return root;
   }
 
-  private weekly(box: Container, top: number, lobby: ChallengeLobby, wk: WeeklyView): void {
+  private weekly(box: Container, top: number, lobby: ChallengeLobby, wk: WeeklyView, rules: Rules): void {
     const fetchBoard = lobby.board;
     const watch = wk.state === 'open' ? lobby.watch : null;
     const chapter = wk.challenge.loadout!.chapter;
-    weeklyPage(box, top, BOX_W, wk, this.icons, {
+    weeklyPage(box, top, BOX_W, wk, this.icons, rules, {
       play: () => {
         this.open = false;
         lobby.play(wk.challenge, chapter);
@@ -142,15 +147,18 @@ export class ChallengeUi {
     });
   }
 
-  private daily(box: Container, top: number, add: (text: string, size: number, fill: number, y: number) => void, lobby: ChallengeLobby, d: DailyView): void {
+  /** The daily's page; everything under `rules` (dailyRules) moves down by their grow. */
+  private daily(box: Container, top: number, add: (text: string, size: number, fill: number, y: number) => void, lobby: ChallengeLobby, d: DailyView, rules: Rules): void {
+    const grow = rules.grow;
     add(t('lobby.chapterTitle', { n: d.chapter, name: chapterName(d.chapter) }), 48, COLORS.text, 165);
     const mutator = mutatorLine(d.challenge.mutator);
     if (mutator) add(mutator, 42, COLORS.saffron, 232);
-    ['challenge.rule1', 'challenge.rule2', 'challenge.rule3'].forEach((key, i) => add(t(key as never), 40, COLORS.dim, (mutator ? 295 : 250) + i * 56));
-    add(t('challenge.milestones'), 48, COLORS.text, 470);
-    BALANCE.challenge.milestones.forEach((m, i) => box.addChild(this.milestoneRow(milestonePay(m, d.chapter), top + 560 + i * 90, d.state === 'done')));
+    rules.view.y = top + (mutator ? 270 : 225);
+    box.addChild(rules.view);
+    add(t('challenge.milestones'), 48, COLORS.text, 470 + grow);
+    BALANCE.challenge.milestones.forEach((m, i) => box.addChild(this.milestoneRow(milestonePay(m, d.chapter), top + grow + 560 + i * 90, d.state === 'done')));
     // where the day stands: time left, done (with the board share once known), or update
-    let y = 920;
+    let y = 920 + grow;
     if (d.state === 'update') add(t('challenge.update'), 44, COLORS.danger, y);
     else if (d.state === 'done') add(t('challenge.done'), 48, COLORS.jade, y);
     else add(t('challenge.ends', { h: d.hours }), 44, COLORS.text, y);
@@ -174,7 +182,7 @@ export class ChallengeUi {
       }, { fill: COLORS.panelLocked, size: 52 }));
     }
     buttons.forEach((b, i) => {
-      b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + 1170);
+      b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + grow + 1170);
       box.addChild(b);
     });
   }
@@ -202,4 +210,10 @@ export class ChallengeUi {
     chip('jade', m.jade, COLORS.jade, 290);
     return row;
   }
+}
+
+/** The daily's rules: they once had 56 a line; 24 more keeps them off the milestones' title. */
+function dailyRules(): Rules {
+  const view = ruleLines(['challenge.rule1', 'challenge.rule2', 'challenge.rule3'], BOX_W - 100);
+  return { view, grow: Math.max(0, view.height + 24 - 3 * 56) };
 }

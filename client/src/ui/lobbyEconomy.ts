@@ -330,9 +330,11 @@ export class EconomyUi {
       : kind === 'ad' ? t('shop.adInfo', { jade: c.jade, n: c.drops })
       : t('shop.jadeInfo', { n: c.drops, chapter: c.chapter });
     const status = left === null ? '' : left > 0 ? t('shop.left', { n: left }) : t('shop.tomorrow');
-    const lines: [string, number, number][] = [[t(`shop.${kind}`), 56, COLORS.text], [info, 40, COLORS.dim], [status, 38, left === 0 ? COLORS.danger : COLORS.dim]];
-    lines.forEach(([text, size, fill], i) => {
-      const l = fit(label(text, size, fill, { align: 'left' }), 420);
+    // "come back tomorrow" in red, outlined like the other red words on a dark card
+    const out = left === 0;
+    const lines: [string, number, number, boolean][] = [[t(`shop.${kind}`), 56, COLORS.text, false], [info, 40, COLORS.dim, false], [status, 38, out ? COLORS.danger : COLORS.dim, out]];
+    lines.forEach(([text, size, fill, stroke], i) => {
+      const l = fit(label(text, size, fill, stroke ? { align: 'left', stroke: { color: COLORS.outline, width: 6 } } : { align: 'left' }), 420);
       l.anchor.set(0, 0.5);
       l.position.set(-260, (i - 1) * (75 + (h - CARD_H) / 4) - 5);
       card.addChild(l);

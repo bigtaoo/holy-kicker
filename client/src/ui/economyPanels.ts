@@ -6,7 +6,7 @@ import type { Haul } from '../meta/haul';
 import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLeft } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
 import { ROWS_TOP, ROW_H, TASKS_BOX_H, achieveRows, tasksSwitch, type AchievePanelActions, type TasksView } from './achievePanel';
-import { dropLines } from './gearText';
+import { GEAR_TILE, gearTiles, placeTiles } from './gearTiles';
 import type { TaoAsset } from '../game/tao/TaoActor';
 import { iconSprite, type IconSheet } from './buildBar';
 import { PatrolScene, type PatrolArt } from './patrolScene';
@@ -207,16 +207,17 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
   return c;
 }
 
-/** What a chest or a patrol just paid, over everything, until OK. */
+/** What a chest or a patrol just paid, over everything, until OK: the coins in lines, the gear in framed tiles. */
 export function haulPanel(haul: Haul, icons: IconSheet, w: number, h: number, close: () => void): Container {
   // text, size, colour and the coin drawn before it
-  const lines: [string, number, number, string?][] = [];
+  const lines: [string, number, number, string][] = [];
   if (haul.copper > 0) lines.push([t('haul.copper', { n: formatAmount(haul.copper) }), 56, COLORS.copper, 'copper']);
   if (haul.jade > 0) lines.push([t('haul.jade', { n: formatAmount(haul.jade) }), 56, COLORS.jade, 'jade']);
-  for (const [text, color] of dropLines(haul.drops)) lines.push([text, 48, color]);
+  const tiles = new Container();
+  const tilesH = placeTiles(gearTiles(haul.drops, icons).map((tile) => tiles.addChild(tile)), 5);
   const root = new Container();
   root.addChild(backdrop(w, h, 0.7));
-  const boxH = 160 + lines.reduce((n, [, size]) => n + size + 36, 0) + 200;
+  const boxH = 160 + lines.reduce((n, [, size]) => n + size + 36, 0) + (tilesH > 0 ? tilesH + 40 : 0) + 200;
   const box = new Container();
   box.position.set(w / 2, h / 2);
   box.addChild(panel(860, boxH));
@@ -229,7 +230,7 @@ export function haulPanel(haul: Haul, icons: IconSheet, w: number, h: number, cl
     const l: Text = fit(label(text, size, fill), 780);
     l.y = y + size / 2;
     box.addChild(l);
-    const icon = coin ? iconSprite(icons, coin, size * 1.5) : null;
+    const icon = iconSprite(icons, coin, size * 1.5);
     if (icon) {
       // the coin and the line centred together, a small gap between
       const gap = 16;
@@ -239,6 +240,10 @@ export function haulPanel(haul: Haul, icons: IconSheet, w: number, h: number, cl
       box.addChild(icon);
     }
     y += size + 36;
+  }
+  if (tilesH > 0) {
+    tiles.y = y + 10 + GEAR_TILE / 2;
+    box.addChild(tiles);
   }
   const ok = button(t('haul.ok'), 400, 120, close);
   ok.y = boxH / 2 - 100;

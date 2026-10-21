@@ -1,4 +1,4 @@
-import { Container } from 'pixi.js';
+import { Container, type Text } from 'pixi.js';
 import { mutatorOf } from '@hk/engine';
 import { BALANCE } from '../meta/balance';
 import type { WeekClaim } from '../meta/weekly';
@@ -26,17 +26,71 @@ export function mutatorLine(id: string | null | undefined): string | null {
   return m && t('mutator.line', { name: t(`mutator.${m}`), info: t(`mutator.${m}Info`) });
 }
 
+/** A page's rules block and how much more room it takes than the rules had on one shrunk line each. */
+export interface Rules {
+  view: Container;
+  grow: number;
+}
+
+/** Rule lines at size 48 in dim, each wrapped at `width` into even lines, stacked down from y 0. */
+export function ruleLines(keys: readonly string[], width: number): Container {
+  const size = 48;
+  const lineH = size + 10;
+  const c = new Container();
+  let y = 0;
+  keys.forEach((key, i) => {
+    const text = t(key as never);
+    const l = label(text, size, COLORS.dim, { lineHeight: lineH });
+    const one = l.width;
+    if (one > width && !breakAtPause(l, text, width)) {
+      Object.assign(l.style, { wordWrap: true, breakWords: true, wordWrapWidth: width });
+      const h = l.height;
+      // the lines evened out, so no word (or character) is left alone on the last, as long as that adds no line
+      for (let w = one / Math.round(h / lineH) + size; ; w += size) {
+        l.style.wordWrapWidth = Math.min(w, width);
+        if (w >= width || l.height <= h) break;
+      }
+    }
+    l.anchor.set(0.5, 0);
+    l.y = y;
+    c.addChild(l);
+    y += l.height + (i < keys.length - 1 ? 6 : 0);
+  });
+  return c;
+}
+
+/** Breaks `l` (showing `text`) into two lines after the colon or comma nearest its middle, if both then fit `width`. */
+function breakAtPause(l: Text, text: string, width: number): boolean {
+  const cuts = [...text.matchAll(/[:：,，]/g)].map((m) => m.index + 1).sort((a, b) => Math.abs(a - text.length / 2) - Math.abs(b - text.length / 2));
+  for (const at of cuts) {
+    l.text = `${text.slice(0, at).trimEnd()}
+${text.slice(at).trimStart()}`;
+    if (l.width <= width) return true;
+  }
+  l.text = text;
+  return false;
+}
+
+/** The weekly's rules: (with a mutator) they once had 46 a line, else 54; 24 more keeps them off the rewards title. */
+export function weeklyRules(w: WeeklyView, width: number): Rules {
+  const view = ruleLines(['weekly.rule1', 'weekly.rule2', 'weekly.rule3'], width - 100);
+  return { view, grow: Math.max(0, view.height + 24 - 3 * (w.challenge.mutator ? 46 : 54)) };
+}
+
 export interface WeeklyPageActions {
   play(): void;
   /** Opens the week's board; null without a name on the boards. */
   ranks: (() => void) | null;
 }
 
-/** The weekly page's parts, drawn into the panel `box` (`width` wide, its top edge at `top`), from y 165 on. */
-export function weeklyPage(box: Container, top: number, width: number, w: WeeklyView, icons: IconSheet, actions: WeeklyPageActions): void {
+/**
+ * The weekly page's parts, drawn into the panel `box` (`width` wide, its top edge at `top`), from y 165 on;
+ * everything under `rules` (weeklyRules) moves down by their grow.
+ */
+export function weeklyPage(box: Container, top: number, width: number, w: WeeklyView, icons: IconSheet, rules: Rules, actions: WeeklyPageActions): void {
   const add = (text: string, size: number, fill: number, y: number) => {
     const l = fit(label(text, size, fill), width - 100);
-    l.y = top + y;
+    l.y = top + (y > 600 ? y + rules.grow : y); // what lies under the rules moves down
     box.addChild(l);
   };
   const l = w.challenge.loadout!;
@@ -53,9 +107,10 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
   add(l.sutras.map((s) => t(`spell.${s}.name` as never)).join(' · '), 36, COLORS.dim, 408);
   const mutator = mutatorLine(w.challenge.mutator);
   if (mutator) add(mutator, 38, COLORS.saffron, 462);
-  ['weekly.rule1', 'weekly.rule2', 'weekly.rule3'].forEach((key, i) => add(t(key as never), mutator ? 36 : 38, COLORS.dim, mutator ? 512 + i * 46 : 480 + i * 54));
+  rules.view.y = top + (mutator ? 492 : 455);
+  box.addChild(rules.view);
   add(t('weekly.rewards'), 48, COLORS.text, 665);
-  weeklyTiers().forEach((tier, i) => box.addChild(tierRow(t(tier.key as never), tier.jade, i, top + 740 + i * 68, icons)));
+  weeklyTiers().forEach((tier, i) => box.addChild(tierRow(t(tier.key as never), tier.jade, i, top + rules.grow + 740 + i * 68, icons)));
   if (w.state === 'update') add(t('weekly.update'), 44, COLORS.danger, 1025);
   else add(w.best > 0 ? t('weekly.best', { wave: w.best }) : t('weekly.noBest'), 46, w.best > 0 ? COLORS.saffron : COLORS.dim, 1025);
   let y = 1080;
@@ -68,7 +123,7 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
   if (w.state === 'open') buttons.push(button(t('lobby.play'), 420, 125, actions.play, { fill: COLORS.saffron, size: 60 }));
   if (actions.ranks) buttons.push(button(t('board.button'), 360, 125, actions.ranks, { fill: COLORS.panelLocked, size: 52 }));
   buttons.forEach((b, i) => {
-    b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + 1235);
+    b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + rules.grow + 1235);
     box.addChild(b);
   });
 }
