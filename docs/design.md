@@ -54,6 +54,10 @@ is recorded.
 
 - In-run levelling: XP orbs, pick 1 of 3 on level-up (relic upgrade / spell / passive).
   Specific spell + passive pairs **evolve**.
+- Winning: the sim stops on the tick the chapter boss goes down, but the view keeps its clock
+  for the monk's closing line before the results. The boss shudders, sinks and fades
+  (`game/bossFall.ts`, 1.3 s, on the view clock; mid-bosses fall the same way), and whatever
+  is still standing drops as corpses with it, so the win never looks like a frozen screen.
 - Death: one rewarded-ad revive per run; otherwise results are paid by the wave reached.
 - **Progress chests** at waves 10/20/30/40/50 of each chapter, claimable once each, so a
   failed push still pays. A run only unlocks them; the player opens them on the lobby's chapter
