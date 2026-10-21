@@ -16,11 +16,12 @@ import { adFreeCard } from './adFreeCard';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { dropName } from './gearText';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
-import { COLORS, button, buttonLabel, dot, fit, label, panel } from './widgets';
+import { railButton, setRailSub } from './lobbyRail';
+import { COLORS, button, dot, fit, label, panel } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
-// chests (and on iOS the ad-free card, adFreeCard.ts), the patrol and daily-task buttons under
-// PLAY, a new player's welcome gift, and their panels. Holds what is open and whether an ad or a purchase is under way; the save
+// chests (and on iOS the ad-free card, adFreeCard.ts), the patrol and daily-task buttons on
+// the Play tab's left rail, a new player's welcome gift, and their panels. Holds what is open and whether an ad or a purchase is under way; the save
 // changes themselves are pure (meta/shop.ts, meta/patrol.ts, meta/daily.ts) and go back to the
 // lobby to store. Each one that went through is reported to analytics: a chest or a quick patrol
 // as `buy`, anything paid out as `claim`, every ad-free buy or restore as `iap`.
@@ -105,60 +106,64 @@ export class EconomyUi {
     for (const f of this.live) f();
   }
 
-  /** The Patrol and Tasks buttons under PLAY, centred on x = 0. */
-  playRow(): Container {
-    const row = new Container();
+  /** The Patrol button for the Play tab's left rail: the hours stored, a dot once it is full. */
+  patrolRail(): Container {
     const save = this.host.save();
     const open = patrolOpen(save);
-    const patrol = button(' ', 460, 130, () => {
+    const r = railButton({
+      icon: open ? iconSprite(this.host.icons, 'patrol', 100) : lockIcon(this.host.icons, 70),
+      name: t('patrol.title'),
+      dim: !open,
+    }, () => {
       if (!open) return this.host.toast(t('tab.unlockFirstRun'));
       this.show('patrol');
-    }, { fill: open ? COLORS.panel : COLORS.panelLocked, size: 46, icon: open ? iconSprite(this.host.icons, 'patrol', 84) : lockIcon(this.host.icons, 64) });
-    patrol.x = -250;
-    const text = buttonLabel(patrol);
-    const full = dot(205, -50);
+    });
     const refresh = () => {
       const hours = patrolHours(this.host.save(), this.now());
-      text.text = open ? `${t('patrol.title')} ${hours >= BALANCE.patrol.capHours ? t('patrol.full') : hoursText(hours)}` : t('patrol.title');
-      fit(text, 320);
-      full.visible = open && hours >= BALANCE.patrol.capHours;
+      const full = open && hours >= BALANCE.patrol.capHours;
+      setRailSub(r, !open ? '' : full ? t('patrol.full') : hoursText(hours));
+      r.dot.visible = full;
     };
     refresh();
     this.live.push(refresh);
-    patrol.addChild(full);
-    row.addChild(patrol);
-    if (tasksOpen(save)) {
-      const daily = claimable(save, this.now()) > 0;
-      const achieve = achievementsReady(save).length > 0;
-      const tasks = button(t('tasks.button'), 460, 130, () => {
-        this.tasksView = achieve && !daily ? 'achieve' : 'daily';
-        this.achievePage = 0;
-        this.show('tasks');
-      }, { fill: COLORS.panel, size: 46, icon: iconSprite(this.host.icons, 'tasks', 84) });
-      tasks.x = 250;
-      if (daily || achieve) tasks.addChild(dot(205, -50));
-      row.addChild(tasks);
-    }
-    return row;
+    return r.view;
+  }
+
+  /** The Tasks button under Patrol, once tasks are open: a dot while one can be claimed. */
+  tasksRail(): Container | null {
+    const save = this.host.save();
+    if (!tasksOpen(save)) return null;
+    const daily = claimable(save, this.now()) > 0;
+    const achieve = achievementsReady(save).length > 0;
+    return railButton({ icon: iconSprite(this.host.icons, 'tasks', 100), name: t('tasks.button'), dot: daily || achieve }, () => {
+      this.tasksView = achieve && !daily ? 'achieve' : 'daily';
+      this.achievePage = 0;
+      this.show('tasks');
+    }).view;
   }
 
   /**
-   * The welcome gift (meta/welcome.ts) under the Patrol and Tasks row, centred on x = 0: lit with
-   * a dot when today's is waiting, dim with tomorrow's name once it is taken; null after the last.
+   * The welcome gift (meta/welcome.ts) for the right rail: lit with a dot when today's is waiting,
+   * dim with "tomorrow" once it is taken; null before the first run and after the last.
    */
-  giftRow(): Container | null {
+  giftRail(): Container | null {
     const save = this.host.save();
     const gift = nextGift(save);
     if (!save.firstRunDone || !gift) return null;
     const ready = giftReady(save, this.now());
-    const name = dropName(gift);
-    const b = button(ready ? t('gift.claim', { gift: name }) : t('gift.tomorrow', { gift: name }), 960, 110, () => {
+    return railButton({
+      icon: iconSprite(this.host.icons, 'chest_free', 104),
+      name: t('gift.button'),
+      // the gift's name is too long for the rail; the toast names it once claimed
+      sub: ready ? '' : t('gift.later'),
+      lit: ready,
+      dim: !ready,
+      dot: ready,
+    }, () => {
       const r = claimGift(this.host.save(), this.now());
-      if (!r) return this.host.toast(t('shop.tomorrow'));
+      if (!r) return this.host.toast(t('gift.tomorrow', { gift: dropName(gift) }));
       this.pay(r, 'claim', { what: 'gift', n: r.n });
-    }, { fill: ready ? COLORS.saffron : COLORS.panelLocked, size: 44, icon: iconSprite(this.host.icons, 'chest_free', 76) });
-    if (ready) b.addChild(dot(465, -40));
-    return b;
+    }).view;
   }
 
   /** Opens a progress chest the runs reached (progressChests.ts) and shows what it paid. */

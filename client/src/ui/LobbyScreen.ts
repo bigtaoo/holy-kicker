@@ -19,6 +19,7 @@ import { gearDetail, gearHeight, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
 import { hintArrow, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
 import { hintTab } from './lobbyHint';
+import { RAIL_R, RAIL_STEP } from './lobbyRail';
 import { LobbyDrift, LobbyFigure } from './lobbyStage';
 import { CARD, CARD_STROKE, RELIC_ROW_H, relicRow, trackSwitch } from './playCard';
 import { monkPanel } from './monkPanel';
@@ -27,13 +28,13 @@ import { settingsPanel, type SettingsActions } from './settingsPanel';
 import { trainHeight, trainTab } from './trainTab';
 import type { Screen, UiFrame } from './uiLayout';
 import { BoardUi, type FetchBoard } from './boardPanel';
-import { ChallengeUi, TILE_W, type ChallengeLobby } from './challengePanel';
+import { ChallengeUi, type ChallengeLobby } from './challengePanel';
 import { consentCard, watched } from './privacyUi';
 import { COLORS, button, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
-// chests and the relic to play with, PLAY with the patrol and daily tasks under it, and five
-// bottom tabs. Gear merges, training and the economy (lobbyEconomy.ts: shop, patrol, tasks)
+// chests, the monk on stage with the relic to play with at his feet and PLAY under them, round
+// buttons down both sides (patrol, tasks, the challenge, the gift), and five bottom tabs. Gear merges, training and the economy (lobbyEconomy.ts: shop, patrol, tasks)
 // are pure save changes made here and handed to the shell to store.
 
 export interface LobbyActions {
@@ -59,6 +60,11 @@ export interface LobbyActions {
 
   track: LobbyTrack;
 }
+
+/** PLAY's size, and the rail buttons' distance from the screen's sides. */
+const PLAY_W = 820;
+const PLAY_H = 210;
+const RAIL_X = 130;
 
 function lockText(lock: Lock): string {
   if (lock.kind === 'firstRun') return t('tab.unlockFirstRun');
@@ -155,7 +161,7 @@ export class LobbyScreen implements Screen {
       },
     }));
     const midY = TOP_H + (f.h - TOP_H - TAB_H) / 2;
-    if (this.tab === 'play') this.playTab(f.w, midY, f.h);
+    if (this.tab === 'play') this.playTab(f.w, f.h);
     else if (this.tab === 'codex') this.codexTab(f.w, midY);
     else if (this.tab === 'gear') this.gearTab(f.w, midY);
     else if (this.tab === 'train') this.trainTab(f.w, midY);
@@ -335,12 +341,9 @@ export class LobbyScreen implements Screen {
     if (this.frame && !this.view.destroyed) this.layout(this.frame);
   }
 
-  private playTab(w: number, midY: number, h: number): void {
+  private playTab(w: number, h: number): void {
     const n = this.save.chapter;
     const open = n <= playableChapters(this.save);
-    // a welcome gift takes a row under Patrol and Tasks; on a short screen the stack moves up for it
-    const gift = this.econ.giftRow();
-    const playY = Math.min(midY + 300, h - TAB_H - 140 - (gift ? 130 : 0));
     const hard = hardOpen(this.save);
     if (hard) {
       const sw = trackSwitch(this.save, (on) => this.actions.chooseTrack(on));
@@ -349,40 +352,41 @@ export class LobbyScreen implements Screen {
     }
     const card = this.chapterCard(n, open);
     const cardTop = TOP_H + 30 + (hard ? 110 : 0);
+    const cardBottom = cardTop + card.height;
     card.position.set(w / 2, cardTop);
     this.view.addChild(card);
 
-    // the monk stands on the courtyard between the card and the relic row at his feet
-    const relicTop = playY - 115 - RELIC_ROW_H;
-    const feet = relicTop - 10;
+    // PLAY, the one loud button, stands over the tab bar; the relic row and the monk above it
+    const playY = h - TAB_H - 50 - PLAY_H / 2;
+    const relicTop = playY - PLAY_H / 2 - 20 - RELIC_ROW_H;
+    const feet = relicTop - 5;
     const look = this.patrolLook();
     this.figureRig = look.rig;
-    this.figure = new LobbyFigure(look.rig, Math.max(160, Math.min(360, feet - cardTop - card.height - 30)));
+    this.figure = new LobbyFigure(look.rig, Math.max(160, Math.min(440, feet - cardBottom - 60)));
     this.figure.view.position.set(w / 2, feet);
     const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id), (text) => this.showToast(text));
     relics.position.set(w / 2, relicTop);
     this.view.addChild(this.figure.view, relics);
-
-    // the daily challenge's tile beside PLAY, at the card's right edge, PLAY narrower for it
-    const tile = open ? this.challenge.tile(190) : null;
-    if (tile) {
-      tile.position.set(w / 2 + 450 - TILE_W / 2, playY);
-      this.view.addChild(tile);
-    }
     if (open) {
-      const pw = tile ? 900 - TILE_W - 20 : 620;
-      const play = button(t('lobby.play'), pw, 190, () => this.actions.play(n), { size: 88 });
-      play.position.set(tile ? w / 2 - 450 + pw / 2 : w / 2, playY);
+      const play = button(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n), { size: 96 });
+      play.position.set(w / 2, playY);
       this.view.addChild(play);
     }
-    const row = this.econ.playRow();
-    row.position.set(w / 2, playY + 200);
-    this.view.addChild(row);
-    if (gift) {
-      gift.position.set(w / 2, playY + 335);
-      this.view.addChild(gift);
+
+    // the side things on two rails beside the monk: Patrol and Tasks left, the challenge and the gift right
+    const railY = cardBottom + 50 + RAIL_R;
+    const rails: [number, (Container | null)[]][] = [
+      [RAIL_X, [this.econ.patrolRail(), this.econ.tasksRail()]],
+      [w - RAIL_X, [open ? this.challenge.rail() : null, this.econ.giftRail()]],
+    ];
+    for (const [x, items] of rails) {
+      items.filter((c): c is Container => c !== null).forEach((c, i) => {
+        c.position.set(x, railY + i * RAIL_STEP);
+        this.view.addChild(c);
+      });
     }
   }
+
 
   /** The chapter card, top at 0: its name between the chapter arrows, how far it went, its five chests. */
   private chapterCard(n: number, open: boolean): Container {
@@ -424,12 +428,17 @@ export class LobbyScreen implements Screen {
       gritLine.y = 215;
       card.addChild(gritLine);
     }
-    // chapter arrows: through the cleared chapters and the first uncleared one
+    // chapter arrows: through the cleared chapters and the first uncleared one; once there is more
+    // than one, both stand, the one with nowhere to go faded, so the title stays centred between them
     const arrow = (dir: -1 | 1) => {
       const target = n + dir;
-      if (target < 1 || target > playableChapters(this.save)) return;
-      const b = button(dir < 0 ? '‹' : '›', 90, 100, () => this.actions.selectChapter(target), { fill: COLORS.panelLocked, size: 80 });
+      if (playableChapters(this.save) < 2) return;
+      const can = target >= 1 && target <= playableChapters(this.save);
+      const b = button(dir < 0 ? '‹' : '›', 90, 100, () => {
+        if (can) this.actions.selectChapter(target);
+      }, { fill: COLORS.panelLocked, size: 80 });
       b.position.set(dir * 385, 70);
+      if (!can) b.alpha = 0.3;
       card.addChild(b);
     };
     arrow(-1);

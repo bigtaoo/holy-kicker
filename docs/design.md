@@ -586,19 +586,33 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
 ```
 ┌──────────────────────────────────┐
 │ avatar Lv.12   copper 12.3k  jade 340  ⚙ │
-│                                  │
-│      [Chapter 3: XX Mountain]    │
+│      ( Normal | Hard )           │
+│   ‹ [Chapter 3: XX Mountain] ›   │
 │      best: wave 37               │
 │      ▢ ▢ ▢ ▢ ▢  progress chests   │
-│                                  │
-│            (the monk)            │
-│      Relic: …   ◯ ◯ ◯ ◯          │
-│           [ PLAY ]               │
-│      patrol chest (6 h stored)   │
+│ (Patrol)                (Daily)  │
+│  3h 0m      (the monk)   16h left│
+│ (Tasks)                 (Gift)   │
+│      Relic: …   ◯ ◯ ◯ ◯ ◯        │
+│ [            PLAY             ]  │
 ├──────┬──────┬──────┬──────┬──────┤
 │ Shop │ Gear │ Play │ Train│ Codex│
 └──────┴──────┴──────┴──────┴──────┘
 ```
+
+One loud thing per screen: PLAY is the only full-width saffron button, at the thumb, and the
+active tab is the only other saffron surface. Everything else on the Play tab is quiet:
+
+- The side things (Patrol and Tasks left, the daily or weekly challenge and the welcome gift
+  right) are one family of round dark badges, `ui/lobbyRail.ts`: the picture, its name under it
+  and a short line under that (hours stored, time left). A saffron ring means "this wants you
+  now" (a challenge open, a gift ready); greyed means locked or done for today.
+- A red dot means something can be claimed; the open tab never shows one, since its own screen
+  shows what is waiting.
+- The chapter arrows come in a pair, the one that cannot move faded, so the card stays centred.
+- The hero takes the height between the card and the relic row, so he stays the picture's subject.
+- Icons are all painted objects in the sticker style, one per meaning: no spell or stat icon is
+  borrowed for a lobby button (the daily is a trophy, Train a wooden post, the corgi's a kettlebell).
 
 The backdrop is a daylight courtyard (the corgi: a sunset desert base), drawn without a dark
 veil so the lobby reads bright and warm. On the Play tab the chosen monk stands centre stage

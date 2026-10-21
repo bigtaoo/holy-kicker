@@ -203,6 +203,8 @@ export const tr: Table<typeof en> = {
   gift: {
     claim: 'Bugünün hediyesini al: {gift}',
     tomorrow: 'Yarının hediyesi: {gift}',
+    button: 'Hediye',
+    later: 'Yarın',
   },
   shop: {
     free: 'Günlük hediye',

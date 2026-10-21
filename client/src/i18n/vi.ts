@@ -203,6 +203,8 @@ export const vi: Table<typeof en> = {
   gift: {
     claim: 'Nhận quà hôm nay: {gift}',
     tomorrow: 'Quà ngày mai: {gift}',
+    button: 'Quà',
+    later: 'Ngày mai',
   },
   shop: {
     free: 'Quà mỗi ngày',

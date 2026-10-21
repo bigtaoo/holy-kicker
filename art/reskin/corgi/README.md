@@ -26,7 +26,8 @@ The grounds are drawn in code, with no generated picture:
 Each sheet is generated from the prompt next to it (`<name>.txt`, `tools/generate_image.sh`). It
 holds several objects on white in a grid, and `tools/split_sheet.py` cuts the cells out.
 
-- `icons/sheet_*`: the 44 icons in `art/icons/icons.png`.
+- `icons/sheet_*`: the 46 icons in `art/icons/icons.png` (`sheet_tabs`: the daily challenge's trophy and
+  the Camp tab's kettlebell, 2026-10-21).
   - `weapons`: the relics' and spells' main pieces.
   - `spells`, `passives`, `shop` and `lobby`. The first three came out in uneven rows and are
     cut with `auto`, which names the objects in reading order and skips the spares.

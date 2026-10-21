@@ -18,7 +18,7 @@ export const TAB_H = 190;
 const BLEED = 800;
 
 /** The picture on each tab (ids in the icon sheet). */
-const TAB_ICONS: Record<Tab, string> = { shop: 'shop', gear: 'robe', play: 'ball', train: 'train_attack', codex: 'codex' };
+const TAB_ICONS: Record<Tab, string> = { shop: 'shop', gear: 'robe', play: 'ball', train: 'tab_train', codex: 'codex' };
 
 /** The painted courtyard in daylight, covering the frame between the bars; the panels on it carry their own dark fill. */
 export function scenery(f: UiFrame, tex: Texture | null): Container {
@@ -157,7 +157,8 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
       const l = lockIcon(icons, 52);
       l.position.set(tw / 2 - 40, -TAB_H / 2 + 44);
       cell.addChild(l);
-    } else if (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save))) {
+    } else if (!active && (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save)))) {
+      // the open tab shows what is waiting itself
       cell.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
     }
     cell.eventMode = 'static';

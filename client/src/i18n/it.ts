@@ -203,6 +203,8 @@ export const it: Table<typeof en> = {
   gift: {
     claim: 'Riscatta il regalo di oggi: {gift}',
     tomorrow: 'Regalo di domani: {gift}',
+    button: 'Regalo',
+    later: 'Domani',
   },
   shop: {
     free: 'Dono del giorno',
