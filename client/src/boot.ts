@@ -13,6 +13,7 @@ import { SaveStore } from './meta/saveStore';
 import { loadSettings, pickLocale } from './meta/settings';
 import type { Platform } from './platform/types';
 import { privacyToast } from './ui/privacyUi';
+import { DISPLAY_FAMILY, DISPLAY_FILE, setDisplayFont } from './ui/fonts';
 import { Shell } from './ui/Shell';
 
 // Boot shared by every entry: the language, the renderer, the art, then the shell. The
@@ -48,9 +49,15 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   const net = new Backend(platform, base, __HK_BUILD__, getLocale);
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
   const privacy = api ? new PrivacyChoice(net, platform, api, deviceTimeZone()) : null;
+  // the display font, before the first text is measured; system fonts if it fails or is slow
+  const font = Promise.race([
+    platform.loadFont(DISPLAY_FILE, DISPLAY_FAMILY).catch(() => null),
+    new Promise<null>((done) => setTimeout(() => done(null), 4000)),
+  ]);
   await lang;
   useWebp(await webp);
   const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k));
+  setDisplayFont(await font);
   // on the GPU behind the loading screen, not in the first run's first frame
   warmTextures(app.renderer, art);
   const artMs = since();

@@ -169,6 +169,8 @@ interface Wx {
   /** Package-file reads (design/04) — how the art loaders' JSON sidecars are read here,
    *  since a mini-game has no `fetch`. See platform/wechat/weChatAssetHost.ts. */
   getFileSystemManager(): WxFileSystemManager;
+  /** Registers a TTF from the package for canvas text; returns its family name, or null. */
+  loadFont?(path: string): string | null;
   /** Fetches and runs a subpackage declared in game.json's `subpackages` (design/04's
    *  package budget). Its files do not resolve before this succeeds. Resolved by NAME —
    *  the `root` lives in game.json, which build/wechatAssetSync.mjs generates.

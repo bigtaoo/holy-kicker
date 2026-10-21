@@ -33,6 +33,9 @@ export interface Platform {
    * since the main package is capped at 4 MB; on the web the files are always there.
    */
   loadPack(name: string): Promise<void>;
+  /** Makes a font file shipped with the game (relative path) drawable on the canvas; resolves
+   *  to the family name to ask for, or null where it could not be loaded. */
+  loadFont(path: string, family: string): Promise<string | null>;
   /** Where the save and the settings live. Never throws (wrap in SafeStore). */
   readonly storage: KeyValueStore;
   /** The player's languages, most preferred first (BCP 47 tags or WeChat's 'zh_CN'). */

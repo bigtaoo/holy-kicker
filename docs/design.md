@@ -620,7 +620,7 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
   `gear.drop` ('{tier} {item}' in English, '{item} {tier}' in the Romance languages), and the
   tier picks the form that agrees with the item from its '|' forms by `gear.form` (gender and
   number in es/fr/it/pt, gender in de/ru/pl; the first form is the tier standing alone).
-- Glyphs: system fonts on web (Japanese, Korean and Thai put their own fonts first, `ui/widgets.ts`); check CJK coverage and size on the WeChat build.
+- Glyphs: body text in system fonts (Japanese, Korean and Thai put their own fonts first, `ui/fonts.ts`). Titles, buttons, labels from 52 up and the damage digits use the display font, Lilita One (`client/public/art/fonts/`, OFL, `art/fonts/README.md`), loaded at boot through `Platform.loadFont` (`FontFace` on the web, `wx.loadFont` on WeChat); only in en, de, fr, es, it, pt and id, since it lacks letters of the other languages and a word mixing two fonts looks worse. If it fails to load within 4 s everything stays on the system fonts. Check CJK coverage and size on the WeChat build.
 - Wrapping breaks only at spaces (else between characters), so the Thai table leaves a space
   between phrases where Thai writing allows one.
 

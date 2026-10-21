@@ -201,6 +201,11 @@ export class WeChatPlatform implements Platform {
     });
   }
 
+  async loadFont(path: string, _family: string): Promise<string | null> {
+    // the runtime names the family itself; null where the font could not be read
+    return typeof wx.loadFont === 'function' ? wx.loadFont(path) || null : null;
+  }
+
   async readText(path: string): Promise<string> {
     // there is no fetch; package files are read straight from the file system
     return wx.getFileSystemManager().readFileSync(path, 'utf8');

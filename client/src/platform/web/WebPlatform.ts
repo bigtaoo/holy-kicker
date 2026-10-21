@@ -210,6 +210,15 @@ export class WebPlatform implements Platform {
 
   async loadPack(_name: string): Promise<void> {}
 
+  async loadFont(path: string, family: string): Promise<string | null> {
+    if (typeof FontFace === 'undefined') return null;
+    // a face for every weight, so the labels' bold asks for this file and is not faked thicker
+    const face = new FontFace(family, `url(${path})`, { weight: '100 900' });
+    await face.load();
+    document.fonts.add(face);
+    return family;
+  }
+
   async readText(path: string): Promise<string> {
     const res = await fetch(path);
     if (!res.ok) throw new Error(`${path}: HTTP ${res.status}`);

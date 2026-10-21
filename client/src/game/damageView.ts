@@ -1,4 +1,5 @@
 import { Container, Particle, ParticleContainer, Rectangle, Text, Texture, type Renderer } from 'pixi.js';
+import { digitFont } from '../ui/fonts';
 import { bakeTexture } from './bake';
 import { DamagePool, damageAlpha, damageScale, heroClear, type CritLook } from './damage';
 
@@ -18,19 +19,21 @@ const CRIT: Record<CritLook, number> = { gold: 0xffc83a, red: 0xff3b3b, orange: 
 
 interface Glyphs {
   textures: Texture[];
-  /** Digit spacing and glyph height, atlas px. */
-  advance: number;
+  /** Each digit's own width (the display font's 1 is narrow) and the glyph height, atlas px. */
+  advances: number[];
   height: number;
 }
 
 function drawGlyphs(renderer: Renderer): Glyphs {
   const style = {
-    fontFamily: 'Arial', fontWeight: 'bold' as const, fontSize: FONT_SIZE, fill: 0xffffff,
+    fontFamily: digitFont(), fontWeight: 'bold' as const, fontSize: FONT_SIZE, fill: 0xffffff,
     stroke: { color: 0x1a1424, width: STROKE, join: 'round' as const },
   };
   const glyphs = Array.from('0123456789', (c) => new Text({ text: c, style, resolution: 1 }));
   const w = Math.ceil(Math.max(...glyphs.map((g) => g.width)));
   const h = Math.ceil(Math.max(...glyphs.map((g) => g.height)));
+  // neighbouring outlines overlap a little, as in a hand-lettered number
+  const advances = glyphs.map((g) => g.width - STROKE * 0.9);
   const box = new Container();
   glyphs.forEach((g, i) => {
     g.x = i * w + (w - g.width) / 2;
@@ -39,8 +42,7 @@ function drawGlyphs(renderer: Renderer): Glyphs {
   const atlas = bakeTexture(renderer, { target: box, frame: new Rectangle(0, 0, w * 10, h), resolution: 1 });
   box.destroy({ children: true });
   const textures = glyphs.map((_, i) => new Texture({ source: atlas.source, frame: new Rectangle(i * w, 0, w, h) }));
-  // neighbouring outlines overlap a little, as in a hand-lettered number
-  return { textures, advance: w - STROKE * 0.9, height: h };
+  return { textures, advances, height: h };
 }
 
 export class DamageLayer {
@@ -80,7 +82,7 @@ export class DamageLayer {
     const live = this.pool.live;
     let count = 0;
     for (const d of live) count += d.digits.length;
-    const { textures, advance, height } = this.glyphs;
+    const { textures, advances, height } = this.glyphs;
     while (this.particles.length < count) {
       this.particles.push(new Particle({ texture: textures[0], anchorX: 0.5, anchorY: 1 }));
     }
@@ -92,15 +94,18 @@ export class DamageLayer {
     let k = 0;
     for (const d of live) {
       const s = (damageScale(d) * HEIGHT) / height;
-      const step = advance * s;
       const n = d.digits.length;
-      const x0 = d.x - ((n - 1) * step) / 2;
+      let width = 0;
+      for (let j = 0; j < n; j++) width += advances[d.digits[j]];
+      let x = d.x - (width * s) / 2;
       const tint = d.crit ? this.crit : NORMAL;
       const alpha = damageAlpha(d) * (this.clearHero ? heroClear(d.x, d.y, hx, hy) : 1);
       for (let j = 0; j < n; j++) {
         const p = this.particles[k++];
+        const a = advances[d.digits[j]] * s;
         p.texture = textures[d.digits[j]];
-        p.x = x0 + j * step;
+        p.x = x + a / 2;
+        x += a;
         p.y = d.y;
         p.scaleX = p.scaleY = s;
         p.tint = tint;

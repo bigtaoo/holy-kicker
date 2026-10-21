@@ -125,7 +125,7 @@ export class RunHud implements Screen {
     this.view.addChild(build.view);
     this.setWave(this.wave);
     if (!this.down && !this.offer) {
-      const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52 });
+      const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52, plain: true });
       pause.position.set(f.w - 90, 300);
       this.view.addChild(pause, this.fastButton(f));
     }

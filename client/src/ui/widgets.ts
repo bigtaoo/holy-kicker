@@ -1,20 +1,11 @@
 import { Container, Graphics, Text, type TextStyleOptions } from 'pixi.js';
-import { getLocale, type Locale } from '../i18n';
+import { getLocale } from '../i18n';
+import { DISPLAY_SIZE, fontFor } from './fonts';
 
 // Small UI building blocks in logical units (the 1080-wide design), in the sticker style of the
 // figures: flat colours, a thick dark outline and one hard shadow. Panels sit on a dark drop
 // shadow with a thin light rim inside and gold corner brackets; buttons are raised, a darker lip
 // under a lighter face that sinks onto the lip while pressed.
-
-/** System fonts with CJK fallbacks (docs/design.md "Localization": system fonts on web). */
-export const FONT = 'Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
-/** Japanese and Korean put their own fonts first, so shared Han characters take their forms;
- *  Arial has no Thai, so Thai names the system Thai fonts before the browser guesses one. */
-const LOCAL_FONT: Partial<Record<Locale, string>> = {
-  ja: 'Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", "Yu Gothic", Meiryo, "Noto Sans CJK JP", sans-serif',
-  ko: 'Arial, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans CJK KR", sans-serif',
-  th: 'Tahoma, "Leelawadee UI", Thonburi, "Noto Sans Thai", Arial, sans-serif',
-};
 
 export const COLORS = {
   bg: 0x1d2420,
@@ -51,10 +42,11 @@ const DROP = 12;
 /** How far a button's face stands above its base. */
 export const LIP = 14;
 
-export function label(text: string, size = 48, fill = COLORS.text, extra: TextStyleOptions = {}): Text {
+/** A centred bold label; from DISPLAY_SIZE up it is display text (ui/fonts.ts). */
+export function label(text: string, size = 48, fill = COLORS.text, extra: TextStyleOptions = {}, display = size >= DISPLAY_SIZE): Text {
   const t = new Text({
     text,
-    style: { fontFamily: LOCAL_FONT[getLocale()] ?? FONT, fontSize: size, fill, fontWeight: 'bold', align: 'center', ...extra },
+    style: { fontFamily: fontFor(getLocale(), display), fontSize: size, fill, fontWeight: 'bold', align: 'center', ...extra },
   });
   t.anchor.set(0.5);
   return t;
@@ -106,6 +98,8 @@ export interface ButtonOptions {
   video?: boolean;
   /** A picture left of the label (an icon sprite), or alone when the label is empty. */
   icon?: Container | null;
+  /** The label in the body font, for a label that is a picture made of letters (the pause sign). */
+  plain?: boolean;
 }
 
 let tapSound = () => {};
@@ -134,7 +128,7 @@ export function showVideoBadges(on: boolean): void {
  */
 export function button(text: string, w: number, h: number, onTap: () => void, o: ButtonOptions = {}): Container {
   const c = new Container();
-  const t = label(text, o.size ?? 56, o.textFill ?? COLORS.text);
+  const t = label(text, o.size ?? 56, o.textFill ?? COLORS.text, {}, !o.plain);
   // long translations shrink to fit instead of overflowing (design: leave ~30 % room)
   const video = o.video && videoBadges;
   const badge = video ? videoBadge(h * 0.42, o.textFill ?? COLORS.text) : o.icon ?? null;

@@ -45,6 +45,7 @@
   "art/cuju_meteor.png": "art/reskin/corgi/game/art/cuju_meteor.png",
   "art/fish.png": "art/reskin/corgi/game/art/fish.png",
   "art/fish.webp": "art/reskin/corgi/game/art/fish.webp",
+  "art/fonts/LilitaOne-Regular.ttf": "client/public/art/fonts/LilitaOne-Regular.ttf",
   "art/ground/deco.json": "art/reskin/corgi/game/art/ground/deco.json",
   "art/ground/deco.png": "art/reskin/corgi/game/art/ground/deco.png",
   "art/ground/earth.png": "art/reskin/corgi/game/art/ground/earth.png",
