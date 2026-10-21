@@ -14,7 +14,10 @@ import { train } from './training';
 // build/journey.mjs). A bot plays every run with the stats its save gives it, and between runs
 // the player does what the lobby offers: merges, trains, opens the shop's chests, collects the
 // patrol and claims the daily tasks. It tells how many days and runs each chapter takes and
-// what the gear is worth when it falls, which the chapter balance is checked against.
+// what the gear is worth when it falls, which the chapter balance is checked against, and the
+// stars: each session gives `stars` runs to the first cleared chapter still short of three (all of
+// them once every chapter is cleared), so it tells when each chapter's hard mode opens. The bot
+// plays without revives, so a clear's stars come from its lowest health alone.
 
 export interface JourneyPlan {
   style: BotStyle;
@@ -26,6 +29,8 @@ export interface JourneyPlan {
   seed: number;
   /** Uses the patrol, the shop and the daily tasks (false: runs, merging and training only). */
   lobby: boolean;
+  /** Runs a session spends replaying a cleared chapter for its stars, while the frontier is open. */
+  stars: number;
 }
 
 export interface ChapterClear {
@@ -35,9 +40,25 @@ export interface ChapterClear {
   runs: number;
   /** Runs played on this chapter, and the waves each reached. */
   tries: number[];
+  /** The clear's stars. */
+  stars: number;
   bonus: string;
   trained: number;
   gear: string;
+}
+
+/** A chapter's third star, which opens its hard mode. */
+export interface ThreeStars {
+  chapter: number;
+  day: number;
+  runs: number;
+  /** Runs played on the chapter since its first clear, and the stars each earned. */
+  tries: number[];
+}
+
+export interface Journey {
+  clears: ChapterClear[];
+  threeStars: ThreeStars[];
 }
 
 const HOUR = 3600 * 1000;
@@ -86,32 +107,58 @@ function describe(s: SaveData): { bonus: string; gear: string } {
   return { bonus, gear };
 }
 
-export function journey(plan: JourneyPlan, log: (line: string) => void = () => {}): ChapterClear[] {
+/** The first cleared chapter short of three stars, or null. */
+function starChase(s: SaveData): number | null {
+  for (let c = 1; c <= s.cleared; c++) if ((s.stars[c - 1] ?? 0) < 3) return c;
+  return null;
+}
+
+/** The chapter run r of a session plays: the star chase first, then the frontier. */
+function nextChapter(s: SaveData, r: number, plan: JourneyPlan): number | null {
+  const chase = starChase(s);
+  const open = frontier(s);
+  if (chase !== null && (open === null || r < plan.stars)) return chase;
+  return open;
+}
+
+export function journey(plan: JourneyPlan, log: (line: string) => void = () => {}): Journey {
   const rand = mulberry(plan.seed);
   let s = newSave();
   let now = new Date(2026, 9, 5, 8).getTime();
   let runs = 0;
   let tries: number[] = [];
+  const replays = new Map<number, number[]>();
   const clears: ChapterClear[] = [];
-  for (let day = 1; day <= plan.days && frontier(s); day++) {
-    for (let session = 0; session < 2 && frontier(s); session++) {
+  const threeStars: ThreeStars[] = [];
+  const more = () => nextChapter(s, 0, plan) !== null;
+  for (let day = 1; day <= plan.days && more(); day++) {
+    for (let session = 0; session < 2 && more(); session++) {
       s = spend(lobby(s, now, plan, rand), now, plan, rand);
-      for (let r = 0; r < plan.runsPerSession && frontier(s); r++) {
-        const { chapter, hard } = s;
+      for (let r = 0; r < plan.runsPerSession && more(); r++) {
+        const chapter = nextChapter(s, r, plan)!;
+        const hard = false;
         const st: RunStats = playChapter(
           plan.seed * 1000 + runs, plan.style, BALANCE.waves, 30, s.relic, earnedSutras(s), chapter, loadout(s).bonus, hard,
         );
         const waves = st.outcome === 'won' ? BALANCE.waves : st.wave - 1;
         runs++;
-        tries.push(waves);
-        const settled = settleRun(s, { chapter, hard, waves }, rand);
+        const replay = chapter <= s.cleared;
+        if (!replay) tries.push(waves);
+        const settled = settleRun(s, { chapter, hard, waves, lowest: st.lowest, revived: false }, rand);
         s = plan.ads ? doubleCopper(settled.save, settled.reward) : settled.save;
         s = bump(bump(bump(s, now, 'runs', 1), now, 'waves', waves), now, 'kills', st.kills);
         s = spend(plan.lobby ? claimAll(s, now) : s, now, plan, rand);
+        const { stars } = settled.reward;
         if (settled.reward.firstClear) {
-          clears.push({ chapter, hard, day, runs, tries, trained: s.trained, ...describe(s) });
-          log(`${hard ? 'hard ' : ''}ch${chapter} cleared on day ${day} after ${runs} runs (${tries.length} on it: ${tries.join(' ')})`);
+          clears.push({ chapter, hard, day, runs, tries, stars, trained: s.trained, ...describe(s) });
+          log(`ch${chapter} cleared on day ${day} after ${runs} runs (${tries.length} on it: ${tries.join(' ')}), ${stars} stars`);
           tries = [];
+          replays.set(chapter, []);
+        } else if (replay) replays.get(chapter)?.push(stars);
+        if (settled.reward.hardUnlocked) {
+          const on = replays.get(chapter) ?? [];
+          threeStars.push({ chapter, day, runs, tries: on });
+          log(`ch${chapter} three stars on day ${day} after ${runs} runs (${on.length} replays: ${on.join(' ')}): hard opens`);
         }
         now += 15 * 60 * 1000;
       }
@@ -120,5 +167,5 @@ export function journey(plan: JourneyPlan, log: (line: string) => void = () => {
     const d = describe(s);
     log(`day ${day}: best ch${bestChapter(s)}, ${runs} runs, copper ${s.copper}, jade ${s.jade}, trained ${s.trained} | ${d.bonus}`);
   }
-  return clears;
+  return { clears, threeStars };
 }
