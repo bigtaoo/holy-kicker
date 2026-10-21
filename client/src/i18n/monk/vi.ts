@@ -81,6 +81,9 @@ export const monkVi: Table<typeof monkEn> = {
     lotus: { name: 'Bộ Bộ Sinh Liên', desc: 'Mỗi bước một đóa sen, sen nở hút đá quý' },
     halo: { name: 'Hào Quang Vô Biên', desc: '{n} tia sáng xoay quanh bạn' },
     roar: { name: 'Tiếng Gầm Sấm', desc: 'Gầm khắp bốn phía, phá tan đạn' },
+    talisman: { name: 'Thiên Cương Phù' },
+    bomb: { name: 'Mưa Sấm Sét' },
+    knives: { name: 'Vạn Đao' },
   },
   shrine: {
     heal: { name: 'Hồi máu' },
@@ -103,6 +106,9 @@ export const monkVi: Table<typeof monkEn> = {
     lotus: { name: 'Bước Sen', desc: 'Đi đến đâu gieo hạt sen, nở dưới chân kẻ địch' },
     halo: { name: 'Phật Quang', desc: 'Tia sáng xoay quanh bạn, đứng yên thì dài hơn', count: 'Tia {a} → {b}' },
     roar: { name: 'Sư Tử Hống', desc: 'Hét vào kẻ địch gần nhất, đẩy lùi kẻ thù' },
+    talisman: { name: 'Bùa Hàng Ma', desc: '{n} lá bùa đuổi theo các kẻ thù khác nhau', count: 'Bùa {a} → {b}' },
+    bomb: { name: 'Lửa Sấm Sét', desc: 'Quả bom ném ra nổ thành {n} bom con', count: 'Bom con {a} → {b}' },
+    knives: { name: 'Vòng Đao', desc: 'Tối đa {n} con dao xoay quanh bạn, rồi bay ra', count: 'Dao {a} → {b}' },
   },
   passive: {
     calm: { name: 'Thiền Tâm', desc: 'Hồi chiêu phép −{n}%' },

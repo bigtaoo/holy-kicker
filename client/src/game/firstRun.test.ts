@@ -45,7 +45,7 @@ describe('the first run', () => {
       }
       e.step([{ owner: 0, tick: s.tick, moveBrad: 0, moveMag: 0, pick }]);
     }
-    expect(taken).toEqual(['spell:incense', 'spell:cymbal', 'passive:wrath', 'spell:incense', 'spell:bell']);
+    expect(taken).toEqual(['spell:incense', 'spell:talisman', 'passive:iron', 'spell:bomb', 'spell:bell']);
     expect(wave).toBeLessThanOrEqual(3);
   });
 });

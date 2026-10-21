@@ -81,6 +81,9 @@ export const monkId: Table<typeof monkEn> = {
     lotus: { name: 'Jalan Teratai', desc: 'Teratai tiap langkah, mekarnya menarik permata' },
     halo: { name: 'Cahaya Abadi', desc: '{n} sinar berputar di sekitarmu' },
     roar: { name: 'Raungan Guntur', desc: 'Meraung ke segala arah, hancurkan peluru' },
+    talisman: { name: 'Segel Langit' },
+    bomb: { name: 'Hujan Petir' },
+    knives: { name: 'Seribu Pisau' },
   },
   shrine: {
     heal: { name: 'Pulih' },
@@ -103,6 +106,9 @@ export const monkId: Table<typeof monkEn> = {
     lotus: { name: 'Langkah Teratai', desc: 'Berjalan menabur benih teratai yang mekar di bawah musuh' },
     halo: { name: 'Sinar Halo', desc: 'Sinar berputar di sekitarmu, makin panjang saat diam', count: 'Sinar {a} → {b}' },
     roar: { name: 'Raungan Singa', desc: 'Teriakan ke musuh terdekat mendorong lawan mundur' },
+    talisman: { name: 'Jimat Penyegel', desc: '{n} jimat mengejar musuh yang berbeda', count: 'Jimat {a} → {b}' },
+    bomb: { name: 'Api Petir', desc: 'Bom yang dilempar pecah jadi {n} bom kecil', count: 'Bom kecil {a} → {b}' },
+    knives: { name: 'Lingkaran Pisau', desc: 'Hingga {n} pisau berputar di sekitarmu, lalu melesat', count: 'Pisau {a} → {b}' },
   },
   passive: {
     calm: { name: 'Pikiran Tenang', desc: 'Jeda jurus −{n}%' },

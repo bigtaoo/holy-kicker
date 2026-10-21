@@ -26,6 +26,8 @@ import type { BossStage } from './bossStage';
 import { hordeLooks, makeBosses, makeElites } from './cast';
 import { summonFx } from './witchView';
 import { SpellView } from './spellView';
+import { ArsenalView } from './arsenalView';
+import { learnSpells } from '../dev/learn';
 import { SutraView } from './sutraView';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
 import { makeDeco } from './decoView';
@@ -102,6 +104,7 @@ export class Game {
   private readonly bowls: BowlView;
   private readonly boss: BossStage | null;
   private readonly feedback: HitFeedback;
+  private readonly arsenal: ArsenalView;
   private readonly spells: SpellView;
   private readonly sutras: SutraView;
   private readonly aura: AuraStack;
@@ -150,6 +153,7 @@ export class Game {
     const s = this.engine.state;
     // dev: skip ahead, so the next tick begins the asked-for wave
     if (chapter && scene.wave > 1 && !restored) startAt(s, Math.min(scene.wave, setup.waves));
+    if (scene.learn && !restored) learnSpells(s, scene.learn);
     Object.assign(this.camPos, { x: lerpX(s.players[0], 1), y: lerpY(s.players[0], 1) }); // a resumed or sought run opens on its hero
 
     this.world.sortableChildren = true;
@@ -195,6 +199,7 @@ export class Game {
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
     this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, mountain: art.mountain, z: HERO_TOP_Z - 2 });
+    this.arsenal = new ArsenalView(app.renderer, this.world, this.fx.pool, scene.ringFx);
     this.aura = new AuraStack(scene.stack);
     this.zen = new ZenRing(this.world);
     this.downCam = new KillCamView(this.world, { hero: this.hero.view, horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
@@ -393,6 +398,12 @@ export class Game {
         case 'palm':
           this.spells.cast(e);
           break;
+        case 'bomb':
+          this.arsenal.throw(e);
+          break;
+        case 'boom':
+          this.arsenal.boom(e);
+          break;
         case 'bolt':
           this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP, e.gold);
           break;
@@ -452,6 +463,7 @@ export class Game {
     this.fish.update(dt);
     this.beads.draw(s.beads, p.relicId === 'beads' && !p.dead ? beadsRings(p) : [], alpha, hx, hy, this.hero.view.zIndex);
     this.spells.draw(s.fields, s.cymbals, alpha, dt);
+    this.arsenal.draw(s.talismans, s.knives, alpha, dt, hx, hy);
     this.sutras.draw(s.lotuses, p, alpha, dt, hx, hy);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
     this.zen.update(dt, inZen(p) && !p.dead, hx, hy);

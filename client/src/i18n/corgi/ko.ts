@@ -82,6 +82,9 @@ export const corgiKo: Table<typeof corgiEn> = {
     lotus: { name: '자석 지뢰', desc: '걸음마다 지뢰, 폭발하며 간식을 끌어옴' },
     halo: { name: '레이저 그리드', desc: '레이저 {n}줄이 주위를 돎' },
     roar: { name: '소닉 바크', desc: '사방으로 짖어 탄환을 부숨' },
+    talisman: { name: '미사일 폭풍' },
+    bomb: { name: '융단 폭격' },
+    knives: { name: '칼날 폭풍' },
   },
   shrine: {
     heal: { name: '구급 키트' },
@@ -104,6 +107,9 @@ export const corgiKo: Table<typeof corgiEn> = {
     lotus: { name: '근접 지뢰', desc: '걸으면 지뢰를 떨구고, 벌레 아래서 폭발' },
     halo: { name: '레이저 포탑', desc: '레이저가 주위를 돎, 멈춰 서면 더 길어짐', count: '레이저 {a} → {b}줄' },
     roar: { name: '메가 멍멍', desc: '가장 가까운 벌레에게 짖어 무리를 밀어냄' },
+    talisman: { name: '유도 미사일', desc: '미사일 {n}발이 각기 다른 벌레를 쫓음', count: '미사일 {a} → {b}' },
+    bomb: { name: '집속 수류탄', desc: '던진 수류탄이 자탄 {n}개로 터짐', count: '자탄 {a} → {b}' },
+    knives: { name: '나이프 링', desc: '칼 최대 {n}자루가 주위를 돌다 한꺼번에 날아감', count: '칼 {a} → {b}' },
   },
   passive: {
     calm: { name: '냉각수', desc: '가젯 재사용 대기 −{n}%' },

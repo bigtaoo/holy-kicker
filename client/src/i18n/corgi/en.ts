@@ -85,6 +85,9 @@ export const corgiEn: Table<typeof monkEn> = {
     lotus: { name: 'Magnet Mines', desc: 'A mine at every step, blasts pull treats' },
     halo: { name: 'Laser Grid', desc: '{n} lasers turn around you' },
     roar: { name: 'Sonic Bark', desc: 'Barks all round, shatters bullets' },
+    talisman: { name: 'Missile Storm' },
+    bomb: { name: 'Carpet Bomb' },
+    knives: { name: 'Blade Storm' },
   },
   shrine: {
     heal: { name: 'Med Kit' },
@@ -107,6 +110,9 @@ export const corgiEn: Table<typeof monkEn> = {
     lotus: { name: 'Proximity Mines', desc: 'Walking drops mines that blow up under bugs' },
     halo: { name: 'Laser Turret', desc: 'A laser turns around you, longer standing still', count: 'Lasers {a} → {b}' },
     roar: { name: 'Mega Bark', desc: 'A bark at the nearest bug pushes the swarm back' },
+    talisman: { name: 'Homing Missiles', desc: '{n} missiles home in on different bugs', count: 'Missiles {a} → {b}' },
+    bomb: { name: 'Cluster Grenade', desc: 'A thrown grenade bursts into {n} bomblets', count: 'Bomblets {a} → {b}' },
+    knives: { name: 'Knife Ring', desc: 'Up to {n} knives circle you, then fly out', count: 'Knives {a} → {b}' },
   },
   passive: {
     calm: { name: 'Coolant', desc: 'Gadget cooldown −{n}%' },

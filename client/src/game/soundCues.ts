@@ -60,6 +60,14 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
       return null;
     case 'bloom':
       return 'bloom';
+    // placeholder sounds for the prototype spells
+    case 'bomb':
+      return e.small ? null : 'swish';
+    case 'boom':
+      return e.small ? 'thump' : 'meteor';
+    case 'talismans':
+    case 'volley':
+      return 'swish';
     case 'roar':
       return 'roar';
     case 'bounce':

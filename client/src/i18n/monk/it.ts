@@ -81,6 +81,9 @@ export const monkIt: Table<typeof monkEn> = {
     lotus: { name: 'Sentiero di Loti', desc: 'Un loto a ogni passo, i fiori attirano gemme' },
     halo: { name: 'Luce Infinita', desc: '{n} raggi ruotano intorno a te' },
     roar: { name: 'Ruggito del Tuono', desc: 'Ruggisce tutto intorno, frantuma i proiettili' },
+    talisman: { name: 'Sigillo Celeste' },
+    bomb: { name: 'Pioggia di Tuoni' },
+    knives: { name: 'Mille Lame' },
   },
   shrine: {
     heal: { name: 'Cura' },
@@ -103,6 +106,9 @@ export const monkIt: Table<typeof monkEn> = {
     lotus: { name: 'Passi di Loto', desc: 'Camminando semini loti che sbocciano sotto i nemici' },
     halo: { name: 'Raggio d\'Aureola', desc: 'Un raggio ti gira intorno, più lungo se stai fermo', count: 'Raggi {a} → {b}' },
     roar: { name: 'Ruggito del Leone', desc: 'Un urlo verso il nemico più vicino respinge i nemici' },
+    talisman: { name: 'Talismani Sigillanti', desc: '{n} talismani inseguono nemici diversi', count: 'Talismani {a} → {b}' },
+    bomb: { name: 'Fuoco del Tuono', desc: 'Una bomba lanciata esplode in {n} bombette', count: 'Bombette {a} → {b}' },
+    knives: { name: 'Cerchio di Lame', desc: 'Fino a {n} coltelli ti girano intorno, poi partono', count: 'Coltelli {a} → {b}' },
   },
   passive: {
     calm: { name: 'Mente Calma', desc: 'Ricarica incantesimi −{n}%' },

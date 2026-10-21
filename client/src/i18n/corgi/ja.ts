@@ -82,6 +82,9 @@ export const corgiJa: Table<typeof corgiEn> = {
     lotus: { name: 'マグネットマイン', desc: '一歩ごとに地雷、爆発でおやつを引き寄せる' },
     halo: { name: 'レーザーグリッド', desc: '{n}本のレーザーが周りを回る' },
     roar: { name: 'ソニックバーク', desc: '全方位に吠え、弾を砕く' },
+    talisman: { name: 'ミサイルストーム' },
+    bomb: { name: '絨毯爆撃' },
+    knives: { name: 'ブレードストーム' },
   },
   shrine: {
     heal: { name: 'メディキット' },
@@ -104,6 +107,9 @@ export const corgiJa: Table<typeof corgiEn> = {
     lotus: { name: '近接地雷', desc: '歩くと地雷を落とし、虫の下で爆発' },
     halo: { name: 'レーザータレット', desc: 'レーザーが周りを回る、立ち止まると長くなる', count: 'レーザー {a} → {b}本' },
     roar: { name: 'メガバーク', desc: '最も近い虫へ吠え、群れを押し返す' },
+    talisman: { name: '追尾ミサイル', desc: '{n} 発のミサイルがそれぞれ別の虫を追う', count: 'ミサイル {a} → {b}' },
+    bomb: { name: 'クラスター弾', desc: '投げた手榴弾が {n} 個の子爆弾に弾ける', count: '子爆弾 {a} → {b}' },
+    knives: { name: 'ナイフリング', desc: '最大 {n} 本の刀が周りを回り、揃うと一斉に飛ぶ', count: '刀 {a} → {b}' },
   },
   passive: {
     calm: { name: 'クーラント', desc: 'ガジェットのクールダウン −{n}%' },

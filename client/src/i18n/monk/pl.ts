@@ -81,6 +81,9 @@ export const monkPl: Table<typeof monkEn> = {
     lotus: { name: 'Ścieżka Lotosu', desc: 'Lotos przy każdym kroku, kwiaty przyciągają klejnoty' },
     halo: { name: 'Bezkresne Światło', desc: 'Promienie ({n}) krążą wokół ciebie' },
     roar: { name: 'Grzmiący Ryk', desc: 'Ryk dookoła, rozbija pociski' },
+    talisman: { name: 'Niebiańska Pieczęć' },
+    bomb: { name: 'Deszcz Gromów' },
+    knives: { name: 'Tysiąc Ostrzy' },
   },
   shrine: {
     heal: { name: 'Leczenie' },
@@ -103,6 +106,9 @@ export const monkPl: Table<typeof monkEn> = {
     lotus: { name: 'Kroki Lotosu', desc: 'Idąc, siejesz lotosy, które kwitną pod wrogami' },
     halo: { name: 'Promień Aureoli', desc: 'Promień krąży wokół ciebie, dłuższy, gdy stoisz', count: 'Promienie {a} → {b}' },
     roar: { name: 'Ryk Lwa', desc: 'Okrzyk w stronę najbliższego wroga odpycha wrogów' },
+    talisman: { name: 'Talizmany Pieczęci', desc: '{n} talizmanów goni różnych wrogów', count: 'Talizmany {a} → {b}' },
+    bomb: { name: 'Ogień Gromu', desc: 'Rzucona bomba rozpada się na {n} bombek', count: 'Bombki {a} → {b}' },
+    knives: { name: 'Krąg Ostrzy', desc: 'Do {n} noży krąży wokół ciebie, potem wylatują', count: 'Noże {a} → {b}' },
   },
   passive: {
     calm: { name: 'Spokojny Umysł', desc: 'Odnowienie zaklęć −{n}%' },

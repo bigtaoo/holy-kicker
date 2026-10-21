@@ -81,6 +81,9 @@ export const monkTr: Table<typeof monkEn> = {
     lotus: { name: 'Nilüfer Yolu', desc: 'Her adımda bir nilüfer, açanlar taşları çeker' },
     halo: { name: 'Sınırsız Işık', desc: '{n} ışın etrafında döner' },
     roar: { name: 'Gök Kükremesi', desc: 'Her yöne kükrer, mermileri parçalar' },
+    talisman: { name: 'Gök Mührü' },
+    bomb: { name: 'Gök Gürültüsü Yağmuru' },
+    knives: { name: 'Bin Bıçak' },
   },
   shrine: {
     heal: { name: 'Şifa' },
@@ -103,6 +106,9 @@ export const monkTr: Table<typeof monkEn> = {
     lotus: { name: 'Nilüfer Adımları', desc: 'Yürürken nilüfer eker, düşmanların altında açar' },
     halo: { name: 'Hale Işını', desc: 'Bir ışın etrafında döner, dururken uzar', count: 'Işın {a} → {b}' },
     roar: { name: 'Aslan Kükremesi', desc: 'En yakın düşmana bağırış, düşmanları geri iter' },
+    talisman: { name: 'Mühür Tılsımları', desc: '{n} tılsım farklı düşmanların peşine düşer', count: 'Tılsım {a} → {b}' },
+    bomb: { name: 'Gök Gürültüsü Ateşi', desc: 'Atılan bomba {n} küçük bombaya ayrılır', count: 'Küçük bomba {a} → {b}' },
+    knives: { name: 'Bıçak Çemberi', desc: 'En fazla {n} bıçak etrafında döner, sonra fırlar', count: 'Bıçak {a} → {b}' },
   },
   passive: {
     calm: { name: 'Sakin Zihin', desc: 'Büyü bekleme −%{n}' },

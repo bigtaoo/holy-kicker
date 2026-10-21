@@ -81,6 +81,9 @@ export const monkEs: Table<typeof monkEn> = {
     lotus: { name: 'Senda de loto', desc: 'Un loto a cada paso, las flores atraen gemas' },
     halo: { name: 'Luz infinita', desc: '{n} rayos giran a tu alrededor' },
     roar: { name: 'Rugido de trueno', desc: 'Ruge en todas direcciones, rompe proyectiles' },
+    talisman: { name: 'Sello Celestial' },
+    bomb: { name: 'Lluvia de Truenos' },
+    knives: { name: 'Mil Hojas' },
   },
   shrine: {
     heal: { name: 'Curación' },
@@ -103,6 +106,9 @@ export const monkEs: Table<typeof monkEn> = {
     lotus: { name: 'Pasos de loto', desc: 'Al caminar siembras semillas que florecen bajo los enemigos' },
     halo: { name: 'Rayo de halo', desc: 'Un rayo gira a tu alrededor, más largo si estás quieto', count: 'Rayos {a} → {b}' },
     roar: { name: 'Rugido del león', desc: 'Un grito al enemigo más cercano empuja a los enemigos' },
+    talisman: { name: 'Talismanes Sellados', desc: '{n} talismanes persiguen a enemigos distintos', count: 'Talismanes {a} → {b}' },
+    bomb: { name: 'Fuego Trueno', desc: 'Una bomba lanzada estalla en {n} bombitas', count: 'Bombitas {a} → {b}' },
+    knives: { name: 'Círculo de Hojas', desc: 'Hasta {n} cuchillos giran a tu alrededor y luego salen disparados', count: 'Cuchillos {a} → {b}' },
   },
   passive: {
     calm: { name: 'Mente serena', desc: 'Recarga de hechizos −{n}%' },

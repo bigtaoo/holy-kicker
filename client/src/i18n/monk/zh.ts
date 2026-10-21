@@ -81,6 +81,9 @@ export const monkZh: Table<typeof monkEn> = {
     lotus: { name: '步步生莲', desc: '每步一朵莲花，绽放时吸来宝石' },
     halo: { name: '普照', desc: '{n} 道光束绕身旋转' },
     roar: { name: '狮王吼', desc: '四面怒吼，震碎子弹' },
+    talisman: { name: '天罡符阵' },
+    bomb: { name: '霹雳雷雨' },
+    knives: { name: '万刃归宗' },
   },
   shrine: {
     heal: { name: '疗伤' },
@@ -103,6 +106,9 @@ export const monkZh: Table<typeof monkEn> = {
     lotus: { name: '莲步', desc: '行走时播下莲子，敌人踩中即绽放' },
     halo: { name: '佛光', desc: '一道光束绕身旋转，站定时更长', count: '光束 {a} → {b} 道' },
     roar: { name: '狮子吼', desc: '朝最近的敌人怒吼，击退敌人' },
+    talisman: { name: '降魔符', desc: '{n} 道符咒各自追向不同的敌人', count: '符咒 {a} → {b} 道' },
+    bomb: { name: '霹雳火', desc: '掷出火雷，炸开 {n} 颗子雷', count: '子雷 {a} → {b} 颗' },
+    knives: { name: '戒刀阵', desc: '最多 {n} 把刀绕身旋转，满了齐射', count: '飞刀 {a} → {b} 把' },
   },
   passive: {
     calm: { name: '禅心', desc: '法术冷却 −{n}%' },

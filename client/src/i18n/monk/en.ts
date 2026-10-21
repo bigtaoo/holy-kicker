@@ -80,6 +80,9 @@ export const monkEn = {
     lotus: { name: 'Lotus Path', desc: 'A lotus at every step, blooms pull gems' },
     halo: { name: 'Boundless Light', desc: '{n} beams turn around you' },
     roar: { name: 'Thunder Roar', desc: 'Roars all round, shatters bullets' },
+    talisman: { name: 'Heavenly Seal' },
+    bomb: { name: 'Thunder Rain' },
+    knives: { name: 'Thousand Blades' },
   },
   shrine: {
     heal: { name: 'Heal' },
@@ -102,6 +105,9 @@ export const monkEn = {
     lotus: { name: 'Lotus Steps', desc: 'Walking sows lotus seeds that bloom under enemies' },
     halo: { name: 'Halo Beam', desc: 'A beam turns around you, longer standing still', count: 'Beams {a} → {b}' },
     roar: { name: "Lion's Roar", desc: 'A shout at the nearest enemy pushes enemies back' },
+    talisman: { name: 'Binding Talismans', desc: '{n} talismans home in on different enemies', count: 'Talismans {a} → {b}' },
+    bomb: { name: 'Thunder Fire', desc: 'A lobbed bomb bursts into {n} bomblets', count: 'Bomblets {a} → {b}' },
+    knives: { name: 'Blade Circle', desc: 'Up to {n} knives circle you, then fly out', count: 'Knives {a} → {b}' },
   },
   passive: {
     calm: { name: 'Calm Mind', desc: 'Spell cooldown −{n}%' },

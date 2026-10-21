@@ -82,6 +82,9 @@ export const corgiVi: Table<typeof corgiEn> = {
     lotus: { name: 'Mìn Nam Châm', desc: 'Mỗi bước một quả mìn, nổ sẽ hút đồ ăn vặt' },
     halo: { name: 'Lưới Laser', desc: '{n} tia laser xoay quanh bạn' },
     roar: { name: 'Sủa Siêu Âm', desc: 'Sủa khắp bốn phía, phá tan đạn' },
+    talisman: { name: 'Bão Tên Lửa' },
+    bomb: { name: 'Ném Bom Rải Thảm' },
+    knives: { name: 'Bão Lưỡi Dao' },
   },
   shrine: {
     heal: { name: 'Hộp cứu thương' },
@@ -104,6 +107,9 @@ export const corgiVi: Table<typeof corgiEn> = {
     lotus: { name: 'Mìn Cảm Ứng', desc: 'Đi đến đâu thả mìn, nổ dưới chân lũ bọ' },
     halo: { name: 'Tháp Laser', desc: 'Tia laser xoay quanh bạn, đứng yên thì dài hơn', count: 'Tia {a} → {b}' },
     roar: { name: 'Sủa Cực Đại', desc: 'Sủa vào con bọ gần nhất, đẩy lùi cả bầy' },
+    talisman: { name: 'Tên Lửa Truy Đuổi', desc: '{n} tên lửa đuổi theo các con bọ khác nhau', count: 'Tên lửa {a} → {b}' },
+    bomb: { name: 'Lựu Đạn Chùm', desc: 'Lựu đạn nổ thành {n} bom con', count: 'Bom con {a} → {b}' },
+    knives: { name: 'Vòng Dao', desc: 'Tối đa {n} con dao xoay quanh bạn, rồi bay ra', count: 'Dao {a} → {b}' },
   },
   passive: {
     calm: { name: 'Chất Làm Mát', desc: 'Hồi chiêu gadget −{n}%' },

@@ -81,6 +81,9 @@ export const monkFr: Table<typeof monkEn> = {
     lotus: { name: 'Chemin de lotus', desc: 'Un lotus à chaque pas, les fleurs attirent les gemmes' },
     halo: { name: 'Lumière infinie', desc: '{n} rayons tournent autour de toi' },
     roar: { name: 'Rugissement de tonnerre', desc: 'Rugit tout autour, brise les projectiles' },
+    talisman: { name: 'Sceau Céleste' },
+    bomb: { name: 'Pluie de Tonnerre' },
+    knives: { name: 'Mille Lames' },
   },
   shrine: {
     heal: { name: 'Soin' },
@@ -103,6 +106,9 @@ export const monkFr: Table<typeof monkEn> = {
     lotus: { name: 'Pas de lotus', desc: 'En marchant, tu sèmes des graines qui fleurissent sous les ennemis' },
     halo: { name: 'Rayon de halo', desc: 'Un rayon tourne autour de toi, plus long à l’arrêt', count: 'Rayons {a} → {b}' },
     roar: { name: 'Rugissement du lion', desc: 'Un cri vers l’ennemi le plus proche repousse les ennemis' },
+    talisman: { name: 'Talismans Scellés', desc: '{n} talismans traquent des ennemis différents', count: 'Talismans {a} → {b}' },
+    bomb: { name: 'Feu du Tonnerre', desc: 'Une bombe lancée éclate en {n} petites bombes', count: 'Petites bombes {a} → {b}' },
+    knives: { name: 'Cercle de Lames', desc: 'Jusqu’à {n} couteaux tournent autour de toi, puis partent', count: 'Couteaux {a} → {b}' },
   },
   passive: {
     calm: { name: 'Esprit calme', desc: 'Recharge des sorts −{n}%' },

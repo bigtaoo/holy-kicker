@@ -159,8 +159,8 @@ export const BOWL = {
   catch: toFp(60),
 };
 
-export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal' | 'lotus' | 'halo' | 'roar';
-export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense', 'bell', 'cymbal', 'lotus', 'halo', 'roar'];
+export type SpellId = 'palm' | 'bolt' | 'incense' | 'bell' | 'cymbal' | 'lotus' | 'halo' | 'roar' | 'talisman' | 'bomb' | 'knives';
+export const SPELL_IDS: readonly SpellId[] = ['palm', 'bolt', 'incense', 'bell', 'cymbal', 'lotus', 'halo', 'roar', 'talisman', 'bomb', 'knives'];
 
 /**
  * One spell level. `count` is palms (palm), jumps (bolt), cymbals (cymbal) or beams (halo); `radius` the blast, jump range, ring, bell blast,
@@ -198,13 +198,19 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
   halo: [lv(0, 1, 360, 1.6, 200), lv(0, 1, 400, 1.6, 200), lv(0, 1, 400, 1.4, 240), lv(0, 1, 450, 1.4, 240), lv(0, 1, 500, 1.1, 300)],
   // a cone shout at the nearest enemy, pushing the horde back (sutra)
   roar: [lv(2, 0, 380, 0, 150), lv(2, 0, 420, 0, 150), lv(1.8, 0, 420, 0, 200), lv(1.8, 0, 470, 0, 200), lv(1.5, 0, 520, 0, 250)],
+  // `count` talismans fan out, then each homes on a different enemy and strikes once (radius: hit, life: flight)
+  talisman: [lv(2, 3, 70, 2, 140), lv(2, 4, 70, 2, 140), lv(1.7, 5, 70, 2, 140), lv(1.7, 6, 70, 2, 180), lv(1.4, 8, 70, 2, 180)],
+  // a bomb lobbed at the nearest enemy: a blast that pushes the mobs back, then `count` bomblets in a star
+  bomb: [lv(1.5, 2, 220, 0, 130), lv(1.5, 3, 220, 0, 130), lv(1.3, 3, 250, 0, 130), lv(1.3, 4, 250, 0, 170), lv(1.1, 5, 280, 0, 170)],
+  // a knife joins the circle around the hero every cooldown, up to `count`; the full circle volleys out (radius: hit)
+  knives: [lv(0.5, 3, 55, 0, 60), lv(0.45, 4, 55, 0, 60), lv(0.4, 5, 60, 0, 70), lv(0.35, 6, 60, 0, 80), lv(0.3, 8, 65, 0, 90)],
 };
 
 /**
  * A new player's first level-ups show something on screen: the first `deals` offers are only
  * these attack spells (the ones not yet owned), never a stat card.
  */
-export const OPENING_DEAL = { deals: 2, spells: ['cymbal', 'bolt', 'palm', 'incense'] as readonly SpellId[] };
+export const OPENING_DEAL = { deals: 2, spells: ['cymbal', 'bolt', 'palm', 'incense', 'talisman', 'bomb', 'knives'] as readonly SpellId[] };
 
 /**
  * Spells and passives that start out of the level-up pool: each comes with a sutra
@@ -271,6 +277,44 @@ export const SPELL_CAST = {
   cymbalSpeed: perTick(1500),
 };
 
+/** Demon-Binding Talismans (systems/talismans.ts). */
+export const TALISMAN = {
+  /** Only cast with an enemy this close; each talisman picks a different one in reach. */
+  reach: toFp(1200),
+  /** They fan out slowly for `spread`, then fly at `speed` turning at most `turn` brads a tick. */
+  spread: ticks(0.25),
+  fanSpeed: perTick(700),
+  speed: perTick(1300),
+  turn: 2600,
+};
+
+/** Thunder Fire, the cluster bomb (systems/bombs.ts). */
+export const BOMB = {
+  reach: toFp(900),
+  /** The bomb's flight, then each bomblet's. */
+  flight: ticks(0.5),
+  bombletFlight: ticks(0.3),
+  /** Bomblets land this far from the blast, with this share of its radius and damage. */
+  scatter: toFp(230),
+  bombletRadiusPercent: 55,
+  bombletDamagePercent: 60,
+  /** Mobs that survive the big blast are pushed this far from its centre. */
+  knockback: toFp(160),
+};
+
+/** Blade Circle (systems/knives.ts). */
+export const KNIVES = {
+  orbit: toFp(210),
+  /** One turn of the circle. */
+  turn: ticks(0.8),
+  /** A circling knife hits a target again after this long. */
+  rehit: ticks(0.4),
+  /** The full circle volleys at the enemies this close, each knife piercing for `life`. */
+  reach: toFp(1000),
+  speed: perTick(1800),
+  life: ticks(0.6),
+};
+
 export type Stat = 'cooldown' | 'maxHp' | 'speed' | 'area' | 'regen' | 'crit' | 'xp' | 'magnet' | 'duration' | 'guard' | 'attack';
 export const STATS: readonly Stat[] = ['cooldown', 'maxHp', 'speed', 'area', 'regen', 'crit', 'xp', 'magnet', 'duration', 'guard', 'attack'];
 
@@ -314,7 +358,7 @@ export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
  */
 export const EVOLVE_PAIR: Readonly<Record<SpellId | RelicId, PassiveId>> = {
   ball: 'legs', staff: 'iron', fish: 'calm', beads: 'eye', bowl: 'karma', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
-  lotus: 'karma', halo: 'calm', roar: 'focus',
+  lotus: 'karma', halo: 'calm', roar: 'focus', talisman: 'calm', bomb: 'eye', knives: 'wrath',
 };
 
 /** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */
@@ -337,6 +381,10 @@ export const SPELL_EVOLVED: Readonly<Record<SpellId, SpellLevel>> = {
   halo: lv(0, 3, 540, 1.1, 300),
   // Thunder Roar: all the way round, and it shatters the bullets it reaches
   roar: lv(1.5, 0, 560, 0, 280),
+  // prototype evolutions: only a stronger row for now
+  talisman: lv(1.2, 10, 80, 2.4, 220),
+  bomb: lv(0.9, 6, 300, 0, 210),
+  knives: lv(0.22, 10, 70, 0, 110),
 };
 
 export const EVOLVE = {

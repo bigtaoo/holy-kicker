@@ -81,6 +81,9 @@ export const corgiFr: Table<typeof corgiEn> = {
     lotus: { name: 'Mines aimant', desc: 'Une mine à chaque pas, les explosions attirent les friandises' },
     halo: { name: 'Grille laser', desc: '{n} lasers tournent autour de toi' },
     roar: { name: 'Aboiement sonique', desc: 'Aboie tout autour, brise les projectiles' },
+    talisman: { name: 'Tempête de Missiles' },
+    bomb: { name: 'Tapis de Bombes' },
+    knives: { name: 'Tempête de Lames' },
   },
   shrine: {
     heal: { name: 'Trousse de soins' },
@@ -103,6 +106,9 @@ export const corgiFr: Table<typeof corgiEn> = {
     lotus: { name: 'Mines de proximité', desc: 'En marchant, tu poses des mines qui explosent sous les bestioles' },
     halo: { name: 'Tourelle laser', desc: 'Un laser tourne autour de toi, plus long à l’arrêt', count: 'Lasers {a} → {b}' },
     roar: { name: 'Méga-aboiement', desc: 'Un aboiement vers la bestiole la plus proche repousse l’essaim' },
+    talisman: { name: 'Missiles Guidés', desc: '{n} missiles traquent des bestioles différentes', count: 'Missiles {a} → {b}' },
+    bomb: { name: 'Grenade à Fragmentation', desc: 'Une grenade éclate en {n} petites bombes', count: 'Petites bombes {a} → {b}' },
+    knives: { name: 'Anneau de Couteaux', desc: 'Jusqu’à {n} couteaux tournent autour de toi, puis partent', count: 'Couteaux {a} → {b}' },
   },
   passive: {
     calm: { name: 'Liquide de refroidissement', desc: 'Recharge des gadgets −{n}%' },

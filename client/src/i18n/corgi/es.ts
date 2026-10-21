@@ -81,6 +81,9 @@ export const corgiEs: Table<typeof corgiEn> = {
     lotus: { name: 'Minas imán', desc: 'Una mina a cada paso, las explosiones atraen golosinas' },
     halo: { name: 'Red láser', desc: '{n} láseres giran a tu alrededor' },
     roar: { name: 'Ladrido sónico', desc: 'Ladra en todas direcciones, rompe proyectiles' },
+    talisman: { name: 'Tormenta de Misiles' },
+    bomb: { name: 'Bombardeo' },
+    knives: { name: 'Tormenta de Hojas' },
   },
   shrine: {
     heal: { name: 'Botiquín' },
@@ -103,6 +106,9 @@ export const corgiEs: Table<typeof corgiEn> = {
     lotus: { name: 'Minas de proximidad', desc: 'Al caminar sueltas minas que explotan bajo los bichos' },
     halo: { name: 'Torreta láser', desc: 'Un láser gira a tu alrededor, más largo si estás quieto', count: 'Láseres {a} → {b}' },
     roar: { name: 'Megaladrido', desc: 'Un ladrido al bicho más cercano empuja al enjambre' },
+    talisman: { name: 'Misiles Guiados', desc: '{n} misiles persiguen a bichos distintos', count: 'Misiles {a} → {b}' },
+    bomb: { name: 'Granada de Racimo', desc: 'Una granada estalla en {n} bombitas', count: 'Bombitas {a} → {b}' },
+    knives: { name: 'Anillo de Cuchillos', desc: 'Hasta {n} cuchillos giran a tu alrededor y luego salen disparados', count: 'Cuchillos {a} → {b}' },
   },
   passive: {
     calm: { name: 'Refrigerante', desc: 'Recarga de gadgets −{n}%' },
