@@ -22,7 +22,7 @@ export function actOf(chapter: number): number {
  * with it (as hp^(ln 3/ln 200) and hp^(ln 4.5/ln 200)); the temple map, about 1.6x easier
  * than the others for the same gear (balance bots, 2026-10-21), takes x1.6 on chapters 6, 11
  * and 16. The meta game (gear tiers, training) keeps a hero growing into the last chapters
- * (`npm run journey`: a casual player clears all 20 around day 30).
+ * (`npm run journey -- casual days=70`: with the acts a casual player clears all 20 around day 60).
  */
 export const LADDER = {
   hp: [100, 120, 144, 174, 209, 402, 302, 363, 436, 524, 1008, 757, 910, 1094, 1315, 2529, 1900, 2284, 2745, 3300],
