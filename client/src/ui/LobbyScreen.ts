@@ -1,4 +1,4 @@
-import { Container, Graphics, type Renderer, type Text, type Texture } from 'pixi.js';
+import { Container, Graphics, type Renderer, type Texture } from 'pixi.js';
 import type { RelicId } from '@hk/engine';
 import { rollDice } from '@hk/protocol';
 import { t } from '../i18n';
@@ -87,7 +87,7 @@ export class LobbyScreen implements Screen {
   private trainPick: number | null = null;
   private merging: MergeView | null = null;
   private frame: UiFrame | null = null;
-  private toast: Text | null = null;
+  private toast: Container | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
   private readonly econ: EconomyUi;
   private readonly boards: BoardUi;
@@ -311,9 +311,12 @@ export class LobbyScreen implements Screen {
     this.relayout();
   }
 
-  /** The courtyard: in daylight behind Play, out of focus and dark behind the menu tabs (baked on first use). */
+  /**
+   * The courtyard: in daylight where the monk stands on it (Play, and Gear's paper doll), out of
+   * focus and dark behind the panels of Shop, Train and Codex (baked on first use).
+   */
   private scenery(f: UiFrame): Container {
-    if (this.tab === 'play' || !this.backdrop) return scenery(f, this.backdrop);
+    if (this.tab === 'play' || this.tab === 'gear' || !this.backdrop) return scenery(f, this.backdrop);
     this.menuBack ??= menuBackdrop(this.renderer, this.backdrop);
     return scenery(f, this.menuBack, true);
   }
@@ -480,13 +483,17 @@ export class LobbyScreen implements Screen {
     if (!this.frame) return;
     this.toast?.destroy();
     const f = this.frame;
-    const toast = fit(label(text, 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }), f.w - 80);
-    toast.position.set(f.w / 2, f.h - TAB_H - 60);
+    // a dark pill, so the line reads as a passing message and not as part of the tab under it
+    const words = fit(label(text, 48, COLORS.text), f.w - 140);
+    const toast = new Container();
+    toast.addChild(panel(words.width + 80, 96, COLORS.panel, 48), words);
+    toast.position.set(f.w / 2, f.h - TAB_H - 80);
+    toast.eventMode = 'none';
     this.view.addChild(toast);
     this.toast = toast;
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => {
-      if (!toast.destroyed) toast.destroy();
+      if (!toast.destroyed) toast.destroy({ children: true });
     }, 1800);
   }
 }

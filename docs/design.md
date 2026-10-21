@@ -636,11 +636,14 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   one waiting is full colour on a saffron halo.
 - Lobby text keeps the 48 floor (the rails' second line 44): the tab names, the rails' names, the
   player's name and level.
-- The menu tabs (Shop, Gear, Train, Codex) are a menu layer over the courtyard: the picture goes
+- The menu tabs (Shop, Train, Codex) are a menu layer over the courtyard: the picture goes
   out of focus and dusk-dark behind them (`MENU_TONE`, baked once into a texture by
   `menuBackdrop`, since a blur every frame costs a low-end phone its frame rate), so their dark
   panels sit on it as the bars do. Their content hangs from a fixed line under the top bar
-  instead of being centred, so a title stays put when the tabs switch.
+  instead of being centred, so a title stays put when the tabs switch. Gear keeps the daylight
+  courtyard: the monk stands on it among his gear, a stage like Play, with no dark panels.
+- A lobby toast (a locked tab's reason, a copied id) is a dark pill over the tab bar, so it reads
+  as a passing message and not as a loose line of the tab under it.
 - The Train tab's board (`ui/trainTab.ts`, `ui/trainBoard.ts`) is a dark panel of its own, its
   title on it, so the backdrop never shows between nodes. The 50 nodes snake in rows of ten along
   one road, lit as far as the training has come. Three states, told apart at a glance: trained is
