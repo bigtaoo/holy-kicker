@@ -67,10 +67,16 @@ Names are working names; every name ships through the string table (en / zh-CN s
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
   it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce; Bottomless Bowl
   swallows up to 8 mobs a throw for their experience.
+  The three spells added on 2026-10-21 (paired talisman–calm, bomb–eye, knives–wrath): the
+  Heavenly Seal bursts where each talisman strikes, hitting everything else within 150 at 60 %
+  (the monk's talisman stays stamped big in the air for 0.3 s); Thunder Rain throws 3 bombs at a
+  time at different enemies (each blast 280 wide at 170 %, every 1.1 s); the Thousand Blades fly back
+  to the hero after their pierce, cutting again on the way, rejoin the circle and volley again
+  once all 10 are home.
 - **Codex implemented** (`client/src/meta/codex.ts`, `client/src/ui/codexTab.ts`): the save keeps
   every evolution and awakening done at least once; a run reports what it evolved when it is
   settled (also on giving up), and the results name the new entries. The lobby's Codex tab
-  (open after chapter 2) shows all of them (10 with the alms bowl), the found ones by name and the rest as "???";
+  (open after chapter 2) shows all of them (13 with the alms bowl), the found ones by name and the rest as "???";
   tapping one shows what it does and its recipe, which is never hidden.
 - **Build strip on the HUD** (`client/src/ui/buildSlots.ts`, `buildBar.ts`): under the
   experience bar, the relic, 4 spell and 4 passive slots (empty ones as dim discs), each with its

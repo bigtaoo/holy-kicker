@@ -82,9 +82,9 @@ export const corgiId: Table<typeof corgiEn> = {
     lotus: { name: 'Ranjau Magnet', desc: 'Ranjau tiap langkah, ledakannya menarik camilan' },
     halo: { name: 'Jaring Laser', desc: '{n} laser berputar di sekitarmu' },
     roar: { name: 'Gonggongan Sonik', desc: 'Menggonggong ke segala arah, hancurkan peluru' },
-    talisman: { name: 'Badai Rudal' },
-    bomb: { name: 'Bom Karpet' },
-    knives: { name: 'Badai Pisau' },
+    talisman: { name: 'Badai Rudal', desc: 'Setiap rudal yang kena meledak, mengenai serangga di sekitar' },
+    bomb: { name: 'Bom Karpet', desc: 'Melempar {n} granat sekaligus ke serangga yang berbeda' },
+    knives: { name: 'Badai Pisau', desc: 'Pisau yang dilempar kembali padamu, memotong saat pergi dan pulang' },
   },
   shrine: {
     heal: { name: 'Kotak P3K' },

@@ -12,13 +12,19 @@ import { nearestTargets } from './talismans';
 // KNIVES.rehit. When the circle is full the next cast volleys it: every knife flies straight
 // at one of the nearest enemies (a different one each while there are enough), piercing for
 // KNIVES.life, and the circle grows again from nothing. Elites and the boss take
-// SPELL_CAST.bigPercent.
+// SPELL_CAST.bigPercent. Evolved (Thousand Blades), a volleyed knife turns after KNIVES.life
+// and flies back to its owner, cutting again on the way, and rejoins the circle; the circle
+// volleys again once every knife is home.
 
 /** Brads per tick for one turn every KNIVES.turn. */
 const SPIN = Math.trunc(BRAD_FULL / KNIVES.turn);
 
 function circling(s: SimState, owner: number): Knife[] {
   return s.knives.filter((k) => k.owner === owner && !k.flying);
+}
+
+function returning(s: SimState, owner: number): number {
+  return s.knives.filter((k) => k.owner === owner && k.flying && k.returns).length;
 }
 
 /** Where a circling knife in `slot` of `count` stands this tick. */
@@ -28,23 +34,29 @@ function place(s: SimState, k: Knife, p: Player, count: number): void {
   k.y = p.y + Math.trunc((sinB(a) * KNIVES.orbit) / TRIG_ONE);
 }
 
-/** Adds a knife to p's circle, or volleys the full circle; false when it is full with nothing in reach. */
-export function castKnives(s: SimState, events: SimEvent[], p: Player, count: number, radius: number, damagePct: number): boolean {
+/**
+ * Adds a knife to p's circle, or volleys the full circle (knives that `come back` when evolved);
+ * false when it is full with nothing in reach, or still waiting for knives on their way back.
+ */
+export function castKnives(s: SimState, events: SimEvent[], p: Player, count: number, radius: number, damagePct: number, comeBack: boolean): boolean {
   const mine = circling(s, p.owner);
-  if (mine.length < count) {
-    const k: Knife = { id: s.nextId++, owner: p.owner, x: 0, y: 0, px: 0, py: 0, slot: mine.length, vx: 0, vy: 0, flying: false, radius, damage: damagePct, age: 0, hit: [] };
+  const away = returning(s, p.owner);
+  if (mine.length + away < count) {
+    const k: Knife = { id: s.nextId++, owner: p.owner, x: 0, y: 0, px: 0, py: 0, slot: mine.length, vx: 0, vy: 0, flying: false, returns: false, radius, damage: damagePct, age: 0, hit: [] };
     place(s, k, p, count);
     k.px = k.x;
     k.py = k.y;
     s.knives.push(k);
     return true;
   }
+  if (away > 0) return false;
   const aims = nearestTargets(s, p.x, p.y, KNIVES.reach, mine.length);
   if (aims.length === 0) return false;
   mine.forEach((k, n) => {
     const t = targetAt(s, aims[n % aims.length])!;
     const a = atan2B(t.y - k.y, t.x - k.x);
     k.flying = true;
+    k.returns = comeBack;
     k.age = 0;
     k.hit.length = 0;
     k.vx = Math.trunc((cosB(a) * KNIVES.speed) / TRIG_ONE);
@@ -61,6 +73,12 @@ export function knifeSystem(s: SimState, events: SimEvent[]): void {
     k.px = k.x;
     k.py = k.y;
     k.age++;
+    if (k.flying && k.returns && k.age >= KNIVES.life) {
+      // on its way back: a fresh cut for everything it passes, then home to the circle
+      if (k.age === KNIVES.life) k.hit.length = 0;
+      if (dist2(by.x - k.x, by.y - k.y) <= KNIVES.orbit * KNIVES.orbit) rejoin(s, k, by);
+      else steerHome(k, by);
+    }
     if (k.flying) {
       k.x += k.vx;
       k.y += k.vy;
@@ -72,9 +90,29 @@ export function knifeSystem(s: SimState, events: SimEvent[]): void {
     }
     // a downed hero's circle turns without cutting
     if (!(by.dead && !k.flying)) cut(s, events, k, by);
-    if (!k.flying || k.age < KNIVES.life) s.knives[w++] = k;
+    if (!k.flying || k.returns || k.age < KNIVES.life) s.knives[w++] = k;
   }
   s.knives.length = w;
+}
+
+function steerHome(k: Knife, by: Player): void {
+  const a = atan2B(by.y - k.y, by.x - k.x);
+  k.vx = Math.trunc((cosB(a) * KNIVES.speed) / TRIG_ONE);
+  k.vy = Math.trunc((sinB(a) * KNIVES.speed) / TRIG_ONE);
+}
+
+/** A knife back home takes the next free place in the circle (it was empty when they flew). */
+function rejoin(s: SimState, k: Knife, by: Player): void {
+  const slot = s.knives.filter((o) => o.owner === k.owner && !o.flying).length;
+  k.flying = false;
+  k.returns = false;
+  k.slot = slot;
+  k.age = 0;
+  k.vx = 0;
+  k.vy = 0;
+  k.hit.length = 0;
+  const sp = by.spells.find((o) => o.id === 'knives');
+  place(s, k, by, Math.max(slot + 1, sp ? slotStats(sp).count : 0));
 }
 
 function cut(s: SimState, events: SimEvent[], k: Knife, by: Player): void {

@@ -4,14 +4,15 @@ import { bakeTexture } from './bake';
 import { CORGI } from './corgiFx';
 import { lerpX, lerpY } from './fixedStep';
 import type { FxPool } from './fx';
-import { explosion, type RingMode } from './spells';
+import { bladeTrail, explosion, sealBurst, type RingMode } from './spells';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
 
 // The talismans, the cluster bomb and the Blade Circle (engine systems/talismans.ts, bombs.ts,
 // knives.ts), drawn with their build icons (art/monk/icons; the corgi's homing missiles, grenade
 // and combat knives): talismans and knives from the sim's lists, bombs flown along an arc from
-// their 'bomb' events (the sim only knows where they land).
+// their 'bomb' events (the sim only knows where they land). The evolved forms: a Heavenly Seal
+// stamps its talisman big where it bursts, and the Thousand Blades leave streaks in flight.
 
 /** Talismans and knives fly at chest height. */
 const LIFT = 50;
@@ -27,6 +28,11 @@ const KNIFE_TURN = CORGI ? Math.PI / 2 : Math.PI / 4;
 const TALISMAN_SCALE = 0.7;
 const KNIFE_SCALE = CORGI ? 0.85 : 0.65;
 const BOMB_SCALE = 0.65;
+/** A seal's stamp grows from the talisman's size to this over STAMP seconds as it fades. */
+const STAMP_SCALE = 1.5;
+const STAMP = 0.3;
+/** An evolved talisman is drawn this much bigger. */
+const SEAL_SCALE = 1.2;
 
 function bake(renderer: Renderer, g: Graphics, w: number, h: number): Texture {
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, w, h), resolution: 1, antialias: true });
@@ -46,6 +52,11 @@ interface Flying {
   small: boolean;
 }
 
+interface Stamp {
+  sprite: Sprite;
+  t: number;
+}
+
 interface Seen {
   sprite: Sprite;
   seen: boolean;
@@ -58,6 +69,7 @@ export class ArsenalView {
   private readonly shadowTex: Texture;
   private readonly sprites: ViewPool<Sprite>;
   private readonly bombs: Flying[] = [];
+  private readonly stamps: Stamp[] = [];
   private readonly talismans = new Map<number, Seen>();
   private readonly knives = new Map<number, Seen>();
 
@@ -91,17 +103,46 @@ export class ArsenalView {
     this.bombs.push({ sprite, shadow, x0: e.x0 / FP, y0: e.y0 / FP, x1: e.x1 / FP, y1: e.y1 / FP, t: 0, dur: e.flight / TICK_RATE, small: e.small });
   }
 
-  /** A bomb went off. */
-  boom(e: Extract<SimEvent, { type: 'boom' }>): void {
-    explosion(this.pool, this.rand, e.x / FP, e.y / FP, e.radius / FP, this.ring);
+  /** A bomb went off, or a Heavenly Seal burst. */
+  boom(e: Extract<SimEvent, { type: 'boom' | 'seal' }>): void {
+    const x = e.x / FP;
+    const y = e.y / FP;
+    if (e.type === 'boom') {
+      explosion(this.pool, this.rand, x, y, e.radius / FP, this.ring);
+      return;
+    }
+    sealBurst(this.pool, this.rand, x, y - LIFT, e.radius / FP, this.ring);
+    // the corgi's missile just bursts; the monk's talisman leaves its seal stamped in the air
+    if (CORGI) return;
+    const sprite = this.sprites.take();
+    sprite.texture = this.talismanTex;
+    sprite.rotation = 0;
+    sprite.position.set(x, y - LIFT);
+    sprite.zIndex = y + 1;
+    this.stamps.push({ sprite, t: 0 });
   }
 
   /** The sim's talismans and knives, the hero (whose knives circle him) standing at (hx, hy). */
   draw(talismans: readonly Talisman[], knives: readonly Knife[], alpha: number, dt: number, hx: number, hy: number): void {
     this.flyBombs(dt);
-    this.sync(this.talismans, talismans, this.talismanTex, alpha, (q) => (q.dir / 65536) * Math.PI * 2 + TALISMAN_TURN, TALISMAN_SCALE);
+    this.fadeStamps(dt);
+    this.sync(this.talismans, talismans, this.talismanTex, alpha, (q) => (q.dir / 65536) * Math.PI * 2 + TALISMAN_TURN, (q) => TALISMAN_SCALE * (q.seal > 0 ? SEAL_SCALE : 1));
     // a circling knife points along the circle (brads grow toward +y), a flying one along its flight
-    this.sync(this.knives, knives, this.knifeTex, alpha, (k, x, y) => (k.flying ? Math.atan2(k.vy, k.vx) : Math.atan2(y - hy, x - hx) + Math.PI / 2) + KNIFE_TURN, KNIFE_SCALE);
+    this.sync(this.knives, knives, this.knifeTex, alpha, (k, x, y) => (k.flying ? Math.atan2(k.vy, k.vx) : Math.atan2(y - hy, x - hx) + Math.PI / 2) + KNIFE_TURN, () => KNIFE_SCALE);
+    for (const k of knives) if (k.flying && k.returns) bladeTrail(this.pool, lerpX(k, alpha), lerpY(k, alpha) - LIFT, Math.atan2(k.vy, k.vx));
+  }
+
+  private fadeStamps(dt: number): void {
+    let w = 0;
+    for (const st of this.stamps) {
+      st.t += dt;
+      const u = Math.min(1, st.t / STAMP);
+      st.sprite.scale.set(TALISMAN_SCALE * SEAL_SCALE + (STAMP_SCALE - TALISMAN_SCALE * SEAL_SCALE) * u);
+      st.sprite.alpha = 1 - u * u;
+      if (u < 1) this.stamps[w++] = st;
+      else this.sprites.give(st.sprite);
+    }
+    this.stamps.length = w;
   }
 
   private flyBombs(dt: number): void {
@@ -127,7 +168,7 @@ export class ArsenalView {
   }
 
   private sync<T extends Talisman | Knife>(
-    views: Map<number, Seen>, list: readonly T[], tex: Texture, alpha: number, angle: (q: T, x: number, y: number) => number, scale: number,
+    views: Map<number, Seen>, list: readonly T[], tex: Texture, alpha: number, angle: (q: T, x: number, y: number) => number, scale: (q: T) => number,
   ): void {
     for (const v of views.values()) v.seen = false;
     for (const q of list) {
@@ -136,7 +177,7 @@ export class ArsenalView {
         const sprite = this.sprites.take();
         sprite.texture = tex;
         sprite.alpha = 1;
-        sprite.scale.set(scale);
+        sprite.scale.set(scale(q));
         v = { sprite, seen: false };
         views.set(q.id, v);
       }

@@ -81,9 +81,9 @@ export const monkIt: Table<typeof monkEn> = {
     lotus: { name: 'Sentiero di Loti', desc: 'Un loto a ogni passo, i fiori attirano gemme' },
     halo: { name: 'Luce Infinita', desc: '{n} raggi ruotano intorno a te' },
     roar: { name: 'Ruggito del Tuono', desc: 'Ruggisce tutto intorno, frantuma i proiettili' },
-    talisman: { name: 'Sigillo Celeste' },
-    bomb: { name: 'Pioggia di Tuoni' },
-    knives: { name: 'Mille Lame' },
+    talisman: { name: 'Sigillo Celeste', desc: 'Ogni talismano che colpisce esplode in un sigillo' },
+    bomb: { name: 'Pioggia di Tuoni', desc: 'Lancia {n} bombe insieme, su nemici diversi' },
+    knives: { name: 'Mille Lame', desc: 'I coltelli lanciati tornano da te, tagliando all’andata e al ritorno' },
   },
   shrine: {
     heal: { name: 'Cura' },

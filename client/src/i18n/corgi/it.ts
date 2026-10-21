@@ -81,9 +81,9 @@ export const corgiIt: Table<typeof corgiEn> = {
     lotus: { name: 'Mine Magnetiche', desc: 'Una mina a ogni passo, le esplosioni attirano i bocconcini' },
     halo: { name: 'Griglia Laser', desc: '{n} laser ruotano intorno a te' },
     roar: { name: 'Abbaio Sonico', desc: 'Abbaia tutto intorno, frantuma i proiettili' },
-    talisman: { name: 'Tempesta di Missili' },
-    bomb: { name: 'Bombardamento' },
-    knives: { name: 'Tempesta di Lame' },
+    talisman: { name: 'Tempesta di Missili', desc: 'Ogni missile che colpisce esplode sugli insetti intorno' },
+    bomb: { name: 'Bombardamento', desc: 'Lancia {n} granate insieme, su insetti diversi' },
+    knives: { name: 'Tempesta di Lame', desc: 'I coltelli lanciati tornano da te, tagliando all’andata e al ritorno' },
   },
   shrine: {
     heal: { name: 'Kit Medico' },

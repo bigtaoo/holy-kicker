@@ -82,9 +82,9 @@ export const corgiTr: Table<typeof corgiEn> = {
     lotus: { name: 'Mıknatıs Mayınlar', desc: 'Her adımda bir mayın, patlamalar ikramları çeker' },
     halo: { name: 'Lazer Ağı', desc: '{n} lazer etrafında döner' },
     roar: { name: 'Sonik Havlama', desc: 'Her yöne havlar, mermileri parçalar' },
-    talisman: { name: 'Füze Fırtınası' },
-    bomb: { name: 'Halı Bombardımanı' },
-    knives: { name: 'Bıçak Fırtınası' },
+    talisman: { name: 'Füze Fırtınası', desc: 'İsabet eden her füze patlar, etraftaki böcekleri de vurur' },
+    bomb: { name: 'Halı Bombardımanı', desc: 'Aynı anda farklı böceklere {n} el bombası atar' },
+    knives: { name: 'Bıçak Fırtınası', desc: 'Atılan bıçaklar geri döner, gidişte de dönüşte de keser' },
   },
   shrine: {
     heal: { name: 'İlk Yardım' },

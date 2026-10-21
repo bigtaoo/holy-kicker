@@ -6,7 +6,7 @@ import type { Palm, Player, SimState, SpellSlot } from '../state';
 import { lasting, slotStats, stat } from './build';
 import { bossIndex, damage, eliteIndex, targetAt } from './combat';
 import { cymbalSystem, spinWheel, throwCymbals } from './cymbals';
-import { bombSystem, throwBomb } from './bombs';
+import { bombSystem, throwBombs } from './bombs';
 import { castKnives, knifeSystem } from './knives';
 import { dropLotus, haloSystem, lotusSystem, roar } from './sutras';
 import { castTalismans, talismanSystem } from './talismans';
@@ -174,9 +174,9 @@ function cast(s: SimState, events: SimEvent[], p: Player, slot: SpellSlot): bool
   const life = lasting(p, l.life);
   if (id === 'lotus') return dropLotus(s, p, l.radius, l.life, l.damage, slot.evolved);
   if (id === 'roar') return roar(s, events, p, l.radius, l.damage, slot.evolved);
-  if (id === 'talisman') return castTalismans(s, events, p, l.count, r, life, l.damage);
-  if (id === 'bomb') return throwBomb(s, events, p, l.count, r, l.damage);
-  if (id === 'knives') return castKnives(s, events, p, l.count, r, l.damage);
+  if (id === 'talisman') return castTalismans(s, events, p, l.count, r, life, l.damage, slot.evolved ? scaled(p, EVOLVE.sealRadius) : 0);
+  if (id === 'bomb') return throwBombs(s, events, p, slot.evolved ? EVOLVE.bombVolley : 1, l.count, r, l.damage);
+  if (id === 'knives') return castKnives(s, events, p, l.count, r, l.damage, slot.evolved);
   if (id === 'palm') {
     const cast: Palm[] = [];
     for (let i = 0; i < l.count; i++) {

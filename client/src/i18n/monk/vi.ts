@@ -81,9 +81,9 @@ export const monkVi: Table<typeof monkEn> = {
     lotus: { name: 'Bộ Bộ Sinh Liên', desc: 'Mỗi bước một đóa sen, sen nở hút đá quý' },
     halo: { name: 'Hào Quang Vô Biên', desc: '{n} tia sáng xoay quanh bạn' },
     roar: { name: 'Tiếng Gầm Sấm', desc: 'Gầm khắp bốn phía, phá tan đạn' },
-    talisman: { name: 'Thiên Cương Phù' },
-    bomb: { name: 'Mưa Sấm Sét' },
-    knives: { name: 'Vạn Đao' },
+    talisman: { name: 'Thiên Cương Phù', desc: 'Mỗi lá bùa trúng đích nổ thành ấn' },
+    bomb: { name: 'Mưa Sấm Sét', desc: 'Ném {n} quả bom cùng lúc vào các kẻ địch khác nhau' },
+    knives: { name: 'Vạn Đao', desc: 'Dao phóng ra bay trở về, chém cả lúc đi lẫn lúc về' },
   },
   shrine: {
     heal: { name: 'Hồi máu' },

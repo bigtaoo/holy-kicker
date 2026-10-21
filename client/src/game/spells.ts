@@ -111,3 +111,25 @@ export function fieldMotes(pool: FxPool, rand: () => number, x: number, y: numbe
     }, true);
   }
 }
+
+/** The Heavenly Seal's burst colours: vermilion and gold (the corgi's missile: orange and white-hot). */
+const SEAL = CORGI ? { ring: CORGI_FX.orange, glow: CORGI_FX.hot, spark: CORGI_FX.laserCore } : { ring: 0xff5a3c, glow: 0xffd36a, spark: 0xfff0b0 };
+
+/** A Heavenly Seal bursting where its talisman struck: a flash, a thick ring and a spray of scraps. */
+export function sealBurst(pool: FxPool, rand: () => number, x: number, y: number, r: number, mode: RingMode): void {
+  pool.emit({ shape: 'glow', x, y, vx: 0, vy: 0, life: 0.18, size0: r * 1.2, size1: r * 1.8, rotation: 0, spin: 0, drag: 1, color: SEAL.glow, alpha: 0.8 });
+  nova(pool, x, y, r * 0.3, r, 0.24, SEAL.ring, mode, 0.22);
+  for (let i = 0; i < 6; i++) {
+    const a = (i / 6) * Math.PI * 2 + rand() * 0.6;
+    const v = r * (2.2 + rand() * 1.2);
+    pool.emit({
+      shape: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.22 + rand() * 0.1,
+      size0: 30, size1: 6, rotation: a, spin: 0, drag: 0.05, color: SEAL.spark, alpha: 1,
+    }, true);
+  }
+}
+
+/** A streak left behind a flying knife of the Thousand Blades. */
+export function bladeTrail(pool: FxPool, x: number, y: number, angle: number): void {
+  pool.emit({ shape: 'band', x, y, vx: 0, vy: 0, life: 0.14, size0: 70, size1: 30, aspect: 0.18, rotation: angle, spin: 0, drag: 1, color: CORGI ? CORGI_FX.cyanPale : 0xfff0c8, alpha: 0.55 }, true);
+}

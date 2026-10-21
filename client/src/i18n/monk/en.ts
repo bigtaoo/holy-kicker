@@ -80,9 +80,9 @@ export const monkEn = {
     lotus: { name: 'Lotus Path', desc: 'A lotus at every step, blooms pull gems' },
     halo: { name: 'Boundless Light', desc: '{n} beams turn around you' },
     roar: { name: 'Thunder Roar', desc: 'Roars all round, shatters bullets' },
-    talisman: { name: 'Heavenly Seal' },
-    bomb: { name: 'Thunder Rain' },
-    knives: { name: 'Thousand Blades' },
+    talisman: { name: 'Heavenly Seal', desc: 'Every talisman that strikes bursts in a seal' },
+    bomb: { name: 'Thunder Rain', desc: 'Throws {n} bombs at once, at different enemies' },
+    knives: { name: 'Thousand Blades', desc: 'Thrown knives fly back to you, cutting both ways' },
   },
   shrine: {
     heal: { name: 'Heal' },

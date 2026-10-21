@@ -28,6 +28,17 @@ describe('eventCue', () => {
     }
   });
 
+  it('gives the bomb, talismans and Blade Circle their own sounds, the bomblets one for the lot', () => {
+    const bomb = { type: 'bomb', owner: 0, x0: 0, y0: 0, x1: 0, y1: 0, flight: 9 } as const;
+    expect(eventCue({ ...bomb, small: false }, 0)).toBe('toss');
+    expect(eventCue({ ...bomb, small: true }, 0)).toBeNull();
+    expect(eventCue({ type: 'boom', x: 0, y: 0, radius: 1, small: false }, 0)).toBe('boom');
+    expect(eventCue({ type: 'boom', x: 0, y: 0, radius: 1, small: true }, 0)).toBe('bomblet');
+    expect(eventCue({ type: 'talismans', owner: 0, x: 0, y: 0, count: 3 }, 0)).toBe('talisman');
+    expect(eventCue({ type: 'seal', x: 0, y: 0, radius: 1 }, 0)).toBe('seal');
+    expect(eventCue({ type: 'volley', owner: 0, x: 0, y: 0, count: 3 }, 0)).toBe('blades');
+  });
+
   it('plays the world\'s sounds whoever caused them, and mutes another player\'s pickups', () => {
     expect(eventCue({ type: 'mobDown', index: 0, x: 0, y: 0, dx: 0, dy: 0 }, 1)).toBe('pop');
     expect(eventCue({ type: 'bossWindup' }, 1)).toBe('windup');

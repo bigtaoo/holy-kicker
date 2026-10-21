@@ -82,9 +82,9 @@ export const corgiPl: Table<typeof corgiEn> = {
     lotus: { name: 'Miny Magnetyczne', desc: 'Mina przy każdym kroku, wybuchy przyciągają smakołyki' },
     halo: { name: 'Siatka Laserów', desc: 'Lasery ({n}) krążą wokół ciebie' },
     roar: { name: 'Szczekanie Soniczne', desc: 'Szczeka dookoła, rozbija pociski' },
-    talisman: { name: 'Burza Rakiet' },
-    bomb: { name: 'Nalot Dywanowy' },
-    knives: { name: 'Burza Ostrzy' },
+    talisman: { name: 'Burza Rakiet', desc: 'Każda trafiająca rakieta wybucha, raniąc robale wokół' },
+    bomb: { name: 'Nalot Dywanowy', desc: 'Rzuca {n} granaty naraz w różne robale' },
+    knives: { name: 'Burza Ostrzy', desc: 'Rzucone noże wracają do ciebie i tną w obie strony' },
   },
   shrine: {
     heal: { name: 'Apteczka' },

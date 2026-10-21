@@ -402,6 +402,7 @@ export class Game {
           this.arsenal.throw(e);
           break;
         case 'boom':
+        case 'seal':
           this.arsenal.boom(e);
           break;
         case 'bolt':

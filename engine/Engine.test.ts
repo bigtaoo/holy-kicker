@@ -95,7 +95,7 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-21 for ENGINE_VERSION 45 (45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
+    // Recorded 2026-10-21 for ENGINE_VERSION 45 (45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
     // A change here is a rules change: bump the version.
     expect(ENGINE_VERSION).toBe(45);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
@@ -125,11 +125,11 @@ describe('Engine', () => {
 
 const GOLDEN = 2760391922;
 const GOLDEN_CHAPTER = 3307038418;
-const GOLDEN_MARSH = 2024468967;
+const GOLDEN_MARSH = 506198948;
 const GOLDEN_SNOW = 3453182910;
-const GOLDEN_GHOST = 2753538815;
+const GOLDEN_GHOST = 2059391412;
 const GOLDEN_PEAK = 503676593;
 const GOLDEN_HARD = 1090118142;
 const GOLDEN_FAT = 1288692088;
 const GOLDEN_NOVICE = 2495846628;
-const GOLDEN_MUTATED = [4164116652, 1846680064, 2078718989];
+const GOLDEN_MUTATED = [2136452560, 1846680064, 302120591];

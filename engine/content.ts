@@ -388,9 +388,11 @@ export const SPELL_EVOLVED: Readonly<Record<SpellId, SpellLevel>> = {
   halo: lv(0, 3, 540, 1.1, 300),
   // Thunder Roar: all the way round, and it shatters the bullets it reaches
   roar: lv(1.5, 0, 560, 0, 280),
-  // prototype evolutions: only a stronger row for now
+  // Heavenly Seal: every talisman that strikes bursts in a seal of EVOLVE.sealRadius
   talisman: lv(1.2, 10, 80, 2.4, 220),
-  bomb: lv(0.9, 6, 300, 0, 210),
+  // Thunder Rain: EVOLVE.bombVolley bombs a throw, each at a different enemy
+  bomb: lv(1.1, 5, 280, 0, 170),
+  // Thousand Blades: volleyed knives fly back to the circle, cutting both ways
   knives: lv(0.22, 10, 70, 0, 110),
 };
 
@@ -409,6 +411,11 @@ export const EVOLVE = {
   /** Meteor Ball: splinters per bounce and how far they look for a target. */
   splinters: 2,
   splinterRange: toFp(450),
+  /** Heavenly Seal: the burst's radius and its share of the talisman's damage. */
+  sealRadius: toFp(150),
+  sealPercent: 60,
+  /** Thunder Rain: bombs a throw. */
+  bombVolley: 3,
 };
 
 export type CardKind = 'relic' | 'spell' | 'passive' | 'shrine' | 'evolve';

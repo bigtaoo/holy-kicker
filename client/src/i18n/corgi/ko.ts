@@ -82,9 +82,9 @@ export const corgiKo: Table<typeof corgiEn> = {
     lotus: { name: '자석 지뢰', desc: '걸음마다 지뢰, 폭발하며 간식을 끌어옴' },
     halo: { name: '레이저 그리드', desc: '레이저 {n}줄이 주위를 돎' },
     roar: { name: '소닉 바크', desc: '사방으로 짖어 탄환을 부숨' },
-    talisman: { name: '미사일 폭풍' },
-    bomb: { name: '융단 폭격' },
-    knives: { name: '칼날 폭풍' },
+    talisman: { name: '미사일 폭풍', desc: '명중한 미사일이 터져 주변 벌레까지 휩쓴다' },
+    bomb: { name: '융단 폭격', desc: '수류탄 {n}개를 한 번에 서로 다른 벌레에게 던진다' },
+    knives: { name: '칼날 폭풍', desc: '날린 칼이 돌아와 오가며 벤다' },
   },
   shrine: {
     heal: { name: '구급 키트' },

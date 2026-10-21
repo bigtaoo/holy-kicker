@@ -81,9 +81,9 @@ export const corgiDe: Table<typeof corgiEn> = {
     lotus: { name: 'Magnetminen', desc: 'Eine Mine bei jedem Schritt, Explosionen ziehen Leckerli an' },
     halo: { name: 'Lasergitter', desc: '{n} Laser drehen sich um dich' },
     roar: { name: 'Schallbellen', desc: 'Bellt rundum, zerschmettert Geschosse' },
-    talisman: { name: 'Raketensturm' },
-    bomb: { name: 'Bombenteppich' },
-    knives: { name: 'Klingensturm' },
+    talisman: { name: 'Raketensturm', desc: 'Jede Rakete zerplatzt beim Treffer und trifft Käfer ringsum' },
+    bomb: { name: 'Bombenteppich', desc: 'Wirft {n} Granaten auf einmal, auf verschiedene Käfer' },
+    knives: { name: 'Klingensturm', desc: 'Geworfene Messer kehren zurück und schneiden auf beiden Wegen' },
   },
   shrine: {
     heal: { name: 'Medikit' },

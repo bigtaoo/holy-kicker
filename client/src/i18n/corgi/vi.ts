@@ -82,9 +82,9 @@ export const corgiVi: Table<typeof corgiEn> = {
     lotus: { name: 'Mìn Nam Châm', desc: 'Mỗi bước một quả mìn, nổ sẽ hút đồ ăn vặt' },
     halo: { name: 'Lưới Laser', desc: '{n} tia laser xoay quanh bạn' },
     roar: { name: 'Sủa Siêu Âm', desc: 'Sủa khắp bốn phía, phá tan đạn' },
-    talisman: { name: 'Bão Tên Lửa' },
-    bomb: { name: 'Ném Bom Rải Thảm' },
-    knives: { name: 'Bão Lưỡi Dao' },
+    talisman: { name: 'Bão Tên Lửa', desc: 'Mỗi tên lửa trúng đích nổ tung, trúng cả bọ xung quanh' },
+    bomb: { name: 'Ném Bom Rải Thảm', desc: 'Ném {n} quả lựu đạn cùng lúc vào các con bọ khác nhau' },
+    knives: { name: 'Bão Lưỡi Dao', desc: 'Dao phóng ra bay trở về, chém cả lúc đi lẫn lúc về' },
   },
   shrine: {
     heal: { name: 'Hộp cứu thương' },

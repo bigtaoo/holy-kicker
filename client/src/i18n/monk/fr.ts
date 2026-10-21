@@ -81,9 +81,9 @@ export const monkFr: Table<typeof monkEn> = {
     lotus: { name: 'Chemin de lotus', desc: 'Un lotus à chaque pas, les fleurs attirent les gemmes' },
     halo: { name: 'Lumière infinie', desc: '{n} rayons tournent autour de toi' },
     roar: { name: 'Rugissement de tonnerre', desc: 'Rugit tout autour, brise les projectiles' },
-    talisman: { name: 'Sceau Céleste' },
-    bomb: { name: 'Pluie de Tonnerre' },
-    knives: { name: 'Mille Lames' },
+    talisman: { name: 'Sceau Céleste', desc: 'Chaque talisman qui touche éclate en un sceau' },
+    bomb: { name: 'Pluie de Tonnerre', desc: 'Lance {n} bombes à la fois, sur des ennemis différents' },
+    knives: { name: 'Mille Lames', desc: 'Les couteaux lancés reviennent et tranchent à l’aller et au retour' },
   },
   shrine: {
     heal: { name: 'Soin' },

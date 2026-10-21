@@ -85,9 +85,9 @@ export const corgiEn: Table<typeof monkEn> = {
     lotus: { name: 'Magnet Mines', desc: 'A mine at every step, blasts pull treats' },
     halo: { name: 'Laser Grid', desc: '{n} lasers turn around you' },
     roar: { name: 'Sonic Bark', desc: 'Barks all round, shatters bullets' },
-    talisman: { name: 'Missile Storm' },
-    bomb: { name: 'Carpet Bomb' },
-    knives: { name: 'Blade Storm' },
+    talisman: { name: 'Missile Storm', desc: 'Every missile that hits bursts, splashing the bugs around' },
+    bomb: { name: 'Carpet Bomb', desc: 'Throws {n} grenades at once, at different bugs' },
+    knives: { name: 'Blade Storm', desc: 'Thrown knives fly back to you, cutting both ways' },
   },
   shrine: {
     heal: { name: 'Med Kit' },

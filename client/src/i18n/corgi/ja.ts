@@ -82,9 +82,9 @@ export const corgiJa: Table<typeof corgiEn> = {
     lotus: { name: 'マグネットマイン', desc: '一歩ごとに地雷、爆発でおやつを引き寄せる' },
     halo: { name: 'レーザーグリッド', desc: '{n}本のレーザーが周りを回る' },
     roar: { name: 'ソニックバーク', desc: '全方位に吠え、弾を砕く' },
-    talisman: { name: 'ミサイルストーム' },
-    bomb: { name: '絨毯爆撃' },
-    knives: { name: 'ブレードストーム' },
+    talisman: { name: 'ミサイルストーム', desc: '命中したミサイルが炸裂し、周りの虫も巻き込む' },
+    bomb: { name: '絨毯爆撃', desc: '一度に{n}個の手榴弾を別々の虫へ投げる' },
+    knives: { name: 'ブレードストーム', desc: '放った刀が戻ってきて、行きも帰りも斬る' },
   },
   shrine: {
     heal: { name: 'メディキット' },

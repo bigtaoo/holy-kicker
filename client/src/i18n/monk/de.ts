@@ -81,9 +81,9 @@ export const monkDe: Table<typeof monkEn> = {
     lotus: { name: 'Lotuspfad', desc: 'Ein Lotus bei jedem Schritt, Blüten ziehen Edelsteine an' },
     halo: { name: 'Grenzenloses Licht', desc: '{n} Strahlen drehen sich um dich' },
     roar: { name: 'Donnerbrüllen', desc: 'Brüllt rundum, zerschmettert Geschosse' },
-    talisman: { name: 'Himmelssiegel' },
-    bomb: { name: 'Donnerregen' },
-    knives: { name: 'Tausend Klingen' },
+    talisman: { name: 'Himmelssiegel', desc: 'Jedes treffende Siegel zerplatzt und trifft alles ringsum' },
+    bomb: { name: 'Donnerregen', desc: 'Wirft {n} Bomben auf einmal, auf verschiedene Feinde' },
+    knives: { name: 'Tausend Klingen', desc: 'Geworfene Messer kehren zurück und schneiden auf beiden Wegen' },
   },
   shrine: {
     heal: { name: 'Heilung' },

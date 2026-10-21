@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FxPool } from './fx';
-import { bolt, explosion, nova } from './spells';
+import { bladeTrail, bolt, explosion, nova, sealBurst } from './spells';
 import { AuraStack } from './aura';
 
 describe('spells', () => {
@@ -28,6 +28,16 @@ describe('spells', () => {
     const pool = new FxPool(100);
     bolt(pool, () => 0.5, 0, 0, 300, 0);
     expect(pool.live[pool.live.length - 1]).toMatchObject({ shape: 'glow', x: 300, y: 0 });
+  });
+
+  it('keeps a seal burst flash and ring over budget, and drops its scraps and the blade trails', () => {
+    const pool = new FxPool(1000, () => 0.5, 1);
+    sealBurst(pool, () => 0.5, 0, 0, 150, 'band');
+    bladeTrail(pool, 0, 0, 1);
+    expect(pool.live.some((p) => p.shape === 'glow')).toBe(true);
+    expect(pool.live.some((p) => p.shape === 'band')).toBe(true);
+    expect(pool.live.some((p) => p.shape === 'spark')).toBe(false);
+    expect(pool.live.filter((p) => p.shape === 'band')).toHaveLength(28);
   });
 
   it('owns a halo and two orbs per aura layer', () => {

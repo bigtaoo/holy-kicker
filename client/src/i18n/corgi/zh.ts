@@ -82,9 +82,9 @@ export const corgiZh: Table<typeof corgiEn> = {
     lotus: { name: '磁吸地雷', desc: '每步一颗地雷，爆炸时吸来零食' },
     halo: { name: '激光网', desc: '{n} 道激光绕身旋转' },
     roar: { name: '音爆汪', desc: '四面狂吠，震碎子弹' },
-    talisman: { name: '导弹风暴' },
-    bomb: { name: '地毯轰炸' },
-    knives: { name: '刀刃风暴' },
+    talisman: { name: '导弹风暴', desc: '每枚导弹命中后爆开，波及周围的虫子' },
+    bomb: { name: '地毯轰炸', desc: '一次扔出 {n} 颗手雷，砸向不同的虫子' },
+    knives: { name: '刀刃风暴', desc: '射出的飞刀会飞回身边，来回都伤敌' },
   },
   shrine: {
     heal: { name: '急救包' },

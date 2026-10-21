@@ -81,9 +81,9 @@ export const monkJa: Table<typeof monkEn> = {
     lotus: { name: '歩歩生蓮', desc: '一歩ごとに蓮、咲くとジェムを引き寄せる' },
     halo: { name: '普照', desc: '{n}本の光線が周りを回る' },
     roar: { name: '獅子王吼', desc: '全方位に吼え、弾を砕く' },
-    talisman: { name: '天罡符陣' },
-    bomb: { name: '霹靂雷雨' },
-    knives: { name: '万刃帰宗' },
+    talisman: { name: '天罡符陣', desc: '命中した符が符印となって炸裂する' },
+    bomb: { name: '霹靂雷雨', desc: '一度に{n}個の火雷を別々の敵へ投げる' },
+    knives: { name: '万刃帰宗', desc: '放った刀が戻ってきて、行きも帰りも斬る' },
   },
   shrine: {
     heal: { name: '治療' },

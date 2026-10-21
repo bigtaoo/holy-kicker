@@ -74,6 +74,8 @@ export type SimEvent =
   /** A player's talismans flew out, or their Blade Circle volleyed. */
   | { type: 'talismans'; owner: number; x: number; y: number; count: number }
   | { type: 'volley'; owner: number; x: number; y: number; count: number }
+  /** A Heavenly Seal talisman struck and burst. */
+  | { type: 'seal'; x: number; y: number; radius: number }
   /** A lotus seed bloomed at (x, y). */
   | { type: 'bloom'; x: number; y: number; radius: number }
   /** A player's Lion's Roar: a cone around `brad` from (x, y) to `radius`, all round if `full`. */

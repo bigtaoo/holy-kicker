@@ -81,9 +81,9 @@ export const monkKo: Table<typeof monkEn> = {
     lotus: { name: '보보생련', desc: '걸음마다 연꽃, 피어나며 보석을 끌어옴' },
     halo: { name: '무량광', desc: '광선 {n}줄이 주위를 돎' },
     roar: { name: '사자왕 포효', desc: '사방으로 포효, 탄환을 부숨' },
-    talisman: { name: '천강부진' },
-    bomb: { name: '벽력뇌우' },
-    knives: { name: '만인귀종' },
+    talisman: { name: '천강부진', desc: '명중한 부적이 부인으로 터진다' },
+    bomb: { name: '벽력뇌우', desc: '화뢰 {n}개를 한 번에 서로 다른 적에게 던진다' },
+    knives: { name: '만인귀종', desc: '날린 칼이 돌아와 오가며 벤다' },
   },
   shrine: {
     heal: { name: '치유' },

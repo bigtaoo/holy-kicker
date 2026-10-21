@@ -81,9 +81,9 @@ export const monkTr: Table<typeof monkEn> = {
     lotus: { name: 'Nilüfer Yolu', desc: 'Her adımda bir nilüfer, açanlar taşları çeker' },
     halo: { name: 'Sınırsız Işık', desc: '{n} ışın etrafında döner' },
     roar: { name: 'Gök Kükremesi', desc: 'Her yöne kükrer, mermileri parçalar' },
-    talisman: { name: 'Gök Mührü' },
-    bomb: { name: 'Gök Gürültüsü Yağmuru' },
-    knives: { name: 'Bin Bıçak' },
+    talisman: { name: 'Gök Mührü', desc: 'İsabet eden her tılsım bir mühürle patlar' },
+    bomb: { name: 'Gök Gürültüsü Yağmuru', desc: 'Aynı anda farklı düşmanlara {n} bomba atar' },
+    knives: { name: 'Bin Bıçak', desc: 'Atılan bıçaklar geri döner, gidişte de dönüşte de keser' },
   },
   shrine: {
     heal: { name: 'Şifa' },

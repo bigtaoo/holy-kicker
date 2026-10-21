@@ -81,9 +81,9 @@ export const monkPt: Table<typeof monkEn> = {
     lotus: { name: 'Caminho de Lótus', desc: 'Um lótus a cada passo, as flores puxam gemas' },
     halo: { name: 'Luz Infinita', desc: '{n} raios giram ao seu redor' },
     roar: { name: 'Rugido Trovão', desc: 'Ruge em toda a volta, destrói projéteis' },
-    talisman: { name: 'Selo Celestial' },
-    bomb: { name: 'Chuva de Trovões' },
-    knives: { name: 'Mil Lâminas' },
+    talisman: { name: 'Selo Celestial', desc: 'Cada talismã que acerta explode num selo' },
+    bomb: { name: 'Chuva de Trovões', desc: 'Lança {n} bombas de uma vez, em inimigos diferentes' },
+    knives: { name: 'Mil Lâminas', desc: 'As facas lançadas voltam para você, cortando na ida e na volta' },
   },
   shrine: {
     heal: { name: 'Cura' },

@@ -3,20 +3,24 @@ import type { SimEvent } from '../events';
 import { dist, dist2 } from '../math/fixed';
 import { BRAD_FULL, cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Bomb, Player, SimState } from '../state';
-import { bossIndex, damage, eliteIndex, nearestTarget, targetAt } from './combat';
+import { bossIndex, damage, eliteIndex, targetAt } from './combat';
+import { nearestTargets } from './talismans';
 
 // Thunder Fire, a cluster bomb: lobbed from the hero at the nearest enemy, it lands after
 // BOMB.flight in a blast that hits everything inside and pushes the mobs that survive away
 // from its centre (like the roar, mobs only), then scatters `split` bomblets in a star around
 // it. A bomblet lands after BOMB.bombletFlight in a smaller, weaker blast and does not split.
+// Evolved (Thunder Rain), every throw is EVOLVE.bombVolley bombs at the nearest enemies, a
+// different one each while there are enough.
 
-/** Throws p's bomb; false when no enemy is in reach. */
-export function throwBomb(s: SimState, events: SimEvent[], p: Player, split: number, radius: number, damagePct: number): boolean {
-  const i = nearestTarget(s, p.x, p.y, BOMB.reach);
-  if (i < 0) return false;
-  const t = targetAt(s, i)!;
-  launch(s, events, { owner: p.owner, x0: p.x, y0: p.y, x: t.x, y: t.y, t: BOMB.flight, radius, damage: damagePct, split });
-  return true;
+/** Throws `n` of p's bombs; false when no enemy is in reach. */
+export function throwBombs(s: SimState, events: SimEvent[], p: Player, n: number, split: number, radius: number, damagePct: number): boolean {
+  const aims = nearestTargets(s, p.x, p.y, BOMB.reach, n);
+  for (const i of aims) {
+    const t = targetAt(s, i)!;
+    launch(s, events, { owner: p.owner, x0: p.x, y0: p.y, x: t.x, y: t.y, t: BOMB.flight, radius, damage: damagePct, split });
+  }
+  return aims.length > 0;
 }
 
 function launch(s: SimState, events: SimEvent[], b: Bomb): void {

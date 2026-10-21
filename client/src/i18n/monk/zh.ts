@@ -81,9 +81,9 @@ export const monkZh: Table<typeof monkEn> = {
     lotus: { name: '步步生莲', desc: '每步一朵莲花，绽放时吸来宝石' },
     halo: { name: '普照', desc: '{n} 道光束绕身旋转' },
     roar: { name: '狮王吼', desc: '四面怒吼，震碎子弹' },
-    talisman: { name: '天罡符阵' },
-    bomb: { name: '霹雳雷雨' },
-    knives: { name: '万刃归宗' },
+    talisman: { name: '天罡符阵', desc: '每道符咒命中后炸开符印，波及周围' },
+    bomb: { name: '霹雳雷雨', desc: '一次掷出 {n} 颗火雷，砸向不同的敌人' },
+    knives: { name: '万刃归宗', desc: '射出的飞刀会飞回身边，来回都伤敌' },
   },
   shrine: {
     heal: { name: '疗伤' },

@@ -142,8 +142,8 @@ export function evolveDesc(id: SpellId | RelicId): string {
   if (id === 'cymbal') return t('evolve.cymbal.desc', { n: SPELL_EVOLVED.cymbal.count });
   if (id === 'halo') return t('evolve.halo.desc', { n: SPELL_EVOLVED.halo.count });
   if (id === 'lotus' || id === 'roar') return t(`evolve.${id}.desc`);
-  // the prototype spells evolve into a stronger row only, shown by the card's own lines
-  if (id === 'talisman' || id === 'bomb' || id === 'knives') return t(`spell.${id}.desc`, { n: SPELL_EVOLVED[id].count });
+  if (id === 'bomb') return t('evolve.bomb.desc', { n: EVOLVE.bombVolley });
+  if (id === 'talisman' || id === 'knives') return t(`evolve.${id}.desc`);
   return t('evolve.bolt.desc');
 }
 

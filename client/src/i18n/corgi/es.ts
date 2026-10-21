@@ -81,9 +81,9 @@ export const corgiEs: Table<typeof corgiEn> = {
     lotus: { name: 'Minas imán', desc: 'Una mina a cada paso, las explosiones atraen golosinas' },
     halo: { name: 'Red láser', desc: '{n} láseres giran a tu alrededor' },
     roar: { name: 'Ladrido sónico', desc: 'Ladra en todas direcciones, rompe proyectiles' },
-    talisman: { name: 'Tormenta de Misiles' },
-    bomb: { name: 'Bombardeo' },
-    knives: { name: 'Tormenta de Hojas' },
+    talisman: { name: 'Tormenta de Misiles', desc: 'Cada misil que impacta estalla y salpica a los bichos cercanos' },
+    bomb: { name: 'Bombardeo', desc: 'Lanza {n} granadas a la vez, a bichos distintos' },
+    knives: { name: 'Tormenta de Hojas', desc: 'Los cuchillos vuelven a ti y cortan a la ida y a la vuelta' },
   },
   shrine: {
     heal: { name: 'Botiquín' },

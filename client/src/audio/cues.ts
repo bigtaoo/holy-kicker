@@ -14,6 +14,7 @@ export type Cue =
   | 'hit' | 'crit' | 'pop' | 'eliteDown' | 'clang'
   // spells and sutras
   | 'nova' | 'meteor' | 'field' | 'zap' | 'bloom' | 'roar' | 'bell' | 'bellBreak'
+  | 'toss' | 'boom' | 'bomblet' | 'talisman' | 'seal' | 'blades'
   // enemies and bosses
   | 'splash' | 'howl' | 'summon' | 'bossCast' | 'windup' | 'slam' | 'bossDown' | 'blast'
   // the run
@@ -52,6 +53,15 @@ export const CUES: Record<Cue, CueDef> = {
   roar: { priority: 2, gain: 0.5, gap: 0.3 },
   bell: { priority: 2, gain: 0.4, gap: 0.5 },
   bellBreak: { priority: 3, gain: 0.5, gap: 0.3 },
+  // the cluster bomb: thrown, the big blast, then its bomblets crackling (one sound for the lot)
+  toss: { priority: 1, gain: 0.35, gap: 0.15 },
+  boom: { priority: 2, gain: 0.55, gap: 0.18 },
+  bomblet: { priority: 1, gain: 0.3, gap: 0.09 },
+  // the talismans flying out, and the Heavenly Seal's bursts, which come many a second
+  talisman: { priority: 2, gain: 0.4, gap: 0.2 },
+  seal: { priority: 1, gain: 0.25, gap: 0.1 },
+  // the Blade Circle volleying
+  blades: { priority: 2, gain: 0.45, gap: 0.2 },
   splash: { priority: 1, gain: 0.9, gap: 0.2 },
   howl: { priority: 3, gain: 0.45, gap: 0.8 },
   summon: { priority: 2, gain: 0.35, gap: 0.3 },

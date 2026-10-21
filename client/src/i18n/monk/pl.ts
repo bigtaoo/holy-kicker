@@ -81,9 +81,9 @@ export const monkPl: Table<typeof monkEn> = {
     lotus: { name: 'Ścieżka Lotosu', desc: 'Lotos przy każdym kroku, kwiaty przyciągają klejnoty' },
     halo: { name: 'Bezkresne Światło', desc: 'Promienie ({n}) krążą wokół ciebie' },
     roar: { name: 'Grzmiący Ryk', desc: 'Ryk dookoła, rozbija pociski' },
-    talisman: { name: 'Niebiańska Pieczęć' },
-    bomb: { name: 'Deszcz Gromów' },
-    knives: { name: 'Tysiąc Ostrzy' },
+    talisman: { name: 'Niebiańska Pieczęć', desc: 'Każdy trafiający talizman wybucha pieczęcią' },
+    bomb: { name: 'Deszcz Gromów', desc: 'Rzuca {n} bomby naraz w różnych wrogów' },
+    knives: { name: 'Tysiąc Ostrzy', desc: 'Rzucone noże wracają do ciebie i tną w obie strony' },
   },
   shrine: {
     heal: { name: 'Leczenie' },

@@ -82,9 +82,9 @@ export const corgiPt: Table<typeof corgiEn> = {
     lotus: { name: 'Minas Magnéticas', desc: 'Uma mina a cada passo, as explosões puxam petiscos' },
     halo: { name: 'Grade de Lasers', desc: '{n} lasers giram ao seu redor' },
     roar: { name: 'Latido Sônico', desc: 'Late em toda a volta, destrói projéteis' },
-    talisman: { name: 'Tempestade de Mísseis' },
-    bomb: { name: 'Bombardeio' },
-    knives: { name: 'Tempestade de Lâminas' },
+    talisman: { name: 'Tempestade de Mísseis', desc: 'Cada míssil que acerta explode nos insetos em volta' },
+    bomb: { name: 'Bombardeio', desc: 'Lança {n} granadas de uma vez, em insetos diferentes' },
+    knives: { name: 'Tempestade de Lâminas', desc: 'As facas lançadas voltam para você, cortando na ida e na volta' },
   },
   shrine: {
     heal: { name: 'Kit Médico' },

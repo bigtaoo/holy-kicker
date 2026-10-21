@@ -81,9 +81,9 @@ export const monkEs: Table<typeof monkEn> = {
     lotus: { name: 'Senda de loto', desc: 'Un loto a cada paso, las flores atraen gemas' },
     halo: { name: 'Luz infinita', desc: '{n} rayos giran a tu alrededor' },
     roar: { name: 'Rugido de trueno', desc: 'Ruge en todas direcciones, rompe proyectiles' },
-    talisman: { name: 'Sello Celestial' },
-    bomb: { name: 'Lluvia de Truenos' },
-    knives: { name: 'Mil Hojas' },
+    talisman: { name: 'Sello Celestial', desc: 'Cada talismán que impacta estalla en un sello' },
+    bomb: { name: 'Lluvia de Truenos', desc: 'Lanza {n} bombas a la vez, a enemigos distintos' },
+    knives: { name: 'Mil Hojas', desc: 'Los cuchillos vuelven a ti y cortan a la ida y a la vuelta' },
   },
   shrine: {
     heal: { name: 'Curación' },

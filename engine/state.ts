@@ -274,6 +274,8 @@ export interface Talisman extends Body {
   damage: number;
   age: number;
   life: number;
+  /** The Heavenly Seal's radius when it strikes (evolved), 0 for none. */
+  seal: number;
 }
 
 /** A bomb in the air from (x0, y0) to (x, y), landing when `t` runs out; bomblets do not split. */
@@ -299,6 +301,8 @@ export interface Knife extends Body {
   vx: number;
   vy: number;
   flying: boolean;
+  /** Thrown by the Thousand Blades: flies back to its owner after KNIVES.life. */
+  returns: boolean;
   radius: number;
   damage: number;
   age: number;
