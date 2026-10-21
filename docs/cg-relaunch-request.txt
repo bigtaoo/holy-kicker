@@ -1,0 +1,23 @@
+To: submissions@crazygames.com
+Subject: Holy Kicker: request for a second Basic Launch
+
+Hi CrazyGames team,
+
+Holy Kicker (game id 5ecb4b73-6fe6-4c38-9653-72366d95f05b) finished Basic Launch on 17.10.2026 and was rejected for missing the performance benchmarks. It scored 8/15 on desktop and 8/15 on mobile & tablet, one point under the bar on each. We would like to ask for a second Basic Launch period.
+
+Most of the 10-16 October window ran on builds we have since replaced. We updated the game several times during Basic Launch, based on what we saw players do:
+- 12 Oct: loading now finishes before the first run starts, so gameplayStart no longer fires before loadingStop. Livelier opening wave.
+- 14-15 Oct: faster first screen, with an HTML loading screen and art loaded in the background. The first run starts at once, without waiting for a key. A click hands the keyboard to the game. Lower memory use. Fixed a freeze when textures unload.
+- 16 Oct (build 37e57712): a readable death with a short kill cam and the cause of death, then Play again straight away. A new results screen. Full keyboard control on desktop. A "click the game first" hint while the iframe has no keyboard focus. New painted thumbnails.
+
+16 October is the only full day on the latest build. The samples are small (58 desktop and 42 mobile users), but that day's numbers already clear the bars we missed:
+- Desktop average playtime: 12m24s (the window averaged 8m56s; 12m12s scores 5).
+- Desktop gameplay conversion: 59.4% (the window averaged 55.0%).
+- Mobile gameplay conversion: 36.7% (the window averaged 21.9%; 28.57% scores 2). Mobile conversion has risen every day as the fixes landed: 13% on 9-11 Oct, 21% on 12-13 Oct, 28-30% on 14-15 Oct, 37% on 16 Oct.
+
+We have another update ready (progress chests in the lobby, results screen fixes, boss polish). We can upload it whenever a new period begins.
+
+Would a second Basic Launch be possible? If there is anything else you'd like us to work on first, we'd be glad to hear it.
+
+Thanks,
+Tao Wang
