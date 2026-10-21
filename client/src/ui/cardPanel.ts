@@ -87,30 +87,53 @@ function icon(text: CardText, icons: IconSheet): Container {
   return c;
 }
 
-function card(text: CardText, icons: IconSheet, onTap: () => void, locked: () => boolean): Container {
+/** Where the name and the effect lines start, right of the icon disc. */
+const TEXT_X = -CARD_W / 2 + 80 + ICON_R * 2;
+const TEXT_W = CARD_W / 2 - TEXT_X - 36;
+/** The effect lines' top, under the name, and the room kept below them. */
+const LINES_TOP = 122;
+const LINES_BOTTOM = 40;
+const LINE_GAP = 8;
+/** The first card's top edge at the highest; the heading and the hint sit above it. */
+const CARDS_TOP = 600;
+
+/**
+ * Up to three effect lines, at 48 and wrapped to the card's text column rather than squeezed: a new
+ * item's one-sentence description runs to two rows in some languages. A stack too tall for any
+ * card height the screen allows still shrinks, never below 40.
+ */
+function effectLines(text: CardText): { block: Container; h: number } {
+  const block = new Container();
+  let y = 0;
+  for (const line of text.lines.slice(0, 3)) {
+    const l = label(line, 48, COLORS.text, { align: 'left', wordWrap: true, wordWrapWidth: TEXT_W, breakWords: true, lineHeight: 58 });
+    l.anchor.set(0, 0);
+    l.y = y;
+    block.addChild(l);
+    y += l.height + LINE_GAP;
+  }
+  return { block, h: Math.max(0, y - LINE_GAP) };
+}
+
+function card(text: CardText, lines: Container, h: number, icons: IconSheet, onTap: () => void, locked: () => boolean): Container {
   const c = new Container();
   const left = -CARD_W / 2;
   const gold = text.kind === 'evolve';
-  const back = panel(CARD_W, CARD_H, gold ? GOLD_PANEL : COLORS.panel);
-  if (gold) back.roundRect(-CARD_W / 2 + 14, -CARD_H / 2 + 14, CARD_W - 28, CARD_H - 28, 20).stroke({ color: GOLD_RIM, width: 6 });
+  const back = panel(CARD_W, h, gold ? GOLD_PANEL : COLORS.panel);
+  if (gold) back.roundRect(-CARD_W / 2 + 14, -h / 2 + 14, CARD_W - 28, h - 28, 20).stroke({ color: GOLD_RIM, width: 6 });
   c.addChild(back, icon(text, icons));
   c.children[1].position.set(left + 40 + ICON_R, 0);
-  const x = left + 80 + ICON_R * 2;
-  const room = CARD_W / 2 - x - 36;
-  const name = fit(label(text.name, 60), room * 0.62);
+  const x = TEXT_X;
+  const room = TEXT_W;
+  // the tag ("New!", "Lv.2 → 3") keeps its size; the name takes the rest of the row
+  const tag = fit(label(text.tag, 48, text.fresh ? COLORS.saffron : COLORS.dim), room * 0.45);
+  const name = fit(label(text.name, 60), room - tag.width - 28);
   name.anchor.set(0, 0.5);
-  name.position.set(x, -CARD_H / 2 + 70);
-  const tag = fit(label(text.tag, 48, text.fresh ? COLORS.saffron : COLORS.dim), room * 0.38);
+  name.position.set(x, -h / 2 + 70);
   tag.anchor.set(1, 0.5);
-  tag.position.set(CARD_W / 2 - 36, -CARD_H / 2 + 70);
-  c.addChild(name, tag);
-  // up to three effect lines below the name
-  text.lines.slice(0, 3).forEach((line, i) => {
-    const l = fit(label(line, 48, COLORS.text), CARD_W / 2 - x - 36);
-    l.anchor.set(0, 0.5);
-    l.position.set(x, -CARD_H / 2 + 150 + i * 62);
-    c.addChild(l);
-  });
+  tag.position.set(CARD_W / 2 - 36, -h / 2 + 70);
+  lines.position.set(x, -h / 2 + LINES_TOP);
+  c.addChild(name, tag, lines);
   c.eventMode = 'static';
   c.cursor = 'pointer';
   let down = false;
@@ -155,20 +178,31 @@ export function cardPanel(
 ): CardPanel {
   const view = new Container();
   view.addChild(backdrop(f.w, f.h, 0.7));
-  const total = texts.length * CARD_H + (texts.length - 1) * GAP;
-  const top = f.h / 2 - total / 2 + 60;
+  // one height for all the cards: the tallest effect lines, within what the screen leaves
+  const blocks = texts.map(effectLines);
+  const roomH = Math.floor((f.h - CARDS_TOP - 60 - (texts.length - 1) * GAP) / Math.max(1, texts.length));
+  const want = Math.max(CARD_H, ...blocks.map((b) => LINES_TOP + b.h + LINES_BOTTOM));
+  const cardH = Math.max(CARD_H, Math.min(want, roomH));
+  for (const b of blocks) {
+    const fitsIn = cardH - LINES_TOP - LINES_BOTTOM;
+    if (b.h > fitsIn) b.block.scale.set(Math.max(40 / 48, fitsIn / b.h));
+  }
+  const total = texts.length * cardH + (texts.length - 1) * GAP;
+  // the heading stays below the wave counter (RunHud, y 300) however tall the cards grow
+  const top = Math.max(CARDS_TOP, f.h / 2 - total / 2 + 60);
   const heading = label(title, 96, COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } });
-  heading.position.set(f.w / 2, top - 200);
+  fit(heading, f.w - 80);
+  heading.position.set(f.w / 2, top - 190);
   const hint = label(t('card.pickOne'), 52, COLORS.text);
   hint.position.set(f.w / 2, top - 90);
   view.addChild(heading, hint);
   let locked = true;
   if (keys && keys.focus >= texts.length) keys.focus = 0;
   const cards = texts.map((text, i) => {
-    const body = card(text, icons, () => onPick(i), () => locked);
+    const body = card(text, blocks[i].block, cardH, icons, () => onPick(i), () => locked);
     const rim = new Graphics();
     const ring = new Graphics()
-      .roundRect(-CARD_W / 2 - FOCUS_PAD, -CARD_H / 2 - FOCUS_PAD, CARD_W + 2 * FOCUS_PAD, CARD_H + 2 * FOCUS_PAD, CARD_RADIUS + FOCUS_PAD)
+      .roundRect(-CARD_W / 2 - FOCUS_PAD, -cardH / 2 - FOCUS_PAD, CARD_W + 2 * FOCUS_PAD, cardH + 2 * FOCUS_PAD, CARD_RADIUS + FOCUS_PAD)
       .stroke({ color: GOLD_RIM, width: 10 });
     ring.visible = false;
     const c = new Container();
@@ -176,9 +210,9 @@ export function cardPanel(
     if (keys) {
       // the card's number key, on its upper left corner
       const chip = new Container();
-      const n = label(String(i + 1), 44, COLORS.outline);
+      const n = label(String(i + 1), 48, COLORS.outline);
       chip.addChild(new Graphics().roundRect(-34, -34, 68, 68, 16).fill(GOLD_RIM).stroke({ color: COLORS.outline, width: 6 }), n);
-      chip.position.set(-CARD_W / 2 + 8, -CARD_H / 2 + 8);
+      chip.position.set(-CARD_W / 2 + 8, -cardH / 2 + 8);
       body.addChild(chip);
       // the mouse moves the highlight too, so keys and mouse never disagree
       body.on('pointerover', () => {
@@ -187,7 +221,7 @@ export function cardPanel(
       });
     }
     view.addChild(c);
-    return { c, body, rim, ring, y: top + CARD_H / 2 + i * (CARD_H + GAP) };
+    return { c, body, rim, ring, y: top + cardH / 2 + i * (cardH + GAP) };
   });
   const showFocus = () => cards.forEach(({ ring }, i) => (ring.visible = !!keys && !locked && keys.focus === i));
   let settled = false;
@@ -203,7 +237,7 @@ export function cardPanel(
       body.tint = pose.locked ? LOCKED_TINT : 0xffffff;
       rim.clear();
       if (pose.rimAlpha > 0 && pose.rim > 0) {
-        rim.poly(rimPoints(CARD_W, CARD_H, CARD_RADIUS, pose.rim), false)
+        rim.poly(rimPoints(CARD_W, cardH, CARD_RADIUS, pose.rim), false)
           .stroke({ color: GOLD_RIM, width: 10, alpha: pose.rimAlpha, cap: 'round', join: 'round' });
       }
     });
