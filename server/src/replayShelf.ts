@@ -14,7 +14,7 @@ import type { Game, Host, ReplayEnd, ReplayWire } from './protocol';
 export const COLLECT = { percent: 100, until: '2026-12-31' };
 export type CollectPlan = typeof COLLECT;
 /** Days a collected replay is kept, and the most the shelf holds (past it new ones are refused). */
-export const KEEP_DAYS = 45;
+export const KEEP_DAYS = 15;
 export const MAX_BYTES = 2 * 1024 ** 3;
 
 /** A stored replay: `name` is the install's tag and the run's id. */

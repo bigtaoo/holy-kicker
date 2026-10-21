@@ -79,7 +79,7 @@ now 100% until 2026-12-31; lower it and push to stop sooner). The client asks on
 sends at the run's end and, for the run so far, when the game goes to the background
 (`client/src/net/runReplays.ts`), only while the player allows statistics. Each is kept under the
 install's tag and the run's id (a later send of the run replaces the earlier) as a gzipped file in
-`HK_REPLAY_DIR` (the `replays` docker volume, `/data/replays`), for 45 days, at most 2 GB; without
+`HK_REPLAY_DIR` (the `replays` docker volume, `/data/replays`), for 15 days, at most 2 GB; without
 `HK_REPLAY_DIR` in memory. `npm run replays -- --collected=200` reads them.
 
 The client side is `client/src/net/` (`Backend`: queue, flush every 20 s and on hide, best
