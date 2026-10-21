@@ -18,8 +18,8 @@ export interface DownActions {
   giveUp(): void;
 }
 
-const W = 940;
-const TEXT_W = W - 120;
+const W = 1000;
+const TEXT_W = W - 80;
 
 export function goalText(goal: Goal): string {
   return goal.kind === 'clear' ? t('run.goal.clear', { n: goal.n }) : t(`run.goal.${goal.kind}`, { n: goal.n, wave: goal.wave });
@@ -53,6 +53,8 @@ export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: n
   if (info) items.push(...fallLines(info, wave, TEXT_W, icons));
   // the way out matches the revive in size and font, so declining the ad never looks disabled
   // (CrazyGames' rewarded-ad rules), but wears the lobby's dark secondary fill: gold is the revive's
+  // room for the key cap over the first button's corner
+  items.push([new Container(), 24]);
   const giveUp = button(t('run.giveUp'), 640, 150, () => actions.giveUp(), { fill: COLORS.panelLocked });
   if (down !== 'none') {
     const playing = down === 'playing';

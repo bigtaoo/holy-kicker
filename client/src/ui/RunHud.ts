@@ -381,7 +381,7 @@ export class RunHud implements Screen {
     }
     const story = this.banner!.story;
     if (story) {
-      const who = label(t(story.who), 44, COLORS.saffron, { stroke: { color: COLORS.outline, width: 8 } });
+      const who = label(t(story.who), 48, COLORS.saffron, { stroke: { color: COLORS.outline, width: 8 } });
       who.y = y + 16;
       const say = label(t('story.quote', { text: t(story.say) }), 52, COLORS.text, {
         stroke: { color: COLORS.outline, width: 8 },
@@ -418,7 +418,7 @@ export class RunHud implements Screen {
       if (busy) report.eventMode = 'none';
       items.push([report, 150]);
       if (this.reporting === 'sent' || this.reporting === 'failed') {
-        const note = label(t(this.reporting === 'sent' ? 'report.sent' : 'report.failed'), 40, this.reporting === 'sent' ? COLORS.jade : COLORS.dim, {
+        const note = label(t(this.reporting === 'sent' ? 'report.sent' : 'report.failed'), 48, this.reporting === 'sent' ? COLORS.jade : COLORS.dim, {
           wordWrap: true, wordWrapWidth: 640, breakWords: true,
         });
         items.push([note, 110]);

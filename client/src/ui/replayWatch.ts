@@ -96,10 +96,10 @@ export class ReplayScreen implements Screen {
     const s = this.game.engine.state;
     const paused = this.seek ? this.seek.paused : this.game.paused;
     const items: [string, number, () => void, number?][] = [
-      [t('weekly.prevWave'), 170, () => this.seekTo({ wave: Math.max(1, s.wave - 1) })],
+      [t('weekly.prevWave'), 200, () => this.seekTo({ wave: Math.max(1, s.wave - 1) })],
       [ended ? t('weekly.again') : paused ? t('weekly.play') : t('weekly.pause'), 220, () => this.toggle(ended), COLORS.saffron],
-      [t('weekly.nextWave'), 170, () => this.seekTo({ wave: s.wave + 1 })],
-      [t('weekly.speed', { n: this.speed }), 150, () => this.nextSpeed()],
+      [t('weekly.nextWave'), 200, () => this.seekTo({ wave: s.wave + 1 })],
+      [t('weekly.speed', { n: this.speed }), 170, () => this.nextSpeed()],
       [t('common.back'), 190, () => this.host.back()],
     ];
     const gap = 16;
@@ -107,7 +107,7 @@ export class ReplayScreen implements Screen {
     const k = Math.min(1, (w - 40) / total);
     let x = (w - total * k) / 2;
     for (const [text, bw, tap, fill] of items) {
-      const b = button(text, bw, BAR_H - 20, tap, { fill: fill ?? COLORS.panelLocked, size: 44 });
+      const b = button(text, bw, BAR_H - 20, tap, { fill: fill ?? COLORS.panelLocked, size: 48 });
       b.scale.set(k);
       b.x = x + (bw * k) / 2;
       x += (bw + gap) * k;
