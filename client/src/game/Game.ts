@@ -13,7 +13,7 @@ import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
 import { Corpses } from './mobView';
-import { HealthBar } from './healthBar';
+import { HealthBar, starMarkAt } from './healthBar';
 import { blockFx, howlFx, nearestElite, type EliteCrowd } from './eliteView';
 import { HordeView } from './hordeView';
 import { guardAlpha } from './guardPulse';
@@ -90,7 +90,7 @@ export class Game {
   private readonly elites: EliteCrowd | null;
   private readonly horde: HordeView;
   private readonly mist: Mist | null;
-  private readonly healthBar = new HealthBar();
+  private readonly healthBar: HealthBar;
   private reviving = false; // a revive to send with the next command (the death screen's ad paid)
   private picking: number | undefined; // a level-up card to send with the next command
   private readonly corpses: Corpses;
@@ -172,6 +172,7 @@ export class Game {
     const shadowTex = shadowTexture(app.renderer);
     const monk = setup.monk ?? 'kicker';
     this.hero = makeHero(monkRig(art, monk), Math.round((HERO_HEIGHT * MONK_HEIGHT[monk]) / 100));
+    this.healthBar = new HealthBar(starMarkAt(setup));
     this.world.addChild(makeShadow(shadowTex, 34, 11), this.hero.view, this.healthBar.view);
     this.healthBar.view.visible = chapter;
     if (scene.ring) this.hero.view.addChildAt(makeRing(app.renderer, 0xffb030), 0);
@@ -449,7 +450,7 @@ export class Game {
     this.hero.view.tint = p.dead ? DOWN_TINT : hurtTint(this.hurtFlash / HURT_FLASH);
     // untouchable (after a blow, a revive, a pick or the bell) pulses softly
     this.hero.view.alpha = p.dead ? 0.6 : guardAlpha(p.hurtCd, alpha);
-    this.healthBar.update(dt, p.hp, p.maxHp);
+    this.healthBar.update(dt, p.hp, p.maxHp, p.lowest);
     this.healthBar.view.position.set(hx, hy + 22);
     this.healthBar.view.zIndex = this.hero.view.zIndex + 0.25;
     this.lowHp.update(real, p.hp, p.maxHp, s.config.waves > 0 && s.outcome === 'playing' && !p.dead);
