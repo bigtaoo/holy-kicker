@@ -29,6 +29,10 @@ export const COLORS = {
   danger: 0xe0303a,
   /** The panels' corner brackets and the bars' trim. */
   trim: 0xc9a35a,
+  /** The one bright highlight gold: selected, evolved, found, the key caps. */
+  gold: 0xffd860,
+  /** Spells' discs and rims: a deep slate, the cool note next to saffron and jade. */
+  slate: 0x5b8499,
 };
 
 /** `color` moved towards black (k < 0) or white (k > 0) by |k|. */
@@ -186,7 +190,7 @@ export function keyCap(b: Container, w: number, h: number, text: string): void {
   const l = label(text, 34, COLORS.outline);
   const cw = Math.max(64, l.width + 28);
   const cap = new Container();
-  cap.addChild(new Graphics().roundRect(-cw / 2, -26, cw, 52, 14).fill(0xffd860).stroke({ color: COLORS.outline, width: 5 }), l);
+  cap.addChild(new Graphics().roundRect(-cw / 2, -26, cw, 52, 14).fill(COLORS.gold).stroke({ color: COLORS.outline, width: 5 }), l);
   cap.position.set(w / 2 - cw / 2 + 10, -h / 2 - 6);
   b.addChild(cap);
 }

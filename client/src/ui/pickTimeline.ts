@@ -21,7 +21,7 @@ export interface TimelineOptions {
   max?: number;
 }
 
-const GOLD_RIM = 0xffd860;
+const GOLD_RIM = COLORS.gold;
 
 /** The timeline in a box `width` by `height`, centred on x 0 with its top at y 0. */
 export function pickTimeline(picks: readonly PickWire[], icons: IconSheet, width: number, height: number, o: TimelineOptions = {}): Container {

@@ -313,7 +313,7 @@ export class RunHud implements Screen {
   private xpBar(f: UiFrame): void {
     const bar = (this.xpView = new Container());
     const w = f.w - 260;
-    const gauge = meter(w, this.xp.share, COLORS.jade, XP_H);
+    const gauge = meter(w, this.xp.share, COLORS.trim, XP_H);
     gauge.view.position.set(40 + w / 2, XP_Y);
     this.xpGauge = gauge;
     const level = label('', 52, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });

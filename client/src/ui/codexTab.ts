@@ -11,7 +11,7 @@ import { COLORS, fit, label, panel } from './widgets';
 // shows it below: what it does (or how to record it) and the recipe, which is never secret,
 // so the Codex also teaches the pairs.
 
-const GOLD = 0xffd860;
+const GOLD = COLORS.gold;
 const COLS = 3;
 const CELL_W = 310;
 // short cells: thirteen entries (five rows) and the detail fit between the header and the tab bar

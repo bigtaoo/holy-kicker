@@ -24,12 +24,15 @@ const CARD_RADIUS = 28;
 /** A locked card is drawn this grey. */
 const LOCKED_TINT = 0x8a8a8a;
 
+/** A shrine's disc: temple lacquer, deeper than the danger red. */
+const SHRINE_RED = 0xb04a42;
+
 export const KIND_COLOR: Record<CardKind, number> = {
-  relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade, shrine: 0xe0607a, evolve: 0xffc83a,
+  relic: COLORS.saffron, spell: COLORS.slate, passive: COLORS.jade, shrine: SHRINE_RED, evolve: COLORS.gold,
 };
 /** An evolution is a gold card: a warm panel with a bright rim. */
 const GOLD_PANEL = 0x5a4216;
-const GOLD_RIM = 0xffd860;
+const GOLD_RIM = COLORS.gold;
 
 function shape(kind: CardKind): Graphics {
   const g = new Graphics().circle(0, 0, ICON_R).fill(KIND_COLOR[kind]).stroke({ color: COLORS.outline, width: 8 });

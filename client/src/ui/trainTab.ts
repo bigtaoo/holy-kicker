@@ -40,7 +40,7 @@ const SLOT = 0x1c2320;
 
 /** One colour per stat, so the line reads as a pattern. */
 const STAT_COLOR: Partial<Record<TrainStat, number>> = {
-  attack: 0xf07040, maxHp: 0xe04a5a, xp: 0x5aa8f0, copper: COLORS.copper, magnet: COLORS.jade, revive: 0xffd860,
+  attack: 0xf07040, maxHp: COLORS.danger, xp: COLORS.trim, copper: COLORS.copper, magnet: COLORS.jade, revive: COLORS.gold,
 };
 
 /** Each stat's painted icon on the icon sheet (art/monk/icons/train_*). */

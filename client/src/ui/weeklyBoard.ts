@@ -23,7 +23,7 @@ export interface WeeklyBoardState {
 }
 
 /** The medal colours by weekly tier: the top 50 %, the top 10 %, the top three. */
-const MARK_FILL = [0, 0xc58a4a, 0xc8d0dc, 0xffd860];
+const MARK_FILL = [0, 0xc58a4a, 0xc8d0dc, COLORS.gold];
 
 /** Last week's tier `mark` as a medal (null for none), `r` in radius. */
 export function markMedal(mark: number | undefined, r: number): Container | null {

@@ -17,9 +17,9 @@ const GAP = 12;
 const GROUP_GAP = 30;
 const PIP_R = 7;
 const PIP_STEP = 16;
-const GOLD = 0xffd860;
+const GOLD = COLORS.gold;
 
-export const KIND_RIM: Record<BuildSlot['kind'], number> = { relic: COLORS.saffron, spell: 0x5aa8f0, passive: COLORS.jade };
+export const KIND_RIM: Record<BuildSlot['kind'], number> = { relic: COLORS.saffron, spell: COLORS.slate, passive: COLORS.jade };
 
 /** The icon of `id` scaled to fit `size`, or null if the sheet lacks it. */
 export function iconSprite(icons: IconSheet, id: string, size: number): Sprite | null {
