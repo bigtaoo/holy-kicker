@@ -44,10 +44,10 @@ export class WebPlatform implements Platform {
   private seen: Attention = { focus: false, input: false };
   readonly storage: KeyValueStore = new SafeStore(browserStorage());
   readonly portal: Portal = NO_PORTAL;
-  readonly ads: Ads = new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
+  readonly ads: Ads = import.meta.env.DEV && new URLSearchParams(location.search).get('ads') === 'fake' ? FAKE_ADS : NO_ADS;
   readonly banner: Banner = this.ads === FAKE_ADS ? new BannerHost(FAKE_BANNER_FILL) : NO_BANNER;
   readonly adPrivacy: AdPrivacy = NO_AD_PRIVACY;
-  readonly store: Store | null = new URLSearchParams(location.search).get('store') === 'fake' ? fakeStore() : null;
+  readonly store: Store | null = import.meta.env.DEV && new URLSearchParams(location.search).get('store') === 'fake' ? fakeStore() : null;
   readonly audio: AudioHost | null = webAudioHost();
 
   askText(o: TextAsk): Promise<string | null> {
