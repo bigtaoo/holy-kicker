@@ -621,6 +621,14 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   on screen and pulled the eye off the hero. Inside the card, only the title wears an outline.
 - Icons are all painted objects in the sticker style, one per meaning: no spell or stat icon is
   borrowed for a lobby button (the daily is a trophy, Train a wooden post, the corgi's a kettlebell).
+  The top bar's die and cog are painted too, not drawn in code or a font glyph.
+- Icons share one optical size: the sheet packer shrinks a solid picture (a book, a chest) inside
+  its cell until it weighs about what a thin one does (`FILL` in `tools/pack_icons.py`), so
+  every caller can size icons by their cell alone.
+- Out of reach is a grey silhouette, not a faded picture (`lockedLook` in `ui/buildBar.ts`):
+  locked relics, tabs and rails, gear not owned, codex entries not found. A collected chest
+  stays faded, since "already taken" is another meaning.
+- Red dots wear a white ring inside their outline, so they still read on a red picture.
 
 The backdrop is a daylight courtyard (the corgi: a sunset desert base), drawn without a dark
 veil so the lobby reads bright and warm. On the Play tab the chosen monk stands centre stage

@@ -9,7 +9,7 @@ training icons into the one icon sheet:
 
     python tools/pack_icons.py client/public/art/icons <art/monk/icons ... train_revive.jpg> \
       art/monk/ui/{jade,copper,shop,codex,lock,settings,patrol,tasks,chest,daily,tab_train}.jpg \
-      art/monk/icons/{bomb,knives,talisman}.jpg
+      art/monk/icons/{bomb,knives,talisman}.jpg art/monk/ui/dice.jpg
 
 - `jade`, `copper`: the currencies in the lobby's top bar. The first jade, a rounded teardrop
   (`r1/jade_drop.jpg`), reads a little like a water drop; the second, a cushion cut with a vein
@@ -25,9 +25,15 @@ training icons into the one icon sheet:
   it has `tab_train`, a wooden training post with a red band (`r3/tab_train_b.jpg`; the first
   try, `r3/tab_train_mannequin.jpg`, was a thin mannequin that read as a person).
 - `lock` replaces the 🔒 emoji, which every platform draws differently. `settings` replaces the ⚙
-  glyph.
-- `patrol` (a straw hat) and `tasks` (a ticked list on a notice board) sit on the Play tab's left
-  rail.
+  glyph; since 2026-10-21 (round 4, `r4/`) it is a warm wooden cog with a red lacquer ring
+  (`r4/settings.txt`), the old cold steel one kept as `r4/settings_steel.jpg`.
+- `dice` (2026-10-21): the honey-wood die beside the player's name, which rolls a new name; it
+  replaced a die drawn in code.
+- `patrol` and `tasks` (a ticked list on a notice board) sit on the Play tab's left rail. Patrol
+  was a straw hat (`r4/patrol_hat.jpg`), the thinnest icon on the sheet and a thing worn, not a
+  trip; since 2026-10-21 it is a traveller's cloth bundle hung from a pole (`r4/patrol_b.jpg`).
+  The other tries: `r4/patrol_a.jpg` came out as two crossed sticks with dollar coins,
+  `r4/patrol_c.jpg` a sack with cash coins that stands like the shop's pouch.
 - `daily` (a gold trophy on a red lacquer base, 2026-10-21): the daily challenge's button on the
   Play tab's right rail, which until then borrowed the Lotus Steps spell icon.
 - `chest` (red lacquer, gold bands): the chapter card's five progress chests. It came with a

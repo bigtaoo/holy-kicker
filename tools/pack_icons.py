@@ -1,7 +1,7 @@
 """Packs the build icons (relic, spells, passives) into one sheet for the HUD and the cards.
 usage: python pack_icons.py [--cell N --name NAME --pad N] <out dir> <img>...
 Each image is cut out (cutout.py), trimmed, scaled to fit a CELL px square keeping its shape,
-centred in that cell, and laid out in a grid in <out dir>/icons.png with <out dir>/icons.json:
+centred in that cell (in the icon sheet, a solid one a little smaller: FILL), and laid out in a grid in <out dir>/icons.png with <out dir>/icons.json:
   {"frames": [{"name", "x", "y", "w", "h"}, ...]}   (the same layout as deco.json)
 The frame name is the file stem, which is the item id in the engine (or the gear slot).
 --cell and --name make another sheet the same way, e.g. the monks' portraits at 256 px
@@ -25,6 +25,17 @@ CELL = 128
 COLS = 4
 # the game mipmaps the sheet: 4 px keeps a clear pixel between cells two levels down
 PAD = 4
+# optical size (the icon sheet only): a solid picture (a book, a chest) looks bigger than a thin
+# one (a hat, a staff) in the same square, so one that covers more than FILL of its square is
+# shrunk by sqrt(FILL / its cover), never below SHRINK; the thin ones cannot grow past the cell
+FILL = 0.5
+SHRINK = 0.8
+
+
+def optical(im):
+    """The scale that gives a trimmed picture about the visual weight of the others."""
+    cover = im.getchannel("A").point(lambda a: 255 if a > 128 else 0).histogram()[255] / max(im.size) ** 2
+    return max(SHRINK, min(1.0, (FILL / cover) ** 0.5)) if cover else 1.0
 
 
 def main():
@@ -46,7 +57,7 @@ def main():
     for i, s in enumerate(srcs):
         im = cutout(s, HOLES.get(Path(s).stem, ()))
         im = im.crop(im.getbbox())
-        k = CELL / max(im.size)
+        k = CELL / max(im.size) * (optical(im) if name == "icons" else 1.0)
         im = im.resize((max(1, round(im.width * k)), max(1, round(im.height * k))), Image.LANCZOS)
         x, y = (i % COLS) * step + PAD, (i // COLS) * step + PAD
         page.alpha_composite(im, (x + (CELL - im.width) // 2, y + (CELL - im.height) // 2))

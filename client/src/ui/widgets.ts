@@ -222,7 +222,8 @@ export function backdrop(w: number, h: number, alpha = 0.6): Graphics {
 
 /** A red dot that marks something to collect, at (x, y). */
 export function dot(x: number, y: number): Graphics {
-  return new Graphics().circle(x, y, 18).fill(COLORS.danger).stroke({ color: COLORS.outline, width: 5 });
+  // a white ring inside the outline, so the red still reads on a red picture (the pouch, the chests)
+  return new Graphics().circle(x, y, 22).fill(COLORS.outline).circle(x, y, 18.5).fill(0xffffff).circle(x, y, 13.5).fill(COLORS.danger);
 }
 
 /** A horizontal bar centred on x = 0, filled to `share`; returns its fill to update. */

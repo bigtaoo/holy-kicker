@@ -3,7 +3,7 @@ import { formatAmount, t } from '../i18n';
 import { seeTab, TABS, tabLock, tabNew, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { monkAffordable } from '../meta/monks';
-import { iconSprite, lockIcon, type IconSheet } from './buildBar';
+import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
 import { anyChestWaiting } from '../meta/progressChests';
 import { shopWaiting } from './lobbyEconomy';
 import type { UiFrame } from './uiLayout';
@@ -59,18 +59,6 @@ export interface TopBarActions {
   reroll: (() => void) | null;
 }
 
-/** Where the pips sit on each face of a die, in thirds of its half-width. */
-const PIPS = [[[0, 0]], [[-1, -1], [1, 1]], [[-1, -1], [0, 0], [1, 1]], [[-1, -1], [1, -1], [-1, 1], [1, 1]],
-  [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]]];
-
-/** A die showing `face` (1-6), the sign that the name next to it rolls again. */
-function die(face: number): Graphics {
-  const g = new Graphics().roundRect(-24, -24, 48, 48, 11).fill(0xfff7e6).stroke({ color: COLORS.outline, width: 5 });
-  for (const [x, y] of PIPS[face - 1]) g.circle(x * 12, y * 12, 5).fill(COLORS.outline);
-  g.rotation = -0.2;
-  return g;
-}
-
 export function topBar(w: number, save: SaveData, shown: string, icons: IconSheet, a: TopBarActions): Container {
   const c = new Container();
   // the bar runs on into the safe-area band above the frame
@@ -101,9 +89,13 @@ export function topBar(w: number, save: SaveData, shown: string, icons: IconShee
   level.position.set(160, TOP_H / 2 + 26);
   who.addChild(name, level);
   if (a.reroll) {
-    const d = die(1 + (save.dice % 6));
-    d.position.set(name.x + name.width + 36, name.y);
-    who.addChild(d);
+    // the painted die (the sheet's `dice`), tilted the other way on every roll
+    const d = iconSprite(icons, 'dice', 72);
+    if (d) {
+      d.position.set(name.x + name.width + 42, name.y);
+      d.rotation = save.dice % 2 ? 0.18 : -0.18;
+      who.addChild(d);
+    }
     who.hitArea = { contains: (x: number, y: number) => x >= 150 && x <= 520 && y >= 0 && y <= TOP_H };
     who.eventMode = 'static';
     who.cursor = 'pointer';
@@ -111,7 +103,7 @@ export function topBar(w: number, save: SaveData, shown: string, icons: IconShee
   }
   c.addChild(avatar, who);
 
-  const icon = iconSprite(icons, 'settings', 64);
+  const icon = iconSprite(icons, 'settings', 88);
   const gear = button(icon ? '' : '⚙', 100, 100, a.settings, { fill: COLORS.panelLocked, size: 56, icon });
   gear.position.set(w - 80, TOP_H / 2 - 4);
   c.addChild(gear);
@@ -154,7 +146,7 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
     const pic = iconSprite(icons, TAB_ICONS[tab], active ? 100 : 86);
     if (pic) {
       pic.y = active ? -30 : -22;
-      if (lock) pic.alpha = 0.3;
+      if (lock) lockedLook(pic, true);
       cell.addChild(pic);
     }
     const name = fit(label(t(`tab.${tab}` as never), 40, active ? COLORS.outline : lock ? COLORS.dim : COLORS.text, {

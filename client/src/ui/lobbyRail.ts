@@ -1,4 +1,5 @@
 import { Container, Graphics, type Text } from 'pixi.js';
+import { lockedLook } from './buildBar';
 import { BADGE } from './playCard';
 import { COLORS, dot, fit, label, playTap, shade } from './widgets';
 
@@ -44,7 +45,7 @@ export function railButton(o: RailOptions, onTap: () => void): Rail {
   face.circle(0, 0, RAIL_R - 14).stroke({ color: shade(fill, -0.12), width: 3 });
   top.addChild(face);
   if (o.icon) {
-    if (o.dim) o.icon.alpha = 0.45;
+    if (o.dim) lockedLook(o.icon);
     top.addChild(o.icon);
   }
   const stroke = { stroke: { color: COLORS.outline, width: 9 } };

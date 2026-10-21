@@ -51,11 +51,12 @@ ICON_SHEETS = {
     "icons/sheet_passives.png": ("auto", "rice focus - wrath - pendant - bracers - robe sandals"),
     "icons/sheet_shop.png": ("auto", "chest_free chest_jade train_attack chest_ad - train_hp train_xp "
                                      "train_copper - - train_magnet train_revive"),
-    "icons/sheet_lobby.png": ("3x3", "jade copper shop codex lock@0.5,0.14 settings@0.5,0.5 patrol tasks chest"),
+    "icons/sheet_lobby.png": ("3x3", "jade copper shop codex lock@0.5,0.14 - patrol tasks chest"),
     "icons/sheet_fix.png": ("1x3", "iron karma sash@0.5,0.42"),
     "icons/sheet_relics.png": ("2x2", "bowl cymbal fish -"),
     "icons/sheet_arsenal.png": ("1x3", "talisman bomb knives"),
     "icons/sheet_tabs.png": ("1x2", "daily tab_train@0.5,0.17"),
+    "icons/sheet_bar.png": ("1x2", "dice settings@0.5,0.5"),
 }
 # the guns among the icons take the squad's gunmetal (tools/recolor_armour.py), so the HUD's
 # relic matches the pistols the hero holds; "glow" lights the blaster's slots, button and muzzle

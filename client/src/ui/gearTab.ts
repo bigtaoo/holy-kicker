@@ -3,7 +3,7 @@ import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { canMerge, gearStats, itemStats, mergeCost, TIERS, worn, type GearSlot, type ItemId, type Tier } from '../meta/gear';
 import type { SaveData } from '../meta/save';
-import type { IconSheet } from './buildBar';
+import { lockedLook, type IconSheet } from './buildBar';
 import { gearIcon } from './gearIcons';
 import { itemName, TIER_COLORS, tierName } from './gearText';
 import { statLines } from './statText';
@@ -51,7 +51,7 @@ function badge(icons: IconSheet, item: ItemId, tier: Tier | -1, r: number): Cont
     .circle(0, 0, r - 6).stroke({ color: rim, width: tier >= 0 ? 8 : 4 }));
   const icon = gearIcon(icons, item, r * 1.45);
   if (icon) {
-    if (tier < 0) icon.alpha = 0.3;
+    if (tier < 0) lockedLook(icon, true);
     c.addChild(icon);
   }
   return c;

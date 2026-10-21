@@ -2,7 +2,7 @@ import { Container, Graphics } from 'pixi.js';
 import { t } from '../i18n';
 import type { SutraId } from '@hk/engine';
 import { codexEntries, type CodexEntry, type EvolveId } from '../meta/codex';
-import { iconSprite, type IconSheet } from './buildBar';
+import { iconSprite, lockedLook, type IconSheet } from './buildBar';
 import { evolveDesc, sutraGoalText } from './cardText';
 import { COLORS, fit, label, panel } from './widgets';
 
@@ -69,7 +69,7 @@ function entryCell(e: CodexEntry, icons: IconSheet, selected: boolean): Containe
     .circle(0, 0, ICON_R - 4).stroke({ color: e.found ? GOLD : COLORS.dim, width: e.found ? 6 : 4 }));
   const icon = iconSprite(icons, e.id, ICON_R * 1.6);
   if (icon) {
-    if (!e.found) icon.alpha = 0.35;
+    if (!e.found) lockedLook(icon, true);
     badge.addChild(icon);
   }
   // the paired passive, small on the lower right like the HUD's hint

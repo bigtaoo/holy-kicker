@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, type Text, type Texture } from 'pixi.js';
+import { ColorMatrixFilter, Container, Graphics, Sprite, type Text, type Texture } from 'pixi.js';
 import { MAX_LEVEL } from '@hk/engine';
 import type { BuildSlot, Charge } from './buildSlots';
 import { COLORS, label } from './widgets';
@@ -37,6 +37,27 @@ export function lockIcon(icons: IconSheet, size: number): Container {
   if (icon) return icon;
   const g = new Graphics().roundRect(-size * 0.3, -size * 0.05, size * 0.6, size * 0.45, 6).fill(COLORS.trim).stroke({ color: COLORS.outline, width: 4 });
   return g.arc(0, -size * 0.05, size * 0.2, Math.PI, 0).stroke({ color: COLORS.outline, width: 6 });
+}
+
+/** Locked or not found yet: one grey look, shared by every such picture (darker on light badges). */
+const greys: Partial<Record<'light' | 'dark', ColorMatrixFilter>> = {};
+
+/**
+ * Turns a picture into its grey silhouette, the look of everything out of reach (a locked
+ * relic, tab or rail, an item not found yet): still recognisable, plainly not yours, where a
+ * faded colour picture only looked washed out on the light badges. On a dark bar (`onDark`) it
+ * only loses its colour, since darkening it there would lose the picture.
+ */
+export function lockedLook(view: Container, onDark = false): void {
+  const key = onDark ? 'dark' : 'light';
+  let f = greys[key];
+  if (!f) {
+    f = greys[key] = new ColorMatrixFilter();
+    f.desaturate();
+    f.brightness(onDark ? 1.1 : 0.72, true);
+  }
+  view.filters = [f];
+  view.alpha = onDark ? 0.7 : 0.8;
 }
 
 /** A spell badge's recharge overlay, redrawn only when its numbers change. */

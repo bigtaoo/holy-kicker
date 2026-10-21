@@ -4,7 +4,7 @@ import { t } from '../i18n';
 import { unlockedRelics } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { THEME } from '../theme';
-import { iconSprite, lockIcon, type IconSheet } from './buildBar';
+import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
 import { COLORS, button, label } from './widgets';
 
 // The Play tab's pieces around the chapter card (LobbyScreen.playTab): the normal / hard
@@ -59,7 +59,7 @@ export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId)
       .stroke({ color: id === chosen ? COLORS.saffron : COLORS.outline, width: id === chosen ? 10 : 6 }));
     const icon = iconSprite(icons, id, RELIC_R * 1.5);
     if (icon) {
-      if (!unlocked) icon.alpha = 0.35;
+      if (!unlocked) lockedLook(icon);
       c.addChild(icon);
     }
     if (!unlocked) {
