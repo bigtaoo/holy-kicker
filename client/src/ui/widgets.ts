@@ -226,12 +226,13 @@ export function dot(x: number, y: number): Graphics {
   return new Graphics().circle(x, y, 22).fill(COLORS.outline).circle(x, y, 18.5).fill(0xffffff).circle(x, y, 13.5).fill(COLORS.danger);
 }
 
-/** A horizontal bar centred on x = 0, filled to `share`; returns its fill to update. */
-export function meter(w: number, share: number, color: number): { view: Container; set(share: number): void } {
+/** A horizontal bar `h` tall centred on (0, 0), filled to `share`; `set` rescales the fill, so
+ *  updating it every frame redraws nothing. */
+export function meter(w: number, share: number, color: number, h = 28): { view: Container; set(share: number): void } {
   const view = new Container();
-  const back = new Graphics().roundRect(-w / 2 - 6, -20, w + 12, 40, 14).fill(COLORS.outline);
-  const fill = new Graphics().roundRect(0, 0, w, 28, 10).fill(color);
-  fill.position.set(-w / 2, -14);
+  const back = new Graphics().roundRect(-w / 2 - 6, -h / 2 - 6, w + 12, h + 12, 14).fill(COLORS.outline);
+  const fill = new Graphics().roundRect(0, 0, w, h, 10).fill(color);
+  fill.position.set(-w / 2, -h / 2);
   view.addChild(back, fill);
   const set = (s: number) => {
     fill.scale.x = Math.max(0.001, Math.min(1, s));

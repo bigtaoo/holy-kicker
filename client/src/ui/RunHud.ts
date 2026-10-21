@@ -1,4 +1,4 @@
-import { Container, Graphics, Sprite, Texture, type Text } from 'pixi.js';
+import { Container, Graphics, type Text } from 'pixi.js';
 import { getLocale, localeName, t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot, type Charge } from './buildSlots';
@@ -12,7 +12,7 @@ import type { StoryLine } from './story';
 import type { TutorialStep } from './tutorial';
 import { tutorialHint, type TutorialHint } from './tutorialHint';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, backdrop, button, fit, keyCap, label, panel, playTap } from './widgets';
+import { COLORS, backdrop, button, fit, keyCap, label, meter, panel, playTap } from './widgets';
 import { RECORD_BURST } from './recordBurst';
 import { RecordBurstView } from './recordBurstView';
 
@@ -72,8 +72,7 @@ export class RunHud implements Screen {
   private burst: RecordBurstView | null = null;
   /** Rebuilt with every layout, like the rest of the HUD. */
   private xpView: Container | null = null;
-  private xpFill: Sprite | null = null;
-  private xpWidth = 0;
+  private xpGauge: ReturnType<typeof meter> | null = null;
   private levelText: Text | null = null;
   private xp = { level: 1, share: 0 };
   /** The open level-up cards, and whether one was tapped (waiting for the engine). */
@@ -191,7 +190,7 @@ export class RunHud implements Screen {
   /** The level and how far the experience is toward the next one, 0..1. */
   setXp(level: number, share: number): void {
     this.xp = { level, share: Math.max(0, Math.min(1, share)) };
-    if (this.xpFill) this.xpFill.width = this.xpWidth * this.xp.share;
+    this.xpGauge?.set(this.xp.share);
     if (this.levelText && this.levelText.text !== t('run.level', { level })) this.levelText.text = t('run.level', { level });
   }
 
@@ -313,22 +312,15 @@ export class RunHud implements Screen {
 
   private xpBar(f: UiFrame): void {
     const bar = (this.xpView = new Container());
-    const fill = (this.xpFill = new Sprite(Texture.WHITE));
-    const x = 40;
-    const w = (this.xpWidth = f.w - 260);
-    const back = new Sprite(Texture.WHITE);
-    back.tint = COLORS.outline;
-    back.width = w + 12;
-    back.height = XP_H + 12;
-    back.position.set(x - 6, XP_Y - XP_H / 2 - 6);
-    fill.tint = 0x7fd8ff;
-    fill.height = XP_H;
-    fill.position.set(x, XP_Y - XP_H / 2);
+    const w = f.w - 260;
+    const gauge = meter(w, this.xp.share, COLORS.jade, XP_H);
+    gauge.view.position.set(40 + w / 2, XP_Y);
+    this.xpGauge = gauge;
     const level = label('', 52, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
     level.anchor.set(1, 0.5);
     level.position.set(f.w - 40, XP_Y);
     this.levelText = level;
-    bar.addChild(back, fill, level);
+    bar.addChild(gauge.view, level);
     this.view.addChild(bar);
     this.setXp(this.xp.level, this.xp.share);
   }
