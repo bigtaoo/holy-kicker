@@ -600,8 +600,10 @@ entries, daily tasks and ad counts, patrol start time, lifetime kills and claime
 └──────┴──────┴──────┴──────┴──────┘
 ```
 
-One loud thing per screen: PLAY is the only full-width saffron button, at the thumb, and the
-active tab is the only other saffron surface. Everything else on the Play tab is quiet:
+One loud thing per screen: PLAY is the only full-width button, at the thumb, and the active tab
+the only other saffron surface. The hero wears flat saffron, so PLAY is glossy instead (gold
+running to deep orange, its word outlined, a glint sweeping across it every few seconds,
+`ui/lobbyPlay.ts`). Everything else on the Play tab is quiet:
 
 - The side things (Patrol and Tasks left, the daily or weekly challenge and the welcome gift
   right) are one family of round dark badges, `ui/lobbyRail.ts`: the picture, its name under it

@@ -21,6 +21,7 @@ import { hintArrow, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
 import { hintTab } from './lobbyHint';
 import { RAIL_R, RAIL_STEP } from './lobbyRail';
 import { LobbyDrift, LobbyFigure } from './lobbyStage';
+import { playButton, type PlayButton } from './lobbyPlay';
 import { CARD, CARD_STROKE, RELIC_ROW_H, relicRow, trackSwitch } from './playCard';
 import { monkPanel } from './monkPanel';
 import type { PlayerName } from './playerName';
@@ -94,6 +95,7 @@ export class LobbyScreen implements Screen {
   private hint: Container | null = null;
   /** The monk in the courtyard (Play tab) and the specks drifting over it. */
   private figure: LobbyFigure | null = null;
+  private play: PlayButton | null = null;
   private drift: LobbyDrift | null = null;
   private figureRig: unknown = null;
   private clock = 0;
@@ -140,6 +142,7 @@ export class LobbyScreen implements Screen {
     this.econ.reset();
     this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg), scenery(f, this.backdrop));
     this.figure = null;
+    this.play = null;
     this.drift = new LobbyDrift(f.w, f.h - TOP_H - TAB_H);
     this.drift.view.y = TOP_H;
     this.view.addChild(this.drift.view);
@@ -255,6 +258,7 @@ export class LobbyScreen implements Screen {
     if (this.view.destroyed) return;
     this.drift?.update(dt);
     this.figure?.update(dt);
+    this.play?.update(dt);
     // the chosen monk's rig loads after the first lobby is up: he steps in once it is there
     if (this.figure && this.patrolLook().rig !== this.figureRig) this.relayout();
   }
@@ -368,9 +372,9 @@ export class LobbyScreen implements Screen {
     relics.position.set(w / 2, relicTop);
     this.view.addChild(this.figure.view, relics);
     if (open) {
-      const play = button(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n), { size: 96 });
-      play.position.set(w / 2, playY);
-      this.view.addChild(play);
+      this.play = playButton(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n));
+      this.play.view.position.set(w / 2, playY);
+      this.view.addChild(this.play.view);
     }
 
     // the side things on two rails beside the monk: Patrol and Tasks left, the challenge and the gift right

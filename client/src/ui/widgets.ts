@@ -44,8 +44,8 @@ export function shade(color: number, k: number): number {
 
 /** How far a panel's and a button's hard shadow drops. */
 const DROP = 12;
-/** A button's lip under its face. */
-const LIP = 14;
+/** How far a button's face stands above its base. */
+export const LIP = 14;
 
 export function label(text: string, size = 48, fill = COLORS.text, extra: TextStyleOptions = {}): Text {
   const t = new Text({
@@ -202,7 +202,7 @@ export function videoBadge(h: number, color: number): Graphics {
 /** A button's label, for callers that change it later. */
 export function buttonLabel(b: Container): Text {
   const top = b.children[1] as Container;
-  return top.children[1] as Text;
+  return top.children.find((c): c is Text => c instanceof Text)!;
 }
 
 /** Scales a text down so it fits `maxW`, keeping it centred. */
