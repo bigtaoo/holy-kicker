@@ -1,6 +1,7 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, type Texture } from 'pixi.js';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
+import { menuCover } from './lobbyBars';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, fit, label, panel } from './widgets';
 
@@ -24,14 +25,27 @@ export class ResumeScreen implements Screen {
   readonly view = new Container();
   /** A choice was made; later taps do nothing while it loads. */
   private chosen = false;
+  private frame: UiFrame | null = null;
+  private backdrop: Texture | null = null;
 
-  constructor(private readonly run: ResumeInfo, private readonly actions: ResumeActions) {}
+  constructor(
+    private readonly run: ResumeInfo,
+    private readonly actions: ResumeActions,
+    /** The lobby's baked menu courtyard (menuBackdrop) to sit on once it is in; null for the flat background. */
+    backdrop: Promise<Texture | null> = Promise.resolve(null),
+  ) {
+    void backdrop.then((tex) => {
+      this.backdrop = tex;
+      if (tex && this.frame && !this.view.destroyed) this.layout(this.frame);
+    });
+  }
 
   layout(f: UiFrame): void {
+    this.frame = f;
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
-    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill({ color: COLORS.bg, alpha: 0.92 }));
+    this.view.addChild(menuCover(f, this.backdrop));
 
     const { chapter: n, hard, wave, waves } = this.run;
     const box = new Container();

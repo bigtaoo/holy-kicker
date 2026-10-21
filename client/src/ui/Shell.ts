@@ -31,6 +31,7 @@ import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
 import { loadChapterArt, loadRunArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
+import { menuBackdrop } from './lobbyBars';
 import { LobbyScreen } from './LobbyScreen';
 import { LobbyArtLoad } from './lobbyArtLoad';
 import { ChallengeFlow } from './challengeFlow';
@@ -102,7 +103,7 @@ export class Shell {
     deviceProps: Record<string, PropValue> = {},
   ) {
     this.names = new PlayerName(net, platform.storage, platform.portal);
-    this.lobbyArt = new LobbyArtLoad(platform, art);
+    this.lobbyArt = new LobbyArtLoad(platform, art, this.app.renderer);
     this.replays = new RunReplays(net);
     this.challenge = new ChallengeFlow(net, () => (this.screenKey = ''), scene.challenge, scene.settleWeeks); // the lobby is drawn again when the record comes
     this.save = this.names.withDice(store.load());
@@ -268,7 +269,7 @@ export class Shell {
     };
     // fallen with no revive left, there is nothing to go on with
     if (outcome === 'lost' && players[0].revives === 0) return giveUp();
-    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }));
+    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => menuBackdrop(this.app.renderer, this.art.lobby))));
   }
 
   /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
@@ -455,7 +456,7 @@ export class Shell {
         return paid;
       },
       next: () => void this.ads.midgame().then(() => this.showLobby()),
-    }, this.ads.rewardedAvailable(), this.art.icons, this.device === 'desktop'));
+    }, this.ads.rewardedAvailable(), this.art.icons, this.device === 'desktop', menuBackdrop(this.app.renderer, this.art.lobby)));
   }
 
   private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>, fall: DownInfo | null): void {
@@ -475,7 +476,7 @@ export class Shell {
       next: () => leave(() => this.showLobby()),
       // a lost run's way back is the same chapter again (not the tutorial: firstRunDone is set), a first clear's the chapter it opened
       again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, 'again')) : this.save.chapter !== this.chapter || this.save.hard !== this.hard ? () => leave(() => this.play(this.save.chapter, undefined, 'next')) : null,
-    }, this.ads.rewardedAvailable(), rank, fall, this.art.icons, this.device === 'desktop'));
+    }, this.ads.rewardedAvailable(), rank, fall, this.art.icons, this.device === 'desktop', menuBackdrop(this.app.renderer, this.art.lobby)));
   }
 
   private tick(): void {

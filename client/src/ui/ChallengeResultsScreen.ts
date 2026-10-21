@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, type Texture } from 'pixi.js';
 import { topPercent, type ChallengeRunReply } from '@hk/protocol';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
@@ -6,6 +6,8 @@ import { BALANCE } from '../meta/balance';
 import { milestonePay, type ChallengeReward } from '../meta/challenge';
 import type { ChallengeSettled } from './challengeFlow';
 import { iconSprite, type IconSheet } from './buildBar';
+import { menuCover } from './lobbyBars';
+import { blockTop } from './ResultsScreen';
 import { panelKey } from './panelKeys';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from './widgets';
@@ -49,6 +51,8 @@ export class ChallengeResultsScreen implements Screen {
     adAvailable: Promise<boolean>,
     private readonly icons: IconSheet = new Map(),
     private readonly keys = false,
+    /** The lobby's baked menu courtyard (menuBackdrop) to sit on; null for the flat background. */
+    private readonly backdrop: Texture | null = null,
   ) {
     ({ reward: this.reward, chapter: this.chapter, waves: this.waves, hours: this.hours, weekly: this.weekly } = run);
     const reward = this.reward;
@@ -71,14 +75,14 @@ export class ChallengeResultsScreen implements Screen {
     this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
-    this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill({ color: COLORS.bg, alpha: 0.92 }));
+    this.view.addChild(menuCover(f, this.backdrop));
 
     const card = new Container();
     const body = this.body();
     const cardH = body.height + 100;
     const k = Math.min(1, (f.h - 80 - 270) / cardH);
     card.scale.set(k);
-    card.position.set(f.w / 2, Math.max((k * cardH) / 2 + 40, f.h / 2 - 220));
+    card.position.set(f.w / 2, blockTop(f.h, k * cardH, 200) + (k * cardH) / 2);
     card.addChild(panel(CARD_W, cardH));
     body.y = -cardH / 2 + 50;
     card.addChild(body);

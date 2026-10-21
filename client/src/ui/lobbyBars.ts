@@ -33,15 +33,46 @@ function toned(k: typeof STAGE_TONE): ColorMatrixFilter {
   return tone;
 }
 
-/** The courtyard for the menu tabs, baked once: a blur every frame would cost a low-end phone its frame rate. */
-export function menuBackdrop(renderer: Renderer, tex: Texture): Texture {
+/** The last baked menu courtyard and the painting it came from: it outlives the painting, which a run frees. */
+let baked: { from: Texture; out: Texture } | null = null;
+
+/**
+ * The courtyard for the menu tabs, baked once: a blur every frame would cost a low-end phone its
+ * frame rate. Kept (at half resolution, which a blur loses nothing to) after the painting is
+ * freed for a run, so the screens around the run sit on it too; `tex` null gives that last bake.
+ */
+export function menuBackdrop(renderer: Renderer, tex: Texture): Texture;
+export function menuBackdrop(renderer: Renderer, tex: Texture | null): Texture | null;
+export function menuBackdrop(renderer: Renderer, tex: Texture | null): Texture | null {
+  if (!tex || tex === baked?.from) return baked?.out ?? null;
   const pic = new Sprite(tex);
   const blur = new BlurFilter({ strength: MENU_TONE.blur, quality: 3 });
   blur.repeatEdgePixels = true;
   pic.filters = [blur, toned(MENU_TONE)];
-  const out = renderer.generateTexture({ target: pic, frame: new Rectangle(0, 0, tex.width, tex.height) });
+  const out = renderer.generateTexture({ target: pic, frame: new Rectangle(0, 0, tex.width, tex.height), resolution: 0.5 });
   pic.destroy();
+  baked?.out.destroy(true);
+  baked = { from: tex, out };
   return out;
+}
+
+/**
+ * The baked menu courtyard (menuBackdrop) over the whole frame and the bands past it, for the
+ * screens between runs (results, resume); the flat background where there is no painting. It
+ * takes taps, so nothing under it does.
+ */
+export function menuCover(f: UiFrame, tex: Texture | null): Container {
+  const c = new Container();
+  c.addChild(new Graphics().rect(-BLEED, -BLEED, f.w + 2 * BLEED, f.h + 2 * BLEED).fill(COLORS.bg));
+  if (tex) {
+    const pic = new Sprite(tex);
+    pic.anchor.set(0.5);
+    pic.scale.set(Math.max(f.w / tex.width, f.h / tex.height));
+    pic.position.set(f.w / 2, f.h / 2);
+    c.addChild(pic);
+  }
+  c.eventMode = 'static';
+  return c;
 }
 
 /**

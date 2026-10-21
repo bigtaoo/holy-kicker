@@ -12,6 +12,7 @@ import { fallFigures, fallIcon } from './fallIcons';
 import { dropName, TIER_COLORS } from './gearText';
 import { goalShare } from './resultsReveal';
 import { statLines } from './statText';
+import { CARD_STROKE } from './playCard';
 import { starRow } from './stars';
 import { COLORS, fit, label, shade } from './widgets';
 
@@ -166,26 +167,34 @@ export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: n
   return Object.assign([c, y] as Part, { copper });
 }
 
-/** The rarer news, one short line each: unlocks, the chests waiting in the lobby, the welcome gift and tomorrow's. */
-export function newsLines(r: Reward, doubled: boolean): [string, number, number][] {
-  const lines: [string, number, number][] = [];
-  if (doubled) lines.push([t('results.doubled'), 48, COLORS.saffron]);
-  if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 42, COLORS.saffron]);
-  if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 44, COLORS.danger]);
-  if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 48, COLORS.saffron]);
-  for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 42, COLORS.saffron]);
-  for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 42, COLORS.saffron]);
+/** A news line: its text, font size, colour and, for red on the dark card, the outline the chapter card's red wears. */
+export type NewsLine = [string, number, number, { stroke: { color: number; width: number } }?];
+
+/**
+ * The rarer news, one short line each: unlocks, the chests waiting in the lobby, the welcome gift
+ * and tomorrow's. One colour per meaning, as in the lobby: copper for copper, white for what the
+ * run unlocked, jade for what waits to be claimed, the tier's colour for gear, red (outlined) for
+ * hard mode.
+ */
+export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
+  const lines: NewsLine[] = [];
+  if (doubled) lines.push([t('results.doubled'), 48, COLORS.copper]);
+  if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 48, COLORS.danger, CARD_STROKE]);
+  if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 48, COLORS.text]);
+  for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 44, COLORS.text]);
+  for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 44, COLORS.text]);
+  if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 44, COLORS.text]);
   // the chests reached wait in the lobby (progressChests.ts): one line, however many
-  if (r.chests.length > 0) lines.push([t('results.chests', { n: r.chests.length }), 42, COLORS.jade]);
+  if (r.chests.length > 0) lines.push([t('results.chests', { n: r.chests.length }), 44, COLORS.jade]);
   // the first run's welcome gift, worn in the next run when it is better (so the next try is
   // visibly stronger), and the one waiting tomorrow (welcome.ts)
   const gift = r.gift?.drops[0];
   const gain = r.gift?.gain;
   if (gift && gain) {
     lines.push([t('results.giftWorn', { gift: dropName(gift) }), 44, TIER_COLORS[gift.tier]]);
-    lines.push([statLines(gain).join('  ·  '), 40, COLORS.saffron]);
+    lines.push([statLines(gain).join('  ·  '), 40, COLORS.text]);
   } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 44, TIER_COLORS[gift.tier]]);
   const tomorrow = r.gift ? BALANCE.welcome[1] : undefined;
-  if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 44, COLORS.saffron]);
+  if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 44, COLORS.jade]);
   return lines;
 }

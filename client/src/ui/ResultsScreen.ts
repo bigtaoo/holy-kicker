@@ -1,9 +1,10 @@
-import { Container, Graphics, type Text } from 'pixi.js';
+import { Container, type Text, type Texture } from 'pixi.js';
 import { t } from '../i18n';
 import type { Reward } from '../meta/progress';
 import type { RunRank } from '../net/backend';
 import type { IconSheet } from './buildBar';
 import type { DownInfo } from './deathInfo';
+import { menuCover } from './lobbyBars';
 import { fallPart, headerPart, newsLines, rewardsPart, type Part } from './resultsParts';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
@@ -32,6 +33,11 @@ export interface ResultsActions {
 
 type Offer = 'hidden' | 'offered' | 'playing' | 'paid';
 
+/** Where a card `cardH` tall with `below` of buttons under it starts: the block centred, a touch high, 40 from the top at least. */
+export function blockTop(frameH: number, cardH: number, below: number): number {
+  return Math.max(40, (frameH - cardH - below) * 0.45);
+}
+
 const CARD_W = 920;
 const INNER_W = 840;
 const GAP = 30;
@@ -57,6 +63,8 @@ export class ResultsScreen implements Screen {
     private readonly icons: IconSheet = new Map(),
     /** A desktop: the keys work and the buttons show them. */
     private readonly keys = false,
+    /** The lobby's baked menu courtyard (menuBackdrop) to sit on; null for the flat background. */
+    private readonly backdrop: Texture | null = null,
   ) {
     // the leaderboard badge comes in when the server answers; offline or unranked runs have none
     void rank.then((r) => {
@@ -80,8 +88,7 @@ export class ResultsScreen implements Screen {
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
     // a tap anywhere off the buttons shows everything at once
-    const back = new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill({ color: COLORS.bg, alpha: 0.92 });
-    back.eventMode = 'static';
+    const back = menuCover(f, this.backdrop);
     back.on('pointertap', () => this.skip());
     this.view.addChild(back);
 
@@ -94,8 +101,8 @@ export class ResultsScreen implements Screen {
     zones.push(rewards);
     const news = new Container();
     let ny = 0;
-    for (const [text, size, fill] of newsLines(r, this.offer === 'paid')) {
-      const l = fit(label(text, size, fill), INNER_W);
+    for (const [text, size, fill, style] of newsLines(r, this.offer === 'paid')) {
+      const l = fit(label(text, size, fill, style), INNER_W);
       l.y = ny + size / 2;
       news.addChild(l);
       ny += size + 24;
@@ -108,7 +115,9 @@ export class ResultsScreen implements Screen {
     const below = (this.actions.again ? 185 : 0) + 270;
     const k = Math.min(1, (f.h - 80 - below) / cardH);
     card.scale.set(k);
-    card.position.set(f.w / 2, Math.max((k * cardH) / 2 + 40, f.h / 2 - 220));
+    // the card and its buttons as one block, centred a little above the middle (a short card
+    // otherwise floats in the top two thirds over an empty floor)
+    card.position.set(f.w / 2, blockTop(f.h, k * cardH, below - 70) + (k * cardH) / 2);
     card.addChild(panel(CARD_W, cardH));
     let y = -cardH / 2 + 40;
     this.parts = [];
