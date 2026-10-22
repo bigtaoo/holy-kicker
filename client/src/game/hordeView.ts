@@ -5,6 +5,7 @@ import { lerpX, lerpY } from './fixedStep';
 import { depthShade } from './mobAnim';
 import { MobView, type MobLook } from './mobView';
 import { SHADOW_Z, ShadowBatch } from './shadow';
+import type { Viewport } from './viewport';
 
 // Draws the horde: one MobView per sim mob, made when the mob joins (a mob keeps its kind for
 // the run), plus chapter 2's tells. A water ghost under the ground is hidden; on its last
@@ -14,6 +15,10 @@ import { SHADOW_Z, ShadowBatch } from './shadow';
 // layer's), a mob a howl drives runs its cycle fast and kicks up snow, and a fallen skeleton
 // or shard lies hidden under the ground until the witch calls it up again. Chapter 4: a paper
 // effigy tears into flying scraps of paper as it falls (its scraps are small effigies).
+//
+// A mob outside the view (by more than a mob's size) is still stepped, so it comes back in at
+// its true place and pose, but not drawn. The view is the world's transform as the last frame
+// left it (the camera is set after the figures are drawn); the margin covers a frame's move.
 
 /** In-world height by mob kind. */
 export const MOB_HEIGHT: Record<MobKind, number> = {
@@ -34,6 +39,8 @@ const HASTE_CYCLE = 1.7;
 const HASTE_PUFFS = 5;
 const SNOW = 0xc8d4ec;
 const PAPER = 0xc4ccdc;
+/** World units past the view's edge a mob is still drawn: more than any mob's frame reaches from its feet. */
+const CULL_MARGIN = 300;
 
 export interface HordeOptions {
   calm: boolean;
@@ -47,6 +54,8 @@ export class HordeView {
   private readonly marks = new Graphics();
   /** Every shown mob's ground shadow, at the shadows' depth: the world does not sort them one by one. */
   private readonly shadows: ShadowBatch;
+  /** The world's transform has been set by a frame's camera, so it can be culled against. */
+  private placed = false;
   /** The run was won: the horde fell with the last boss and is drawn no more. */
   routed = false;
 
@@ -84,7 +93,8 @@ export class HordeView {
     }
   }
 
-  draw(mobs: readonly Mob[], alpha: number, dt: number, hx: number, hy: number): void {
+  /** `vp` and the world's transform give the view to cull against (nothing is culled without it). */
+  draw(mobs: readonly Mob[], alpha: number, dt: number, hx: number, hy: number, vp?: Viewport): void {
     while (this.mobs.length < mobs.length) {
       const m = mobs[this.mobs.length];
       const looks = this.looks[m.kind];
@@ -102,13 +112,17 @@ export class HordeView {
       this.shadows.end();
       return;
     }
+    const w = this.world, k = w.scale.x, cull = this.placed && vp;
+    const x0 = cull ? -w.x / k - CULL_MARGIN : -Infinity, y0 = cull ? -w.y / k - CULL_MARGIN : -Infinity;
+    const x1 = cull ? (vp.playW - w.x) / k + CULL_MARGIN : Infinity, y1 = cull ? (vp.playH - w.y) / k + CULL_MARGIN : Infinity;
+    this.placed = true;
     for (let i = 0; i < this.mobs.length; i++) {
       const m = mobs[i];
       const v = this.mobs[i];
       const x = lerpX(m, alpha);
       const y = lerpY(m, alpha);
       const hidden = underground(m);
-      v.setVisible(!hidden);
+      v.setVisible(!hidden && x >= x0 && x <= x1 && y >= y0 && y <= y1);
       if (hidden) {
         if (rising(m, EMERGE.warn)) this.mark(g, x, y, 1 - (m.t - alpha) / EMERGE.warn);
         continue;

@@ -455,7 +455,7 @@ export class Game {
     this.healthBar.view.zIndex = this.hero.view.zIndex + 0.25;
     this.lowHp.update(real, p.hp, p.maxHp, s.config.waves > 0 && s.outcome === 'playing' && !p.dead);
 
-    this.horde.draw(s.mobs, alpha, dt, hx, hy);
+    this.horde.draw(s.mobs, alpha, dt, hx, hy, this.vp);
     this.elites?.draw(this.horde.routed ? [] : s.elites, alpha, dt, hx, hy, isMidBoss(s.wave, s.config.waves), 2 * twinHp(s.config.chapter, s.wave, s.config.hard));
     this.corpses.update(dt);
     this.mist?.update(dt);

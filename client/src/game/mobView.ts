@@ -206,7 +206,9 @@ export class MobView {
     const air = (meta.lift[f] ?? 0) / meta.height;
     const [rx, ry] = this.look.shadow;
     const k = 1 - air * 1.5;
-    if (this.shadows) this.shadows.add(x, y, rx * k, ry * k);
+    if (this.shadows) {
+      if (this.sprite.visible) this.shadows.add(x, y, rx * k, ry * k);
+    }
     else if (this.shadow) {
       this.shadow.position.set(x, y);
       sizeShadow(this.shadow, rx, ry, k);
