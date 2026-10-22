@@ -12,6 +12,8 @@ export const it: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Completa per sbloccare: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} in ogni partita',
     level: 'Liv.{level}',
     play: 'GIOCA',
     best: 'Record: ondata {wave}',
@@ -189,6 +191,12 @@ export const it: Table<typeof en> = {
     runs: 'Completa {n} partite',
   },
   results: {
+    newMonk: '{name} può unirsi a te!',
+    sutraCards: 'Ora compare nelle carte di livello',
+    newTier: 'Ora cade equipaggiamento {tier}!',
+    tierMore: 'Equipaggiamento più forte da qui in poi',
+    blessing: 'Benedizione stellare!',
+    blessingStat: '{stats} in ogni partita',
     collect: 'Riscuoti nella lobby ({n})',
     lobby: 'Torna alla lobby',
     mergeStep: 'Equipaggiamento da fondere ×{n}',

@@ -4,9 +4,10 @@ import { gearStats } from './gear';
 import { atFrontier } from './progress';
 import type { SaveData } from './save';
 import { trainingStats } from './training';
+import { blessingBonus } from './unlocks';
 
 // What the meta progression sends into a run (docs/design.md "Engine boundary"): the engine
-// stats of the worn gear, the training line and, on the first uncleared chapter, the grit of
+// stats of the worn gear, the training line, the star blessings and, on the first uncleared chapter, the grit of
 // the lost tries there and a new player's head start summed into RunConfig.bonus, and training's free revives, which the
 // shell offers before the rewarded-ad one.
 
@@ -21,9 +22,10 @@ export function loadout(save: SaveData, chapter = save.chapter, hard = save.hard
   const trained = trainingStats(save);
   const grit = gritBonus(save, chapter, hard);
   const novice = noviceBonus(save, chapter, hard);
+  const blessed = blessingBonus(save);
   const bonus: Partial<Record<Stat, number>> = {};
   for (const stat of STATS) {
-    const n = (gear[stat] ?? 0) + (trained[stat] ?? 0) + (grit[stat] ?? 0) + (novice[stat] ?? 0);
+    const n = (gear[stat] ?? 0) + (trained[stat] ?? 0) + (grit[stat] ?? 0) + (novice[stat] ?? 0) + (blessed[stat] ?? 0);
     if (n) bonus[stat] = n;
   }
   return { bonus, freeRevives: trained.revive ?? 0 };

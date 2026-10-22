@@ -12,6 +12,8 @@ export const fr: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Termine pour débloquer : {list}',
+    nextBlessing: '★ {have}/{need} : {stats} à chaque partie',
     level: 'Nv.{level}',
     play: 'JOUER',
     best: 'Record : vague {wave}',
@@ -190,6 +192,12 @@ export const fr: Table<typeof en> = {
     runs: 'Termine {n} parties',
   },
   results: {
+    newMonk: '{name} peut te rejoindre !',
+    sutraCards: 'Apparaît désormais dans tes cartes de niveau',
+    newTier: 'L’équipement {tier} tombe désormais !',
+    tierMore: 'Un meilleur équipement dès maintenant',
+    blessing: 'Bénédiction des étoiles !',
+    blessingStat: '{stats} à chaque partie',
     collect: 'Récupérer dans le lobby ({n})',
     lobby: 'Retour au lobby',
     mergeStep: 'Équipement à fusionner ×{n}',

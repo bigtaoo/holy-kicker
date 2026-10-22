@@ -43,8 +43,14 @@ export interface Balance {
   xpPerWave: number;
   levelXpBase: number;
   levelXpStep: number;
-  /** The level the first training node opens at (each next node one level later), and the codex's chapter. */
-  unlocks: { trainLevel: number; codexChapter: number };
+  /**
+   * The level the first training node opens at (each next node one level later), the codex's
+   * chapter, and the chapter to clear for each relic (RELIC_IDS order) and before each monk can be
+   * bought (unlocks.ts, docs/unlocks.md).
+   */
+  unlocks: { trainLevel: number; codexChapter: number; relics: number[]; monks: Record<MonkId, number> };
+  /** Star blessings (unlocks.ts): a permanent bonus of `n` to `stat` once the normal chapters' stars total `stars`. */
+  blessings: Blessing[];
   /** What earns each sutra (progress.ts sutraGoal), in SUTRA_IDS order. */
   sutras: SutraGoal[];
   gear: GearBalance;
@@ -107,6 +113,12 @@ export interface GritBalance {
   max: number;
   minWaves: number;
   bonus: Partial<Record<Stat, number>>;
+}
+
+export interface Blessing {
+  stars: number;
+  stat: Stat;
+  n: number;
 }
 
 /**

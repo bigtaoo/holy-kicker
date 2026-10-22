@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { doubleCopper, earnedSutras, seeTab, settleRun, tabLock, tabNew, unlockedRelics, xpToNext } from './progress';
+import { doubleCopper, earnedSutras, seeTab, settleRun, tabLock, tabNew, unlockedRelics, xpToNext, type Reward } from './progress';
 import { newSave, parseSave } from './save';
 import { MemoryStore, SafeStore, SaveStore } from './saveStore';
 
@@ -86,27 +86,23 @@ describe('progress', () => {
   });
 
   it('unlocks the staff with the first clear, and the save keeps only an unlocked relic', () => {
+    const relics = (r: Reward) => r.unlocks.flatMap((u) => (u.kind === 'relic' ? [u.id] : []));
     expect(unlockedRelics(newSave())).toEqual(['ball']);
     const { save, reward } = settleRun(newSave(), { chapter: 1, waves: 50 });
-    expect(reward.newRelic).toBe('staff');
+    expect(relics(reward)).toEqual(['staff']);
     expect(unlockedRelics(save)).toEqual(['ball', 'staff']);
-    expect(settleRun(save, { chapter: 1, waves: 50 }).reward.newRelic).toBeNull();
+    expect(relics(settleRun(save, { chapter: 1, waves: 50 }).reward)).toEqual([]);
     expect(parseSave(JSON.stringify({ ...save, relic: 'staff' })).relic).toBe('staff');
     expect(parseSave(JSON.stringify({ relic: 'staff' })).relic).toBe('ball');
     expect(parseSave(JSON.stringify({ cleared: 1, relic: 'sword' })).relic).toBe('ball');
-    // the second clear brings the wooden fish
+    // the second clear brings none, the third the wooden fish (docs/unlocks.md)
     const second = settleRun(save, { chapter: 2, waves: 50 });
-    expect(second.reward.newRelic).toBe('fish');
-    expect(unlockedRelics(second.save)).toEqual(['ball', 'staff', 'fish']);
-    expect(parseSave(JSON.stringify({ ...second.save, relic: 'fish' })).relic).toBe('fish');
-    // the third brings the prayer beads
+    expect(relics(second.reward)).toEqual([]);
+    expect(parseSave(JSON.stringify({ ...second.save, relic: 'fish' })).relic).toBe('ball');
     const third = settleRun(second.save, { chapter: 3, waves: 50 });
-    expect(third.reward.newRelic).toBe('beads');
-    expect(unlockedRelics(third.save)).toEqual(['ball', 'staff', 'fish', 'beads']);
-    // the fourth brings the alms bowl
-    const fourth = settleRun(third.save, { chapter: 4, waves: 50 });
-    expect(fourth.reward.newRelic).toBe('bowl');
-    expect(unlockedRelics(fourth.save)).toEqual(['ball', 'staff', 'fish', 'beads', 'bowl']);
+    expect(relics(third.reward)).toEqual(['fish']);
+    expect(unlockedRelics(third.save)).toEqual(['ball', 'staff', 'fish']);
+    expect(parseSave(JSON.stringify({ ...third.save, relic: 'fish' })).relic).toBe('fish');
   });
 
   it('levels up from wave xp, carrying the remainder', () => {
@@ -124,19 +120,22 @@ describe('progress', () => {
     expect(doubleCopper(save, reward).copper).toBe(save.copper + 100);
   });
 
-  it('grants each sutra at its achievement, from the progress the save keeps', () => {
+  it('grants each sutra at its achievement, and keeps it', () => {
+    const sutras = (r: Reward) => r.unlocks.flatMap((u) => (u.kind === 'sutra' ? [u.id] : []));
     let save = newSave();
     expect(earnedSutras(save)).toEqual([]);
     let run = settleRun(save, { chapter: 1, waves: 25 });
-    expect(run.reward.newSutras).toEqual(['lotus']);
-    run = settleRun(run.save, { chapter: 1, waves: 12, evolved: ['palm'] });
-    expect(run.reward.newSutras).toEqual(['halo']);
+    expect(sutras(run.reward)).toEqual(['lotus']);
     save = { ...run.save, runs: 9, cleared: 1 };
     run = settleRun(save, { chapter: 2, waves: 50 });
     // the tenth run and the chapter 2 clear at once
-    expect(run.reward.newSutras).toEqual(['roar', 'focus']);
+    expect(sutras(run.reward)).toEqual(['roar', 'focus']);
+    run = settleRun({ ...run.save, cleared: 10, chapter: 11 }, { chapter: 11, waves: 50 });
+    expect(sutras(run.reward)).toEqual(['halo']);
     expect(earnedSutras(run.save)).toEqual(['lotus', 'halo', 'roar', 'focus']);
-    expect(settleRun(run.save, { chapter: 1, waves: 30 }).reward.newSutras).toEqual([]);
+    expect(sutras(settleRun(run.save, { chapter: 1, waves: 30 }).reward)).toEqual([]);
+    // stored: a save whose progress no longer reaches a goal keeps the sutra
+    expect(earnedSutras({ ...run.save, cleared: 0, best: run.save.best.map(() => 0), runs: 0 })).toEqual(['lotus', 'halo', 'roar', 'focus']);
   });
 
   it('gates tabs as the design says', () => {

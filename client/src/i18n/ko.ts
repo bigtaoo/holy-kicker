@@ -12,6 +12,8 @@ export const ko: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: '클리어 시 해금: {list}',
+    nextBlessing: '★ {have}/{need}: 매 판 {stats}',
     level: 'Lv.{level}',
     play: '출전',
     best: '최고: {wave} 웨이브',
@@ -187,6 +189,12 @@ export const ko: Table<typeof en> = {
     runs: '{n}판 완주',
   },
   results: {
+    newMonk: '{name} 합류 가능!',
+    sutraCards: '이제 레벨업 카드에 나와요',
+    newTier: '이제 {tier} 장비가 나와요!',
+    tierMore: '이제부터 더 강한 장비',
+    blessing: '별의 축복!',
+    blessingStat: '매 판 {stats}',
     collect: '로비에서 받기 ({n})',
     lobby: '로비로',
     mergeStep: '합성 가능한 장비 ×{n}',

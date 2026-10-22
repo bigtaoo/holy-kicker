@@ -12,6 +12,8 @@ export const de: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Abschließen schaltet frei: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} in jedem Lauf',
     level: 'Stufe {level}',
     play: 'SPIELEN',
     best: 'Rekord: Welle {wave}',
@@ -189,6 +191,12 @@ export const de: Table<typeof en> = {
     runs: 'Beende {n} Läufe',
   },
   results: {
+    newMonk: '{name} kann sich dir jetzt anschließen!',
+    sutraCards: 'Erscheint jetzt in deinen Level-up-Karten',
+    newTier: 'Jetzt fällt {tier}-Ausrüstung!',
+    tierMore: 'Ab jetzt stärkere Ausrüstung',
+    blessing: 'Sternensegen!',
+    blessingStat: '{stats} in jedem Lauf',
     collect: 'In der Lobby abholen ({n})',
     lobby: 'Zur Lobby',
     mergeStep: 'Ausrüstung zum Verschmelzen ×{n}',

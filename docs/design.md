@@ -307,7 +307,8 @@ chapter is meant to carry the next one; chapters 3–5 are to be tuned against t
 
 ### B. Content line (the replay motivation)
 
-- **Relics**, each a different way to play, unlocked by clearing chapters:
+- **Relics**, each a different way to play, unlocked by clearing chapters (staff 1, wooden fish 3,
+  beads 7, bowl 15; `balance.json` `unlocks.relics`, the whole schedule in `docs/unlocks.md`):
 
 | Relic | Play style |
 |---|---|

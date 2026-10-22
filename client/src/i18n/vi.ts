@@ -12,6 +12,8 @@ export const vi: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Vượt qua để mở khóa: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} mỗi lượt',
     level: 'Lv.{level}',
     play: 'CHƠI',
     best: 'Kỷ lục: đợt {wave}',
@@ -189,6 +191,12 @@ export const vi: Table<typeof en> = {
     runs: 'Hoàn thành {n} trận',
   },
   results: {
+    newMonk: '{name} đã có thể gia nhập!',
+    sutraCards: 'Giờ xuất hiện trong thẻ lên cấp',
+    newTier: 'Trang bị {tier} bắt đầu rơi!',
+    tierMore: 'Trang bị mạnh hơn từ đây',
+    blessing: 'Phúc lành của sao!',
+    blessingStat: '{stats} mỗi lượt',
     collect: 'Nhận ở sảnh ({n})',
     lobby: 'Về sảnh',
     mergeStep: 'Trang bị có thể ghép ×{n}',

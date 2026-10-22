@@ -1,10 +1,11 @@
-import { MONK_IDS, RELIC_IDS, type MonkId, type RelicId } from '@hk/engine';
+import { MONK_IDS, SUTRA_IDS, type MonkId, type RelicId } from '@hk/engine';
 import { CHALLENGE_ID, isDice } from '@hk/protocol';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { newDaily, parseDaily, type Daily } from './daily';
 import { parseWeeks, type WeekEntry } from './weekly';
 import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './gear';
+import { keepUnlocks } from './unlocks';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
@@ -36,12 +37,14 @@ export interface SaveData {
   /** The reached chests already opened in the lobby, the same bits (progressChests.ts). */
   opened: number[];
   runs: number;
-  /** The relic chosen for the next run (docs/content.md "Relics": one more per chapter cleared). */
+  /** The relic chosen for the next run (docs/content.md "Relics", unlocked by chapter: unlocks.ts). */
   relic: RelicId;
   /** Evolutions and awakenings done at least once, in Codex order (codex.ts). */
   codex: EvolveId[];
   /** Owned gear, counts per item and tier (gear.ts); unlocked relics have at least one copy. */
   gear: Inventory;
+  /** Sutras earned, bit i for SUTRA_IDS[i] (unlocks.ts earnedSutras), kept so a moved goal takes none away. */
+  sutras: number;
   /** Training nodes bought, in line order (training.ts). */
   trained: number;
   /** When the patrol started piling up (ms since the epoch), 0 before it opens (patrol.ts). */
@@ -87,7 +90,7 @@ export function newSave(): SaveData {
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), stars: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
-    gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
+    gear: grantRelics(emptyInventory(), ['ball']), sutras: 0, trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [],
   };
@@ -150,6 +153,8 @@ function owned(monks: number, id: unknown): boolean {
  * its clears read as one star, its hard clears as a count from chapter 1, and a player who had
  * hard mode keeps it with three stars on those five chapters.
  * A save without the last falls reads as none fallen yet.
+ * A save without stored sutras is from before the re-paced unlocks (docs/unlocks.md): it keeps
+ * the relics and sutras the old gates gave (unlocks.ts keepUnlocks).
  */
 export function parseSave(text: string | null): SaveData {
   return readSave(saveObject(text));
@@ -190,7 +195,7 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
   const monks = bits(raw.monks, MONK_IDS.length, 1) | 1;
   const chests = bitsPer(raw.chests, BALANCE.chests.length);
   const hardChests = bitsPer(raw.hardChests, BALANCE.chests.length);
-  return {
+  const save: SaveData = {
     version: SAVE_VERSION,
     firstRunDone: raw.firstRunDone === true,
     level: int(raw.level, 1, 999, 1),
@@ -205,10 +210,11 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
     chests,
     opened: openedOf(raw.opened, chests),
     runs: int(raw.runs, 0, max, 0),
-    // only a relic the clears have unlocked
-    relic: RELIC_IDS.indexOf(raw.relic as RelicId) >= 0 && RELIC_IDS.indexOf(raw.relic as RelicId) <= cleared ? (raw.relic as RelicId) : 'ball',
+    // the worn relic and the relics' copies: keepUnlocks below
+    relic: 'ball',
     codex: Array.isArray(raw.codex) ? mergeCodex(raw.codex) : [],
-    gear: grantRelics(inventory(raw.gear), RELIC_IDS.slice(0, cleared + 1)),
+    gear: inventory(raw.gear),
+    sutras: bits(raw.sutras, SUTRA_IDS.length, 0),
     trained: int(raw.trained, 0, BALANCE.training.nodes, 0),
     patrol: int(raw.patrol, 0, max, 0),
     daily: parseDaily(raw.daily),
@@ -233,4 +239,5 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
     challenge: typeof raw.challenge === 'string' && CHALLENGE_ID.test(raw.challenge) ? raw.challenge : '',
     weeks: parseWeeks(raw.weeks),
   };
+  return keepUnlocks(save, raw.relic, raw.sutras === undefined);
 }

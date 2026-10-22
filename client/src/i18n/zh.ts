@@ -12,6 +12,8 @@ export const zh: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: '通关解锁：{list}',
+    nextBlessing: '★ {have}/{need}：每局{stats}',
     level: 'Lv.{level}',
     play: '出战',
     best: '最佳：第 {wave} 波',
@@ -187,6 +189,12 @@ export const zh: Table<typeof en> = {
     runs: '完成 {n} 局',
   },
   results: {
+    newMonk: '{name}可以加入了！',
+    sutraCards: '升级卡里会出现它了',
+    newTier: '开始掉落{tier}装备！',
+    tierMore: '往后的装备更强了',
+    blessing: '星辰赐福！',
+    blessingStat: '每局{stats}',
     collect: '回大厅领取 ({n})',
     lobby: '回大厅',
     mergeStep: '可合成装备 ×{n}',

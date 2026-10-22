@@ -4,7 +4,7 @@ import {
 } from '@hk/engine';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { sutraGoal } from '../meta/progress';
+import { sutraGoal } from '../meta/unlocks';
 import { pairsOf, type IconId } from './buildSlots';
 
 // What a level-up card says (docs/content.md "International players"): the name, "New!" or

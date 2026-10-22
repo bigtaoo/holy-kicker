@@ -107,7 +107,7 @@ first clear already changes how the game plays.
   lands at the kick's strike time over the half circle toward it, hitting everything inside the
   reach (270 → 340, awakened 440) at 220 → 400 % and knocking the horde back 90 → 150; the elite
   and the boss are not knocked back, so the staff keeps hitting them. The relic is chosen in the
-  lobby under the chapter card (`save.relic`, one more unlocked per chapter cleared, announced on
+  lobby under the chapter card (`save.relic`, unlocked by clearing chapters 1 / 3 / 7 / 15 (`docs/unlocks.md`), announced on
   the results); `RunConfig.relic` sets it for the run, `?relic=staff` forces it in dev.
 - Balance (`npm run balance -- 10 skilled casual staff`): the staff only works when the player
   goes to the big ones, so the bots chase the elite and the boss with it (and still run from a
@@ -151,7 +151,7 @@ first clear already changes how the game plays.
 The monk is who plays the run; the relic is what he fights with, and any monk takes any relic.
 Chosen and bought in the lobby's monk panel (the avatar at the top left, `client/src/ui/monkPanel.ts`).
 The kicker is free; the others are bought once with jade (`balance.json` "monks"), which gives
-jade a long-term sink. A red dot on the avatar says one is affordable.
+jade a long-term sink, once their chapter is cleared (novice 5, fat monk 10; `unlocks.monks`). A red dot on the avatar says one is affordable.
 
 | Monk | Price | Stats (`MONK_STATS`) | Passive (`MONK_PASSIVE`, `engine/systems/monks.ts`) |
 |---|---|---|---|
@@ -188,8 +188,8 @@ The engine already has four of these shapes (`nova`, `meteor`, `field`, `chain`)
 Lotus Steps rewards moving and Halo Beam rewards standing still, so both fit Stillness.
 
 - **Sutras implemented** (`engine/systems/sutras.ts`, ENGINE_VERSION 13). A sutra is earned by an
-  achievement read from the save (`client/src/meta/progress.ts` `earnedSutras`, goals in
-  `balance.json` `sutras`): Lotus Steps for reaching wave 25, Halo Beam for one Codex entry,
+  achievement (`client/src/meta/unlocks.ts` `earnedSutras`, goals in `balance.json` `sutras`,
+  kept in `save.sutras` once earned): Lotus Steps for reaching wave 25, Halo Beam for clearing chapter 11,
   Lion's Roar for clearing chapter 2, Focus for 10 finished runs. A run's `RunConfig.sutras`
   adds their cards to the pool; a locked sutra spell shows its goal in the Codex.
 - **Lotus Steps**: every cooldown while the hero walks he drops a seed (life 2.5–3 s). It arms

@@ -12,6 +12,8 @@ export const tr: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Bitirince açılır: {list}',
+    nextBlessing: '★ {have}/{need}: her oyunda {stats}',
     level: 'Sv. {level}',
     play: 'OYNA',
     best: 'Rekor: dalga {wave}',
@@ -189,6 +191,12 @@ export const tr: Table<typeof en> = {
     runs: '{n} tur bitir',
   },
   results: {
+    newMonk: '{name} artık katılabilir!',
+    sutraCards: 'Artık seviye kartlarında çıkıyor',
+    newTier: 'Artık {tier} ekipman düşüyor!',
+    tierMore: 'Bundan sonra daha güçlü ekipman',
+    blessing: 'Yıldız lütfu!',
+    blessingStat: 'Her oyunda {stats}',
     collect: 'Lobide topla ({n})',
     lobby: 'Lobiye dön',
     mergeStep: 'Birleştirilebilir ekipman ×{n}',

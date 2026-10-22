@@ -12,6 +12,8 @@ export const pl: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Ukończ, by odblokować: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} w każdej grze',
     level: 'Poz.{level}',
     play: 'GRAJ',
     best: 'Rekord: fala {wave}',
@@ -189,6 +191,12 @@ export const pl: Table<typeof en> = {
     runs: 'Ukończ rozgrywki: {n}',
   },
   results: {
+    newMonk: '{name} może teraz dołączyć!',
+    sutraCards: 'Teraz pojawia się na kartach poziomu',
+    newTier: 'Teraz wypada sprzęt: {tier}!',
+    tierMore: 'Od teraz mocniejszy sprzęt',
+    blessing: 'Błogosławieństwo gwiazd!',
+    blessingStat: '{stats} w każdej grze',
     collect: 'Odbierz w lobby ({n})',
     lobby: 'Wróć do lobby',
     mergeStep: 'Ekwipunek do połączenia ×{n}',

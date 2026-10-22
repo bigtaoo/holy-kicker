@@ -10,6 +10,8 @@ export const en = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Clear to unlock: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} in every run',
     level: 'Lv.{level}',
     play: 'PLAY',
     best: 'Best: wave {wave}',
@@ -187,6 +189,12 @@ export const en = {
     runs: 'Finish {n} runs',
   },
   results: {
+    newMonk: '{name} can join you now!',
+    sutraCards: 'Now comes up in your level-up cards',
+    newTier: '{tier} gear now drops!',
+    tierMore: 'Stronger gear from here on',
+    blessing: 'Star blessing!',
+    blessingStat: '{stats} in every run',
     collect: 'Collect in the lobby ({n})',
     lobby: 'Back to lobby',
     mergeStep: 'Gear ready to merge ×{n}',
