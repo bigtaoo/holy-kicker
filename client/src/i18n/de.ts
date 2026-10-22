@@ -8,7 +8,7 @@ export const de: Table<typeof en> = {
     continue: 'Weiter',
     back: 'Zurück',
     locked: 'Gesperrt',
-    keyEnter: 'Enter',
+    keyEnter: 'Eingabe',
     keyEsc: 'Esc',
   },
   lobby: {
@@ -52,10 +52,10 @@ export const de: Table<typeof en> = {
     down: 'Du bist gefallen',
     revive: 'Wiederbeleben',
     fall: {
-      charge: { cause: 'Von einem Ansturm erwischt', tip: 'Elites zielen vor dem Ansturm: siehst du die rote Linie, weiche seitlich aus' },
-      slam: { cause: 'Von einem Stampfer erwischt', tip: 'Erscheint ein roter Kreis, geh hinaus' },
+      charge: { cause: 'Von einem Ansturm erwischt', tip: 'Elites zielen vor dem Ansturm: siehst du die Ziellinie, weiche seitlich aus' },
+      slam: { cause: 'Von einem Stampfer erwischt', tip: 'Leuchtet ein Kreis am Boden auf, geh hinaus' },
       bullet: { cause: 'Abgeschossen', tip: 'Geschosse fliegen gerade: weiche seitlich aus ihrer Bahn' },
-      zone: { cause: 'In der Gefahrenzone gestanden', tip: 'Erscheint ein roter Kreis, geh hinaus' },
+      zone: { cause: 'In der Gefahrenzone gestanden', tip: 'Leuchtet ein Kreis am Boden auf, geh hinaus' },
     },
     goal: {
       record: 'Neuer Rekord: {wave} Wellen!',
@@ -92,7 +92,7 @@ export const de: Table<typeof en> = {
     adjs: 'Ruhiger|Tapferer|Flinker|Fröhlicher|Stiller|Kühner|Sanfter|Glücklicher|Schläfriger|Mächtiger|Bescheidener|Wendiger|Lustiger|Geduldiger|Furchtloser|Schlauer',
   },
   challenge: {
-    streak: 'Tagesserie: {n} Tage',
+    streak: 'Tagesserie: {n} {n|one:Tag|other:Tage}',
     streakNone: 'Noch keine Serie',
     streakToday: '+{n} heute',
     streakTomorrow: '+{n} morgen',
@@ -194,7 +194,7 @@ export const de: Table<typeof en> = {
   },
   sutra: {
     codex: 'Trage {n} in den Kodex ein',
-    runs: 'Beende {n} Läufe',
+    runs: 'Beende {n} {n|one:Lauf|other:Läufe}',
   },
   results: {
     newMonk: '{name} kann sich dir jetzt anschließen!',
@@ -276,18 +276,18 @@ export const de: Table<typeof en> = {
   tasks: {
     title: 'Tagesaufgaben',
     button: 'Aufgaben',
-    runs: 'Beende {n} Läufe',
-    waves: 'Schaffe {n} Wellen',
-    chests: 'Öffne {n} Ladentruhen',
+    runs: 'Beende {n} {n|one:Lauf|other:Läufe}',
+    waves: 'Schaffe {n} {n|one:Welle|other:Wellen}',
+    chests: 'Öffne {n} {n|one:Ladentruhe|other:Ladentruhen}',
     claim: 'Abholen',
     done: 'Erledigt',
     resets: 'Jeden Tag um Mitternacht neue Aufgaben',
   },
   achieve: {
-    streak: 'Spiele die Tagesherausforderung {n} Tage in Folge',
+    streak: 'Spiele die Tagesherausforderung {n} {n|one:Tag|other:Tage} in Folge',
     title: 'Erfolge',
-    runs: 'Beende {n} Läufe',
-    codex: 'Trage {n} Kodex-Einträge ein',
+    runs: 'Beende {n} {n|one:Lauf|other:Läufe}',
+    codex: 'Trage {n} {n|one:Kodex-Eintrag|other:Kodex-Einträge} ein',
     level: 'Erreiche Stufe {n}',
     tier: 'Besitze ein Teil vom Rang {tier}',
     claim: 'Abholen +{jade}',

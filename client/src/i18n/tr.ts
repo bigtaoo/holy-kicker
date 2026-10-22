@@ -52,10 +52,10 @@ export const tr: Table<typeof en> = {
     down: 'Düştün',
     revive: 'Diril',
     fall: {
-      charge: { cause: 'Bir hücuma yakalandın', tip: 'Seçkinler hücumdan önce nişan alır: kırmızı çizgiyi görünce yana kaç' },
-      slam: { cause: 'Bir darbeye yakalandın', tip: 'Kırmızı bir daire belirince dışına çık' },
+      charge: { cause: 'Bir hücuma yakalandın', tip: 'Seçkinler hücumdan önce nişan alır: nişan çizgisini görünce yana kaç' },
+      slam: { cause: 'Bir darbeye yakalandın', tip: 'Yerde bir daire parlayınca dışına çık' },
       bullet: { cause: 'Vuruldun', tip: 'Mermiler düz gider: yolundan yana çekil' },
-      zone: { cause: 'Tehlikede durdun', tip: 'Kırmızı bir daire belirince dışına çık' },
+      zone: { cause: 'Tehlikede durdun', tip: 'Yerde bir daire parlayınca dışına çık' },
     },
     goal: {
       record: 'Yeni rekor: {wave} dalga!',

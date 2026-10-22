@@ -8,7 +8,7 @@ export const zh: Table<typeof en> = {
     continue: '继续',
     back: '返回',
     locked: '未解锁',
-    keyEnter: 'Enter',
+    keyEnter: '回车',
     keyEsc: 'Esc',
   },
   lobby: {
@@ -52,10 +52,10 @@ export const zh: Table<typeof en> = {
     down: '你倒下了',
     revive: '复活',
     fall: {
-      charge: { cause: '被冲锋撞倒', tip: '精英冲锋前会瞄准：看到红线就往旁边闪' },
-      slam: { cause: '被重击砸中', tip: '出现红圈时，赶紧走出去' },
+      charge: { cause: '被冲锋撞倒', tip: '精英冲锋前会瞄准：看到瞄准线就往旁边闪' },
+      slam: { cause: '被重击砸中', tip: '地上亮起圆圈时，赶紧走出去' },
       bullet: { cause: '被射倒', tip: '子弹直线飞行：横着走出它的路线' },
-      zone: { cause: '站在了危险区里', tip: '出现红圈时，赶紧走出去' },
+      zone: { cause: '站在了危险区里', tip: '地上亮起圆圈时，赶紧走出去' },
     },
     goal: {
       record: '新纪录：{wave} 波！',

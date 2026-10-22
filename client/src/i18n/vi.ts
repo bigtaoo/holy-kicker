@@ -52,10 +52,10 @@ export const vi: Table<typeof en> = {
     down: 'Bạn đã gục',
     revive: 'Hồi sinh',
     fall: {
-      charge: { cause: 'Bị lao húc trúng', tip: 'Tinh anh ngắm trước khi lao: thấy vạch đỏ thì né sang ngang' },
-      slam: { cause: 'Bị đập trúng', tip: 'Khi vòng đỏ hiện ra, hãy bước ra ngoài' },
+      charge: { cause: 'Bị lao húc trúng', tip: 'Tinh anh ngắm trước khi lao: thấy vạch ngắm thì né sang ngang' },
+      slam: { cause: 'Bị đập trúng', tip: 'Khi một vòng tròn sáng lên dưới đất, hãy bước ra ngoài' },
       bullet: { cause: 'Bị bắn hạ', tip: 'Đạn bay thẳng: né sang ngang khỏi đường bay' },
-      zone: { cause: 'Đứng trong vùng nguy hiểm', tip: 'Khi vòng đỏ hiện ra, hãy bước ra ngoài' },
+      zone: { cause: 'Đứng trong vùng nguy hiểm', tip: 'Khi một vòng tròn sáng lên dưới đất, hãy bước ra ngoài' },
     },
     goal: {
       record: 'Kỷ lục mới: {wave} đợt!',

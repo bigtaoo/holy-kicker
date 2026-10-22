@@ -52,10 +52,10 @@ export const pl: Table<typeof en> = {
     down: 'Padłeś',
     revive: 'Wskrześ',
     fall: {
-      charge: { cause: 'Trafiony szarżą', tip: 'Elity celują przed szarżą: gdy widzisz czerwoną linię, uskocz w bok' },
-      slam: { cause: 'Trafiony uderzeniem', tip: 'Gdy pojawi się czerwony krąg, wyjdź z niego' },
+      charge: { cause: 'Trafiony szarżą', tip: 'Elity celują przed szarżą: gdy widzisz linię celowania, uskocz w bok' },
+      slam: { cause: 'Trafiony uderzeniem', tip: 'Gdy na ziemi rozbłyśnie krąg, wyjdź z niego' },
       bullet: { cause: 'Zestrzelony', tip: 'Pociski lecą prosto: uskocz w bok z ich toru' },
-      zone: { cause: 'Stałeś w strefie', tip: 'Gdy pojawi się czerwony krąg, wyjdź z niego' },
+      zone: { cause: 'Stałeś w strefie', tip: 'Gdy na ziemi rozbłyśnie krąg, wyjdź z niego' },
     },
     goal: {
       record: 'Nowy rekord: {wave} fal!',
@@ -92,7 +92,7 @@ export const pl: Table<typeof en> = {
     adjs: 'Spokojny|Dzielny|Szybki|Wesoły|Cichy|Śmiały|Łagodny|Szczęśliwy|Senny|Potężny|Skromny|Zwinny|Radosny|Cierpliwy|Nieustraszony|Sprytny',
   },
   challenge: {
-    streak: 'Seria dzienna: {n} dni',
+    streak: 'Seria dzienna: {n} {n|one:dzień|few:dni|many:dni|other:dni}',
     streakNone: 'Jeszcze bez serii',
     streakToday: '+{n} dziś',
     streakTomorrow: '+{n} jutro',
@@ -284,7 +284,7 @@ export const pl: Table<typeof en> = {
     resets: 'Nowe zadania codziennie o północy',
   },
   achieve: {
-    streak: 'Zagraj w wyzwanie dnia {n} dni z rzędu',
+    streak: 'Zagraj w wyzwanie dnia {n} {n|one:dzień|few:dni|many:dni|other:dni} z rzędu',
     title: 'Osiągnięcia',
     runs: 'Ukończ rozgrywki: {n}',
     codex: 'Wpisy w Kodeksie: {n}',

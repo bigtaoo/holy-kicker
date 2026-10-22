@@ -33,7 +33,7 @@ export const id: Table<typeof en> = {
   },
   tab: {
     shop: 'Toko',
-    gear: 'Gear',
+    gear: 'Perlengkapan',
     play: 'Main',
     codex: 'Kodeks',
     unlockLevel: 'Terbuka di Lv.{level}',
@@ -52,10 +52,10 @@ export const id: Table<typeof en> = {
     down: 'Kamu tumbang',
     revive: 'Bangkit',
     fall: {
-      charge: { cause: 'Kena serudukan', tip: 'Elite membidik sebelum menyeruduk: saat ada garis merah, menyamping' },
-      slam: { cause: 'Kena hantaman', tip: 'Saat lingkaran merah muncul, keluar darinya' },
+      charge: { cause: 'Kena serudukan', tip: 'Elite membidik sebelum menyeruduk: saat ada garis bidikan, menyamping' },
+      slam: { cause: 'Kena hantaman', tip: 'Saat lingkaran menyala di tanah, keluar darinya' },
       bullet: { cause: 'Tertembak', tip: 'Tembakan melaju lurus: menyamping dari jalurnya' },
-      zone: { cause: 'Berdiri di zona bahaya', tip: 'Saat lingkaran merah muncul, keluar darinya' },
+      zone: { cause: 'Berdiri di zona bahaya', tip: 'Saat lingkaran menyala di tanah, keluar darinya' },
     },
     goal: {
       record: 'Rekor baru: {wave} gelombang!',

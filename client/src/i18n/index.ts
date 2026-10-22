@@ -95,16 +95,44 @@ function lookup(key: string, locale: Locale): string {
 
 /**
  * The text for `key` in the current locale, with {name} placeholders filled from `vars`;
- * {name:lower} starts the value with a small letter, for a name inside a phrase.
+ * {name:lower} starts the value with a small letter, for a name inside a phrase, and
+ * {n|one:day|other:days} picks the word for the count `n` by the language's plural rules
+ * (few and many too, for Polish or Russian; a missing form reads `other`).
  */
 export function t(key: Key, vars?: Record<string, string | number>): string {
   const text = lookup(key, current);
   if (!vars) return text;
-  return text.replace(/\{(\w+)(:lower)?\}/g, (whole, name: string, lower?: string) => {
-    if (!(name in vars)) return whole;
-    const v = String(vars[name]);
-    return lower ? v.charAt(0).toLocaleLowerCase(current) + v.slice(1) : v;
-  });
+  return text
+    .replace(/\{(\w+)\|([^{}]+)\}/g, (whole, name: string, forms: string) => (name in vars ? pluralForm(forms, Number(vars[name]), current) : whole))
+    .replace(/\{(\w+)(:lower)?\}/g, (whole, name: string, lower?: string) => {
+      if (!(name in vars)) return whole;
+      const v = String(vars[name]);
+      return lower ? v.charAt(0).toLocaleLowerCase(current) + v.slice(1) : v;
+    });
+}
+
+const RULES: Partial<Record<Locale, Intl.PluralRules | null>> = {};
+
+/** `n`'s plural category in `locale`; English's rule where Intl.PluralRules is missing (old WeChat). */
+export function pluralCategory(n: number, locale: Locale): string {
+  if (RULES[locale] === undefined) {
+    try {
+      RULES[locale] = typeof Intl !== 'undefined' && Intl.PluralRules ? new Intl.PluralRules(locale) : null;
+    } catch {
+      RULES[locale] = null;
+    }
+  }
+  return RULES[locale]?.select(n) ?? (n === 1 ? 'one' : 'other');
+}
+
+/** The form for `n` out of "one:day|other:days". */
+function pluralForm(forms: string, n: number, locale: Locale): string {
+  const table = new Map<string, string>();
+  for (const part of forms.split('|')) {
+    const at = part.indexOf(':');
+    if (at > 0) table.set(part.slice(0, at), part.slice(at + 1));
+  }
+  return table.get(pluralCategory(n, locale)) ?? table.get('other') ?? '';
 }
 
 /** A language's own name for itself, for the language picker. */
@@ -113,9 +141,10 @@ export function localeName(locale: Locale): string {
 }
 
 /**
- * A compact amount for the top bar: 950, 12.3k, 4.5M in English (and the other European
- * languages); 950, 1.2万, 3.4亿 in Chinese, the same in Japanese (万, 億) and Korean (만, 억).
- * Below the first step the number is exact.
+ * A compact amount for the top bar in the language's own style (12.3K, 1,2 k, 4,5 Mio., 1.2万),
+ * from Intl.NumberFormat; one decimal below ten of a unit, none above. Where Intl has no compact
+ * notation (old WeChat) English's k and M, and 万/亿 in Chinese, Japanese (万, 億) and Korean
+ * (만, 억). Below the first step the number is exact.
  */
 const STEPS: Partial<Record<Locale, [number, string][]>> = {
   zh: [[1e8, '亿'], [1e4, '万']],
@@ -123,8 +152,30 @@ const STEPS: Partial<Record<Locale, [number, string][]>> = {
   ko: [[1e8, '억'], [1e4, '만']],
 };
 
+const COMPACT: Partial<Record<Locale, [Intl.NumberFormat, Intl.NumberFormat] | null>> = {};
+
+function compact(locale: Locale): [Intl.NumberFormat, Intl.NumberFormat] | null {
+  if (COMPACT[locale] === undefined) {
+    try {
+      const make = (digits: number) =>
+        new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: digits, roundingMode: 'trunc' } as Intl.NumberFormatOptions);
+      const pair: [Intl.NumberFormat, Intl.NumberFormat] = [make(1), make(0)];
+      // An engine that ignores `notation` prints the whole number: treat it as having none.
+      COMPACT[locale] = /[^\d\s.,]/.test(pair[0].format(12345e3)) ? pair : null;
+    } catch {
+      COMPACT[locale] = null;
+    }
+  }
+  return COMPACT[locale] ?? null;
+}
+
 export function formatAmount(n: number, locale: Locale = current): string {
   const v = Math.floor(n);
+  const f = v >= 1000 ? compact(locale) : null;
+  if (f) {
+    const integer = f[0].formatToParts(v).filter((p) => p.type === 'integer').map((p) => p.value).join('');
+    return (integer.length >= 2 ? f[1] : f[0]).format(v);
+  }
   const steps = STEPS[locale] ?? [[1e6, 'M'], [1e3, 'k']];
   for (const [size, suffix] of steps) {
     if (v >= size * 10) return `${Math.floor(v / size)}${suffix}`;

@@ -8,7 +8,7 @@ export const ko: Table<typeof en> = {
     continue: '계속',
     back: '뒤로',
     locked: '잠김',
-    keyEnter: 'Enter',
+    keyEnter: '엔터',
     keyEsc: 'Esc',
   },
   lobby: {
@@ -52,10 +52,10 @@ export const ko: Table<typeof en> = {
     down: '쓰러졌다',
     revive: '부활',
     fall: {
-      charge: { cause: '돌진에 당함', tip: '정예는 돌진 전에 조준해요: 빨간 선이 보이면 옆으로 피하세요' },
-      slam: { cause: '내려찍기에 당함', tip: '빨간 원이 나타나면 밖으로 나가세요' },
+      charge: { cause: '돌진에 당함', tip: '정예는 돌진 전에 조준해요: 조준선이 보이면 옆으로 피하세요' },
+      slam: { cause: '내려찍기에 당함', tip: '바닥에 원이 빛나면 밖으로 나가세요' },
       bullet: { cause: '저격당함', tip: '탄은 직선으로 날아요: 옆으로 비켜서세요' },
-      zone: { cause: '위험 구역에 서 있었음', tip: '빨간 원이 나타나면 밖으로 나가세요' },
+      zone: { cause: '위험 구역에 서 있었음', tip: '바닥에 원이 빛나면 밖으로 나가세요' },
     },
     goal: {
       record: '신기록: {wave} 웨이브!',

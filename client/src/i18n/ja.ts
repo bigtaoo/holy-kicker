@@ -52,10 +52,10 @@ export const ja: Table<typeof en> = {
     down: '倒れてしまった',
     revive: '復活',
     fall: {
-      charge: { cause: '突進に捕まった', tip: 'エリートは突進前に狙いを定める：赤い線が見えたら横へ' },
-      slam: { cause: '叩きつけを食らった', tip: '赤い円が出たら、外へ歩こう' },
+      charge: { cause: '突進に捕まった', tip: 'エリートは突進前に狙いを定める：照準の線が見えたら横へ' },
+      slam: { cause: '叩きつけを食らった', tip: '地面に円が光ったら、外へ歩こう' },
       bullet: { cause: '撃ち倒された', tip: '弾はまっすぐ飛ぶ：横へずれてかわそう' },
-      zone: { cause: '危険地帯に立っていた', tip: '赤い円が出たら、外へ歩こう' },
+      zone: { cause: '危険地帯に立っていた', tip: '地面に円が光ったら、外へ歩こう' },
     },
     goal: {
       record: '新記録：{wave} ウェーブ！',

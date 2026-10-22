@@ -74,7 +74,7 @@ export const monkDe: Table<typeof monkEn> = {
     staff: { name: 'Ruyi-Stab' },
     fish: { name: 'Betäubungsglocke', desc: 'Jeder {n}. Ring betäubt {s}s lang' },
     beads: { name: '108 Perlen', desc: 'Ein zweiter Ring dreht sich andersherum' },
-    bowl: { name: 'Bodenlose Schale', desc: 'Schluckt {n} Feinde pro Wurf, EP sofort' },
+    bowl: { name: 'Bodenlose Schale', desc: 'Schluckt {n} {n|one:Feind|other:Feinde} pro Wurf, EP sofort' },
     palm: { name: 'Berghand', desc: 'Bleibt liegen und hält Feinde {s}s fest' },
     bolt: { name: 'Endlose Kette' },
     incense: { name: 'Heilweihrauch' },
@@ -101,7 +101,7 @@ export const monkDe: Table<typeof monkEn> = {
   },
   spell: {
     palm: { name: 'Buddhahand', desc: 'Eine Riesenhand schlägt auf die größte Menge', count: 'Hände {a} → {b}' },
-    bolt: { name: 'Vajra-Blitz', desc: 'Blitz springt durch {n} Feinde' },
+    bolt: { name: 'Vajra-Blitz', desc: 'Blitz springt durch {n} {n|one:Feind|other:Feinde}' },
     incense: { name: 'Weihrauchring', desc: 'Ein Ring brennt {s}s lang zu deinen Füßen' },
     bell: { name: 'Goldene Glocke', desc: 'Blockt alle {s}s einen Treffer, dann knallt sie' },
     cymbal: { name: 'Fliegende Becken', desc: '{n} Becken fliegen los, durchbohren und prallen ab', count: 'Becken {a} → {b}' },
@@ -233,12 +233,12 @@ export const monkDe: Table<typeof monkEn> = {
   },
   tasks: {
     patrol: 'Hol die Patrouille ab',
-    kills: 'Besiege {n} Feinde',
+    kills: 'Besiege {n} {n|one:Feind|other:Feinde}',
     reward: 'Je: {copper} Kupfer, {jade} Jade',
     bonus: 'Alle abgeholt: +{jade} Jade',
   },
   achieve: {
-    kills: 'Besiege insgesamt {n} Feinde',
+    kills: 'Besiege insgesamt {n} {n|one:Feind|other:Feinde}',
     clear: 'Schaffe Kapitel {n}',
     hard: 'Schaffe schweres Kapitel {n}',
     trained: 'Trainiere {n}-mal',
