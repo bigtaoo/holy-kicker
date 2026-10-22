@@ -58,6 +58,10 @@ export class PerfReport {
   private nth = 0;
   /** What the game held at the run's first battle frame, once its scene is built. */
   private base: MemSample | null = null;
+  private chapter = 0;
+  /** When the player tapped to start the next run, and the ms from then to its first battle frame. */
+  private tapAt: number | null = null;
+  private ready: number | null = null;
 
   constructor(
     private readonly net: Backend,
@@ -66,16 +70,27 @@ export class PerfReport {
     net.onHidden(() => this.send('leave'));
   }
 
-  /** A run starts; `measured` is false for a dev sandbox or bot run. */
-  start(measured: boolean): void {
+  /** The player tapped to start a run (its art may still need fetching). */
+  tapped(now = performance.now()): void {
+    this.tapAt = now;
+  }
+
+  /** A run of `chapter` starts; `measured` is false for a dev sandbox or bot run. */
+  start(measured: boolean, chapter: number): void {
     this.nth++;
     this.meter = measured ? new PerfMeter() : null;
     this.base = null;
+    this.chapter = chapter;
+    this.ready = null;
   }
 
   frame(f: BattleFrame, mobs: number, ctx = 0): void {
     if (!this.meter) return;
-    this.base ??= this.probe();
+    if (!this.base) {
+      this.base = this.probe();
+      if (this.tapAt !== null) this.ready = Math.round(performance.now() - this.tapAt);
+      this.tapAt = null;
+    }
     this.meter.frame(f, mobs, ctx);
     if (!this.meter.midDue()) return;
     const props = this.props(this.meter.snapshot('mid', true));
@@ -100,7 +115,8 @@ export class PerfReport {
     if (!snap || !this.base) return null;
     const now = this.probe();
     const base = this.base;
-    const props: PerfProps = { ...snap, nth: this.nth, tex: now.tex, texUp: now.tex - base.tex, texMB: now.texMB, nodes: now.nodes, nodesUp: now.nodes - base.nodes };
+    const props: PerfProps = { ...snap, nth: this.nth, tex: now.tex, texUp: now.tex - base.tex, texMB: now.texMB, nodes: now.nodes, nodesUp: now.nodes - base.nodes, chapter: this.chapter };
+    if (this.ready !== null) props.ready = this.ready;
     if (now.heap !== undefined) {
       props.heap = now.heap;
       if (base.heap !== undefined) props.heapUp = now.heap - base.heap;

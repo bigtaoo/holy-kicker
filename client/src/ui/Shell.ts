@@ -268,9 +268,9 @@ export class Shell {
     this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => menuBackdrop(this.app.renderer, this.art.lobby)), this.device === 'desktop'));
   }
 
-  /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
+  /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching); the tap starts `perf`'s ready time. */
   private play(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: Challenge | null = null): Promise<void> {
-    return this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => this.startRun(chapter, left, from, c));
+    return this.perf?.tapped(), this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => this.startRun(chapter, left, from, c));
   }
 
   /** Runs `then` once `chapter`'s art and `monk`'s rig are in; on a failure, the lobby (the next tap tries again). */
@@ -323,7 +323,7 @@ export class Shell {
     }, left?.state);
     this.replays.begin(this.game, rankedRun(this.scene) && !this.scene.record);
     this.kills = left?.kills ?? 0;
-    this.perf?.start(rankedRun(this.scene) && !this.scene.record);
+    this.perf?.start(rankedRun(this.scene) && !this.scene.record, chapter);
     if (this.quality) this.game.applyQuality(this.quality);
     this.game.shake.on = loadSettings(this.platform.storage).shake;
     this.game.onEvents = (events) => {

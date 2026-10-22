@@ -22,7 +22,7 @@ const battle = (r: PerfReport, secs: number, ms = 1000 / 60) => {
 describe('PerfReport', () => {
   it('sends one snapshot at the end of a run with what memory grew since its first battle frame', () => {
     const { sent, mem, report } = setup();
-    report.start(true);
+    report.start(true, 1);
     battle(report, 3);
     mem.tex = 112;
     mem.nodes = 2500;
@@ -35,7 +35,7 @@ describe('PerfReport', () => {
 
   it('folds a healthy mid stretch into the next snapshot and sends a troubled one', () => {
     const { sent, mem, report } = setup();
-    report.start(true);
+    report.start(true, 1);
     battle(report, PERF_MID_SECS);
     expect(sent).toHaveLength(0);
     mem.tex += 40;
@@ -46,7 +46,7 @@ describe('PerfReport', () => {
 
   it('sends a mid stretch whose frames often miss a refresh', () => {
     const { sent, report } = setup();
-    report.start(true);
+    report.start(true, 1);
     const late = { ms: 2000 / 60, target: 1000 / 60, vsync: 1000 / 60, level: 4, work: 3, sim: 1, view: 1, draw: 1 };
     // 13 hitches a minute, just over PERF_TROUBLE
     for (let i = 0; i < 13 * (PERF_MID_SECS / 60); i++) report.frame(late, 10);
@@ -64,13 +64,30 @@ describe('PerfReport', () => {
 
   it('counts runs since launch, sends nothing for an unmeasured run, and snapshots on hide', () => {
     const { sent, report, hide } = setup();
-    report.start(false);
+    report.start(false, 1);
     battle(report, 10);
     report.end();
     expect(sent).toHaveLength(0);
-    report.start(true);
+    report.start(true, 1);
     battle(report, 10);
     hide();
     expect(sent).toMatchObject([{ why: 'leave', nth: 2 }]);
+  });
+
+  it('tells the chapter, and the time from the tap on Play to the first battle frame', () => {
+    const { sent, report } = setup();
+    report.tapped(performance.now() - 1500);
+    report.start(true, 3);
+    battle(report, 6);
+    report.end();
+    expect(sent[0]).toMatchObject({ chapter: 3 });
+    expect(sent[0].ready).toBeGreaterThanOrEqual(1500);
+    expect(sent[0].ready).toBeLessThan(5000);
+    // a run no tap started has no ready time
+    report.start(true, 2);
+    battle(report, 6);
+    report.end();
+    expect(sent[1]).toMatchObject({ chapter: 2 });
+    expect(sent[1]).not.toHaveProperty('ready');
   });
 });
