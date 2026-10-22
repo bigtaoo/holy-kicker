@@ -142,7 +142,9 @@ interface Soft {
  * bushes sway in the wind and part round the hero at `hero()` (sway.ts).
  */
 export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam: Vec, hero?: () => Vec, tint = 0xffffff): Container {
-  const view = new Container();
+  // A render group: its hundreds of props only move, so Pixi keeps their draw list, where in the
+  // world's (rebuilt every frame by the y-sort) they would be collected again each frame.
+  const view = new Container({ isRenderGroup: true });
   view.tint = tint;
   const home: { s: Sprite; x: number; y: number }[] = [];
   const soft: Soft[] = [];
