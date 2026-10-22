@@ -14,6 +14,7 @@ import type { SceneOptions } from './game/scene';
 import { SaveStore } from './meta/saveStore';
 import { loadSettings, pickLocale } from './meta/settings';
 import type { Platform } from './platform/types';
+import { healthAdvice } from './ui/healthAdvice';
 import { privacyToast } from './ui/privacyUi';
 import { DISPLAY_FAMILY, DISPLAY_FILE, setDisplayFont } from './ui/fonts';
 import { Shell } from './ui/Shell';
@@ -61,6 +62,8 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     new Promise<null>((done) => setTimeout(() => done(null), 4000)),
   ]);
   await lang;
+  // a game in China opens on the health advice for games (WeChat; ui/healthAdvice.ts)
+  const advice = platform.host === 'wechat' ? healthAdvice(app, () => platform.safeInsets()) : null;
   useWebp(await webp);
   // WeChat ships its art in the package and the iOS app on the device: only the web waits on a network
   const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k), platform.host !== 'wechat' && platform.host !== 'ios');
@@ -106,6 +109,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   await shell.start(opts.direct);
   // the page's loading screen (index.html) goes once the first screen is up; no page on WeChat
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
+  advice?.close();
   net.loaded({ script, art: artMs });
   cloud?.auto();
   platform.onHide(() => cloud?.auto());

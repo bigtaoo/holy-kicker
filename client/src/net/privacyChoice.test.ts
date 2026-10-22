@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import type { Sharing } from '../meta/privacy';
+import type { Platform } from '../platform/types';
 import { PrivacyChoice } from './privacyChoice';
 
-function host(country: string | null) {
+function host(country: string | null, name: Platform['host'] = 'web') {
   const kept = new Map<string, string>();
   const opened: string[] = [];
   return {
     opened,
+    host: name,
     storage: { getItem: (k: string) => kept.get(k) ?? null, setItem: (k: string, v: string) => void kept.set(k, v) },
     country: () => country,
     openUrl: (url: string) => void opened.push(url),
@@ -30,6 +32,13 @@ describe('PrivacyChoice', () => {
     expect(choice.asking()).toBe(false);
     // the next launch remembers it
     expect(make('DE', null, h).sent).toEqual(['send']);
+  });
+
+  it("asks every WeChat player first (China's PIPL wants consent, not a notice)", () => {
+    const { choice, sent } = make(null, 'Asia/Shanghai', host(null, 'wechat'));
+    expect(sent).toEqual(['hold']);
+    expect(choice.asking()).toBe(true);
+    expect(choice.noticeDue()).toBe(false);
   });
 
   it('only tells a player elsewhere, once, and stops on a no', () => {

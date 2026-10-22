@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Turkish.
 export const tr: Table<typeof en> = {
   lang: { name: 'Türkçe' },
+  boot: {
+    healthAdvice: 'Zararlı ve korsan oyunlara hayır de.\nKendini koru ve dolandırıcılığa dikkat et.\nÖlçülü oyna; fazla oyun sağlığa zararlıdır.\nZamanını iyi planla ve sağlıklı bir hayatın tadını çıkar.',
+  },
   common: {
     continue: 'Devam',
     back: 'Geri',
@@ -353,7 +356,7 @@ export const tr: Table<typeof en> = {
     policy: 'Gizlilik politikası',
     gameCenter: 'Game Center',
     adPrivacy: 'Reklam gizliliği',
-    dataNotice: 'Oyun istatistikleri ve sıralama turları, oyunu dengelemek ve sıralamaları yürütmek için sunucumuza gider.',
+    dataNotice: 'Oyun istatistikleri, tur tekrarları ve sıralama turları, oyunu dengelemek ve sıralamaları yürütmek için sunucumuza gider.',
     playId: 'Oyun kimliğin: {id}',
     idCopied: 'Kimlik kopyalandı',
     idCopyFailed: 'Kimlik kopyalanamadı',
@@ -380,8 +383,8 @@ export const tr: Table<typeof en> = {
     copyFailed: 'Kod kopyalanamadı',
   },
   privacy: {
-    toast: 'Oyun, istatistikleri ve sıralama turlarını sunucusuna gönderir.\nBunu Ayarlar\'dan istediğin zaman kapatabilirsin.',
-    ask: 'Oyun istatistiklerini toplayabilir miyiz?\nOyunu geliştirir ve sıralamaları yürütür.',
+    toast: 'Oyun, istatistikleri, tur tekrarlarını ve sıralama turlarını sunucusuna gönderir.\nBunu Ayarlar\'dan istediğin zaman kapatabilirsin.',
+    ask: 'Oyun istatistiklerini ve tur tekrarlarını toplayabilir miyiz?\nOyunu geliştirir ve sıralamaları yürütür.',
     allow: 'İzin ver',
     decline: 'Hayır, sağ ol',
     link: 'Gizlilik',
