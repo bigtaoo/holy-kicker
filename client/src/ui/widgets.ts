@@ -13,8 +13,8 @@ import { DISPLAY_SIZE, fontFor } from './fonts';
  * spacecraft's cool steel with pale steel-blue trim for the corgi (his white suit and chapter card).
  */
 const SURFACES = THEME === 'corgi'
-  ? { bg: 0x1b2026, panel: 0x2b333b, panelLocked: 0x22282e, outline: 0x0a0d10, dim: 0x8e99a3, trim: 0x9db8c9 }
-  : { bg: 0x1d2420, panel: 0x2c3631, panelLocked: 0x232a26, outline: 0x0b0e0c, dim: 0x8f9a94, trim: 0xc9a35a };
+  ? { bg: 0x1b2026, panel: 0x2b333b, panelLocked: 0x22282e, outline: 0x0a0d10, dim: 0x9ba6b0, trim: 0x9db8c9 }
+  : { bg: 0x1d2420, panel: 0x2c3631, panelLocked: 0x232a26, outline: 0x0b0e0c, dim: 0x9ca7a1, trim: 0xc9a35a };
 
 export const COLORS = {
   bg: SURFACES.bg,
@@ -138,12 +138,11 @@ export function showVideoBadges(on: boolean): void {
 export function button(text: string, w: number, h: number, onTap: () => void, o: ButtonOptions = {}): Container {
   const c = new Container();
   const t = label(text, o.size ?? 56, o.textFill ?? COLORS.text, {}, !o.plain);
-  // long translations shrink to fit instead of overflowing (design: leave ~30 % room)
+  // long translations shrink, then wrap, to fit instead of overflowing (design: leave ~30 % room)
   const video = o.video && videoBadges;
   const badge = video ? videoBadge(h * 0.42, o.textFill ?? COLORS.text) : o.icon ?? null;
   const gap = badge && text ? badge.width + 20 : 0;
-  const room = w - 48 - gap;
-  if (t.width > room) t.scale.set(room / t.width);
+  fit(t, w - 48 - gap, h - LIP - 12);
   const { base, face } = buttonFace(w, h, o.fill ?? COLORS.saffron);
   // the face, the badge and the label ride together LIP above the button's middle
   const top = new Container();
@@ -190,10 +189,10 @@ export function button(text: string, w: number, h: number, onTap: () => void, o:
 
 /** A keycap with `text` (Enter, Esc) on the upper right corner of a `w` by `h` button, for desktops. */
 export function keyCap(b: Container, w: number, h: number, text: string): void {
-  const l = label(text, 34, COLORS.outline);
-  const cw = Math.max(64, l.width + 28);
+  const l = label(text, 48, COLORS.outline);
+  const cw = Math.max(76, l.width + 28);
   const cap = new Container();
-  cap.addChild(new Graphics().roundRect(-cw / 2, -26, cw, 52, 14).fill(COLORS.gold).stroke({ color: COLORS.outline, width: 5 }), l);
+  cap.addChild(new Graphics().roundRect(-cw / 2, -32, cw, 64, 16).fill(COLORS.gold).stroke({ color: COLORS.outline, width: 5 }), l);
   cap.position.set(w / 2 - cw / 2 + 10, -h / 2 - 6);
   b.addChild(cap);
 }
@@ -212,10 +211,41 @@ export function buttonLabel(b: Container): Text {
   return top.children.find((c): c is Text => c instanceof Text)!;
 }
 
-/** Scales a text down so it fits `maxW`, keeping it centred. */
-export function fit(t: Text, maxW: number): Text {
+/** How far fit() shrinks a text before it wraps it instead: past this it gets hard to read. */
+const MIN_SCALE = 0.75;
+
+/**
+ * Fits a text into `maxW`, keeping it centred: it shrinks to MIN_SCALE, then wraps onto two
+ * lines (when they fit `maxH`), and only a text that still overflows shrinks further.
+ */
+export function fit(t: Text, maxW: number, maxH = Infinity): Text {
   t.scale.set(1);
-  if (t.width > maxW) t.scale.set(maxW / t.width);
+  // a text its caller wraps itself only shrinks
+  const own = t.style.wordWrap && !wrapped.has(t);
+  if (!own) t.style.wordWrap = false;
+  const width = t.width;
+  if (width <= maxW) return t;
+  if (own || width * MIN_SCALE <= maxW) return shrink(t, maxW / width);
+  const tall = t.height;
+  const cjk = /^(zh|ja|ko|th)/.test(getLocale());
+  for (const s of [1, MIN_SCALE]) {
+    t.style.wordWrap = true;
+    t.style.breakWords = cjk;
+    t.style.wordWrapWidth = maxW / s;
+    if (t.width <= maxW / s + 1 && t.height < tall * 2.5 && t.height * s <= maxH) {
+      wrapped.add(t);
+      return shrink(t, s);
+    }
+  }
+  t.style.wordWrap = false;
+  return shrink(t, maxW / width);
+}
+
+/** The texts fit() wrapped, which it may unwrap again. */
+const wrapped = new WeakSet<Text>();
+
+function shrink(t: Text, s: number): Text {
+  t.scale.set(s);
   return t;
 }
 

@@ -51,8 +51,8 @@ export function chestRow(save: SaveData, chapter: number, icons: IconSheet, open
         .moveTo(x - 22, 50).lineTo(x - 4, 68).lineTo(x + 28, 30)
         .stroke({ color: COLORS.jade, width: 12, cap: 'round', join: 'round' }));
     }
-    const wave = label(String(c.wave), 40, got ? COLORS.dim : COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
-    wave.position.set(x, 112);
+    const wave = label(String(c.wave), 48, got ? COLORS.dim : COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
+    wave.position.set(x, 116);
     row.addChild(wave);
   });
   return row;

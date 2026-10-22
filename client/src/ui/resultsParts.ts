@@ -130,9 +130,9 @@ function gearTiles(drops: readonly Drop[], icons: IconSheet): Container[] {
     c.addChild(new Graphics().roundRect(-62, -62, 124, 124, 22).fill(shade(color, -0.55)).stroke({ color, width: 7 }));
     c.addChild(iconSprite(icons, d.item, 100) ?? fit(label(dropName(d), 24, color), 110));
     if (n > 1) {
-      const k = label(t('gear.count', { n }), 40, COLORS.text, { stroke: { color: COLORS.outline, width: 7 } });
+      const k = label(t('gear.count', { n }), 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
       k.anchor.set(1, 1);
-      k.position.set(58, 62);
+      k.position.set(72, 76);
       c.addChild(k);
     }
     return c;
