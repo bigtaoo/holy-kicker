@@ -39,7 +39,6 @@ const MOTES: Record<'field' | 'heal', readonly [number, number]> = CORGI
 
 function bake(renderer: Renderer, g: Graphics, size: number): Texture {
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
-  g.destroy();
   return tex;
 }
 

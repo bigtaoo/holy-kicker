@@ -70,6 +70,5 @@ function bakeTile(renderer: Renderer, l: MistLayer): Texture {
   }
   const size = l.tile.size;
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, size, size), resolution: 1, antialias: true });
-  g.destroy();
   return tex;
 }

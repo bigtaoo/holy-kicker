@@ -35,7 +35,6 @@ const ZONE_TEX = 128;
 
 function bake(renderer: Renderer, g: Graphics, size: number, resolution: number): Texture {
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, size, size), resolution, antialias: true });
-  g.destroy();
   return tex;
 }
 

@@ -1,5 +1,5 @@
 import { Graphics, Particle, ParticleContainer, Rectangle, Texture, type Renderer } from 'pixi.js';
-import { bakeTexture } from './bake';
+import { bakeTexture, keepForSession } from './bake';
 import { FxPool, fxAlpha, fxSize, type FxParticle, type FxShape } from './fx';
 
 // Draws the FxPool through one ParticleContainer: every effect is a tinted particle on a
@@ -36,7 +36,6 @@ function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
   g.rect(CELL * 4, 2, CELL, CELL - 4).fill({ color: 0xffffff, alpha: 0.35 });
   g.rect(CELL * 4, CELL * 0.22, CELL, CELL * 0.56).fill({ color: 0xffffff, alpha: 1 });
   const atlas = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, CELL * SHAPES.length, CELL), resolution: 1, antialias: true });
-  g.destroy();
   const out = new Map<FxShape, Texture>();
   SHAPES.forEach((s, i) => out.set(s, new Texture({ source: atlas.source, frame: new Rectangle(i * CELL, 0, CELL, CELL) })));
   return out;
@@ -56,7 +55,7 @@ export class FxLayer {
   private readonly tints: number[] = [];
 
   constructor(renderer: Renderer) {
-    this.textures = drawAtlas(renderer);
+    this.textures = keepForSession(renderer, 'fx', () => drawAtlas(renderer));
     this.view.texture = this.textures.get('spark')!;
     // in front of every standing figure
     this.view.zIndex = 1e7;

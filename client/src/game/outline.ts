@@ -52,6 +52,5 @@ export function outlineSheet(renderer: Renderer, sheet: MobSheet, style = ELITE_
   });
   const rows = Math.ceil(textures.length / meta.cols);
   const page = bakeTexture(renderer, { target: box, frame: new Rectangle(0, 0, meta.cols * out.frameW, rows * out.frameH), resolution: 1, antialias: true });
-  box.destroy({ children: true });
   return sliceSheet(out, page);
 }

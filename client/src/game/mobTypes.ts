@@ -44,7 +44,6 @@ export function fakeMobTypes(renderer: Renderer, base: MobSheet, types: number, 
     });
     const size = page > 0 ? new Rectangle(0, 0, page, page) : new Rectangle(0, 0, w, h);
     pages.push(bakeTexture(renderer, { target: box, frame: size, resolution: 1 }));
-    box.destroy({ children: true });
   }
   return slots.map((s) => sliceSheet(meta, pages[s.page], s.x, s.y));
 }

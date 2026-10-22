@@ -60,6 +60,5 @@ function blob(renderer: Renderer): Texture {
   const g = new Graphics();
   for (let i = 10; i >= 1; i--) g.circle(r, r, (r * i) / 10).fill({ color: 0xffffff, alpha: 0.16 });
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, r * 2, r * 2), resolution: 1, antialias: true });
-  g.destroy();
   return tex;
 }

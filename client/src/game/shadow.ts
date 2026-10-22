@@ -1,5 +1,5 @@
 import { Graphics, Rectangle, Sprite, Texture, type Renderer } from 'pixi.js';
-import { bakeTexture } from './bake';
+import { bakeTexture, keepForSession } from './bake';
 
 // Ground shadows: one shared disc texture stretched into an ellipse per figure. As sprites
 // they batch with the figures around them, where a Graphics per shadow would not.
@@ -9,9 +9,12 @@ const R = 64;
 export const SHADOW_Z = -1e6;
 
 export function shadowTexture(renderer: Renderer): Texture {
+  return keepForSession(renderer, 'shadow', () => bakeShadow(renderer));
+}
+
+function bakeShadow(renderer: Renderer): Texture {
   const g = new Graphics().circle(R, R, R - 1).fill({ color: 0x000000, alpha: 0.3 });
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, R * 2, R * 2), resolution: 1, antialias: true });
-  g.destroy();
   return tex;
 }
 

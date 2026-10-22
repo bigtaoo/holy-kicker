@@ -54,7 +54,6 @@ export function wispSheet(renderer: Renderer): MobSheet {
   }
   const rows = Math.ceil((FRAMES * 2) / COLS);
   const tex = bakeTexture(renderer, { target: box, frame: new Rectangle(0, 0, COLS * W, rows * H), resolution: 1, antialias: true });
-  box.destroy({ children: true });
   const meta: SheetMeta = {
     frames: FRAMES, flash: FRAMES, cols: COLS, frameW: W, frameH: H, fps: 10, anchor: [W / 2, FOOT_Y], height: FOOT_Y - 14, lift,
   };
