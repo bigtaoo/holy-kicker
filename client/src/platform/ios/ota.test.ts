@@ -95,11 +95,11 @@ describe('the updater calls', () => {
 
   it('do nothing in development, in a browser, or when the manifest fails', async () => {
     const u = fakeUpdater();
-    expect(await checkOta('0.0.0', true, u, async () => manifest)).toBe('none');
-    expect(await checkOta('1.0.18', false, u, async () => manifest)).toBe('none');
+    expect(await checkOta('0.0.0', true, u, async () => manifest, kv())).toBe('none');
+    expect(await checkOta('1.0.18', false, u, async () => manifest, kv())).toBe('none');
     expect(u.calls).toEqual([]);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(await checkOta('1.0.18', true, u, async () => { throw new Error('offline'); })).toBe('none');
+    expect(await checkOta('1.0.18', true, u, async () => { throw new Error('offline'); }, kv())).toBe('none');
     warn.mockRestore();
   });
 
@@ -108,7 +108,7 @@ describe('the updater calls', () => {
     expect(await applyDownloaded('1.0.18', true, u, kv())).toBe(true);
     expect(u.calls).toEqual(['set c']);
     expect(await applyDownloaded('1.0.18.2', true, fakeUpdater(), kv())).toBe(false);
-    expect(await applyDownloaded('0.0.0', true, u)).toBe(false);
+    expect(await applyDownloaded('0.0.0', true, u, kv())).toBe(false);
   });
 
   it("keep the manifest's revoke list, and at the next launch leave a bundle taken back", async () => {
