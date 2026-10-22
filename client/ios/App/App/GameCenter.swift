@@ -1,7 +1,8 @@
 import GameKit
 import UIKit
 
-// Game Center for the bridge (docs/ios.md "Game Center"): the player's nickname for the boards.
+// Game Center for the bridge (docs/ios.md "Game Center"): the player's nickname for the boards,
+// and the signed identity the cloud save keys a player's slot on (bridge v5).
 // Authentication starts at launch, so a player signed in to Game Center in Settings is signed in
 // silently. When Apple hands back its sign-in sheet instead, it is kept and never shown at launch:
 // the game offers it from a tap (settings), through signIn().
@@ -48,6 +49,36 @@ final class GameCenter {
         }
         signInSheet = nil
         presenter.present(sheet, animated: true)
+    }
+
+    /// Game Center's identity signature for the cloud save (docs/cloud-save.md "iOS: Game Center"):
+    /// the player ids, the bundle id, the URL of Apple's key, the signature and the salt (base64)
+    /// and the timestamp; `ok` false when no player is signed in or GameKit failed. The server
+    /// checks it, so nothing here is trusted on the page's word.
+    func identity(_ done: @escaping ([String: Any]) -> Void) {
+        let player = GKLocalPlayer.local
+        guard player.isAuthenticated else {
+            done(["ok": false])
+            return
+        }
+        player.fetchItems(forIdentityVerificationSignature: { url, signature, salt, timestamp, error in
+            DispatchQueue.main.async {
+                guard error == nil, let url, let signature, let salt else {
+                    done(["ok": false])
+                    return
+                }
+                done([
+                    "ok": true,
+                    "player": player.teamPlayerID,
+                    "alt": player.gamePlayerID,
+                    "bundle": Bundle.main.bundleIdentifier ?? "",
+                    "key": url.absoluteString,
+                    "sig": signature.base64EncodedString(),
+                    "salt": salt.base64EncodedString(),
+                    "ts": timestamp,
+                ])
+            }
+        })
     }
 
     private func publish(_ next: State) {

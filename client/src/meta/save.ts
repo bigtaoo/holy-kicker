@@ -103,10 +103,22 @@ function ints(v: unknown, min: number, max: number): number[] {
   return out;
 }
 
+/** The low `width` bits of a bit field: a newer build's extra bits are dropped, not read as all set. */
+function bits(v: unknown, width: number, fallback: number): number {
+  return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v % 2 ** width : fallback;
+}
+
+/** Bit fields per chapter, as `ints`. */
+function bitsPer(v: unknown, width: number): number[] {
+  const out = new Array<number>(BALANCE.chapters).fill(0);
+  if (Array.isArray(v)) for (let i = 0; i < out.length; i++) out[i] = bits(v[i], width, 0);
+  return out;
+}
+
 /** The opened chests, within the reached ones; a save from before opening in the lobby was paid every chest it reached. */
 function openedOf(v: unknown, reached: number[]): number[] {
   if (!Array.isArray(v)) return [...reached];
-  return ints(v, 0, (1 << BALANCE.chests.length) - 1).map((o, i) => o & reached[i]);
+  return bitsPer(v, BALANCE.chests.length).map((o, i) => o & reached[i]);
 }
 
 function inventory(v: unknown): Inventory {
@@ -140,16 +152,28 @@ function owned(monks: number, id: unknown): boolean {
  * A save without the last falls reads as none fallen yet.
  */
 export function parseSave(text: string | null): SaveData {
-  const fresh = newSave();
-  if (!text) return fresh;
-  let raw: Record<string, unknown>;
+  return readSave(saveObject(text));
+}
+
+/** The stored text as an object, null for nothing or text that is not a JSON object. */
+export function saveObject(text: string | null): Record<string, unknown> | null {
+  if (!text) return null;
   try {
     const parsed: unknown = JSON.parse(text);
-    if (parsed === null || typeof parsed !== 'object') return fresh;
-    raw = parsed as Record<string, unknown>;
+    return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
   } catch {
-    return fresh;
+    return null;
   }
+}
+
+/** The version a stored object says it is, 0 for none. */
+export function versionOf(raw: Record<string, unknown> | null): number {
+  return typeof raw?.version === 'number' && Number.isFinite(raw.version) ? raw.version : 0;
+}
+
+/** parseSave on an already parsed object (null gives a new save). */
+export function readSave(raw: Record<string, unknown> | null): SaveData {
+  if (!raw) return newSave();
   const max = Number.MAX_SAFE_INTEGER;
   const cleared = int(raw.cleared, 0, BALANCE.chapters, 0);
   const old = int(raw.version, 0, SAVE_VERSION, 0) < 6;
@@ -163,9 +187,9 @@ export function parseSave(text: string | null): SaveData {
   const hardStars = ints(raw.hardStars, 0, 3).map((s, i) => (hardBest[i] >= BALANCE.waves ? Math.max(1, s) : 0));
   const chapter = int(raw.chapter, 1, Math.min(BALANCE.chapters, cleared + 1), 1);
   const hard = raw.hard === true && stars[chapter - 1] >= 3;
-  const monks = int(raw.monks, 0, (1 << MONK_IDS.length) - 1, 1) | 1;
-  const chests = ints(raw.chests, 0, (1 << BALANCE.chests.length) - 1);
-  const hardChests = ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1);
+  const monks = bits(raw.monks, MONK_IDS.length, 1) | 1;
+  const chests = bitsPer(raw.chests, BALANCE.chests.length);
+  const hardChests = bitsPer(raw.hardChests, BALANCE.chests.length);
   return {
     version: SAVE_VERSION,
     firstRunDone: raw.firstRunDone === true,
@@ -189,7 +213,7 @@ export function parseSave(text: string | null): SaveData {
     patrol: int(raw.patrol, 0, max, 0),
     daily: parseDaily(raw.daily),
     // a save from before the dots has seen every tab it could open
-    seen: int(raw.seen, 0, 0xff, 0xff),
+    seen: bits(raw.seen, 8, 0xff),
     grit: int(raw.grit, 0, BALANCE.grit.max, 0),
     hard,
     hardBest,
@@ -201,7 +225,7 @@ export function parseSave(text: string | null): SaveData {
     monk: owned(monks, raw.monk) ? (raw.monk as MonkId) : 'kicker',
     monks,
     kills: int(raw.kills, 0, max, 0),
-    achieved: int(raw.achieved, 0, (2 ** BALANCE.achievements.length) - 1, 0),
+    achieved: bits(raw.achieved, BALANCE.achievements.length, 0),
     dice: isDice(raw.dice) ? raw.dice : 0,
     gifts: int(raw.gifts, 0, BALANCE.welcome.length, 0),
     giftDay: int(raw.giftDay, 0, 99999999, 0),

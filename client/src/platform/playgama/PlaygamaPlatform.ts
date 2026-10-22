@@ -1,7 +1,7 @@
 import type { Host, PropValue } from '@hk/protocol';
 import type { DeviceInfo } from '../../game/quality';
 import { RUN_KEY } from '../../meta/resume';
-import { SAVE_KEY, SafeStore, type KeyValueStore } from '../../meta/saveStore';
+import { BACKUP_KEY, BROKEN_KEY, SAVE_KEY, SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { SETTINGS_KEY } from '../../meta/settings';
 import { INSTALL_KEY } from '../../net/backend';
 import { SENT_KEY } from '../../ui/playerName';
@@ -16,7 +16,7 @@ import { bridgeAnalytics } from './bridgeAnalytics';
 // Built with `create()`, which waits (bounded) for Bridge and reads the save through it first.
 
 /** Every key the game keeps in its store, read in one call at boot. */
-const KEYS = [SAVE_KEY, SETTINGS_KEY, RUN_KEY, INSTALL_KEY, SENT_KEY];
+const KEYS = [SAVE_KEY, BACKUP_KEY, BROKEN_KEY, SETTINGS_KEY, RUN_KEY, INSTALL_KEY, SENT_KEY];
 
 /** Bridge's stand-ins for a page that is no portal: a developer's own preview and the QA tool. */
 const TEST_PLATFORMS = new Set(['mock', 'qa_tool']);

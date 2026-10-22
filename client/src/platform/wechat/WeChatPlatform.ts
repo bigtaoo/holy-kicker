@@ -4,6 +4,7 @@ import type { Battery, DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { NO_ADS, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
+import { weChatStore } from './weChatStorage';
 import { WeChatMusicDeck } from './weChatMusicDeck';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
 
@@ -15,14 +16,7 @@ export class WeChatPlatform implements Platform {
   readonly host = 'wechat';
   private bridge: WeChatEventBridge | null = null;
   // Ads and the wx.login cloud save come with the WeChat release (docs/design.md).
-  readonly storage: KeyValueStore = new SafeStore({
-    // getStorageSync answers '' for a key that was never written
-    getItem: (key) => {
-      const v = wx.getStorageSync(key);
-      return typeof v === 'string' && v !== '' ? v : null;
-    },
-    setItem: (key, value) => wx.setStorageSync(key, value),
-  });
+  readonly storage: KeyValueStore = new SafeStore(weChatStore(wx));
   readonly portal: Portal = NO_PORTAL;
   readonly ads: Ads = NO_ADS;
   readonly banner: Banner = NO_BANNER;

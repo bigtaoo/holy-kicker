@@ -60,3 +60,28 @@ describe('Game Center account', () => {
     expect(s.signIns).toHaveLength(1);
   });
 });
+
+describe('Game Center identity', () => {
+  const signed = { ok: true, player: 'T:1', alt: 'G:1', bundle: 'com.gamestao.holykicker', key: 'https://static.gc.apple.com/k.cer', sig: 'c2ln', salt: 'c2FsdA==', ts: 5 };
+
+  function signer(v: number, answer: unknown) {
+    let cb: ((a: unknown) => void) | null = null;
+    const native = {
+      v, gameCenter: () => ({ alias: 'Kicker', canSignIn: false }), onGameCenter: () => {},
+      onGameCenterIdentity: (f: (a: unknown) => void) => (cb = f),
+      gameCenterIdentity: () => queueMicrotask(() => cb?.(answer)),
+    } as unknown as Partial<HKNative>;
+    return new GameCenterAccount(native);
+  }
+
+  it('passes on what GameKit signed', async () => {
+    expect(await signer(5, signed).identity()).toEqual({ player: 'T:1', alt: 'G:1', bundle: signed.bundle, key: signed.key, sig: 'c2ln', salt: 'c2FsdA==', ts: 5 });
+  });
+
+  it('has none on an older shell, signed out or on a broken answer', async () => {
+    expect(await signer(4, signed).identity()).toBeNull();
+    expect(await signer(5, { ok: false }).identity()).toBeNull();
+    expect(await signer(5, { ...signed, sig: 7 }).identity()).toBeNull();
+    expect(await new GameCenterAccount(shell(null).native).identity()).toBeNull();
+  });
+});
