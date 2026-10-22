@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Polish.
 export const pl: Table<typeof en> = {
   lang: { name: 'Polski' },
+  boot: {
+    healthAdvice: 'Nie dla szkodliwych i pirackich gier.\nChroń się i uważaj na oszustwa.\nGraj z umiarem; zbyt dużo grania szkodzi zdrowiu.\nPlanuj swój czas i ciesz się zdrowym życiem.',
+  },
   common: {
     continue: 'Dalej',
     back: 'Wróć',
@@ -353,7 +356,7 @@ export const pl: Table<typeof en> = {
     policy: 'Prywatność',
     gameCenter: 'Game Center',
     adPrivacy: 'Prywatność reklam',
-    dataNotice: 'Statystyki gry i wyniki do rankingów trafiają na nasz serwer, by balansować grę i prowadzić rankingi.',
+    dataNotice: 'Statystyki gry, powtórki rozgrywek i wyniki do rankingów trafiają na nasz serwer, by balansować grę i prowadzić rankingi.',
     playId: 'Twój identyfikator gry: {id}',
     idCopied: 'Skopiowano identyfikator',
     idCopyFailed: 'Nie udało się skopiować identyfikatora',
@@ -380,8 +383,8 @@ export const pl: Table<typeof en> = {
     copyFailed: 'Nie udało się skopiować kodu',
   },
   privacy: {
-    toast: 'Gra wysyła statystyki i wyniki do rankingów na swój serwer.\nMożesz to wyłączyć w każdej chwili w Ustawieniach.',
-    ask: 'Czy możemy zbierać statystyki, by ulepszać grę?\nRankingi też ich potrzebują.',
+    toast: 'Gra wysyła statystyki, powtórki rozgrywek i wyniki do rankingów na swój serwer.\nMożesz to wyłączyć w każdej chwili w Ustawieniach.',
+    ask: 'Czy możemy zbierać statystyki i powtórki rozgrywek, by ulepszać grę?\nRankingi też ich potrzebują.',
     allow: 'Zezwól',
     decline: 'Nie, dzięki',
     link: 'Prywatność',

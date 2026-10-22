@@ -363,13 +363,32 @@ cloud (`capacitor.config.ts`: `autoUpdate: false`, `statsUrl: ''`).
 
 ## Privacy and store listing
 
-- `PrivacyInfo.xcprivacy`: `UserDefaults` (`CA92.1`); no tracking; the AdMob SDK and Capacitor
-  ship their own manifests.
+- `PrivacyInfo.xcprivacy`: `UserDefaults` (`CA92.1`); no tracking; the collected data types the
+  app's own code sends (below, from 2026-10-22); the AdMob SDK and Capacitor ship their own
+  manifests. Both apps use the same file: `build/setIosApp.mjs` patches only `IOS_FILES`, so the
+  corgi's build keeps it as committed (`shell.test.ts` pins it).
 - Privacy policy (served at `hk.gamestao.com/privacy`): AdMob (non-personalised ads, UMP),
   Game Center (the nickname shown on the boards) and Apple's purchases, added 2026-10-09.
-- App privacy label, from what `docs/retention.md` says we collect: identifiers (install id;
-  AdMob's device id), usage data, diagnostics (problem reports, with text the player writes),
-  the Game Center nickname. Nothing linked to a person, nothing used for tracking.
+- App privacy label (App Store Connect → App Privacy, by hand, for **both** apps). Nothing is
+  used for tracking (the app never shows the ATT prompt and asks AdMob for non-personalised ads).
+  Answer "Data Not Used to Track You" for every type, and declare:
+
+  | Type | From | Linked to the user | Purposes |
+  |---|---|---|---|
+  | Identifiers → Device ID | our install id; AdMob's per-developer id (IDFV) | no | Analytics, App Functionality; AdMob: Third-Party Advertising |
+  | Identifiers → User ID | Game Center nickname on the boards; the Game Center hash that finds a cloud save | yes | App Functionality |
+  | Usage Data → Product Interaction | our gameplay events; AdMob's ad taps and views | no | Analytics; AdMob: Third-Party Advertising |
+  | Usage Data → Advertising Data | AdMob: the ads shown | no | Third-Party Advertising |
+  | Purchases → Purchase History | the `iap` event | no | Analytics |
+  | Location → Coarse Location | the country (Cloudflare, from the IP); AdMob's IP-based rough location | no | Analytics; AdMob: Third-Party Advertising |
+  | User Content → Gameplay Content | leaderboard runs, run replays (until `COLLECT` ends), the cloud save | yes | Analytics, App Functionality |
+  | User Content → Customer Support | problem reports, the text the player writes | no | App Functionality |
+  | Diagnostics → Crash Data | `anomaly` events; AdMob's SDK crash data | no | App Functionality |
+  | Diagnostics → Performance Data | `perf` snapshots, the device class on `session` | no | App Functionality |
+  | Diagnostics → Other Diagnostic Data | problem reports (device model and system, a replay) | no | App Functionality |
+
+  The cloud save and the replays were not on the label submitted with 1.0; update it before the
+  next review. The privacy policy (`server/src/privacy.en.html`) lists the same data.
 - `app-ads.txt` at **`https://gamestao.com/app-ads.txt`**, and `https://gamestao.com/` as the
   listing's Marketing URL (the developer website AdMob's crawler reads). gamestao.com is the
   studio site (`D:\goodgoodstudy`, repo `bigtaoo/gamestao-homepage`): static Cloudflare

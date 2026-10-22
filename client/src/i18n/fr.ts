@@ -4,6 +4,9 @@ import type { Table } from './index';
 // French.
 export const fr: Table<typeof en> = {
   lang: { name: 'Français' },
+  boot: {
+    healthAdvice: 'Dis non aux jeux nuisibles et piratés.\nProtège-toi et méfie-toi des arnaques.\nJoue avec modération ; trop jouer nuit à la santé.\nGère bien ton temps et profite d\'une vie saine.',
+  },
   common: {
     continue: 'Continuer',
     back: 'Retour',
@@ -354,7 +357,7 @@ export const fr: Table<typeof en> = {
     policy: 'Confidentialité',
     gameCenter: 'Game Center',
     adPrivacy: 'Pubs et vie privée',
-    dataNotice: 'Les statistiques de jeu et les parties classées vont à notre serveur, pour équilibrer le jeu et gérer les classements.',
+    dataNotice: 'Les statistiques de jeu, les replays des parties et les parties classées vont à notre serveur, pour équilibrer le jeu et gérer les classements.',
     playId: 'Ton ID de jeu : {id}',
     idCopied: 'ID copié',
     idCopyFailed: "Impossible de copier l'ID",
@@ -381,8 +384,8 @@ export const fr: Table<typeof en> = {
     copyFailed: 'Impossible de copier le code',
   },
   privacy: {
-    toast: 'Le jeu envoie des statistiques et les parties classées à son serveur.\nTu peux le désactiver à tout moment dans les réglages.',
-    ask: 'Pouvons-nous collecter des statistiques pour améliorer le jeu ?\nLes classements en ont besoin aussi.',
+    toast: 'Le jeu envoie des statistiques, les replays des parties et les parties classées à son serveur.\nTu peux le désactiver à tout moment dans les réglages.',
+    ask: 'Pouvons-nous collecter des statistiques et les replays des parties pour améliorer le jeu ?\nLes classements en ont besoin aussi.',
     allow: 'Accepter',
     decline: 'Non merci',
     link: 'Confidentialité',

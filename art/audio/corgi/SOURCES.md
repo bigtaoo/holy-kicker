@@ -12,7 +12,8 @@ and the corgi set also draws on the Kenney packs listed in art/audio/SOURCES.md.
 pass `--source` the main checkout's `art/audio/source`.
 
 Everything picked is CC0 (no attribution needed). Where a page offers several licenses, CC0 is
-one of them and is the one we use.
+one of them and is the one we use. `tools/audio_build.py` refuses a pick whose credit line is not
+CC0.
 
 | Folder | Source | Author | License |
 |---|---|---|---|
@@ -21,7 +22,7 @@ one of them and is the one we use.
 | `oga/lib/6-short-water-splashes` | https://opengameart.org/content/6-short-water-splashes | ezwa | CC0 |
 | `oga/lib/teleport-spell` | https://opengameart.org/content/teleport-spell | ogrebane | CC0 |
 | `corgi/dog-sounds` | https://opengameart.org/content/dog-sounds | pauliuw | CC0 |
-| `corgi/dog-barking-mono` | https://opengameart.org/content/dog-barking-mono | HaelDB | OGA-BY 3.0 / CC0 |
+| `corgi/dog-barking-mono` | https://opengameart.org/content/dog-barking-mono | HaelDB | CC0 (page offers OGA-BY 3.0 or CC0; taken under CC0, checked 2026-10-22) |
 | `corgi/dog-grunt` | https://opengameart.org/content/dog-grunt | qubodup | CC0 |
 | `corgi/baby-animals` | https://opengameart.org/content/baby-animals-sounds-pack | Technopeasant | CC0 |
 | `corgi/squish` | https://opengameart.org/content/squish-sounds-effects | EZduzziteh | CC0 |
@@ -43,7 +44,7 @@ one of them and is the one we use.
 | `corgi/music/space-shooter` | https://opengameart.org/node/146468 | HydroGene | CC0 |
 | `corgi/music/arplands` | https://opengameart.org/node/192583 | LordZintick | CC0 |
 | `corgi/music/elevator` | https://opengameart.org/node/86540 | You're Perfect Studio | CC0 (among others) |
-| `corgi/music/push-ahead` | https://opengameart.org/node/123082 | Centurion_of_war | CC-BY 4.0 / CC0 |
+| `corgi/music/push-ahead` | https://opengameart.org/node/123082 | Centurion_of_war | CC0 (page offers CC-BY 4.0 or CC0; taken under CC0, checked 2026-10-22) |
 | `corgi/music/battle-loop` | https://opengameart.org/content/8-bit-battle-loop | Wolfgang_ | CC0 |
 | `corgi/music/perces` | https://opengameart.org/content/perces | poinl | CC0 |
 
