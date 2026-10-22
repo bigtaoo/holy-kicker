@@ -31,7 +31,7 @@ import { BoardUi, type FetchBoard } from './boardPanel';
 import { ChallengeUi, type ChallengeLobby } from './challengePanel';
 import { consentCard, watched } from './privacyUi';
 import { redrawn, reminderCard } from './reminders';
-import { COLORS, fit, label, panel } from './widgets';
+import { COLORS, fit, label, oneDot, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
 // chests, the monk on stage with the relic to play with at his feet and PLAY under them, round
@@ -152,7 +152,7 @@ export class LobbyScreen implements Screen {
       this.change({ ...this.save, dice: rollDice(Math.random) });
       this.relayout();
     };
-    this.view.addChild(topBar(f.w, this.save, this.names.shown(this.save), this.icons, {
+    const bar = this.view.addChild(topBar(f.w, this.save, this.names.shown(this.save), this.icons, {
       reroll,
       monks: () => {
         this.monksOpen = true;
@@ -172,7 +172,7 @@ export class LobbyScreen implements Screen {
     else this.shopTab(f.w, f.h, top);
     // a new player's next step before chapter 1 is cleared: an arrow bobbing over its tab (lobbyHint.ts)
     const hint = hintTab(this.save, Date.now(), this.tab);
-    this.view.addChild(tabBar(f.w, f.h, this.save, this.tab, this.icons, {
+    const tabs = this.view.addChild(tabBar(f.w, f.h, this.save, this.tab, this.icons, {
       locked: (lock) => this.showToast(lockText(lock)),
       select: (tab, save) => {
         if (save !== this.save) this.change(save);
@@ -181,7 +181,10 @@ export class LobbyScreen implements Screen {
         this.relayout();
       },
     }, nextStep(this.save, Date.now())));
-    this.hint = hint ? hintArrow(f.w, f.h, hint) : null;
+    // one red dot at a time: the hinted tab's, else what is on this tab, then the tab bar, then the monk
+    const content = this.view.children.slice(this.view.getChildIndex(bar) + 1, this.view.getChildIndex(tabs));
+    oneDot(hint ? [tabs, ...content, bar] : [...content, tabs, bar]);
+    this.hint = hint ? hintArrow(f.w, f.h, this.save, hint) : null;
     if (this.hint) this.view.addChild(this.hint);
     // the consent card waits at the foot of the lobby, under every panel, until it is answered
     const privacy = watched(this.actions.settings.privacy, () => this.relayout());
@@ -221,6 +224,13 @@ export class LobbyScreen implements Screen {
         setShake: (on) => {
           set.setShake(on);
           this.relayout();
+        },
+        haptics: set.haptics && {
+          on: set.haptics.on,
+          set: (on) => {
+            set.haptics!.set(on);
+            this.relayout();
+          },
         },
         close: () => {
           this.settingsOpen = false;
@@ -397,7 +407,7 @@ export class LobbyScreen implements Screen {
     this.figureRig = look.rig;
     this.figure = new LobbyFigure(look.rig, Math.max(160, Math.min(440, feet - cardBottom - 60)));
     this.figure.view.position.set(w / 2, feet);
-    const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id), (text) => this.showToast(text));
+    const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id));
     relics.position.set(w / 2, relicTop);
     this.view.addChild(this.figure.view, relics);
     if (open) {

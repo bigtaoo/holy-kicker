@@ -149,7 +149,7 @@ export function topBar(w: number, save: SaveData, shown: string, icons: IconShee
   avatar.on('pointertap', a.monks);
   // the name and level roll a new name, the die next to it says so
   const who = new Container();
-  const name = fit(label(shown, 48, COLORS.text, { align: 'left' }), 290);
+  const name = fit(label(shown, 48, COLORS.text, { align: 'left' }), 290, 60);
   name.anchor.set(0, 0.5);
   name.position.set(160, TOP_H / 2 - 26);
   const level = label(t('lobby.level', { level: save.level }), 48, COLORS.dim);
@@ -200,11 +200,17 @@ export interface TabBarActions {
  * The five tabs along the bottom: picture over name, the open one raised in saffron. While a new
  * player's arrow points somewhere (`hint`), only that tab keeps its dot, so there is one next step.
  */
+/** The tabs in the bar: the Codex only once it opens (a new player has enough to look at). */
+function shownTabs(save: SaveData): Tab[] {
+  return TABS.filter((tab) => tab !== 'codex' || !tabLock(save, tab));
+}
+
 export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons: IconSheet, a: TabBarActions, hint: Tab | null = null): Container {
   const c = new Container();
-  const tw = w / TABS.length;
+  const tabs = shownTabs(save);
+  const tw = w / tabs.length;
   c.addChild(bar(w, h - TAB_H, TAB_H + BLEED, h - TAB_H + 3, true));
-  TABS.forEach((tab, i) => {
+  tabs.forEach((tab, i) => {
     const lock = tabLock(save, tab);
     const active = tab === current;
     const cell = new Container();
@@ -245,9 +251,10 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
 }
 
 /** A saffron arrow over `tab`'s cell, pointing down at it; the lobby bobs it by its pivot. */
-export function hintArrow(w: number, h: number, tab: Tab): Container {
+export function hintArrow(w: number, h: number, save: SaveData, tab: Tab): Container {
   const c = new Container();
-  c.position.set((w / TABS.length) * (TABS.indexOf(tab) + 0.5), h - TAB_H + 15);
+  const tabs = shownTabs(save);
+  c.position.set((w / tabs.length) * (tabs.indexOf(tab) + 0.5), h - TAB_H + 15);
   c.addChild(new Graphics()
     .poly([-24, -95, 24, -95, 24, -50, 52, -50, 0, 5, -52, -50, -24, -50]).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 7 }));
   c.eventMode = 'none';

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeViewport, DESIGN_H, DESIGN_W, ZOOM_AT_WIDEST } from './viewport';
+import { computeViewport, DESIGN_H, DESIGN_W, wantsUpright, ZOOM_AT_WIDEST } from './viewport';
 
 describe('computeViewport', () => {
   it('shows exactly the design size on a 9:16 phone', () => {
@@ -49,5 +49,13 @@ describe('computeViewport', () => {
     expect(v.playW).toBe(100);
     expect(v.playH).toBeLessThan(1000);
     expect(v.playY).toBeGreaterThan(0);
+  });
+});
+
+describe('wantsUpright', () => {
+  it('asks only a touch-only device held sideways', () => {
+    expect(wantsUpright(844, 390, true)).toBe(true);
+    expect(wantsUpright(390, 844, true)).toBe(false);
+    expect(wantsUpright(1920, 1080, false)).toBe(false);
   });
 });

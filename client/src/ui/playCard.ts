@@ -1,11 +1,10 @@
 import { Container, Graphics } from 'pixi.js';
-import { RELIC_IDS, type RelicId } from '@hk/engine';
+import type { RelicId } from '@hk/engine';
 import { t } from '../i18n';
 import { unlockedRelics } from '../meta/progress';
 import type { SaveData } from '../meta/save';
-import { relicChapter } from '../meta/unlocks';
 import { THEME } from '../theme';
-import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
+import { iconSprite, type IconSheet } from './buildBar';
 import { COLORS, label } from './widgets';
 
 // The Play tab's pieces around the chapter card (LobbyScreen.playTab, chapterCard.ts): its
@@ -28,9 +27,9 @@ export const CARD_STROKE = { stroke: { color: COLORS.outline, width: 10 } };
 export const RELIC_ROW_H = 250;
 
 /**
- * The relic for the next run, top at 0: its name, then one badge per relic (locked ones dimmed).
+ * The relic for the next run, top at 0: its name, then one badge per relic the player has.
  */
-export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId) => void, toast: (text: string) => void): Container {
+export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId) => void): Container {
   const row = new Container();
   const chosen = save.relic;
   // straight on the courtyard, outlined like the HUD's words, so the picture shows between the badges
@@ -38,26 +37,17 @@ export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId)
   head.y = 48;
   const open = unlockedRelics(save);
   row.addChild(head);
-  RELIC_IDS.forEach((id, i) => {
-    const unlocked = open.includes(id);
+  // only the relics the player has: the locked ones wait for the results screen that opens them
+  open.forEach((id, i) => {
     const c = new Container();
-    c.position.set((i - (RELIC_IDS.length - 1) / 2) * (RELIC_R * 2 + 40), 160);
-    c.addChild(new Graphics().circle(0, 0, RELIC_R).fill(unlocked ? BADGE.fill : BADGE.off)
+    c.position.set((i - (open.length - 1) / 2) * (RELIC_R * 2 + 40), 160);
+    c.addChild(new Graphics().circle(0, 0, RELIC_R).fill(BADGE.fill)
       .stroke({ color: id === chosen ? COLORS.saffron : COLORS.outline, width: id === chosen ? 10 : 6 }));
     const icon = iconSprite(icons, id, RELIC_R * 1.5);
-    if (icon) {
-      if (!unlocked) lockedLook(icon);
-      c.addChild(icon);
-    }
-    if (!unlocked) {
-      const l = lockIcon(icons, 48);
-      l.position.set(RELIC_R * 0.6, RELIC_R * 0.6);
-      c.addChild(l);
-    }
+    if (icon) c.addChild(icon);
     c.eventMode = 'static';
     c.cursor = 'pointer';
     c.on('pointertap', () => {
-      if (!unlocked) return toast(t('tab.unlockChapter', { n: relicChapter(id) }));
       if (id !== chosen) select(id);
     });
     row.addChild(c);

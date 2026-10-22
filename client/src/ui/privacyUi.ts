@@ -17,8 +17,12 @@ const FADE = 0.6;
 /** The toast's centre from the top of the frame, below the wave counter and the pause button. */
 const TOAST_Y = 480;
 
-/** Shows the one-time data toast over whatever is on screen; it cannot be tapped and goes by itself. */
-export function privacyToast(app: Application, insets: () => Insets): void {
+/**
+ * Shows the one-time data toast over whatever is on screen; it cannot be tapped and goes by itself.
+ * Its clock stands still while `hold` says so (the first run's move hint, which it would cover);
+ * `shown` runs once, when it starts to fade in.
+ */
+export function privacyToast(app: Application, insets: () => Insets, hold: () => boolean, shown: () => void): void {
   const view = new Container();
   view.eventMode = 'none';
   const text = label(t('privacy.toast'), 48, COLORS.text, { wordWrap: true, wordWrapWidth: 920, breakWords: true });
@@ -27,7 +31,15 @@ export function privacyToast(app: Application, insets: () => Insets): void {
   layer.addChild(view);
   let age = 0;
   const tick = () => {
+    if (hold()) {
+      // still hidden, or faded back out if the hint came up after it
+      age = Math.min(age, TOAST_AFTER);
+      layer.alpha = 0;
+      return;
+    }
+    const before = age;
     age += app.ticker.deltaMS / 1000;
+    if (before <= TOAST_AFTER && age > TOAST_AFTER) shown();
     const left = TOAST_AFTER + TOAST_FOR - age;
     if (left <= 0) {
       app.ticker.remove(tick);

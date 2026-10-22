@@ -230,6 +230,7 @@ interface Wx {
   /** The system is short of memory; `level` is given on Android only (5, 10 or 15, worse as it grows). */
   onMemoryWarning?: (cb: (r?: { level?: number }) => void) => void;
   /** `level` is 1 to 100 (a string on some Android base libraries); missing on PC WeChat. */
+  vibrateShort?: (opts: { type: 'heavy' | 'medium' | 'light'; fail?: () => void }) => void;
   getBatteryInfo?: (opts: { success: (r: { level: number | string; isCharging: boolean }) => void; fail?: () => void }) => void;
   getWindowInfo(): WxWindowInfo;
   /** The menu capsule (… and close) WeChat draws over the game's top-right corner. */

@@ -260,7 +260,23 @@ export function backdrop(w: number, h: number, alpha = 0.6): Graphics {
 /** A red dot that marks something to collect, at (x, y). */
 export function dot(x: number, y: number): Graphics {
   // a white ring inside the outline, so the red still reads on a red picture (the pouch, the chests)
-  return new Graphics().circle(x, y, 22).fill(COLORS.outline).circle(x, y, 18.5).fill(0xffffff).circle(x, y, 13.5).fill(COLORS.danger);
+  const d = new Graphics().circle(x, y, 22).fill(COLORS.outline).circle(x, y, 18.5).fill(0xffffff).circle(x, y, 13.5).fill(COLORS.danger);
+  d.label = 'dot';
+  return d;
+}
+
+/** Keeps the first shown red dot (dot()) under `groups`, searched in order, and hides the others: one ask at a time. */
+export function oneDot(groups: readonly Container[]): void {
+  let kept = false;
+  const walk = (c: Container) => {
+    if (!c.visible) return;
+    if (c.label === 'dot') {
+      if (kept) c.visible = false;
+      kept = true;
+    }
+    for (const child of c.children) walk(child);
+  };
+  groups.forEach(walk);
 }
 
 /** A horizontal bar `h` tall centred on (0, 0), filled to `share`; `set` rescales the fill, so

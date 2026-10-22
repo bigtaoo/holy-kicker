@@ -114,8 +114,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   cloud?.auto();
   platform.onHide(() => cloud?.auto());
   if (privacy?.noticeDue()) {
-    privacyToast(app, () => platform.safeInsets());
-    privacy.noticeShown();
+    privacyToast(app, () => platform.safeInsets(), () => shell.teachingMove, () => privacy.noticeShown());
   }
   return { app, shell, quality, device, cloud };
 }

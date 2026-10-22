@@ -122,6 +122,16 @@ function passiveLines(id: PassiveId, level: number): string[] {
   );
 }
 
+/**
+ * The one-time line that explains the small badge of what an item evolves with: the first
+ * card a player sees with one (RunWatch keeps the once).
+ */
+export function pairsLine(text: CardText): string {
+  const id = text.pairs[0];
+  const name = isRelic(id) ? t(`relic.${id}.name`) : id in SPELL_LEVELS ? t(`spell.${id as SpellId}.name`) : t(`passive.${id as PassiveId}.name`);
+  return t('card.pairs', { name });
+}
+
 function isRelic(id: string): id is RelicId {
   return RELIC_IDS.includes(id as RelicId);
 }

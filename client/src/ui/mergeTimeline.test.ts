@@ -30,3 +30,13 @@ describe('merge timeline', () => {
     expect(COPIES).toBe(5);
   });
 });
+
+describe('reduced motion', () => {
+  it('softens the white flash and keeps the timing', () => {
+    const calm = mergeTiming(false, true);
+    const burst = marks(calm).burst;
+    expect(mergeFrame(burst, calm).flash).toBeCloseTo(0.3);
+    expect(mergeFrame(burst, mergeTiming(false)).flash).toBe(1);
+    expect(marks(calm).counted).toBe(marks(mergeTiming(false)).counted);
+  });
+});

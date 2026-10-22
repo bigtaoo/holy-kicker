@@ -11,6 +11,7 @@ import { cloudRows } from './cloudRows';
 import { languagePanel } from './languagePanel';
 import type { ReminderUi } from './reminders';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
+import { toggle } from './toggle';
 
 // The settings panel, opened from the lobby's gear: language (a button to the picker,
 // languagePanel.ts) beside the screen shake on or off, the sound effects' and the
@@ -30,6 +31,8 @@ export interface SettingsActions {
   setQuality(mode: QualityMode): void;
   shake(): boolean;
   setShake(on: boolean): void;
+  /** Vibration on level-ups and hits; unset where the device cannot buzz. */
+  haptics?: { on(): boolean; set(on: boolean): void };
   /** Where the game talks to its backend, the player's privacy answer (net/privacyChoice.ts); null offline. */
   privacy: PrivacyUi | null;
   /** Signing in to the host's account from here (Game Center); never offered elsewhere. */
@@ -56,7 +59,7 @@ export async function keepLanguage(kv: KeyValueStore, locale: Locale): Promise<v
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders' | 'cloud'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders' | 'cloud'> & { canVibrate: boolean },
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: (locale) => void keepLanguage(kv, locale).then(() => o.setLanguage(locale)),
@@ -77,6 +80,7 @@ export function storedSettings(
     },
     shake: () => loadSettings(kv).shake,
     setShake: (shake) => updateSettings(kv, { shake }),
+    haptics: o.canVibrate ? { on: () => loadSettings(kv).haptics, set: (haptics) => updateSettings(kv, { haptics }) } : undefined,
     privacy: o.privacy,
     account: o.account,
     adPrivacy: o.adPrivacy,
@@ -186,30 +190,6 @@ function reminderRow(r: ReminderUi, add: (c: Container, step: number) => void, h
   add(toggle(state === 'on', ROW + 160, (on) => void r.set(on)), 140);
 }
 
-/** An on/off switch, `w` wide: a pill with its knob at the right and saffron when on. */
-function toggle(on: boolean, w: number, set: (on: boolean) => void): Container {
-  const c = new Container();
-  const pw = 200;
-  const ph = 96;
-  const knob = ph / 2 - 12;
-  c.addChild(new Graphics()
-    .roundRect(-pw / 2, -ph / 2, pw, ph, ph / 2)
-    .fill(on ? COLORS.saffron : COLORS.panelLocked)
-    .stroke({ color: COLORS.outline, width: 6 })
-    .circle(on ? pw / 2 - ph / 2 : -pw / 2 + ph / 2, 0, knob)
-    .fill(on ? COLORS.text : COLORS.dim)
-    .stroke({ color: COLORS.outline, width: 6 }));
-  // the whole half row is the hit area
-  c.hitArea = { contains: (px: number, py: number) => Math.abs(px) <= w / 2 && Math.abs(py) <= 60 };
-  c.eventMode = 'static';
-  c.cursor = 'pointer';
-  c.on('pointertap', () => {
-    playTap();
-    set(!on);
-  });
-  return c;
-}
-
 /** The language (a button to the picker) and, beside it, the screen shake as a switch, each
  *  under a heading of its own (the shake's says whether it is on). */
 function topRow(view: Container, w: number, h: number, a: SettingsActions): { heads: Container; row: Container } {
@@ -252,6 +232,11 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   const top = topRow(view, w, h, a);
   add(top.heads, 90);
   add(top.row, 150);
+  if (a.haptics) {
+    const on = a.haptics.on();
+    heading(t(on ? 'settings.hapticsOn' : 'settings.hapticsOff'));
+    add(toggle(on, ROW + 160, (v) => a.haptics!.set(v)), 140);
+  }
 
   const volume = a.volume();
   heading(volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }));
