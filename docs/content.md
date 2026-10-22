@@ -95,8 +95,8 @@ Unlocked one per chapter clear (the cuju ball is the starter).
 |---|---|---|---|---|
 | Cuju ball | Cuju Ball / 蹴鞠 | Kicked, bounces between 3 targets (implemented) | Arhat Legs | **Meteor Ball** / 流星鞠: splits into 3 on every bounce |
 | Staff | Staff / 禅杖 | Close 180° sweep with knockback (implemented) | Iron Head | **Ruyi Staff** / 如意禅杖: sweep grows to a full circle and longer reach (implemented) |
-| Wooden fish | Wooden Fish / 木鱼 | Each tap sends a sound ring around the hero (implemented) | Calm Mind | **Stunning Bell** / 晨钟: every 4th ring stuns for 1 s (implemented) |
-| Prayer beads | Prayer Beads / 念珠 | Beads orbit the hero, hit on contact (implemented) | Wisdom Eye | **108 Beads** / 百八念珠: two rings, opposite directions (implemented) |
+| Wooden fish | Wooden Fish / 木鱼 | Each tap sends a sound ring around the hero (implemented) | Alms Rice | **Stunning Bell** / 晨钟: every 4th ring stuns for 1 s (implemented) |
+| Prayer beads | Prayer Beads / 念珠 | Beads orbit the hero, hit on contact (implemented) | Calm Mind | **108 Beads** / 百八念珠: two rings, opposite directions (implemented) |
 | Alms bowl | Alms Bowl / 钵盂 | Thrown, returns, drags small mobs along (implemented) | Karma | **Bottomless Bowl** / 无底钵: swallows small mobs, drops their XP at once (implemented) |
 
 Unlock order: ball (start), staff (ch1), wooden fish (ch2), beads (ch3), bowl (ch4), so the
@@ -117,7 +117,7 @@ first clear already changes how the game plays.
   `engine/systems/fish.ts`): the hero taps when a target is within 90 % of the reach; a ring
   grows from where he stood at 1500 units/s to its reach (360 → 460, awakened 520) and hits each
   enemy it passes once at 150 → 280 %, the elite and the boss at full relic damage, with no
-  knockback. The Stunning Bell (with Calm Mind) makes every 4th ring stun the mobs and the elite
+  knockback. The Stunning Bell (with Alms Rice) makes every 4th ring stun the mobs and the elite
   it passes for 1 s (they stand frozen; the boss is not stunned). A mob it kills respawns
   unstunned, so the stun matters on the tougher late waves and the elite.
 - Balance (`npm run balance -- 10 skilled casual fish`): like the staff, the fish only reaches the
@@ -130,7 +130,7 @@ first clear already changes how the game plays.
   and hit each enemy a bead touches (within 85 of it) once per pass, at 70 → 120 %, the elite and
   the boss at full relic damage, with no knockback. The ring covers 65–235 from the hero, where
   the horde (70), the boss (150) and the elite (220) stop, so the hero never swings: he only has
-  to stand close. 108 Beads (with Wisdom Eye) adds a second ring of 6: the inner one at 115, the
+  to stand close. 108 Beads (with Calm Mind) adds a second ring of 6: the inner one at 115, the
   outer at 250 turning the other way (gold beads), reaching 335.
 - Balance (`npm run balance -- 10 skilled casual beads`): with the bots closing in like for the
   staff, a chapter takes 804–808 s (ball 803–829, fish 803–805); bosses fall in 25–60 s.
@@ -182,7 +182,7 @@ The engine already has four of these shapes (`nova`, `meteor`, `field`, `chain`)
 | Golden Bell | Golden Bell / 金钟罩 | Blocks one hit every 8 s; breaking it blasts (`nova`) | Iron Head | **Golden Body** / 金身: 2 s of immunity after it breaks, larger blast |
 | Flying Cymbals | Flying Cymbals / 飞钹 | Two cymbals fly straight across the screen, pierce | Arhat Legs | **Cymbal Wheel** / 钹轮: cymbals circle the hero permanently |
 | Lotus Steps *(sutra)* | Lotus Steps / 莲步 | Walking drops lotus seeds that burst when stepped on | Karma | **Lotus Path** / 步步生莲: every step blooms, and blooms pull XP |
-| Halo Beam *(sutra)* | Halo Beam / 佛光 | A beam rotates around the hero | Calm Mind | **Boundless Light** / 普照: three beams |
+| Halo Beam *(sutra)* | Halo Beam / 佛光 | A beam rotates around the hero | Focus | **Boundless Light** / 普照: three beams |
 | Lion's Roar *(sutra)* | Lion's Roar / 狮子吼 | Cone shout at the nearest enemy, pushes back | Focus | **Thunder Roar** / 狮王吼: full circle, shatters bullets |
 
 Lotus Steps rewards moving and Halo Beam rewards standing still, so both fit Stillness.
@@ -228,13 +228,13 @@ Lotus Steps rewards moving and Halo Beam rewards standing still, so both fit Sti
 | Arhat Legs | Arhat Legs / 罗汉腿 | Move speed +8 % |
 | Wisdom Eye | Wisdom Eye / 慧眼 | Area +10 % |
 | Alms Rice | Alms Rice / 斋饭 | Regenerate 0.4 % health per second |
-| Wrath | Wrath / 怒目 | Crit chance +5 % |
+| Wrath | Wrath / 怒目 | Crit chance +7 % (was 5 until 2026-10-22) |
 | Focus | Focus / 定力 | Duration +10 %, guard after a hit +20 % (implemented) |
-| Karma | Karma / 善缘 | XP +8 %, pickup radius +15 % (implemented) |
+| Karma | Karma / 善缘 | XP +12 %, pickup radius +20 % (8 and 15 until 2026-10-22) |
 
 Seven are in the pool from the start; Focus comes from a sutra. Karma was planned as a sutra
 unlock but is in the pool from the start, since the alms bowl awakens with it (2026-10-03).
-Experience gains keep their fraction (`Player.xpPart`), so +8 % counts on 1-point gems.
+Experience gains keep their fraction (`Player.xpPart`), so +12 % counts on 1-point gems.
 
 ## Shrines (waves 5, 15, 25, 35, 45)
 

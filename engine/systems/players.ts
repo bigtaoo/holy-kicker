@@ -1,7 +1,7 @@
 import { BALL, HARD, HERO, HURT, ladder, LADDER, rampChapter, ZEN } from '../config';
 import type { HurtSource, SimEvent } from '../events';
 import { MAG_FULL, type PlayerCommand } from '../input';
-import { dist2, FP } from '../math/fixed';
+import { dist, dist2, FP } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import { underground, type Player, type SimState } from '../state';
 import { bowlLevel, pickCard, relicCooldown, relicLevel, relicPct, stat } from './build';
@@ -65,6 +65,9 @@ export function movePlayers(s: SimState, events: SimEvent[]): void {
     p.x += p.vx;
     p.y += p.vy;
     p.moving = p.moveMag > HERO.moveMag;
+    p.live++;
+    if (p.moving) p.moved++;
+    p.travel += dist(p.vx, p.vy);
     // Stillness: standing still charges the relic, moving drops it at once
     const was = p.still;
     p.still = p.moving ? 0 : Math.min(ZEN.enter, p.still + 1);

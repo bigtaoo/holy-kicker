@@ -85,13 +85,13 @@ describe('prayer beads', () => {
     expect(dist(s.elites[0].x - p.x, s.elites[0].y - p.y)).toBeLessThanOrEqual(225_000);
   });
 
-  it('awaken with Wisdom Eye into two rings turning opposite ways', () => {
+  it('awaken with Calm Mind into two rings turning opposite ways', () => {
     const e = quiet();
     const s = e.state;
     const p = s.players[0];
     expect(cardPool(p)[0]).toEqual({ kind: 'relic', id: 'beads' });
     p.relic = MAX_LEVEL;
-    p.passives = [{ id: 'eye', level: 1 }];
+    p.passives = [{ id: 'calm', level: 1 }];
     expect(evolutions(p)).toEqual([{ kind: 'evolve', id: 'beads' }]);
     p.offer = evolutions(p);
     e.step([{ ...cmd(e), pick: 0 }]);

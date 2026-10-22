@@ -101,3 +101,38 @@ export function formatPicks(rows: { m: RunMeta; r: RunStats }[]): string[] {
   return ['card               offered  taken  rate  runs', ...list.map(([k, c]) =>
     `${k.padEnd(18)} ${String(c.offered).padStart(7)} ${String(c.took).padStart(6)} ${String(Math.round((100 * c.took) / c.offered)).padStart(4)}% ${String(c.runs).padStart(5)}`)];
 }
+
+/**
+ * Each spell, passive and evolution in the runs' final builds: runs ending with it, how many
+ * were won, and the wave they reached on average, against the runs without it. Runs still in
+ * play when the replay ends (a quit) count as not won. `group` splits the runs, e.g. by chapter
+ * band ('ch1-2'); rows are by group, then most runs first.
+ */
+export function formatBuilds(rows: { m: RunMeta; r: RunStats }[], group: (m: RunMeta) => string = () => 'all'): string[] {
+  const out = ['group   card               runs  won  win%  wave | without: runs win%  wave'];
+  const live = rows.filter((x) => !x.m.earlier && x.r.build);
+  const groups = [...new Set(live.map((x) => group(x.m)))].sort();
+  for (const g of groups) {
+    const runs = live.filter((x) => group(x.m) === g);
+    const cards = new Map<string, Set<number>>();
+    runs.forEach(({ r }, i) => {
+      const add = (k: string) => (cards.get(k) ?? cards.set(k, new Set()).get(k)!).add(i);
+      for (const sp of r.build.spells) { add(`spell:${sp.id}`); if (sp.evolved) add(`evolve:${sp.id}`); }
+      for (const ps of r.build.passives) add(`passive:${ps.id}`);
+      if (r.build.awakened) add(`evolve:${r.build.relic}`);
+    });
+    const tally = (idx: number[]) => {
+      const won = idx.filter((i) => runs[i].r.outcome === 'won').length;
+      return { n: idx.length, won, rate: idx.length ? Math.round((100 * won) / idx.length) : 0, wave: avg(idx.map((i) => runs[i].r.wave)) };
+    };
+    for (const [k, set] of [...cards].sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0]))) {
+      const w = tally([...set]);
+      const wo = tally(runs.map((_, i) => i).filter((i) => !set.has(i)));
+      out.push(
+        `${g.padEnd(7)} ${k.padEnd(18)} ${String(w.n).padStart(4)} ${String(w.won).padStart(4)} ${String(w.rate).padStart(4)}% ${String(w.wave).padStart(5)}` +
+        ` | ${String(wo.n).padStart(13)} ${String(wo.rate).padStart(4)}% ${String(wo.wave).padStart(5)}`,
+      );
+    }
+  }
+  return out;
+}

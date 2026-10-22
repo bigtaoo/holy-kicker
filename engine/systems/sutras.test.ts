@@ -65,7 +65,7 @@ describe('sutras', () => {
   });
 
   it('pair the new spells for evolution', () => {
-    expect([EVOLVE_PAIR.lotus, EVOLVE_PAIR.halo, EVOLVE_PAIR.roar]).toEqual(['karma', 'calm', 'focus']);
+    expect([EVOLVE_PAIR.lotus, EVOLVE_PAIR.halo, EVOLVE_PAIR.roar]).toEqual(['karma', 'focus', 'focus']);
     const p = newPlayer(0, 0, 0);
     learn(p, 'roar', false, MAX_LEVEL);
     p.passives = [{ id: 'focus', level: 1 }];

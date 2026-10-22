@@ -370,9 +370,9 @@ export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
   legs: { stat: 'speed', perLevel: 8 },
   eye: { stat: 'area', perLevel: 10 },
   rice: { stat: 'regen', perLevel: 4 },
-  wrath: { stat: 'crit', perLevel: 5 },
+  wrath: { stat: 'crit', perLevel: 7 },
   // experience and the gem magnet's radius
-  karma: { stat: 'xp', perLevel: 8, also: { stat: 'magnet', perLevel: 15 } },
+  karma: { stat: 'xp', perLevel: 12, also: { stat: 'magnet', perLevel: 20 } },
   // how long spells last (seeds, rings, prints, cymbal flights) and the untouchable time after a blow
   focus: { stat: 'duration', perLevel: 10, also: { stat: 'guard', perLevel: 20 } },
 };
@@ -380,11 +380,12 @@ export const PASSIVES: Readonly<Record<PassiveId, PassiveDef>> = {
 /**
  * Evolutions (docs/content.md): a spell at MAX_LEVEL plus its paired passive at any level
  * puts the evolved form on the next level-up as a guaranteed card; the relic awakens the same
- * way. The evolved row replaces the level-5 row.
+ * way. The evolved row replaces the level-5 row. Each passive evolves two things, so none is
+ * worth taking for its pairs alone (2026-10-22: the fish to Alms Rice, the beads to Calm Mind, Halo to Focus).
  */
 export const EVOLVE_PAIR: Readonly<Record<SpellId | RelicId, PassiveId>> = {
-  ball: 'legs', staff: 'iron', fish: 'calm', beads: 'eye', bowl: 'karma', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
-  lotus: 'karma', halo: 'calm', roar: 'focus', talisman: 'calm', bomb: 'eye', knives: 'wrath',
+  ball: 'legs', staff: 'iron', fish: 'rice', beads: 'calm', bowl: 'karma', palm: 'eye', bolt: 'wrath', incense: 'rice', bell: 'iron', cymbal: 'legs',
+  lotus: 'karma', halo: 'focus', roar: 'focus', talisman: 'calm', bomb: 'eye', knives: 'wrath',
 };
 
 /** The awakened cuju (Meteor Ball): every bounce also sends two splinters at other targets. */

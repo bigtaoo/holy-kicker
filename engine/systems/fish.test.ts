@@ -85,12 +85,12 @@ describe('wooden fish', () => {
     expect(s.mobs[0].x).toBeLessThan(x);
   });
 
-  it('levels with the cards and awakens with Calm Mind', () => {
+  it('levels with the cards and awakens with Alms Rice', () => {
     const e = quiet();
     const p = e.state.players[0];
     expect(cardPool(p)[0]).toEqual({ kind: 'relic', id: 'fish' });
     p.relic = MAX_LEVEL;
-    p.passives = [{ id: 'calm', level: 1 }];
+    p.passives = [{ id: 'rice', level: 1 }];
     expect(evolutions(p)).toEqual([{ kind: 'evolve', id: 'fish' }]);
     p.offer = evolutions(p);
     e.step([{ ...cmd(e), pick: 0 }]);
