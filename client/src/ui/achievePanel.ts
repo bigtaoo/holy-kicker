@@ -68,7 +68,7 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
     all.y = top + 215;
     c.addChild(all);
   } else {
-    const done = label(t('achieve.claimed', { n: achievementsClaimed(save), total: goals.length }), 44, COLORS.dim);
+    const done = label(t('achieve.claimed', { n: achievementsClaimed(save), total: goals.length }), 48, COLORS.dim);
     done.y = top + 215;
     c.addChild(done);
   }
@@ -78,7 +78,7 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
     const state = achievementState(save, i);
     const row = new Container();
     row.y = top + ROWS_TOP + k * ROW_H;
-    const name = fit(label(goalText(g), 46, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
+    const name = fit(label(goalText(g), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
     const have = Math.min(g.n, achievementProgress(save, g.kind));
@@ -87,19 +87,19 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
     row.addChild(name, bar.view);
     // a tier is a rank, not a count
     if (g.kind !== 'tier') {
-      const count = label(g.kind === 'kills' ? `${formatAmount(have)}/${formatAmount(g.n)}` : `${have}/${g.n}`, 42, COLORS.dim);
+      const count = label(g.kind === 'kills' ? `${formatAmount(have)}/${formatAmount(g.n)}` : `${have}/${g.n}`, 48, COLORS.dim);
       count.anchor.set(0, 0.5);
       count.position.set(-20, 40);
       row.addChild(count);
     }
     if (state === 'open') {
-      const pays = label(t('achieve.reward', { jade: g.jade }), 44, COLORS.jade);
+      const pays = label(t('achieve.reward', { jade: g.jade }), 48, COLORS.jade);
       pays.x = 320;
       row.addChild(pays);
     } else {
       const on = state === 'ready';
       const b = button(on ? t('achieve.claim', { jade: g.jade }) : t('tasks.done'), 270, 110, () => on && a.claim(i), {
-        fill: on ? COLORS.saffron : COLORS.panelLocked, textFill: on ? COLORS.text : COLORS.dim, size: 46,
+        fill: on ? COLORS.saffron : COLORS.panelLocked, textFill: on ? COLORS.text : COLORS.dim, size: 48,
       });
       b.x = 305;
       row.addChild(b);
@@ -108,7 +108,7 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
   });
 
   const y = top + ROWS_TOP + PER_PAGE * ROW_H - 30;
-  const at = label(t('achieve.page', { page: p + 1, pages }), 44, COLORS.dim);
+  const at = label(t('achieve.page', { page: p + 1, pages }), 48, COLORS.dim);
   at.y = y;
   c.addChild(at);
   for (const dir of [-1, 1]) {

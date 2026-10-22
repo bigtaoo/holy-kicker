@@ -8,7 +8,7 @@ import { COLORS, button, label } from './widgets';
 // under them saying how the last try went. The rows redraw themselves as the sync answers.
 
 /** The buttons and two lines of the hint. */
-const HEIGHT = 110 + 20 + 2 * 50 + 30;
+const HEIGHT = 110 + 20 + 2 * 60 + 30;
 
 /** The rows, `width` wide and `height` tall (centred on the view) whatever they say, so the panel never moves. */
 export function cloudRows(cloud: CloudUi, width: number): { view: Container; height: number } {
@@ -20,13 +20,13 @@ export function cloudRows(cloud: CloudUi, width: number): { view: Container; hei
     const code = cloud.code();
     const busy = cloud.busy();
     const left = code
-      ? button(code, bw, 110, () => cloud.copy?.(), { fill: COLORS.panelLocked, size: 44 })
-      : button(t('cloud.backup'), bw, 110, () => !busy && cloud.backup(), { fill: COLORS.saffron, textFill: COLORS.outline, size: 44 });
-    const right = button(t('cloud.restore'), bw, 110, () => !busy && cloud.restore(), { fill: COLORS.panelLocked, size: 44 });
+      ? button(code, bw, 110, () => cloud.copy?.(), { fill: COLORS.panelLocked, size: 48 })
+      : button(t('cloud.backup'), bw, 110, () => !busy && cloud.backup(), { fill: COLORS.saffron, textFill: COLORS.outline, size: 48 });
+    const right = button(t('cloud.restore'), bw, 110, () => !busy && cloud.restore(), { fill: COLORS.panelLocked, size: 48 });
     left.position.set(-(bw + 24) / 2, -HEIGHT / 2 + 55);
     right.position.set((bw + 24) / 2, -HEIGHT / 2 + 55);
     const status = cloud.status();
-    const line = label(status ? t(`cloud.${status}`) : t(code ? 'cloud.hintCode' : 'cloud.hint'), 40, status === 'failed' || status === 'badCode' || status === 'noSlot' ? COLORS.text : COLORS.dim, style);
+    const line = label(status ? t(`cloud.${status}`) : t(code ? 'cloud.hintCode' : 'cloud.hint'), 48, status === 'failed' || status === 'badCode' || status === 'noSlot' ? COLORS.text : COLORS.dim, style);
     line.y = -HEIGHT / 2 + 110 + 20 + line.height / 2;
     view.addChild(left, right, line);
   };

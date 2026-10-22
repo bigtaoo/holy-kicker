@@ -95,7 +95,7 @@ export class PatrolScene {
     this.sack.addChild(pouch);
 
     this.bubble = new Container();
-    const text = fit(label(t('patrol.full'), 40, COLORS.outline), 220);
+    const text = fit(label(t('patrol.full'), 48, COLORS.outline), 220);
     const bw = text.width + 50;
     this.bubble.addChild(new Graphics()
       .poly([-bw / 2 + 16, 10, -bw / 2 + 40, 30, -bw / 2 - 24, 52]).fill(COLORS.text).stroke({ width: 6, color: COLORS.outline })

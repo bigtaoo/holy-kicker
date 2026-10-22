@@ -107,7 +107,7 @@ export class ChallengeResultsScreen implements Screen {
       c.addChild(l);
     };
     add(t(this.weekly ? 'weekly.title' : 'challenge.title'), 68, COLORS.saffron, 20);
-    add(t('lobby.chapterTitle', { n: this.chapter, name: chapterName(this.chapter) }), 44, COLORS.dim, 95);
+    add(t('lobby.chapterTitle', { n: this.chapter, name: chapterName(this.chapter) }), 48, COLORS.dim, 95);
     const big = label(String(this.waves), 170, COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
     big.y = 230;
     c.addChild(big);
@@ -187,7 +187,7 @@ export class ChallengeResultsScreen implements Screen {
       b.x = (i - (list.length - 1) / 2) * 200;
       b.addChild(new Graphics().circle(0, 0, BADGE_R).fill(lit ? COLORS.jade : COLORS.panelLocked).stroke({ color: COLORS.outline, width: 6 }));
       const n = label(String(m.wave), 60, lit ? COLORS.outline : COLORS.dim);
-      const pay = label(`+${milestonePay(m, this.chapter).copper}`, 44, lit ? COLORS.copper : COLORS.dim);
+      const pay = label(`+${milestonePay(m, this.chapter).copper}`, 48, lit ? COLORS.copper : COLORS.dim);
       pay.y = BADGE_R + 36;
       b.addChild(n, pay);
       row.addChild(b);

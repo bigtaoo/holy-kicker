@@ -152,20 +152,20 @@ function dataRows(
   const share = button(on ? t('settings.shareOn') : t('settings.shareOff'), bw, 110, () => p.set(!on), {
     fill: on ? COLORS.saffron : COLORS.panelLocked,
     textFill: on ? COLORS.outline : COLORS.text,
-    size: 44,
+    size: 48,
   });
-  const policy = button(t('settings.policy'), bw, 110, () => p.openPolicy(), { fill: COLORS.panelLocked, size: 44 });
+  const policy = button(t('settings.policy'), bw, 110, () => p.openPolicy(), { fill: COLORS.panelLocked, size: 48 });
   row.addChild(share, policy);
-  if (n === 3) row.addChild(button(t('settings.adPrivacy'), bw, 110, () => ads.open(), { fill: COLORS.panelLocked, size: 44 }));
+  if (n === 3) row.addChild(button(t('settings.adPrivacy'), bw, 110, () => ads.open(), { fill: COLORS.panelLocked, size: 48 }));
   row.children.forEach((b, i) => (b.x = (i - (n - 1) / 2) * (bw + 24)));
   add(row, 140);
   const id = p.id();
   const style = { wordWrap: true, wordWrapWidth: W - 100, breakWords: true };
-  const notice = label(t('settings.dataNotice'), 42, COLORS.dim, style);
+  const notice = label(t('settings.dataNotice'), 48, COLORS.dim, style);
   if (!id) return add(notice, notice.height + 40);
   add(notice, notice.height + 16);
   // the ID on a line of its own, which copies itself when tapped (players quote it in a problem)
-  const line = label(t('settings.playId', { id }), 42, copyId ? COLORS.text : COLORS.dim, style);
+  const line = label(t('settings.playId', { id }), 48, copyId ? COLORS.text : COLORS.dim, style);
   if (copyId) {
     line.eventMode = 'static';
     line.cursor = 'pointer';
@@ -263,7 +263,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   const mode = a.quality();
   heading(t('settings.quality'));
   add(choices(QUALITY_MODES, (m) => t(`settings.${m}`), mode, (m) => a.setQuality(m)), 140);
-  const hint = label(t(HINT[mode]), 44, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 60, breakWords: true });
+  const hint = label(t(HINT[mode]), 48, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 60, breakWords: true });
   add(hint, hint.height + 30);
 
   if (a.reminders) reminderRow(a.reminders, add, heading);
@@ -280,7 +280,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
     // no room for a row of its own on a 16:9 phone, and it is rarely there: Game Center signs
     // most players in by itself
     const row = new Container();
-    const gc = button(t('settings.gameCenter'), 400, 110, () => a.account.signIn(), { fill: COLORS.panelLocked, size: 44 });
+    const gc = button(t('settings.gameCenter'), 400, 110, () => a.account.signIn(), { fill: COLORS.panelLocked, size: 48 });
     gc.x = -210;
     back.x = 210;
     row.addChild(gc, back);

@@ -85,7 +85,7 @@ function text(id: ReminderId): [string, string] {
 export function reminderCard(w: number, y: number, r: ReminderUi): Container {
   const card = new Container();
   card.position.set(w / 2, y);
-  const ask = label(t('remind.offer', { patrol: t('patrol.title') }), 44, COLORS.text, { wordWrap: true, wordWrapWidth: 900, breakWords: true });
+  const ask = label(t('remind.offer', { patrol: t('patrol.title') }), 48, COLORS.text, { wordWrap: true, wordWrapWidth: 900, breakWords: true });
   const h = ask.height + 210;
   card.addChild(panel(1000, h));
   ask.y = -h / 2 + 30 + ask.height / 2;

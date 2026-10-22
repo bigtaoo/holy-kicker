@@ -49,7 +49,7 @@ export function watchButton(top: TopRun, st: WeeklyBoardState, y: number, watch:
   if (!top.replay) return null;
   const busy = st.busy === top.tag;
   const text = busy ? t('weekly.loading') : st.failed === top.tag ? t('weekly.failed') : t('weekly.watch');
-  const b = button(text, 180, 64, watch, { fill: busy ? COLORS.panelLocked : COLORS.saffron, size: 44 });
+  const b = button(text, 180, 64, watch, { fill: busy ? COLORS.panelLocked : COLORS.saffron, size: 48 });
   b.position.set(350, y);
   if (busy) b.eventMode = 'none';
   return b;
@@ -61,7 +61,7 @@ export function chosenTimeline(r: ChallengeBoardReply, st: WeeklyBoardState, sho
   const at = tops[Math.min(st.chosen, tops.length - 1)];
   if (!at || at.top.picks.length === 0) return null;
   const c = new Container();
-  const title = fit(label(t('weekly.picks', { name: name(at.row) }), 44, COLORS.dim), width);
+  const title = fit(label(t('weekly.picks', { name: name(at.row) }), 48, COLORS.dim), width);
   title.y = 20;
   c.addChild(title);
   const tl = pickTimeline(at.top.picks, icons, width, height - 60, { max: 80, tap: at.top.replay ? (i) => void watch(at.row, at.top, at.top.picks[i].tick) : undefined });

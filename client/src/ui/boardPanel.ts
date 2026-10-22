@@ -76,7 +76,7 @@ export class BoardUi {
     if (!this.fetchBoard) return null;
     const name = chapterName(chapter);
     const view = { id: boardId(chapter, hard, THEME), title: t('board.title', { n: chapter, name }), sub: hard ? t('lobby.hard') : t('lobby.normal'), color: hard ? COLORS.danger : COLORS.text };
-    return button(t('board.button'), 200, 80, () => this.show(view), { fill: COLORS.panelLocked, size: 44 });
+    return button(t('board.button'), 200, 80, () => this.show(view), { fill: COLORS.panelLocked, size: 48 });
   }
 
   /** Opens `view`'s board, fetched with `fetchBoard` (the challenge boards come through here with their own fetch; a weekly's with `watch`). */
@@ -106,7 +106,7 @@ export class BoardUi {
     box.addChild(panel(BOX_W, BOX_H));
     const title = fit(label(open.title, 60, open.color), BOX_W - 80);
     title.y = top + 80;
-    const mode = fit(label(open.sub, 42, COLORS.dim), BOX_W - 80);
+    const mode = fit(label(open.sub, 48, COLORS.dim), BOX_W - 80);
     mode.y = top + 150;
     box.addChild(title, mode, this.body(top + 230));
     const back = button(t('common.back'), 400, 110, () => {
@@ -159,7 +159,7 @@ export class BoardUi {
     const pending = challenge && r.pending === true;
     if (r.mine && !shown && !challenge) return c;
     const text = pending ? t('challenge.checking') : challenge && r.mine ? t('challenge.top', { n: topPercent(r.mine.rank, r.total) }) : t('board.total', { n: r.total });
-    const foot = label(text, 44, challenge && r.mine ? COLORS.saffron : COLORS.dim);
+    const foot = label(text, 48, challenge && r.mine ? COLORS.saffron : COLORS.dim);
     foot.y = footY + (r.mine && !shown ? rh + 10 : 0);
     c.addChild(foot);
     return c;
@@ -199,7 +199,7 @@ function rowView(r: BoardRow, mine: boolean, y: number, o: { narrow: boolean; h:
   c.y = y;
   if (mine) c.addChild(panel(BOX_W - 60, o.h - 6, COLORS.panelLocked, 14));
   const fill = mine ? COLORS.saffron : r.rank <= 3 ? COLORS.text : COLORS.dim;
-  const rank = label(String(r.rank), 44, fill);
+  const rank = label(String(r.rank), 48, fill);
   rank.anchor.set(1, 0.5);
   rank.x = -330;
   const medal = markMedal(r.mark, 20);
@@ -208,7 +208,7 @@ function rowView(r: BoardRow, mine: boolean, y: number, o: { narrow: boolean; h:
     c.addChild(medal);
   }
   const resultX = o.narrow ? 240 : 430;
-  const result = label(resultOf(r), 44, r.won ? COLORS.jade : fill);
+  const result = label(resultOf(r), 48, r.won ? COLORS.jade : fill);
   result.anchor.set(1, 0.5);
   result.x = resultX;
   const who = nameLabel(rowName(r), (n) => (mine ? t('board.you', { name: n }) : n), fill, resultX - result.width - 30 - NAME_X);
@@ -224,7 +224,7 @@ const NAME_X = -256;
 /** A row's name in `maxW` (`dress` adds "(you)" around it): shrunk to three quarters of its size
  *  at most, the name cut short with an ellipsis past that. */
 function nameLabel(name: string, dress: (name: string) => string, fill: number, maxW: number): Text {
-  const l = label(dress(name), 44, fill, { align: 'left' });
+  const l = label(dress(name), 48, fill, { align: 'left' });
   let chars = [...name];
   while (chars.length > 3 && l.width > maxW / 0.75) {
     chars = chars.slice(0, -1);

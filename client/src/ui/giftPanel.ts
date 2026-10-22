@@ -49,7 +49,7 @@ export function giftPanel(save: SaveData, now: number, w: number, h: number, ico
     box.addChild(c);
   });
   const rows = Math.ceil(gifts.length / PER_ROW);
-  const note = label(t('gift.note'), 40, COLORS.dim, { wordWrap: true, wordWrapWidth: BOX_W - 100, breakWords: true });
+  const note = label(t('gift.note'), 48, COLORS.dim, { wordWrap: true, wordWrapWidth: BOX_W - 100, breakWords: true });
   note.y = top + 170 + rows * (CELL_H + GAP) + 20 + note.height / 2;
   box.addChild(note);
   const claim = button(ready ? t('gift.claimNow') : t('gift.later'), 520, 130, () => ready && a.claim(), {
@@ -69,7 +69,7 @@ function cell(day: number, haul: Haul, state: 'claimed' | 'ready' | 'later', cw:
   const lit = state === 'ready';
   c.addChild(panel(cw, CELL_H, lit ? 0x6a4a14 : state === 'claimed' ? COLORS.panelLocked : COLORS.panel, 22));
   if (lit) c.addChild(new Graphics().roundRect(-cw / 2, -CELL_H / 2, cw, CELL_H, 22).stroke({ color: COLORS.gold, width: 8 }));
-  const name = fit(label(t('gift.day', { n: day }), 40, lit ? COLORS.gold : COLORS.text), cw - 30);
+  const name = fit(label(t('gift.day', { n: day }), 48, lit ? COLORS.gold : COLORS.text), cw - 30);
   name.y = -CELL_H / 2 + 42;
   c.addChild(name);
   const coins = [
@@ -83,13 +83,13 @@ function cell(day: number, haul: Haul, state: 'claimed' | 'ready' | 'later', cw:
     c.addChild(art);
   }
   if (haul.monk) {
-    const l = fit(label(t(`monk.${haul.monk}.name`), 38, COLORS.gold), cw - 30);
+    const l = fit(label(t(`monk.${haul.monk}.name`), 48, COLORS.gold), cw - 30);
     l.y = CELL_H / 2 - 50;
     c.addChild(l);
   }
   coins.forEach(([coin, n, fill], k) => {
     const line = new Container();
-    const l = label(`+${formatAmount(n)}`, 38, fill);
+    const l = label(`+${formatAmount(n)}`, 48, fill);
     const icon = iconSprite(icons, coin, 50);
     if (icon) {
       icon.x = -l.width / 2 - 4;
@@ -97,7 +97,7 @@ function cell(day: number, haul: Haul, state: 'claimed' | 'ready' | 'later', cw:
       line.addChild(icon);
     }
     line.addChild(l);
-    line.y = CELL_H / 2 - 50 - (coins.length - 1 - k) * 52;
+    line.y = CELL_H / 2 - 50 - (coins.length - 1 - k) * 58;
     c.addChild(line);
   });
   if (state === 'claimed') {

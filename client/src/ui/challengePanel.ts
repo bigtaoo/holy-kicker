@@ -164,7 +164,7 @@ export class ChallengeUi {
     const grow = rules.grow;
     add(t('lobby.chapterTitle', { n: d.chapter, name: chapterName(d.chapter) }), 48, COLORS.text, 165);
     const mutator = mutatorLine(d.challenge.mutator);
-    if (mutator) add(mutator, 42, COLORS.saffron, 232);
+    if (mutator) add(mutator, 48, COLORS.saffron, 232);
     rules.view.y = top + (mutator ? 270 : 225);
     box.addChild(rules.view);
     add(t('challenge.milestones'), 48, COLORS.text, 470 + grow);
@@ -176,15 +176,15 @@ export class ChallengeUi {
       box.addChild(this.streakRow(d, top + y));
       y += 70;
     }
-    if (d.state === 'update') add(t('challenge.update'), 44, COLORS.danger, y);
+    if (d.state === 'update') add(t('challenge.update'), 48, COLORS.danger, y);
     else if (d.state === 'done') add(t('challenge.done'), 48, COLORS.jade, y);
-    else add(t('challenge.ends', { h: d.hours }), 44, COLORS.text, y);
+    else add(t('challenge.ends', { h: d.hours }), 48, COLORS.text, y);
     y += 65;
     if (d.state === 'done') {
       if (d.local) add(t('challenge.best', { wave: d.best }), 52, COLORS.saffron, y);
       else if (d.reply) add(t('challenge.top', { n: topPercent(d.reply.rank, d.reply.total) }), 52, COLORS.saffron, y);
-      add(t('challenge.next', { h: d.hours }), 40, COLORS.dim, y + 60);
-    } else if (d.local) add(t('challenge.offline'), 40, COLORS.dim, y);
+      add(t('challenge.next', { h: d.hours }), 48, COLORS.dim, y + 60);
+    } else if (d.local) add(t('challenge.offline'), 48, COLORS.dim, y);
     const buttons: Container[] = [];
     if (d.state !== 'update') {
       buttons.push(button(t(d.state === 'done' ? 'challenge.practice' : 'lobby.play'), 420, 140, () => {
@@ -209,9 +209,9 @@ export class ChallengeUi {
   private streakRow(d: DailyView, y: number): Container {
     const row = new Container();
     row.y = y;
-    const text = label(d.streak > 0 ? t('challenge.streak', { n: d.streak }) : t('challenge.streakNone'), 44, COLORS.gold);
+    const text = label(d.streak > 0 ? t('challenge.streak', { n: d.streak }) : t('challenge.streakNone'), 48, COLORS.gold);
     const s = iconSprite(this.icons, 'jade', 56);
-    const pay = label(t(d.state === 'done' ? 'challenge.streakTomorrow' : 'challenge.streakToday', { n: d.nextStreakJade }), 44, COLORS.jade);
+    const pay = label(t(d.state === 'done' ? 'challenge.streakTomorrow' : 'challenge.streakToday', { n: d.nextStreakJade }), 48, COLORS.jade);
     text.anchor.set(0, 0.5);
     pay.anchor.set(0, 0.5);
     const w = text.width + 30 + (s ? 60 : 0) + pay.width;
@@ -229,7 +229,7 @@ export class ChallengeUi {
   private milestoneRow(m: { wave: number; copper: number; jade: number }, y: number, dim: boolean): Container {
     const row = new Container();
     row.y = y;
-    const name = label(t('challenge.wave', { wave: m.wave }), 44, dim ? COLORS.dim : COLORS.text, { align: 'left' });
+    const name = label(t('challenge.wave', { wave: m.wave }), 48, dim ? COLORS.dim : COLORS.text, { align: 'left' });
     name.anchor.set(0, 0.5);
     name.x = -400;
     row.addChild(name);
@@ -239,7 +239,7 @@ export class ChallengeUi {
         s.x = x;
         row.addChild(s);
       }
-      const l = label(`+${n}`, 44, dim ? COLORS.dim : fill);
+      const l = label(`+${n}`, 48, dim ? COLORS.dim : fill);
       l.anchor.set(0, 0.5);
       l.x = x + 40;
       row.addChild(l);
