@@ -4,6 +4,9 @@ import type { Table } from './index';
 // German.
 export const de: Table<typeof en> = {
   lang: { name: 'Deutsch' },
+  boot: {
+    healthAdvice: 'Sag Nein zu schädlichen und raubkopierten Spielen.\nSchütze dich und hüte dich vor Betrug.\nSpiel mit Maß; zu viel Spielen schadet der Gesundheit.\nTeil dir deine Zeit gut ein und lebe gesund.',
+  },
   common: {
     continue: 'Weiter',
     back: 'Zurück',
@@ -353,7 +356,7 @@ export const de: Table<typeof en> = {
     policy: 'Datenschutz',
     gameCenter: 'Game Center',
     adPrivacy: 'Werbung & Datenschutz',
-    dataNotice: 'Spielstatistiken und Bestenlisten-Läufe gehen an unseren Server, um das Spiel auszubalancieren und die Bestenlisten zu betreiben.',
+    dataNotice: 'Spielstatistiken, Lauf-Wiederholungen und Bestenlisten-Läufe gehen an unseren Server, um das Spiel auszubalancieren und die Bestenlisten zu betreiben.',
     playId: 'Deine Spiel-ID: {id}',
     idCopied: 'ID kopiert',
     idCopyFailed: 'ID konnte nicht kopiert werden',
@@ -380,8 +383,8 @@ export const de: Table<typeof en> = {
     copyFailed: 'Code konnte nicht kopiert werden',
   },
   privacy: {
-    toast: 'Das Spiel sendet Spielstatistiken und Bestenlisten-Läufe an seinen Server.\nDu kannst das jederzeit in den Einstellungen abschalten.',
-    ask: 'Dürfen wir Spielstatistiken sammeln, um das Spiel zu verbessern?\nDie Bestenlisten brauchen sie auch.',
+    toast: 'Das Spiel sendet Spielstatistiken, Lauf-Wiederholungen und Bestenlisten-Läufe an seinen Server.\nDu kannst das jederzeit in den Einstellungen abschalten.',
+    ask: 'Dürfen wir Spielstatistiken und Lauf-Wiederholungen sammeln, um das Spiel zu verbessern?\nDie Bestenlisten brauchen sie auch.',
     allow: 'Erlauben',
     decline: 'Nein danke',
     link: 'Datenschutz',

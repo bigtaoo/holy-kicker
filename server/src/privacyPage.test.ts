@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { pageGame, privacyPage } from './privacyPage';
+import { CLOUD_LIMITS } from './protocol';
 
 const page = (lang: 'en' | 'zh') => readFileSync(new URL(`./privacy.${lang}.html`, import.meta.url), 'utf8');
 
@@ -22,5 +23,11 @@ describe('privacy page per game', () => {
       expect(corgi).toContain(lang === 'en' ? 'Corgi Commando' : '柯基突击队');
       expect(corgi).toContain(`?g=corgi&amp;lang=${lang === 'en' ? 'zh' : 'en'}`);
     }
+  });
+
+  it('states how long a cloud save is kept, as the server keeps it', () => {
+    expect(CLOUD_LIMITS.slotDays).toBe(30);
+    expect(page('en')).toContain(`Cloud saves: ${CLOUD_LIMITS.slotDays} days after`);
+    expect(page('zh')).toContain(`云存档：最后一次更新后 ${CLOUD_LIMITS.slotDays} 天`);
   });
 });

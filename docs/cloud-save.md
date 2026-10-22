@@ -147,7 +147,9 @@ Limits: a save of at most 24 kB (`CLOUD_LIMITS.saveBytes`; a 20-chapter save is 
 JSON object with a numeric `version`. Rates per address: `cloudNew` 3 at once, then 1 a minute
 (slots and Game Center lookups); `cloud` 10 at once, then 6 a minute (reads and writes). The
 Mongo collection `cloud` holds `{ _id: code, game, rev, version, save, at, gc? }`, with a unique
-sparse index on `gc` and a TTL that drops a slot not written for two years.
+sparse index on `gc` and a TTL that drops a slot not written for 30 days (`CLOUD_LIMITS.slotDays`,
+as the privacy policy states; a player who keeps playing keeps it, since every sync writes). The
+server changes an older index's TTL in place at start (`collMod`); it was two years until 2026-10-22.
 
 A write is optimistic: the client sends the revision it merged from; on 409 it merges the
 answer and tries once more, else waits for the next sync.

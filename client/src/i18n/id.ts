@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Indonesian.
 export const id: Table<typeof en> = {
   lang: { name: 'Bahasa Indonesia' },
+  boot: {
+    healthAdvice: 'Tolak game yang merugikan dan bajakan.\nLindungi dirimu dan waspadai penipuan.\nBermainlah secukupnya; terlalu banyak bermain merusak kesehatan.\nAtur waktumu dan nikmati hidup sehat.',
+  },
   common: {
     continue: 'Lanjut',
     back: 'Kembali',
@@ -353,7 +356,7 @@ export const id: Table<typeof en> = {
     policy: 'Kebijakan privasi',
     gameCenter: 'Game Center',
     adPrivacy: 'Privasi iklan',
-    dataNotice: 'Statistik main dan rekor peringkat dikirim ke server kami, untuk menyeimbangkan game dan papan peringkat.',
+    dataNotice: 'Statistik main, rekaman ulang permainan dan rekor peringkat dikirim ke server kami, untuk menyeimbangkan game dan papan peringkat.',
     playId: 'ID main kamu: {id}',
     idCopied: 'ID disalin',
     idCopyFailed: 'Gagal menyalin ID',
@@ -380,8 +383,8 @@ export const id: Table<typeof en> = {
     copyFailed: 'Gagal menyalin kode',
   },
   privacy: {
-    toast: 'Game ini mengirim statistik main dan rekor peringkat ke servernya.\nMatikan kapan saja di Pengaturan.',
-    ask: 'Boleh kami kumpulkan statistik main?\nItu membantu game dan papan peringkat.',
+    toast: 'Game ini mengirim statistik main, rekaman ulang permainan dan rekor peringkat ke servernya.\nMatikan kapan saja di Pengaturan.',
+    ask: 'Boleh kami kumpulkan statistik main dan rekaman ulang permainan?\nItu membantu game dan papan peringkat.',
     allow: 'Izinkan',
     decline: 'Tidak',
     link: 'Privasi',
