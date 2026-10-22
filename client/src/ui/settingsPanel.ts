@@ -3,9 +3,11 @@ import { getLocale, loadLocale, localeName, setLocale, t, type Key, type Locale 
 import { QUALITY_MODES, type QualityMode } from '../game/quality';
 import type { Sound } from '../audio/Sound';
 import type { KeyValueStore } from '../meta/saveStore';
+import type { CloudUi } from '../net/cloudSync';
 import type { PrivacyUi } from '../net/privacyChoice';
 import type { AdPrivacy, Portal } from '../platform/types';
 import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
+import { cloudRows } from './cloudRows';
 import { languagePanel } from './languagePanel';
 import type { ReminderUi } from './reminders';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
@@ -14,9 +16,9 @@ import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets'
 // languagePanel.ts) beside the screen shake on or off, the sound effects' and the
 // music's volume in steps (0 is off), the graphics quality and, online, play data: sharing on or off,
 // the privacy policy (and beside it the ad network's privacy options where they are due, iOS in
-// the EEA/UK) and the install's id, and beside Back a Game Center button while Apple's sign-in
-// waits for a tap (iOS). Every change goes straight to the shell, which stores it and
-// redraws the lobby, so the panel just shows the current values.
+// the EEA/UK) and the install's id, then the cloud save (cloudRows.ts), and beside Back a Game
+// Center button while Apple's sign-in waits for a tap (iOS). Every change goes straight to the
+// shell, which stores it and redraws the lobby, so the panel just shows the current values.
 
 export interface SettingsActions {
   setLanguage(locale: Locale): void;
@@ -38,6 +40,8 @@ export interface SettingsActions {
   copyId?: (id: string) => Promise<boolean>;
   /** The iOS app's reminders (ui/reminders.ts); unset where the host has no notifications. */
   reminders?: ReminderUi;
+  /** The cloud save's backup and restore (net/cloudSync.ts); unset where the host has a cloud of its own or is offline. */
+  cloud?: CloudUi | null;
   close(): void;
 }
 
@@ -52,7 +56,7 @@ export async function keepLanguage(kv: KeyValueStore, locale: Locale): Promise<v
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders' | 'cloud'>,
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: (locale) => void keepLanguage(kv, locale).then(() => o.setLanguage(locale)),
@@ -78,6 +82,7 @@ export function storedSettings(
     adPrivacy: o.adPrivacy,
     copyId: o.copyId,
     reminders: o.reminders,
+    cloud: o.cloud,
   };
 }
 
@@ -263,6 +268,11 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
 
   if (a.reminders) reminderRow(a.reminders, add, heading);
   if (a.privacy) dataRows(a.privacy, a.adPrivacy, a.copyId, add, heading);
+  if (a.cloud) {
+    heading(t('cloud.title'));
+    const rows = cloudRows(a.cloud, ROW + 160);
+    add(rows.view, rows.height);
+  }
 
   y += 40;
   const back = button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked });

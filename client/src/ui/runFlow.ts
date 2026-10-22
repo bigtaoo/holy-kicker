@@ -22,9 +22,10 @@ import type { Platform, Portal } from '../platform/types';
 import type { PacedAds } from '../platform/adPacing';
 import type { Sound } from '../audio/Sound';
 import type { Backend, RunRank, RunResult } from '../net/backend';
+import { runBuild } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import type { RunReplays } from '../net/runReplays';
-import type { Challenge, Device } from '@hk/protocol';
+import type { Challenge, Device, ReplayWire } from '@hk/protocol';
 import { menuBackdrop } from './lobbyBars';
 import type { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
@@ -195,7 +196,7 @@ export class RunFlow {
   private end(): void {
     if (!this.game) return;
     const s = this.game.engine.state;
-    this.host.challenge.capture(this.game);
+    const replay = this.host.challenge.capture(this.game);
     void this.host.replays.end();
     this.game.destroy();
     this.game = null;
@@ -204,7 +205,7 @@ export class RunFlow {
     if (!this.watch?.downShown) this.host.portal.gameplayStop();
     const fall = this.watch?.fall ?? null;
     this.watch = null;
-    this.settle(s, fall);
+    this.settle(s, fall, replay);
   }
 
   /** The last run, left unfinished, given up from the resume screen: settled like a give-up in the run. */
@@ -215,8 +216,8 @@ export class RunFlow {
   }
 
   // Pays out the run that ended in `s` (`waves` fully cleared), tells the backend, enters it on its board when no dev switch
-  // bent the rules (the results show the rank once it comes) and shows the results, with what felled the hero (`fall`).
-  private settle(s: SimState, fall: DownInfo | null = null): void {
+  // bent the rules, with its replay for the server to check (the results show the rank once it comes), and shows the results, with what felled the hero (`fall`).
+  private settle(s: SimState, fall: DownInfo | null = null, replay: ReplayWire | null = null): void {
     const h = this.host;
     const cause = fall?.cause;
     dropRun(h.platform.storage);
@@ -227,9 +228,9 @@ export class RunFlow {
       level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
     };
     h.perf()?.end();
-    h.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
+    h.net.track('run_end', { ...run, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
     const name = rankedRun(h.scene) ? h.names.board(h.save()) : null;
-    const rank = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }) : Promise.resolve(null);
+    const rank = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(null);
     void h.net.flush();
     if (h.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
     const { reward, save: played } = settleRun(noteFall(h.save(), this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });

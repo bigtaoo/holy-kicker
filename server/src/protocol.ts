@@ -37,7 +37,8 @@ export type Device = (typeof DEVICES)[number];
  * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached) and, in a browser, `focus` (the game ever had the keys since launch) and `input` (any key or click reached it). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,
  * `emerge`, `bullet`, `zone`, or `level` when under-levelled for the wave). `alive` has what a `leave` in a run has
  * (`chapter`, `wave`, `level`, `kills`, `card`, `tutorial`). `run_resume` has `chapter`, `hard` and
- * `wave`. A daily challenge run's `run_start` and `run_end` also have `challenge`, the
+ * `wave`. `run_end` also has the final build and how the run was moved through (RUN_BUILD).
+ * A daily challenge run's `run_start` and `run_end` also have `challenge`, the
  * challenge's id (`d20261019`). `iap` has `what` (`buy` or
  * `restore`), `item` (`adfree`) and `outcome` (`owned`, `cancelled`, `pending` or `failed`, and
  * `none` for a restore that found nothing).
@@ -45,6 +46,19 @@ export type Device = (typeof DEVICES)[number];
  * `perf` is a frame-rate snapshot of the battle so far (see PerfProps); `anomaly` one thing gone
  * wrong on the device, sent as it happens (see AnomalyProps).
  */
+/**
+ * The build a `run_end` carries (builds from engine 49 on): `spells` and `passives` as
+ * comma-joined id + level, a spell's `+` when evolved (`palm5+,bolt3`, `eye2,rice1`, empty for
+ * none); `relicLv` 1..5 and `awakened`; `moving`, the percent of the hero's ticks up spent moving;
+ * `travel`, world units walked per kill (none without kills). Kiting runs move almost all the
+ * time and walk far per kill.
+ */
+export const RUN_BUILD = {
+  spells: /^(?:[a-z]{2,12}[1-5]\+?(?:,[a-z]{2,12}[1-5]\+?){0,3})?$/,
+  passives: /^(?:[a-z]{2,12}[1-5](?:,[a-z]{2,12}[1-5]){0,3})?$/,
+  maxTravel: 100_000,
+} as const;
+
 export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap', 'perf', 'anomaly', 'alive', 'run_resume'] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
@@ -287,6 +301,25 @@ export interface RunEntry {
   dice?: number;
 }
 
+/**
+ * What POST /v1/runs takes: the run and, when the client has one, its replay from the first wave.
+ * A new best counts on its board only once the server has re-simulated it with that replay.
+ */
+export interface RunPost extends RunEntry {
+  replay?: ReplayWire | null;
+}
+
+/** What POST /v1/runs answers: the board, where the run places among the shown rows (provisional until verified), and what was done with it. */
+export interface RunReply {
+  board: string;
+  rank: number;
+  /** A new best for the install. */
+  best: boolean;
+  /** `pending`: kept, shown once re-simulated; `lower`: no better than the install's best; `unverified`: a better run with no replay the server can check, not kept. */
+  status: 'pending' | 'lower' | 'unverified';
+  tag: string;
+}
+
 /** A board's id: the chapter, the mode and, for a game but the first, the game (`c3h-corgi`). */
 export function boardId(chapter: number, hard: boolean, game?: Game): string {
   return `c${chapter}${hard ? 'h' : ''}${boardSuffix(game)}`;
@@ -427,43 +460,7 @@ export function rollDice(random: () => number): number {
   return packDice(pick(DICE.words), pick(DICE.words), DICE.numMin + pick(DICE.numMax - DICE.numMin + 1));
 }
 
-export type NameCheck = { ok: true; name: string } | { ok: false; why: 'length' | 'chars' | 'rude' };
-
-// Names nobody should wear, matched inside the name with spaces and punctuation taken out and
-// digits read as letters (f4ck): rude words in the game's languages, politics a Chinese host
-// refuses, and names that pass for staff. Short or common-looking ones are in WORDS instead,
-// matched only as a whole word, so "glass" and "computer" stay fine.
-const INSIDE = [
-  'fuck', 'shit', 'cunt', 'nigger', 'nigga', 'faggot', 'bitch', 'whore', 'slut', 'rapist', 'hitler', 'porn', 'pussy', 'penis',
-  'dildo', 'retard', 'asshole', 'bastard', 'wanker', 'twat', 'arschloch', 'fotze', 'wichser', 'schlampe', 'hurensohn',
-  'putain', 'salope', 'connard', 'encule', 'mierda', 'cabron', 'pendejo', 'maricon', 'caralho', 'buceta', 'cazzo', 'stronzo',
-  'vaffanculo', 'puttana', 'kurwa', 'pierdol', 'jebac', 'pizda', 'хуй', 'пизд', 'бляд', 'ебат', 'ебан', 'сука', 'мудак', 'пидор',
-  'ちんこ', 'まんこ', '死ね', 'きちがい', '씨발', '시발', '병신', '좆', '개새끼', '傻逼', '煞笔', '操你', '草泥马', '你妈', '妈的',
-  '他妈', '尼玛', '日你', '鸡巴', '屌', '婊子', '贱人', '去死', '狗日', '王八蛋', '习近平', '共产党', '法轮', '六四', '台独',
-  '毛泽东', 'admin', 'moderator', 'crazygames', '官方', '客服', '管理员',
-];
-const WORDS = ['ass', 'cock', 'dick', 'fag', 'kys', 'nazi', 'puta', 'pute', 'merde', 'porra', 'troia', 'chuj', 'hure', 'sb', 'gm', 'poki', 'staff', 'dev'];
-/** Digits read as letters: any digit for a vowel (f4ck, sh1t), and the usual ones for consonants. */
-const LEET: Record<string, string> = { s: '5', t: '7', g: '69', b: '8', l: '1', z: '2' };
-const looseLetters = (w: string) => [...w].map((c) => (/[aeiouy]/.test(c) ? `[${c}0-9]` : LEET[c] ? `[${c}${LEET[c]}]` : c)).join('');
-const RUDE_INSIDE = new RegExp(INSIDE.map(looseLetters).join('|'));
-const RUDE_WORD = new RegExp(`^(${WORDS.map(looseLetters).join('|')})$`);
-
-/**
- * A portal account's name, cleaned (spaces folded, compatibility forms unified), or why it is
- * refused: its length, characters other than letters, digits, spaces and _ . -, or a word above.
- * The portal moderates its names already; this is the server's guard against a client that
- * sends something else as one.
- */
-export function checkName(raw: string): NameCheck {
-  const name = raw.normalize('NFKC').replace(/\s+/g, ' ').trim();
-  const n = [...name].length;
-  if (n < LIMITS.nameMin || n > LIMITS.nameMax) return { ok: false, why: 'length' };
-  if (!/^[\p{L}\p{M}\p{N} _.-]+$/u.test(name)) return { ok: false, why: 'chars' };
-  const lower = name.toLowerCase();
-  if (RUDE_INSIDE.test(lower.replace(/[ _.-]/g, '')) || lower.split(/[ _.-]+/).some((w) => RUDE_WORD.test(w))) return { ok: false, why: 'rude' };
-  return { ok: true, name };
-}
-
 export * from './challengeWire';
 export * from './game';
+export * from './cloudWire';
+export * from './nameCheck';

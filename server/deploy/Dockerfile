@@ -9,6 +9,7 @@ COPY server.mjs ./
 # directory's owner, so the server may write there
 RUN mkdir -p /data/replays && chown node:node /data/replays
 USER node
-ENV PORT=8080 HK_REPLAY_DIR=/data/replays
+# the heap stays well under the container's mem_limit (docker-compose.yml)
+ENV PORT=8080 HK_REPLAY_DIR=/data/replays NODE_OPTIONS=--max-old-space-size=160
 EXPOSE 8080
 CMD ["node", "server.mjs"]

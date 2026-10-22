@@ -1,4 +1,4 @@
-import type { BoardName, BoardReply, ChallengeBoardReply, ChallengeList, ChallengeRun, ChallengeRunReply, EventBatch, EventName, Host, NameEntry, PropValue, ReplayEnd, ReplayWire, Report, RunEntry, RunReplay } from '@hk/protocol';
+import type { BoardName, BoardReply, ChallengeBoardReply, ChallengeList, ChallengeRun, ChallengeRunReply, EventBatch, EventName, Host, NameEntry, PropValue, ReplayEnd, ReplayWire, Report, RunEntry, RunPost, RunReplay } from '@hk/protocol';
 import type { Sharing } from '../meta/privacy';
 import type { Platform } from '../platform/types';
 import { THEME } from '../theme';
@@ -26,15 +26,17 @@ export const INSTALL_KEY = 'hk.install';
 export const DEFAULT_API = __HK_API__;
 
 /**
- * Where the backend is, or null for none: `?api=` overrides (`off`, or a URL such as
- * http://localhost:8080 for a local server); development builds stay offline otherwise, and so
- * does WeChat, whose request whitelist needs an ICP-filed domain the backend does not have yet.
+ * Where the backend is, or null for none. In development `?api=` picks it (a URL such as
+ * http://localhost:8080 for a local server; `off` or none stays offline); a release reads no
+ * `?api=`, so no link can send a player's install id and telemetry elsewhere. WeChat stays offline:
+ * its request whitelist needs an ICP-filed domain the backend does not have yet.
  */
 export function apiBase(host: Host, dev: boolean, query: URLSearchParams, configured: string | undefined): string | null {
-  const q = query.get('api');
-  if (q === 'off') return null;
-  if (q) return q.replace(/\/+$/, '');
-  if (dev || host === 'wechat') return null;
+  if (dev) {
+    const q = query.get('api');
+    return q && q !== 'off' ? q.replace(/\/+$/, '') : null;
+  }
+  if (host === 'wechat') return null;
   return (configured || DEFAULT_API).replace(/\/+$/, '');
 }
 
@@ -174,11 +176,15 @@ export class Backend {
     return { install: this.install, session: this.session, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME, events };
   }
 
-  /** Enters a finished run on its board; the reply has the install's rank there, or null offline. */
-  async submitRun(run: RunResult): Promise<RunRank | null> {
+  /**
+   * Enters a finished run on its board with its replay, which the server re-simulates before the
+   * run shows (a run without one is not kept); the reply has the install's rank there, or null offline.
+   */
+  async submitRun(run: RunResult, replay: ReplayWire | null = null): Promise<RunRank | null> {
     if (this.sharing !== 'send') return null;
-    const entry: RunEntry = { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME };
-    const r = (await this.send('POST', '/v1/runs', entry)) as Partial<RunRank> | null;
+    const entry: RunPost = { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME, replay };
+    const small = JSON.stringify(entry).length <= KEEPALIVE_BYTES;
+    const r = (await this.send('POST', '/v1/runs', entry, REPORT_TIMEOUT_MS, small)) as Partial<RunRank> | null;
     return r && typeof r.rank === 'number' && r.rank > 0 ? (r as RunRank) : null;
   }
 
@@ -220,10 +226,13 @@ export class Backend {
   }
 
   /** Sends a counted challenge run with its replay, which the server re-simulates when it would rank high. */
-  async submitChallengeRun(challenge: string, run: RunResult, replay: ReplayWire): Promise<ChallengeRunReply | null> {
+  /** The board's answer, `outdated` when the server's engine moved on during the run (a deploy: its record now names another), or null. */
+  async submitChallengeRun(challenge: string, run: RunResult, replay: ReplayWire): Promise<ChallengeRunReply | 'outdated' | null> {
     if (this.sharing !== 'send') return null;
     const body: ChallengeRun = { challenge, run: { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME }, replay };
-    const r = (await this.send('POST', '/v1/challenge/runs', body, REPORT_TIMEOUT_MS)) as Partial<ChallengeRunReply> | null;
+    const refused: string[] = [];
+    const r = (await this.send('POST', '/v1/challenge/runs', body, REPORT_TIMEOUT_MS, false, refused)) as Partial<ChallengeRunReply> | null;
+    if (refused[0] === 'engine') return 'outdated';
     return r && typeof r.rank === 'number' && typeof r.total === 'number' && typeof r.board === 'string' ? (r as ChallengeRunReply) : null;
   }
 
@@ -238,8 +247,8 @@ export class Backend {
     return r && Array.isArray(r.cmds) && typeof r.tick === 'number' && typeof r.engine === 'number' ? (r as ReplayWire) : null;
   }
 
-  /** The reply's JSON ({} for an empty one), or null when anything went wrong. */
-  private async send(method: 'GET' | 'POST', path: string, body?: unknown, timeout = TIMEOUT_MS, keepalive = method === 'POST' && timeout === TIMEOUT_MS): Promise<unknown> {
+  /** The reply's JSON ({} for an empty one), or null when anything went wrong; a 400's reason goes into `refused`. */
+  private async send(method: 'GET' | 'POST', path: string, body?: unknown, timeout = TIMEOUT_MS, keepalive = method === 'POST' && timeout === TIMEOUT_MS, refused?: string[]): Promise<unknown> {
     if (!this.base || typeof fetch !== 'function') return null;
     const abort = new AbortController();
     const timer = setTimeout(() => abort.abort(), timeout);
@@ -252,6 +261,10 @@ export class Backend {
         // a batch sent as the tab goes away still arrives (browsers cap keepalive bodies at 64 kB)
         keepalive,
       });
+      if (res.status === 400 && refused) {
+        const why = ((await res.json().catch(() => null)) as { error?: unknown } | null)?.error;
+        if (typeof why === 'string') refused.push(why);
+      }
       if (!res.ok) return null;
       return res.status === 204 ? {} : await res.json();
     } catch {

@@ -24,10 +24,10 @@ before names) goes by a dice name made from its tag.
 
 | Route | What |
 |---|---|
-| `GET /health` | `{ ok: true }` |
+| `GET /health` | `{ ok: true }` once the database answers a ping within 2 s (`HEALTH_TIMEOUT_MS`), else 503 `{ ok: false }`: the container's healthcheck, the deploy's wait and the uptime monitor read it |
 | `POST /v1/events` | an `EventBatch` (src/protocol.ts): up to 50 events, names from `EVENT_NAMES`; an event numbered `n` is kept once per session (`_id` `session/n`), so a batch sent again is not counted twice → 204 |
 | `GET /v1/beacon?h=crazygames&s=open_touch&b=<build>` | an anonymous load checkpoint (`BEACONS`: `open_*` from the CrazyGames page before the SDK, `loaded_*` from the game's first screen): counted per day, host, build and step, no id, whatever the privacy answer → 204 |
-| `POST /v1/runs` | a `RunEntry`: kept if it is the install's best on its board → `{ board, rank, best, tag }`; its `name` or `dice`, if the rules take it, becomes the install's name |
+| `POST /v1/runs` | a `RunPost`: a `RunEntry` and its replay (up to 3 MB). A new best for the install on its board is kept only with a replay the server can check (src/boardDocs.ts `boardReplay`: this engine, from wave 1, as long as the run, a config the run could have had, src/resim.ts `chapterConfig`) and shows once re-simulated → `{ board, rank, best, status: pending \| lower \| unverified, tag }`, the rank provisional (where it would place among the shown rows); its `name` or `dice`, if the rules take it, becomes the install's name |
 | `POST /v1/name` | a `NameEntry` `{ install, host, name \| dice }`: the install's name on every board → `{ ok: true }`, or 400 `bad name` |
 | `GET /v1/boards/c<N>[h]` | top 50 of chapter N (h: hard), plus the caller's own row (header `x-hk-install`) |
 | `GET /v1/challenge` | the open challenges (`ChallengeList`, src/challengeWire.ts) and the server's clock: today's daily, made from the UTC date (src/challenge.ts `dailyOf`: id `d20261019`, seed, chapter `furthest`, 50 waves for now, the server's `ENGINE_VERSION`), and this week's weekly (`weeklyOf`: id `w2026-43`, Monday 00:00 UTC to Monday, its relic, monk, sutras and chapter picked by hand in src/weeklies.ts, else a rotation) |
@@ -47,7 +47,15 @@ before names) goes by a dice name made from its tag.
 A run ranks by: a win over any loss, then more waves, then less time (`runScore`). Every request
 is checked whole (`src/rules.ts`) and refused on anything unexpected; a run that could not have
 happened (a win short of the last wave, under 4 s per wave) is refused too. Each caller IP has a
-token bucket per route (`RATES` in `src/routes.ts`). Runs on the chapter boards are not replayed.
+token bucket per route (`RATES` in `src/routes.ts`).
+
+**Chapter-board runs** are re-simulated by the same queue as challenge runs (below), with the
+chapter's config rules (`chapterConfig`: all 50 waves, the run's chapter, mode, relic and monk, up
+to 3 revives, no mutator). A first best waits as a hidden `pending` row with its replay; a better
+one waits as `next` beside the shown best, so a refused run never costs the install the best it
+had. Verified, the run shows and its replay is dropped; refused, it goes and its replay is kept as
+a problem report. Rows kept before the boards were checked have no `state` and stay shown. A run
+with no replay (an older client), from an older engine or resumed from a snapshot is not kept.
 
 **Challenge runs** (docs/design.md "Challenges") are re-simulated off the request path
 (src/resimQueue.ts): one pending run at a time, a slice of ticks per turn of the event loop. The
@@ -85,7 +93,8 @@ install's tag and the run's id (a later send of the run replaces the earlier) as
 The client side is `client/src/net/` (`Backend`: queue, flush every 20 s and on hide, best
 effort) and `client/src/ui/boardPanel.ts` (the Ranks button on the lobby's chapter card). A run
 goes on a board only when no dev URL switch bends the rules (`rankedRun` in `game/scene.ts`).
-Development builds stay offline unless `?api=http://localhost:8080`; WeChat stays offline
+Development builds stay offline unless `?api=http://localhost:8080`; a release reads no `?api=`
+(`apiBase` in `client/src/net/backend.ts`), so no link can point a player's install id elsewhere. WeChat stays offline
 until the backend has an ICP-filed domain on the mini-game's request whitelist.
 
 ## Storage
@@ -107,7 +116,8 @@ npm test -w server
 It runs on the box daydayup owns (Hetzner `blightbloom`, 62.238.1.182; ssh alias
 `blightbloom`) and shares nothing with daydayup but the machine: its own compose project in
 `/home/deploy/holykicker` (`deploy/`), its own network, its own Atlas cluster, its own secrets.
-Two containers: `hk-api` (128 MB, no published port) and `hk-tunnel` (cloudflared). The
+Three containers: `hk-api` (256 MB, heap capped at 160 MB; no published port), `hk-tunnel`
+(cloudflared) and `hk-backup` (a nightly `mongodump`, "Backups" below). The
 box's ports 80/443 are daydayup's Caddy, so the way in is a Cloudflare Tunnel: `hk-tunnel`
 dials out to Cloudflare, which serves https://hk.gamestao.com and passes the requests down to
 `http://api:8080`. The client's address arrives in `CF-Connecting-IP`.
@@ -122,6 +132,42 @@ the web build goes out); a push that leaves the bundle unchanged restarts nothin
 
 ```bash
 npm run deploy:server        # build, ship, docker compose up, wait for both containers
+```
+
+A deploy from CI keeps the image that ran before it as `holykicker-api:previous` and its files in
+`/home/deploy/holykicker/previous/`; when the new `hk-api` is not healthy within 90 s (its
+healthcheck reads `/health` every 30 s, so a server that cannot reach Atlas counts as down), it
+puts both back, starts the previous server and fails the job. `npm run deploy:server` by hand
+does not roll back. To go back by hand:
+
+```bash
+ssh blightbloom 'cd /home/deploy/holykicker && cp previous/* . && docker tag holykicker-api:previous holykicker-api && docker compose up -d --no-build --force-recreate'
+```
+
+### Uptime
+
+Nothing on the box watches it from the outside; an external monitor does (the operator sets it up
+once, by hand): a free UptimeRobot (or Better Stack) HTTP(S) monitor on
+`https://hk.gamestao.com/health`, every 5 minutes, alerting by e-mail after 2 failures, with the
+keyword `"ok":true` if the plan offers keyword checks. `/health` answers 503 when Atlas does
+not, so it catches a database outage as well as a dead container or tunnel.
+
+### Backups
+
+`hk-backup` (docker-compose.yml) runs `mongodump` of the `holykicker` database every night at
+03:00 UTC into the `holykicker_backups` volume, one gzipped archive a day, and deletes those
+older than `HK_BACKUP_DAYS` (default 14, set in `.env`). It reads with `HK_MONGO_URI`, so it
+needs no secret of its own; `docker logs hk-backup` shows each night's file and size. A copy
+on the same box guards against a bad write or a dropped collection, not against losing the box;
+Atlas keeps the data apart from it. On an Atlas tier with Cloud Backup (Flex or M10 and up; M0
+has none), also turn on Atlas → the cluster → Backup with a daily snapshot kept 7+ days, which
+restores in place from the Atlas UI.
+
+Restore one night's archive (it overwrites the collections it holds; try it on another
+database first with `--nsFrom='holykicker.*' --nsTo='restore.*'`):
+
+```bash
+ssh blightbloom 'cd /home/deploy/holykicker && docker run --rm --env-file .env -v holykicker_backups:/backups mongo:8.0 sh -c '''mongorestore --uri="$HK_MONGO_URI" --gzip --archive=/backups/holykicker-2026-10-22.archive.gz --nsInclude="holykicker.*" --drop''''
 ```
 
 ### Deploy from CI

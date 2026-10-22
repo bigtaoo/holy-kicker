@@ -1,6 +1,6 @@
 {
   "source": "marsh/waterghost_v1.png",
-  "out": "../../../client/public/art/mobs/waterghost",
+  "out": "../../../client/public/art/ch2/mobs/waterghost",
   "frames": 10,
   "fps": 9,
   "height": 168,

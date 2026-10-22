@@ -8,6 +8,7 @@ import type { SaveData } from './save';
 import { trainingStats } from './training';
 import type { RunSetup } from '../game/runSetup';
 import { weeklySetup, type WeeklyBalance } from './weekly';
+import { blessingBonus } from './unlocks';
 
 // The daily challenge (docs/design.md "Challenges"): one shared run a UTC day, built from the
 // server's record (net/backend.ts challenges) with the player's own loadout. The first finished
@@ -59,13 +60,14 @@ export function challengeSetup(save: SaveData, c: Challenge): RunSetup {
   };
 }
 
-/** The engine stats of the worn gear and the training line (loadout.ts without grit and the novice bonus). */
+/** The engine stats of the worn gear, the training line and the star blessings (loadout.ts without grit and the novice bonus). */
 export function challengeBonus(save: SaveData): StatBonus {
   const gear = gearStats(save);
   const trained = trainingStats(save);
+  const blessed = blessingBonus(save);
   const bonus: Partial<Record<Stat, number>> = {};
   for (const stat of STATS) {
-    const n = (gear[stat] ?? 0) + (trained[stat] ?? 0);
+    const n = (gear[stat] ?? 0) + (trained[stat] ?? 0) + (blessed[stat] ?? 0);
     if (n) bonus[stat] = n;
   }
   return bonus;

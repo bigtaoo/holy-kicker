@@ -207,7 +207,7 @@ describe('challenge routes', () => {
     await resim.start();
     expect(resim.length).toBe(1);
     await resim.idle();
-    expect((await store.pendingChallengeRuns()).length).toBe(0);
+    expect((await store.pendingResims()).length).toBe(0);
     expect((await store.challengeBoard(entry.board, 50, 'tag1')).mine?.rank).toBe(1);
   });
 });

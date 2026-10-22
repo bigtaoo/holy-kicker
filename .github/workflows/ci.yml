@@ -7,6 +7,9 @@ name: ci
 # Cloudflare at h.gamestao.com (wrangler/web.jsonc). Backend first, so a client never goes
 # live talking to routes the server does not have yet. A push that leaves the server bundle
 # unchanged restarts nothing (server/deploy/ci-deploy.sh compares the files).
+# Beside `check`, `smoke` builds every web dist (web, corgi, CrazyGames, Playgama, iOS) and plays
+# each for 30 s in headless Chrome (build/smoke.mjs): a page error, a console error or no fight
+# fails it, and no deploy runs without it.
 # The corgi reskin (docs/reskin.md "Builds") publishes the same way to h.gamestao.com/new/
 # (wrangler/new.jsonc) once NEW_WEB_DEPLOY_ENABLED is set; its build fails while any corgi art
 # is missing, so the switch only goes on with the art complete. It shares hk.gamestao.com (server/src/game.ts).
@@ -46,8 +49,31 @@ jobs:
       - run: npm ci
       - run: npm run check
 
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: build the release dists
+        working-directory: client
+        # side by side and without tsc, which `check` runs
+        run: |
+          set -eu
+          pids=""
+          for c in vite.config.js vite.new.config.js vite.crazygames.config.js vite.playgama.config.js vite.ios.config.js; do
+            npx vite build --config "$c" --logLevel warn > "/tmp/$c.log" 2>&1 & pids="$pids $!"
+          done
+          for p in $pids; do wait "$p" || { cat /tmp/*.log; exit 1; }; done
+      # the runner's own Google Chrome (playwright-core downloads none)
+      - run: npm run smoke
+
   deploy-server:
-    needs: check
+    needs: [check, smoke]
     runs-on: ubuntu-latest
     if: ${{ vars.SERVER_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     concurrency:
@@ -88,10 +114,10 @@ jobs:
           exit 1
 
   deploy-web:
-    needs: [check, deploy-server]
+    needs: [check, smoke, deploy-server]
     runs-on: ubuntu-latest
     # runs when the server deploy succeeded or was switched off, never after it failed
-    if: ${{ !cancelled() && needs.check.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.deploy-server.result) && vars.WEB_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.smoke.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.deploy-server.result) && vars.WEB_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     concurrency:
       group: web-deploy
       cancel-in-progress: true
@@ -120,10 +146,10 @@ jobs:
           exit 1
 
   deploy-new:
-    needs: [check, deploy-server]
+    needs: [check, smoke, deploy-server]
     runs-on: ubuntu-latest
     # like deploy-web, for the corgi reskin; its own switch, so either game ships on its own
-    if: ${{ !cancelled() && needs.check.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.deploy-server.result) && vars.NEW_WEB_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    if: ${{ !cancelled() && needs.check.result == 'success' && needs.smoke.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.deploy-server.result) && vars.NEW_WEB_DEPLOY_ENABLED == 'true' && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     concurrency:
       group: new-deploy
       cancel-in-progress: true

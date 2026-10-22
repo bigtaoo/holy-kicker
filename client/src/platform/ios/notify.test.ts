@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { HKNative, NotifyState } from './bridge';
 import { nativeNotifier } from './notify';
 
-function shell(v = 5, status: NotifyState['status'] | null = 'unknown') {
+function shell(v = 6, status: NotifyState['status'] | null = 'unknown') {
   let cb: ((s: NotifyState) => void) | null = null;
   const posted: unknown[][] = [];
   const native: Partial<HKNative> = {
@@ -17,9 +17,9 @@ function shell(v = 5, status: NotifyState['status'] | null = 'unknown') {
 }
 
 describe('native notifier', () => {
-  it('exists only on a shell of bridge v5 with every call', () => {
+  it('exists only on a shell of bridge v6 with every call', () => {
     expect(nativeNotifier(null)).toBeNull();
-    expect(nativeNotifier(shell(4).native)).toBeNull();
+    expect(nativeNotifier(shell(5).native)).toBeNull();
     const { native } = shell();
     expect(nativeNotifier({ ...native, notifyCancel: undefined })).toBeNull();
     expect(nativeNotifier(native)).not.toBeNull();
@@ -38,7 +38,7 @@ describe('native notifier', () => {
   });
 
   it('books only while on, and cancels by id', () => {
-    const s = shell(5, 'off');
+    const s = shell(6, 'off');
     const n = nativeNotifier(s.native)!;
     n.schedule('patrol', 1000, 'a', 'b');
     expect(s.posted).toEqual([]);

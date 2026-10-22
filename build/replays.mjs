@@ -74,7 +74,7 @@ async function analyzerFor(v) {
     stdin: {
       contents: `export { replayEngine, hashState, ENGINE_VERSION } from '@hk/engine';
         export { analyzeRun } from './server/src/replayStats.ts';
-        export { formatPicks, formatRun, formatTable } from './server/src/replayReport.ts';`,
+        export { formatBuilds, formatPicks, formatRun, formatTable } from './server/src/replayReport.ts';`,
       resolveDir: ROOT, loader: 'ts',
     },
     bundle: true, platform: 'node', format: 'esm', outfile: out, logLevel: 'error',
@@ -118,6 +118,8 @@ for (const rep of reports) {
   rows.push({ m, r: stats });
   console.log(mod.formatRun(m, stats).join('\n') + '\n');
 }
-if (mod) console.log([...mod.formatTable(rows), '', ...mod.formatPicks(rows)].join('\n'));
+// the builds by chapter band too: what wins early is not what wins late
+const band = (m) => (m.chapter <= 2 ? 'ch1-2' : m.chapter <= 5 ? 'ch3-5' : 'ch6+');
+if (mod) console.log([...mod.formatTable(rows), '', ...mod.formatPicks(rows), '', ...mod.formatBuilds(rows, band)].join('\n'));
 if (jsonArg) writeFileSync(jsonArg.slice('--json='.length), JSON.stringify(rows, null, 1));
 rmSync(work, { recursive: true, force: true });

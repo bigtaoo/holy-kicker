@@ -1,6 +1,9 @@
-import { ELITE, HERO, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
-import type { Card, MonkId, PassiveId, RelicId, SpellId, StatBonus } from './content';
+import { ELITE, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
 import { Prng } from './math/prng';
+import type { Player } from './player';
+
+export type { HeroAction, PassiveSlot, Player, SpellSlot } from './player';
+export { newPlayer } from './player';
 
 // The whole simulation state: plain data, integers only (FP positions, tick timers), in
 // ordered arrays whose order is the iteration order. Every moving thing keeps the position it
@@ -11,79 +14,6 @@ export interface Body {
   y: number;
   px: number;
   py: number;
-}
-
-export type HeroAction = 'none' | 'kick' | 'hurt';
-
-export interface Player extends Body {
-  owner: number;
-  vx: number;
-  vy: number;
-  /** -1 facing left, 1 right. */
-  facing: number;
-  moving: boolean;
-  /** Ticks stood still, up to ZEN.enter (in Zen once there; systems/players.ts). */
-  still: number;
-  /** Last command, held while no new one arrives. */
-  moveBrad: number;
-  moveMag: number;
-  action: HeroAction;
-  /** Ticks into the current action. */
-  actionT: number;
-  struck: boolean;
-  kickCd: number;
-  hurtCd: number;
-  /** 1-based; `xp` counts toward the next level. */
-  level: number;
-  xp: number;
-  /** Experience toward the next whole point, in hundredths (the xp stat grows gains by percent). */
-  xpPart: number;
-  hp: number;
-  maxHp: number;
-  /** Down at 0 health: no moving, kicking or picking up until revived. */
-  dead: boolean;
-  revives: number;
-  /** The lowest health over the run, percent of the max health at the time: a clear's stars (docs/design.md "Stars"). */
-  lowest: number;
-  /** Health regenerated so far toward the next point, in units of 1 / REGEN_UNIT. */
-  regen: number;
-  /** The relic played with, and its level, 1..MAX_LEVEL. */
-  relicId: RelicId;
-  relic: number;
-  /** The relic awakened (after MAX_LEVEL with its paired passive). */
-  awakened: boolean;
-  spells: SpellSlot[];
-  passives: PassiveSlot[];
-  /** The Golden Bell is up and takes the next blow. */
-  bell: boolean;
-  /** The level-up or shrine cards on offer; the sim stands still while any player has some. */
-  offer: Card[];
-  /** An offering stands, paid at the next shrine or the win if the hero is up then. */
-  bet: boolean;
-  /** Offerings paid so far (extra copper at the results). */
-  offerings: number;
-  /** Wooden fish taps so far (every FISH.stunEvery-th ring of the Stunning Bell stuns). */
-  taps: number;
-  /** Halo Beam: the first beam's angle, brads. */
-  halo: number;
-  /** Stats brought from outside the run (RunConfig.bonus, and the monk's), under the passives in the stack. */
-  bonus: StatBonus;
-  monk: MonkId;
-  /** Blows taken while running, for the novice's dodge (MONK_PASSIVE.dodgeEvery). */
-  dodge: number;
-}
-
-export interface SpellSlot {
-  id: SpellId;
-  level: number;
-  /** Ticks to the next cast. */
-  cd: number;
-  evolved: boolean;
-}
-
-export interface PassiveSlot {
-  id: PassiveId;
-  level: number;
 }
 
 export interface Mob extends Body {
@@ -485,14 +415,6 @@ export function newMob(x: number, y: number, hp = 1, kind: MobKind = 'chaser', t
   return { ...body(x, y), kind, hp, stun: 0, t, haste: 0, lag: 0, gap: 0 };
 }
 
-export function newPlayer(owner: number, x: number, y: number, hp = HERO.hp, revives = 0, relicId: RelicId = 'ball', bonus: StatBonus = {}, monk: MonkId = 'kicker'): Player {
-  return {
-    ...body(x, y), owner, vx: 0, vy: 0, facing: -1, moving: false, still: 0, moveBrad: 0, moveMag: 0,
-    action: 'none', actionT: 0, struck: false, kickCd: 0, hurtCd: 0, level: 1, xp: 0, xpPart: 0,
-    hp, maxHp: hp, dead: false, revives, lowest: 100, regen: 0, relicId, relic: 1, awakened: false, spells: [], passives: [], bell: false, offer: [],
-    bet: false, offerings: 0, taps: 0, halo: 0, bonus, monk, dodge: 0,
-  };
-}
 
 export function newElite(x: number, y: number, id = 0, hp = ELITE.hp, cd = ELITE.cooldown, kind: EliteKind = 'charger'): Elite {
   return { ...body(x, y), id, kind, hp, maxHp: hp, stun: 0, phase: 'walk', shots: 0, t: 0, cd, vx: 0, vy: 0, affixes: 0, guard: 0, guardT: 0 };

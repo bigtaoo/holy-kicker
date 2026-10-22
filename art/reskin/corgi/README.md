@@ -11,7 +11,7 @@ One planet per chapter, each in its own colours. The bugs stay cold and the hero
 | Chapter | Planet | Ground (game file) | Props sheet |
 |---|---|---|---|
 | 1 | icy moon: frost dust, regolith paths | `ground/grass`, `earth`, `earth_soft` | `planets/deco_frost` |
-| 2 | spore jungle | `ground/marsh` | `planets/deco_jungle` |
+| 2 | spore jungle | `ch2/ground/marsh` | `planets/deco_jungle` |
 | 3 | desert dunes | `ch3/ground/snow` | `planets/deco_dune` |
 | 4 | forge world: basalt with lava cracks | `ch4/ground/street` | `planets/deco_forge` |
 | 5 | bug hive: resin honeycomb | `ch5/ground/cave` | `planets/deco_hive` |

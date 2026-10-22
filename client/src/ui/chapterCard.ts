@@ -7,13 +7,18 @@ import type { SaveData } from '../meta/save';
 import type { BoardUi } from './boardPanel';
 import { lockIcon, type IconSheet } from './buildBar';
 import { chestRow } from './chestRow';
+import { clearUnlocks, nextBlessing, starTotal } from '../meta/unlocks';
+import { sutraName } from './cardText';
 import { CARD, CARD_STROKE } from './playCard';
+import { statLines } from './statText';
 import { starRow } from './stars';
 import { COLORS, button, fit, label, panel } from './widgets';
 
 // The Play tab's chapter card (LobbyScreen.playTab): its name between the chapter arrows, its
 // stars or how far it went, its five chests, and the normal / hard switch over it once a
-// chapter is cleared (a chapter's hard mode opens with its three stars).
+// chapter is cleared (a chapter's hard mode opens with its three stars). Under the stars, a line
+// or two: the grit on the first uncleared chapter, what clearing it unlocks, and on a cleared
+// chapter still short of three stars the next star blessing (docs/unlocks.md).
 
 export interface ChapterCardDeps {
   save: SaveData;
@@ -56,12 +61,9 @@ export function trackSwitch(d: ChapterCardDeps): Container {
 export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Container {
   const { save } = d;
   const card = new Container();
-  // grit on the first uncleared chapter takes a line: the chests move down and the card grows
-  const grit = gritBonus(save, n);
-  const gritLine = open && Object.keys(grit).length > 0
-    ? fit(label(t('lobby.grit', { n: save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), 48, CARD.accent), 840)
-    : null;
-  const shift = gritLine ? 55 : 0;
+  // each line takes 55 units: the chests move down and the card grows
+  const lines = cardLines(save, n, open).map(([text, fill]) => fit(label(text, 48, fill), 840));
+  const shift = lines.length * 55;
   const back = panel(900, 370 + shift, CARD.fill);
   back.y = (370 + shift) / 2;
   card.addChild(back);
@@ -95,10 +97,10 @@ export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Conta
   const chests = chestRow(save, n, d.icons, (i) => d.progressChest(n, hard, i));
   chests.y = 200 + shift;
   card.addChild(title, chests);
-  if (gritLine) {
-    gritLine.y = 215;
-    card.addChild(gritLine);
-  }
+  lines.forEach((l, i) => {
+    l.y = 215 + i * 55;
+    card.addChild(l);
+  });
   // chapter arrows: through the cleared chapters and the first uncleared one; once there is more
   // than one, both stand, the one with nowhere to go faded, so the title stays centred between them
   const playable = playableChapters(save);
@@ -116,4 +118,22 @@ export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Conta
   arrow(-1);
   arrow(1);
   return card;
+}
+
+/** The card's lines under the stars, each its text and colour. */
+function cardLines(save: SaveData, n: number, open: boolean): [string, number][] {
+  if (!open) return [];
+  const out: [string, number][] = [];
+  const grit = gritBonus(save, n);
+  if (Object.keys(grit).length > 0) out.push([t('lobby.grit', { n: save.grit, attack: grit.attack ?? 0, hp: grit.maxHp ?? 0 }), CARD.accent]);
+  if (save.hard) return out;
+  if (n > save.cleared) {
+    const names = clearUnlocks(n).flatMap((u) =>
+      u.kind === 'relic' ? [t(`relic.${u.id}.name`)] : u.kind === 'sutra' ? [sutraName(u.id)] : u.kind === 'monk' ? [t(`monk.${u.id}.name`)] : []);
+    if (names.length > 0) out.push([t('lobby.clearFor', { list: names.join(', ') }), CARD.accent]);
+  } else if ((save.stars[n - 1] ?? 0) < 3) {
+    const b = nextBlessing(save);
+    if (b) out.push([t('lobby.nextBlessing', { have: starTotal(save), need: b.stars, stats: statLines({ [b.stat]: b.n }).join('') }), CARD.accent]);
+  }
+  return out;
 }

@@ -14,6 +14,10 @@ name: ota-ios
 # counts up from the live manifest. So an update always outranks the shell it was made for, and
 # the next shell outranks every update made for the one before.
 #
+# `stop` publishes a manifest with nothing to download (plus `revoke`, versions to take back) under
+# the live version, so the next publish counts on from it; docs/ios.md "Hot updates" says which
+# bundles honour what.
+#
 # Needs the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID secrets ci.yml deploys the web with.
 
 on:
@@ -25,8 +29,24 @@ on:
         default: 'monk'
         type: choice
         options: [monk, corgi]
+      action:
+        description: 'publish this commit, or stop: no device downloads anything until the next publish'
+        required: true
+        default: 'publish'
+        type: choice
+        options: [publish, stop]
+      min_bridge:
+        description: 'oldest shell bridge contract (HKNative.v) the update needs; auto is this commit''s bridgeVersion'
+        required: true
+        default: 'auto'
+        type: string
+      revoke:
+        description: 'versions to take back, space separated, added to the live list; a device running one goes back to its shell''s own bundle'
+        required: false
+        default: ''
+        type: string
       min_native:
-        description: 'oldest shell version (CFBundleShortVersionString) the update needs'
+        description: 'oldest shell version (CFBundleShortVersionString) the update needs; the only gate bundles before the bridge gate honour'
         required: true
         default: '1.0'
         type: string
@@ -47,6 +67,7 @@ env:
   RELEASE_TAG: ${{ inputs.theme == 'monk' && 'ios-v' || 'corgi-ios-v' }}
   BUILD_SCRIPT: ${{ inputs.theme == 'monk' && 'build:ios' || 'build:ios:new' }}
   WRANGLER_CONFIG: ${{ inputs.theme == 'monk' && 'wrangler/ota.jsonc' || 'wrangler/ota-corgi.jsonc' }}
+  ACTION: ${{ inputs.action }}
 
 jobs:
   publish:
@@ -81,6 +102,13 @@ jobs:
             *) N=1 ;;
           esac
           V="$SHELL_V.$N"
+          echo "live=$LIVE" >> "$GITHUB_OUTPUT"
+          if [ "$ACTION" = "stop" ]; then
+            if [ -z "$LIVE" ] || [ "$LIVE" = "null" ]; then echo "no live manifest to stop"; exit 1; fi
+            echo "version=$LIVE" >> "$GITHUB_OUTPUT"
+            echo "Stopping $THEME at $LIVE" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
           if [ -n "$LIVE" ] && [ "$(printf '%s\n%s\n' "$LIVE" "$V" | sort -V | tail -1)" != "$V" ]; then
             echo "$V would not outrank the live $LIVE"; exit 1
           fi
@@ -88,26 +116,51 @@ jobs:
           echo "Publishing $THEME $V for shell $SHELL_V (live: ${LIVE:-none})" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - run: npm ci
+        if: inputs.action == 'publish'
       - name: Build the bundle
+        if: inputs.action == 'publish'
         env:
           HK_BUNDLE_VERSION: ${{ steps.ver.outputs.version }}
         run: npm run "$BUILD_SCRIPT"
+      # the very bundle that ships, played for 30 s in headless Chrome (build/smoke.mjs); ci's own
+      # smoke covers Holy Kicker's iOS build of this commit, not the corgi's
+      - name: Smoke the bundle
+        if: inputs.action == 'publish'
+        run: npm run smoke -- ios
 
       - name: Zip it with the manifest
         env:
           V: ${{ steps.ver.outputs.version }}
           MIN_NATIVE: ${{ inputs.min_native }}
+          MIN_BRIDGE: ${{ inputs.min_bridge }}
+          REVOKE: ${{ inputs.revoke }}
         run: |
           set -eu
           OUT=client/dist-ota
           rm -rf "$OUT" && mkdir -p "$OUT"
-          (cd client/dist-ios && zip -r -q -X "../dist-ota/$V.zip" .)
-          SIZE=$(stat -c %s "$OUT/$V.zip")
-          # Workers static assets take files up to 25 MiB
-          if [ "$SIZE" -gt 25000000 ]; then echo "$V.zip is $SIZE bytes, over the 25 MB asset limit"; exit 1; fi
-          SUM=$(sha256sum "$OUT/$V.zip" | cut -d' ' -f1)
-          jq -n --arg v "$V" --arg url "$OTA_HOST/$V.zip" --arg sum "$SUM" --arg min "$MIN_NATIVE" \
-            '{version: $v, url: $url, checksum: $sum, minNativeVersion: $min}' > "$OUT/manifest.json"
+          # the taken-back list only grows: the live one plus this run's
+          REVOKED=$(curl -fsS --max-time 10 "$OTA_HOST/manifest.json" | jq -c '.revoke // []' || true)
+          REVOKED=${REVOKED:-[]}
+          REVOKED=$(jq -cn --argjson live "$REVOKED" --arg add "$REVOKE" '$live + ($add | split(" ") | map(select(. != ""))) | unique')
+          if [ "$ACTION" = "stop" ]; then
+            # nothing to download: no url or checksum, and a shell version out of reach so the bundles
+            # from before `stop` refuse it too
+            jq -n --arg v "$V" --argjson revoke "$REVOKED" \
+              '{version: $v, stop: true, revoke: $revoke, minNativeVersion: "999"}' > "$OUT/manifest.json"
+          else
+            if [ "$MIN_BRIDGE" = "auto" ]; then
+              MIN_BRIDGE=$(sed -nE 's/.*static let bridgeVersion = ([0-9]+).*/\1/p' client/ios/App/App/HKBridgeViewController.swift)
+            fi
+            if ! echo "$MIN_BRIDGE" | grep -Eq '^[0-9]+$'; then echo "min_bridge must be a number (got: $MIN_BRIDGE)"; exit 1; fi
+            (cd client/dist-ios && zip -r -q -X "../dist-ota/$V.zip" .)
+            SIZE=$(stat -c %s "$OUT/$V.zip")
+            # Workers static assets take files up to 25 MiB
+            if [ "$SIZE" -gt 25000000 ]; then echo "$V.zip is $SIZE bytes, over the 25 MB asset limit"; exit 1; fi
+            SUM=$(sha256sum "$OUT/$V.zip" | cut -d' ' -f1)
+            jq -n --arg v "$V" --arg url "$OTA_HOST/$V.zip" --arg sum "$SUM" --arg min "$MIN_NATIVE" \
+              --argjson bridge "$MIN_BRIDGE" --argjson revoke "$REVOKED" \
+              '{version: $v, url: $url, checksum: $sum, minNativeVersion: $min, minBridge: $bridge, revoke: $revoke}' > "$OUT/manifest.json"
+          fi
           # the app's page (capacitor://localhost) reads the manifest; it must never come from a cache
           printf '/*\n  Access-Control-Allow-Origin: *\n/manifest.json\n  Cache-Control: no-cache, must-revalidate\n' > "$OUT/_headers"
           cat "$OUT/manifest.json" | tee -a "$GITHUB_STEP_SUMMARY"
@@ -124,11 +177,13 @@ jobs:
         run: |
           set -eu
           for i in $(seq 1 20); do
-            GOT=$(curl -fsS --max-time 10 -H 'Origin: capacitor://localhost' "$OTA_HOST/manifest.json?v=check$i" | jq -r .version || true)
-            [ "$GOT" = "$V" ] && break
+            # a stop keeps the version, so its own flag tells it has landed
+            GOT=$(curl -fsS --max-time 10 -H 'Origin: capacitor://localhost' "$OTA_HOST/manifest.json?v=check$i" | jq -r '"\(.version)\(if .stop then " stop" else "" end)"' || true)
+            [ "$GOT" = "$V$([ "$ACTION" = stop ] && echo ' stop')" ] && break
             sleep 5
           done
-          if [ "$GOT" != "$V" ]; then echo "the manifest says ${GOT:-nothing}, not $V"; exit 1; fi
+          if [ "$GOT" != "$V$([ "$ACTION" = stop ] && echo ' stop')" ]; then echo "the manifest says ${GOT:-nothing}, not $V ($ACTION)"; exit 1; fi
           curl -fsSI -H 'Origin: capacitor://localhost' "$OTA_HOST/manifest.json" | grep -qi '^access-control-allow-origin:'
+          if [ "$ACTION" = "stop" ]; then exit 0; fi
           curl -fsS --max-time 60 -o /tmp/got.zip "$OTA_HOST/$V.zip"
           [ "$(sha256sum /tmp/got.zip | cut -d' ' -f1)" = "$(jq -r .checksum client/dist-ota/manifest.json)" ]

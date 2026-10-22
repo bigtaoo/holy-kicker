@@ -1,6 +1,6 @@
 {
   "source": "brood_v2.png",
-  "out": "../game/art/mobs/toad_king",
+  "out": "../game/art/ch2/mobs/toad_king",
   "frames": 10,
   "fps": 8,
   "outline": {"px": 7, "color": "#e2f2ee", "steps": 12},

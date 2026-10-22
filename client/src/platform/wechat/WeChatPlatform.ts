@@ -2,8 +2,10 @@ import { Application, DOMAdapter } from 'pixi.js';
 import type { DragStick, Vec2 } from '../../game/dragStick';
 import type { Battery, DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_ADS, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
+import { NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AudioHost, type Banner, type Insets, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { WeChatAdapter } from './WeChatAdapter';
+import { weChatAds } from './weChatAds';
+import { weChatStore } from './weChatStorage';
 import { WeChatMusicDeck } from './weChatMusicDeck';
 import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEvents';
 
@@ -14,17 +16,11 @@ import { installWeChatEventBridge, type WeChatEventBridge } from './weChatDomEve
 export class WeChatPlatform implements Platform {
   readonly host = 'wechat';
   private bridge: WeChatEventBridge | null = null;
-  // Ads and the wx.login cloud save come with the WeChat release (docs/design.md).
-  readonly storage: KeyValueStore = new SafeStore({
-    // getStorageSync answers '' for a key that was never written
-    getItem: (key) => {
-      const v = wx.getStorageSync(key);
-      return typeof v === 'string' && v !== '' ? v : null;
-    },
-    setItem: (key, value) => wx.setStorageSync(key, value),
-  });
+  // The wx.login cloud save comes with the WeChat release (docs/design.md).
+  readonly storage: KeyValueStore = new SafeStore(weChatStore(wx));
   readonly portal: Portal = NO_PORTAL;
-  readonly ads: Ads = NO_ADS;
+  // NO_ADS until adUnits.json has a unit id (docs/wechat-ads.md)
+  readonly ads: Ads = weChatAds(wx);
   readonly banner: Banner = NO_BANNER;
   readonly adPrivacy: AdPrivacy = NO_AD_PRIVACY;
   readonly store: Store | null = null;
@@ -71,6 +67,11 @@ export class WeChatPlatform implements Platform {
 
   onMemoryWarning(cb: (level: number) => void): void {
     wx.onMemoryWarning?.((r) => cb(Number(r?.level) || 0));
+  }
+
+  onScriptError(cb: (err: unknown, stack?: string) => void): void {
+    wx.onError?.((e) => cb(e?.message ?? e, e?.stack));
+    wx.onUnhandledRejection?.((r) => cb(r?.reason, r?.reason instanceof Error ? r.reason.stack : undefined));
   }
 
   onBattery(cb: (b: Battery) => void): void {

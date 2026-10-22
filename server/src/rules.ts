@@ -1,4 +1,4 @@
-import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, REPLAY_ENDS, checkName, isDice, isGame, keptGame, type Game, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry, type RunReplay } from './protocol';
+import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, REPLAY_ENDS, RUN_BUILD, checkName, isDice, isGame, keptGame, type Game, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry, type RunReplay } from './protocol';
 
 // Checks what clients send before anything is stored. Pure: each check takes the parsed JSON
 // (unknown) and returns the clean value or the reason it was refused. Anything unexpected is
@@ -52,11 +52,21 @@ function checkProps(v: unknown): Record<string, PropValue> | null {
   return out;
 }
 
+/** A `run_end`'s build fields (RUN_BUILD), where present: each must have its shape. */
+export function runBuildOk(p: Record<string, PropValue>): boolean {
+  const is = (k: string, ok: (x: PropValue) => boolean) => p[k] === undefined || ok(p[k]);
+  return is('spells', (x) => typeof x === 'string' && RUN_BUILD.spells.test(x)) &&
+    is('passives', (x) => typeof x === 'string' && RUN_BUILD.passives.test(x)) &&
+    is('relicLv', (x) => isInt(x, 1, 5)) && is('awakened', (x) => typeof x === 'boolean') &&
+    is('moving', (x) => isInt(x, 0, 100)) && is('travel', (x) => isInt(x, 0, RUN_BUILD.maxTravel));
+}
+
 function checkEvent(v: unknown, now: number): ClientEvent | null {
   if (!isObj(v) || !(EVENT_NAMES as readonly unknown[]).includes(v.e)) return null;
   if (typeof v.t !== 'number' || !Number.isFinite(v.t) || v.t < now - LIMITS.late || v.t > now + LIMITS.early) return null;
   if (v.n !== undefined && !isInt(v.n, 1, 1e9)) return null;
   const p = checkProps(v.p);
+  if (p && v.e === 'run_end' && !runBuildOk(p)) return null;
   return p ? { e: v.e as ClientEvent['e'], t: Math.trunc(v.t), ...(v.n !== undefined ? { n: v.n } : {}), p } : null;
 }
 
@@ -127,6 +137,16 @@ function checkReplay(v: unknown): ReplayWire | null | undefined {
   if (cmds.length > LIMITS.replayNumbers || cmds.length % 5 !== 0 || !cmds.every((n) => isInt(n, -1, 1e9))) return undefined;
   if (JSON.stringify(v.config).length > LIMITS.replayConfig) return undefined;
   return { engine: v.engine, config: v.config, wave: v.wave, cmds: cmds as number[], tick: v.tick, hash: v.hash };
+}
+
+/**
+ * A chapter run (RunPost) and the replay that lets the server verify it; a replay that does not
+ * parse is dropped rather than refused, so the run still learns its rank.
+ */
+export function checkRunPost(v: unknown): Checked<{ run: RunEntry; replay: ReplayWire | null }> {
+  const run = checkRun(v);
+  if (!run.ok) return run;
+  return { ok: true, value: { run: run.value, replay: (isObj(v) && checkReplay(v.replay)) || null } };
 }
 
 /** A challenge run: the challenge's id, a plausible run and its replay (which re-simulation checks later). */

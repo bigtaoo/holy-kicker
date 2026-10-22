@@ -4,14 +4,22 @@ import { apiBase, DEFAULT_API } from './backend';
 import { EventQueue, newId, QUEUE_CAP } from './events';
 
 describe('backend', () => {
-  it('finds the API, offline in development and on WeChat unless ?api= says otherwise', () => {
+  it('finds the API, offline on WeChat and in development unless ?api= says otherwise', () => {
     const q = (s = '') => new URLSearchParams(s);
     expect(apiBase('crazygames', false, q(), undefined)).toBe(DEFAULT_API);
     expect(apiBase('web', false, q(), 'https://x.test/')).toBe('https://x.test');
     expect(apiBase('web', true, q(), undefined)).toBeNull();
     expect(apiBase('wechat', false, q(), undefined)).toBeNull();
     expect(apiBase('web', true, q('api=http://localhost:8080'), undefined)).toBe('http://localhost:8080');
-    expect(apiBase('crazygames', false, q('api=off'), undefined)).toBeNull();
+    expect(apiBase('web', true, q('api=off'), undefined)).toBeNull();
+  });
+
+  it('reads no ?api= in a release, so a link cannot send the install id elsewhere', () => {
+    const q = (s = '') => new URLSearchParams(s);
+    expect(apiBase('crazygames', false, q('api=https://evil.test'), undefined)).toBe(DEFAULT_API);
+    expect(apiBase('web', false, q('api=https://evil.test'), 'https://x.test')).toBe('https://x.test');
+    expect(apiBase('ios', false, q('api=off'), undefined)).toBe(DEFAULT_API);
+    expect(apiBase('wechat', false, q('api=https://evil.test'), undefined)).toBeNull();
   });
 
   it('makes ids the server takes', () => {

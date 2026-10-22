@@ -2,7 +2,7 @@ import type { Notifier } from '../types';
 import type { HKNative, NotifyState } from './bridge';
 
 // Local notifications through the shell (Notifications.swift, docs/ios.md "Reminders"): the
-// system's permission and the booked reminders, by id. Only a shell of bridge v5 or later has
+// system's permission and the booked reminders, by id. Only a shell of bridge v6 or later has
 // them; `nativeNotifier` is null otherwise, and the game never offers reminders there.
 
 export class NativeNotifier implements Notifier {
@@ -52,7 +52,7 @@ export class NativeNotifier implements Notifier {
 
 /** The shell's notifications, or null on a shell (or a browser) without them. */
 export function nativeNotifier(native: Partial<HKNative> | null): NativeNotifier | null {
-  if (!native || (native.v ?? 0) < 5) return null;
+  if (!native || (native.v ?? 0) < 6) return null;
   const calls = [native.notify, native.onNotify, native.notifyAsk, native.notifySchedule, native.notifyCancel];
   return calls.every((f) => typeof f === 'function') ? new NativeNotifier(native) : null;
 }

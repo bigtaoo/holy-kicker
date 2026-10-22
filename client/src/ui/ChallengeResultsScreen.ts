@@ -37,6 +37,8 @@ export class ChallengeResultsScreen implements Screen {
   private frame: UiFrame | null = null;
   private offer: Offer = 'hidden';
   private reply: ChallengeRunReply | null = null;
+  /** The server refused the run: its engine moved on during it. */
+  private outdated = false;
   private left = false;
   private readonly reward: ChallengeReward;
   private readonly chapter: number;
@@ -61,7 +63,8 @@ export class ChallengeResultsScreen implements Screen {
     const reward = this.reward;
     void run.reply.then((r) => {
       if (r && !this.view.destroyed) {
-        this.reply = r;
+        if (r === 'outdated') this.outdated = true;
+        else this.reply = r;
         this.relayout();
       }
     });
@@ -139,6 +142,11 @@ export class ChallengeResultsScreen implements Screen {
         y += 68;
       }
     }
+    if (this.outdated) {
+      // two lines, wrapped about their centre
+      add(t('challenge.outdated'), 48, COLORS.dim, y + 30);
+      y += 170;
+    }
     add(t('challenge.next', { h: this.hours }), 48, COLORS.text, y);
     return c;
   }
@@ -158,6 +166,11 @@ export class ChallengeResultsScreen implements Screen {
         add(t('challenge.checking'), 48, COLORS.dim, y);
         y += 68;
       }
+    }
+    if (this.outdated) {
+      // two lines, wrapped about their centre
+      add(t('challenge.outdated'), 48, COLORS.dim, y + 30);
+      y += 170;
     }
     add(t('weekly.after'), 48, COLORS.text, y);
     return c;

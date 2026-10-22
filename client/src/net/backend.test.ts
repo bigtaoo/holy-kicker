@@ -170,13 +170,17 @@ describe('Backend', () => {
     ]);
   });
 
-  it('enters a run and reads back its rank, null for an answer without one', async () => {
+  it('enters a run with its replay and reads back its rank, null for an answer without one', async () => {
     const calls = server({ ok: true, body: { board: 'c2h', rank: 4, best: true } }, { ok: true, body: { rank: 0 } }, { ok: false, status: 429 });
     const net = new Backend(platform(), 'https://api.test', '1.0.0', () => 'en');
     const run = { chapter: 2, hard: true, won: false, wave: 12, tenths: 4000, level: 9, kills: 500, monk: 'kicker', relic: 'staff' };
-    expect(await net.submitRun(run)).toEqual({ board: 'c2h', rank: 4, best: true });
-    expect(sent(calls[0])).toEqual({ ...run, install: net.install, host: 'crazygames', build: '1.0.0', game: 'monk' });
-    expect(await net.submitRun(run)).toBeNull();
+    const replay = { engine: 48, config: { seed: 5 }, wave: 1, cmds: [1, 2, 3], tick: 12000, hash: 7 };
+    expect(await net.submitRun(run, replay)).toEqual({ board: 'c2h', rank: 4, best: true });
+    expect(sent(calls[0])).toEqual({ ...run, install: net.install, host: 'crazygames', build: '1.0.0', game: 'monk', replay });
+    // a small run still arrives as the tab closes, a long replay does not hold the page
+    expect(calls[0].init.keepalive).toBe(true);
+    expect(await net.submitRun(run, { ...replay, cmds: new Array(LIMITS.replayNumbers).fill(255) })).toBeNull();
+    expect(calls[1].init.keepalive).toBe(false);
     expect(await net.submitRun(run)).toBeNull();
   });
 

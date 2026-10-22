@@ -56,6 +56,7 @@ describe('iOS shell', () => {
     for (const member of ['saved:', 'languages:', 'device:', 'save: function', 'openUrl: function']) expect(bridge).toContain(member);
     for (const member of [
       'gameCenter: gc.get', 'onGameCenter: gc.on', 'gameCenterSignIn: function', '_gameCenter: gc.push',
+      'gameCenterIdentity: function', 'onGameCenterIdentity: gcId.on', '_gameCenterIdentity: gcId.push',
       'adState: ad.get', 'onAdState: ad.on', 'onAdEvent: adEvent.on', 'showAd: function', 'adPrivacy: function',
       '_adState: ad.push', '_adEvent: adEvent.push',
       'store: store.get', 'onStore: store.on', 'onStoreResult: storeResult.on', 'buy: function', 'restore: function',
@@ -67,12 +68,17 @@ describe('iOS shell', () => {
     expect(bridge).toContain("post({ op: 'gameCenter' });");
     expect(bridge).toContain("post({ op: 'adState' });");
     expect(bridge).toContain("post({ op: 'store' });");
-    for (const op of ['"gameCenter"', '"gameCenterSignIn"', '"adState"', '"showAd"', '"adPrivacy"', '"store"', '"buy"', '"restore"']) {
+    for (const op of ['"gameCenter"', '"gameCenterSignIn"', '"gameCenterIdentity"', '"adState"', '"showAd"', '"adPrivacy"', '"store"', '"buy"', '"restore"']) {
       expect(bridge).toContain(`case ${op}:`);
     }
-    for (const receiver of ['_gameCenter', '_adState', '_adEvent', '_store', '_storeResult']) expect(bridge).toContain(`push("${receiver}"`);
+    for (const receiver of ['_gameCenter', '_gameCenterIdentity', '_adState', '_adEvent', '_store', '_storeResult']) expect(bridge).toContain(`push("${receiver}"`);
     expect(bridge).toContain('window.HKNative.\\(receiver)(');
     expect(gameCenter).toContain('"alias": alias ?? NSNull(), "canSignIn": canSignIn');
+    // gameCenter.ts identityOf reads these keys
+    for (const key of ['"ok": true', '"player": player.teamPlayerID', '"alt": player.gamePlayerID', '"bundle":', '"key":', '"sig":', '"salt":', '"ts": timestamp']) {
+      expect(gameCenter).toContain(key);
+    }
+    expect(gameCenter).toContain('fetchItems(forIdentityVerificationSignature:');
     // admob.ts reads these keys and these values
     for (const key of ['"status": status', '"rewarded": rewarded', '"interstitial": interstitial', '"privacyOptions": privacyOptions', '"error": error']) {
       expect(adMob).toContain(key);

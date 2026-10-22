@@ -307,7 +307,8 @@ chapter is meant to carry the next one; chapters 3–5 are to be tuned against t
 
 ### B. Content line (the replay motivation)
 
-- **Relics**, each a different way to play, unlocked by clearing chapters:
+- **Relics**, each a different way to play, unlocked by clearing chapters (staff 1, wooden fish 3,
+  beads 7, bowl 15; `balance.json` `unlocks.relics`, the whole schedule in `docs/unlocks.md`):
 
 | Relic | Play style |
 |---|---|
@@ -599,6 +600,8 @@ is stopped at death and the player opts in, so it should be fine; confirm during
   browsers that block third-party `localStorage`. The SDK initialises asynchronously, so boot
   waits for it (bounded at 3 s, as in daydayup) **before** reading the save. The save carries a
   format version for migrations; settings (quality, volume, language) are local only.
+  No build writes over a save it cannot fully read, and a player without a portal account
+  can move their save with a restore code (docs/cloud-save.md).
 - **Clock:** patrol and daily resets use the device clock. Cheating only affects the player
   themselves; a clock that moved backwards simply pays nothing.
 - **Balance data** (merge costs, copper rates, drop tables, ad caps) lives in data files, never

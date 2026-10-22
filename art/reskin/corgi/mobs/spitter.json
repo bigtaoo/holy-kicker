@@ -1,6 +1,6 @@
 {
   "source": "spitter_v2.png",
-  "out": "../game/art/mobs/toad",
+  "out": "../game/art/ch2/mobs/toad",
   "frames": 10,
   "fps": 11,
   "height": 132,

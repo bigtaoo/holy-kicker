@@ -1,6 +1,6 @@
 {
   "source": "bogworm_v2.png",
-  "out": "../game/art/mobs/carp",
+  "out": "../game/art/ch2/mobs/carp",
   "frames": 12,
   "fps": 10,
   "flash": false,

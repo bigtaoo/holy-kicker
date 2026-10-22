@@ -1,10 +1,11 @@
-import { MONK_IDS, RELIC_IDS, type MonkId, type RelicId } from '@hk/engine';
+import { MONK_IDS, SUTRA_IDS, type MonkId, type RelicId } from '@hk/engine';
 import { CHALLENGE_ID, isDice } from '@hk/protocol';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { newDaily, parseDaily, type Daily } from './daily';
 import { parseWeeks, type WeekEntry } from './weekly';
 import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './gear';
+import { keepUnlocks } from './unlocks';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
@@ -38,12 +39,14 @@ export interface SaveData {
   /** The reached chests already opened in the lobby, the same bits (progressChests.ts). */
   opened: number[];
   runs: number;
-  /** The relic chosen for the next run (docs/content.md "Relics": one more per chapter cleared). */
+  /** The relic chosen for the next run (docs/content.md "Relics", unlocked by chapter: unlocks.ts). */
   relic: RelicId;
   /** Evolutions and awakenings done at least once, in Codex order (codex.ts). */
   codex: EvolveId[];
   /** Owned gear, counts per item and tier (gear.ts); unlocked relics have at least one copy. */
   gear: Inventory;
+  /** Sutras earned, bit i for SUTRA_IDS[i] (unlocks.ts earnedSutras), kept so a moved goal takes none away. */
+  sutras: number;
   /** Training nodes bought, in line order (training.ts). */
   trained: number;
   /** When the patrol started piling up (ms since the epoch), 0 before it opens (patrol.ts). */
@@ -95,7 +98,7 @@ export function newSave(): SaveData {
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), stars: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
-    gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
+    gear: grantRelics(emptyInventory(), ['ball']), sutras: 0, trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: [], dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 },
   };
@@ -111,10 +114,22 @@ function ints(v: unknown, min: number, max: number): number[] {
   return out;
 }
 
+/** The low `width` bits of a bit field: a newer build's extra bits are dropped, not read as all set. */
+function bits(v: unknown, width: number, fallback: number): number {
+  return typeof v === 'number' && Number.isSafeInteger(v) && v >= 0 ? v % 2 ** width : fallback;
+}
+
+/** Bit fields per chapter, as `ints`. */
+function bitsPer(v: unknown, width: number): number[] {
+  const out = new Array<number>(BALANCE.chapters).fill(0);
+  if (Array.isArray(v)) for (let i = 0; i < out.length; i++) out[i] = bits(v[i], width, 0);
+  return out;
+}
+
 /** The opened chests, within the reached ones; a save from before opening in the lobby was paid every chest it reached. */
 function openedOf(v: unknown, reached: number[]): number[] {
   if (!Array.isArray(v)) return [...reached];
-  return ints(v, 0, (1 << BALANCE.chests.length) - 1).map((o, i) => o & reached[i]);
+  return bitsPer(v, BALANCE.chests.length).map((o, i) => o & reached[i]);
 }
 
 function inventory(v: unknown): Inventory {
@@ -128,14 +143,13 @@ function inventory(v: unknown): Inventory {
   return out;
 }
 
-/** The claimed achievements: words of ACHIEVED_BITS bits, none past the last goal; before version 7 it was one number. */
+/** The claimed achievements: words of ACHIEVED_BITS bits, a newer build's goals cut off; before version 7 it was one number. */
 function achievedOf(v: unknown): number[] {
   const words = typeof v === 'number' ? [v] : Array.isArray(v) ? v : [];
   const goals = BALANCE.achievements.length;
   const out: number[] = [];
   for (let w = 0; w * ACHIEVED_BITS < goals; w++) {
-    const bits = Math.min(ACHIEVED_BITS, goals - w * ACHIEVED_BITS);
-    out.push(int(words[w], 0, 2 ** bits - 1, 0));
+    out.push(bits(words[w], Math.min(ACHIEVED_BITS, goals - w * ACHIEVED_BITS), 0));
   }
   while (out.length && !out[out.length - 1]) out.pop();
   return out;
@@ -165,18 +179,32 @@ function owned(monks: number, id: unknown): boolean {
  * hard mode keeps it with three stars on those five chapters.
  * Version 6 kept the claimed achievements in one number: it becomes the first word, no streak yet.
  * A save without the last falls reads as none fallen yet.
+ * A save without stored sutras is from before the re-paced unlocks (docs/unlocks.md): it keeps
+ * the relics and sutras the old gates gave (unlocks.ts keepUnlocks).
  */
 export function parseSave(text: string | null): SaveData {
-  const fresh = newSave();
-  if (!text) return fresh;
-  let raw: Record<string, unknown>;
+  return readSave(saveObject(text));
+}
+
+/** The stored text as an object, null for nothing or text that is not a JSON object. */
+export function saveObject(text: string | null): Record<string, unknown> | null {
+  if (!text) return null;
   try {
     const parsed: unknown = JSON.parse(text);
-    if (parsed === null || typeof parsed !== 'object') return fresh;
-    raw = parsed as Record<string, unknown>;
+    return parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
   } catch {
-    return fresh;
+    return null;
   }
+}
+
+/** The version a stored object says it is, 0 for none. */
+export function versionOf(raw: Record<string, unknown> | null): number {
+  return typeof raw?.version === 'number' && Number.isFinite(raw.version) ? raw.version : 0;
+}
+
+/** parseSave on an already parsed object (null gives a new save). */
+export function readSave(raw: Record<string, unknown> | null): SaveData {
+  if (!raw) return newSave();
   const max = Number.MAX_SAFE_INTEGER;
   const cleared = int(raw.cleared, 0, BALANCE.chapters, 0);
   const old = int(raw.version, 0, SAVE_VERSION, 0) < 6;
@@ -190,10 +218,10 @@ export function parseSave(text: string | null): SaveData {
   const hardStars = ints(raw.hardStars, 0, 3).map((s, i) => (hardBest[i] >= BALANCE.waves ? Math.max(1, s) : 0));
   const chapter = int(raw.chapter, 1, Math.min(BALANCE.chapters, cleared + 1), 1);
   const hard = raw.hard === true && stars[chapter - 1] >= 3;
-  const monks = int(raw.monks, 0, (1 << MONK_IDS.length) - 1, 1) | 1;
-  const chests = ints(raw.chests, 0, (1 << BALANCE.chests.length) - 1);
-  const hardChests = ints(raw.hardChests, 0, (1 << BALANCE.chests.length) - 1);
-  return {
+  const monks = bits(raw.monks, MONK_IDS.length, 1) | 1;
+  const chests = bitsPer(raw.chests, BALANCE.chests.length);
+  const hardChests = bitsPer(raw.hardChests, BALANCE.chests.length);
+  const save: SaveData = {
     version: SAVE_VERSION,
     firstRunDone: raw.firstRunDone === true,
     level: int(raw.level, 1, 999, 1),
@@ -208,15 +236,16 @@ export function parseSave(text: string | null): SaveData {
     chests,
     opened: openedOf(raw.opened, chests),
     runs: int(raw.runs, 0, max, 0),
-    // only a relic the clears have unlocked
-    relic: RELIC_IDS.indexOf(raw.relic as RelicId) >= 0 && RELIC_IDS.indexOf(raw.relic as RelicId) <= cleared ? (raw.relic as RelicId) : 'ball',
+    // the worn relic and the relics' copies: keepUnlocks below
+    relic: 'ball',
     codex: Array.isArray(raw.codex) ? mergeCodex(raw.codex) : [],
-    gear: grantRelics(inventory(raw.gear), RELIC_IDS.slice(0, cleared + 1)),
+    gear: inventory(raw.gear),
+    sutras: bits(raw.sutras, SUTRA_IDS.length, 0),
     trained: int(raw.trained, 0, BALANCE.training.nodes, 0),
     patrol: int(raw.patrol, 0, max, 0),
     daily: parseDaily(raw.daily),
     // a save from before the dots has seen every tab it could open
-    seen: int(raw.seen, 0, 0xff, 0xff),
+    seen: bits(raw.seen, 8, 0xff),
     grit: int(raw.grit, 0, BALANCE.grit.max, 0),
     hard,
     hardBest,
@@ -240,4 +269,5 @@ export function parseSave(text: string | null): SaveData {
     bestStreak: Math.max(int(raw.bestStreak, 0, max, 0), int(raw.streak, 0, max, 0)),
     dailyBest: dailyBestOf(raw.dailyBest),
   };
+  return keepUnlocks(save, raw.relic, raw.sutras === undefined);
 }

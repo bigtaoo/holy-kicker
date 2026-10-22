@@ -1,7 +1,8 @@
 #!/bin/sh
 # The only command CI's deploy key may run on blightbloom: it reads the server payload
 # (a tar.gz of server.mjs, Dockerfile, docker-compose.yml, package.json) from stdin, puts it
-# in /home/deploy/holykicker and restarts the containers. `.github/workflows/ci.yml`'s
+# in /home/deploy/holykicker and restarts the containers. When the new server does not come up
+# healthy, it puts the previous image and files back (holykicker-api:previous, ./previous/). `.github/workflows/ci.yml`'s
 # deploy-server job sends it; server/README.md "Deploy from CI" says how it is installed.
 #
 # The key is registered in /home/deploy/.ssh/authorized_keys as
@@ -48,14 +49,38 @@ if [ "$same" = 1 ] && up; then
   exit 0
 fi
 
+# Keep what runs now, image and files, so a deploy that does not come up healthy goes back to it.
+PREV="$TARGET/previous"
+rollback=0
+if docker image inspect holykicker-api >/dev/null 2>&1 && up; then
+  docker tag holykicker-api holykicker-api:previous
+  mkdir -p "$PREV"
+  for f in $FILES; do cp "$TARGET/$f" "$PREV/$f"; done
+  rollback=1
+fi
+
+wait_up() {
+  # /health pings Mongo (routes.ts); the container's healthcheck reads it every 30 s
+  for _ in $(seq 1 45); do
+    up && return 0
+    sleep 2
+  done
+  return 1
+}
+
 for f in $FILES; do cp "$STAGE/$f" "$TARGET/$f"; done
 cd "$TARGET"
 docker compose up -d --build --force-recreate
-for _ in $(seq 1 30); do
-  up && { echo "hk-api healthy, hk-tunnel running"; exit 0; }
-  sleep 2
-done
+wait_up && { echo "hk-api healthy, hk-tunnel running"; exit 0; }
 docker logs --tail 30 hk-api
 docker logs --tail 15 hk-tunnel || true
 echo "hk-api or hk-tunnel did not come up" >&2
+[ "$rollback" = 1 ] || exit 1
+
+echo "rolling back to the previous image" >&2
+for f in $FILES; do cp "$PREV/$f" "$TARGET/$f"; done
+docker tag holykicker-api:previous holykicker-api
+docker compose up -d --no-build --force-recreate
+if wait_up; then echo "rolled back: the previous server is up again" >&2; else echo "the rollback did not come up either" >&2; fi
+# the job fails either way: the pushed server is not the one running
 exit 1

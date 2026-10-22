@@ -15,7 +15,10 @@ services:
     # collected replays (server/src/replayShelf.ts), kept across deploys
     volumes:
       - replays:/data/replays
-    mem_limit: 128m
+    # measured (server-hardening, 2026-10-22): ~75 MB idle, +17 MB RSS while re-simulating a long
+    # run, plus a 3 MB replay body parsed per report or ranked run; the heap is capped below this in
+    # the Dockerfile (--max-old-space-size), so V8 collects before the kernel kills the container
+    mem_limit: 256m
     logging: &logging
       driver: json-file
       options:
@@ -43,5 +46,33 @@ services:
     mem_limit: 128m
     logging: *logging
 
+  # A nightly mongodump of the database (server/README.md "Backups"), kept HK_BACKUP_DAYS (14)
+  # days on the `backups` volume. It reads only; nothing else depends on it.
+  backup:
+    image: mongo:8.0
+    container_name: hk-backup
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - backups:/backups
+    mem_limit: 256m
+    logging: *logging
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        while :; do
+          now=$$(date -u +%s); next=$$(date -u -d "$$(date -u +%F) 03:00" +%s)
+          [ "$$next" -gt "$$now" ] || next=$$((next + 86400))
+          sleep $$((next - now))
+          f=/backups/holykicker-$$(date -u +%F).archive.gz
+          if mongodump --uri="$$HK_MONGO_URI" --nsInclude="$${HK_MONGO_DB:-holykicker}.*" --gzip --archive="$$f.part" --quiet; then
+            mv "$$f.part" "$$f"; echo "backup $$f $$(du -h "$$f" | cut -f1)"
+          else
+            rm -f "$$f.part"; echo "backup failed" >&2
+          fi
+          find /backups -name 'holykicker-*.archive.gz' -mtime +$${HK_BACKUP_DAYS:-14} -delete
+        done
+
 volumes:
   replays:
+  backups:

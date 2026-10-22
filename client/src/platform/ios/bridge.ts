@@ -22,6 +22,10 @@ export interface HKNative {
   onGameCenter(cb: (state: GameCenterState) => void): void;
   /** Shows Apple's sign-in sheet; only from a tap (v2). */
   gameCenterSignIn(): void;
+  /** Asks GameKit to sign the player for the cloud save; the answer comes through onGameCenterIdentity (v5). */
+  gameCenterIdentity(): void;
+  /** Called with each answer to gameCenterIdentity (v5). */
+  onGameCenterIdentity(cb: (answer: GameCenterIdentity) => void): void;
   /** AdMob's last state, null before the shell has sent one (v3). */
   adState(): AdState | null;
   /** Called with every new AdMob state (v3). */
@@ -42,15 +46,15 @@ export interface HKNative {
   buy(id: string): void;
   /** Restore purchases: AppStore.sync(), then the entitlements again; only from a tap (v4). */
   restore(): void;
-  /** Whether reminders may be shown, null until the system has answered (v5). */
+  /** Whether reminders may be shown, null until the system has answered (v6). */
   notify(): NotifyState | null;
-  /** Called with every new answer, and after notifyAsk even when nothing changed (v5). */
+  /** Called with every new answer, and after notifyAsk even when nothing changed (v6). */
   onNotify(cb: (state: NotifyState) => void): void;
-  /** Shows the system's permission sheet; only from a tap (v5). */
+  /** Shows the system's permission sheet; only from a tap (v6). */
   notifyAsk(): void;
-  /** Books a local notification at `at` (ms since 1970), replacing one with the same id (v5). */
+  /** Books a local notification at `at` (ms since 1970), replacing one with the same id (v6). */
   notifySchedule(id: string, at: number, title: string, body: string): void;
-  /** Drops a booked notification (v5). */
+  /** Drops a booked notification (v6). */
   notifyCancel(id: string): void;
 }
 
@@ -105,6 +109,22 @@ export interface GameCenterState {
   alias: string | null;
   /** Whether Apple's sign-in sheet is waiting to be shown. */
   canSignIn: boolean;
+}
+
+/** GKLocalPlayer.fetchItems(forIdentityVerificationSignature:) as the shell passes it on
+ *  (docs/cloud-save.md "iOS: Game Center"): `ok` false when the player is not signed in or GameKit failed. */
+export interface GameCenterIdentity {
+  ok: boolean;
+  /** teamPlayerID, and gamePlayerID beside it. */
+  player?: string;
+  alt?: string;
+  bundle?: string;
+  /** The URL of Apple's public key. */
+  key?: string;
+  /** The signature and the salt, base64; the timestamp in ms. */
+  sig?: string;
+  salt?: string;
+  ts?: number;
 }
 
 /** The shell's bridge, or null in a browser. Members may be missing on an older shell. */

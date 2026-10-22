@@ -1,6 +1,6 @@
 {
   "source": "marsh/toad_v1.png",
-  "out": "../../../client/public/art/mobs/toad",
+  "out": "../../../client/public/art/ch2/mobs/toad",
   "frames": 10,
   "fps": 11,
   "height": 132,
