@@ -37,7 +37,8 @@ export type Device = (typeof DEVICES)[number];
  * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached) and, in a browser, `focus` (the game ever had the keys since launch) and `input` (any key or click reached it). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,
  * `emerge`, `bullet`, `zone`, or `level` when under-levelled for the wave). `alive` has what a `leave` in a run has
  * (`chapter`, `wave`, `level`, `kills`, `card`, `tutorial`). `run_resume` has `chapter`, `hard` and
- * `wave`. A daily challenge run's `run_start` and `run_end` also have `challenge`, the
+ * `wave`. `run_end` also has the final build and how the run was moved through (RUN_BUILD).
+ * A daily challenge run's `run_start` and `run_end` also have `challenge`, the
  * challenge's id (`d20261019`). `iap` has `what` (`buy` or
  * `restore`), `item` (`adfree`) and `outcome` (`owned`, `cancelled`, `pending` or `failed`, and
  * `none` for a restore that found nothing).
@@ -45,6 +46,19 @@ export type Device = (typeof DEVICES)[number];
  * `perf` is a frame-rate snapshot of the battle so far (see PerfProps); `anomaly` one thing gone
  * wrong on the device, sent as it happens (see AnomalyProps).
  */
+/**
+ * The build a `run_end` carries (builds from engine 49 on): `spells` and `passives` as
+ * comma-joined id + level, a spell's `+` when evolved (`palm5+,bolt3`, `eye2,rice1`, empty for
+ * none); `relicLv` 1..5 and `awakened`; `moving`, the percent of the hero's ticks up spent moving;
+ * `travel`, world units walked per kill (none without kills). Kiting runs move almost all the
+ * time and walk far per kill.
+ */
+export const RUN_BUILD = {
+  spells: /^(?:[a-z]{2,12}[1-5]\+?(?:,[a-z]{2,12}[1-5]\+?){0,3})?$/,
+  passives: /^(?:[a-z]{2,12}[1-5](?:,[a-z]{2,12}[1-5]){0,3})?$/,
+  maxTravel: 100_000,
+} as const;
+
 export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap', 'perf', 'anomaly', 'alive', 'run_resume'] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 

@@ -24,7 +24,7 @@ import { bracketed } from '../platform/brackets';
 import type { Ads, Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
 import { languageProps, type Backend, type RunRank, type RunResult } from '../net/backend';
-import { runLeave } from '../net/leaveProps';
+import { runBuild, runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, PropValue, ReplayWire } from '@hk/protocol';
@@ -427,7 +427,7 @@ export class Shell {
       level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
     };
     this.perf?.end();
-    this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(this.challenge.run && { challenge: this.challenge.run.id }) });
+    this.net.track('run_end', { ...run, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(this.challenge.run && { challenge: this.challenge.run.id }) });
     const name = rankedRun(this.scene) ? this.names.board(this.save) : null;
     const rank = name && !this.challenge.run ? this.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(null);
     void this.net.flush();

@@ -72,6 +72,15 @@ export interface PickStats {
   took: string;
 }
 
+/** The hero's final build: spells and passives with their levels, the relic's. */
+export interface BuildStats {
+  relic: string;
+  relicLv: number;
+  awakened: boolean;
+  spells: { id: string; level: number; evolved: boolean }[];
+  passives: { id: string; level: number }[];
+}
+
 export interface RunStats {
   ticks: number;
   seconds: number;
@@ -93,6 +102,7 @@ export interface RunStats {
   waves: WaveStats[];
   deaths: Death[];
   picks: PickStats[];
+  build: BuildStats;
 }
 
 interface WaveAcc {
@@ -140,6 +150,7 @@ export function analyzeRun(engine: Stepper, endTick: number): RunStats {
   const out: RunStats = {
     ticks: 0, seconds: 0, outcome: '', wave: 0, level: 1, kills: 0, downSeconds: 0, revives: 0, damage: {},
     idle: 0, low: 0, circling: 0, leading: 0, waves: [], deaths: [], picks: [],
+    build: { relic: '', relicLv: 1, awakened: false, spells: [], passives: [] },
   };
   let downTicks = 0, liveTicks = 0, idleTicks = 0, lowTicks = 0, movingSamples = 0, ledSamples = 0;
   let windows = 0, circlingWindows = 0, windowTurn = 0, windowT = 0, lastBrad = -1;
@@ -238,6 +249,11 @@ export function analyzeRun(engine: Stepper, endTick: number): RunStats {
     ticks: s.tick, seconds: r1(s.tick / TICK_RATE), outcome: s.outcome, wave: s.wave, level: p.level,
     downSeconds: r1(downTicks / TICK_RATE), idle: pct(idleTicks, liveTicks), low: pct(lowTicks, liveTicks),
     circling: pct(circlingWindows, windows), leading: pct(ledSamples, movingSamples),
+    build: {
+      relic: p.relicId, relicLv: p.relic, awakened: p.awakened,
+      spells: p.spells.map((sp) => ({ id: sp.id, level: sp.level, evolved: sp.evolved })),
+      passives: p.passives.map((ps) => ({ id: ps.id, level: ps.level })),
+    },
   });
   return out;
 }
