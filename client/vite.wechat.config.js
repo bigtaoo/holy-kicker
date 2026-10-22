@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { relative, sep } from 'node:path';
 import { cpSync, existsSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
@@ -49,6 +50,9 @@ const onlyEnZh = {
 // (art.ts loadChapterArt). The bought monks' rigs (public/art/monks) are a pack the same way,
 // 'monks' (art.ts loadMonkArt). The recorded sounds and music (public/audio) are one more
 // subpackage, 'audio', which Sound loads at boot. build/checkWeChatPackage.mjs budgets each package.
+// The art only dev scene switches draw (src/platform/wechat/devOnlyArt.json: ?ground=earth,
+// ?face=white) stays out, since the WeChat entry always plays DEFAULT_SCENE.
+const DEV_ONLY = new Set(JSON.parse(readFileSync(fileURLToPath(new URL('./src/platform/wechat/devOnlyArt.json', import.meta.url)), 'utf8')));
 const copyArt = {
   name: 'copy-art',
   closeBundle() {
@@ -56,7 +60,8 @@ const copyArt = {
     const to = fileURLToPath(new URL('./wechat/art', import.meta.url));
     rmSync(to, { recursive: true, force: true });
     // the web builds' WebP copies (tools/webp.py) stay out: WeChat loads the PNGs
-    cpSync(from, to, { recursive: true, filter: (src) => !src.endsWith('.webp') });
+    const publicPath = (src) => relative(fileURLToPath(new URL('./public', import.meta.url)), src).split(sep).join('/');
+    cpSync(from, to, { recursive: true, filter: (src) => !src.endsWith('.webp') && !DEV_ONLY.has(publicPath(src)) });
     const packs = readdirSync(to).filter((d) => /^(ch\d+|monks)$/.test(d)).sort();
     for (const name of packs) writeFileSync(`${to}/${name}/game.js`, `// ${name}: an art pack, loaded by wx.loadSubpackage\n`);
     const gameJson = fileURLToPath(new URL('./wechat/game.json', import.meta.url));

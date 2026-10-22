@@ -1,6 +1,6 @@
 {
   "source": "worm_v2.png",
-  "out": "../game/art/mobs/waterghost",
+  "out": "../game/art/ch2/mobs/waterghost",
   "frames": 10,
   "fps": 9,
   "height": 168,

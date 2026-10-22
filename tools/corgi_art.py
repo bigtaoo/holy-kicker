@@ -27,7 +27,7 @@ GROUNDS = {
     "art/ground/grass.png": ["planet_tile.py", "frost"],
     "art/ground/earth.png": ["planet_tile.py", "regolith"],
     "art/ground/earth_soft.png": ["planet_tile.py", "regolith", "--soft"],
-    "art/ground/marsh.png": ["planet_tile.py", "spore"],
+    "art/ch2/ground/marsh.png": ["planet_tile.py", "spore"],
     "art/ch3/ground/snow.png": ["planet_tile.py", "dune"],
     "art/ch4/ground/street.png": ["rock_tile.py", "--rgb", "60,58,58", "--ember", "230,130,50", "--embers", "6",
                                  "--lava", "160,74,28", "--seed", "7"],
@@ -37,7 +37,7 @@ GROUNDS = {
 # each chapter's props: a 2x3 sheet cut in reading order into the frame names decoView.ts draws
 DECO = {
     "art/ground/deco": ("planets/deco_frost.png", "grass_tuft bush rocks dirt_patch stump gravestone"),
-    "art/ground/marsh_deco": ("planets/deco_jungle.png", "reeds puddle lily mossrock log lantern"),
+    "art/ch2/ground/marsh_deco": ("planets/deco_jungle.png", "reeds puddle lily mossrock log lantern"),
     "art/ch3/ground/snow_deco": ("planets/deco_dune.png", "pine snowrock shrub ice stump cairn"),
     "art/ch4/ground/street_deco": ("planets/deco_forge.png", "lantern_post papers jars crates stall burner"),
     "art/ch5/ground/cave_deco": ("planets/deco_hive.png", "spikes bones - brazier crystals stupa"),

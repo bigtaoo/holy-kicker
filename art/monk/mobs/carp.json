@@ -1,6 +1,6 @@
 {
   "source": "marsh/carp_v2.png",
-  "out": "../../../client/public/art/mobs/carp",
+  "out": "../../../client/public/art/ch2/mobs/carp",
   "frames": 12,
   "fps": 10,
   "flash": false,

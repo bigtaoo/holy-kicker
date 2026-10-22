@@ -1,6 +1,6 @@
 {
   "source": "marsh/toad_king_v1.png",
-  "out": "../../../client/public/art/mobs/toad_king",
+  "out": "../../../client/public/art/ch2/mobs/toad_king",
   "frames": 10,
   "fps": 8,
   "outline": {"px": 7, "color": "#e2f2ee", "steps": 12},

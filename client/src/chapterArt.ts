@@ -14,10 +14,11 @@ import type { Platform } from './platform/types';
 /** The late art (lateArt.ts), for the shell's lobby-art queue. */
 export { lateArt };
 
-// The later chapters' art, piece by piece (game/chapterNeeds.ts): chapter 2's misty marsh (in
-// the main package, but no first run needs it), then the art packs (art/ch<n>/, WeChat
-// subpackages): chapter 3's snow pass, chapter 4's ghost market and chapter 5's Demon Peak, each
-// with its ground and props, mobs and elite, and the baked bosses on their own. A run loads what
+// The later chapters' art, piece by piece (game/chapterNeeds.ts), in art packs (art/ch<n>/, WeChat
+// subpackages): chapter 2's misty marsh (which the lobby fetches behind the first screen, Shell
+// start, so chapter 2 never waits on it), chapter 3's snow pass, chapter 4's ghost market and
+// chapter 5's Demon Peak, each with its ground and props, mobs and elite, and the baked bosses on
+// their own. A run loads what
 // its chapter draws; freeChapterArt drops the mobs and bosses no chapter near the next run's
 // draws, so a player back in chapter 1 after the Demon Peak does not carry all five chapters'
 // hordes. The grounds and props stay: they are small, and `art.stages` is indexed by chapter.
@@ -40,14 +41,15 @@ function sheet(platform: Platform, path: string, got: string[]) {
 
 const PIECES: Record<ChapterPiece, Piece> = {
   marsh: {
+    pack: 'ch2',
     async load(platform, { ground, deco }, art, got) {
       const [marsh, marshDeco, ghost, toad, toadKing] = await Promise.all([
-        ground === 'flat' ? null : Assets.load<Texture>('art/ground/marsh.png'),
-        deco === 'none' ? null : loadDeco(platform, 'art/ground/marsh_deco'),
+        ground === 'flat' ? null : Assets.load<Texture>('art/ch2/ground/marsh.png'),
+        deco === 'none' ? null : loadDeco(platform, 'art/ch2/ground/marsh_deco'),
         // the water ghost, toad and toad king
-        sheet(platform, 'art/mobs/waterghost', got),
-        sheet(platform, 'art/mobs/toad', got),
-        sheet(platform, 'art/mobs/toad_king', got),
+        sheet(platform, 'art/ch2/mobs/waterghost', got),
+        sheet(platform, 'art/ch2/mobs/toad', got),
+        sheet(platform, 'art/ch2/mobs/toad_king', got),
       ]);
       art.stages[1] = { ground: marsh, deco: marshDeco, style: MARSH_DECO, mist: MARSH_MIST };
       art.marsh = { ghost, toad, toadKing };
@@ -56,7 +58,8 @@ const PIECES: Record<ChapterPiece, Piece> = {
   },
   // the Black Carp King
   carp: {
-    load: async (platform, _scene, art, got) => void (art.bosses.carp = await sheet(platform, 'art/mobs/carp', got)),
+    pack: 'ch2',
+    load: async (platform, _scene, art, got) => void (art.bosses.carp = await sheet(platform, 'art/ch2/mobs/carp', got)),
     drop: (art) => delete art.bosses.carp,
   },
   snow: {
