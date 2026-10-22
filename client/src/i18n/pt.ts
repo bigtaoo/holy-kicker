@@ -187,6 +187,11 @@ export const pt: Table<typeof en> = {
     runs: 'Termine {n} partidas',
   },
   results: {
+    collect: 'Coletar no lobby ({n})',
+    lobby: 'Voltar ao lobby',
+    mergeStep: 'Equipamento para fundir ×{n}',
+    goMerge: 'Fundir',
+    upNext: 'A seguir',
     waves: 'ondas vencidas',
     starNext2: 'Próxima estrela: concluir sem reviver',
     starNext3: 'Próxima estrela: nunca abaixo de {n}% de vida',

@@ -2,7 +2,7 @@ import { Container, Graphics, type Renderer, type Texture } from 'pixi.js';
 import type { RelicId } from '@hk/engine';
 import { rollDice } from '@hk/protocol';
 import { t } from '../i18n';
-import { earnedSutras, playableChapters, type Lock, type Tab } from '../meta/progress';
+import { earnedSutras, playableChapters, tabLock, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import type { Store } from '../platform/types';
 import type { EvolveId } from '../meta/codex';
@@ -351,6 +351,11 @@ export class LobbyScreen implements Screen {
   /** Opens on the settings panel (the lobby is rebuilt after a language change). */
   openSettings(): void {
     this.settingsOpen = true;
+  }
+
+  /** Opens on `tab` (the results' next step), unless it is still locked. */
+  openTab(tab: Tab): void {
+    if (!tabLock(this.save, tab)) this.tab = tab;
   }
 
   private relayout(): void {

@@ -201,6 +201,8 @@ export const corgiZh: Table<typeof corgiEn> = {
     clear: '通关星球 {n}',
   },
   results: {
+    trainStep: '可训练 {n} 格：{stats}',
+    goTrain: '去训练',
     cleared: '星球通关！',
     hardCleared: '困难星球通关！',
     hardUnlocked: '三星！本星球困难模式已解锁',

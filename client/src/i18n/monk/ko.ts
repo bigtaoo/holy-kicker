@@ -200,6 +200,8 @@ export const monkKo: Table<typeof monkEn> = {
     clear: '{n}장 클리어',
   },
   results: {
+    trainStep: '지금 수련 ×{n}: {stats}',
+    goTrain: '수련하기',
     cleared: '장 클리어!',
     hardCleared: '어려움 장 클리어!',
     hardUnlocked: '별 3개! 이 장의 어려움 모드 열림',

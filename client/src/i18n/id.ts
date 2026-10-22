@@ -187,6 +187,11 @@ export const id: Table<typeof en> = {
     runs: 'Selesaikan {n} permainan',
   },
   results: {
+    collect: 'Ambil di lobi ({n})',
+    lobby: 'Kembali ke lobi',
+    mergeStep: 'Perlengkapan siap digabung ×{n}',
+    goMerge: 'Gabung',
+    upNext: 'Berikutnya',
     waves: 'gelombang dilewati',
     starNext2: 'Bintang berikutnya: tamat tanpa hidup kembali',
     starNext3: 'Bintang berikutnya: darah tak pernah di bawah {n}%',

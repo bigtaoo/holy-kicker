@@ -13,9 +13,10 @@ import { noteFall, runPast } from '../meta/falls';
 import { loadout } from '../meta/loadout';
 import { rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
-import { chooseTrack, doubleCopper, earnedSutras, selectChapter, settleRun, type Reward } from '../meta/progress';
+import { chooseTrack, doubleCopper, earnedSutras, selectChapter, settleRun, type Reward, type Tab } from '../meta/progress';
 import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
+import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
 import { afterRun } from '../meta/welcome';
 import type { SaveStore } from '../meta/saveStore';
 import { loadSettings, updateSettings } from '../meta/settings';
@@ -29,7 +30,7 @@ import { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
-import { loadChapterArt, loadRunArt } from '../chapterArt';
+import { chapterLook, loadChapterArt, loadRunArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
 import { menuBackdrop } from './lobbyBars';
 import { LobbyScreen } from './LobbyScreen';
@@ -212,10 +213,10 @@ export class Shell {
     this.names.sync(save);
   }
 
-  /** `settings` opens the lobby on its settings panel (after a language change). */
-  private showLobby(settings = false): void {
+  /** `open` opens the lobby on its settings panel (after a language change) or on a tab (the results' next step). */
+  private showLobby(open: 'settings' | Tab | null = null): void {
     if (!this.lobbyArt.in) {
-      void this.lobbyArt.ready().then(() => this.showLobby(settings));
+      void this.lobbyArt.ready().then(() => this.showLobby(open));
       return;
     }
     // a new day's counters, and the patrol once it opens
@@ -228,20 +229,11 @@ export class Shell {
     this.challenge.refresh();
     const lobby = new LobbyScreen(this.save, this.names, {
       play: (chapter) => this.play(chapter),
-      selectChapter: (chapter) => {
-        this.commit(selectChapter(this.save, chapter));
-        this.showLobby();
-      },
-      chooseTrack: (hard) => {
-        this.commit(chooseTrack(this.save, hard));
-        this.showLobby();
-      },
-      selectRelic: (relic) => {
-        this.commit({ ...this.save, relic });
-        this.showLobby();
-      },
+      selectChapter: (chapter) => this.relobby(selectChapter(this.save, chapter)),
+      chooseTrack: (hard) => this.relobby(chooseTrack(this.save, hard)),
+      selectRelic: (relic) => this.relobby({ ...this.save, relic }),
       settings: storedSettings(this.platform.storage, this.sound, {
-        setLanguage: () => this.showLobby(true),
+        setLanguage: () => this.showLobby('settings'),
         setQuality: (quality) => this.onQualityMode(quality),
         privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform),
         account: this.platform.portal, adPrivacy: this.platform.adPrivacy,
@@ -250,14 +242,18 @@ export class Shell {
       adAvailable: () => this.ads.rewardedAvailable(),
       rewarded: () => this.rewarded('lobby'),
       board: this.net.online && this.names.ranked() ? (id) => this.net.board(id) : null, // no guests on account hosts
-      challenge: () => this.challenge.lobby(this.save, this.names.ranked(), (c, chapter) => void this.play(chapter, undefined, null, c), (v) => this.watchReplay(v), (save) => {
-        this.commit(save);
-        this.showLobby();
-      }),
+      challenge: () => this.challenge.lobby(this.save, this.names.ranked(), (c, chapter) => void this.play(chapter, undefined, null, c), (v) => this.watchReplay(v), (save) => this.relobby(save)),
       track: (e, p) => this.net.track(e, p), store: this.platform.store,
     }, this.art.icons, this.app.renderer, this.art.lobby, () => ({ rig: monkRig(this.art, this.save.monk), art: this.art.patrol, icons: this.art.icons }));
-    if (settings) lobby.openSettings();
+    if (open === 'settings') lobby.openSettings();
+    else if (open) lobby.openTab(open);
     this.setScreen(lobby);
+  }
+
+  /** Keeps `save` and draws the lobby again with it. */
+  private relobby(save: SaveData): void {
+    this.commit(save);
+    this.showLobby();
   }
 
   /** The last run was left unfinished: go on with it, or give it up (settled like a give-up in the run). */
@@ -467,15 +463,19 @@ export class Shell {
       leaving = true;
       void (this.save.runs > 1 ? this.ads.midgame() : Promise.resolve()).then(then);
     };
+    // a lost run's way back is the same chapter again (not the tutorial: firstRunDone is set), a first clear's the chapter it opened
+    const opened = reward.firstClear && (this.save.chapter !== this.chapter || this.save.hard !== this.hard);
     this.setScreen(new ResultsScreen(reward, waves, {
       double: async () => {
         const paid = await this.rewarded('double');
         if (paid) this.commit(doubleCopper(this.save, reward));
         return paid;
       },
-      next: () => leave(() => this.showLobby()),
-      // a lost run's way back is the same chapter again (not the tutorial: firstRunDone is set), a first clear's the chapter it opened
-      again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, 'again')) : this.save.chapter !== this.chapter || this.save.hard !== this.hard ? () => leave(() => this.play(this.save.chapter, undefined, 'next')) : null,
+      next: (tab) => leave(() => this.showLobby(tab)),
+      again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, 'again')) : opened ? () => leave(() => this.play(this.save.chapter, undefined, 'next')) : null,
+      waiting: () => waitingCount(lobbyWaiting(this.save, Date.now())), step: () => (fall ? lossStep(this.save) : null),
+      // the opened chapter's art, loaded now for its preview and the run Next chapter starts
+      preview: opened ? chapterLook(this.platform, this.scene, this.art, this.save.chapter).catch(() => null) : undefined,
     }, this.ads.rewardedAvailable(), rank, fall, this.art.icons, this.device === 'desktop', menuBackdrop(this.app.renderer, this.art.lobby)));
   }
 

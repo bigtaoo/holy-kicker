@@ -187,6 +187,11 @@ export const vi: Table<typeof en> = {
     runs: 'Hoàn thành {n} trận',
   },
   results: {
+    collect: 'Nhận ở sảnh ({n})',
+    lobby: 'Về sảnh',
+    mergeStep: 'Trang bị có thể ghép ×{n}',
+    goMerge: 'Đi ghép',
+    upNext: 'Tiếp theo',
     waves: 'đợt đã vượt',
     starNext2: 'Sao tiếp theo: qua màn không hồi sinh',
     starNext3: 'Sao tiếp theo: máu không bao giờ dưới {n}%',

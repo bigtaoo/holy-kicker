@@ -200,6 +200,8 @@ export const corgiFr: Table<typeof corgiEn> = {
     clear: 'Termine la planète {n}',
   },
   results: {
+    trainStep: 'Entraînement ×{n} possible : {stats}',
+    goTrain: 'S’entraîner',
     cleared: 'Planète terminée !',
     hardCleared: 'Planète difficile terminée !',
     hardUnlocked: '3 étoiles ! Mode difficile de cette planète ouvert',

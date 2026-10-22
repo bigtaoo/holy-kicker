@@ -185,6 +185,11 @@ export const ko: Table<typeof en> = {
     runs: '{n}판 완주',
   },
   results: {
+    collect: '로비에서 받기 ({n})',
+    lobby: '로비로',
+    mergeStep: '합성 가능한 장비 ×{n}',
+    goMerge: '합성하기',
+    upNext: '다음 목적지',
     waves: '클리어한 웨이브',
     starNext2: '다음 별: 부활 없이 클리어',
     starNext3: '다음 별: 체력을 항상 {n}% 이상 유지',

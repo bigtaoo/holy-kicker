@@ -15,12 +15,18 @@ export function chestsWaiting(save: SaveData, chapter: number, hard: boolean): n
   return reached & ~(save[key(hard)][chapter - 1] ?? 0);
 }
 
+/** How many chests wait, over every chapter of both tracks. */
+export function chestsWaitingCount(save: SaveData): number {
+  let count = 0;
+  for (let n = 1; n <= BALANCE.chapters; n++) {
+    for (let bits = chestsWaiting(save, n, false) | (chestsWaiting(save, n, true) << 16); bits; bits &= bits - 1) count++;
+  }
+  return count;
+}
+
 /** Whether any chapter of either track has a chest waiting. */
 export function anyChestWaiting(save: SaveData): boolean {
-  for (let n = 1; n <= BALANCE.chapters; n++) {
-    if (chestsWaiting(save, n, false) || chestsWaiting(save, n, true)) return true;
-  }
-  return false;
+  return chestsWaitingCount(save) > 0;
 }
 
 /** Opens a waiting chest and pays it, or null when it is not waiting. */

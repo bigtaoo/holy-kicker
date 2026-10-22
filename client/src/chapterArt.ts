@@ -1,11 +1,12 @@
 import { Assets, type Renderer, type Texture } from 'pixi.js';
-import type { MonkId } from '@hk/engine';
+import { mapOf, type MonkId } from '@hk/engine';
 import { loadDeco, loadMonkArt, loadSheet, loadTao } from './art';
 import { warmTextures } from './gpuWarm';
 import type { Art } from './game/Game';
 import { CHAPTER_PIECES, piecesFor, piecesKept, type ChapterPiece } from './game/chapterNeeds';
 import { GHOST_DECO, MARSH_DECO, PEAK_DECO, SNOW_DECO } from './game/decoView';
 import { MARSH_MIST } from './game/mistView';
+import type { MobSheet } from './game/mobView';
 import type { SceneOptions } from './game/scene';
 import type { Platform } from './platform/types';
 
@@ -162,4 +163,28 @@ export async function loadRunArt(renderer: Renderer, platform: Platform, scene: 
   await freeChapterArt(art, chapter);
   await Promise.all([loadChapterArt(platform, scene, art, chapter), loadMonkArt(platform, art, monk)]);
   warmTextures(renderer, art);
+}
+
+/** A chapter as the results' "Up next" shows it: its map's ground tile and its signature enemy's first frame. */
+export interface ChapterLook {
+  chapter: number;
+  /** The ground tile; null where the scene draws the flat field. */
+  ground: Texture | null;
+  foe: Texture | null;
+}
+
+/** Each map's signature enemy, by map: the fox, the water ghost, the ice wraith, the lantern ghost, the Demon Peak's monk. */
+const FOES: ((art: Art) => MobSheet | undefined)[] = [
+  (art) => art.fox,
+  (art) => art.marsh?.ghost,
+  (art) => art.snow?.wraith,
+  (art) => art.ghost?.lantern,
+  (art) => art.peak?.monk,
+];
+
+/** Loads `chapter`'s art (so the next run starts sooner too) and picks its look from it. */
+export async function chapterLook(platform: Platform, scene: Scene, art: Art, chapter: number): Promise<ChapterLook> {
+  await loadChapterArt(platform, scene, art, chapter);
+  const map = mapOf(chapter);
+  return { chapter, ground: art.stages[map - 1]?.ground ?? null, foe: FOES[map - 1](art)?.textures[0] ?? null };
 }

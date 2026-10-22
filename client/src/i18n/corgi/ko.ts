@@ -201,6 +201,8 @@ export const corgiKo: Table<typeof corgiEn> = {
     clear: '행성 {n} 클리어',
   },
   results: {
+    trainStep: '지금 훈련 ×{n}: {stats}',
+    goTrain: '훈련하기',
     cleared: '행성 클리어!',
     hardCleared: '어려움 행성 클리어!',
     hardUnlocked: '별 3개! 이 행성의 어려움 모드 열림',

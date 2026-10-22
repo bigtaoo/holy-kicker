@@ -201,6 +201,8 @@ export const corgiPt: Table<typeof corgiEn> = {
     clear: 'Conclua o planeta {n}',
   },
   results: {
+    trainStep: 'Treine ×{n} agora: {stats}',
+    goTrain: 'Treinar',
     cleared: 'Planeta concluído!',
     hardCleared: 'Planeta difícil concluído!',
     hardUnlocked: '3 estrelas! Modo difícil deste planeta liberado',

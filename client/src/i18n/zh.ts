@@ -185,6 +185,11 @@ export const zh: Table<typeof en> = {
     runs: '完成 {n} 局',
   },
   results: {
+    collect: '回大厅领取 ({n})',
+    lobby: '回大厅',
+    mergeStep: '可合成装备 ×{n}',
+    goMerge: '去合成',
+    upNext: '即将前往',
     waves: '通过波数',
     starNext2: '下一颗星：不复活通关',
     starNext3: '下一颗星：血量始终不低于 {n}%',

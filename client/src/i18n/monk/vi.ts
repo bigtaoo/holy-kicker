@@ -200,6 +200,8 @@ export const monkVi: Table<typeof monkEn> = {
     clear: 'Qua chương {n}',
   },
   results: {
+    trainStep: 'Luyện được ×{n}: {stats}',
+    goTrain: 'Đi luyện',
     cleared: 'Qua chương!',
     hardCleared: 'Qua chương khó!',
     hardUnlocked: '3 sao! Đã mở chế độ Khó của chương này',

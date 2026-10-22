@@ -5,6 +5,7 @@ import type { SaveData } from '../meta/save';
 import { monkAffordable } from '../meta/monks';
 import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
 import { anyChestWaiting } from '../meta/progressChests';
+import { canTrain } from '../meta/waiting';
 import { shopWaiting } from './lobbyEconomy';
 import type { UiFrame } from './uiLayout';
 import { COLORS, button, dot, fit, label, shade } from './widgets';
@@ -228,7 +229,7 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
       const l = lockIcon(icons, 52);
       l.position.set(tw / 2 - 40, -TAB_H / 2 + 44);
       cell.addChild(l);
-    } else if (!active && (!hint || hint === tab) && (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save)))) {
+    } else if (!active && (!hint || hint === tab) && (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save)) || (tab === 'train' && canTrain(save)))) {
       // the open tab shows what is waiting itself
       cell.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
     }

@@ -186,6 +186,11 @@ export const th: Table<typeof en> = {
     runs: 'เล่นจบ {n} รอบ',
   },
   results: {
+    collect: 'ไปรับที่ล็อบบี้ ({n})',
+    lobby: 'กลับล็อบบี้',
+    mergeStep: 'อุปกรณ์ที่รวมได้ ×{n}',
+    goMerge: 'ไปรวม',
+    upNext: 'ต่อไป',
     waves: 'คลื่นที่ผ่าน',
     starNext2: 'ดาวถัดไป: ผ่านโดยไม่ฟื้นคืนชีพ',
     starNext3: 'ดาวถัดไป: พลังชีวิตไม่ต่ำกว่า {n}%',

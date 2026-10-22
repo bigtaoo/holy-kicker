@@ -200,6 +200,8 @@ export const monkZh: Table<typeof monkEn> = {
     clear: '通关第 {n} 章',
   },
   results: {
+    trainStep: '可修炼 {n} 格：{stats}',
+    goTrain: '去修炼',
     cleared: '通关！',
     hardCleared: '困难通关！',
     hardUnlocked: '三星！本章困难模式已解锁',
