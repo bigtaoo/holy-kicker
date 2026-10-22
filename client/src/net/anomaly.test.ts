@@ -1,6 +1,6 @@
 import { ANOMALY_CAP, LIMITS, STALL_MAX_MS, STALL_MS } from '@hk/protocol';
 import { describe, expect, it } from 'vitest';
-import { AnomalyCap, cleanMsg, errorSource, StallWatch } from './anomaly';
+import { AnomalyCap, cleanMsg, errorSource, stackSource, StallWatch } from './anomaly';
 
 describe('AnomalyCap', () => {
   it('lets each kind through a few times a session, each on its own count', () => {
@@ -56,5 +56,14 @@ describe('errorSource', () => {
     expect(errorSource('game.js', 0, 0)).toBe('game.js');
     expect(errorSource('', 3, 4)).toBe('');
     expect(errorSource(undefined, 3, 4)).toBe('');
+  });
+});
+
+describe('stackSource', () => {
+  it('reads the first script position off a stack, as WeChat gives it', () => {
+    expect(stackSource('TypeError: x\n    at t.update (game.js:1:23456)\n    at n (game.js:1:99)')).toBe('game.js:1:23456');
+    expect(stackSource('at https://usr/js/game.js:3:4')).toBe('game.js:3:4');
+    expect(stackSource('no position here')).toBe('');
+    expect(stackSource(undefined)).toBe('');
   });
 });

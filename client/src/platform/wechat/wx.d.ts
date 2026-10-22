@@ -35,6 +35,20 @@ interface WxDeviceInfo {
   system?: string;
 }
 
+/** A rewarded video or interstitial ad (base library 2.0.4+ / 2.6.0+); it loads itself once made
+ *  and again after each close. `show` rejects when none is loaded. */
+interface WxAd<Close> {
+  load(): Promise<void>;
+  show(): Promise<void>;
+  onLoad(cb: () => void): void;
+  onError(cb: (e: { errMsg?: string; errCode?: number }) => void): void;
+  onClose(cb: (res?: Close) => void): void;
+}
+
+/** `isEnded` false: closed before the end, no reward; missing (base library before 2.1.0): ended. */
+type WxRewardedVideoAd = WxAd<{ isEnded?: boolean }>;
+type WxInterstitialAd = WxAd<void>;
+
 interface WxBenchmarkInfo {
   /** 1 high, 2 mid, 3 low, 0 unknown. */
   modelLevel: number;
@@ -226,6 +240,8 @@ interface Wx {
   env?: { USER_DATA_PATH?: string };
   /** An uncaught script error anywhere in the game. */
   onError?: (cb: (e: { message?: string; stack?: string }) => void) => void;
+  /** Base library 2.10.0+: a promise rejected with no handler. */
+  onUnhandledRejection?: (cb: (r: { reason?: unknown; promise?: Promise<unknown> }) => void) => void;
   getDeviceInfo?: () => WxDeviceInfo;
   /** Base library 2.15+; feature-detect. */
   getDeviceBenchmarkInfo?: (opts: { success: (r: WxBenchmarkInfo) => void; fail?: () => void }) => void;
@@ -249,6 +265,9 @@ interface Wx {
    *  is no DOM here, so this is the only signal. Optional for the same reason as above. */
   onAudioInterruptionBegin?: (cb: () => void) => void;
   onAudioInterruptionEnd?: (cb: () => void) => void;
+  /** One per unit id for the whole game (later calls hand back the same ad). */
+  createRewardedVideoAd?: (opts: { adUnitId: string }) => WxRewardedVideoAd;
+  createInterstitialAd?: (opts: { adUnitId: string }) => WxInterstitialAd;
   /** Turns on the capsule menu's forward items (platform/wechat/weChatShare.ts). */
   showShareMenu?: (opts: { withShareTicket?: boolean; menus?: ('shareAppMessage' | 'shareTimeline')[] }) => void;
   /** A system dialog; `editable` (base library 2.17.1+) adds a text box, its text in `content`. */

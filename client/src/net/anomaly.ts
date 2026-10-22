@@ -3,11 +3,12 @@ import type { Application } from 'pixi.js';
 import type { MemSample } from '../game/memProbe';
 import type { Platform } from '../platform/types';
 import type { Backend } from './backend';
+import { AnomalyStash } from './anomalyStash';
 
 // The `anomaly` event (server/src/protocol.ts AnomalyProps): something gone wrong on the device,
 // sent as it happens. A broken device can repeat the same thing every frame, so each kind is
-// capped per session. Every hook is feature-detected: WeChat has no window, and its canvas may
-// not take event listeners.
+// capped per session. Every hook is feature-detected: WeChat has no window (its host reports the
+// uncaught errors, Platform.onScriptError), and its canvas may not take event listeners.
 
 type Kind = (typeof ANOMALY_KINDS)[number];
 
@@ -67,6 +68,12 @@ export function errorSource(file: unknown, line: unknown, col: unknown): string 
   return cleanMsg(at ? `${name}:${at}` : name);
 }
 
+/** Where an error was thrown, read off the first `file.js:line:col` of its stack; '' when none. */
+export function stackSource(stack: unknown): string {
+  const m = typeof stack === 'string' ? /([\w.-]+\.js):(\d+):(\d+)/.exec(stack) : null;
+  return m ? errorSource(m[1], Number(m[2]), Number(m[3])) : '';
+}
+
 /** What the game holds, as the anomaly props carry it. */
 function held(m: MemSample): Partial<AnomalyProps> {
   return { tex: m.tex, texMB: m.texMB, nodes: m.nodes, ...(m.heap !== undefined ? { heap: m.heap } : {}) };
@@ -76,6 +83,10 @@ function held(m: MemSample): Partial<AnomalyProps> {
 export function watchAnomalies(app: Application, platform: Platform, net: Backend, probe: () => MemSample, where: Whereabouts): { frame(ms: number): void } {
   const cap = new AnomalyCap();
   const stalls = new StallWatch();
+  // a release without a backend keeps them on the device, for the first launch that has one
+  const stash = new AnomalyStash(platform.storage);
+  const hold = !net.online && !import.meta.env.DEV;
+  if (net.online) for (const props of stash.take()) net.track('anomaly', props as unknown as Record<string, PropValue>);
   const report = (kind: Kind, extra: Partial<AnomalyProps> = {}) => {
     const { place, wave } = where();
     if (!cap.pass(kind)) {
@@ -85,6 +96,7 @@ export function watchAnomalies(app: Application, platform: Platform, net: Backen
     }
     const props: AnomalyProps = { kind, place, ...extra };
     if (wave !== undefined) props.wave = wave;
+    if (hold) return stash.push(props);
     net.track('anomaly', props as unknown as Record<string, PropValue>);
   };
   const canvas = app.canvas as Partial<Pick<HTMLCanvasElement, 'addEventListener'>> | undefined;
@@ -97,6 +109,10 @@ export function watchAnomalies(app: Application, platform: Platform, net: Backen
     });
     win.addEventListener('unhandledrejection', (e) => report('error', { msg: cleanMsg(e.reason) }));
   }
+  platform.onScriptError?.((err, stack) => {
+    const src = stackSource(stack);
+    report('error', { msg: cleanMsg(err), ...(src ? { src } : {}) });
+  });
   platform.onMemoryWarning?.((level) => report('memory', { level, ...held(probe()) }));
   platform.onHide(() => stalls.hide());
   const hidden = () => typeof document !== 'undefined' && document.hidden === true;
