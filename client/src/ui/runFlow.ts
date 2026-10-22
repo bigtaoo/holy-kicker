@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import { SUTRA_IDS, TICK_RATE, type SimState } from '@hk/engine';
+import { SUTRA_IDS, type SimState } from '@hk/engine';
 import { Game, type Art } from '../game/Game';
 import type { DragStick } from '../game/dragStick';
 import type { LevelSettings } from '../game/quality';
@@ -36,6 +36,7 @@ import { canReport, reportProblem } from './problemReport';
 import type { PlayerName } from './playerName';
 import type { DownInfo } from './deathInfo';
 import { RunWatch } from './runWatch';
+import { clearedWaves, keepable, runSummary } from './runSummary';
 import type { Screen } from './uiLayout';
 
 // A run's life (docs/design.md "Flow"), the shell's other half: the run started from the lobby, a
@@ -165,7 +166,7 @@ export class RunFlow {
   private keep(): void {
     const s = this.game?.engine.state;
     const { scene, platform, challenge } = this.host;
-    if (!s || s.config.waves === 0 || scene.autoplay || scene.record || challenge.run) return;
+    if (!s || !keepable(s, scene, !!challenge.run)) return;
     keepRun(platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills });
   }
 
@@ -249,12 +250,9 @@ export class RunFlow {
     const h = this.host;
     const cause = fall?.cause;
     dropRun(h.platform.storage);
-    const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
+    const waves = clearedWaves(s);
     const p = s.players[0];
-    const run = {
-      chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
-      level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
-    };
+    const run = runSummary(s, this.chapter, this.hard, this.kills);
     h.perf()?.end();
     h.net.track('run_end', { ...run, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
     const name = rankedRun(h.scene) ? h.names.board(h.save()) : null;
