@@ -78,8 +78,7 @@ export class Game {
   readonly resumed: boolean;
   private readonly loop = new FixedStep();
   private readonly root = new Container();
-  // its own render group: the y-sort rebuilds its draw list each frame, the stage's (sides, HUD) stays cached
-  private readonly world = new Container({ isRenderGroup: true });
+  private readonly world = new Container({ isRenderGroup: true }); // y-sorted each frame: a group keeps the stage's list cached
   private readonly playMask = new Graphics();
   private readonly sides: Container;
   private readonly label = new Text({ text: '', style: { fill: 0xffffff, fontFamily: 'Arial', stroke: { color: 0x000000, width: 4 } } });
