@@ -104,6 +104,7 @@ export const en = {
     practice: 'Practice',
     practiceNote: "Practice run: today\'s rewards are already yours",
     checking: 'Checking your run…',
+    outdated: 'The game was updated during your run, so it is not ranked. Restart the game to play',
     top: 'Top {n}%',
   },
   mutator: {

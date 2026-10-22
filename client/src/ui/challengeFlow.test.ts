@@ -100,6 +100,23 @@ describe('challenge flow', () => {
     flow.begin(daily);
     expect(flow.settle(first.save, ended, run, 9, 100, true).reward.counted).toBe(false);
   });
+
+  it('fetches the record again when the server refused a run made on its old engine, so the card says to update', async () => {
+    const net = fakeNet({ now: START, challenges: [daily] });
+    const flow = new ChallengeFlow(net as unknown as Backend, () => {}, false, false, () => START);
+    flow.refresh();
+    await settle();
+    // the server was deployed with the next engine during the run
+    net.challenges.mockResolvedValue({ now: START, challenges: [{ ...daily, engine: ENGINE_VERSION + 1 }] });
+    net.submitChallengeRun.mockResolvedValue('outdated' as never);
+    flow.begin(daily);
+    (flow as unknown as { replay: ReplayWire }).replay = { engine: ENGINE_VERSION, config: {}, wave: 1, cmds: [], tick: 10, hash: 0 };
+    const settled = flow.settle(player, ended, run, 7, 200, true);
+    expect(await settled.reply).toBe('outdated');
+    await settle();
+    expect(net.challenges).toHaveBeenCalledTimes(2);
+    expect(flow.daily(player)).toMatchObject({ state: 'update', reply: null });
+  });
 });
 
 describe('weekly challenge flow', () => {

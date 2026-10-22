@@ -129,6 +129,16 @@ function checkReplay(v: unknown): ReplayWire | null | undefined {
   return { engine: v.engine, config: v.config, wave: v.wave, cmds: cmds as number[], tick: v.tick, hash: v.hash };
 }
 
+/**
+ * A chapter run (RunPost) and the replay that lets the server verify it; a replay that does not
+ * parse is dropped rather than refused, so the run still learns its rank.
+ */
+export function checkRunPost(v: unknown): Checked<{ run: RunEntry; replay: ReplayWire | null }> {
+  const run = checkRun(v);
+  if (!run.ok) return run;
+  return { ok: true, value: { run: run.value, replay: (isObj(v) && checkReplay(v.replay)) || null } };
+}
+
 /** A challenge run: the challenge's id, a plausible run and its replay (which re-simulation checks later). */
 export function checkChallengeRun(v: unknown): Checked<ChallengeRun> {
   if (!isObj(v) || typeof v.challenge !== 'string' || !CHALLENGE_ID.test(v.challenge)) return { ok: false, reason: 'bad challenge' };

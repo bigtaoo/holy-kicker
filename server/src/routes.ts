@@ -1,12 +1,13 @@
+import { ENGINE_VERSION } from '@hk/engine';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
 import { challengeFor, misfit, openChallenges } from './challenge';
 import { marked } from './marks';
-import { BEACONS, BOARD_SUFFIX, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, isGame, keptGame, loadBucket, type Beacon, type Game, type Host } from './protocol';
+import { BEACONS, BOARD_SUFFIX, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, isGame, keptGame, loadBucket, type Beacon, type Game, type Host, type ReplayWire, type RunEntry } from './protocol';
 import { REPLAY_NAME, wantsReplays, type CollectPlan, type ReplayShelf } from './replayShelf';
-import { checkBatch, checkChallengeRun, checkNameEntry, checkReport, checkRun, checkRunReplay } from './rules';
-import type { ResimJob } from './challengeDocs';
-import type { Store } from './store';
+import { checkBatch, checkChallengeRun, checkNameEntry, checkReport, checkRunPost, checkRunReplay } from './rules';
+import { boardReplay } from './boardDocs';
+import type { ResimRef, Store } from './store';
 
 // The HTTP API (server/README.md), as a function from a parsed request to a reply so the tests
 // drive it without sockets; index.ts does the networking. Every player route is anonymous and
@@ -36,8 +37,10 @@ export interface Deps {
   now(): number;
   /** Rate limit: false when `key` asked for `route` too often. */
   allow(route: string, key: string): boolean;
-  /** Where pending challenge runs go to be re-simulated (resimQueue.ts). */
-  resim: { push(job: ResimJob): void };
+  /** Where pending challenge runs and board bests go to be re-simulated (resimQueue.ts). */
+  resim: { push(ref: ResimRef): void };
+  /** How a board run's replay is judged before the run is kept (boardDocs.ts boardReplay, the default; the tests take any). */
+  boardReplay?: (run: RunEntry, replay: ReplayWire | null) => ReplayWire | null;
   /** Last week's weekly tiers by tag, for the marks beside the names on the boards (marks.ts WeekMarks); none without. */
   marks?: { current(): Promise<ReadonlyMap<string, number>> };
   /** Where collected replays go (replayShelf.ts); none collects nothing. `collect` overrides COLLECT (tests). */
@@ -69,9 +72,25 @@ function installTag(req: Req, d: Deps): string | null {
   return install && install.length >= LIMITS.idMin && install.length <= LIMITS.idMax ? tagOf(install, d.tagSalt) : null;
 }
 
+/** How long `/health` waits for the database before calling the server unhealthy. */
+export const HEALTH_TIMEOUT_MS = 2000;
+
+/** Whether the store answers a ping within HEALTH_TIMEOUT_MS: the container's healthcheck and the deploy's wait read it. */
+async function reachable(store: Store): Promise<boolean> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<false>((done) => { timer = setTimeout(() => done(false), HEALTH_TIMEOUT_MS); });
+  try {
+    return await Promise.race([store.ping().then(() => true as const), late]);
+  } catch {
+    return false;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function route(req: Req, d: Deps): Promise<Reply> {
   const { method, path } = req;
-  if (method === 'GET' && path === '/health') return { status: 200, body: { ok: true } };
+  if (method === 'GET' && path === '/health') return (await reachable(d.store)) ? { status: 200, body: { ok: true } } : { status: 503, body: { ok: false } };
 
   if (method === 'POST' && path === '/v1/events') {
     if (!d.allow('events', req.ip)) return { status: 429 };
@@ -99,10 +118,12 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
 
   if (method === 'POST' && path === '/v1/runs') {
     if (!d.allow('runs', req.ip)) return { status: 429 };
-    const c = checkRun(req.body);
+    const c = checkRunPost(req.body);
     if (!c.ok) return bad(c.reason);
-    const tag = tagOf(c.value.install, d.tagSalt);
-    const r = await d.store.submitRun(c.value, tag, d.now());
+    const { run, replay } = c.value;
+    const tag = tagOf(run.install, d.tagSalt);
+    const { at, ...r } = await d.store.submitRun(run, tag, (d.boardReplay ?? ((r, p) => boardReplay(r, p, ENGINE_VERSION)))(run, replay), d.now());
+    if (r.status === 'pending') d.resim.push({ kind: 'board', board: r.board, tag, at });
     return { status: 200, body: { ...r, tag } };
   }
 
@@ -139,7 +160,7 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     const entry = { board: challengeBoardId(challenge.id, challenge.engine, run.chapter, run.game), tag, challenge: challenge.id, run, replay };
     const now = d.now();
     const r = await d.store.challengeRun(entry, now);
-    if (r.status === 'pending') d.resim.push({ ...entry, at: now });
+    if (r.status === 'pending') d.resim.push({ kind: 'challenge', board: entry.board, tag, at: now });
     return { status: 200, body: { ...r, tag } };
   }
 

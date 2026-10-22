@@ -106,6 +106,7 @@ export const fr: Table<typeof en> = {
     practice: "S\'entraîner",
     practiceNote: "Partie d\'entraînement : tu as déjà les récompenses du jour",
     checking: 'Vérification de ta partie…',
+    outdated: "Le jeu a été mis à jour pendant ta partie, elle n'est donc pas classée. Relance le jeu pour jouer",
     top: 'Top {n} %',
   },
   mutator: {

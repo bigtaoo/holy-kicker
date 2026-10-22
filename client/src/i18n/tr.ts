@@ -106,6 +106,7 @@ export const tr: Table<typeof en> = {
     practice: 'Antrenman',
     practiceNote: 'Antrenman oyunu: bugünün ödüllerini zaten aldın',
     checking: 'Oyunun kontrol ediliyor…',
+    outdated: 'Oyun sen oynarken güncellendi, bu yüzden bu oyun sıralamaya girmiyor. Oynamak için oyunu yeniden başlat',
     top: 'İlk %{n}',
   },
   mutator: {

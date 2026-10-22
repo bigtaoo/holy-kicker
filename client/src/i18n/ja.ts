@@ -106,6 +106,7 @@ export const ja: Table<typeof en> = {
     practice: '練習',
     practiceNote: '練習：今日の報酬は受け取り済みです',
     checking: '記録を確認中…',
+    outdated: 'プレイ中にゲームが更新されたため、この記録はランキングに入りません。ゲームを再起動してください',
     top: '上位{n}%',
   },
   mutator: {

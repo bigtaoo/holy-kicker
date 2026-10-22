@@ -40,7 +40,8 @@ describe('readBody', () => {
   it('gives a problem report room for its replay and keeps everything else small', () => {
     expect(maxBody('/v1/reports')).toBe(LIMITS.reportBytes);
     expect(maxBody('/v1/events')).toBe(MAX_BODY);
-    expect(maxBody('/v1/runs')).toBe(MAX_BODY);
+    expect(maxBody('/v1/runs')).toBe(LIMITS.reportBytes);
+    expect(maxBody('/v1/name')).toBe(MAX_BODY);
   });
 });
 
