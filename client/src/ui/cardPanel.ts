@@ -16,7 +16,8 @@ import { COLORS, backdrop, fit, label, panel } from './widgets';
 // Shrine blessings have no item and keep a drawn shape. The cards rise in grey and only take taps
 // once a gold line has run round their rims (cardGate.ts). On a desktop the keys pick too
 // (cardKeys.ts): each card wears its number, and a gold ring shows the one Enter takes. A player
-// who does nothing for a while is shown a hand tapping the suggested card (cardNudge.ts).
+// who does nothing for a while is shown a hand tapping the suggested card (cardNudge.ts); in a new
+// player's first runs that card also wears a "Top pick" tag from the start.
 
 const CARD_W = 960;
 const CARD_H = 330;
@@ -168,13 +169,32 @@ export interface CardPanel {
   key(code: string, repeat: boolean): void;
 }
 
+/** Where the hand's fingertip taps, from the card's middle: low on the icon, so the hand hangs over
+ *  the icons below rather than the level line or the next card's name. */
+const HAND_X = -CARD_W / 2 + 40 + ICON_R * 0.6;
+const HAND_DOWN = 0;
+
 /** The ring round the highlighted card. */
 const FOCUS_PAD = 14;
 
-/** The card nudge's state, kept by the caller across layouts: the card to suggest, and whether the player did anything yet. */
+/**
+ * The card nudge's state, kept by the caller across layouts: the card to suggest, whether the
+ * player did anything yet, and whether the card wears the tag (a new player's first runs).
+ */
 export interface CardNudgeState {
   suggest: number;
   touched: boolean;
+  tagged: boolean;
+}
+
+/** The suggested card's tag, a pill on its top edge over the start of the name. */
+function suggestTag(cardH: number): Container {
+  const c = new Container();
+  const text = label(t('card.suggested'), 48, COLORS.outline);
+  const w = Math.ceil(text.width) + 48;
+  c.addChild(new Graphics().roundRect(-w / 2, -34, w, 68, 34).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 }), text);
+  c.position.set(TEXT_X + w / 2, -cardH / 2);
+  return c;
 }
 
 /**
@@ -230,14 +250,15 @@ export function cardPanel(
         showFocus();
       });
     }
+    if (nudge?.tagged && nudge.suggest === i) body.addChild(suggestTag(cardH));
     view.addChild(c);
     return { c, body, rim, ring, y: top + cardH / 2 + i * (cardH + GAP) };
   });
   const showFocus = () => cards.forEach(({ ring }, i) => (ring.visible = !!keys && !locked && keys.focus === i));
   const hand = nudge && cards[nudge.suggest] ? cardHand() : null;
   if (hand && nudge) {
-    // the fingertip rests right of the middle, over the effect lines' free end
-    hand.view.position.set(f.w / 2 + CARD_W * 0.3, cards[nudge.suggest].y - 10);
+    // the fingertip rests on the card's lower left, by the icon, clear of the name and the level step
+    hand.view.position.set(f.w / 2 + HAND_X, cards[nudge.suggest].y + HAND_DOWN);
     hand.view.visible = false;
     view.addChild(hand.view);
     const touch = () => (nudge.touched = true);

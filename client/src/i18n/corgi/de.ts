@@ -113,14 +113,14 @@ export const corgiDe: Table<typeof corgiEn> = {
     knives: { name: 'Messerring', desc: 'Bis zu {n} Messer kreisen um dich, dann fliegen sie los', count: 'Messer {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Kühlmittel', desc: 'Gadget-Abklingzeit −{n}%' },
+    calm: { name: 'Kühlmittel', desc: 'Gadget-Abklingzeit −{n}%', blurb: 'Deine Gadgets sind schneller wieder bereit' },
     iron: { name: 'Panzerung' },
     legs: { name: 'Düsenstiefel' },
-    eye: { name: 'Weitwinkel', desc: 'Gadget-Fläche +{n}%' },
+    eye: { name: 'Weitwinkel', desc: 'Gadget-Fläche +{n}%', blurb: 'Deine Gadgets treffen eine größere Fläche' },
     rice: { name: 'Trockenfutter' },
     wrath: { name: 'Zielfernrohr' },
     karma: { name: 'Leckerli-Magnet' },
-    focus: { name: 'Batterie', desc: 'Gadget-Dauer +{n}%, Schutz nach Treffer +{m}%' },
+    focus: { name: 'Batterie', desc: 'Gadget-Dauer +{n}%, Schutz nach Treffer +{m}%', blurb: 'Gadgets halten länger, nach Treffern sicherer' },
   },
   boss: {
     abbot: 'Titankäfer',

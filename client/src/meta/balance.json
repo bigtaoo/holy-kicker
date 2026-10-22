@@ -7,6 +7,7 @@
   "lowHealth": { "percent": 30, "hysteresis": 5, "bpm": [66, 120] },
   "grit": {"max": 20, "minWaves": 5, "bonus": {"attack": 3, "maxHp": 4}},
   "novice": {"runs": 3, "bonus": {"attack": 25, "maxHp": 40}},
+  "cardNudge": { "after": 3 },
   "copperPerWave": 10,
   "copperChapterStep": 0.5,
   "chests": [

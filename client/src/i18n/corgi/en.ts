@@ -117,14 +117,14 @@ export const corgiEn: Table<typeof monkEn> = {
     knives: { name: 'Knife Ring', desc: 'Up to {n} knives circle you, then fly out', count: 'Knives {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Coolant', desc: 'Gadget cooldown −{n}%' },
+    calm: { name: 'Coolant', desc: 'Gadget cooldown −{n}%', blurb: 'Your gadgets come back sooner' },
     iron: { name: 'Plating' },
     legs: { name: 'Jet Boots' },
-    eye: { name: 'Wide Lens', desc: 'Gadget area +{n}%' },
+    eye: { name: 'Wide Lens', desc: 'Gadget area +{n}%', blurb: 'Your gadgets hit a wider area' },
     rice: { name: 'Kibble' },
     wrath: { name: 'Scope' },
     karma: { name: 'Treat Magnet' },
-    focus: { name: 'Battery', desc: 'Gadget duration +{n}%, guard after a hit +{m}%' },
+    focus: { name: 'Battery', desc: 'Gadget duration +{n}%, guard after a hit +{m}%', blurb: 'Gadgets last longer; safer after a hit' },
   },
   boss: {
     abbot: 'Titan Beetle',

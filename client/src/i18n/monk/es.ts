@@ -113,14 +113,14 @@ export const monkEs: Table<typeof monkEn> = {
     knives: { name: 'Círculo de Hojas', desc: 'Hasta {n} cuchillos giran a tu alrededor y luego salen disparados', count: 'Cuchillos {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Mente serena', desc: 'Recarga de hechizos −{n}%' },
+    calm: { name: 'Mente serena', desc: 'Recarga de hechizos −{n}%', blurb: 'Tus hechizos vuelven antes' },
     iron: { name: 'Cabeza de hierro' },
     legs: { name: 'Piernas de arhat' },
-    eye: { name: 'Ojo sabio', desc: 'Área de hechizos +{n}%' },
+    eye: { name: 'Ojo sabio', desc: 'Área de hechizos +{n}%', blurb: 'Tus hechizos cubren más área' },
     rice: { name: 'Arroz de limosna' },
     wrath: { name: 'Ira' },
     karma: { name: 'Karma' },
-    focus: { name: 'Concentración', desc: 'Duración de hechizos +{n}%, protección tras un golpe +{m}%' },
+    focus: { name: 'Concentración', desc: 'Duración de hechizos +{n}%, protección tras un golpe +{m}%', blurb: 'Hechizos más largos, más seguro tras un golpe' },
   },
   boss: {
     abbot: 'Abad caído',

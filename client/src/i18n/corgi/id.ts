@@ -114,14 +114,14 @@ export const corgiId: Table<typeof corgiEn> = {
     knives: { name: 'Cincin Pisau', desc: 'Hingga {n} pisau berputar di sekitarmu, lalu melesat', count: 'Pisau {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Pendingin', desc: 'Jeda gadget −{n}%' },
+    calm: { name: 'Pendingin', desc: 'Jeda gadget −{n}%', blurb: 'Gadget siap lagi lebih cepat' },
     iron: { name: 'Pelat Baja' },
     legs: { name: 'Sepatu Jet' },
-    eye: { name: 'Lensa Lebar', desc: 'Area gadget +{n}%' },
+    eye: { name: 'Lensa Lebar', desc: 'Area gadget +{n}%', blurb: 'Gadget mengenai area lebih luas' },
     rice: { name: 'Makanan Kering' },
     wrath: { name: 'Teropong' },
     karma: { name: 'Magnet Camilan' },
-    focus: { name: 'Baterai', desc: 'Durasi gadget +{n}%, kebal usai kena +{m}%' },
+    focus: { name: 'Baterai', desc: 'Durasi gadget +{n}%, kebal usai kena +{m}%', blurb: 'Gadget bertahan lebih lama, lebih aman usai kena' },
   },
   boss: {
     abbot: 'Kumbang Titan',

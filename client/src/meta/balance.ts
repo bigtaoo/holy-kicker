@@ -33,6 +33,8 @@ export interface Balance {
   lowHealth: LowHealthBalance;
   grit: GritBalance;
   novice: NoviceBalance;
+  /** Seconds the level-up cards stand open untouched before a hand taps the suggested one (ui/cardNudge.ts). */
+  cardNudge: { after: number };
   copperPerWave: number;
   copperChapterStep: number;
   chests: Chest[];

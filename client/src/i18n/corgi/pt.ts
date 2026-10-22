@@ -114,14 +114,14 @@ export const corgiPt: Table<typeof corgiEn> = {
     knives: { name: 'Anel de Facas', desc: 'Até {n} facas giram ao seu redor e depois disparam', count: 'Facas {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Líquido Refrigerante', desc: 'Recarga de gadgets −{n}%' },
+    calm: { name: 'Líquido Refrigerante', desc: 'Recarga de gadgets −{n}%', blurb: 'Seus gadgets voltam mais cedo' },
     iron: { name: 'Blindagem' },
     legs: { name: 'Botas a Jato' },
-    eye: { name: 'Lente Ampla', desc: 'Área de gadgets +{n}%' },
+    eye: { name: 'Lente Ampla', desc: 'Área de gadgets +{n}%', blurb: 'Seus gadgets cobrem uma área maior' },
     rice: { name: 'Ração' },
     wrath: { name: 'Mira' },
     karma: { name: 'Ímã de Petiscos' },
-    focus: { name: 'Bateria', desc: 'Duração de gadgets +{n}%, proteção após um golpe +{m}%' },
+    focus: { name: 'Bateria', desc: 'Duração de gadgets +{n}%, proteção após um golpe +{m}%', blurb: 'Gadgets duram mais, mais seguro após um golpe' },
   },
   boss: {
     abbot: 'Besouro Titã',

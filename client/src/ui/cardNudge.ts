@@ -1,3 +1,5 @@
+import { BALANCE } from '../meta/balance';
+
 // A hand for a player who stares at the level-up cards: once they have stood open
 // CARD_NUDGE.after seconds with no tap, pointer move or key, a hand taps the suggested card
 // (suggestCard in the engine's bot: the bot's choice without its chance) again and again, and the
@@ -7,7 +9,7 @@
 
 export const CARD_NUDGE = {
   /** Seconds after the cards open before the hand comes. */
-  after: 5,
+  after: BALANCE.cardNudge.after,
   /** Seconds of one tap: down, held, up and a rest. */
   beat: 1.2,
 };

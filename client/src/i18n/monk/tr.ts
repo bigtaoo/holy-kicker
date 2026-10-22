@@ -113,14 +113,14 @@ export const monkTr: Table<typeof monkEn> = {
     knives: { name: 'Bıçak Çemberi', desc: 'En fazla {n} bıçak etrafında döner, sonra fırlar', count: 'Bıçak {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Sakin Zihin', desc: 'Büyü bekleme −%{n}' },
+    calm: { name: 'Sakin Zihin', desc: 'Büyü bekleme −%{n}', blurb: 'Büyülerin daha çabuk hazır olur' },
     iron: { name: 'Demir Kafa' },
     legs: { name: 'Arhat Bacakları' },
-    eye: { name: 'Bilgelik Gözü', desc: 'Büyü alanı +%{n}' },
+    eye: { name: 'Bilgelik Gözü', desc: 'Büyü alanı +%{n}', blurb: 'Büyülerin daha geniş alana vurur' },
     rice: { name: 'Sadaka Pirinci' },
     wrath: { name: 'Gazap' },
     karma: { name: 'Karma' },
-    focus: { name: 'Odak', desc: 'Büyü süresi +%{n}, darbe sonrası koruma +%{m}' },
+    focus: { name: 'Odak', desc: 'Büyü süresi +%{n}, darbe sonrası koruma +%{m}', blurb: 'Büyüler daha uzun sürer, darbeden sonra daha güvende' },
   },
   boss: {
     abbot: 'Düşmüş Başrahip',

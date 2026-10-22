@@ -114,14 +114,14 @@ export const corgiJa: Table<typeof corgiEn> = {
     knives: { name: 'ナイフリング', desc: '最大 {n} 本の刀が周りを回り、揃うと一斉に飛ぶ', count: '刀 {a} → {b}' },
   },
   passive: {
-    calm: { name: 'クーラント', desc: 'ガジェットのクールダウン −{n}%' },
+    calm: { name: 'クーラント', desc: 'ガジェットのクールダウン −{n}%', blurb: 'ガジェットがより早く使える' },
     iron: { name: '装甲板' },
     legs: { name: 'ジェットブーツ' },
-    eye: { name: 'ワイドレンズ', desc: 'ガジェットの範囲 +{n}%' },
+    eye: { name: 'ワイドレンズ', desc: 'ガジェットの範囲 +{n}%', blurb: 'ガジェットがより広く当たる' },
     rice: { name: 'カリカリフード' },
     wrath: { name: 'スコープ' },
     karma: { name: 'おやつマグネット' },
-    focus: { name: 'バッテリー', desc: 'ガジェットの持続 +{n}%、被弾後の無敵 +{m}%' },
+    focus: { name: 'バッテリー', desc: 'ガジェットの持続 +{n}%、被弾後の無敵 +{m}%', blurb: 'ガジェットが長く続き、被弾後も安全' },
   },
   boss: {
     abbot: 'タイタンビートル',

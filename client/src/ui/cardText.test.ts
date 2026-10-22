@@ -25,9 +25,9 @@ describe('card text', () => {
     expect(cardText({ kind: 'relic', id: 'ball' }, p).lines).toEqual(['Bounces 3 → 4']);
     p.relic = 3;
     expect(cardText({ kind: 'relic', id: 'ball' }, p).lines).toEqual(['Cooldown 0.9s → 0.7s']);
-    expect(cardText({ kind: 'passive', id: 'rice' }, p).lines).toEqual(['Heal 0.4% health per second']);
+    expect(cardText({ kind: 'passive', id: 'rice' }, p).lines).toEqual(['Slowly heal while you fight', 'Heal 0.4% health per second']);
     setLocale('zh');
-    expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ name: '罗汉腿', tag: '新！', lines: ['移速 +8%'] });
+    expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ name: '罗汉腿', tag: '新！', lines: ['跑得更快，更容易躲开', '移速 +8%'] });
   });
 
   it('shows a passive\'s step as what it gives now and what it will give', () => {
@@ -106,7 +106,7 @@ describe('card text', () => {
     const awaken = cardText({ kind: 'evolve', id: 'bowl' }, p);
     expect(awaken).toMatchObject({ name: 'Bottomless Bowl', tag: 'Awaken!' });
     expect(awaken.lines).toEqual(['Swallows 8 enemies a throw, XP at once', 'Reach +7%']);
-    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['XP +8%, pickup range +15%']);
+    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['Level up faster', 'XP +8%, pickup range +15%']);
   });
 
   it('describes the sutra spells, their evolutions, Focus and the sutras', () => {
@@ -120,7 +120,7 @@ describe('card text', () => {
     const roar = cardText({ kind: 'evolve', id: 'roar' }, p);
     expect(roar).toMatchObject({ name: 'Thunder Roar', tag: 'Evolve!' });
     expect(roar.lines).toEqual(['Roars all round, shatters bullets', 'Area +8%', 'Damage +12%']);
-    expect(cardText({ kind: 'passive', id: 'focus' }, p).lines).toEqual(['Spell duration +10%, invincibility after a hit +20%']);
+    expect(cardText({ kind: 'passive', id: 'focus' }, p).lines).toEqual(['Spells last longer; safer after a hit', 'Spell duration +10%, invincibility after a hit +20%']);
     expect(sutraName('roar')).toBe("Lion's Roar");
     expect(sutraName('focus')).toBe('Focus');
     expect(sutraGoalText('lotus')).toBe('Reach wave 25 in a chapter');

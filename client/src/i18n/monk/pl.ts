@@ -113,14 +113,14 @@ export const monkPl: Table<typeof monkEn> = {
     knives: { name: 'Krąg Ostrzy', desc: 'Do {n} noży krąży wokół ciebie, potem wylatują', count: 'Noże {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Spokojny Umysł', desc: 'Odnowienie zaklęć −{n}%' },
+    calm: { name: 'Spokojny Umysł', desc: 'Odnowienie zaklęć −{n}%', blurb: 'Zaklęcia wracają szybciej' },
     iron: { name: 'Żelazna Głowa' },
     legs: { name: 'Nogi Arhata' },
-    eye: { name: 'Oko Mądrości', desc: 'Obszar zaklęć +{n}%' },
+    eye: { name: 'Oko Mądrości', desc: 'Obszar zaklęć +{n}%', blurb: 'Zaklęcia trafiają większy obszar' },
     rice: { name: 'Ryż Jałmużny' },
     wrath: { name: 'Gniew' },
     karma: { name: 'Karma' },
-    focus: { name: 'Skupienie', desc: 'Czas trwania zaklęć +{n}%, ochrona po trafieniu +{m}%' },
+    focus: { name: 'Skupienie', desc: 'Czas trwania zaklęć +{n}%, ochrona po trafieniu +{m}%', blurb: 'Zaklęcia trwają dłużej, bezpieczniej po trafieniu' },
   },
   boss: {
     abbot: 'Upadły Opat',

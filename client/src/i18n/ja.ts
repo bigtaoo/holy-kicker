@@ -128,6 +128,7 @@ export const ja: Table<typeof en> = {
   card: {
     levelUp: 'レベルアップ！',
     pickOne: '1つ選ぼう',
+    suggested: 'おすすめ',
     gained: '習得：{name}',
     new: 'NEW！',
     level: 'Lv {a} → {b}',
@@ -164,11 +165,11 @@ export const ja: Table<typeof en> = {
     bolt: { count: 'ジャンプ {a} → {b}回' },
   },
   passive: {
-    iron: { desc: '最大HP +{n}%' },
-    legs: { desc: '移動速度 +{n}%' },
-    rice: { desc: '毎秒HPを{n}%回復' },
-    wrath: { desc: '会心率 +{n}%' },
-    karma: { desc: '経験値 +{n}%、回収範囲 +{m}%' },
+    iron: { desc: '最大HP +{n}%', blurb: '打たれ強くなる' },
+    legs: { desc: '移動速度 +{n}%', blurb: '速く走って避けやすくなる' },
+    rice: { desc: '毎秒HPを{n}%回復', blurb: '戦いながら少しずつ回復' },
+    wrath: { desc: '会心率 +{n}%', blurb: '会心の一撃が出やすくなる' },
+    karma: { desc: '経験値 +{n}%、回収範囲 +{m}%', blurb: '早くレベルアップ' },
   },
   story: {
     quote: '「{text}」',

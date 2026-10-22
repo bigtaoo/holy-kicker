@@ -130,6 +130,7 @@ export const id: Table<typeof en> = {
   card: {
     levelUp: 'Naik level!',
     pickOne: 'Pilih satu',
+    suggested: 'Saran',
     gained: 'Dipelajari: {name}',
     new: 'Baru!',
     level: 'Lv {a} → {b}',
@@ -166,11 +167,11 @@ export const id: Table<typeof en> = {
     bolt: { count: 'Lompatan {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'Darah maks +{n}%' },
-    legs: { desc: 'Kecepatan +{n}%' },
-    rice: { desc: 'Pulihkan {n}% darah per detik' },
-    wrath: { desc: 'Peluang kritis +{n}%' },
-    karma: { desc: 'XP +{n}%, jarak ambil +{m}%' },
+    iron: { desc: 'Darah maks +{n}%', blurb: 'Tahan lebih banyak pukulan' },
+    legs: { desc: 'Kecepatan +{n}%', blurb: 'Lari lebih cepat, lebih mudah menghindar' },
+    rice: { desc: 'Pulihkan {n}% darah per detik', blurb: 'Pulih perlahan saat bertarung' },
+    wrath: { desc: 'Peluang kritis +{n}%', blurb: 'Lebih sering memberi serangan kritis' },
+    karma: { desc: 'XP +{n}%, jarak ambil +{m}%', blurb: 'Naik level lebih cepat' },
   },
   story: {
     quote: '"{text}"',

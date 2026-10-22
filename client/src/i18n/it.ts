@@ -130,6 +130,7 @@ export const it: Table<typeof en> = {
   card: {
     levelUp: 'Livello su!',
     pickOne: 'Scegline uno',
+    suggested: 'Consigliato',
     gained: 'Imparato: {name}',
     new: 'Nuovo!',
     level: 'Liv {a} → {b}',
@@ -166,11 +167,11 @@ export const it: Table<typeof en> = {
     bolt: { count: 'Salti {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'Salute massima +{n}%' },
-    legs: { desc: 'Velocità di movimento +{n}%' },
-    rice: { desc: 'Cura il {n}% di salute al secondo' },
-    wrath: { desc: 'Probabilità critico +{n}%' },
-    karma: { desc: 'EXP +{n}%, raggio di raccolta +{m}%' },
+    iron: { desc: 'Salute massima +{n}%', blurb: 'Reggi più colpi' },
+    legs: { desc: 'Velocità di movimento +{n}%', blurb: 'Corri più veloce e schiva meglio' },
+    rice: { desc: 'Cura il {n}% di salute al secondo', blurb: 'Ti curi piano piano in battaglia' },
+    wrath: { desc: 'Probabilità critico +{n}%', blurb: 'Più colpi critici' },
+    karma: { desc: 'EXP +{n}%, raggio di raccolta +{m}%', blurb: 'Sali di livello più in fretta' },
   },
   story: {
     quote: '«{text}»',

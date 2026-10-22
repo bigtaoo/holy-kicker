@@ -113,14 +113,14 @@ export const monkDe: Table<typeof monkEn> = {
     knives: { name: 'Klingenkreis', desc: 'Bis zu {n} Messer kreisen um dich, dann fliegen sie los', count: 'Messer {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Ruhiger Geist', desc: 'Zauber-Abklingzeit −{n}%' },
+    calm: { name: 'Ruhiger Geist', desc: 'Zauber-Abklingzeit −{n}%', blurb: 'Deine Zauber sind schneller wieder bereit' },
     iron: { name: 'Eisenschädel' },
     legs: { name: 'Arhat-Beine' },
-    eye: { name: 'Auge der Weisheit', desc: 'Zauberfläche +{n}%' },
+    eye: { name: 'Auge der Weisheit', desc: 'Zauberfläche +{n}%', blurb: 'Deine Zauber treffen eine größere Fläche' },
     rice: { name: 'Almosenreis' },
     wrath: { name: 'Zorn' },
     karma: { name: 'Karma' },
-    focus: { name: 'Fokus', desc: 'Zauberdauer +{n}%, Schutz nach Treffer +{m}%' },
+    focus: { name: 'Fokus', desc: 'Zauberdauer +{n}%, Schutz nach Treffer +{m}%', blurb: 'Zauber halten länger, nach Treffern sicherer' },
   },
   boss: {
     abbot: 'Gefallener Abt',

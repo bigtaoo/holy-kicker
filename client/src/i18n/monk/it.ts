@@ -113,14 +113,14 @@ export const monkIt: Table<typeof monkEn> = {
     knives: { name: 'Cerchio di Lame', desc: 'Fino a {n} coltelli ti girano intorno, poi partono', count: 'Coltelli {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Mente Calma', desc: 'Ricarica incantesimi −{n}%' },
+    calm: { name: 'Mente Calma', desc: 'Ricarica incantesimi −{n}%', blurb: 'I tuoi incantesimi tornano prima' },
     iron: { name: 'Testa di Ferro' },
     legs: { name: 'Gambe dell\'Arhat' },
-    eye: { name: 'Occhio della Saggezza', desc: 'Area incantesimi +{n}%' },
+    eye: { name: 'Occhio della Saggezza', desc: 'Area incantesimi +{n}%', blurb: 'I tuoi incantesimi coprono più area' },
     rice: { name: 'Riso delle Elemosine' },
     wrath: { name: 'Ira' },
     karma: { name: 'Karma' },
-    focus: { name: 'Concentrazione', desc: 'Durata incantesimi +{n}%, protezione dopo un colpo +{m}%' },
+    focus: { name: 'Concentrazione', desc: 'Durata incantesimi +{n}%, protezione dopo un colpo +{m}%', blurb: 'Incantesimi più lunghi, più sicuro dopo un colpo' },
   },
   boss: {
     abbot: 'Abate Caduto',

@@ -114,14 +114,14 @@ export const corgiZh: Table<typeof corgiEn> = {
     knives: { name: '战术飞刀', desc: '最多 {n} 把刀绕身旋转，满了齐射', count: '飞刀 {a} → {b} 把' },
   },
   passive: {
-    calm: { name: '冷却液', desc: '技能冷却 −{n}%' },
+    calm: { name: '冷却液', desc: '技能冷却 −{n}%', blurb: '技能更快再次使用' },
     iron: { name: '装甲板' },
     legs: { name: '喷气靴' },
-    eye: { name: '广角镜', desc: '技能范围 +{n}%' },
+    eye: { name: '广角镜', desc: '技能范围 +{n}%', blurb: '技能覆盖范围更大' },
     rice: { name: '狗粮' },
     wrath: { name: '瞄准镜' },
     karma: { name: '零食磁铁' },
-    focus: { name: '电池', desc: '技能持续 +{n}%，受击后无敌 +{m}%' },
+    focus: { name: '电池', desc: '技能持续 +{n}%，受击后无敌 +{m}%', blurb: '技能持续更久，挨打后更安全' },
   },
   boss: {
     abbot: '泰坦甲虫',
