@@ -358,6 +358,8 @@ export const tr: Table<typeof en> = {
     adPrivacy: 'Reklam gizliliği',
     dataNotice: 'Oyun istatistikleri, tur tekrarları ve sıralama turları, oyunu dengelemek ve sıralamaları yürütmek için sunucumuza gider.',
     playId: 'Oyun kimliğin: {id}',
+    version: 'Sürüm {v}',
+    versionTester: 'Sürüm {v} · test edici',
     idCopied: 'Kimlik kopyalandı',
     idCopyFailed: 'Kimlik kopyalanamadı',
   },

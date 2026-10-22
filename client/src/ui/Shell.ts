@@ -7,6 +7,7 @@ import type { SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
 import { setupOf } from '../game/runSetup';
 import { BALANCE } from '../meta/balance';
+import { EXPERIMENTS, enroll, experimentTag, forcedArms } from '../meta/experiments';
 import { rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
 import { chooseTrack, selectChapter, type Tab } from '../meta/progress';
@@ -22,7 +23,7 @@ import { languageProps, type Backend } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import { RunReplays } from '../net/runReplays';
-import type { Challenge, Device, PropValue } from '@hk/protocol';
+import type { Challenge, Device, OfferPlace, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
 import { loadRunArt, lateArt, loadChapterArt } from '../chapterArt';
@@ -97,7 +98,7 @@ export class Shell {
     this.lobbyArt = new LobbyArtLoad(platform, art, this.app.renderer);
     this.replays = new RunReplays(net);
     this.challenge = new ChallengeFlow(net, () => (this.screenKey = ''), scene.challenge, scene.settleWeeks); // the lobby is drawn again when the record comes
-    this.save = this.names.withDice(store.load());
+    this.save = this.enrolled(this.names.withDice(store.load()));
     store.save(this.save);
     const settings = loadSettings(platform.storage);
     this.sound = new Sound(platform, settings.volume, settings.music);
@@ -182,7 +183,9 @@ export class Shell {
 
   /** Re-reads the save after the portal account changed (a guest signed in). */
   reloadSave(): void {
-    this.save = this.names.withDice(this.store.load());
+    const loaded = this.names.withDice(this.store.load());
+    this.save = this.enrolled(loaded);
+    if (this.save.arms !== loaded.arms) this.store.save(this.save);
     if (this.screen instanceof LobbyScreen) this.showLobby();
   }
 
@@ -206,7 +209,15 @@ export class Shell {
     }
   }
 
+  /** `save` put in the experiments running here (meta/experiments.ts), and the events tagged with its arms. */
+  private enrolled(save: SaveData): SaveData {
+    const s = enroll(save, this.platform.host, Math.random, EXPERIMENTS, forcedArms(this.scene.arm));
+    this.net.tag(experimentTag(s), s.tester);
+    return s;
+  }
+
   private commit(save: SaveData): void {
+    if (save.tester !== this.save.tester) this.net.tag(experimentTag(save), save.tester);
     this.save = save;
     this.store.save(save);
     // a rolled name reaches the boards from here
@@ -238,10 +249,11 @@ export class Shell {
         setQuality: (quality) => this.onQualityMode(quality),
         privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform), cloud: this.cloud,
         account: this.platform.portal, adPrivacy: this.platform.adPrivacy, reminders: this.reminders ?? undefined,
+        version: __HK_BUILD__, tester: () => this.save.tester, markTester: () => this.commit({ ...this.save, tester: true }),
       }),
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
-      rewarded: () => this.rewarded('lobby'),
+      rewarded: (at) => this.rewarded(at),
       board: this.net.online && this.names.ranked() ? (id) => this.net.board(id) : null, // no guests on account hosts
       challenge: () => this.challenge.lobby(this.save, this.names.ranked(), (c, chapter) => void this.play(chapter, undefined, null, c), (v) => this.watchReplay(v), (save) => this.relobby(save)),
       track: (e, p) => this.net.track(e, p), store: this.platform.store,
@@ -301,10 +313,11 @@ export class Shell {
     });
   }
 
-  /** A rewarded ad, counted when it paid (`at` says where it was offered). */
-  private async rewarded(at: string): Promise<boolean> {
+  /** A rewarded ad, counted when it paid (`at` says where it was offered), and the offer as taken or failed. */
+  private async rewarded(at: OfferPlace): Promise<boolean> {
     const paid = await this.ads.rewarded();
     if (paid) this.net.track('ad', this.ads.adFree() ? { at, free: true } : { at });
+    this.net.track('offer', { at, outcome: paid ? 'taken' : 'failed' });
     return paid;
   }
 

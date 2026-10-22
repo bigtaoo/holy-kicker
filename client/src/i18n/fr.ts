@@ -359,6 +359,8 @@ export const fr: Table<typeof en> = {
     adPrivacy: 'Pubs et vie privée',
     dataNotice: 'Les statistiques de jeu, les replays des parties et les parties classées vont à notre serveur, pour équilibrer le jeu et gérer les classements.',
     playId: 'Ton ID de jeu : {id}',
+    version: 'Version {v}',
+    versionTester: 'Version {v} · testeur',
     idCopied: 'ID copié',
     idCopyFailed: "Impossible de copier l'ID",
   },

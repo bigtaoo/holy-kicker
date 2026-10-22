@@ -1,0 +1,7 @@
+{
+  "first20": {
+    "note": "A 20-wave first run against the full chapter, for D1 (docs/retention.md). The short arm plays the full chapter until runWaves is built: on no host.",
+    "hosts": [],
+    "arms": { "control": 1, "short": 1 }
+  }
+}

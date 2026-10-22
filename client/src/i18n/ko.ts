@@ -356,6 +356,8 @@ export const ko: Table<typeof en> = {
     adPrivacy: '광고 개인정보',
     dataNotice: '플레이 통계, 판 리플레이, 순위 기록을 서버로 보내\n밸런스 조정과 순위표에 사용해요.',
     playId: '내 플레이 ID: {id}',
+    version: '버전 {v}',
+    versionTester: '버전 {v} · 테스터',
     idCopied: 'ID를 복사했어요',
     idCopyFailed: '복사하지 못했어요',
   },

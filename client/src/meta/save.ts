@@ -1,5 +1,5 @@
 import { MONK_IDS, SUTRA_IDS, type MonkId, type RelicId } from '@hk/engine';
-import { CHALLENGE_ID, isDice } from '@hk/protocol';
+import { CHALLENGE_ID, EXP_NAME, isDice } from '@hk/protocol';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { newDaily, parseDaily, type Daily } from './daily';
@@ -91,6 +91,10 @@ export interface SaveData {
   bestStreak: number;
   /** The best waves of a daily's runs, counted or practice, and which daily ('' for none): offline it has no board, so this is the score. */
   dailyBest: { id: string; waves: number };
+  /** The experiments this save was offered (experiments.ts): id → arm, '' when it was not enrolled (an older player). */
+  arms: Record<string, string>;
+  /** The player marked this device as a tester (settings): its events stay out of the dashboard's numbers. */
+  tester: boolean;
 }
 
 export function newSave(): SaveData {
@@ -101,6 +105,7 @@ export function newSave(): SaveData {
     gear: grantRelics(emptyInventory(), ['ball']), sutras: 0, trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: [], dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 },
+    arms: {}, tester: false,
   };
 }
 
@@ -181,6 +186,9 @@ function owned(monks: number, id: unknown): boolean {
  * A save without the last falls reads as none fallen yet.
  * A save without stored sutras is from before the re-paced unlocks (docs/unlocks.md): it keeps
  * the relics and sutras the old gates gave (unlocks.ts keepUnlocks).
+ * A save without experiment arms was offered none (experiments.ts enrolls it only while its first
+ * run is still to come) and is no tester's. They came without a version: an added field changes
+ * no field's meaning, and an older build keeps them (saveKeep.ts).
  */
 export function parseSave(text: string | null): SaveData {
   return readSave(saveObject(text));
@@ -200,6 +208,16 @@ export function saveObject(text: string | null): Record<string, unknown> | null 
 /** The version a stored object says it is, 0 for none. */
 export function versionOf(raw: Record<string, unknown> | null): number {
   return typeof raw?.version === 'number' && Number.isFinite(raw.version) ? raw.version : 0;
+}
+
+/** The experiments' arms as stored: valid names only, a few at most. */
+function armsOf(v: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (v === null || typeof v !== 'object' || Array.isArray(v)) return out;
+  for (const [id, arm] of Object.entries(v as Record<string, unknown>).slice(0, 16)) {
+    if (EXP_NAME.test(id) && typeof arm === 'string' && (arm === '' || EXP_NAME.test(arm))) out[id] = arm;
+  }
+  return out;
 }
 
 /** parseSave on an already parsed object (null gives a new save). */
@@ -268,6 +286,8 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
     streakDay: int(raw.streakDay, 0, max, 0),
     bestStreak: Math.max(int(raw.bestStreak, 0, max, 0), int(raw.streak, 0, max, 0)),
     dailyBest: dailyBestOf(raw.dailyBest),
+    arms: armsOf(raw.arms),
+    tester: raw.tester === true,
   };
   return keepUnlocks(save, raw.relic, raw.sutras === undefined);
 }

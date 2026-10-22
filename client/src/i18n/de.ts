@@ -358,6 +358,8 @@ export const de: Table<typeof en> = {
     adPrivacy: 'Werbung & Datenschutz',
     dataNotice: 'Spielstatistiken, Lauf-Wiederholungen und Bestenlisten-Läufe gehen an unseren Server, um das Spiel auszubalancieren und die Bestenlisten zu betreiben.',
     playId: 'Deine Spiel-ID: {id}',
+    version: 'Version {v}',
+    versionTester: 'Version {v} · Tester',
     idCopied: 'ID kopiert',
     idCopyFailed: 'ID konnte nicht kopiert werden',
   },

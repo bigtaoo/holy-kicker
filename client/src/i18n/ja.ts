@@ -356,6 +356,8 @@ export const ja: Table<typeof en> = {
     adPrivacy: '広告のプライバシー',
     dataNotice: 'プレイ統計・プレイのリプレイ・ランキング記録を送信し、\nバランス調整とランキングに使います。',
     playId: 'あなたのプレイID：{id}',
+    version: 'バージョン {v}',
+    versionTester: 'バージョン {v} · テスター',
     idCopied: 'IDをコピーしました',
     idCopyFailed: 'コピーできませんでした',
   },

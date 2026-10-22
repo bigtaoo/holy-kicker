@@ -1,6 +1,6 @@
 import type { HostAnalytics } from '../types';
 import type { PlaygamaBridge } from './bridge';
-import { PerfSampler, progressionEvent } from './telemetry';
+import { PerfSampler, armFields, progressionEvent } from './telemetry';
 
 // The game's one telemetry adapter for Playgama (telemetry.ts says what goes out): run events as
 // a progression funnel and `performance_sample`, both through Bridge's custom events until it has
@@ -15,6 +15,7 @@ function heapMB(): number | undefined {
 
 export function bridgeAnalytics(bridge: Pick<PlaygamaBridge, 'track'>, build: string, onHide: (cb: () => void) => void): HostAnalytics {
   let on = true;
+  let arms = {};
   const sampler = new PerfSampler(build, () => performance.now());
   const sample = (props: ReturnType<PerfSampler['flush']>) => {
     if (!props || !on) return;
@@ -33,8 +34,9 @@ export function bridgeAnalytics(bridge: Pick<PlaygamaBridge, 'track'>, build: st
     event: (e, p) => {
       if (e === 'run_end') sample(sampler.flush());
       const mapped = progressionEvent(e, p);
-      if (mapped && on) bridge.track(...mapped);
+      if (mapped && on) bridge.track(mapped[0], { ...mapped[1], ...arms });
     },
     frame: (ms) => sample(sampler.frame(ms)),
+    tag: (exp) => void (arms = armFields(exp)),
   };
 }

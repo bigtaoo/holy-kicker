@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { GAP_MS, PerfSampler, progressionEvent, SAMPLE_MS, TARGET_FPS } from './telemetry';
+import { armFields, GAP_MS, PerfSampler, progressionEvent, SAMPLE_MS, TARGET_FPS } from './telemetry';
 
 describe('progressionEvent', () => {
   it('maps a run start to a bounded step', () => {
@@ -72,5 +72,14 @@ describe('PerfSampler', () => {
     const out = s.flush()!;
     expect(out.frame_count).toBe(300);
     expect(out.frames_over_500ms).toBe(0);
+  });
+});
+
+describe('armFields', () => {
+  it('names the experiments and their arms in the same order, none when not enrolled', () => {
+    expect(armFields('first20:short')).toEqual({ experiment: 'first20', variant: 'short' });
+    expect(armFields('a:x,first20:control')).toEqual({ experiment: 'a,first20', variant: 'x,control' });
+    expect(armFields('')).toEqual({});
+    expect(armFields('First20:short')).toEqual({});
   });
 });

@@ -192,6 +192,9 @@ describe('routes', () => {
     expect((await route(req('GET', '/v1/stats?host=poki', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(200);
     expect((await route(req('GET', '/v1/stats?host=steam', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(400);
     expect((await route(req('GET', '/v1/stats?days=1&to=2026-10-09', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(200);
+    expect((await route(req('GET', '/v1/stats?exp=first20:short&testers=1', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(200);
+    expect((await route(req('GET', '/v1/stats?exp=first20', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(200);
+    expect((await route(req('GET', '/v1/stats?exp=First$', undefined, { authorization: 'Bearer key' }), deps())).status).toBe(400);
     for (const to of ['2026-13-01', '2026-02-30', 'yesterday', '2026-1-9']) {
       expect((await route(req('GET', `/v1/stats?to=${to}`, undefined, { authorization: 'Bearer key' }), deps())).status).toBe(400);
     }

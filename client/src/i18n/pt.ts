@@ -358,6 +358,8 @@ export const pt: Table<typeof en> = {
     adPrivacy: 'Privacidade de anúncios',
     dataNotice: 'As estatísticas de jogo, os replays das partidas e as partidas do ranking vão para o nosso servidor, para balancear o jogo e manter os rankings.',
     playId: 'Seu ID de jogo: {id}',
+    version: 'Versão {v}',
+    versionTester: 'Versão {v} · testador',
     idCopied: 'ID copiado',
     idCopyFailed: 'Não foi possível copiar o ID',
   },

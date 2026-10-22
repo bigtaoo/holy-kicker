@@ -358,6 +358,8 @@ export const pl: Table<typeof en> = {
     adPrivacy: 'Prywatność reklam',
     dataNotice: 'Statystyki gry, powtórki rozgrywek i wyniki do rankingów trafiają na nasz serwer, by balansować grę i prowadzić rankingi.',
     playId: 'Twój identyfikator gry: {id}',
+    version: 'Wersja {v}',
+    versionTester: 'Wersja {v} · tester',
     idCopied: 'Skopiowano identyfikator',
     idCopyFailed: 'Nie udało się skopiować identyfikatora',
   },

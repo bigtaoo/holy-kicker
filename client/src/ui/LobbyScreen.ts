@@ -1,6 +1,6 @@
 import { Container, Graphics, type Renderer, type Texture } from 'pixi.js';
 import type { RelicId } from '@hk/engine';
-import { rollDice } from '@hk/protocol';
+import { rollDice, type OfferPlace } from '@hk/protocol';
 import { t } from '../i18n';
 import { earnedSutras, playableChapters, tabLock, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -51,7 +51,7 @@ export interface LobbyActions {
   commit(save: SaveData): void;
   /** Whether a rewarded ad can be offered, and playing one (shop chests, patrol). */
   adAvailable(): Promise<boolean>;
-  rewarded(): Promise<boolean>;
+  rewarded(at: OfferPlace): Promise<boolean>;
   /** Fetches a leaderboard; null offline (no Ranks button then). */
   board: FetchBoard | null;
   /** The daily challenge for the tile beside PLAY; null while there is none to show (challengeFlow.ts). */
@@ -122,7 +122,7 @@ export class LobbyScreen implements Screen {
       },
       relayout: () => this.relayout(),
       toast: (text) => this.showToast(text),
-      rewarded: () => actions.rewarded(),
+      rewarded: (at) => actions.rewarded(at),
       icons: this.icons,
       patrolLook,
       store: actions.store,

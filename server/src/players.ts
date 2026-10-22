@@ -1,5 +1,5 @@
 import type { Audience } from './audience';
-import { LIMITS, boardId, type ClientEvent, type Game, type Host } from './protocol';
+import { LIMITS, boardId, expPairs, type ClientEvent, type EventBatch, type Game, type Host } from './protocol';
 
 // What the backend remembers about each install for retention: the day it was first seen, the
 // later days it came back, what it did on its first day (day 0) and how it got through each board.
@@ -15,7 +15,7 @@ const DAY_MS = 86_400_000;
 export const PLACES = ['lobby', 'run', 'results', 'other'] as const;
 
 export interface DayZero {
-  /** Launches, run starts, runs finished (died, won or gave up), runs won, runs given up. */
+  /** Launches, run starts, runs finished (died, won or gave up), chapters cleared (cleared()), runs given up. */
   sessions: number;
   starts: number;
   ends: number;
@@ -27,6 +27,11 @@ export interface DayZero {
   tutorial: boolean;
   buys: number;
   ads: number;
+  /** Interstitials shown, rewarded offers drawn with an ad ready and drawn with none (`offer`), ad-free cards bought (iOS). Missing before they were kept. */
+  inters?: number;
+  offers?: number;
+  nofill?: number;
+  iaps?: number;
   /** Seconds with the game on screen (summed from `leave`). */
   secs: number;
   /** Where the last `leave` of the day happened ('' when none came), and the run's wave there. */
@@ -50,6 +55,29 @@ export interface Player {
   d0: DayZero;
   /** Per board (`c4`, `c4h`): how the install got to its first clear. Missing before it was kept. */
   progress?: Record<string, Progress>;
+  /** Its experiment arms (`first20:short`, from the batches' `exp`); missing when in none. */
+  exp?: string[];
+  /** Marked a tester in the game's settings: the stats leave it out unless asked. */
+  tester?: true;
+}
+
+/** The arms and the tester mark a batch carries, as kept on its install. */
+export function tagsOf(b: Pick<EventBatch, 'exp' | 'tester'>): Pick<Player, 'exp' | 'tester'> {
+  const exp = expPairs(b.exp);
+  return { ...(exp.length > 0 && { exp }), ...(b.tester && { tester: true as const }) };
+}
+
+/** The install's tags to change after batch `b` (a newer arm list, the tester mark), or null when they stand. A batch from an older build, with no `exp`, leaves the arms kept; the mark is never taken back. */
+export function retag(p: Pick<Player, 'exp' | 'tester'>, b: Pick<EventBatch, 'exp' | 'tester'>): Pick<Player, 'exp' | 'tester'> | null {
+  const t = tagsOf(b);
+  const exp = t.exp && t.exp.join(',') !== (p.exp ?? []).join(',') ? { exp: t.exp } : {};
+  const tester = t.tester && !p.tester ? { tester: t.tester } : {};
+  return exp.exp || tester.tester ? { ...exp, ...tester } : null;
+}
+
+/** A `run_end` that cleared its chapter: won, and as long as the chapter (runWire.ts RUN_BUILD on `waves`). */
+export function cleared(p: Record<string, unknown>): boolean {
+  return p.won === true && (p.waves === undefined || p.waves === LIMITS.waves);
 }
 
 /** Runs finished on a board up to and including the first won one, and the day of that win after `first` (-1: not yet). */
@@ -59,7 +87,7 @@ export interface Progress {
 }
 
 export function emptyDayZero(): DayZero {
-  return { sessions: 0, starts: 0, ends: 0, wins: 0, quits: 0, best: 0, firstWave: 0, tutorial: false, buys: 0, ads: 0, secs: 0, left: '', leftWave: 0 };
+  return { sessions: 0, starts: 0, ends: 0, wins: 0, quits: 0, best: 0, firstWave: 0, tutorial: false, buys: 0, ads: 0, inters: 0, offers: 0, nofill: 0, iaps: 0, secs: 0, left: '', leftWave: 0 };
 }
 
 /** Whole days from `first` to `day` (both YYYY-MM-DD). */
@@ -95,7 +123,7 @@ export function foldDayZero(d: DayZero | undefined, events: readonly ClientEvent
         const wave = num(p.wave);
         if (z.ends === 0) z.firstWave = wave;
         z.ends++;
-        if (p.won === true) z.wins++;
+        if (cleared(p)) z.wins++;
         if (p.gaveUp === true) z.quits++;
         z.best = Math.max(z.best, wave);
         break;
@@ -109,7 +137,15 @@ export function foldDayZero(d: DayZero | undefined, events: readonly ClientEvent
         break;
       case 'ad':
         // one the ad-free card paid (iOS) was never watched
-        if (p.free !== true) z.ads++;
+        if (p.kind === 'inter') z.inters = (z.inters ?? 0) + 1;
+        else if (p.free !== true) z.ads++;
+        break;
+      case 'offer':
+        if (p.outcome === 'shown') z.offers = (z.offers ?? 0) + 1;
+        if (p.outcome === 'nofill') z.nofill = (z.nofill ?? 0) + 1;
+        break;
+      case 'iap':
+        if (p.what === 'buy' && p.outcome === 'owned') z.iaps = (z.iaps ?? 0) + 1;
         break;
       case 'leave':
         z.secs += Math.min(num(p.secs), 4 * 3600);
@@ -138,7 +174,7 @@ export function foldProgress(progress: Record<string, Progress> | undefined, eve
     const board = boardId(chapter, p.hard === true);
     const g = out[board] ?? { tries: 0, day: -1 };
     if (g.day >= 0) continue;
-    out[board] = { tries: g.tries + 1, day: p.won === true ? Math.max(0, offset) : -1 };
+    out[board] = { tries: g.tries + 1, day: cleared(p) ? Math.max(0, offset) : -1 };
   }
   return out;
 }

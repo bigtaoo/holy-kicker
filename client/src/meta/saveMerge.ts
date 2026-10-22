@@ -63,6 +63,9 @@ export function mergeSaves(mine: SaveData, other: SaveData): SaveData {
     streakDay: streaked.streakDay,
     bestStreak: Math.max(lead.bestStreak, trail.bestStreak),
     dailyBest: dailyOf(lead.dailyBest, trail.dailyBest),
+    // an experiment the save that played more was offered keeps its arm; one only the other was offered comes along
+    arms: { ...trail.arms, ...lead.arms },
+    tester: lead.tester || trail.tester,
   };
   // the same checks as a stored save: relics the clears unlock are owned, the shown chapter is open
   return readSave(JSON.parse(JSON.stringify(merged)) as Record<string, unknown>);

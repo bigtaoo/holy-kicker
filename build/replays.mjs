@@ -9,16 +9,21 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 // the hero, how the stick was played, what hurt and what killed, which cards were taken.
 // Each replay is played on the engine it was recorded with: an older ENGINE_VERSION's engine/
 // is taken from git (the last commit before the next bump) into a cache under the temp dir.
-// Usage: npm run replays -- [file.json ...] [--fetch[=N]] [--collected[=N]] [--json=out.json]
+// Usage: npm run replays -- [file.json ...] [--fetch[=N]] [--collected[=N]] [--exp=ID[:ARM]] [--json=out.json]
 //   file.json: a problem report (GET /v1/reports/<id>), a collected replay or a bare replay.
 //   --fetch=N: the newest N problem reports from hk.gamestao.com (HK_ADMIN_KEY in the environment).
 //   --collected=N: the newest N collected run replays (server/src/replayShelf.ts), likewise.
+//   --exp=first20 (or first20:short): only the replays of installs in that experiment (or arm),
+//     docs/experiments.md; replays from builds before the arms were sent have none and are left out.
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const API = 'https://hk.gamestao.com';
 const args = process.argv.slice(2);
 const fetchArg = args.find((a) => a.startsWith('--fetch'));
 const collectedArg = args.find((a) => a.startsWith('--collected'));
 const jsonArg = args.find((a) => a.startsWith('--json='));
+const expArg = args.find((a) => a.startsWith('--exp='))?.slice('--exp='.length);
+/** Whether a replay's install is in `--exp`: an arm is one of its `id:arm` pairs, an experiment any arm of it. */
+const inExp = (rep) => !expArg || String(rep.exp ?? '').split(',').some((pair) => (expArg.includes(':') ? pair === expArg : pair.startsWith(`${expArg}:`)));
 const files = args.filter((a) => !a.startsWith('--'));
 
 async function adminGet(path) {
@@ -105,7 +110,7 @@ const rows = [];
 let mod;
 for (const rep of reports) {
   const r = rep.replay;
-  if (!r || r.tick === 0) continue;
+  if (!r || r.tick === 0 || !inExp(rep)) continue;
   mod = await analyzerFor(r.engine);
   const engine = mod.replayEngine(r);
   const stats = mod.analyzeRun(engine, r.tick);
