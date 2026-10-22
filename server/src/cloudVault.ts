@@ -1,5 +1,5 @@
 import { MongoClient, MongoServerError, type Collection } from 'mongodb';
-import type { Game } from './protocol';
+import { CLOUD_LIMITS, type Game } from './protocol';
 
 // Where the cloud saves live (docs/cloud-save.md "The server"): one slot per player, by its
 // restore code. The routes (cloudSave.ts) only see CloudVault; MongoVault is the real one, in its
@@ -24,9 +24,6 @@ export interface CloudVault {
   /** Writes `save` over revision `base`: 'stale' when the slot moved on or holds a higher version. */
   write(code: string, base: number, version: number, save: string, now: number): Promise<WriteOutcome>;
 }
-
-/** A slot not written for this long is dropped. */
-export const SLOT_DAYS = 730;
 
 export class MemoryVault implements CloudVault {
   readonly slots = new Map<string, Slot & { gc: string | null; at: number }>();
@@ -73,10 +70,16 @@ export class MongoVault implements CloudVault {
   static async open(uri: string, dbName: string): Promise<MongoVault> {
     const client = new MongoClient(uri, { maxPoolSize: 3, appName: 'holykicker-cloud' });
     await client.connect();
-    const slots = client.db(dbName).collection<SlotDoc>('cloud');
+    const db = client.db(dbName);
+    const slots = db.collection<SlotDoc>('cloud');
+    const ttl = CLOUD_LIMITS.slotDays * 86_400;
     await Promise.all([
       slots.createIndex({ gc: 1 }, { unique: true, sparse: true }),
-      slots.createIndex({ at: 1 }, { expireAfterSeconds: SLOT_DAYS * 86_400 }),
+      // An index made with another TTL (two years until 2026-10) conflicts (code 85): change it in place.
+      slots.createIndex({ at: 1 }, { expireAfterSeconds: ttl }).catch(async (err: unknown) => {
+        if (!(err instanceof MongoServerError && err.code === 85)) throw err;
+        await db.command({ collMod: 'cloud', index: { keyPattern: { at: 1 }, expireAfterSeconds: ttl } });
+      }),
     ]);
     return new MongoVault(client, slots);
   }
