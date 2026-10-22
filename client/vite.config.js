@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
 import { themeAssets } from '../build/theme.mjs';
+import { preloadRenderer } from '../build/preloadRenderer.mjs';
 
 /**
  * The web build of one art set (build/theme.mjs). Monk: `npm run build` → client/dist, served at
@@ -15,7 +16,7 @@ export function webConfig(theme) {
     // @hk/engine: the deterministic sim, a sibling package at the repo root (build/hkAlias.mjs)
     resolve: { alias: engineAlias },
     define: buildDefine(theme),
-    plugins: [themeAssets(theme)],
+    plugins: [themeAssets(theme), preloadRenderer()],
     server: {
       port: monk ? 5174 : 5184,
       host: true,

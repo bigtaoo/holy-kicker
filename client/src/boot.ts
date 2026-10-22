@@ -16,6 +16,7 @@ import type { Platform } from './platform/types';
 import { privacyToast } from './ui/privacyUi';
 import { DISPLAY_FAMILY, DISPLAY_FILE, setDisplayFont } from './ui/fonts';
 import { Shell } from './ui/Shell';
+import { lateArt } from './lateArt';
 
 // Boot shared by every entry: the language, the renderer, the art, then the shell. The
 // platform is fully initialised before this runs (CrazyGames waits for its SDK first, since
@@ -59,10 +60,12 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   ]);
   await lang;
   useWebp(await webp);
-  const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k));
+  // WeChat ships its art in the package and the iOS app on the device: only the web waits on a network
+  const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k), platform.host !== 'wechat' && platform.host !== 'ios');
   setDisplayFont(await font);
   // on the GPU behind the loading screen, not in the first run's first frame
   warmTextures(app.renderer, art);
+  void lateArt().then(() => warmTextures(app.renderer, art));
   const artMs = since();
   const shell = new Shell(app, platform, art, scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);

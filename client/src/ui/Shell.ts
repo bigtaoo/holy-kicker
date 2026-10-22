@@ -30,7 +30,7 @@ import { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
-import { chapterLook, loadChapterArt, loadRunArt } from '../chapterArt';
+import { chapterLook, lateArt, loadChapterArt, loadRunArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
 import { menuBackdrop } from './lobbyBars';
 import { LobbyScreen } from './LobbyScreen';
@@ -143,10 +143,10 @@ export class Shell {
     return this.game ? 'run' : 'other';
   }
 
-  // The first screen, settled once it is up (`direct`, ?direct: no lobby); then the lobby's art, then chapter 2's.
+  // The first screen, settled once it is up (`direct`, ?direct: no lobby); then the late art, the lobby's, chapter 2's.
   async start(direct = false): Promise<void> {
     await this.firstScreen(direct);
-    void this.lobbyArt.ready().then(() => loadChapterArt(this.platform, this.scene, this.art, 2)).catch(() => undefined);
+    void lateArt().then(() => this.lobbyArt.ready()).then(() => loadChapterArt(this.platform, this.scene, this.art, 2)).catch(() => undefined);
   }
 
   private async firstScreen(direct: boolean): Promise<void> {

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
+import { preloadRenderer } from '../build/preloadRenderer.mjs';
 
 // The Playgama build: `npm run build:playgama` writes client/dist-playgama/, the folder to zip and
 // upload (index.html at the archive's root). Like the CrazyGames build (vite.crazygames.config.js):
@@ -59,7 +60,7 @@ export default defineConfig({
   base: './',
   resolve: { alias: engineAlias },
   define: buildDefine(),
-  plugins: [playgama()],
+  plugins: [playgama(), preloadRenderer()],
   server: { port: 5176, host: true },
   build: { target: 'es2020', outDir: 'dist-playgama', emptyOutDir: true },
 });

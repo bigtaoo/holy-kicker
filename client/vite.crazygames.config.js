@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
 import { themeAssets, themeOf } from '../build/theme.mjs';
+import { preloadRenderer } from '../build/preloadRenderer.mjs';
 
 // The CrazyGames build: `npm run build:crazygames` writes client/dist-crazygames/, the folder
 // to zip and upload. Adapted from D:\daydayup\client\vite.crazygames.config.js. It differs
@@ -76,7 +77,7 @@ export function crazygamesConfig(theme) {
     base: './',
     resolve: { alias: engineAlias },
     define: buildDefine(theme),
-    plugins: [portalHtml(theme), themeAssets(theme)],
+    plugins: [portalHtml(theme), themeAssets(theme), preloadRenderer()],
     server: { port: monk ? 5175 : 5185, host: true },
     build: { target: 'es2020', outDir: monk ? 'dist-crazygames' : 'dist-crazygames-new', emptyOutDir: true },
   });
