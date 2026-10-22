@@ -1,12 +1,13 @@
 import { SPELLS } from '../config';
-import { EVOLVE, SPELL_CAST } from '../content';
+import { EVOLVE, SPELL_CAST, SPELL_LEVELS } from '../content';
 import type { SimEvent } from '../events';
 import { dist2, TICK_RATE, toFp } from '../math/fixed';
 import type { Palm, Player, SimState, SpellSlot } from '../state';
 import { lasting, slotStats, stat } from './build';
-import { bossIndex, damage, eliteIndex, targetAt } from './combat';
-import { cymbalSystem, spinWheel, throwCymbals } from './cymbals';
+import { bossIndex, damage, eliteIndex, nearestTarget, targetAt } from './combat';
+import { cymbalSystem, flingCymbal, spinWheel, throwCymbals } from './cymbals';
 import { bombSystem, throwBombs } from './bombs';
+import { dartSystem } from './darts';
 import { castKnives, knifeSystem } from './knives';
 import { dropLotus, haloSystem, lotusSystem, roar } from './sutras';
 import { castTalismans, talismanSystem } from './talismans';
@@ -20,7 +21,7 @@ import { castTalismans, talismanSystem } from './talismans';
 // palms fall a moment after the cast (their shadow warns the crowd) and the Mountain Palm
 // leaves a print that pins mobs, the Endless Chain forks at every jump,
 // Healing Incense heals the hero standing in it, the Golden Body guards longer after it breaks
-// and the Cymbal Wheel keeps its cymbals circling the hero. The sutra spells (Lotus Steps,
+// and the Cymbal Wheel keeps its cymbals circling the hero and flings more from its rim. The sutra spells (Lotus Steps,
 // Halo Beam, Lion's Roar) are in systems/sutras.ts; the talismans, the cluster bomb and the
 // Blade Circle in systems/talismans.ts, bombs.ts and knives.ts.
 
@@ -67,23 +68,6 @@ function placeField(
   else events.push({ type: 'cast', kind: 'field', x, y, radius });
 }
 
-/** The nearest target within range of (x, y) not in `hit`; -1 if none. */
-function nearestNew(s: SimState, x: number, y: number, range: number, hit: readonly number[]): number {
-  let best = -1;
-  let bestD = range * range;
-  const n = bossIndex(s);
-  for (let i = 0; i <= n; i++) {
-    const t = hit.includes(i) ? null : targetAt(s, i);
-    if (!t) continue;
-    const d = dist2(t.x - x, t.y - y);
-    if (d < bestD) {
-      bestD = d;
-      best = i;
-    }
-  }
-  return best;
-}
-
 /**
  * Lightning from the player's chest jumping from target to target, never one twice. With
  * `fork` every jump also strikes the nearest other target from where it landed.
@@ -93,7 +77,7 @@ function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range:
   let y = p.y - CHEST;
   const hit: number[] = [];
   for (let j = 0; j < jumps; j++) {
-    const best = nearestNew(s, x, y, j === 0 ? range * 2 : range, hit);
+    const best = nearestTarget(s, x, y, j === 0 ? range * 2 : range, hit);
     if (best < 0) break;
     hit.push(best);
     const t = targetAt(s, best)!;
@@ -103,7 +87,7 @@ function chain(s: SimState, events: SimEvent[], p: Player, jumps: number, range:
     damage(s, events, best, p, null, pct(s, best, damagePct));
     x = tx;
     y = ty;
-    const side = fork ? nearestNew(s, x, y, Math.trunc((range * EVOLVE.forkRangePercent) / 100), hit) : -1;
+    const side = fork ? nearestTarget(s, x, y, Math.trunc((range * EVOLVE.forkRangePercent) / 100), hit) : -1;
     if (side >= 0) {
       hit.push(side);
       const f = targetAt(s, side)!;
@@ -190,7 +174,7 @@ function cast(s: SimState, events: SimEvent[], p: Player, slot: SpellSlot): bool
     return cast.length > 0;
   }
   if (id === 'bolt') return chain(s, events, p, l.count, r, l.damage, slot.evolved);
-  if (id === 'cymbal') return slot.evolved ? spinWheel(s, p, l.count, r, l.damage) : throwCymbals(s, p, l.count, r, life, l.damage);
+  if (id === 'cymbal') return slot.evolved ? spinWheel(s, p, l.count, r, l.damage) || flingCymbal(s, p, r, lasting(p, SPELL_LEVELS.cymbal[4].life), l.damage) : throwCymbals(s, p, l.count, r, life, l.damage);
   if (id === 'bell') {
     p.bell = true;
     events.push({ type: 'bellUp', owner: p.owner });
@@ -280,4 +264,5 @@ export function spellSystem(s: SimState, events: SimEvent[]): void {
   knifeSystem(s, events);
   lotusSystem(s, events);
   haloSystem(s, events);
+  dartSystem(s, events);
 }

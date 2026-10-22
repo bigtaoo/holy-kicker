@@ -5,7 +5,7 @@ import { FP, TICK_RATE, type Cymbal, type Field, type SimEvent } from '@hk/engin
 import { lerpX, lerpY } from './fixedStep';
 import type { FxPool } from './fx';
 import { PalmFalls } from './palmView';
-import { bolt, explosion, fieldMotes, nova, rubble, type RingMode } from './spells';
+import { bolt, clang, explosion, fieldMotes, nova, rubble, type RingMode } from './spells';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
 
@@ -191,6 +191,8 @@ export class SpellView {
       }
       v.sprite.rotation += dt * 18;
       v.sprite.zIndex = y + 1;
+      // a cymbal waiting its turn in a volley is still in the hero's hands
+      v.sprite.visible = c.orbit > 0 || c.age > 0;
       // a thrown cymbal fades out over its last few ticks; the wheel's never do
       v.sprite.alpha = c.orbit > 0 ? 1 : Math.min(1, (c.life - c.age) / 4);
     }
@@ -209,10 +211,11 @@ export class SpellView {
       .circle(0, 0, orbit).stroke({ color: TRACK, width: 10, alpha: 0.4 });
   }
 
-  /** A cast, or a palm on its way down (positions in FP). */
-  cast(e: Extract<SimEvent, { type: 'cast' | 'palm' }>): void {
+  /** A cast, a palm on its way down or a cymbal's ricochet (positions in FP). */
+  cast(e: Extract<SimEvent, { type: 'cast' | 'palm' | 'clang' }>): void {
     const x = e.x / FP;
     const y = e.y / FP;
+    if (e.type === 'clang') return clang(this.pool, this.rand, x, y - CYMBAL_LIFT);
     const r = e.radius / FP;
     if (e.type === 'palm') this.palms.drop(x, y, r, e.fall / TICK_RATE, e.print / TICK_RATE);
     else if (e.kind === 'nova') nova(this.pool, x, y, 60, r, NOVA_LIFE, NOVA, this.ring);

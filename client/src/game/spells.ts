@@ -139,3 +139,14 @@ export function sealBurst(pool: FxPool, rand: () => number, x: number, y: number
 export function bladeTrail(pool: FxPool, x: number, y: number, angle: number): void {
   pool.emit({ shape: 'band', x, y, vx: 0, vy: 0, life: 0.14, size0: 70, size1: 30, aspect: 0.18, rotation: angle, spin: 0, drag: 1, color: CORGI ? CORGI_FX.cyanPale : 0xfff0c8, alpha: 0.55 }, true);
 }
+
+/** A cymbal glancing off a foe to the next: a small flash and three sparks, cut first on a busy screen. */
+export function clang(pool: FxPool, rand: () => number, x: number, y: number): void {
+  const color = CORGI ? CORGI_FX.cyanPale : 0xfff0b0;
+  pool.emit({ shape: 'glow', x, y, vx: 0, vy: 0, life: 0.12, size0: 50, size1: 70, rotation: 0, spin: 0, drag: 1, color, alpha: 0.6 });
+  for (let i = 0; i < 3; i++) {
+    const a = rand() * Math.PI * 2;
+    const v = 260 + rand() * 160;
+    pool.emit({ shape: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.16, size0: 22, size1: 5, rotation: a, spin: 0, drag: 0.05, color, alpha: 0.9 });
+  }
+}

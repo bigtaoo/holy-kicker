@@ -42,13 +42,13 @@ export function targetAt(s: SimState, i: number): Body | null {
   return null;
 }
 
-/** Index of the nearest target within maxDist of (x, y), skipping `skip`; -1 if none. */
-export function nearestTarget(s: SimState, x: number, y: number, maxDist: number, skip = -1): number {
+/** Index of the nearest target within maxDist of (x, y), skipping `skip` (one or a list); -1 if none. */
+export function nearestTarget(s: SimState, x: number, y: number, maxDist: number, skip: number | readonly number[] = -1): number {
   let best = -1;
   let bestD = maxDist * maxDist;
   const n = bossIndex(s);
   for (let i = 0; i <= n; i++) {
-    const t = i === skip ? null : targetAt(s, i);
+    const t = (typeof skip === 'number' ? i === skip : skip.includes(i)) ? null : targetAt(s, i);
     if (!t) continue;
     const d = dist2(t.x - x, t.y - y);
     if (d < bestD) {

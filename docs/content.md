@@ -55,8 +55,10 @@ Names are working names; every name ships through the string table (en / zh-CN s
 - Portrait readability: few, large slots. The HUD shows 9 icons at most.
 - **Implemented** (`engine/content.ts`, `engine/systems/build.ts`): the experience curve and
   pick 1 of 3, cuju levels 1–5, the five starting spells and the six starting passives. The
-  Golden Bell recharges only after it breaks; Flying Cymbals fly out in an even star, the
-  first at the nearest enemy.
+  Golden Bell recharges only after it breaks; Flying Cymbals are thrown one after another
+  (0.12 s apart) at the nearest enemies, pierce, and glance off the first foe each was aimed at
+  to the nearest unhit one within 500, twice (2026-10-22: the even star was rarely picked and
+  read as one flash; a volley that keeps clanging round the horde reads like the knives).
 - **Evolutions implemented** (`SPELL_EVOLVED`, `RELIC_AWAKENED`, `EVOLVE` in `engine/content.ts`):
   a ready evolution is always dealt first on the next level-up (or Insight) as a gold card; the
   evolved row keeps the level-5 numbers and adds the mechanic. Mountain Palm leaves a print
@@ -65,7 +67,7 @@ Names are working names; every name ships through the string table (en / zh-CN s
   every jump; Healing Incense heals 2.4 % health per second inside; Golden Body guards 2 s
   after it breaks with a bigger blast; Cymbal Wheel keeps 4 cymbals circling at 260 (a target
   is hit again every 0.5 s, mobs pressed against the hero are inside the ring and safe from
-  it); Meteor Ball sends 2 one-hit splinters at other targets on every bounce; Bottomless Bowl
+  it) and flings a ricocheting cymbal from its rim at the nearest enemy every 0.5 s; Meteor Ball sends 2 one-hit splinters at other targets on every bounce; Bottomless Bowl
   swallows up to 8 mobs a throw for their experience.
   The three spells added on 2026-10-21 (paired talisman–calm, bomb–eye, knives–wrath): the
   Heavenly Seal bursts where each talisman strikes, hitting everything else within 150 at 60 %
@@ -194,9 +196,19 @@ Lotus Steps rewards moving and Halo Beam rewards standing still, so both fit Sti
   after 0.4 s and blooms when an enemy comes within 130 of it; at the end of its life it
   blooms anyway if an enemy is inside its bloom radius, else it withers. Seeds that bloomed only
   when stepped on were too rare (the horde follows, it rarely walks over a seed). Lotus Path
-  drops one every 0.2 s and each bloom sends the gems within 450 to the hero.
+  drops one every 0.2 s and each bloom sends the gems within 450 to the hero. Each bloom also
+  scatters 5 petals (40 % of its damage, 0.5 s, homing on the Lotus Path) that hit each foe once
+  and set off a seed they cross, so a field of seeds goes off in a chain (2026-10-22).
 - **Halo Beam**: always turning (one turn per 1.6 s down to 1.1 s, faster with Calm Mind), hits
   each target once per sweep; on the move the beam is 70 % as long, so it rewards standing.
+  Since 2026-10-22 the beam deals half and every beam's tip shoots a thin needle of light every
+  0.12 s (every 0.24 s with more than one beam) that flies on to 1.8 times its length at 60 %,
+  hitting each foe once: the spell reads as a sprinkler instead of a lone stick.
+  Total damage of the three reworks (60 s at wave 25 of chapter 3, standing / walking): cymbals
+  lv5 510/346 → 578/560, evolved 448/750 → 662/893; halo lv5 853/649 → 945/730, evolved
+  1884/1541 → 1777/1439; lotus lv5
+  1172 → 1303 walking, evolved 1392 → 1506. Darts are small and see-through and the volley's
+  ricochet sparks are the first effects culled on a busy screen.
 - **Lion's Roar** aims at the nearest enemy rather than the move direction: the player mostly
   walks away from the horde, so a roar ahead hit nothing. The 120° cone pushes the mobs it does
   not fell back by 220.

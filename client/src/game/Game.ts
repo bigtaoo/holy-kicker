@@ -397,6 +397,7 @@ export class Game {
         }
         case 'cast':
         case 'palm':
+        case 'clang':
           this.spells.cast(e);
           break;
         case 'bomb':
@@ -465,7 +466,7 @@ export class Game {
     this.beads.draw(s.beads, p.relicId === 'beads' && !p.dead ? beadsRings(p) : [], alpha, hx, hy, this.hero.view.zIndex);
     this.spells.draw(s.fields, s.cymbals, alpha, dt);
     this.arsenal.draw(s.talismans, s.knives, alpha, dt, hx, hy);
-    this.sutras.draw(s.lotuses, p, alpha, dt, hx, hy);
+    this.sutras.draw(s.lotuses, s.darts, p, alpha, dt, hx, hy);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
     this.zen.update(dt, inZen(p) && !p.dead, hx, hy);
     this.aura.update(dt, hx, hy, this.fx.pool);

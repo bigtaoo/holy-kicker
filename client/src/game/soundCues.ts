@@ -56,8 +56,9 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
       return SPELL_CUES[e.kind];
     case 'bolt':
       return 'zap';
-    // the palm sounds when it lands, as its 'meteor' cast
+    // the palm sounds when it lands, as its 'meteor' cast; a ricochet's hit is heard already
     case 'palm':
+    case 'clang':
       return null;
     case 'bloom':
       return 'bloom';

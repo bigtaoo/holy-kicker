@@ -102,8 +102,7 @@ export interface Mob extends Body {
 
 /**
  * An emerger still under the ground (or rising from its mark), a skeleton or shard that fell
- * (until summoned again) or a mob resting out a boss fight (both health 0) cannot be hit, hurt
- * or moved.
+ * (until summoned again) or a mob resting out a boss fight (both health 0) cannot be hit, hurt or moved.
  */
 export function underground(m: Mob): boolean {
   return (m.kind === 'emerger' && m.t > 0) || m.hp === 0;
@@ -271,6 +270,25 @@ export interface Cymbal extends Body {
   orbit: number;
   /** Angle around the owner, brads. */
   angle: number;
+  /** The target it was thrown at (combat.ts numbering), and the ricochets left after striking it. */
+  aim: number;
+  bounces: number;
+}
+
+/** A halo needle or a lotus petal (systems/darts.ts): pierces, hitting each target once. */
+export interface Dart extends Body {
+  id: number;
+  owner: number;
+  kind: 'needle' | 'petal';
+  /** Heading, brads; a homing one (Lotus Path's petals) turns up to `turn` a tick toward the nearest target. */
+  dir: number;
+  speed: number;
+  turn: number;
+  radius: number;
+  damage: number;
+  age: number;
+  life: number;
+  hit: number[];
 }
 
 /** A demon-binding talisman: fans out, then homes on its target and strikes once. */
@@ -415,6 +433,7 @@ export interface SimState {
   fields: Field[];
   palms: Palm[];
   cymbals: Cymbal[];
+  darts: Dart[];
   talismans: Talisman[];
   bombs: Bomb[];
   knives: Knife[];
@@ -455,7 +474,7 @@ export function createState(config: RunConfig): SimState {
   const s = config.seed;
   return {
     config, tick: 0, nextId: 1, players: [], mobs: [], elites: [], boss: null, rush: [], balls: [], bullets: [], zones: [], spawns: [],
-    gems: [], gemCells: new Map(), resting: 0, fields: [], palms: [], cymbals: [], talismans: [], bombs: [], knives: [], rings: [], beads: [], bowls: [], lotuses: [],
+    gems: [], gemCells: new Map(), resting: 0, fields: [], palms: [], cymbals: [], darts: [], talismans: [], bombs: [], knives: [], rings: [], beads: [], bowls: [], lotuses: [],
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, waveKills: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),

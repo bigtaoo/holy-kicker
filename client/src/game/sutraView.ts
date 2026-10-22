@@ -1,7 +1,8 @@
 import { Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { bakeTexture } from './bake';
 import { CORGI, CORGI_FX, corgiMine } from './corgiFx';
-import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Lotus, type Player, type SimEvent } from '@hk/engine';
+import { FP, TICK_RATE, haloLength, haloSpin, slotStats, type Dart, type Lotus, type Player, type SimEvent } from '@hk/engine';
+import { DartView } from './dartView';
 import { SHADOW_Z } from './shadow';
 import { ViewPool } from './viewPool';
 
@@ -70,6 +71,7 @@ export class SutraView {
   private readonly seedPool: ViewPool<Sprite>;
   private readonly lionPool: ViewPool<Sprite>;
   private readonly burstPool: ViewPool<Graphics>;
+  private readonly darts: DartView;
 
   constructor(
     renderer: Renderer,
@@ -84,6 +86,7 @@ export class SutraView {
     this.burstPool = new ViewPool(() => new Graphics(), place);
     this.beams.visible = false;
     world.addChild(this.beams);
+    this.darts = new DartView(world, overZ);
   }
 
   /** A sutra event from the sim: a bloom, a roar or a bounce (positions in FP). */
@@ -180,8 +183,9 @@ export class SutraView {
     this.bursts.push({ g, t: 0, life, draw });
   }
 
-  /** The seeds on the ground, the local hero's halo (hero at hx, hy) and the bursts. */
-  draw(lotuses: readonly Lotus[], p: Player, alpha: number, dt: number, hx: number, hy: number): void {
+  /** The seeds on the ground, the local hero's halo (hero at hx, hy), the darts and the bursts. */
+  draw(lotuses: readonly Lotus[], darts: readonly Dart[], p: Player, alpha: number, dt: number, hx: number, hy: number): void {
+    this.darts.draw(darts, alpha);
     for (const v of this.seeds.values()) v.seen = false;
     for (const l of lotuses) {
       let v = this.seeds.get(l.id);
@@ -244,7 +248,7 @@ export class SutraView {
       // a soft wide glow, then the bright core, trailing a faint wedge where it just swept
       const trail = (spin / BRADS) * TAU * 4;
       g.moveTo(0, 0).arc(0, 0, len, a - trail, a).lineTo(0, 0).fill({ color: GOLD, alpha: 0.18 });
-      g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: GOLD, width: 34, alpha: 0.35, cap: 'round' });
+      g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: GOLD, width: 26, alpha: 0.3, cap: 'round' });
       g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: BEAM, width: 12, alpha: 0.95, cap: 'round' });
     }
     g.circle(0, 0, 34).fill({ color: BEAM, alpha: 0.45 });

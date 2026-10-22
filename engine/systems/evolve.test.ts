@@ -128,6 +128,7 @@ describe('evolved spells', () => {
     steps(e, 1);
     expect(s.cymbals.length).toBe(SPELL_EVOLVED.cymbal.count);
     expect(s.cymbals.every((c) => c.orbit === EVOLVE.wheelOrbit)).toBe(true);
+    const wheel = () => s.cymbals.filter((c) => c.orbit > 0).length;
     s.mobs.push(newMob(p.x + EVOLVE.wheelOrbit, p.y, 1e9));
     let hits = 0;
     for (let i = 0; i < 150; i++) {
@@ -136,13 +137,15 @@ describe('evolved spells', () => {
       s.mobs[0].y = p.y;
       hits += e.step([cmd(e)]).filter((v) => v.type === 'hit').length;
     }
-    // still the same cymbals, and the mob was hit more than once per cymbal
-    expect(s.cymbals.length).toBe(SPELL_EVOLVED.cymbal.count);
+    // still the same wheel, and the mob was hit more than once per cymbal
+    expect(wheel()).toBe(SPELL_EVOLVED.cymbal.count);
     expect(hits).toBeGreaterThan(SPELL_EVOLVED.cymbal.count);
+    // with an enemy about it flings ricocheting cymbals from its rim
+    expect(s.cymbals.some((c) => c.orbit === 0 && c.bounces > 0)).toBe(true);
     // they follow the hero
     p.x += 1_000_000;
     steps(e, 1);
-    expect(Math.abs(s.cymbals[0].x - p.x)).toBeLessThanOrEqual(EVOLVE.wheelOrbit);
+    expect(Math.abs(s.cymbals.find((c) => c.orbit > 0)!.x - p.x)).toBeLessThanOrEqual(EVOLVE.wheelOrbit);
   });
 });
 

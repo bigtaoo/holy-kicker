@@ -80,6 +80,8 @@ export type SimEvent =
   | { type: 'seal'; x: number; y: number; radius: number }
   /** A lotus seed bloomed at (x, y). */
   | { type: 'bloom'; x: number; y: number; radius: number }
+  /** A cymbal ricocheted off the enemy at (x, y). */
+  | { type: 'clang'; x: number; y: number }
   /** A player's Lion's Roar: a cone around `brad` from (x, y) to `radius`, all round if `full`. */
   | { type: 'roar'; owner: number; x: number; y: number; brad: number; radius: number; full: boolean }
   /** A player reached `level` and has cards to pick (the sim waits for the pick). */

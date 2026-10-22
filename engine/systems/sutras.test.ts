@@ -117,7 +117,23 @@ describe('Lotus Steps', () => {
     events = steps(e, 4);
     expect(events.filter((v) => v.type === 'bloom').length).toBe(1);
     expect(s.lotuses.some((l) => l.id === seed.id)).toBe(false);
-    expect(hits(events)).toBe(2);
+    expect(new Set(events.flatMap((v) => (v.type === 'hit' ? [v.index] : []))).size).toBe(2);
+    // and shoots its petals out
+    expect(s.darts.filter((d) => d.kind === 'petal').length).toBe(LOTUS.petals);
+  });
+
+  it("sets off the armed seeds its petals reach that have an enemy in their bloom", () => {
+    const e = quiet();
+    const s = e.state;
+    const p = s.players[0];
+    learn(p, 'lotus');
+    p.spells[0].cd = 1e6;
+    const seed = (id: number, x: number, y: number, radius: number) => ({ id, owner: 0, x, y, radius, damage: 100, age: LOTUS.arm, life: 1000, pull: false });
+    // a mob steps on the first; its petals reach the next two, but only the second has the mob in its bloom
+    s.lotuses.push(seed(1, 1_000_000, 0, 200_000), seed(2, 1_100_000, 0, 200_000), seed(3, 1_000_000, -110_000, 100_000), seed(4, 3_000_000, 0, 200_000));
+    post(e, 950_000, 50_000);
+    steps(e, LOTUS.petalLife * 2);
+    expect(s.lotuses.map((l) => l.id)).toEqual([3, 4]);
   });
 
   it('Lotus Path sends the gems near a bloom to the hero', () => {
@@ -138,6 +154,16 @@ describe('Lotus Steps', () => {
   });
 });
 
+/** Steps with the needles taken away as they leave, so only the beams hit. */
+function beamHits(e: Engine, n: number, walk = false): number {
+  let k = 0;
+  for (let i = 0; i < n; i++) {
+    k += hits(e.step([cmd(e, walk)]));
+    e.state.darts.length = 0;
+  }
+  return k;
+}
+
 describe('Halo Beam', () => {
   it('hits a target once per turn, and each of three beams once when evolved', () => {
     for (const evolved of [false, true]) {
@@ -147,7 +173,7 @@ describe('Halo Beam', () => {
       post(e, p.x + 200_000, p.y + 50_000);
       const row = evolved ? SPELL_EVOLVED.halo : SPELL_LEVELS.halo[0];
       // just short of two whole turns
-      expect(hits(steps(e, Math.floor((2 * 65536) / haloSpin(p, row.life))))).toBe(2 * row.count);
+      expect(beamHits(e, Math.floor((2 * 65536) / haloSpin(p, row.life)))).toBe(2 * row.count);
     }
   });
 
@@ -158,7 +184,7 @@ describe('Halo Beam', () => {
     const len = SPELL_LEVELS.halo[0].radius;
     const turn = Math.ceil(65536 / haloSpin(p, SPELL_LEVELS.halo[0].life));
     post(e, p.x, p.y + Math.trunc(len * 0.8));
-    expect(hits(steps(e, turn))).toBe(1);
+    expect(beamHits(e, turn)).toBe(1);
     // walking, the target walks along out of reach
     const m = e.state.mobs[0];
     let n = 0;
@@ -166,8 +192,22 @@ describe('Halo Beam', () => {
       m.x = p.x;
       m.y = p.y + Math.trunc(len * 0.8);
       n += hits(e.step([cmd(e, true)]));
+      e.state.darts.length = 0;
     }
     expect(n).toBe(0);
+  });
+
+  it('shoots needles out along its beams that reach past them', () => {
+    const e = quiet();
+    const s = e.state;
+    const p = s.players[0];
+    learn(p, 'halo');
+    const len = SPELL_LEVELS.halo[0].radius;
+    const far = post(e, p.x + Math.trunc((len * 3) / 2), p.y);
+    const turn = Math.ceil(65536 / haloSpin(p, SPELL_LEVELS.halo[0].life));
+    const struck = steps(e, turn * 2).filter((v) => v.type === 'hit' && v.index === far).length;
+    expect(s.darts.some((d) => d.kind === 'needle')).toBe(true);
+    expect(struck).toBeGreaterThan(0);
   });
 });
 

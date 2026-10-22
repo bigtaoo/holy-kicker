@@ -55,7 +55,7 @@ describe('card text', () => {
     expect(cardText({ kind: 'evolve', id: 'bell' }, p).lines).toEqual(['2s untouchable on breaking', 'Area +24%']);
     expect(cardText({ kind: 'evolve', id: 'ball' }, p)).toMatchObject({ name: 'Meteor Ball', tag: 'Awaken!' });
     setLocale('zh');
-    expect(cardText({ kind: 'evolve', id: 'cymbal' }, p)).toMatchObject({ name: '钹轮', tag: '进化！', lines: ['4 片铜钹永远绕身旋转'] });
+    expect(cardText({ kind: 'evolve', id: 'cymbal' }, p)).toMatchObject({ name: '钹轮', tag: '进化！', lines: ['4 片铜钹永远绕身旋转，还会甩出飞钹'] });
   });
 
   it('carries the item icon and what it evolves with', () => {
@@ -111,12 +111,12 @@ describe('card text', () => {
 
   it('describes the sutra spells, their evolutions, Focus and the sutras', () => {
     const p = newPlayer(0, 0, 0);
-    expect(cardText({ kind: 'spell', id: 'lotus' }, p).lines).toEqual(['Walking sows lotus seeds that bloom under enemies']);
+    expect(cardText({ kind: 'spell', id: 'lotus' }, p).lines).toEqual(['Walking sows lotus seeds that burst into petals under enemies']);
     p.spells = [{ id: 'lotus', level: 1, cd: 0, evolved: false }, { id: 'halo', level: 2, cd: 0, evolved: false }];
     expect(cardText({ kind: 'spell', id: 'lotus' }, p).lines).toEqual(['Cooldown 0.6s → 0.5s']);
     // the halo's shorter turn reads as a faster spin
     expect(cardText({ kind: 'spell', id: 'halo' }, p).lines).toEqual(['Spin +14%', 'Damage +20%']);
-    expect(cardText({ kind: 'evolve', id: 'halo' }, p).lines).toEqual(['3 beams turn around you', 'Area +8%']);
+    expect(cardText({ kind: 'evolve', id: 'halo' }, p).lines).toEqual(['3 beams turn around you, shooting needles', 'Area +8%', 'Damage +33%']);
     const roar = cardText({ kind: 'evolve', id: 'roar' }, p);
     expect(roar).toMatchObject({ name: 'Thunder Roar', tag: 'Evolve!' });
     expect(roar.lines).toEqual(['Roars all round, shatters bullets', 'Area +8%', 'Damage +12%']);

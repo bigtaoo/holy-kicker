@@ -224,7 +224,7 @@ describe('build effects', () => {
     expect(p.hurtCd).toBeGreaterThan(0);
   });
 
-  it('throws cymbals that pierce the horde and hit the elite once', () => {
+  it('throws cymbals one after another that pierce the horde, each hitting a target once', () => {
     const e = quiet();
     const s = e.state;
     const p = s.players[0];
@@ -235,18 +235,45 @@ describe('build effects', () => {
     p.spells = [{ id: 'cymbal', level: 1, cd: 1, evolved: false }];
     e.step([cmd(e)]);
     expect(s.cymbals.length).toBe(SPELL_LEVELS.cymbal[0].count);
+    // the first is on its way, the second still in the hero's hand
+    expect(s.cymbals[0].x).toBeGreaterThan(p.x);
+    expect(s.cymbals[1].x).toBe(p.x);
     p.spells[0].cd = 1e6;
     let down = 0;
     let eliteHits = 0;
-    for (let i = 0; i < SPELL_LEVELS.cymbal[0].life + 2; i++) {
+    const flight = (SPELL_LEVELS.cymbal[0].life + SPELL_CAST.cymbalStagger) * (SPELL_CAST.cymbalBounces + 1);
+    for (let i = 0; i < flight + 2; i++) {
       for (const v of e.step([cmd(e)])) {
         if (v.type === 'mobDown') down++;
         if (v.type === 'hit' && v.kind === 'elite') eliteHits++;
       }
     }
     expect(down).toBeGreaterThanOrEqual(5);
-    expect(eliteHits).toBe(1);
+    expect(eliteHits).toBeGreaterThanOrEqual(1);
+    expect(eliteHits).toBeLessThanOrEqual(SPELL_LEVELS.cymbal[0].count);
     expect(s.cymbals.length).toBe(0);
+  });
+
+  it('ricochets a cymbal off the enemy it was thrown at to the nearest one it has not hit', () => {
+    const e = quiet();
+    const s = e.state;
+    const p = s.players[0];
+    p.kickCd = 1e6;
+    s.mobs.push(newMob(p.x + 400_000, p.y, 1e9), newMob(p.x + 400_000, p.y + 300_000, 1e9));
+    p.spells = [{ id: 'cymbal', level: 1, cd: 1, evolved: false }];
+    e.step([cmd(e)]);
+    p.spells[0].cd = 1e6;
+    s.cymbals.length = 1;
+    const hit = new Set<number>();
+    let clangs = 0;
+    for (let i = 0; i < 40; i++) {
+      for (const v of e.step([cmd(e)])) {
+        if (v.type === 'hit') hit.add(v.index);
+        if (v.type === 'clang') clangs++;
+      }
+    }
+    expect([...hit].sort()).toEqual([0, 1]);
+    expect(clangs).toBeGreaterThanOrEqual(1);
   });
 });
 

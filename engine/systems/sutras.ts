@@ -5,14 +5,18 @@ import { atan2B, BRAD_FULL, BRAD_HALF, normBrad } from '../math/trig';
 import type { Lotus, Player, SimState } from '../state';
 import { lasting, slotStats, stat } from './build';
 import { bossIndex, damage, eliteIndex, nearestTarget, targetAt } from './combat';
+import { shootDart } from './darts';
 import { pullGems } from './drops';
 
 // The spells a sutra adds to the pool (docs/content.md "Spells"). Lotus Steps: while the hero
 // walks he leaves lotus seeds that arm after a moment and bloom when an enemy steps on one, so
 // the horde following him runs into them; a seed whose time is up blooms too if an enemy is
-// within its bloom, else it withers. Lotus Path drops one at
-// almost every step and each bloom sends the gems near it to the hero. Halo Beam: beams turn around the hero for good and
-// hit what they sweep over, longer while he stands still; Boundless Light has three. Lion's
+// within its bloom, else it withers. A bloom shoots petals (LOTUS.petals) that set off the
+// armed seeds they fly over when an enemy is in their bloom, so a trail blooms down the line.
+// Lotus Path drops one at almost every step, its petals home in on the horde and each bloom
+// sends the gems near it to the hero. Halo Beam: beams turn around the hero for good, hit what
+// they sweep over and shoot needles out along themselves (HALO), all longer while he stands
+// still, so they draw spirals; Boundless Light has three. Lion's
 // Roar: a cone shout at the nearest enemy that pushes the mobs it does not fell back;
 // Thunder Roar goes all the way round and shatters the bullets it reaches. Like every spell,
 // they deal SPELL_CAST.bigPercent of their damage to the elite and the boss.
@@ -41,6 +45,12 @@ function inBloom(s: SimState, l: Lotus): boolean {
 function bloom(s: SimState, events: SimEvent[], l: Lotus): void {
   const by = s.players.find((q) => q.owner === l.owner) ?? s.players[0];
   events.push({ type: 'bloom', x: l.x, y: l.y, radius: l.radius });
+  const petal = {
+    kind: 'petal' as const, speed: LOTUS.petalSpeed, life: LOTUS.petalLife, radius: LOTUS.petalRadius,
+    damage: Math.trunc((l.damage * LOTUS.petalPercent) / 100), turn: l.pull ? LOTUS.petalTurn : 0,
+  };
+  const a0 = s.spell.int(BRAD_FULL);
+  for (let k = 0; k < LOTUS.petals; k++) shootDart(s, by, l.x, l.y, a0 + Math.trunc((k * BRAD_FULL) / LOTUS.petals), petal);
   const r2 = l.radius * l.radius;
   for (let i = 0; i <= bossIndex(s); i++) {
     const t = targetAt(s, i);
@@ -49,12 +59,22 @@ function bloom(s: SimState, events: SimEvent[], l: Lotus): void {
   if (l.pull && !by.dead) pullGems(s, by, l.x, l.y, LOTUS.pull);
 }
 
-/** Ages every seed; an armed one an enemy stands on blooms, and so does one at its time with an enemy near. */
+/** An armed seed of `owner`'s within reach of one of their petals. */
+function petalOn(s: SimState, l: Lotus): boolean {
+  const r2 = LOTUS.trigger * LOTUS.trigger;
+  return s.darts.some((d) => d.kind === 'petal' && d.owner === l.owner && dist2(d.x - l.x, d.y - l.y) < r2);
+}
+
+/**
+ * Ages every seed; an armed one an enemy stands on blooms, and so does one a petal reaches
+ * with an enemy in its bloom, or one at its time with an enemy near.
+ */
 export function lotusSystem(s: SimState, events: SimEvent[]): void {
   let w = 0;
   for (const l of s.lotuses) {
     l.age++;
-    const stepped = l.age >= LOTUS.arm && nearestTarget(s, l.x, l.y, LOTUS.trigger) >= 0;
+    const armed = l.age >= LOTUS.arm;
+    const stepped = armed && (nearestTarget(s, l.x, l.y, LOTUS.trigger) >= 0 || (petalOn(s, l) && inBloom(s, l)));
     if (stepped || (l.age >= l.life && inBloom(s, l))) {
       bloom(s, events, l);
       continue;
@@ -76,7 +96,17 @@ export function haloLength(p: Player, radius: number): number {
   return p.moving ? Math.trunc((r * HALO.movingPercent) / 100) : r;
 }
 
-/** Turns every hero's halo one tick; each beam hits what it swept over. */
+/** Shoots a needle out along each of p's beams. */
+function needles(s: SimState, p: Player, count: number, len: number, damagePct: number): void {
+  const speed = p.moving ? Math.trunc((HALO.needleSpeed * HALO.movingPercent) / 100) : HALO.needleSpeed;
+  const shot = {
+    kind: 'needle' as const, speed, life: Math.max(1, Math.trunc((len * HALO.needleReach) / 100 / speed)), radius: HALO.needleRadius,
+    damage: Math.trunc((damagePct * HALO.needlePercent) / 100), turn: 0,
+  };
+  for (let k = 0; k < count; k++) shootDart(s, p, p.x, p.y, p.halo + Math.trunc((k * BRAD_FULL) / count), shot);
+}
+
+/** Turns every hero's halo one tick; each beam hits what it swept over and now and then shoots a needle. */
 export function haloSystem(s: SimState, events: SimEvent[]): void {
   for (const p of s.players) {
     const slot = p.spells.find((sp) => sp.id === 'halo');
@@ -87,6 +117,8 @@ export function haloSystem(s: SimState, events: SimEvent[]): void {
     p.halo = normBrad(from + spin);
     if (p.dead) continue;
     const len = haloLength(p, l.radius);
+    if (s.tick % (l.count > 1 ? 2 * HALO.needleEvery : HALO.needleEvery) === 0) needles(s, p, l.count, len, l.damage);
+    const beamPct = Math.trunc((l.damage * HALO.beamPercent) / 100);
     const len2 = len * len;
     for (let i = 0; i <= bossIndex(s); i++) {
       const t = targetAt(s, i);
@@ -95,7 +127,7 @@ export function haloSystem(s: SimState, events: SimEvent[]): void {
       for (let k = 0; k < l.count; k++) {
         const beam = from + Math.trunc((k * BRAD_FULL) / l.count);
         if (normBrad(a - beam) >= spin) continue;
-        damage(s, events, i, p, null, share(s, i, l.damage));
+        damage(s, events, i, p, null, share(s, i, beamPct));
         break;
       }
     }

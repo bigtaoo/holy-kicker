@@ -190,8 +190,8 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
   incense: [lv(4, 0, 300, 3, 80), lv(4, 0, 340, 3, 80), lv(3.4, 0, 340, 3.5, 80), lv(3.4, 0, 380, 3.5, 80), lv(2.8, 0, 380, 4, 120)],
   // a golden dome that takes one blow for the hero, then breaks in a blast (cast shape 'nova')
   bell: [lv(8, 0, 300, 0, 150), lv(7, 0, 320, 0, 150), lv(7, 0, 360, 0, 200), lv(6, 0, 360, 0, 200), lv(5, 0, 420, 0, 250)],
-  // cymbals thrown out in a star, the first at the nearest enemy, piercing all they pass
-  cymbal: [lv(2.4, 2, 70, 1.2, 100), lv(2.4, 3, 70, 1.2, 100), lv(2, 3, 85, 1.2, 100), lv(2, 4, 85, 1.2, 130), lv(1.6, 4, 100, 1.2, 130)],
+  // cymbals thrown one after another at the nearest enemies, piercing, ricocheting off the one aimed at
+  cymbal: [lv(2.4, 2, 70, 1.2, 80), lv(2.4, 3, 70, 1.2, 80), lv(2, 3, 85, 1.2, 80), lv(2, 4, 85, 1.2, 100), lv(1.6, 4, 100, 1.2, 100)],
   // walking drops lotus seeds that bloom when an enemy steps on one, or at their time with one near (sutra)
   lotus: [lv(0.6, 0, 180, 2.5, 220), lv(0.5, 0, 180, 2.5, 220), lv(0.5, 0, 210, 2.5, 270), lv(0.4, 0, 210, 3, 270), lv(0.35, 0, 240, 3, 330)],
   // a beam turning around the hero, longer while he stands still (sutra)
@@ -244,8 +244,15 @@ export const SUTRA_IDS: readonly SutraId[] = ['lotus', 'halo', 'roar', 'focus'];
 export const LOTUS = {
   /** A seed is armed this long after it was dropped (the mobs at the hero's heels pass first). */
   arm: ticks(0.4),
-  /** An armed seed blooms when an enemy comes this close to it. */
+  /** An armed seed blooms when an enemy (or a petal, with an enemy in its bloom) comes this close to it. */
   trigger: toFp(130),
+  /** A bloom shoots `petals` out at `petalPercent` of its damage; Lotus Path's home in on the horde. */
+  petals: 5,
+  petalSpeed: perTick(900),
+  petalLife: ticks(0.5),
+  petalRadius: toFp(45),
+  petalPercent: 40,
+  petalTurn: 2000,
   /** Lotus Path: a bloom sends the gems this close to it flying to the hero. */
   pull: toFp(450),
 };
@@ -253,6 +260,14 @@ export const LOTUS = {
 export const HALO = {
   /** While the hero moves the beam is this share of its length. */
   movingPercent: 70,
+  /** The beam's own sweep deals this share of the spell's damage; the needles the rest. */
+  beamPercent: 50,
+  /** A needle leaves along each beam every `needleEvery` (with several beams every other time), flying `needleReach` percent of the beam's length. */
+  needleEvery: ticks(0.12),
+  needleSpeed: perTick(1500),
+  needleReach: 180,
+  needleRadius: toFp(40),
+  needlePercent: 60,
 };
 
 export const ROAR = {
@@ -282,6 +297,10 @@ export const SPELL_CAST = {
   /** Cymbals are only thrown with an enemy this close to aim at. */
   cymbalReach: toFp(1100),
   cymbalSpeed: perTick(1500),
+  /** A throw's cymbals leave one after another; one that strikes its target ricochets to the nearest new one this close. */
+  cymbalStagger: ticks(0.12),
+  cymbalBounces: 2,
+  cymbalBounceReach: toFp(500),
 };
 
 /** Demon-Binding Talismans (systems/talismans.ts). */
@@ -380,12 +399,12 @@ export const SPELL_EVOLVED: Readonly<Record<SpellId, SpellLevel>> = {
   incense: lv(2.8, 0, 380, 4, 120),
   // Golden Body: a bigger blast, then EVOLVE.bellGuard of immunity
   bell: lv(5, 0, 520, 0, 250),
-  // Cymbal Wheel: `count` cymbals circle the hero for good, `radius` each
-  cymbal: lv(0.5, 4, 100, 0, 130),
+  // Cymbal Wheel: `count` cymbals circle the hero for good, `radius` each, and fling one more every cast
+  cymbal: lv(0.5, 4, 100, 0, 100),
   // Lotus Path: a seed at almost every step, and every bloom pulls the gems near it
   lotus: lv(0.2, 0, 240, 3, 330),
   // Boundless Light: three beams
-  halo: lv(0, 3, 540, 1.1, 300),
+  halo: lv(0, 3, 540, 1.1, 400),
   // Thunder Roar: all the way round, and it shatters the bullets it reaches
   roar: lv(1.5, 0, 560, 0, 280),
   // Heavenly Seal: every talisman that strikes bursts in a seal of EVOLVE.sealRadius
