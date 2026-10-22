@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { TaoActor, type TaoAsset } from '../game/tao/TaoActor';
 import { THEME } from '../theme';
-import { LEAVES, MOTES, breath, hop, speckAt, type DriftStyle } from './lobbyAmbient';
+import { actDrift, breath, hop, speckAt, type DriftStyle } from './lobbyAmbient';
 import { COLORS } from './widgets';
 
 // What moves in the lobby's courtyard (docs/design.md "Lobby layout"): the chosen monk standing
@@ -71,14 +71,16 @@ function spotlight(height: number): Graphics {
 /** The drifting specks over a w x h box. */
 export class LobbyDrift {
   readonly view = new Container();
-  private readonly style: DriftStyle = THEME === 'corgi' ? MOTES : LEAVES;
+  private readonly style: DriftStyle;
   private readonly specks: Graphics[] = [];
   private clock = 0;
 
-  constructor(private readonly w: number, private readonly h: number) {
+  /** `cleared`: the chapters cleared, whose act picks the specks. */
+  constructor(private readonly w: number, private readonly h: number, cleared: number) {
+    this.style = actDrift(THEME === 'corgi', cleared);
     for (let i = 0; i < this.style.count; i++) {
       const s = speckAt(this.style, i, 0, w, h);
-      const g = this.style === LEAVES ? leaf(s.color) : mote(s.color);
+      const g = SHAPES[this.style.shape](s.color);
       g.scale.set(s.size / 20);
       this.specks.push(g);
       this.view.addChild(g);
@@ -113,3 +115,20 @@ function leaf(color: number): Graphics {
 function mote(color: number): Graphics {
   return new Graphics().circle(0, 0, 10).fill({ color, alpha: 0.35 }).circle(0, 0, 5.5).fill(color).stroke({ color: COLORS.outline, width: 1.5, alpha: 0.6 });
 }
+
+/** A six-armed snowflake 20 units across: a soft outline under each arm, then the arm. */
+function flake(color: number): Graphics {
+  const g = new Graphics();
+  const arms = (style: { color: number; width: number; alpha?: number }) => {
+    for (let i = 0; i < 3; i++) {
+      const a = (i * Math.PI) / 3;
+      g.moveTo(Math.cos(a) * 10, Math.sin(a) * 10).lineTo(-Math.cos(a) * 10, -Math.sin(a) * 10);
+    }
+    g.stroke({ ...style, cap: 'round' });
+  };
+  arms({ color: COLORS.outline, width: 6, alpha: 0.35 });
+  arms({ color, width: 3.5 });
+  return g;
+}
+
+const SHAPES: Record<DriftStyle['shape'], (color: number) => Graphics> = { leaf, mote, flake };

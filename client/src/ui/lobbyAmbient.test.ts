@@ -1,7 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { LEAVES, MOTES, breath, hop, share, speckAt } from './lobbyAmbient';
+import { LEAVES, MOTES, actDrift, breath, hop, share, speckAt } from './lobbyAmbient';
 
 describe('lobby ambient', () => {
+  it('changes the specks with the act of the next chapter', () => {
+    expect(actDrift(false, 0)).toBe(LEAVES);
+    expect(actDrift(false, 4)).toBe(LEAVES);
+    expect(actDrift(true, 4)).toBe(MOTES);
+    const [two, three, four, done] = [5, 10, 15, 20].map((cleared) => actDrift(false, cleared));
+    expect(new Set([LEAVES, two, three, four]).size).toBe(4);
+    expect(done).toBe(four);
+    expect([two.shape, three.shape, four.shape]).toEqual(['mote', 'flake', 'leaf']);
+  });
+
   it('keeps shares in [0, 1)', () => {
     for (let i = 0; i < 50; i++) for (let k = 0; k < 8; k++) {
       const s = share(i, k);
