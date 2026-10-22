@@ -30,6 +30,9 @@ const STATS_W = 1000;
 const ROW_H = 58;
 const MERGE_W = 440;
 const MERGE_H = 110;
+/** The doll's least gap under the stats panel, and how far its bottom stays above the tab bar. */
+const DOLL_GAP = 30;
+const DOLL_FLOOR = 30;
 /** The item panel's tier rows: one per tier, eight of them, so they stay compact. */
 const TIER_ROW_H = 84;
 const TIER_STEP = 96;
@@ -81,27 +84,30 @@ function badge(icons: IconSheet, item: ItemId, tier: Tier | -1, r: number): Cont
 }
 
 /**
- * The tab centred on x = 0 from y = 0 down: the doll with the hero `hero` makes (the lobby's
- * figure, as tall as asked, feet at its origin) in the middle, "Merge all" at his feet when anything can merge (a
- * quiet line saying how merging works when nothing can) and the panel of what gear adds up to.
+ * The tab centred on x = 0 from y = 0 down to `room`: the panel of what gear adds up to on top,
+ * and at the bottom, standing on the courtyard's floor like the Play tab's figure, the doll with
+ * the hero `hero` makes (the lobby's figure, as tall as asked, feet at its origin), "Merge all" at
+ * his feet when anything can merge (a quiet line saying how merging works when nothing can).
  */
-export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, hero?: (height: number) => Container): Container {
+export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, room: number, hero?: (height: number) => Container): Container {
   const c = new Container();
-  c.addChild(gearDoll(save, icons, worn(save), hero?.(HERO_H) ?? null, (slot) => actions.open(slot)));
+  const [card, h] = statsCard(t('gear.total'), statLines(gearStats(save)));
+  card.y = h / 2;
+  const doll = new Container();
+  doll.addChild(gearDoll(save, icons, worn(save), hero?.(HERO_H) ?? null, (slot) => actions.open(slot)));
   const feet = HERO_FEET + 30 + MERGE_H / 2;
   if (anyMerge(save)) {
     const all = button(t('gear.mergeAll'), MERGE_W, MERGE_H, () => actions.mergeAll(), { size: 52, textFill: COLORS.outline });
     all.y = feet;
-    c.addChild(all);
+    doll.addChild(all);
   } else {
     const how = label(t('gear.howMerge').replace(/(\d) /g, '$1 '), 48, COLORS.text, { ...CARD_STROKE, wordWrap: true, wordWrapWidth: MERGE_W, breakWords: true, lineHeight: 54 });
     how.alpha = 0.8;
     how.y = feet;
-    c.addChild(how);
+    doll.addChild(how);
   }
-  const [card, h] = statsCard(t('gear.total'), statLines(gearStats(save)));
-  card.y = DOLL_H + 20 + h / 2;
-  c.addChild(card);
+  doll.y = Math.max(h + DOLL_GAP, room - DOLL_FLOOR - DOLL_H);
+  c.addChild(doll, card);
   return c;
 }
 

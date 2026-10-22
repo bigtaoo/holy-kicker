@@ -166,7 +166,7 @@ export class LobbyScreen implements Screen {
     const top = TOP_H + MENU_TOP;
     if (this.tab === 'play') this.playTab(f.w, f.h);
     else if (this.tab === 'codex') this.codexTab(f.w, f.h, top);
-    else if (this.tab === 'gear') this.gearTab(f.w, top);
+    else if (this.tab === 'gear') this.gearTab(f.w, f.h, top);
     else if (this.tab === 'train') this.trainTab(f.w, top);
     else this.shopTab(f.w, f.h, top);
     // a new player's next step before chapter 1 is cleared: an arrow bobbing over its tab (lobbyHint.ts)
@@ -320,11 +320,11 @@ export class LobbyScreen implements Screen {
     return scenery(f, this.menuBack, true);
   }
 
-  private gearTab(w: number, top: number): void {
+  private gearTab(w: number, h: number, top: number): void {
     // the chosen monk stands among his gear: the Play tab's figure, updated and swapped like it
     const look = this.patrolLook();
     this.figureRig = look.rig;
-    const tab = gearTab(this.save, this.icons, this.gearActions(), (h) => (this.figure = new LobbyFigure(look.rig, h)).view);
+    const tab = gearTab(this.save, this.icons, this.gearActions(), h - TAB_H - top, (size) => (this.figure = new LobbyFigure(look.rig, size)).view);
     tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
