@@ -75,7 +75,7 @@ export function listErrors(state) {
   ];
 }
 
-const TYPES = { '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.json': 'application/json', '.mp3': 'audio/mpeg', '.ttf': 'font/ttf' };
+const TYPES = { '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.json': 'application/json', '.mp3': 'audio/mpeg', '.ttf': 'font/ttf', '.txt': 'text/plain; charset=utf-8' };
 
 /**
  * The Vite plugin that ships a theme's files in place of client/public. Monk: nothing to do.
