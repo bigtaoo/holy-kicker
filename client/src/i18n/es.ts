@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Spanish.
 export const es: Table<typeof en> = {
   lang: { name: 'Español' },
+  boot: {
+    healthAdvice: 'Di no a los juegos dañinos y piratas.\nProtégete y cuidado con las estafas.\nJuega con moderación; jugar demasiado daña la salud.\nOrganiza bien tu tiempo y disfruta de una vida sana.',
+  },
   common: {
     continue: 'Continuar',
     back: 'Volver',
@@ -354,8 +357,10 @@ export const es: Table<typeof en> = {
     policy: 'Privacidad',
     gameCenter: 'Game Center',
     adPrivacy: 'Privacidad de anuncios',
-    dataNotice: 'Las estadísticas de juego y las partidas clasificadas van a nuestro servidor, para equilibrar el juego y gestionar las clasificaciones.',
+    dataNotice: 'Las estadísticas de juego, las repeticiones de partidas y las partidas clasificadas van a nuestro servidor, para equilibrar el juego y gestionar las clasificaciones.',
     playId: 'Tu ID de juego: {id}',
+    version: 'Versión {v}',
+    versionTester: 'Versión {v} · tester',
     idCopied: 'ID copiado',
     idCopyFailed: 'No se pudo copiar el ID',
   },
@@ -381,8 +386,8 @@ export const es: Table<typeof en> = {
     copyFailed: 'No se pudo copiar el código',
   },
   privacy: {
-    toast: 'El juego envía estadísticas y partidas clasificadas a su servidor.\nPuedes desactivarlo cuando quieras en Ajustes.',
-    ask: '¿Podemos recoger estadísticas para mejorar el juego?\nLas clasificaciones también las necesitan.',
+    toast: 'El juego envía estadísticas, repeticiones de partidas y partidas clasificadas a su servidor.\nPuedes desactivarlo cuando quieras en Ajustes.',
+    ask: '¿Podemos recoger estadísticas y repeticiones de partidas para mejorar el juego?\nLas clasificaciones también las necesitan.',
     allow: 'Permitir',
     decline: 'No, gracias',
     link: 'Privacidad',

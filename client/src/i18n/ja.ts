@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Japanese.
 export const ja: Table<typeof en> = {
   lang: { name: '日本語' },
+  boot: {
+    healthAdvice: '有害なゲームや海賊版を拒否しましょう。\n自分を守り、詐欺に注意しましょう。\n適度なゲームは脳に良く、のめり込みは体に毒です。\n時間を上手に使い、健康な生活を楽しみましょう。',
+  },
   common: {
     continue: '続ける',
     back: '戻る',
@@ -352,8 +355,10 @@ export const ja: Table<typeof en> = {
     policy: 'プライバシー',
     gameCenter: 'Game Center',
     adPrivacy: '広告のプライバシー',
-    dataNotice: 'プレイ統計とランキング記録を送信し、\nバランス調整とランキングに使います。',
+    dataNotice: 'プレイ統計・プレイのリプレイ・ランキング記録を送信し、\nバランス調整とランキングに使います。',
     playId: 'あなたのプレイID：{id}',
+    version: 'バージョン {v}',
+    versionTester: 'バージョン {v} · テスター',
     idCopied: 'IDをコピーしました',
     idCopyFailed: 'コピーできませんでした',
   },
@@ -379,8 +384,8 @@ export const ja: Table<typeof en> = {
     copyFailed: 'コピーできませんでした',
   },
   privacy: {
-    toast: 'このゲームはプレイ統計とランキングの記録をサーバーに送ります。\n設定からいつでもオフにできます。',
-    ask: 'ゲーム改善のためにプレイ統計を集めてもいいですか？\nランキングにも必要です。',
+    toast: 'このゲームはプレイ統計・プレイのリプレイ・ランキングの記録をサーバーに送ります。\n設定からいつでもオフにできます。',
+    ask: 'ゲーム改善のためにプレイ統計とリプレイを集めてもいいですか？\nランキングにも必要です。',
     allow: '許可する',
     decline: 'しない',
     link: 'プライバシー',

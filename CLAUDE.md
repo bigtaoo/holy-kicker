@@ -61,6 +61,7 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `?monk=fat` (or `novice`) plays as that monk whatever the save says; `?challenge` shows a daily
   and a weekly challenge made up on the device when offline (online the server's record wins);
   `?challenge=settle` treats the weeks in the save as closed, so their reward card shows now.
+  `?arm=first20:short` puts the save in that experiment arm whatever the table says (`docs/experiments.md`).
   `?autoplay` lets the balance bot play (`&from=N` rushes it to wave N first); `?record=SECONDS` records the run to a
   video (`&shape=landscape|portrait|phone`, `src/dev/recorder.ts`); store videos: `tools/record_video.mjs` → `tools/store_video.py` (`docs/store.md`).
 - `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay), and every run's replay while `COLLECT` in `src/replayShelf.ts` asks (`npm run replays -- --collected`) at

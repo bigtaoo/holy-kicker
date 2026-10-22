@@ -157,6 +157,23 @@ ordered by the device's `t`), Newgrounds build 81b1aee (10-18) and Playgama buil
   39% passed 60 s; Bridge's session facts are too coarse to name the step, so builds from this
   commit send `tutorial_step`. Read it before changing the hints.
 
+## A shorter first run (not built)
+
+The `first20` experiment (docs/experiments.md) is meant to test a first run of 20 waves against
+the full 50: a first win within about 8 minutes instead of 20+, for D1. The infrastructure is in
+(the arm, `waves` on runs, full-length-only clears and boards); the short run itself is not.
+`runWaves` in client/src/meta/experiments.ts is the hook: today every arm gets `BALANCE.waves`.
+
+**The owner decides before it is built** what a 20-wave win gives, since it is not a chapter clear:
+
+- whether it unlocks chapter 2 (players then meet chapter 2 with a weaker build), or only pays
+  copper and the first-run rewards and asks for the full chapter 1 next;
+- whether wave 20's mid-boss becomes the run's end boss, or the run ends on a plain wave;
+- whether a 20-wave run awards stars or chests, and how the results screen words it;
+- whether the second run is short too, or only the first.
+
+A short run is never a clear on the server and never goes on a board, whatever is decided.
+
 ## Performance
 
 A device that stutters loses players before any design lever matters, so the dash also shows how

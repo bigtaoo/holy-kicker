@@ -1,8 +1,11 @@
+// first, so that errors thrown while the rest loads are caught too (net/earlyErrors.ts)
+import { takeEarlyErrors } from './net/earlyErrors';
 import { Assets } from 'pixi.js';
 import { loadArt, useWebp, webpDecodes } from './art';
 import { warmTextures } from './gpuWarm';
 import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale, t } from './i18n';
-import { watchAnomalies } from './net/anomaly';
+import { cleanMsg, watchAnomalies } from './net/anomaly';
+import { AnomalyStash } from './net/anomalyStash';
 import { apiBase, Backend } from './net/backend';
 import { CloudSync } from './net/cloudSync';
 import { hitchContext, liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
@@ -14,6 +17,7 @@ import type { SceneOptions } from './game/scene';
 import { SaveStore } from './meta/saveStore';
 import { loadSettings, pickLocale } from './meta/settings';
 import type { Platform } from './platform/types';
+import { healthAdvice } from './ui/healthAdvice';
 import { privacyToast } from './ui/privacyUi';
 import { DISPLAY_FAMILY, DISPLAY_FILE, setDisplayFont } from './ui/fonts';
 import { Shell } from './ui/Shell';
@@ -29,6 +33,21 @@ function bootBar(share: number): void {
 }
 
 export async function boot(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean } = {}) {
+  try {
+    return await bootGame(platform, scene, opts);
+  } catch (err) {
+    // no reporter came up: what went wrong waits on the device for the next launch (net/anomalyStash.ts)
+    try {
+      const stash = new AnomalyStash(platform.storage);
+      for (const e of [...takeEarlyErrors(), { msg: cleanMsg(err) }]) stash.push({ kind: 'error', place: 'boot', ...e });
+    } catch {
+      /* the storage is the platform's; boot's own failure is what the caller shows */
+    }
+    throw err;
+  }
+}
+
+async function bootGame(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean }) {
   // the script is in: about a third of the way (the bar crept there on its own while it came)
   bootBar(0.3);
   // destroyed trees free their graphics' contexts (game/graphicsDestroy.ts)
@@ -61,6 +80,8 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     new Promise<null>((done) => setTimeout(() => done(null), 4000)),
   ]);
   await lang;
+  // a game in China opens on the health advice for games (WeChat; ui/healthAdvice.ts)
+  const advice = platform.host === 'wechat' ? healthAdvice(app, () => platform.safeInsets()) : null;
   useWebp(await webp);
   // WeChat ships its art in the package and the iOS app on the device: only the web waits on a network
   const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k), platform.host !== 'wechat' && platform.host !== 'ios');
@@ -88,7 +109,9 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
     const place = shell.place();
     const s = shell.run?.engine.state;
     return place === 'run' && s ? { place, wave: Math.max(1, s.wave) } : { place };
-  });
+  }, takeEarlyErrors());
+  shell.onFault = (err) => anomalies.error(err);
+  quality.onFault = (err) => shell.fault(err);
   quality.onBattleFrame = (f) => {
     const s = shell.run?.engine.state;
     perf.frame(f, s ? liveMobs(s) : 0, s ? hitchContext(s) : 0);
@@ -106,6 +129,7 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   await shell.start(opts.direct);
   // the page's loading screen (index.html) goes once the first screen is up; no page on WeChat
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
+  advice?.close();
   net.loaded({ script, art: artMs });
   cloud?.auto();
   platform.onHide(() => cloud?.auto());

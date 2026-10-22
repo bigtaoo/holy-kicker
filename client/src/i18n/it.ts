@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Italian.
 export const it: Table<typeof en> = {
   lang: { name: 'Italiano' },
+  boot: {
+    healthAdvice: 'Di\' no ai giochi dannosi e pirata.\nProteggiti e attento alle truffe.\nGioca con moderazione: giocare troppo nuoce alla salute.\nOrganizza bene il tuo tempo e goditi una vita sana.',
+  },
   common: {
     continue: 'Continua',
     back: 'Indietro',
@@ -354,8 +357,10 @@ export const it: Table<typeof en> = {
     policy: 'Privacy',
     gameCenter: 'Game Center',
     adPrivacy: 'Privacy annunci',
-    dataNotice: 'Le statistiche di gioco e le partite in classifica vanno al nostro server, per bilanciare il gioco e gestire le classifiche.',
+    dataNotice: 'Le statistiche di gioco, i replay delle partite e le partite in classifica vanno al nostro server, per bilanciare il gioco e gestire le classifiche.',
     playId: 'Il tuo ID di gioco: {id}',
+    version: 'Versione {v}',
+    versionTester: 'Versione {v} · tester',
     idCopied: 'ID copiato',
     idCopyFailed: "Impossibile copiare l'ID",
   },
@@ -381,8 +386,8 @@ export const it: Table<typeof en> = {
     copyFailed: 'Impossibile copiare il codice',
   },
   privacy: {
-    toast: 'Il gioco invia statistiche e partite in classifica al suo server.\nPuoi disattivarlo quando vuoi nelle Impostazioni.',
-    ask: 'Possiamo raccogliere statistiche per migliorare il gioco?\nAnche le classifiche ne hanno bisogno.',
+    toast: 'Il gioco invia statistiche, replay delle partite e partite in classifica al suo server.\nPuoi disattivarlo quando vuoi nelle Impostazioni.',
+    ask: 'Possiamo raccogliere statistiche e replay delle partite per migliorare il gioco?\nAnche le classifiche ne hanno bisogno.',
     allow: 'Consenti',
     decline: 'No, grazie',
     link: 'Privacy',

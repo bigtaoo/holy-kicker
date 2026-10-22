@@ -26,6 +26,8 @@ export class QualityRuntime {
   private readonly frame: BattleFrame = { ms: 0, target: 0, vsync: 0, level: 0, work: 0, sim: 0, view: 0, draw: 0 };
   /** Each battle frame (perf telemetry; the object is reused); calm frames never come here. */
   onBattleFrame: (f: BattleFrame) => void = () => {};
+  /** A frame threw (boot.ts hands it to Shell.fault); must not throw itself. */
+  onFault: (err: unknown) => void = (err) => console.error(err);
   /** onBattleFrame threw once (logged then, not every frame after). */
   private faulted = false;
 
@@ -70,7 +72,12 @@ export class QualityRuntime {
       this.wasCalm = calm;
       frameWork.sim = frameWork.run = 0;
       const start = performance.now();
-      app.ticker.update(now);
+      // a throw in any of the frame's listeners or the render goes to the shell, which recovers (ui/faultGuard.ts)
+      try {
+        app.ticker.update(now);
+      } catch (err) {
+        this.onFault(err);
+      }
       f.work = performance.now() - start;
       f.sim = frameWork.sim;
       f.view = frameWork.run - frameWork.sim;

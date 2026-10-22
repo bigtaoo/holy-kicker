@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Simplified Chinese.
 export const zh: Table<typeof en> = {
   lang: { name: '简体中文' },
+  boot: {
+    healthAdvice: '抵制不良游戏，拒绝盗版游戏。\n注意自我保护，谨防受骗上当。\n适度游戏益脑，沉迷游戏伤身。\n合理安排时间，享受健康生活。',
+  },
   common: {
     continue: '继续',
     back: '返回',
@@ -352,8 +355,10 @@ export const zh: Table<typeof en> = {
     policy: '隐私政策',
     gameCenter: 'Game Center',
     adPrivacy: '广告隐私',
-    dataNotice: '游戏数据和排行榜成绩会发送到我们的服务器，用于调整平衡和运行排行榜。',
+    dataNotice: '游戏数据、对局回放和排行榜成绩会发送到我们的服务器，用于调整平衡和运行排行榜。',
     playId: '你的游戏 ID：{id}',
+    version: '版本 {v}',
+    versionTester: '版本 {v} · 测试者',
     idCopied: 'ID 已复制',
     idCopyFailed: '复制失败',
   },
@@ -379,8 +384,8 @@ export const zh: Table<typeof en> = {
     copyFailed: '复制失败',
   },
   privacy: {
-    toast: '我们会把游戏数据和排行榜成绩发送到服务器。\n可随时在设置中关闭。',
-    ask: '可以收集游戏数据来改进游戏吗？\n排行榜也需要它。',
+    toast: '我们会把游戏数据、对局回放和排行榜成绩发送到服务器。\n可随时在设置中关闭。',
+    ask: '可以收集游戏数据和对局回放来改进游戏吗？\n排行榜也需要它们。',
     allow: '允许',
     decline: '不用了',
     link: '隐私',

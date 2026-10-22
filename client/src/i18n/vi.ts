@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Vietnamese.
 export const vi: Table<typeof en> = {
   lang: { name: 'Tiếng Việt' },
+  boot: {
+    healthAdvice: 'Nói không với trò chơi độc hại và lậu.\nTự bảo vệ mình và cảnh giác lừa đảo.\nChơi điều độ; chơi quá nhiều hại sức khỏe.\nSắp xếp thời gian hợp lý và tận hưởng cuộc sống lành mạnh.',
+  },
   common: {
     continue: 'Tiếp tục',
     back: 'Quay lại',
@@ -354,8 +357,10 @@ export const vi: Table<typeof en> = {
     policy: 'Chính sách bảo mật',
     gameCenter: 'Game Center',
     adPrivacy: 'Quyền riêng tư QC',
-    dataNotice: 'Thống kê chơi và kết quả xếp hạng được gửi về máy chủ để cân bằng game và vận hành bảng xếp hạng.',
+    dataNotice: 'Thống kê chơi, bản phát lại các lượt chơi và kết quả xếp hạng được gửi về máy chủ để cân bằng game và vận hành bảng xếp hạng.',
     playId: 'ID của bạn: {id}',
+    version: 'Phiên bản {v}',
+    versionTester: 'Phiên bản {v} · người thử',
     idCopied: 'Đã sao chép ID',
     idCopyFailed: 'Không sao chép được ID',
   },
@@ -381,8 +386,8 @@ export const vi: Table<typeof en> = {
     copyFailed: 'Không sao chép được mã',
   },
   privacy: {
-    toast: 'Game gửi thống kê chơi và kết quả xếp hạng về máy chủ.\nBạn có thể tắt bất cứ lúc nào trong Cài đặt.',
-    ask: 'Cho phép thu thập thống kê chơi?\nGiúp cải thiện game và vận hành bảng xếp hạng.',
+    toast: 'Game gửi thống kê chơi, bản phát lại các lượt chơi và kết quả xếp hạng về máy chủ.\nBạn có thể tắt bất cứ lúc nào trong Cài đặt.',
+    ask: 'Cho phép thu thập thống kê chơi và bản phát lại?\nGiúp cải thiện game và vận hành bảng xếp hạng.',
     allow: 'Cho phép',
     decline: 'Không, cảm ơn',
     link: 'Bảo mật',

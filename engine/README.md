@@ -17,8 +17,10 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
 
 ## Shape
 
-- `Engine` steps the systems in `STEP_ORDER`: input, player movement, horde, boss, kicks,
-  balls, rings, beads, bowls, spells, threats, contact, drops, build, waves. The order is part of the contract.
+- `Engine` steps the systems in `STEP_ORDER`: input, player movement, horde, emerge (mobs
+  climbing out of the ground), elite, boss, affixes (the elites' and bosses' extra rules), shots,
+  kicks, balls, rings, beads, bowls, spells, threats, contact, drops, build, waves, spawns. The
+  order is part of the contract (`stepOrder` in `Engine.test.ts`).
 - `RunConfig.waves` > 0 runs a chapter (`systems/waves.ts`): the horde grows each wave, elites
   and bosses arrive on their waves, the hero has health and can go down, and `state.outcome`
   turns `won` (the last boss fell, or the mid-boss of a run that ends on a mid-boss wave, like
@@ -52,7 +54,9 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
   (one per concern: `ai`, `combat`, `drop`, `spell`, `cards`).
 - **No imports from outside the engine** (no Pixi, no DOM, no client code). The engine's
   tsconfig has no DOM lib.
-- **Iterate arrays, not Maps or Sets**, wherever the order could affect the state.
+- **Iterate arrays, not Maps or Sets**, and no `for…in` or `Object.keys/values/entries`:
+  their order is insertion order, which a snapshot does not keep. Every `.sort` needs a
+  comparator with a last tiebreak. The lint's allowlist names each exception and why.
 - **Floats only at the input edge** (`quantizeMove`), which the sim never calls.
 - **A rules change changes the golden hash** in `Engine.test.ts`: bump `ENGINE_VERSION` and
   record the new value on purpose.

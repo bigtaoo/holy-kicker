@@ -16,6 +16,14 @@ export interface Stats {
   host: Host | null;
   /** The game they are for (game.ts): each game's numbers stand apart. */
   game: Game;
+  /**
+   * The installs the per-install numbers (cohorts, funnel, drivers, audience, clears, first run,
+   * arms) are made of: one experiment's or one arm's (`exp`, null for all) and whether testers are
+   * in. The per-day counts, boards, beacons, perf and anomalies are the host's whole traffic.
+   */
+  cohort: Cohort;
+  /** Per experiment arm (`first20:short`) among the window's new installs: docs/experiments.md says how to read it. */
+  arms: ArmRow[];
   days: { day: string; active: number; fresh: number; runs: number; ended: number }[];
   /**
    * Per board: runs ended, won, the median wave of the lost ones, and the waves they ended on
@@ -50,6 +58,42 @@ export interface Stats {
   anomalies: AnomalyStats;
   /** What the perf snapshots and anomalies say is wrong, problems first (src/diagnose.ts). */
   diagnosis: Finding[];
+}
+
+/** Which installs the per-install numbers count (GET /v1/stats `exp=`, `testers=1`). */
+export interface Cohort {
+  /** An experiment (`first20`: every arm of it) or one arm (`first20:short`); null for every install. */
+  exp: string | null;
+  /** Installs marked as testers count too (left out unless asked). */
+  testers: boolean;
+}
+
+export const ALL_INSTALLS: Cohort = { exp: null, testers: false };
+
+/** Whether install `p` is in `c`. */
+export function inCohort(p: Pick<Player, 'exp' | 'tester'>, c: Cohort): boolean {
+  if (p.tester && !c.testers) return false;
+  if (c.exp === null) return true;
+  return (p.exp ?? []).some((pair) => (c.exp!.includes(':') ? pair === c.exp : pair.startsWith(`${c.exp}:`)));
+}
+
+/**
+ * One experiment arm's new installs: how many; of those whose next day is over (`known`), how many
+ * came back then (D1, the primary); minutes on screen and second runs on day 0 (secondary);
+ * rewarded ads and interstitials on day 0 (the guardrail).
+ */
+export interface ArmRow {
+  arm: string;
+  n: number;
+  known: number;
+  back: number;
+  /** Day-0 minutes on screen, summed over the installs that reported any (`timed`). */
+  minutes: number;
+  timed: number;
+  /** Started a second run on day 0. */
+  second: number;
+  ads: number;
+  inters: number;
 }
 
 /** One load checkpoint's count on a day for a build. */
@@ -89,6 +133,11 @@ const FUNNEL: [string, (z: DayZero) => boolean][] = [
   ['cleared a chapter', (z) => z.wins > 0],
   ['finished 3+ runs', (z) => z.ends >= 3],
   ['launched twice', (z) => z.sessions >= 2],
+  // the ad funnel: offers drawn with an ad ready, then watched; interstitials; the iOS ad-free card
+  ['was offered a rewarded ad', (z) => (z.offers ?? 0) > 0],
+  ['watched a rewarded ad', (z) => z.ads > 0],
+  ['saw an interstitial', (z) => (z.inters ?? 0) > 0],
+  ['bought ad-free', (z) => (z.iaps ?? 0) > 0],
 ];
 
 /** Picks the label of the first bucket whose bound the value is under (the last one catches the rest). */
@@ -103,7 +152,10 @@ const DRIVERS: [string, (z: DayZero, build: string) => string][] = [
   ['launches on day 0', (z) => band(z.sessions, [[2, '1'], [3, '2']], '3+')],
   ['finished the tutorial', (z) => (z.tutorial ? 'yes' : 'no')],
   ['bought in the lobby', (z) => (z.buys > 0 ? 'yes' : 'no')],
-  ['watched an ad', (z) => (z.ads > 0 ? 'yes' : 'no')],
+  ['rewarded ads watched on day 0', (z) => band(z.ads, [[1, '0'], [2, '1'], [4, '2-3']], '4+')],
+  ['interstitials on day 0', (z) => band(z.inters ?? 0, [[1, '0'], [2, '1'], [4, '2-3']], '4+')],
+  ['rewarded offers with no ad on day 0', (z) => band(z.nofill ?? 0, [[1, '0'], [3, '1-2']], '3+')],
+  ['bought ad-free on day 0', (z) => ((z.iaps ?? 0) > 0 ? 'yes' : 'no')],
   ['gave up a run', (z) => (z.quits > 0 ? 'yes' : 'no')],
   ['last left the game from', (z) => (z.left === '' ? 'unknown' : z.left === 'run' ? `run, wave ${band(z.leftWave, [[5, '1-4'], [10, '5-9'], [20, '10-19']], '20+')}` : z.left)],
 ];
@@ -117,6 +169,7 @@ export class StatsFold {
   private readonly audience = AUDIENCE_KEYS.map(() => new Map<string, { n: number; tutorial: number; ran: number; known: number; back: number }>());
   /** Per board: installs that tried it, and [days, tries] of those that cleared it. */
   private readonly clears = new Map<string, { tried: number; days: [number, number][]; tries: [number, number][] }>();
+  private readonly arms = new Map<string, ArmRow>();
 
   /** `days` is the window, oldest first, ending on `today` or before it. Returns stay `today`'s:
    *  a window that ended last week still shows how its installs have come back since. */
@@ -126,7 +179,7 @@ export class StatsFold {
   ) {}
 
   /** One install first seen inside the window. */
-  add(p: Pick<Player, 'first' | 'back' | 'build' | 'aud'> & { d0?: DayZero; progress?: Record<string, Progress> }): void {
+  add(p: Pick<Player, 'first' | 'back' | 'build' | 'aud' | 'exp'> & { d0?: DayZero; progress?: Record<string, Progress> }): void {
     if (p.first < this.days[0] || p.first > this.days[this.days.length - 1]) return;
     for (const [board, g] of Object.entries(p.progress ?? {})) {
       const row = this.clears.get(board) ?? { tried: 0, days: [], tries: [] };
@@ -157,17 +210,33 @@ export class StatsFold {
       g.back += d1;
       this.audience[i].set(label, g);
     });
+    for (const arm of p.exp ?? []) {
+      const r = this.arms.get(arm) ?? { arm, n: 0, known: 0, back: 0, minutes: 0, timed: 0, second: 0, ads: 0, inters: 0 };
+      r.n++;
+      if (known) r.known++;
+      r.back += d1;
+      if (z.left !== '') {
+        r.timed++;
+        r.minutes += Math.round(z.secs / 6) / 10;
+      }
+      if (z.starts >= 2) r.second++;
+      r.ads += z.ads;
+      r.inters += z.inters ?? 0;
+      this.arms.set(arm, r);
+    }
     if (!known) return;
     DRIVERS.forEach(([, label], i) => bump(this.drivers[i], label(z, p.build ?? ''), d1));
     if (z.ends > 0) bump(this.firstRun, z.firstWave, d1);
   }
 
-  result(host: Host | null, game: Game, counts: DayCounts, ends: EndCount[], beacons: BeaconCount[] = [], snaps: PerfSnap[] = [], anomalies: AnomalyCount[] = []): Stats {
+  result(host: Host | null, game: Game, cohort: Cohort, counts: DayCounts, ends: EndCount[], beacons: BeaconCount[] = [], snaps: PerfSnap[] = [], anomalies: AnomalyCount[] = []): Stats {
     const at = (m: Map<string, number>, day: string) => m.get(day) ?? 0;
     return {
       today: this.today,
       host,
       game,
+      cohort,
+      arms: [...this.arms.values()].sort((a, b) => a.arm.localeCompare(b.arm)),
       days: this.days.map((day) => ({ day, active: at(counts.active, day), fresh: at(this.fresh, day), runs: at(counts.runs, day), ended: at(counts.ended, day) })),
       boards: boardsOf(ends),
       returnDays: [...RETURN_DAYS],

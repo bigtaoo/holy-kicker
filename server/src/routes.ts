@@ -248,7 +248,11 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     // one game's numbers at a time, Holy Kicker's unless asked
     const game = req.query.get('game') || 'monk';
     if (!isGame(game)) return bad('bad game');
-    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null, to, game as Game) };
+    // one experiment's installs (`exp=first20`) or one arm's (`exp=first20:short`); testers only with `testers=1`
+    const exp = req.query.get('exp') || null;
+    if (exp !== null && !/^[a-z0-9_]{1,16}(?::[a-z0-9_]{1,16})?$/.test(exp)) return bad('bad exp');
+    const cohort = { exp, testers: req.query.get('testers') === '1' };
+    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null, to, game as Game, cohort) };
   }
 
   return { status: 404 };

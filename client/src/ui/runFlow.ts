@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import { SUTRA_IDS, TICK_RATE, type SimState } from '@hk/engine';
+import { SUTRA_IDS, type SimState } from '@hk/engine';
 import { Game, type Art } from '../game/Game';
 import type { DragStick } from '../game/dragStick';
 import type { LevelSettings } from '../game/quality';
@@ -10,10 +10,11 @@ import { chapterLook } from '../chapterArt';
 import { BALANCE } from '../meta/balance';
 import { challengeSetup } from '../meta/challenge';
 import { evolvedIn } from '../meta/codex';
+import { runWaves } from '../meta/experiments';
 import { noteFall, runPast } from '../meta/falls';
 import { loadout } from '../meta/loadout';
 import { doubleCopper, earnedSutras, settleRun, type Reward, type Tab } from '../meta/progress';
-import { dropRun, keepRun, type SavedRun } from '../meta/resume';
+import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
 import { afterRun } from '../meta/welcome';
@@ -23,9 +24,10 @@ import type { PacedAds } from '../platform/adPacing';
 import type { Sound } from '../audio/Sound';
 import type { Backend, RunRank, RunResult } from '../net/backend';
 import { runBuild } from '../net/leaveProps';
+import { offered } from '../net/offers';
 import type { PerfReport } from '../net/perfReport';
 import type { RunReplays } from '../net/runReplays';
-import type { Challenge, Device, ReplayWire } from '@hk/protocol';
+import type { Challenge, Device, InterPlace, OfferPlace, PropValue, ReplayWire } from '@hk/protocol';
 import { menuBackdrop } from './lobbyBars';
 import type { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
@@ -36,6 +38,7 @@ import { canReport, reportProblem } from './problemReport';
 import type { PlayerName } from './playerName';
 import type { DownInfo } from './deathInfo';
 import { RunWatch } from './runWatch';
+import { clearedWaves, keepable, runSummary } from './runSummary';
 import type { Screen } from './uiLayout';
 
 // A run's life (docs/design.md "Flow"), the shell's other half: the run started from the lobby, a
@@ -65,7 +68,8 @@ export interface RunHost {
   showLobby(tab?: Tab | null): void;
   /** A run of `chapter`, once its art is in. */
   play(chapter: number, left?: SavedRun, from?: 'again' | 'next' | null): void;
-  rewarded(at: string): Promise<boolean>;
+  /** Plays the rewarded ad offered at `at`; resolves whether it paid. */
+  rewarded(at: OfferPlace): Promise<boolean>;
   quality(): LevelSettings | null;
   perf(): PerfReport | null;
   /** The lobby's art goes until the next lobby asks for it again. */
@@ -106,7 +110,7 @@ export class RunFlow {
     this.freeRevives = left ? left.freeRevives : c ? 0 : freeRevives;
     const game = (this.game = new Game(h.app, h.platform, h.art, h.scene, h.stick, left ? setupOf(left.state.config) : c ? challengeSetup(save, c) : {
       chapter,
-      waves: h.scene.waves ? BALANCE.waves : 0,
+      waves: h.scene.waves ? runWaves(save) : 0,
       revives: BALANCE.revives + freeRevives,
       relic: h.scene.relic ?? save.relic,
       sutras: h.scene.sutras ? SUTRA_IDS : earnedSutras(save),
@@ -148,7 +152,9 @@ export class RunFlow {
     // the first run teaches moving; a replayed first chapter, a resumed run or a dev bot's does not
     const teach = !save.firstRunDone && h.scene.waves && !left && !h.scene.autoplay && !h.scene.record;
     this.watch = new RunWatch(game, hud, {
-      chapter, novice: save.runs < BALANCE.novice.runs, portal: h.portal, ads: h.ads, net: h.net, past: runPast(save, chapter, this.hard),
+      chapter, novice: save.runs < BALANCE.novice.runs, portal: h.portal, net: h.net,
+      // the death panel asks the host only when it would offer the ad's revive
+      ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', h.ads.rewardedAvailable()) }, past: runPast(save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
       kills: () => this.kills, keepRun: () => this.keep(), end: () => this.end(), cheer: () => h.sound.play('cleared'),
     }, !!teach);
@@ -157,7 +163,7 @@ export class RunFlow {
     h.portal.gameplayStart();
     // a resumed fight waits on the pause panel until the player looks (a card choice or the death panel holds it anyway)
     const s = game.engine.state;
-    if (!left) h.net.track('run_start', { chapter, hard: this.hard, monk: c?.loadout?.monk ?? h.scene.monk ?? save.monk, relic: c?.loadout?.relic ?? h.scene.relic ?? save.relic, ...(from && { [from]: true }), ...(c && { challenge: c.id }) });
+    if (!left) h.net.track('run_start', { chapter, hard: this.hard, waves: s.config.waves, monk: c?.loadout?.monk ?? h.scene.monk ?? save.monk, relic: c?.loadout?.relic ?? h.scene.relic ?? save.relic, ...(from && { [from]: true }), ...(c && { challenge: c.id }) });
     else if (s.outcome === 'playing' && s.players[0].offer.length === 0) hud.pauseForHost();
   }
 
@@ -165,7 +171,7 @@ export class RunFlow {
   private keep(): void {
     const s = this.game?.engine.state;
     const { scene, platform, challenge } = this.host;
-    if (!s || s.config.waves === 0 || scene.autoplay || scene.record || challenge.run) return;
+    if (!s || !keepable(s, scene, !!challenge.run)) return;
     keepRun(platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills });
   }
 
@@ -193,7 +199,35 @@ export class RunFlow {
     return true;
   }
 
-  private end(): void {
+  /** A frame threw in this run (Shell.fault): takes it off screen unsettled and kept for the resume
+   *  offer, as a fresh view may well play on; null, with nothing done, for a run that is never kept. */
+  shelve(): SavedRun | null {
+    if (!this.game) return null;
+    try {
+      this.keep();
+    } catch {
+      return null;
+    }
+    const left = loadRun(this.host.platform.storage);
+    if (left?.state.tick !== this.game.engine.state.tick) return null;
+    this.drop();
+    return left;
+  }
+
+  /** Takes the run off screen without settling it (its kept copy, if any, stays for the resume offer). */
+  drop(): void {
+    const game = this.game;
+    [this.game, this.hud, this.watch] = [null, null, null];
+    this.host.portal.gameplayStop();
+    try {
+      game?.destroy();
+    } catch {
+      /* a half-built run: whatever it holds goes with the page */
+    }
+  }
+
+  /** Ends the run in play as a give-up: paid out, and on to its results. */
+  end(): void {
     if (!this.game) return;
     const s = this.game.engine.state;
     const replay = this.host.challenge.capture(this.game);
@@ -221,15 +255,13 @@ export class RunFlow {
     const h = this.host;
     const cause = fall?.cause;
     dropRun(h.platform.storage);
-    const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
+    const waves = clearedWaves(s);
     const p = s.players[0];
-    const run = {
-      chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
-      level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
-    };
+    const run = runSummary(s, this.chapter, this.hard, this.kills);
     h.perf()?.end();
-    h.net.track('run_end', { ...run, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
-    const name = rankedRun(h.scene) ? h.names.board(h.save()) : null;
+    h.net.track('run_end', { ...run, waves: s.config.waves, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
+    // a run shorter than the chapter (an experiment's first run) is never on a board
+    const name = rankedRun(h.scene) && s.config.waves === BALANCE.waves ? h.names.board(h.save()) : null;
     const rank = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(null);
     void h.net.flush();
     if (h.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
@@ -250,12 +282,20 @@ export class RunFlow {
     if (done.reward.streak) h.net.track('claim', { what: 'streak', n: done.reward.streak, jade: done.reward.streakJade });
     h.setScreen(new ChallengeResultsScreen(done, {
       double: async () => {
-        const paid = await h.rewarded('double');
+        const paid = await h.rewarded('challenge_double');
         if (paid) h.commit({ ...h.save(), copper: h.save().copper + done.reward.copper });
         return paid;
       },
-      next: () => void h.ads.midgame().then(() => h.showLobby()),
-    }, h.ads.rewardedAvailable(), h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
+      next: () => void h.ads.midgame(this.inter('challenge_next')).then(() => h.showLobby()),
+    }, offered(this.track, 'challenge_double', h.ads.rewardedAvailable(), done.reward.copper > 0), h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
+  }
+
+  /** Reports an offer to analytics. */
+  private readonly track = (e: 'offer', p: Record<string, PropValue>) => this.host.net.track(e, p);
+
+  /** Reports the interstitial that started after the button at `at`. */
+  private inter(at: InterPlace): () => void {
+    return () => this.host.net.track('ad', { kind: 'inter', at });
   }
 
   private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>, fall: DownInfo | null): void {
@@ -263,10 +303,10 @@ export class RunFlow {
     let leaving = false;
     // the interstitial sits on the break after the results (adPacing.ts: at most one every few minutes of play), never
     // inside a run, never after the first run (the tutorial) and never on Play again, which keeps the player playing
-    const leave = (then: () => void, ad = true) => {
+    const leave = (then: () => void, at: InterPlace | null) => {
       if (leaving) return;
       leaving = true;
-      void (ad && h.save().runs > 1 ? h.ads.midgame() : Promise.resolve()).then(then);
+      void (at && h.save().runs > 1 ? h.ads.midgame(this.inter(at)) : Promise.resolve()).then(then);
     };
     // a lost run's way back is the same chapter again (not the tutorial: firstRunDone is set), a first clear's the chapter it opened
     const save = h.save();
@@ -277,11 +317,11 @@ export class RunFlow {
         if (paid) h.commit(doubleCopper(h.save(), reward));
         return paid;
       },
-      next: (tab) => leave(() => h.showLobby(tab)),
-      again: !reward.firstClear ? () => leave(() => h.play(this.chapter, undefined, 'again'), false) : opened ? () => leave(() => h.play(h.save().chapter, undefined, 'next')) : null,
+      next: (tab) => leave(() => h.showLobby(tab), 'results_lobby'),
+      again: !reward.firstClear ? () => leave(() => h.play(this.chapter, undefined, 'again'), null) : opened ? () => leave(() => h.play(h.save().chapter, undefined, 'next'), 'results_next') : null,
       waiting: () => waitingCount(lobbyWaiting(h.save(), Date.now())), step: () => (fall ? lossStep(h.save()) : null),
       // the opened chapter's art, loaded now for its preview and the run Next chapter starts
       preview: opened ? chapterLook(h.platform, h.scene, h.art, save.chapter).catch(() => null) : undefined,
-    }, h.ads.rewardedAvailable(), rank, fall, h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
+    }, offered(this.track, 'double', h.ads.rewardedAvailable(), reward.copper > 0), rank, fall, h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
   }
 }

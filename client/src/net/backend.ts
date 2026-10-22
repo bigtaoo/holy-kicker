@@ -63,6 +63,8 @@ export class Backend {
   private leave: (() => Record<string, PropValue>) | null = null;
   private readonly hidden: (() => void)[] = [];
   private wanted: Promise<boolean> | null = null;
+  private exp = '';
+  private tester = false;
 
   constructor(
     private readonly platform: Platform,
@@ -177,7 +179,15 @@ export class Backend {
   }
 
   private batch(events: EventBatch['events']): EventBatch {
-    return { install: this.install, session: this.session, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME, events };
+    const tags = { ...(this.exp && { exp: this.exp }), ...(this.tester && { tester: true as const }) };
+    return { install: this.install, session: this.session, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME, ...tags, events };
+  }
+
+  /** The install's experiment arms (experiments.ts experimentTag) and tester mark, sent with every batch from now on. */
+  tag(exp: string, tester: boolean): void {
+    this.exp = exp;
+    this.tester = tester;
+    this.platform.analytics?.tag?.(exp);
   }
 
   /**
@@ -214,7 +224,7 @@ export class Backend {
   /** Sends run `run`'s replay (net/runReplays.ts); a small one still arrives as the tab closes. */
   async sendReplay(run: string, end: ReplayEnd, replay: ReplayWire): Promise<boolean> {
     if (this.sharing !== 'send') return false;
-    const body: RunReplay = { install: this.install, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME, run, end, replay };
+    const body: RunReplay = { install: this.install, host: this.platform.host, build: this.build, locale: this.locale(), game: THEME, ...(this.exp && { exp: this.exp }), run, end, replay };
     return (await this.send('POST', '/v1/replays', body, REPORT_TIMEOUT_MS, JSON.stringify(body).length <= KEEPALIVE_BYTES)) !== null;
   }
 

@@ -1,14 +1,15 @@
-import type { PropValue } from '@hk/protocol';
+import type { OfferPlace, PropValue } from '@hk/protocol';
 import { Container } from 'pixi.js';
 import { formatAmount, t, type Key } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { claimBonus, claimTask, tasksOpen, untilNextDay } from '../meta/daily';
 import type { Haul } from '../meta/haul';
-import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
+import { canDouble, collectPatrol, patrolHours, patrolOpen, quickLeft, quickPatrol, type QuickPay } from '../meta/patrol';
 import { openProgressChest } from '../meta/progressChests';
 import type { SaveData } from '../meta/save';
 import { lobbyWaiting } from '../meta/waiting';
+import { OfferLog } from '../net/offers';
 import type { Store } from '../platform/types';
 import { claimGift, giftReady, nextGift } from '../meta/welcome';
 import { giftPanel } from './giftPanel';
@@ -35,8 +36,8 @@ export interface EconomyHost {
   change(save: SaveData): void;
   relayout(): void;
   toast(text: string): void;
-  /** Plays a rewarded ad; resolves whether it finished. */
-  rewarded(): Promise<boolean>;
+  /** Plays the rewarded ad offered at `at`; resolves whether it finished. */
+  rewarded(at: OfferPlace): Promise<boolean>;
   /** The icon sheet, with the chests as chest_free, chest_ad and chest_jade. */
   icons: IconSheet;
   /** What the patrol panel's scene is drawn with. */
@@ -46,8 +47,8 @@ export interface EconomyHost {
   track: LobbyTrack;
 }
 
-/** Reports a lobby purchase or payout to analytics (Backend.track). */
-export type LobbyTrack = (e: 'buy' | 'claim' | 'iap', p: Record<string, PropValue>) => void;
+/** Reports a lobby purchase, payout or rewarded offer to analytics (Backend.track). */
+export type LobbyTrack = (e: 'buy' | 'claim' | 'iap' | 'offer', p: Record<string, PropValue>) => void;
 
 type Modal = 'patrol' | 'tasks' | 'gift' | null;
 
@@ -85,10 +86,14 @@ export class EconomyUi {
   /** The tasks panel's page: today's tasks first, unless only an achievement waits. */
   private tasksView: TasksView = 'daily';
   private achievePage = 0;
+  /** This lobby's rewarded offers, each reported once as shown or no-fill. */
+  private readonly offers: OfferLog;
 
   constructor(private readonly host: EconomyHost, adAvailable: Promise<boolean>, private readonly now: () => number = Date.now) {
+    this.offers = new OfferLog(host.track);
     void adAvailable.then((ok) => {
       this.adOk = ok;
+      this.offers.answer(ok);
       if (ok) host.relayout();
     });
   }
@@ -179,6 +184,7 @@ export class EconomyUi {
   shopTab(room: number): Container {
     const c = new Container();
     const kinds = CHEST_KINDS.filter((k) => k !== 'ad' || this.adOk);
+    if ((chestsLeft(this.host.save(), this.now(), 'ad') ?? 0) > 0) this.offers.place('lobby_chest');
     const store = this.host.store;
     const n = kinds.length + (store ? 1 : 0);
     const h = Math.round(Math.max(CARD_H, Math.min(CARD_TALL, (room - FOOT_H) / n - CARD_GAP)));
@@ -216,6 +222,8 @@ export class EconomyUi {
     const c = new Container();
     const save = this.host.save();
     if (this.modal === 'patrol') {
+      if (canDouble(save, this.now())) this.offers.place('patrol_double');
+      if (quickLeft(save, this.now(), 'ad') > 0) this.offers.place('patrol_quick');
       c.addChild(patrolPanel(save, this.now, w, h, this.adOk, this.playing, {
         collect: (double) => void this.collect(double),
         quick: (pay) => void this.quick(pay),
@@ -282,11 +290,11 @@ export class EconomyUi {
   }
 
   /** Plays the rewarded ad with every ad button locked; resolves whether it finished. */
-  private async watch(): Promise<boolean> {
+  private async watch(at: OfferPlace): Promise<boolean> {
     if (this.playing) return false;
     this.playing = true;
     this.host.relayout();
-    const paid = await this.host.rewarded();
+    const paid = await this.host.rewarded(at);
     this.playing = false;
     if (!paid) this.host.relayout();
     return paid;
@@ -307,20 +315,20 @@ export class EconomyUi {
   }
 
   private async collect(double: boolean): Promise<void> {
-    if (double && !(await this.watch())) return;
+    if (double && !(await this.watch('patrol_double'))) return;
     const hours = patrolHours(this.host.save(), this.now());
     this.pay(collectPatrol(this.host.save(), this.now(), double), 'claim', { what: 'patrol', hours: Math.round(hours * 10) / 10, double });
   }
 
   private async quick(pay: QuickPay): Promise<void> {
-    if (pay === 'ad' && !(await this.watch())) return;
+    if (pay === 'ad' && !(await this.watch('patrol_quick'))) return;
     this.pay(quickPatrol(this.host.save(), this.now(), pay), 'buy', { item: 'patrol', pay });
   }
 
   private async open(kind: ChestKind): Promise<void> {
     const block = chestBlock(this.host.save(), this.now(), kind);
     if (block) return this.host.toast(block === 'jade' ? t('shop.noJade') : t('shop.tomorrow'));
-    if (kind === 'ad' && !(await this.watch())) return;
+    if (kind === 'ad' && !(await this.watch('lobby_chest'))) return;
     this.pay(openChest(this.host.save(), this.now(), kind), 'buy', { item: 'chest', kind });
   }
 
