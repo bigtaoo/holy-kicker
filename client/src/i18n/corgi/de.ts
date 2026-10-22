@@ -200,6 +200,8 @@ export const corgiDe: Table<typeof corgiEn> = {
     clear: 'Schaffe Planet {n}',
   },
   results: {
+    trainStep: 'Jetzt ×{n} drillen: {stats}',
+    goTrain: 'Drillen',
     cleared: 'Planet geschafft!',
     hardCleared: 'Schwerer Planet geschafft!',
     hardUnlocked: '3 Sterne! Schwerer Modus für diesen Planeten offen',

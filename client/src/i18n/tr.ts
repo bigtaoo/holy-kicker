@@ -188,6 +188,11 @@ export const tr: Table<typeof en> = {
     runs: '{n} tur bitir',
   },
   results: {
+    collect: 'Lobide topla ({n})',
+    lobby: 'Lobiye dön',
+    mergeStep: 'Birleştirilebilir ekipman ×{n}',
+    goMerge: 'Birleştir',
+    upNext: 'Sıradaki',
     waves: 'geçilen dalga',
     starNext2: 'Sonraki yıldız: dirilmeden geç',
     starNext3: 'Sonraki yıldız: can hiç %{n} altına düşmesin',

@@ -201,6 +201,8 @@ export const corgiRu: Table<typeof corgiEn> = {
     clear: 'Пройди планету {n}',
   },
   results: {
+    trainStep: 'Тренировка ×{n} доступна: {stats}',
+    goTrain: 'Тренировать',
     cleared: 'Планета пройдена!',
     hardCleared: 'Сложная планета пройдена!',
     hardUnlocked: '3 звезды! Сложный режим планеты открыт',

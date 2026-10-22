@@ -200,6 +200,8 @@ export const monkJa: Table<typeof monkEn> = {
     clear: '第{n}章をクリア',
   },
   results: {
+    trainStep: '今すぐ修行 ×{n}：{stats}',
+    goTrain: '修行へ',
     cleared: '章クリア！',
     hardCleared: 'ハード章クリア！',
     hardUnlocked: '星3！この章のハードモード解放',

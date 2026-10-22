@@ -200,6 +200,8 @@ export const monkRu: Table<typeof monkEn> = {
     clear: 'Пройди главу {n}',
   },
   results: {
+    trainStep: 'Тренировка ×{n} доступна: {stats}',
+    goTrain: 'Тренировать',
     cleared: 'Глава пройдена!',
     hardCleared: 'Сложная глава пройдена!',
     hardUnlocked: '3 звезды! Сложный режим главы открыт',

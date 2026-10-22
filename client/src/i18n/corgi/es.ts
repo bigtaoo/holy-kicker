@@ -200,6 +200,8 @@ export const corgiEs: Table<typeof corgiEn> = {
     clear: 'Supera el planeta {n}',
   },
   results: {
+    trainStep: 'Entrena ×{n} ya: {stats}',
+    goTrain: 'Entrenar',
     cleared: '¡Planeta superado!',
     hardCleared: '¡Planeta difícil superado!',
     hardUnlocked: '¡3 estrellas! Modo difícil de este planeta abierto',

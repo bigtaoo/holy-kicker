@@ -3,11 +3,12 @@ import { Container } from 'pixi.js';
 import { formatAmount, t, type Key } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
-import { claimable, claimBonus, claimTask, tasksOpen, untilNextDay } from '../meta/daily';
+import { claimBonus, claimTask, tasksOpen, untilNextDay } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { collectPatrol, patrolHours, patrolOpen, quickPatrol, type QuickPay } from '../meta/patrol';
 import { openProgressChest } from '../meta/progressChests';
 import type { SaveData } from '../meta/save';
+import { lobbyWaiting } from '../meta/waiting';
 import type { Store } from '../platform/types';
 import { claimGift, giftReady, nextGift } from '../meta/welcome';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
@@ -134,8 +135,9 @@ export class EconomyUi {
   tasksRail(): Container | null {
     const save = this.host.save();
     if (!tasksOpen(save)) return null;
-    const daily = claimable(save, this.now()) > 0;
-    const achieve = achievementsReady(save).length > 0;
+    const w = lobbyWaiting(save, this.now());
+    const daily = w.tasks > 0;
+    const achieve = w.achievements > 0;
     return railButton({ icon: iconSprite(this.host.icons, 'tasks', 100), name: t('tasks.button'), dot: daily || achieve }, () => {
       this.tasksView = achieve && !daily ? 'achieve' : 'daily';
       this.achievePage = 0;

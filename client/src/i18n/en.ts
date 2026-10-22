@@ -186,6 +186,11 @@ export const en = {
     runs: 'Finish {n} runs',
   },
   results: {
+    collect: 'Collect in the lobby ({n})',
+    lobby: 'Back to lobby',
+    mergeStep: 'Gear ready to merge ×{n}',
+    goMerge: 'Go merge',
+    upNext: 'Up next',
     waves: 'waves cleared',
     starNext2: 'Next star: clear without a revive',
     starNext3: 'Next star: never drop under {n}% health',

@@ -201,6 +201,8 @@ export const corgiVi: Table<typeof corgiEn> = {
     clear: 'Qua hành tinh {n}',
   },
   results: {
+    trainStep: 'Tập được ×{n}: {stats}',
+    goTrain: 'Đi tập',
     cleared: 'Qua hành tinh!',
     hardCleared: 'Qua hành tinh khó!',
     hardUnlocked: '3 sao! Đã mở chế độ Khó của hành tinh này',

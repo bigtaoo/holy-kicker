@@ -201,6 +201,8 @@ export const corgiTh: Table<typeof corgiEn> = {
     clear: 'ผ่านดาวที่ {n}',
   },
   results: {
+    trainStep: 'ฝึกได้ ×{n}: {stats}',
+    goTrain: 'ไปฝึก',
     cleared: 'ผ่านดาวแล้ว!',
     hardCleared: 'ผ่านดาวโหมดยากแล้ว!',
     hardUnlocked: '3 ดาว! เปิดโหมดยากของดาวเคราะห์นี้แล้ว',

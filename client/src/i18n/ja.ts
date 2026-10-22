@@ -186,6 +186,11 @@ export const ja: Table<typeof en> = {
     runs: 'プレイを{n}回完了',
   },
   results: {
+    collect: 'ロビーで受け取る ({n})',
+    lobby: 'ロビーへ',
+    mergeStep: '合成できる装備 ×{n}',
+    goMerge: '合成へ',
+    upNext: '次はここ',
     waves: 'クリアしたウェーブ',
     starNext2: '次の星：復活なしでクリア',
     starNext3: '次の星：体力を常に{n}%以上に保つ',

@@ -201,6 +201,8 @@ export const corgiJa: Table<typeof corgiEn> = {
     clear: '惑星{n}をクリア',
   },
   results: {
+    trainStep: '今すぐ訓練 ×{n}：{stats}',
+    goTrain: '訓練へ',
     cleared: '惑星クリア！',
     hardCleared: 'ハード惑星クリア！',
     hardUnlocked: '星3！この惑星のハードモード解放',

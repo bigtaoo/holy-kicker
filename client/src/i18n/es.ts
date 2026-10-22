@@ -188,6 +188,11 @@ export const es: Table<typeof en> = {
     runs: 'Termina {n} partidas',
   },
   results: {
+    collect: 'Recoger en el lobby ({n})',
+    lobby: 'Volver al lobby',
+    mergeStep: 'Equipo para fusionar ×{n}',
+    goMerge: 'Fusionar',
+    upNext: 'A continuación',
     waves: 'oleadas superadas',
     starNext2: 'Siguiente estrella: supéralo sin revivir',
     starNext3: 'Siguiente estrella: no bajes del {n}% de vida',

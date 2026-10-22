@@ -200,6 +200,8 @@ export const monkFr: Table<typeof monkEn> = {
     clear: 'Termine le chapitre {n}',
   },
   results: {
+    trainStep: 'Entraînement ×{n} possible : {stats}',
+    goTrain: 'S’entraîner',
     cleared: 'Chapitre terminé !',
     hardCleared: 'Chapitre difficile terminé !',
     hardUnlocked: '3 étoiles ! Mode difficile de ce chapitre ouvert',

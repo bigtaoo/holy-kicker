@@ -188,6 +188,11 @@ export const de: Table<typeof en> = {
     runs: 'Beende {n} Läufe',
   },
   results: {
+    collect: 'In der Lobby abholen ({n})',
+    lobby: 'Zur Lobby',
+    mergeStep: 'Ausrüstung zum Verschmelzen ×{n}',
+    goMerge: 'Verschmelzen',
+    upNext: 'Als Nächstes',
     waves: 'Wellen geschafft',
     starNext2: 'Nächster Stern: ohne Wiederbelebung schaffen',
     starNext3: 'Nächster Stern: nie unter {n}% Leben fallen',

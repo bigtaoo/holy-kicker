@@ -1,10 +1,13 @@
 import { Container, type Text, type Texture } from 'pixi.js';
+import type { ChapterLook } from '../chapterArt';
 import { t } from '../i18n';
-import type { Reward } from '../meta/progress';
+import type { Reward, Tab } from '../meta/progress';
+import type { NextStep } from '../meta/waiting';
 import type { RunRank } from '../net/backend';
 import type { IconSheet } from './buildBar';
 import type { DownInfo } from './deathInfo';
 import { menuCover } from './lobbyBars';
+import { nextStepPart, previewPart } from './resultsNext';
 import { fallPart, headerPart, newsLines, rewardsPart, type Part } from './resultsParts';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
@@ -13,22 +16,32 @@ import { COLORS, button, buttonLabel, keyCap, label, panel, playTap } from './wi
 
 // Results after a run, in three zones on one card: the header (the title, the waves cleared as
 // one big number, a badge for the best and the leaderboard place once the server answers), after
-// a lost run a strip with what felled the hero, how near the next goal came and one short tip, and
-// the rewards as icons (the copper counting up, the gear in tier-coloured frames), with the rarer
-// news (unlocks, chests, the welcome gift) in short lines under them. The parts come in one after
-// another (resultsReveal.ts); a tap shows them all. Under the card: Play again (after a lost run,
-// the quickest way back into a fight) or Next chapter (after a first clear, so a winner goes on
-// instead of stopping at the results), then the rewarded "double copper" offer and Continue side
-// by side at the same size, font and colour (CrazyGames' rewarded-ad rules). On a desktop Enter
-// takes the first button (Play again or Next chapter, or Continue alone) and Escape continues; the
-// buttons wear their keys. The rewarded ad has no key: it plays only on a click.
+// a lost run a strip with what felled the hero, how near the next goal came and one short tip,
+// then the one step in the lobby that makes the next run go further (training the copper buys,
+// else gear to merge) with a button to its tab, and the rewards as icons (the copper counting up,
+// the gear in tier-coloured frames), with the rarer news (unlocks, chests, the welcome gift) in
+// short lines under them, and after a first clear the chapter it opened. The parts come in one
+// after another (resultsReveal.ts); a tap shows them all. Under the card two buttons: with
+// something waiting in the lobby (the count its red dots show, lobbyWaiting), Collect in the lobby
+// leads and Play again steps back; with nothing, Play again leads and Back to lobby steps back. A
+// first clear always leads with Next chapter, so a winner goes on. The lower one sits beside the
+// rewarded "double copper" offer at the same size, font and colour (CrazyGames' rewarded-ad rules).
+// On a desktop Enter takes the first button and Escape goes to the lobby; the buttons wear their
+// keys. The rewarded ad has no key: it plays only on a click.
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
   double(): Promise<boolean>;
-  next(): void;
+  /** To the lobby; `tab` opens it on that tab. */
+  next(tab?: Tab): void;
   /** Plays the same chapter again (Next chapter: the one a first clear opened); null where the results lead to the lobby only. */
   again: (() => void) | null;
+  /** How many things wait in the lobby now, asked at each layout (doubled copper may buy training). */
+  waiting(): number;
+  /** After a lost run, the one step in the lobby to point to. */
+  step(): NextStep | null;
+  /** After a first clear, the chapter it opened, once its art is in (null when it fails). */
+  preview?: Promise<ChapterLook | null>;
 }
 
 type Offer = 'hidden' | 'offered' | 'playing' | 'paid';
@@ -51,6 +64,9 @@ export class ResultsScreen implements Screen {
   /** The parts in reveal order with where each rests, and the copper count with its part. */
   private parts: [Container, number][] = [];
   private copper: { text: Text; part: number } | null = null;
+  private look: ChapterLook | null = null;
+  /** What Enter does: the first button's action. */
+  private primary: () => void = () => this.actions.next();
 
   constructor(
     private readonly reward: Reward,
@@ -70,6 +86,12 @@ export class ResultsScreen implements Screen {
     void rank.then((r) => {
       if (r && !this.view.destroyed) {
         this.rank = r;
+        this.relayout();
+      }
+    });
+    void actions.preview?.then((look) => {
+      if (look && !this.view.destroyed) {
+        this.look = look;
         this.relayout();
       }
     });
@@ -95,7 +117,11 @@ export class ResultsScreen implements Screen {
     const r = this.reward;
     // the zones top down, each [view, height]; the rewards' copper counts up
     const zones: Part[] = [headerPart(r, this.waves, this.rank, INNER_W)];
-    if (this.fall) zones.push(fallPart(this.fall, this.waves, INNER_W, this.icons));
+    if (this.fall) {
+      zones.push(fallPart(this.fall, this.waves, INNER_W, this.icons));
+      const step = this.actions.step();
+      if (step) zones.push(nextStepPart(step, INNER_W, () => this.actions.next(step.tab)));
+    }
     const total = this.offer === 'paid' ? 2 * r.copper : r.copper;
     const rewards = rewardsPart(r, total, this.icons, INNER_W);
     zones.push(rewards);
@@ -110,6 +136,7 @@ export class ResultsScreen implements Screen {
       ny += l.height + 20;
     }
     if (ny > 0) zones.push([news, ny]);
+    if (this.look && this.actions.again) zones.push(previewPart(this.look, INNER_W));
 
     const cardH = zones.reduce((n, [, h]) => n + h + GAP, 0) + 60;
     const card = new Container();
@@ -139,19 +166,27 @@ export class ResultsScreen implements Screen {
     this.update(0, total);
   }
 
-  /** Play again, then the ad offer and Continue side by side (or Continue alone), from `y` down. */
+  /** The leading button over the second (or one alone), the second beside the ad offer, from `y` down. */
   private buttons(c: Container, x: number, y: number): void {
     const busy = this.offer === 'playing';
-    // with Play again first, Continue (and the ad offer, which matches it) step back
-    const second = this.actions.again ? COLORS.panelLocked : COLORS.saffron;
-    if (this.actions.again) {
-      const again = button(t(this.reward.firstClear ? 'results.nextChapter' : 'results.again'), 640, 150, () => this.actions.again?.(), { fill: COLORS.saffron });
-      again.position.set(x, y);
-      if (busy) again.eventMode = 'none';
-      else if (this.keys) keyCap(again, 640, 150, t('common.keyEnter'));
-      c.addChild(again);
+    const n = this.actions.waiting();
+    const lobby = { text: n > 0 ? t('results.collect', { n }) : t('results.lobby'), act: () => this.actions.next() };
+    const again = this.actions.again;
+    const replay = again && { text: t(this.reward.firstClear ? 'results.nextChapter' : 'results.again'), act: again };
+    // a first clear goes on; a loss with something to collect leads there, else straight back in
+    const rows = !replay ? [lobby] : this.reward.firstClear || n === 0 ? [replay, lobby] : [lobby, replay];
+    this.primary = rows[0].act;
+    if (rows.length === 2) {
+      const first = button(rows[0].text, 640, 150, rows[0].act, { fill: COLORS.saffron });
+      first.position.set(x, y);
+      if (busy) first.eventMode = 'none';
+      else if (this.keys) keyCap(first, 640, 150, t('common.keyEnter'));
+      c.addChild(first);
       y += 185;
     }
+    const last = rows[rows.length - 1];
+    // under a leading button, the second (and the ad offer, which matches it) step back
+    const fill = rows.length === 2 ? COLORS.panelLocked : COLORS.saffron;
     const pair = this.offer === 'offered' || this.offer === 'playing';
     // the pair spans the card's width, so the ad's label (beside its badge) keeps a readable size
     const w = pair ? 450 : 640;
@@ -160,19 +195,20 @@ export class ResultsScreen implements Screen {
     let size = 52;
     if (pair) {
       const probe = button(adText, w, 140, () => {}, { video: !busy, size });
-      const other = button(t('common.continue'), w, 140, () => {}, { size });
+      const other = button(last.text, w, 140, () => {}, { size });
       size *= Math.min(buttonLabel(probe).scale.x, buttonLabel(other).scale.x);
       probe.destroy({ children: true });
       other.destroy({ children: true });
     }
-    const next = button(t('common.continue'), w, 140, () => this.actions.next(), { fill: second, size });
-    next.position.set(pair ? x + w / 2 + 10 : x, y);
-    if (busy) next.eventMode = 'none';
-    else if (this.keys) keyCap(next, w, 140, t(this.actions.again ? 'common.keyEsc' : 'common.keyEnter'));
-    c.addChild(next);
+    const second = button(last.text, w, 140, last.act, { fill, size });
+    second.position.set(pair ? x + w / 2 + 10 : x, y);
+    if (busy) second.eventMode = 'none';
+    // Escape is the lobby's key; Play again under Collect has none
+    else if (this.keys && (rows.length === 1 || last === lobby)) keyCap(second, w, 140, t(rows.length === 1 ? 'common.keyEnter' : 'common.keyEsc'));
+    c.addChild(second);
     if (pair) {
-      // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
-      const ad = button(adText, w, 140, () => void this.playAd(), { fill: busy ? COLORS.panelLocked : second, video: !busy, size });
+      // the same size, font and colour as its neighbour (CrazyGames' rewarded-ad rules)
+      const ad = button(adText, w, 140, () => void this.playAd(), { fill: busy ? COLORS.panelLocked : fill, video: !busy, size });
       ad.position.set(x - w / 2 - 10, y);
       if (busy) ad.eventMode = 'none';
       c.addChild(ad);
@@ -189,13 +225,13 @@ export class ResultsScreen implements Screen {
     if (this.copper && !this.copper.text.destroyed) this.copper.text.text = `+${countUp(this.age, this.copper.part, total)}`;
   }
 
-  /** Enter: the first key press while the parts come in shows them all, the next plays again (or continues); Escape continues. */
+  /** Enter: the first key press while the parts come in shows them all, the next takes the first button; Escape goes to the lobby. */
   key(code: string, repeat: boolean): void {
     const k = panelKey(code, repeat);
     if (!this.keys || !k || k === 'pause' || this.offer === 'playing') return;
     if (k === 'ok' && this.age < REVEALED && partIn(this.age, this.parts.length - 1) < 1) return this.skip();
     playTap();
-    if (k === 'ok' && this.actions.again) this.actions.again();
+    if (k === 'ok') this.primary();
     else this.actions.next();
   }
 

@@ -201,6 +201,8 @@ export const corgiId: Table<typeof corgiEn> = {
     clear: 'Tamatkan planet {n}',
   },
   results: {
+    trainStep: 'Latih ×{n} sekarang: {stats}',
+    goTrain: 'Latih',
     cleared: 'Planet tamat!',
     hardCleared: 'Planet sulit tamat!',
     hardUnlocked: '3 bintang! Mode sulit planet ini terbuka',

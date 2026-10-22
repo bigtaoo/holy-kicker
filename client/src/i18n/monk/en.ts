@@ -199,6 +199,8 @@ export const monkEn = {
     clear: 'Clear chapter {n}',
   },
   results: {
+    trainStep: 'Train ×{n} now: {stats}',
+    goTrain: 'Go train',
     cleared: 'Chapter cleared!',
     hardCleared: 'Hard chapter cleared!',
     hardUnlocked: '3 stars! Hard mode open for this chapter',
