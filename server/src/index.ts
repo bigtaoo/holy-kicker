@@ -88,8 +88,8 @@ async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
   let body: unknown;
   try {
     body = method === 'POST' ? await readBody(req, limit) : undefined;
-  } catch {
-    res.writeHead(413, CORS).end();
+  } catch (err) {
+    res.writeHead((err as Error).message === 'too slow' ? 408 : 413, { ...CORS, connection: 'close' }).end();
     return;
   } finally {
     if (big) bigReads.give();

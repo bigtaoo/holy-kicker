@@ -35,7 +35,7 @@ import { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { ResumeScreen } from './ResumeScreen';
-import { FaultGuard } from './faultGuard';
+import { FaultGuard, RESTART_GAP_MS } from './faultGuard';
 import { ReminderBook } from './reminders';
 import { RunFlow } from './runFlow';
 import { storedSettings, type SettingsActions } from './settingsPanel';
@@ -85,7 +85,7 @@ export class Shell {
   private readonly runs: RunFlow;
   /** The iOS app's reminders, booked on the way to the lobby and to the background; null on hosts without them. */
   private readonly reminders: ReminderBook | null;
-  private readonly faults = new FaultGuard();
+  private readonly faults = new FaultGuard(Date.now, () => !!globalThis.location?.reload && !restartedLately());
   /** The run on screen was resumed after a fault: one more fault settles it rather than offering it again. */
   private faultedRun = false;
   /** Reports a frame that threw (boot.ts wires it to the `anomaly` event). */
@@ -233,6 +233,8 @@ export class Shell {
   }
 
   private commit(save: SaveData): void {
+    // the mark is one way, and an open lobby still holds the save from before it was set
+    if (this.save.tester && !save.tester) save = { ...save, tester: true };
     if (save.tester !== this.save.tester) this.net.tag(experimentTag(save), save.tester);
     this.save = save;
     this.store.save(save);
@@ -354,8 +356,10 @@ export class Shell {
       }
     }
     if (act === 'wait') return;
-    const reload = globalThis.location?.reload?.bind(globalThis.location);
-    if (act === 'restart' && reload) return reload();
+    if (act === 'restart') {
+      markRestart();
+      return globalThis.location.reload();
+    }
     try {
       this.recover();
     } catch (again) {
@@ -424,5 +428,23 @@ export class Shell {
     }
     // over the run, the HUD and any toast added after it
     if (this.app.stage.children[this.app.stage.children.length - 1] !== this.upright.view) this.app.stage.addChild(this.upright.view);
+  }
+}
+
+// when the page last restarted itself over a fault, kept across the reload (sessionStorage, where there is one)
+const RESTART_KEY = 'hk:faultRestart';
+function restartedLately(): boolean {
+  try {
+    const at = Number(globalThis.sessionStorage?.getItem(RESTART_KEY));
+    return at > 0 && Date.now() - at < RESTART_GAP_MS;
+  } catch {
+    return false;
+  }
+}
+function markRestart(): void {
+  try {
+    globalThis.sessionStorage?.setItem(RESTART_KEY, String(Date.now()));
+  } catch {
+    /* without it a fault that comes back restarts again after STRIKES recoveries */
   }
 }

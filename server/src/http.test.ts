@@ -37,6 +37,12 @@ describe('readBody', () => {
     expect(req.destroyed).toBe(true);
   });
 
+  it('cuts off a body that is too slow to arrive', async () => {
+    const req = Object.assign(new EventEmitter(), { headers: {}, destroyed: false, destroy() { req.destroyed = true; } });
+    await expect(readBody(req as typeof req & IncomingMessage, 100, 10)).rejects.toThrow('too slow');
+    expect(req.destroyed).toBe(true);
+  });
+
   it('gives a problem report room for its replay and keeps everything else small', () => {
     expect(maxBody('/v1/reports')).toBe(LIMITS.reportBytes);
     expect(maxBody('/v1/events')).toBe(MAX_BODY);

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { FaultGuard, RECOVER_GAP_MS, REPORT_GAP_MS, STRIKE_MS, STRIKES } from './faultGuard';
 
-function guard(): { g: FaultGuard; at(ms: number): void } {
+function guard(canRestart = true): { g: FaultGuard; at(ms: number): void } {
   let t = 0;
-  return { g: new FaultGuard(() => t), at: (ms) => (t = ms) };
+  return { g: new FaultGuard(() => t, () => canRestart), at: (ms) => (t = ms) };
 }
 
 describe('FaultGuard', () => {
@@ -23,7 +23,7 @@ describe('FaultGuard', () => {
     expect(g.fault().report).toBe(true);
   });
 
-  it('restarts once recoveries keep failing, then only waits', () => {
+  it('restarts once recoveries keep failing', () => {
     const { g, at } = guard();
     const acts = [];
     for (let i = 0; i < STRIKES; i++) {
@@ -31,8 +31,21 @@ describe('FaultGuard', () => {
       acts.push(g.fault().act);
     }
     expect(acts).toEqual([...Array<string>(STRIKES - 1).fill('recover'), 'restart']);
-    at(STRIKES * RECOVER_GAP_MS + STRIKE_MS);
+  });
+
+  it('rests and then recovers again where it cannot restart (WeChat, or just restarted)', () => {
+    const { g, at } = guard(false);
+    for (let i = 0; i < STRIKES; i++) {
+      at(i * RECOVER_GAP_MS);
+      g.fault();
+    }
+    const rested = (STRIKES - 1) * RECOVER_GAP_MS;
+    at(rested + STRIKE_MS - 1);
     expect(g.fault().act).toBe('wait');
+    at(rested + STRIKE_MS);
+    expect(g.fault().act).toBe('recover');
+    at(rested + 10 * STRIKE_MS);
+    expect(g.fault().act).toBe('recover');
   });
 
   it('forgets recoveries older than the strike window', () => {
