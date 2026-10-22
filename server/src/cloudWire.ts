@@ -11,6 +11,8 @@ export const CLOUD_LIMITS = {
   code: 12,
   /** Game Center identity fields: ids, a bundle id, base-64 signature and salt, the key's URL. */
   gcField: 512,
+  /** A slot not written for this many days is dropped (the privacy policy states it). */
+  slotDays: 30,
 };
 
 /** Crockford's base 32: no I, L, O or U, so a code read aloud or copied by hand survives. */

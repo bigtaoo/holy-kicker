@@ -43,7 +43,22 @@ To turn the backend on for WeChat:
 1. The domain `hk.gamestao.com` needs an ICP filing (备案) under the mini-game's entity.
 2. 开发管理 → 开发设置 → 服务器域名: add `https://hk.gamestao.com` as a request domain
    (request 合法域名).
-3. Drop the `host === 'wechat'` case from `apiBase` (`client/src/net/backend.ts`).
+3. Before the next step, the consent the law asks for (China's PIPL wants consent before play
+   data leaves the device, not the toast the rest of the world gets):
+   - `PrivacyChoice` already treats every WeChat player as in the consent region
+     (`client/src/net/privacyChoice.ts`): the lobby's consent card asks, and nothing is sent
+     until the player taps Allow. Check the card in DevTools once the backend is on.
+   - The card's Privacy button calls `Platform.openUrl`, which does nothing on WeChat (a
+     mini-game opens no web pages). Wire it to `wx.openPrivacyContract` before the switch.
+   - Fill in 用户隐私保护指引 in the console (设置 → 基本设置 → 服务内容声明) to match
+     `server/src/privacy.zh.html`, and declare the request domain's data there.
+4. Drop the `host === 'wechat'` case from `apiBase` (`client/src/net/backend.ts`).
 
 Until then the stash only grows on the device; WeChat's own 运维中心 → 错误日志 in the console
 shows the same errors in the meantime.
+
+## Launch screen
+
+The WeChat build opens on the health advice for games (健康游戏忠告, `boot.healthAdvice` in the
+string tables), drawn over the screen from the moment the strings are in until the lobby is up,
+and for at least 2 s (`client/src/ui/healthAdvice.ts`). Other hosts never show it.

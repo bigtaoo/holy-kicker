@@ -4,6 +4,9 @@ import type { Table } from './index';
 // Korean.
 export const ko: Table<typeof en> = {
   lang: { name: '한국어' },
+  boot: {
+    healthAdvice: '유해 게임과 불법 복제 게임을 거부하세요.\n자신을 보호하고 사기에 주의하세요.\n적당한 게임은 뇌에 좋고, 지나치면 몸을 해쳐요.\n시간을 잘 나누어 건강한 생활을 즐기세요.',
+  },
   common: {
     continue: '계속',
     back: '뒤로',
@@ -351,7 +354,7 @@ export const ko: Table<typeof en> = {
     policy: '개인정보 처리방침',
     gameCenter: 'Game Center',
     adPrivacy: '광고 개인정보',
-    dataNotice: '플레이 통계와 순위 기록을 서버로 보내\n밸런스 조정과 순위표에 사용해요.',
+    dataNotice: '플레이 통계, 판 리플레이, 순위 기록을 서버로 보내\n밸런스 조정과 순위표에 사용해요.',
     playId: '내 플레이 ID: {id}',
     idCopied: 'ID를 복사했어요',
     idCopyFailed: '복사하지 못했어요',
@@ -378,8 +381,8 @@ export const ko: Table<typeof en> = {
     copyFailed: '복사하지 못했어요',
   },
   privacy: {
-    toast: '게임이 플레이 통계와 순위 기록을 서버로 보내요.\n설정에서 언제든 끌 수 있어요.',
-    ask: '게임 개선을 위해 플레이 통계를 모아도 될까요?\n순위표에도 필요해요.',
+    toast: '게임이 플레이 통계, 판 리플레이, 순위 기록을 서버로 보내요.\n설정에서 언제든 끌 수 있어요.',
+    ask: '게임 개선을 위해 플레이 통계와 판 리플레이를 모아도 될까요?\n순위표에도 필요해요.',
     allow: '허용',
     decline: '괜찮아요',
     link: '개인정보',

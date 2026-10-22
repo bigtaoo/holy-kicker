@@ -45,6 +45,14 @@ describe('iOS shell', () => {
     expect(privacy).toContain('<string>CA92.1</string>');
   });
 
+  it('declares what the app collects, none of it for tracking', () => {
+    const types = [...privacy.matchAll(/<string>NSPrivacyCollectedDataType(?!Purpose)(\w+)<\/string>/g)].map((m) => m[1]);
+    for (const t of ['DeviceID', 'UserID', 'ProductInteraction', 'GameplayContent', 'CoarseLocation', 'CrashData']) expect(types).toContain(t);
+    expect(privacy).not.toMatch(/<key>NSPrivacyCollectedDataTypeTracking<\/key>\s*<true\/>/);
+    expect(privacy).toMatch(/<key>NSPrivacyTracking<\/key>\s*<false\/>/);
+    expect(privacy.match(/<key>NSPrivacyCollectedDataTypePurposes<\/key>/g)).toHaveLength(types.length);
+  });
+
   it('roots the window in the bridge view controller', () => {
     expect(sceneDelegate).toContain('rootViewController = HKBridgeViewController()');
     expect(storyboard).toContain('customClass="HKBridgeViewController" customModule="App"');

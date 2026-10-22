@@ -2,6 +2,9 @@
 // Placeholders are {name}; numbers arrive already formatted.
 export const en = {
   lang: { name: 'English' },
+  boot: {
+    healthAdvice: 'Say no to harmful and pirated games.\nProtect yourself and beware of scams.\nPlay in moderation; too much gaming harms your health.\nPlan your time well and enjoy a healthy life.',
+  },
   common: {
     continue: 'Continue',
     back: 'Back',
@@ -355,7 +358,7 @@ export const en = {
     gameCenter: 'Game Center',
     // Google's consent options for its ads (EEA/UK), beside the privacy policy
     adPrivacy: 'Ad privacy',
-    dataNotice: 'Play stats and leaderboard runs go to our server, to balance the game and run the boards.',
+    dataNotice: 'Play stats, run replays and leaderboard runs go to our server, to balance the game and run the boards.',
     playId: 'Your play ID: {id}',
     idCopied: 'ID copied',
     idCopyFailed: "Couldn't copy the ID",
@@ -383,8 +386,8 @@ export const en = {
     copyFailed: "Couldn't copy the code",
   },
   privacy: {
-    toast: 'The game sends play stats and leaderboard runs to its server.\nTurn this off anytime in Settings.',
-    ask: 'Can we collect play stats?\nThey improve the game and run the boards.',
+    toast: 'The game sends play stats, run replays and leaderboard runs to its server.\nTurn this off anytime in Settings.',
+    ask: 'Can we collect play stats and run replays?\nThey improve the game and run the boards.',
     allow: 'Allow',
     decline: 'No thanks',
     link: 'Privacy',

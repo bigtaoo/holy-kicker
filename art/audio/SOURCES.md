@@ -6,7 +6,10 @@ the repo; re-download from the links below). `tools/audio_audition.py` writes
 
 Everything is CC0 (no attribution needed) except where marked **CC-BY**, which would need a
 credit in the game and on the store page; the game has no credits screen, so CC-BY sounds are
-not used (art/audio/picks.json has the shipped picks).
+not used (art/audio/picks.json has the shipped picks). `tools/audio_build.py` refuses a pick whose
+credit line is not CC0; the audition page still lists the CC-BY pack for comparison only. (Until
+2026-10-22 `boom` was `oga/magic8/04_Fire_explosion_04_medium.wav`; it is now Kenney's
+`explosionCrunch_001`, the closest CC0 match.)
 
 | Folder | Source | Author | License |
 |---|---|---|---|

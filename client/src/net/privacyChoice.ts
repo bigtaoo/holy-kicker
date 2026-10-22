@@ -6,12 +6,13 @@ import type { Platform } from '../platform/types';
 import { INSTALL_KEY, type Backend } from './backend';
 
 // The player's privacy answer, applied to the backend and the host's own analytics (meta/privacy.ts
-// has the rules): built only where the game has a backend, so offline builds and WeChat never ask.
-// A host that blocks the backend (Playgama's sandbox) still asks, for its analytics.
+// has the rules): built only where the game has a backend, so offline builds and WeChat (until its
+// backend is on, docs/wechat-ads.md) never ask. A host that blocks the backend (Playgama's sandbox)
+// still asks, for its analytics. WeChat asks every player: China's PIPL wants consent, not a notice.
 
 /** What the lobby's consent card and the settings panel read and change. */
 export interface PrivacyUi {
-  /** The lobby asks: a player in the EEA, the UK or Switzerland who has not answered yet. */
+  /** The lobby asks: a player in the EEA, the UK, Switzerland or on WeChat who has not answered yet. */
   asking(): boolean;
   /** Play data goes out now. */
   sharing(): boolean;
@@ -35,12 +36,12 @@ export class PrivacyChoice implements PrivacyUi {
 
   constructor(
     private readonly net: Pick<Backend, 'setSharing'>,
-    private readonly platform: Pick<Platform, 'storage' | 'country' | 'openUrl'>,
+    private readonly platform: Pick<Platform, 'host' | 'storage' | 'country' | 'openUrl'>,
     /** The backend's address, which serves the policy at /privacy. */
     private readonly base: string,
     timeZone: string | null,
   ) {
-    this.region = privacyRegion(platform.country(), timeZone);
+    this.region = platform.host === 'wechat' ? 'consent' : privacyRegion(platform.country(), timeZone);
     net.setSharing(sharingOf(this.region, loadSettings(platform.storage).dataSharing));
   }
 
