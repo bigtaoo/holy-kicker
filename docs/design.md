@@ -296,7 +296,8 @@ No random rolls.
 
 **As built** (`client/src/meta/training.ts`, `balance.json` "training"): 100 nodes (from node 51,
 `valueStep`, every node gives twice as much); node n opens at
-player level n + 1 and costs 100 + 40 (n − 1) copper. The line repeats attack +2 %, health +3 %,
+player level n + 1 and costs 100 + 40 (n − 1) copper, except the first three
+(`introCosts`: 50, 70, 90), so a first run that dies around wave 9 (90 copper) still buys one. The line repeats attack +2 %, health +3 %,
 XP +2 %, copper +3 %, pickup range +5 %; nodes 12 and 30 give a free revive instead, offered on
 the death panel before the rewarded-ad one.
 

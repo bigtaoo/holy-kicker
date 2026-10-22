@@ -17,6 +17,8 @@ export interface TrainingBalance {
   cycle: [TrainStat, number][];
   /** Nodes (1-based) that give a free revive instead of their cycle stat. */
   reviveNodes: number[];
+  /** What the first nodes cost, so a first run that dies early still buys one; the formula takes over after them. */
+  introCosts: number[];
   costBase: number;
   costStep: number;
 }
@@ -36,7 +38,7 @@ const TRAIN = BALANCE.training;
 export function trainNode(n: number): TrainNode {
   const [stat, base]: [TrainStat, number] = TRAIN.reviveNodes.includes(n) ? ['revive', 1] : TRAIN.cycle[(n - 1) % TRAIN.cycle.length];
   const value = stat === 'revive' ? base : base * (1 + Math.floor((n - 1) / TRAIN.valueStep));
-  return { n, stat, value, cost: TRAIN.costBase + TRAIN.costStep * (n - 1), level: n + BALANCE.unlocks.trainLevel - 1 };
+  return { n, stat, value, cost: TRAIN.introCosts[n - 1] ?? TRAIN.costBase + TRAIN.costStep * (n - 1), level: n + BALANCE.unlocks.trainLevel - 1 };
 }
 
 /** The next node to buy, or null once the line is done. */

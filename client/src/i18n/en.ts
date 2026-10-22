@@ -202,7 +202,7 @@ export const en = {
   gift: {
     claim: "Claim today's gift: {gift}",
     tomorrow: "Tomorrow's gift: {gift}",
-    button: 'Gift',
+    button: 'Welcome',
     later: 'Tomorrow',
   },
   shop: {

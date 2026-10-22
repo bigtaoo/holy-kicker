@@ -97,9 +97,18 @@ describe('gear', () => {
 describe('training', () => {
   it('lays out a fixed line: the cycle, free revives, rising cost, one node per level', () => {
     const t = BALANCE.training;
-    expect(trainNode(1)).toEqual({ n: 1, stat: t.cycle[0][0], value: t.cycle[0][1], cost: t.costBase, level: 1 });
+    expect(trainNode(1)).toEqual({ n: 1, stat: t.cycle[0][0], value: t.cycle[0][1], cost: t.introCosts[0], level: 1 });
     expect(trainNode(t.reviveNodes[0]).stat).toBe('revive');
-    expect(trainNode(3).cost).toBe(t.costBase + 2 * t.costStep);
+    const k = t.introCosts.length;
+    expect(trainNode(k).cost).toBe(t.introCosts[k - 1]);
+    expect(trainNode(k + 1).cost).toBe(t.costBase + k * t.costStep);
+  });
+
+  it('lets a first run that dies around wave 9 buy the first node', () => {
+    const copper = 9 * BALANCE.copperPerWave;
+    expect(trainBlock({ ...newSave(), level: 1, copper })).toBeNull();
+    // costs never fall from one node to the next
+    for (let n = 2; n <= BALANCE.training.nodes; n++) expect(trainNode(n).cost).toBeGreaterThanOrEqual(trainNode(n - 1).cost);
   });
 
   it('buys nodes in order, gated by level and copper', () => {

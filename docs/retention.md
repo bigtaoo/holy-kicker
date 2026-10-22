@@ -128,7 +128,7 @@ look for a step change, a share halving or a count going from 0 to many, not for
 | a boss wave spikes in a board's lost runs | That boss is a wall | Its health, or grit (`BALANCE.grit`) for the players stuck there; docs/design.md "Pacing targets" |
 | first clears of chapters 4–5 take far longer than the 2 / 3–4 weeks the design aims for | The last chapters are too hard for the gear players have by then | `HORDE.chapterHp`, `HURT.chapterPercent`, grit; compare with the bots' numbers in docs/design.md |
 | chapter 1 clear rate very low | The first win comes too late | Ease chapter 1's last waves, or make the first clear reachable within the first 3–4 runs with training |
-| bought in the lobby: big D1 gap | Meta progress is the hook | Make the first purchase happen on day 0 (start with enough copper for one training node) |
+| bought in the lobby: big D1 gap | Meta progress is the hook | Make the first purchase happen on day 0 (start with enough copper for one training node; the first nodes cost 50/70/90 since 2026-10-22, so a wave-9 death buys one) |
 
 ## First run: where players leave (2026-10-19)
 

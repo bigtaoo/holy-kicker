@@ -202,7 +202,7 @@ export const ko: Table<typeof en> = {
   gift: {
     claim: '오늘의 선물 받기: {gift}',
     tomorrow: '내일의 선물: {gift}',
-    button: '선물',
+    button: '환영 선물',
     later: '내일',
   },
   shop: {

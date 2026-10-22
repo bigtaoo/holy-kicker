@@ -203,7 +203,7 @@ export const th: Table<typeof en> = {
   gift: {
     claim: 'รับของขวัญวันนี้: {gift}',
     tomorrow: 'ของขวัญพรุ่งนี้: {gift}',
-    button: 'ของขวัญ',
+    button: 'ของต้อนรับ',
     later: 'พรุ่งนี้',
   },
   shop: {

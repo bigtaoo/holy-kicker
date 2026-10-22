@@ -202,7 +202,7 @@ export const ja: Table<typeof en> = {
   gift: {
     claim: '今日の贈り物を受け取る：{gift}',
     tomorrow: '明日の贈り物：{gift}',
-    button: '贈り物',
+    button: '歓迎の品',
     later: '明日',
   },
   shop: {

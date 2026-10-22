@@ -204,7 +204,7 @@ export const es: Table<typeof en> = {
   gift: {
     claim: 'Recoge el regalo de hoy: {gift}',
     tomorrow: 'Regalo de mañana: {gift}',
-    button: 'Regalo',
+    button: 'Bienvenida',
     later: 'Mañana',
   },
   shop: {

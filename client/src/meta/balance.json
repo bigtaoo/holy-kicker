@@ -70,6 +70,7 @@
     "valueStep": 50,
     "cycle": [["attack", 2], ["maxHp", 3], ["xp", 2], ["copper", 3], ["magnet", 5]],
     "reviveNodes": [12, 30],
+    "introCosts": [50, 70, 90],
     "costBase": 100,
     "costStep": 40
   },
