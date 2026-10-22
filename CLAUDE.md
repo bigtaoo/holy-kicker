@@ -71,7 +71,7 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - `client/wechat/` — the WeChat DevTools project; `npm run build:wechat` writes `js/` and
   `art/` into it.
 - `client/public/art/` — shipped sprites (exported by `tools/cutout.py`). The big ones listed in
-  `client/src/webpArt.json` also ship a `.webp` twin (`python tools/webp.py` after changing a PNG;
+  `client/src/webpArt.json` also ship a `.webp` twin (lossy for full-colour sheets, lossless for the palette ones a first run waits on) (`python tools/webp.py` after changing a PNG;
   `check:webp` fails on a missing or mis-sized one); web hosts load it when the browser decodes WebP, falling back
   to the PNG per file; WeChat ships PNG only.
 - `client/themes/corgi.json` — the corgi reskin's asset list: one codebase, two art sets, never

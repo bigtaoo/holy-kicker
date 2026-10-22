@@ -59,7 +59,7 @@ export async function loadArt(
     // the Thunder Roar's lion head (art/monk/icons/evolved)
     tick(pic('art/lion.png', late)),
     // a first run may deal the palm at its first level-up
-    tick(Assets.load<Texture>('art/palm.png').then(mipmapped)),
+    tick(loadPic('art/palm.png').then(mipmapped)),
     // the Mountain Palm's stone hand (art/monk/fx/mountain.txt)
     tick(pic('art/mountain.png', late)),
     tick(ground === 'flat' ? null : loadPic(`art/ground/${ground}.png`)),
@@ -75,11 +75,12 @@ export async function loadArt(
 }
 
 /**
- * The PNGs with a lossy WebP beside them (tools/webp.py): the full-colour sheets of the first
- * screen, a quarter of the bytes. Only art never unloaded by its URL belongs here (chapterArt.ts
- * and freeLobbyArt unload by the PNG's).
+ * The PNGs with a WebP beside them (tools/webp.py): lossy for the full-colour sheets of the first
+ * screen, a quarter of the bytes; lossless, pixel for pixel, for the palette sheets a first run
+ * waits on, a sixth less. Only art never unloaded by its URL belongs here (chapterArt.ts and
+ * freeLobbyArt unload by the PNG's).
  */
-const WEBP = new Set<string>(WEBP_ART);
+const WEBP = new Set<string>([...WEBP_ART.lossy, ...WEBP_ART.lossless]);
 let webp = false;
 
 /** A 1 x 1 lossy WebP with alpha (Google's feature test image). */
@@ -212,11 +213,11 @@ export async function loadDeco(platform: Platform, path: string, mipmaps = true)
 
 /** A baked mob: <path>.json + <path>.png, or another png with the same layout; with `late`, the png comes later. */
 export async function loadSheet(platform: Platform, path: string, png = `${path}.png`, late?: Late | null): Promise<MobSheet> {
-  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), late ? placeholder() : Assets.load<Texture>(png).then(mipmapped)]);
+  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), late ? placeholder() : loadPic(png).then(mipmapped)]);
   const out = sliceSheet(JSON.parse(text) as SheetMeta, sheet);
   if (late) {
     toFill(out.textures);
-    late.push(() => Assets.load<Texture>(png).then((real) => fill(out.textures, mipmapped(real).source)));
+    late.push(() => loadPic(png).then((real) => fill(out.textures, mipmapped(real).source)));
   }
   return out;
 }

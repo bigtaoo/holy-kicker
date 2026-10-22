@@ -9,7 +9,8 @@ import { imageSize } from './imageSize.mjs';
 import { listErrors, listPath, listState, publicFiles, readList, ROOT, THEMES } from './theme.mjs';
 
 const sync = process.argv.includes('--sync');
-const webp = JSON.parse(readFileSync(new URL('../client/src/webpArt.json', import.meta.url), 'utf8'));
+const { lossy, lossless } = JSON.parse(readFileSync(new URL('../client/src/webpArt.json', import.meta.url), 'utf8'));
+const webp = [...lossy, ...lossless];
 const files = publicFiles();
 let bad = 0;
 

@@ -1,1 +1,4 @@
-["art/hero/atlas.png", "art/boss_monk/atlas.png", "art/fish.png", "art/staff.png", "art/cuju.png", "art/ground/grass.png", "art/ground/earth.png", "art/ground/earth_soft.png"]
+{
+  "lossy": ["art/hero/atlas.png", "art/boss_monk/atlas.png", "art/fish.png", "art/staff.png", "art/cuju.png", "art/ground/grass.png", "art/ground/earth.png", "art/ground/earth_soft.png"],
+  "lossless": ["art/icons/icons.png", "art/icons/monks.png", "art/ground/deco.png", "art/mobs/jiangshi_soft.png", "art/palm.png"]
+}

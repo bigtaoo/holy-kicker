@@ -4,7 +4,8 @@ import { readFileSync } from 'node:fs';
 import { imageSize } from './imageSize.mjs';
 
 const art = (rel) => readFileSync(new URL(`../client/public/${rel}`, import.meta.url));
-const list = JSON.parse(readFileSync(new URL('../client/src/webpArt.json', import.meta.url), 'utf8'));
+const { lossy, lossless } = JSON.parse(readFileSync(new URL('../client/src/webpArt.json', import.meta.url), 'utf8'));
+const list = [...lossy, ...lossless];
 
 let bad = 0;
 for (const png of list) {
