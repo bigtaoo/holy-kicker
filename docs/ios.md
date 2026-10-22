@@ -14,7 +14,7 @@ says what we take from funny, what we build new, and in which order.
 | In | Out (later, see the last section) |
 |---|---|
 | The whole game, iPhone, portrait | iPad layout (runs in iPhone compatibility mode) |
-| Game Center sign-in, silent where possible: the player's nickname on the boards | Cloud save, Game Center leaderboards / achievements |
+| Game Center sign-in, silent where possible: the player's nickname on the boards; the cloud save keyed to the player (`docs/cloud-save.md`) | Game Center leaderboards / achievements |
 | AdMob: rewarded + interstitial, Google's consent form (UMP) in the EEA/UK | Banner, ATT / personalised ads |
 | One purchase: the **ad-free card** (non-consumable), with Restore | Jade packs, starter pack, battle pass |
 | Every storefront except mainland China | China (needs a game licence for IAP) |
@@ -94,7 +94,7 @@ client/
 
 Every member is feature-detected so a newer JS bundle on an older shell degrades instead of
 throwing; `v` is raised when the shell gains calls (2 with Game Center, 3 with AdMob, 4 with the
-store). Answers are pushed, not settled by id: the shell calls `_gameCenter(state)`,
+store, 5 with Game Center's signed identity for the cloud save). Answers are pushed, not settled by id: the shell calls `_gameCenter(state)`,
 `_adState(state)` and `_store(state)` whenever a state changes and when the page posts
 `gameCenter` / `adState` / `store` as it loads (a reloaded page asks again), `_adEvent(e)` as an ad
 the page asked for comes and goes, and `_storeResult(r)` when a buy or a restore is over.
@@ -105,6 +105,10 @@ interface HKNative {
   gameCenter(): { alias: string | null; canSignIn: boolean } | null; // null until GameKit answers
   onGameCenter(cb: (s: { alias: string | null; canSignIn: boolean }) => void): void;
   gameCenterSignIn(): void; // presents Apple's kept sheet, only from a tap
+  // v5: fetchItems(forIdentityVerificationSignature:), pushed to _gameCenterIdentity
+  gameCenterIdentity(): void;
+  onGameCenterIdentity(cb: (a: { ok: boolean; player?; alt?; bundle?; key?; sig?; salt?; ts? }) => void): void;
+  // player: teamPlayerID, alt: gamePlayerID, sig and salt base64, key the URL of Apple's public key
   // ads (step 3, built)
   adState(): AdState | null; // null before the shell has sent one
   onAdState(cb: (s: AdState) => void): void;
@@ -179,7 +183,8 @@ interface HKNative {
   currencies, the panel none for a row of its own on a 16:9 iPhone SE, and the button is
   rarely there, since Game Center signs most players in by itself.
 - The name is `GKLocalPlayer.local.alias` (the nickname the player chose; `displayName` can be
-  a real name). `teamPlayerID` stays in the shell until the cloud save needs it.
+  a real name). `teamPlayerID` leaves the shell only inside the signed identity the cloud
+  save asks for (bridge v5, `gameCenterIdentity`), never for the boards.
 - `IosPlatform.portal.userName()` returns the alias (`platform/ios/gameCenter.ts`); `accounts()`
   is **false**, so a player without Game Center goes by a dice name instead of being kept off
   the boards (`ui/playerName.ts`). An alias that fails `checkName` (length, characters, rude
@@ -188,7 +193,7 @@ interface HKNative {
   `main.crazygames.ts` does), and `PlayerName` sends the new name.
 - Server: `rules.ts` takes a text `name` from `crazygames` and `ios` (`NAMING_HOSTS`). The
   server still trusts the client for the name, as it does on CrazyGames; verifying Game Center's
-  identity signature comes with the cloud save, not before.
+  identity signature is checked only for the cloud save (`server/src/gameCenter.ts`).
 - Capability: Game Center on the App ID and in the profile (done), `com.apple.developer.game-center`
   in `App.entitlements` (`CODE_SIGN_ENTITLEMENTS`); enable Game Center on the App Store Connect
   version.
@@ -458,8 +463,8 @@ Owner setup, the same steps as Holy Kicker's above:
 
 ## Later
 
-- **Cloud save** keyed to Game Center: verify `fetchItems(forIdentityVerificationSignature)`
-  on the server (funny's CrazyGames auth in `server/metaserver/src/service/auth/crazygames.ts`
-  is the shape to copy). This is what jade packs would need first.
+- **Cloud save** keyed to Game Center: built (bridge v5, `docs/cloud-save.md`), still to verify
+  on a device: the signature the server checks, and which of `teamPlayerID` / `gamePlayerID`
+  it matched. This is what jade packs would need first.
 - Banner in the lobby (native `GADBannerView` in the band `Banner.height` keeps clear), ATT and
   personalised ads, mediation, Game Center achievements for chapter clears, iPad layout.

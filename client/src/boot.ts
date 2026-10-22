@@ -1,9 +1,10 @@
 import { Assets } from 'pixi.js';
 import { loadArt, useWebp, webpDecodes } from './art';
 import { warmTextures } from './gpuWarm';
-import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale } from './i18n';
+import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale, t } from './i18n';
 import { watchAnomalies } from './net/anomaly';
 import { apiBase, Backend } from './net/backend';
+import { CloudSync } from './net/cloudSync';
 import { hitchContext, liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
 import { deviceTimeZone, PrivacyChoice } from './net/privacyChoice';
 import { patchGraphicsDestroy } from './game/graphicsDestroy';
@@ -17,6 +18,7 @@ import { privacyToast } from './ui/privacyUi';
 import { DISPLAY_FAMILY, DISPLAY_FILE, setDisplayFont } from './ui/fonts';
 import { Shell } from './ui/Shell';
 import { lateArt } from './lateArt';
+import { THEME } from './theme';
 
 // Boot shared by every entry: the language, the renderer, the art, then the shell. The
 // platform is fully initialised before this runs (CrazyGames waits for its SDK first, since
@@ -67,7 +69,17 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   warmTextures(app.renderer, art);
   void lateArt().then(() => warmTextures(app.renderer, art));
   const artMs = since();
-  const shell = new Shell(app, platform, art, scene, new SaveStore(platform.storage), net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
+  const store = new SaveStore(platform.storage);
+  const shell = new Shell(app, platform, art, scene, store, net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
+  // the cloud save where the host keeps none of its own (docs/cloud-save.md "The cloud save")
+  const cloud = base && (platform.host === 'web' || platform.host === 'ios') ? new CloudSync({
+    base, game: THEME, kv: platform.storage, store, reload: () => shell.reloadSave(), playing: () => shell.place() === 'run',
+    askCode: () => platform.askText({
+      title: t('cloud.askTitle'), prompt: t('cloud.askPrompt'), placeholder: t('cloud.placeholder'), send: t('cloud.send'), cancel: t('cloud.cancel'), max: 20,
+    }),
+    copyText: platform.copyText?.bind(platform),
+  }) : null;
+  shell.cloud = cloud;
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
   const probe = memProbe(app);
@@ -95,9 +107,11 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   // the page's loading screen (index.html) goes once the first screen is up; no page on WeChat
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
   net.loaded({ script, art: artMs });
+  cloud?.auto();
+  platform.onHide(() => cloud?.auto());
   if (privacy?.noticeDue()) {
     privacyToast(app, () => platform.safeInsets());
     privacy.noticeShown();
   }
-  return { app, shell, quality, device };
+  return { app, shell, quality, device, cloud };
 }

@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
+import { cloudRoute, type CloudDeps } from './cloudSave';
 import { challengeFor, misfit, openChallenges } from './challenge';
 import { marked } from './marks';
 import { BEACONS, BOARD_SUFFIX, CHALLENGE_BOARD, HOSTS, LIMITS, challengeBoardId, isGame, keptGame, loadBucket, type Beacon, type Game, type Host } from './protocol';
@@ -43,6 +44,8 @@ export interface Deps {
   /** Where collected replays go (replayShelf.ts); none collects nothing. `collect` overrides COLLECT (tests). */
   replays?: ReplayShelf;
   collect?: CollectPlan;
+  /** The cloud save's slots and Apple's Game Center keys (cloudSave.ts); none answers 404. */
+  cloud?: CloudDeps;
 }
 
 export const BOARD_ROWS = 50;
@@ -72,6 +75,7 @@ function installTag(req: Req, d: Deps): string | null {
 export async function route(req: Req, d: Deps): Promise<Reply> {
   const { method, path } = req;
   if (method === 'GET' && path === '/health') return { status: 200, body: { ok: true } };
+  if (path.startsWith('/v1/cloud/')) return cloudRoute(req, d);
 
   if (method === 'POST' && path === '/v1/events') {
     if (!d.allow('events', req.ip)) return { status: 429 };
@@ -252,6 +256,8 @@ export const RATES = {
   reports: { burst: 3, perMinute: 2 },
   challenge: { burst: 3, perMinute: 2 },
   replays: { burst: 4, perMinute: 3 },
+  cloud: { burst: 10, perMinute: 6 },
+  cloudNew: { burst: 3, perMinute: 1 },
 };
 
 /** A real calendar day written YYYY-MM-DD. */

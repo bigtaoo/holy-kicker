@@ -22,6 +22,10 @@ export interface HKNative {
   onGameCenter(cb: (state: GameCenterState) => void): void;
   /** Shows Apple's sign-in sheet; only from a tap (v2). */
   gameCenterSignIn(): void;
+  /** Asks GameKit to sign the player for the cloud save; the answer comes through onGameCenterIdentity (v5). */
+  gameCenterIdentity(): void;
+  /** Called with each answer to gameCenterIdentity (v5). */
+  onGameCenterIdentity(cb: (answer: GameCenterIdentity) => void): void;
   /** AdMob's last state, null before the shell has sent one (v3). */
   adState(): AdState | null;
   /** Called with every new AdMob state (v3). */
@@ -90,6 +94,22 @@ export interface GameCenterState {
   alias: string | null;
   /** Whether Apple's sign-in sheet is waiting to be shown. */
   canSignIn: boolean;
+}
+
+/** GKLocalPlayer.fetchItems(forIdentityVerificationSignature:) as the shell passes it on
+ *  (docs/cloud-save.md "iOS: Game Center"): `ok` false when the player is not signed in or GameKit failed. */
+export interface GameCenterIdentity {
+  ok: boolean;
+  /** teamPlayerID, and gamePlayerID beside it. */
+  player?: string;
+  alt?: string;
+  bundle?: string;
+  /** The URL of Apple's public key. */
+  key?: string;
+  /** The signature and the salt, base64; the timestamp in ms. */
+  sig?: string;
+  salt?: string;
+  ts?: number;
 }
 
 /** The shell's bridge, or null in a browser. Members may be missing on an older shell. */

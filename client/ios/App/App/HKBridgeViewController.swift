@@ -18,7 +18,7 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
 
     static let handlerName = "hk"
     /// Raised whenever the contract gains calls (HKNative.v in bridge.ts).
-    static let bridgeVersion = 4
+    static let bridgeVersion = 5
 
     private let keyStore = KeyStore()
     private let gameCenter = GameCenter()
@@ -80,6 +80,8 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             if let state = gameCenter.state { push("_gameCenter", state.json) }
         case "gameCenterSignIn":
             gameCenter.signIn()
+        case "gameCenterIdentity":
+            gameCenter.identity { [weak self] answer in self?.push("_gameCenterIdentity", answer) }
         case "adState":
             push("_adState", adMob.state.json)
         case "showAd":
@@ -130,7 +132,7 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
               push: function(v){ last = v; for (var i = 0; i < cbs.length; i++) { try { cbs[i](v); } catch (e) {} } }
             };
           }
-          var gc = feed(), ad = feed(), adEvent = feed(), store = feed(), storeResult = feed();
+          var gc = feed(), gcId = feed(), ad = feed(), adEvent = feed(), store = feed(), storeResult = feed();
           window.HKNative = {
             v: c.v, saved: c.saved || {}, languages: c.languages || [], device: c.device || '',
             save: function(k, v){ post({ op: 'save', key: String(k), value: String(v) }); },
@@ -138,6 +140,8 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             gameCenter: gc.get,
             onGameCenter: gc.on,
             gameCenterSignIn: function(){ post({ op: 'gameCenterSignIn' }); },
+            gameCenterIdentity: function(){ post({ op: 'gameCenterIdentity' }); },
+            onGameCenterIdentity: gcId.on,
             adState: ad.get,
             onAdState: ad.on,
             onAdEvent: adEvent.on,
@@ -149,6 +153,7 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             buy: function(id){ post({ op: 'buy', id: String(id) }); },
             restore: function(){ post({ op: 'restore' }); },
             _gameCenter: gc.push,
+            _gameCenterIdentity: gcId.push,
             _adState: ad.push,
             _adEvent: adEvent.push,
             _store: store.push,

@@ -467,3 +467,4 @@ export function checkName(raw: string): NameCheck {
 
 export * from './challengeWire';
 export * from './game';
+export * from './cloudWire';

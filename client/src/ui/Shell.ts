@@ -75,8 +75,8 @@ export class Shell {
   onQualityMode: (mode: QualityMode) => void = () => {};
   /** The `perf` sender (boot.ts feeds it the battle frames); a meter per real run. */
   perf: PerfReport | null = null;
-  /** Free revives (training) left in this run; they come before the rewarded-ad one. */
-  private freeRevives = 0;
+  cloud: SettingsActions['cloud'] = null; // the cloud save's settings rows (boot.ts), unset where the host has its own
+  private freeRevives = 0; // free revives (training) left in this run, before the rewarded-ad one
   private kills = 0; // enemies defeated in this run, for the daily tasks
   private loading = false; // a chapter's art pack is being fetched; taps on play wait for it
   private readonly lobbyArt: LobbyArtLoad;
@@ -235,7 +235,7 @@ export class Shell {
       settings: storedSettings(this.platform.storage, this.sound, {
         setLanguage: () => this.showLobby('settings'),
         setQuality: (quality) => this.onQualityMode(quality),
-        privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform),
+        privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform), cloud: this.cloud,
         account: this.platform.portal, adPrivacy: this.platform.adPrivacy,
       }),
       commit: (save) => this.commit(save),

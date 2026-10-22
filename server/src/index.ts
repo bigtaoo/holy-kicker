@@ -8,6 +8,8 @@ import PRIVACY_ZH from './privacy.zh.html';
 import { pageGame, privacyPage } from './privacyPage';
 import { WeekMarks } from './marks';
 import { MongoStore } from './mongoStore';
+import { MemoryVault, MongoVault } from './cloudVault';
+import { appleKeys } from './gameCenter';
 import { DiskShelf, MemoryShelf } from './replayShelf';
 import { ResimQueue } from './resimQueue';
 import { Limiter, RATES, route } from './routes';
@@ -34,7 +36,9 @@ const resim = new ResimQueue(store, ENGINE_VERSION, Date.now, (line) => console.
 await resim.start();
 const marks = new WeekMarks(store, Date.now);
 const replays = env.HK_REPLAY_DIR ? await DiskShelf.open(env.HK_REPLAY_DIR) : new MemoryShelf();
-const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim, marks, replays };
+// the cloud save's slots (cloudSave.ts), in Mongo beside the rest
+const cloud = { vault: uri ? await MongoVault.open(uri, env.HK_MONGO_DB || 'holykicker') : new MemoryVault(), gcKey: appleKeys() };
+const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim, marks, replays, cloud };
 
 /** Replies longer than this (bytes of JSON) go gzipped to a client that takes it. */
 const GZIP_FROM = 4096;

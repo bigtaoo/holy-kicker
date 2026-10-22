@@ -87,6 +87,11 @@ export class SaveStore {
     return this.read(raw, text);
   }
 
+  /** The save as last read or written, without touching the store (the cloud sync merges into it). */
+  current(): SaveData {
+    return this.seen ? clone(this.seen) : this.load();
+  }
+
   save(data: SaveData): void {
     const text = JSON.stringify(this.raw ? keep(data, this.seen, this.raw) : data);
     this.seen = clone(data);
