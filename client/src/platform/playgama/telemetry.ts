@@ -1,4 +1,4 @@
-import type { EventName, PropValue } from '@hk/protocol';
+import { expPairs, type EventName, type PropValue } from '@hk/protocol';
 
 // What goes to Playgama's own telemetry (get_game_telemetry_guide): a progression funnel made from
 // the game's run events, the first run's tutorial funnel, and a `performance_sample` of the battle frames about every 30 active
@@ -38,6 +38,17 @@ export function progressionEvent(e: EventName, p: Props = {}): [string, Props] |
   const result = { ...step(p), ...build, wave: Number(p.wave) || 0, duration_sec: Math.round((Number(p.tenths) || 0) / 10), hero_level: Number(p.level) || 0, kills: Number(p.kills) || 0 };
   if (p.won) return ['progression_completed', result];
   return ['progression_failed', { ...result, reason: p.gaveUp ? 'gave_up' : String(p.cause ?? 'unknown') }];
+}
+
+/**
+ * The install's experiment arms (an EventBatch's `exp`) as fields on its progression events, so
+ * Playgama's funnel splits by them too: `experiment` the ids and `variant` their arms, both
+ * comma-joined in the same order (`first20` / `short`); none when the install is in none.
+ */
+export function armFields(exp: string): Props {
+  const pairs = expPairs(exp).map((pair) => pair.split(':'));
+  if (pairs.length === 0) return {};
+  return { experiment: pairs.map(([id]) => id).join(','), variant: pairs.map(([, arm]) => arm).join(',') };
 }
 
 /** The frame rate the game aims for. */

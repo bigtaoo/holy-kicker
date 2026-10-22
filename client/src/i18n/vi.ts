@@ -230,6 +230,7 @@ export const vi: Table<typeof en> = {
     gift: 'Quà chào mừng: {gift}!',
     giftWorn: 'Đã trang bị cho lượt sau: {gift}!',
     rankShort: 'Xếp hạng #{rank}',
+    rankPending: 'Xếp hạng #{rank} (đang kiểm tra)',
   },
   remind: {
     offer: 'Nhắc bạn khi {patrol} đầy và thử thách hằng ngày sẵn sàng?',
@@ -366,6 +367,8 @@ export const vi: Table<typeof en> = {
     adPrivacy: 'Quyền riêng tư QC',
     dataNotice: 'Thống kê chơi, bản phát lại các lượt chơi và kết quả xếp hạng được gửi về máy chủ để cân bằng game và vận hành bảng xếp hạng.',
     playId: 'ID của bạn: {id}',
+    version: 'Phiên bản {v}',
+    versionTester: 'Phiên bản {v} · người thử',
     idCopied: 'Đã sao chép ID',
     idCopyFailed: 'Không sao chép được ID',
   },

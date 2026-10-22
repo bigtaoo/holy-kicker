@@ -1,3 +1,5 @@
+import { adWatchdog, type AdTimer } from '../adTimeout';
+
 // The CrazyGames SDK v3, wrapped so nothing in the game can be broken by it. Adapted from
 // D:\daydayup\client\src\platform\crazygames\sdk.ts, which carries the live findings:
 //  - the SDK is missing in local dev, under an adblocker and in tests, so every call is a
@@ -110,6 +112,7 @@ export class CrazyGamesSdk {
     private readonly global: CgGlobal = globalThis as CgGlobal,
     private readonly now: () => number = () => Date.now(),
     private readonly sleep: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
+    private readonly timer?: AdTimer,
   ) {}
 
   /** Waits for the script, runs its init and reads the environment; 'disabled' on every
@@ -190,7 +193,8 @@ export class CrazyGamesSdk {
     void settle(() => this.sdk?.game?.happytime?.());
   }
 
-  /** One ad; true only if it finished. A synchronous throw means no callback will come. */
+  /** One ad; true only if it finished. A synchronous throw means no callback will come, and
+   *  one that never comes gives the ad up as unfilled (adTimeout.ts); a callback after that is ignored. */
   async requestAd(type: CgAdType, hooks: CgAdCallbacks = {}): Promise<boolean> {
     const fn = this.sdk?.ad?.requestAd;
     if (!this.isEnabled() || typeof fn !== 'function') return false;
@@ -199,17 +203,28 @@ export class CrazyGamesSdk {
       const finish = (ok: boolean) => {
         if (!settled) {
           settled = true;
+          watch.done();
           resolve(ok);
         }
       };
+      const watch = adWatchdog(() => {
+        guard(() => hooks.adError?.(new Error('requestAd timed out')));
+        finish(false);
+      }, this.timer);
       try {
         fn.call(this.sdk?.ad, type, {
-          adStarted: () => guard(hooks.adStarted),
+          adStarted: () => {
+            if (settled) return;
+            watch.started();
+            guard(hooks.adStarted);
+          },
           adFinished: () => {
+            if (settled) return;
             guard(hooks.adFinished);
             finish(true);
           },
           adError: (error: unknown) => {
+            if (settled) return;
             guard(() => hooks.adError?.(error));
             finish(false);
           },

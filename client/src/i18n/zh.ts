@@ -228,6 +228,7 @@ export const zh: Table<typeof en> = {
     gift: '见面礼：{gift}！',
     giftWorn: '已为下一局装备：{gift}！',
     rankShort: '排行榜 #{rank}',
+    rankPending: '排行榜 #{rank}（审核中）',
   },
   remind: {
     offer: '{patrol}满了、每日挑战开放时，要提醒你吗？',
@@ -364,6 +365,8 @@ export const zh: Table<typeof en> = {
     adPrivacy: '广告隐私',
     dataNotice: '游戏数据、对局回放和排行榜成绩会发送到我们的服务器，用于调整平衡和运行排行榜。',
     playId: '你的游戏 ID：{id}',
+    version: '版本 {v}',
+    versionTester: '版本 {v} · 测试者',
     idCopied: 'ID 已复制',
     idCopyFailed: '复制失败',
   },

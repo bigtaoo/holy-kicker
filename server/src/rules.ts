@@ -1,4 +1,4 @@
-import { CHALLENGE_ID, EVENT_NAMES, HOSTS, LIMITS, REPLAY_ENDS, RUN_BUILD, checkName, isDice, isGame, keptGame, type Game, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry, type RunReplay } from './protocol';
+import { CHALLENGE_ID, EVENT_NAMES, EXP_TAG, HOSTS, INTER_PLACES, LIMITS, OFFER_OUTCOMES, OFFER_PLACES, REPLAY_ENDS, RUN_BUILD, checkName, isDice, isGame, keptGame, type Game, type ChallengeRun, type ClientEvent, type EventBatch, type BoardName, type Host, type PropValue, type Report, type ReplayWire, type RunEntry, type RunReplay } from './protocol';
 
 // Checks what clients send before anything is stored. Pure: each check takes the parsed JSON
 // (unknown) and returns the clean value or the reason it was refused. Anything unexpected is
@@ -61,12 +61,23 @@ export function runBuildOk(p: Record<string, PropValue>): boolean {
     is('moving', (x) => isInt(x, 0, 100)) && is('travel', (x) => isInt(x, 0, RUN_BUILD.maxTravel));
 }
 
+const oneOf = (list: readonly string[]) => (x: PropValue) => typeof x === 'string' && list.includes(x);
+
+/** The fields runWire.ts names (a run's `waves`, an offer's place and outcome, an interstitial's), where present: each must have its shape. */
+export function wireOk(e: string, p: Record<string, PropValue>): boolean {
+  const is = (k: string, ok: (x: PropValue) => boolean) => p[k] === undefined || ok(p[k]);
+  if (e === 'run_start' || e === 'run_end') return is('waves', (x) => isInt(x, 0, LIMITS.waves));
+  if (e === 'offer') return oneOf(OFFER_PLACES)(p.at) && oneOf(OFFER_OUTCOMES)(p.outcome);
+  if (e === 'ad' && p.kind !== undefined) return p.kind === 'inter' && oneOf(INTER_PLACES)(p.at);
+  return true;
+}
+
 function checkEvent(v: unknown, now: number): ClientEvent | null {
   if (!isObj(v) || !(EVENT_NAMES as readonly unknown[]).includes(v.e)) return null;
   if (typeof v.t !== 'number' || !Number.isFinite(v.t) || v.t < now - LIMITS.late || v.t > now + LIMITS.early) return null;
   if (v.n !== undefined && !isInt(v.n, 1, 1e9)) return null;
   const p = checkProps(v.p);
-  if (p && v.e === 'run_end' && !runBuildOk(p)) return null;
+  if (p && ((v.e === 'run_end' && !runBuildOk(p)) || !wireOk(v.e as string, p))) return null;
   return p ? { e: v.e as ClientEvent['e'], t: Math.trunc(v.t), ...(v.n !== undefined ? { n: v.n } : {}), p } : null;
 }
 
@@ -79,13 +90,16 @@ export function checkBatch(v: unknown, now: number): Checked<EventBatch> {
   const game = gameOf(v.game);
   if (!game) return { ok: false, reason: 'bad game' };
   if (!Array.isArray(v.events) || v.events.length === 0 || v.events.length > LIMITS.batchEvents) return { ok: false, reason: 'bad events' };
+  if (v.exp !== undefined && !(typeof v.exp === 'string' && EXP_TAG.test(v.exp))) return { ok: false, reason: 'bad exp' };
+  if (v.tester !== undefined && v.tester !== true) return { ok: false, reason: 'bad tester' };
+  const tags = { ...(v.exp !== undefined && { exp: v.exp }), ...(v.tester && { tester: true as const }) };
   const events: ClientEvent[] = [];
   for (const raw of v.events) {
     const e = checkEvent(raw, now);
     if (!e) return { ok: false, reason: 'bad event' };
     events.push(e);
   }
-  return { ok: true, value: { install: v.install, session: v.session, host: v.host, build: v.build, locale: v.locale, ...game, events } };
+  return { ok: true, value: { install: v.install, session: v.session, host: v.host, build: v.build, locale: v.locale, ...game, ...tags, events } };
 }
 
 /** A run for the leaderboard; a run that could not have happened is refused. */
@@ -185,7 +199,9 @@ export function checkRunReplay(v: unknown): Checked<RunReplay> {
   if (!isId(v.run) || !(REPLAY_ENDS as readonly unknown[]).includes(v.end)) return { ok: false, reason: 'bad run' };
   const replay = checkReplay(v.replay);
   if (!replay) return { ok: false, reason: 'bad replay' };
-  return { ok: true, value: { install: v.install, host: v.host, build: v.build, locale: v.locale, ...game, run: v.run, end: v.end as RunReplay['end'], replay } };
+  if (v.exp !== undefined && !(typeof v.exp === 'string' && EXP_TAG.test(v.exp))) return { ok: false, reason: 'bad exp' };
+  const exp = v.exp ? { exp: v.exp } : {};
+  return { ok: true, value: { install: v.install, host: v.host, build: v.build, locale: v.locale, ...game, ...exp, run: v.run, end: v.end as RunReplay['end'], replay } };
 }
 
 /** The UTC day of `ms`, as YYYY-MM-DD. */

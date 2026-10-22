@@ -1,12 +1,12 @@
 import { randomBytes } from 'node:crypto';
 import type { Audience } from './audience';
-import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
+import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, retag, type Player } from './players';
 import { ahead, challengeUpdate, freshDoc, jobOf, settleDoc, standing, topRuns, waiting, type Best, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
 import { boardJob, boardStanding, boardUpdate, boardWaiting, newBest, provisionalRank, settleBoardDoc, shown, type BoardDoc } from './boardDocs';
 import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Game, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
-import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
+import { ALL_INSTALLS, StatsFold, inCohort, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
 
 // Where the backend keeps things. The routes only see this interface: mongoStore.ts is the real
 // one, MemoryStore below serves the tests and a local run without a database.
@@ -31,7 +31,8 @@ export interface Store {
    * The operator's numbers for one game (Holy Kicker's when not named) and one host or (null) all
    * of them, over the `days` days ending on `to` (a UTC day) or today, whichever is earlier.
    */
-  stats(days: number, now: number, host: Host | null, to?: string, game?: Game): Promise<Stats>;
+  /** `cohort` picks the installs of the per-install numbers (stats.ts Cohort); every one but testers when left out. */
+  stats(days: number, now: number, host: Host | null, to?: string, game?: Game, cohort?: Cohort): Promise<Stats>;
   /** Keeps a problem report received at `now`; returns its id. */
   addReport(report: Report, now: number): Promise<string>;
   /** The newest `limit` reports, without their replays' commands. */
@@ -46,9 +47,9 @@ export interface Store {
    */
   challengeRun(entry: ChallengeEntry, now: number): Promise<Omit<ChallengeRunReply, 'tag'>>;
   /** The re-simulation's verdict on the run made at `at`: it enters the board with its pick timeline, or (null) is dropped. */
-  settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void>;
+  settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null | 'stale'): Promise<void>;
   /** The re-simulation's verdict on the board run made at `at`: it shows on its board, or is dropped. */
-  settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void>;
+  settleBoardRun(board: string, tag: string, at: number, ok: boolean | 'stale'): Promise<void>;
   /** Every run still waiting for its re-simulation, as references (to queue again after a restart). */
   pendingResims(): Promise<ResimRef[]>;
   /** The run and replay `ref` names, while its row still holds it waiting; else null. */
@@ -89,7 +90,7 @@ export type { BoardDoc } from './boardDocs';
 export interface RunTaken {
   board: string;
   rank: number;
-  /** A new best for the install (verified or not). */
+  /** A new best for the install, kept and waiting for its re-simulation (`pending`); never for a run not kept. */
   best: boolean;
   status: 'pending' | 'lower' | 'unverified';
   at: number;
@@ -190,7 +191,7 @@ export class MemoryStore implements Store {
     if (batch.events.some((e) => e.e === 'run_end')) p.progress = foldProgress(p.progress, batch.events, offset);
     if (!this.active.has(key) && counted(offset)) p.back = [...p.back, offset];
     this.active.add(key);
-    this.players.set(batch.install, p);
+    this.players.set(batch.install, { ...p, ...retag(p, batch) });
   }
 
   private sorted(board: string): BoardDoc[] {
@@ -207,11 +208,13 @@ export class MemoryStore implements Store {
     if (typeof doc !== 'string') this.best.set(key, doc);
     const name = runName(run);
     if (name) await this.setName(tag, name);
-    const rank = provisionalRank(doc === 'lower' ? boardStanding(old!) : b, this.sorted(board));
-    return { board, rank, best: doc !== 'lower', status: typeof doc === 'string' ? doc : 'pending', at: now };
+    // a run not kept places nowhere: the install keeps the place it had (0: none yet)
+    const placed = typeof doc === 'string' ? (old && old.state !== 'stale' ? boardStanding(old) : null) : b;
+    const rank = placed ? provisionalRank(placed, this.sorted(board)) : 0;
+    return { board, rank, best: typeof doc !== 'string', status: typeof doc === 'string' ? doc : 'pending', at: now };
   }
 
-  async settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void> {
+  async settleBoardRun(board: string, tag: string, at: number, ok: boolean | 'stale'): Promise<void> {
     const key = `${board}/${tag}`;
     const doc = this.best.get(key);
     const next = doc && settleBoardDoc(doc, at, ok);
@@ -239,14 +242,14 @@ export class MemoryStore implements Store {
     this.names.set(tag, name);
   }
 
-  async stats(days: number, now: number, host: Host | null, to?: string, game: Game = 'monk'): Promise<Stats> {
+  async stats(days: number, now: number, host: Host | null, to?: string, game: Game = 'monk', cohort: Cohort = ALL_INSTALLS): Promise<Stats> {
     const today = dayOf(now);
     const list = windowOf(days, today, to);
     const fold = new StatsFold(list, today);
     const last = list[list.length - 1];
     const g = keptGame(game);
     const mine = (h: Host, of: Game | undefined) => (host === null || h === host) && of === g;
-    for (const p of this.players.values()) if (mine(p.host, p.game)) fold.add(p);
+    for (const p of this.players.values()) if (mine(p.host, p.game) && inCohort(p, cohort)) fold.add(p);
     const counts: DayCounts = { active: new Map(), runs: new Map(), ended: new Map() };
     const inc = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
     for (const key of this.active) {
@@ -278,7 +281,7 @@ export class MemoryStore implements Store {
       const [day, h, build, step, of] = key.split('/');
       if (day >= list[0] && day <= last && mine(h as Host, (of || undefined) as Game | undefined)) beacons.push({ day, build, step, n, ...(Object.keys(t).length ? { t: { ...t } } : {}) });
     }
-    return fold.result(host, game, counts, ends, beacons, snaps, anomalies);
+    return fold.result(host, game, cohort, counts, ends, beacons, snaps, anomalies);
   }
 
   async addReport(report: Report, now: number): Promise<string> {
@@ -315,7 +318,7 @@ export class MemoryStore implements Store {
     return { board: e.board, status: waiting(doc) ? ('pending' as const) : ('ranked' as const), ...this.place(standing(doc)) };
   }
 
-  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void> {
+  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null | 'stale'): Promise<void> {
     const key = `${board}/${tag}`;
     const doc = this.challenges.get(key);
     const next = doc && settleDoc(doc, at, picks);

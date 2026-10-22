@@ -45,8 +45,15 @@ export interface SettingsActions {
   reminders?: ReminderUi;
   /** The cloud save's backup and restore (net/cloudSync.ts); unset where the host has a cloud of its own or is offline. */
   cloud?: CloudUi | null;
+  /** The build shown at the bottom (__HK_BUILD__); tapped TESTER_TAPS times it marks the install a tester. */
+  version: string;
+  tester(): boolean;
+  markTester(): void;
   close(): void;
 }
+
+/** Taps on the version line that mark the install a tester (the dashboard leaves testers out, docs/experiments.md). */
+export const TESTER_TAPS = 7;
 
 /** Switches to `locale` and stores it, once its table is in (a chunk that failed to load keeps the current language). */
 export async function keepLanguage(kv: KeyValueStore, locale: Locale): Promise<void> {
@@ -59,7 +66,7 @@ export async function keepLanguage(kv: KeyValueStore, locale: Locale): Promise<v
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders' | 'cloud'> & { canVibrate: boolean },
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders' | 'cloud' | 'version' | 'tester' | 'markTester'> & { canVibrate: boolean },
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: (locale) => void keepLanguage(kv, locale).then(() => o.setLanguage(locale)),
@@ -87,7 +94,25 @@ export function storedSettings(
     copyId: o.copyId,
     reminders: o.reminders,
     cloud: o.cloud,
+    version: o.version,
+    tester: o.tester,
+    markTester: o.markTester,
   };
+}
+
+/** The build, dim and small; TESTER_TAPS taps on it mark the install a tester, which the line then says. */
+function versionLine(a: SettingsActions): Container {
+  const text = () => (a.tester() ? t('settings.versionTester', { v: a.version }) : t('settings.version', { v: a.version }));
+  const line = label(text(), 42, COLORS.dim);
+  let taps = 0;
+  line.eventMode = 'static';
+  line.cursor = 'default';
+  line.on('pointertap', () => {
+    if (a.tester() || ++taps < TESTER_TAPS) return;
+    a.markTester();
+    line.text = text();
+  });
+  return line;
 }
 
 const W = 860;
@@ -271,6 +296,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
     row.addChild(gc, back);
     add(row, 110);
   } else add(back, 110);
+  add(versionLine(a), 70);
   // the box is as tall as its rows, centred, and shrinks on a frame too short for it
   const boxH = y + 50;
   box.children.forEach((c) => (c.y -= boxH / 2));

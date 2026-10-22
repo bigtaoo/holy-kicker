@@ -95,6 +95,8 @@ export interface HostAnalytics {
   event(e: EventName, p?: Record<string, PropValue>): void;
   /** One battle frame's length in ms (the lobby, pauses and card choices left out). */
   frame(ms: number): void;
+  /** The install's experiment arms (protocol EXP_TAG, '' for none), for the events after it. */
+  tag?(exp: string): void;
 }
 
 /** The text box's wording, already translated, and the longest text it takes. */

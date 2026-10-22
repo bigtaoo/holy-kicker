@@ -1,4 +1,3 @@
-import { ENGINE_VERSION } from '@hk/engine';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { audienceOf } from './audience';
 import { cloudRoute, type CloudDeps } from './cloudSave';
@@ -22,6 +21,8 @@ export interface Req {
   /** The parsed JSON body (undefined when there was none or it did not parse). */
   body: unknown;
   ip: string;
+  /** The caller's rate was already charged (index.ts does it before reading the body); route() charges it otherwise. */
+  rated?: boolean;
 }
 
 export interface Reply {
@@ -91,13 +92,34 @@ async function reachable(store: Store): Promise<boolean> {
   }
 }
 
+/**
+ * The rate bucket a request is charged to (RATES), or null for none: known from the method and
+ * path alone, so the server can refuse a caller before it reads a body of up to 3 MB.
+ */
+export function rateOf(method: string, path: string): keyof typeof RATES | null {
+  if (method === 'POST') {
+    if (path === '/v1/cloud/new' || path === '/v1/cloud/gc') return 'cloudNew';
+    if (path === '/v1/cloud/read' || path === '/v1/cloud/write') return 'cloud';
+    return POST_RATES[path] ?? null;
+  }
+  if (method !== 'GET') return null;
+  if (path === '/v1/beacon') return 'beacons';
+  if (path === '/v1/challenge' || path === '/v1/replays/wanted' || path.startsWith('/v1/boards/') || path.startsWith('/v1/challenge/boards/')) return 'boards';
+  return null;
+}
+
+const POST_RATES: Record<string, keyof typeof RATES | undefined> = {
+  '/v1/events': 'events', '/v1/runs': 'runs', '/v1/name': 'names', '/v1/challenge/runs': 'challenge', '/v1/reports': 'reports', '/v1/replays': 'replays',
+};
+
 export async function route(req: Req, d: Deps): Promise<Reply> {
   const { method, path } = req;
+  const rate = req.rated ? null : rateOf(method, path);
+  if (rate && !d.allow(rate, req.ip)) return { status: 429 };
   if (method === 'GET' && path === '/health') return (await reachable(d.store)) ? { status: 200, body: { ok: true } } : { status: 503, body: { ok: false } };
   if (path.startsWith('/v1/cloud/')) return cloudRoute(req, d);
 
   if (method === 'POST' && path === '/v1/events') {
-    if (!d.allow('events', req.ip)) return { status: 429 };
     const c = checkBatch(req.body, d.now());
     if (!c.ok) return bad(c.reason);
     await d.store.addEvents(c.value, d.now(), audienceOf(req.headers, c.value.events));
@@ -106,7 +128,6 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
 
   // anonymous load checkpoints: a GET with no body or preflight, so a page's inline script can send it
   if (method === 'GET' && path === '/v1/beacon') {
-    if (!d.allow('beacons', req.ip)) return { status: 429 };
     const host = req.query.get('h') ?? '', step = req.query.get('s') ?? '', build = req.query.get('b') ?? '';
     if (!(HOSTS as readonly string[]).includes(host) || !(BEACONS as readonly string[]).includes(step)) return bad('bad beacon');
     if (!/^[\w.+-]{1,32}$/.test(build)) return bad('bad build');
@@ -121,18 +142,16 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
   }
 
   if (method === 'POST' && path === '/v1/runs') {
-    if (!d.allow('runs', req.ip)) return { status: 429 };
     const c = checkRunPost(req.body);
     if (!c.ok) return bad(c.reason);
     const { run, replay } = c.value;
     const tag = tagOf(run.install, d.tagSalt);
-    const { at, ...r } = await d.store.submitRun(run, tag, (d.boardReplay ?? ((r, p) => boardReplay(r, p, ENGINE_VERSION)))(run, replay), d.now());
+    const { at, ...r } = await d.store.submitRun(run, tag, (d.boardReplay ?? boardReplay)(run, replay), d.now());
     if (r.status === 'pending') d.resim.push({ kind: 'board', board: r.board, tag, at });
     return { status: 200, body: { ...r, tag } };
   }
 
   if (method === 'POST' && path === '/v1/name') {
-    if (!d.allow('names', req.ip)) return { status: 429 };
     const c = checkNameEntry(req.body);
     if (!c.ok) return bad(c.reason);
     await d.store.setName(tagOf(c.value.install, d.tagSalt), c.value.name, d.now());
@@ -141,18 +160,15 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
 
   const board = path.startsWith('/v1/boards/') ? path.slice('/v1/boards/'.length) : null;
   if (method === 'GET' && board !== null) {
-    if (!d.allow('boards', req.ip)) return { status: 429 };
     if (Number(BOARD.exec(board)?.[1] ?? 0) > LIMITS.chapters || !BOARD.test(board)) return bad('bad board');
     return { status: 200, body: marked(await d.store.board(board, BOARD_ROWS, installTag(req, d)), (await d.marks?.current()) ?? new Map()) };
   }
 
   if (method === 'GET' && path === '/v1/challenge') {
-    if (!d.allow('boards', req.ip)) return { status: 429 };
     return { status: 200, body: { now: d.now(), challenges: openChallenges(d.now()) } };
   }
 
   if (method === 'POST' && path === '/v1/challenge/runs') {
-    if (!d.allow('challenge', req.ip)) return { status: 429 };
     const c = checkChallengeRun(req.body);
     if (!c.ok) return bad(c.reason);
     const { run, replay } = c.value;
@@ -170,7 +186,6 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
 
   const cboard = path.startsWith('/v1/challenge/boards/') ? path.slice('/v1/challenge/boards/'.length) : null;
   if (method === 'GET' && cboard !== null) {
-    if (!d.allow('boards', req.ip)) return { status: 429 };
     // a weekly top run's replay, to watch: <board>/replays/<tag>
     const [name, replays, tag, ...rest] = cboard.split('/');
     if (!CHALLENGE_BOARD.test(name)) return bad('bad board');
@@ -183,7 +198,6 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
   }
 
   if (method === 'POST' && path === '/v1/reports') {
-    if (!d.allow('reports', req.ip)) return { status: 429 };
     const c = checkReport(req.body);
     if (!c.ok) return bad(c.reason);
     return { status: 200, body: { id: await d.store.addReport(c.value, d.now()) } };
@@ -199,14 +213,12 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
 
   // collected replays: whether this install is asked for them, and one sent (replayShelf.ts)
   if (method === 'GET' && path === '/v1/replays/wanted') {
-    if (!d.allow('boards', req.ip)) return { status: 429 };
     const install = req.headers['x-hk-install'];
     const ok = !!d.replays && !!install && install.length >= LIMITS.idMin && install.length <= LIMITS.idMax;
     return { status: 200, body: { want: ok && wantsReplays(install, d.now(), d.collect) } };
   }
 
   if (method === 'POST' && path === '/v1/replays') {
-    if (!d.allow('replays', req.ip)) return { status: 429 };
     const c = checkRunReplay(req.body);
     if (!c.ok) return bad(c.reason);
     const { install, run, ...doc } = c.value;
@@ -236,7 +248,11 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
     // one game's numbers at a time, Holy Kicker's unless asked
     const game = req.query.get('game') || 'monk';
     if (!isGame(game)) return bad('bad game');
-    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null, to, game as Game) };
+    // one experiment's installs (`exp=first20`) or one arm's (`exp=first20:short`); testers only with `testers=1`
+    const exp = req.query.get('exp') || null;
+    if (exp !== null && !/^[a-z0-9_]{1,16}(?::[a-z0-9_]{1,16})?$/.test(exp)) return bad('bad exp');
+    const cohort = { exp, testers: req.query.get('testers') === '1' };
+    return { status: 200, body: await d.store.stats(days, d.now(), host as Host | null, to, game as Game, cohort) };
   }
 
   return { status: 404 };
@@ -244,7 +260,8 @@ export async function route(req: Req, d: Deps): Promise<Reply> {
 
 /** A token bucket per route and caller: `burst` requests at once, refilled at `perMinute`. */
 export class Limiter {
-  private readonly buckets = new Map<string, { tokens: number; at: number }>();
+  private readonly buckets = new Map<string, { tokens: number; at: number; rate: { burst: number; perMinute: number } }>();
+  private swept = 0;
 
   constructor(
     private readonly rates: Record<string, { burst: number; perMinute: number }>,
@@ -256,15 +273,31 @@ export class Limiter {
     if (!rate) return true;
     const id = `${route}/${key}`;
     const t = this.now();
-    const b = this.buckets.get(id) ?? { tokens: rate.burst, at: t };
-    b.tokens = Math.min(rate.burst, b.tokens + ((t - b.at) * rate.perMinute) / 60_000);
+    if (t - this.swept >= Limiter.SWEEP_MS) this.sweep(t);
+    const b = this.buckets.get(id) ?? { tokens: rate.burst, at: t, rate };
+    b.tokens = Limiter.refilled(b, t);
     b.at = t;
     const ok = b.tokens >= 1;
     if (ok) b.tokens -= 1;
     this.buckets.set(id, b);
-    // forget the full buckets now and then, so the map does not grow with every caller seen
-    if (this.buckets.size > 50_000) for (const [k, v] of this.buckets) if (v.tokens >= this.rates[k.split('/')[0]].burst - 1) this.buckets.delete(k);
     return ok;
+  }
+
+  /** Buckets held (for the tests). */
+  get size(): number {
+    return this.buckets.size;
+  }
+
+  /** How often the map is swept: a bucket that would have refilled by now is the same as none. */
+  static readonly SWEEP_MS = 60_000;
+
+  private static refilled(b: { tokens: number; at: number; rate: { burst: number; perMinute: number } }, t: number): number {
+    return Math.min(b.rate.burst, b.tokens + ((t - b.at) * b.rate.perMinute) / 60_000);
+  }
+
+  private sweep(t: number): void {
+    this.swept = t;
+    for (const [k, b] of this.buckets) if (Limiter.refilled(b, t) >= b.rate.burst) this.buckets.delete(k);
   }
 }
 

@@ -230,6 +230,7 @@ export const id: Table<typeof en> = {
     gift: 'Hadiah sambutan: {gift}!',
     giftWorn: 'Dipakai untuk permainan berikutnya: {gift}!',
     rankShort: 'Peringkat #{rank}',
+    rankPending: 'Peringkat #{rank} (diperiksa)',
   },
   remind: {
     offer: 'Ingatkan saat {patrol} penuh dan Tantangan Harian siap?',
@@ -366,6 +367,8 @@ export const id: Table<typeof en> = {
     adPrivacy: 'Privasi iklan',
     dataNotice: 'Statistik main, rekaman ulang permainan dan rekor peringkat dikirim ke server kami, untuk menyeimbangkan game dan papan peringkat.',
     playId: 'ID main kamu: {id}',
+    version: 'Versi {v}',
+    versionTester: 'Versi {v} · penguji',
     idCopied: 'ID disalin',
     idCopyFailed: 'Gagal menyalin ID',
   },

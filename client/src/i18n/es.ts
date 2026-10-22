@@ -230,6 +230,7 @@ export const es: Table<typeof en> = {
     gift: 'Regalo de bienvenida: ¡{gift}!',
     giftWorn: 'Equipado para tu próxima partida: ¡{gift}!',
     rankShort: 'Clasificación #{rank}',
+    rankPending: 'Clasificación #{rank} (verificando)',
   },
   remind: {
     offer: '¿Te avisamos cuando {patrol} esté llena y el desafío diario esté listo?',
@@ -366,6 +367,8 @@ export const es: Table<typeof en> = {
     adPrivacy: 'Privacidad de anuncios',
     dataNotice: 'Las estadísticas de juego, las repeticiones de partidas y las partidas clasificadas van a nuestro servidor, para equilibrar el juego y gestionar las clasificaciones.',
     playId: 'Tu ID de juego: {id}',
+    version: 'Versión {v}',
+    versionTester: 'Versión {v} · tester',
     idCopied: 'ID copiado',
     idCopyFailed: 'No se pudo copiar el ID',
   },

@@ -53,6 +53,8 @@ svg text { fill: var(--dim); font-size: 10px; }
   <select id="game" title="Each game's numbers stand apart (server/src/game.ts)"><option value="monk">Holy Kicker</option><option value="corgi">corgi</option></select>
   <select id="host"><option value="">all hosts</option><option>crazygames</option><option>ios</option><option>playgama</option><option>poki</option><option>web</option><option>wechat</option></select>
   <select id="days"><option value="1">1 day</option><option value="7">7 days</option><option value="14">14 days</option><option value="30" selected>30 days</option><option value="60">60 days</option><option value="90">90 days</option></select>
+  <input id="exp" size="14" placeholder="experiment" title="One experiment (first20) or one arm (first20:short): the per-install numbers count only its installs (docs/experiments.md). Daily, perf, anomalies and boards stay whole.">
+  <label title="Installs marked as testers (the version tapped 7 times in settings) are left out unless ticked"><input id="testers" type="checkbox"> testers</label>
   <input id="to" type="date" title="Last day of the window (UTC); empty is today. Returns still count up to today.">
   <input id="key" type="password" placeholder="admin key" size="14">
   <button id="go">Load</button>
@@ -73,21 +75,24 @@ $('key').value = store.get('hk.dash.key') || '';
 $('game').value = store.get('hk.dash.game') || 'monk';
 $('host').value = store.get('hk.dash.host') || '';
 $('days').value = store.get('hk.dash.days') || '30';
+$('exp').value = store.get('hk.dash.exp') || '';
 $('go').onclick = load;
-$('game').onchange = $('host').onchange = $('days').onchange = load;
+$('game').onchange = $('host').onchange = $('days').onchange = $('exp').onchange = $('testers').onchange = load;
 if ($('key').value) load();
 
 async function load() {
   const key = $('key').value.trim();
   if (!key) return;
-  store.set('hk.dash.key', key); store.set('hk.dash.game', $('game').value); store.set('hk.dash.host', $('host').value); store.set('hk.dash.days', $('days').value);
+  store.set('hk.dash.key', key); store.set('hk.dash.game', $('game').value); store.set('hk.dash.host', $('host').value); store.set('hk.dash.days', $('days').value); store.set('hk.dash.exp', $('exp').value.trim());
   $('msg').textContent = 'loading…';
   const q = new URLSearchParams({ days: $('days').value, game: $('game').value });
   if ($('host').value) q.set('host', $('host').value);
   if ($('to').value) q.set('to', $('to').value);
+  if ($('exp').value.trim()) q.set('exp', $('exp').value.trim());
+  if ($('testers').checked) q.set('testers', '1');
   try {
     const res = await fetch(`/v1/stats?${q}`, { headers: { authorization: `Bearer ${key}` } });
-    if (!res.ok) throw new Error(res.status === 401 ? 'wrong key' : `HTTP ${res.status}`);
+    if (!res.ok) throw new Error(res.status === 401 ? 'wrong key' : res.status === 400 ? 'experiment: an id or id:arm' : `HTTP ${res.status}`);
     render(await res.json());
     $('msg').textContent = '';
   } catch (e) {
@@ -115,13 +120,14 @@ function render(s) {
   const today = s.days[s.days.length - 1], yday = s.days[s.days.length - 2] || today;
   const live = today.day === s.today;
   $('out').innerHTML = [
-    section(`Overview · ${esc(s.game === 'corgi' ? 'corgi' : 'Holy Kicker')} · ${esc(s.host || 'all hosts')} · ${esc(s.days[0].day)} to ${esc(today.day)} (UTC)`, 'Retention pools every cohort whose return day is over. Colours: green beats a good casual web game, amber is average, red is below.',
+    section(`Overview · ${esc(s.game === 'corgi' ? 'corgi' : 'Holy Kicker')} · ${esc(s.host || 'all hosts')}${s.cohort?.exp ? ` · ${esc(s.cohort.exp)}` : ''}${s.cohort?.testers ? ' · with testers' : ''} · ${esc(s.days[0].day)} to ${esc(today.day)} (UTC)`, 'Retention pools every cohort whose return day is over. Colours: green beats a good casual web game, amber is average, red is below.',
       `<div class="kpis">${kpi(fresh, 'new installs in the window')}${s.days.length > 1 ? kpi(yday.active, `active on ${yday.day}`) : ''}${kpi(today.active, live ? 'active today so far' : `active on ${today.day}`)}
       ${ret.map((r) => kpi(fmt(r.p), `D${r.n} of ${r.fresh} installs`, shade(r.p, r.n))).join('')}</div>`),
     section('What to look at', 'Rules of thumb from the numbers below; each points at the lever most likely to move retention.', diagnose(s, ret)),
     section('Diagnosis (performance)', 'What the perf snapshots and device anomalies below say is wrong, problems first, each with the numbers and where in the client to look (src/diagnose.ts). Rules wait for enough runs (usually 5 per group) so one odd device does not raise an alarm.', diagnosis(s)),
     section('Retention by first day', 'Each row is the installs first seen that day; the cells are the share seen again exactly N days later. A dash: that day is not over yet.', cohortTable(s)),
     section('Daily', 'Bars: active installs; the darker part is new ones. Hover for numbers.', dailyChart(s)),
+    section('Experiments', 'New installs by experiment arm (docs/experiments.md). D1 is the primary: back on day 1, of those whose next day is over. Day-0 minutes and the share that started a second run are secondary; rewarded ads and interstitials per install are the guardrail. Read one host at a time (pick it above): hosts differ more than arms do. About 1,250 installs per arm are needed to see D1 move from 25% to 30%; under that, a gap is noise.', arms(s)),
     section('New-player funnel (day 0)', 'Of the installs first seen in the window, how many got this far on their first day. A big drop between two steps is where new players give up.', funnel(s)),
     section('Loading (every launch)', 'Anonymous counts with no install id, sent whatever the privacy answer: opened is the portal page starting (before the SDK and the game download), loaded is the first screen up. Touch is phones and tablets. Loaded / opened is the share that got past loading; compare opened with the portal\'s own plays.', loading(s)),
     section('Performance (battle frames)', 'Frame-rate snapshots of battles (perf events: one when a run ends or the game goes to the background mid-run, plus a mid snapshot every 3 battle minutes only while something looks wrong), by the sending install\'s device and system, and by build. So the rows count end and leave snapshots mostly; mid is how many trouble snapshots a group sent. fps and p5 are medians over snapshots of the median and 5th-percentile frame rate; long/min is frames of 50 ms+ per battle minute; Hz is the display refresh the game measured, hitch/min frames that missed a refresh they should have shown (fair across 30, 60 and 120 Hz, unlike long) and missed/min the refreshes missed; own work is the share of hitches after our own frame work took 75%+ of a frame (else they came late while our work was short: GC, GPU, compositor), boss and wave start the shares with a boss or elite up and in a wave's first 3 seconds; work p95 is the 95th-percentile main-thread work of a frame, split into engine steps, view update and draw (Pixi render), in ms (1 ms steps on Safari); pacing comes from builds of 2026-10-20 on; below phone is the share of snapshots whose run had dropped under the phone quality level; heap, textures (count and MB) and nodes (display objects on stage) are medians of what the game held then. p5 under 30 is red, under 45 amber. Runs that crash never send their end snapshot. GPU, memory and cores come from the session event of the launch. Builds from 2026-10-15 on.', perf(s)),
@@ -236,7 +242,16 @@ function medianLoad(t) {
 }
 
 /** Steps measured against an earlier one (the rest only against everyone who opened the game). */
-const AFTER = { 'started a run': 'opened the game', 'finished the tutorial': 'started a run', 'finished a run': 'started a run' };
+const AFTER = { 'started a run': 'opened the game', 'finished the tutorial': 'started a run', 'finished a run': 'started a run', 'watched a rewarded ad': 'was offered a rewarded ad' };
+
+function arms(s) {
+  if (!s.arms?.length) return '<p class="hint">No install in the window is in an experiment.</p>';
+  const per = (a, n) => (n > 0 ? (a / n).toFixed(2) : '–');
+  return `<table><tr><th>arm</th><th>installs</th><th>D1</th><th>day-0 min</th><th>second run</th><th>rewarded / install</th><th>interstitials / install</th></tr>${s.arms.map((a) => {
+    const d1 = a.known ? pct(a.back, a.known) : null;
+    return `<tr><td>${esc(a.arm)}</td><td>${a.n}</td><td><span class="cell" style="${shade(d1, 1)}" title="${a.back} of ${a.known}">${fmt(d1)}</span></td><td>${a.timed ? (a.minutes / a.timed).toFixed(1) : '–'}</td><td>${fmt(pct(a.second, a.n))}</td><td>${per(a.ads, a.n)}</td><td>${per(a.inters, a.n)}</td></tr>`;
+  }).join('')}</table>`;
+}
 
 function funnel(s) {
   const all = s.funnel[0]?.n || 0;

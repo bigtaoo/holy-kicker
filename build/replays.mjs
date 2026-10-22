@@ -1,24 +1,33 @@
 import { build } from 'esbuild';
-import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { engineDir } from './engines.mjs';
 
 // Reads replays (server/src/replayStats.ts): where the time went, how the horde stood around
 // the hero, how the stick was played, what hurt and what killed, which cards were taken.
 // Each replay is played on the engine it was recorded with: an older ENGINE_VERSION's engine/
-// is taken from git (the last commit before the next bump) into a cache under the temp dir.
-// Usage: npm run replays -- [file.json ...] [--fetch[=N]] [--collected[=N]] [--json=out.json]
+// is taken from git (the last commit before the next bump) into a cache under the temp dir (engines.mjs).
+// Usage: npm run replays -- [file.json ...] [--fetch[=N]] [--collected[=N]] [--host=H] [--build=B] [--exp=ID[:ARM]] [--json=out.json]
 //   file.json: a problem report (GET /v1/reports/<id>), a collected replay or a bare replay.
 //   --fetch=N: the newest N problem reports from hk.gamestao.com (HK_ADMIN_KEY in the environment).
 //   --collected=N: the newest N collected run replays (server/src/replayShelf.ts), likewise.
+//   --host=H, --build=B: only the replays from that host (crazygames, ios, ...) or that build.
+//   --exp=first20 (or first20:short): only the replays of installs in that experiment (or arm),
+//     docs/experiments.md; replays from builds before the arms were sent have none and are left out.
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 const API = 'https://hk.gamestao.com';
 const args = process.argv.slice(2);
 const fetchArg = args.find((a) => a.startsWith('--fetch'));
 const collectedArg = args.find((a) => a.startsWith('--collected'));
 const jsonArg = args.find((a) => a.startsWith('--json='));
+const valueOf = (name) => args.find((a) => a.startsWith(`--${name}=`))?.slice(name.length + 3);
+const hostArg = valueOf('host');
+const buildArg = valueOf('build');
+const expArg = valueOf('exp');
+/** Whether a replay's install is in `--exp`: an arm is one of its `id:arm` pairs, an experiment any arm of it. */
+const inExp = (rep) => !expArg || String(rep.exp ?? '').split(',').some((pair) => (expArg.includes(':') ? pair === expArg : pair.startsWith(`${expArg}:`)));
 const files = args.filter((a) => !a.startsWith('--'));
 
 async function adminGet(path) {
@@ -38,38 +47,16 @@ async function fetchCollected(n) {
   return Promise.all(list.map(async (e) => ({ id: e.name, run: e.name, ...(await adminGet(`/v1/replays/${e.name}`)) })));
 }
 
-/** Each ENGINE_VERSION's last commit: the parent of the commit that bumped it next; HEAD's own is the working tree. */
-function versionCommits() {
-  const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8' });
-  const bumps = git('log', '--format=%H', '-G', 'ENGINE_VERSION = [0-9]+', '--', 'engine/Engine.ts').trim().split('\n');
-  const versionAt = (c) => Number(/ENGINE_VERSION = (\d+)/.exec(git('show', `${c}:engine/Engine.ts`))[1]);
-  const map = new Map();
-  bumps.forEach((c, i) => map.set(versionAt(c), i === 0 ? null : `${bumps[i - 1]}^`));
-  return { map, git };
-}
-
-const cache = join(tmpdir(), 'hk-engines');
 const work = mkdtempSync(join(tmpdir(), 'hk-replays-'));
 const bundles = new Map();
-let commits;
 
 /** The analyzer bundled with the engine of version `v`. */
 async function analyzerFor(v) {
   if (bundles.has(v)) return bundles.get(v);
-  commits ??= versionCommits();
-  if (!commits.map.has(v)) throw new Error(`no commit has ENGINE_VERSION ${v}`);
-  const commit = commits.map.get(v);
-  let engineDir = join(ROOT, 'engine');
-  if (commit) {
-    const dir = join(cache, `e${v}`);
-    if (!existsSync(join(dir, 'engine', 'index.ts'))) {
-      mkdirSync(dir, { recursive: true });
-      execFileSync('sh', ['-c', `git archive ${commit} engine | tar -x -C "${dir.replace(/\\/g, '/')}"`], { cwd: ROOT });
-    }
-    engineDir = join(dir, 'engine');
-  }
+  const dir = engineDir(v);
+  if (!dir) throw new Error(`no commit has ENGINE_VERSION ${v}`);
   const out = join(work, `analyze${v}.mjs`);
-  const engineIndex = join(engineDir, 'index.ts');
+  const engineIndex = join(dir, 'index.ts');
   await build({
     stdin: {
       contents: `export { replayEngine, hashState, ENGINE_VERSION } from '@hk/engine';
@@ -105,7 +92,8 @@ const rows = [];
 let mod;
 for (const rep of reports) {
   const r = rep.replay;
-  if (!r || r.tick === 0) continue;
+  if (!r || r.tick === 0 || !inExp(rep)) continue;
+  if ((hostArg && rep.host !== hostArg) || (buildArg && rep.build !== buildArg)) continue;
   mod = await analyzerFor(r.engine);
   const engine = mod.replayEngine(r);
   const stats = mod.analyzeRun(engine, r.tick);

@@ -1,12 +1,12 @@
 import { MongoBulkWriteError, MongoClient, type Collection, type Db, type ObjectId } from 'mongodb';
 import type { Audience } from './audience';
-import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
+import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, retag, type Player } from './players';
 import { challengeUpdate, freshDoc, settleDoc, standing, topRuns, waiting } from './challengeDocs';
 import { boardStanding, boardUpdate, newBest, settleBoardDoc, type BoardDoc } from './boardDocs';
 import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type Game, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
-import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
+import { ALL_INSTALLS, StatsFold, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
 import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summaryOf, resimLoad, resimRefs, type ChallengeDoc, type ChallengeEntry, type ResimLoad, type ResimRef, type RunTaken, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
@@ -59,8 +59,8 @@ interface ChallengeRow extends ChallengeDoc {
 
 type BestDoc = BoardDoc & { _id: string };
 
-/** A board row's shown run only: no pending row, no replay. */
-const SHOWN = { state: { $ne: 'pending' as const } };
+/** A board row's shown run only: no pending or stale row (boardDocs.ts shown). */
+const SHOWN = { state: { $nin: ['pending', 'stale'] as ('pending' | 'stale')[] } };
 const NO_REPLAY = { projection: { replay: 0, 'next.replay': 0 } };
 /** What finds the rows with a run waiting, in either collection. */
 const WAITING = { $or: [{ state: 'pending' as const }, { 'next.at': { $exists: true } }] };
@@ -148,8 +148,9 @@ export class MongoStore implements Store {
     const offset = dayOffset(p.first, day);
     const fresh = seen.upsertedCount === 1 && counted(offset);
     const ran = b.events.some((e) => e.e === 'run_end');
-    if (p.first !== day && !fresh && !ran) return;
-    const set = { ...(p.first === day ? { d0: foldDayZero(p.d0, b.events) } : {}), ...(ran ? { progress: foldProgress(p.progress, b.events, offset) } : {}) };
+    const tags = retag(p, b);
+    if (p.first !== day && !fresh && !ran && !tags) return;
+    const set = { ...(p.first === day ? { d0: foldDayZero(p.d0, b.events) } : {}), ...(ran ? { progress: foldProgress(p.progress, b.events, offset) } : {}), ...tags };
     await this.installs.updateOne({ _id: b.install }, { ...(Object.keys(set).length ? { $set: set } : {}), ...(fresh ? { $addToSet: { back: offset } } : {}) });
   }
 
@@ -180,11 +181,13 @@ export class MongoStore implements Store {
     }
     const name = runName(run);
     if (name) await this.setName(tag, name, now);
-    const rank = await this.rankOf(doc === 'lower' && old ? boardStanding(old) : b);
-    return { board, rank, best: doc !== 'lower', status: typeof doc === 'string' ? doc : 'pending', at: now };
+    // a run not kept places nowhere: the install keeps the place it had (0: none yet)
+    const placed = typeof doc === 'string' ? (old && old.state !== 'stale' ? boardStanding(old) : null) : b;
+    const rank = placed ? await this.rankOf(placed) : 0;
+    return { board, rank, best: typeof doc !== 'string', status: typeof doc === 'string' ? doc : 'pending', at: now };
   }
 
-  async settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void> {
+  async settleBoardRun(board: string, tag: string, at: number, ok: boolean | 'stale'): Promise<void> {
     const _id = `${board}/${tag}`;
     const doc = await this.best.findOne({ _id }, NO_REPLAY);
     const next = doc && settleBoardDoc(doc, at, ok);
@@ -241,7 +244,7 @@ export class MongoStore implements Store {
     return { board: e.board, status: waiting(doc) ? ('pending' as const) : ('ranked' as const), ...(await this.place(standing(doc))) };
   }
 
-  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void> {
+  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null | 'stale'): Promise<void> {
     const _id = `${board}/${tag}`;
     const doc = await this.challenges.findOne({ _id });
     const next = doc && settleDoc(doc, at, picks);
@@ -288,7 +291,7 @@ export class MongoStore implements Store {
     await this.names.replaceOne({ _id: tag }, { ...name, at: new Date(now) }, { upsert: true });
   }
 
-  async stats(days: number, now: number, host: Host | null, to?: string, game: Game = 'monk'): Promise<Stats> {
+  async stats(days: number, now: number, host: Host | null, to?: string, game: Game = 'monk', cohort: Cohort = ALL_INSTALLS): Promise<Stats> {
     const today = dayOf(now);
     const list = windowOf(days, today, to);
     const window = { $gte: list[0], $lte: list[list.length - 1] };
@@ -297,7 +300,10 @@ export class MongoStore implements Store {
     const mine = { ...(host ? { host } : {}), game: g ?? { $exists: false } };
     const fold = new StatsFold(list, today);
     // one small document per new install, streamed: memory stays flat however many there are
-    for await (const p of this.installs.find({ first: window, ...mine }, { projection: { first: 1, build: 1, aud: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
+    // the same rule as stats.ts inCohort: an arm is one element of `exp`, an experiment any arm of it
+    const exp = cohort.exp === null ? {} : { exp: cohort.exp.includes(':') ? cohort.exp : { $regex: `^${cohort.exp}:` } };
+    const testers = cohort.testers ? {} : { tester: { $exists: false } };
+    for await (const p of this.installs.find({ first: window, ...mine, ...exp, ...testers }, { projection: { first: 1, build: 1, aud: 1, exp: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
     type Count = { _id: string; n: number };
     type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown }; n: number };
     type Trouble = { _id: { day: string; build: string; kind: unknown; msg: unknown; src: unknown; level: unknown }; n: number };
@@ -338,7 +344,7 @@ export class MongoStore implements Store {
       day: d.day, host: d.host, build: d.build, device: auds.get(d.install)?.device ?? 'unknown', os: auds.get(d.install)?.os ?? 'unknown', ...(devices.get(d.session) ?? sessionDevice(undefined)), p: d.p ?? {},
     }));
     const anomalies: AnomalyCount[] = trouble.map(({ _id: { day, build, ...p }, n }) => ({ ...anomalyKey(day, build ?? 'unknown', p as Record<string, PropValue>), n }));
-    return fold.result(host, game, counts, outcomes, loads, snaps, anomalies);
+    return fold.result(host, game, cohort, counts, outcomes, loads, snaps, anomalies);
   }
 
   async addReport(report: Report, now: number): Promise<string> {

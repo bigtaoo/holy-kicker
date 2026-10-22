@@ -6,7 +6,7 @@ import type { Deps, Reply, Req } from './routes';
 
 // The cloud save's routes (docs/cloud-save.md "The server"), reached from routes.ts for every
 // path under /v1/cloud/. A slot is reached by its restore code alone, so every call is a POST
-// with the code in the body (never in a URL or a log) and rate limited per address.
+// with the code in the body (never in a URL or a log) and rate limited per address (routes.ts rateOf).
 
 export interface CloudDeps {
   vault: CloudVault;
@@ -39,7 +39,6 @@ export async function cloudRoute(req: Req, d: Deps): Promise<Reply> {
   if (req.method !== 'POST') return { status: 404 };
 
   if (req.path === '/v1/cloud/new') {
-    if (!d.allow('cloudNew', req.ip)) return { status: 429 };
     const c = checkCloudNew(req.body);
     if (!c.ok) return bad(c.reason);
     const slot = await makeSlot(vault, d.now(), c.value.game, null);
@@ -47,7 +46,6 @@ export async function cloudRoute(req: Req, d: Deps): Promise<Reply> {
   }
 
   if (req.path === '/v1/cloud/gc') {
-    if (!d.allow('cloudNew', req.ip)) return { status: 429 };
     const c = checkCloudGc(req.body);
     if (!c.ok) return bad(c.reason);
     const { game, identity, create } = c.value;
@@ -63,7 +61,6 @@ export async function cloudRoute(req: Req, d: Deps): Promise<Reply> {
   }
 
   if (req.path === '/v1/cloud/read') {
-    if (!d.allow('cloud', req.ip)) return { status: 429 };
     const c = checkCloudRead(req.body);
     if (!c.ok) return bad(c.reason);
     const slot = await vault.read(c.value.code);
@@ -72,7 +69,6 @@ export async function cloudRoute(req: Req, d: Deps): Promise<Reply> {
   }
 
   if (req.path === '/v1/cloud/write') {
-    if (!d.allow('cloud', req.ip)) return { status: 429 };
     const c = checkCloudWrite(req.body);
     if (!c.ok) return bad(c.reason);
     const { game, code, base, save } = c.value;

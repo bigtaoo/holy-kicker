@@ -229,6 +229,7 @@ export const th: Table<typeof en> = {
     gift: 'ของขวัญต้อนรับ: {gift}!',
     giftWorn: 'สวมใส่สำหรับรอบถัดไปแล้ว: {gift}!',
     rankShort: 'อันดับ #{rank}',
+    rankPending: 'อันดับ #{rank} (กำลังตรวจสอบ)',
   },
   remind: {
     offer: 'ให้เตือนเมื่อ{patrol}เต็มและภารกิจรายวันพร้อมไหม?',
@@ -365,6 +366,8 @@ export const th: Table<typeof en> = {
     adPrivacy: 'ความเป็นส่วนตัวโฆษณา',
     dataNotice: 'สถิติการเล่น รีเพลย์การเล่น และผลบนกระดานอันดับ จะถูกส่งไปยังเซิร์ฟเวอร์ เพื่อปรับสมดุลเกม และจัดอันดับ',
     playId: 'ID การเล่นของคุณ: {id}',
+    version: 'เวอร์ชัน {v}',
+    versionTester: 'เวอร์ชัน {v} · ผู้ทดสอบ',
     idCopied: 'คัดลอก ID แล้ว',
     idCopyFailed: 'คัดลอกไม่สำเร็จ',
   },

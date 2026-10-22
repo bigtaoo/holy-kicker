@@ -230,6 +230,7 @@ export const pl: Table<typeof en> = {
     gift: 'Prezent powitalny: {gift}!',
     giftWorn: 'Założone na następną rozgrywkę: {gift}!',
     rankShort: 'Ranking #{rank}',
+    rankPending: 'Ranking #{rank} (sprawdzanie)',
   },
   remind: {
     offer: 'Przypomnieć, gdy {patrol} się zapełni, a wyzwanie dnia będzie gotowe?',
@@ -366,6 +367,8 @@ export const pl: Table<typeof en> = {
     adPrivacy: 'Prywatność reklam',
     dataNotice: 'Statystyki gry, powtórki rozgrywek i wyniki do rankingów trafiają na nasz serwer, by balansować grę i prowadzić rankingi.',
     playId: 'Twój identyfikator gry: {id}',
+    version: 'Wersja {v}',
+    versionTester: 'Wersja {v} · tester',
     idCopied: 'Skopiowano identyfikator',
     idCopyFailed: 'Nie udało się skopiować identyfikatora',
   },

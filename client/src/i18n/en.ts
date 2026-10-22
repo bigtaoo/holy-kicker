@@ -228,6 +228,7 @@ export const en = {
     gift: 'Welcome gift: {gift}!',
     giftWorn: 'Equipped for your next run: {gift}!',
     rankShort: 'Leaderboard #{rank}',
+    rankPending: 'Leaderboard #{rank} (checking)',
   },
   remind: {
     offer: 'Want a reminder when {patrol} is full and the daily challenge is ready?',
@@ -368,6 +369,8 @@ export const en = {
     adPrivacy: 'Ad privacy',
     dataNotice: 'Play stats, run replays and leaderboard runs go to our server, to balance the game and run the boards.',
     playId: 'Your play ID: {id}',
+    version: 'Version {v}',
+    versionTester: 'Version {v} · tester',
     idCopied: 'ID copied',
     idCopyFailed: "Couldn't copy the ID",
   },

@@ -44,22 +44,11 @@ export type Device = (typeof DEVICES)[number];
  * `none` for a restore that found nothing).
  *
  * `perf` is a frame-rate snapshot of the battle so far (see PerfProps); `anomaly` one thing gone
- * wrong on the device, sent as it happens (see AnomalyProps).
+ * wrong on the device, sent as it happens (see AnomalyProps). `offer` (a rewarded ad offered), the
+ * interstitial `ad` and the runs' `waves` are in runWire.ts.
  */
-/**
- * The build a `run_end` carries (builds from engine 49 on): `spells` and `passives` as
- * comma-joined id + level, a spell's `+` when evolved (`palm5+,bolt3`, `eye2,rice1`, empty for
- * none); `relicLv` 1..5 and `awakened`; `moving`, the percent of the hero's ticks up spent moving;
- * `travel`, world units walked per kill (none without kills). Kiting runs move almost all the
- * time and walk far per kill.
- */
-export const RUN_BUILD = {
-  spells: /^(?:[a-z]{2,12}[1-5]\+?(?:,[a-z]{2,12}[1-5]\+?){0,3})?$/,
-  passives: /^(?:[a-z]{2,12}[1-5](?:,[a-z]{2,12}[1-5]){0,3})?$/,
-  maxTravel: 100_000,
-} as const;
 
-export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap', 'perf', 'anomaly', 'alive', 'run_resume'] as const;
+export const EVENT_NAMES = ['session', 'run_start', 'run_end', 'tutorial', 'buy', 'ad', 'claim', 'share', 'leave', 'iap', 'perf', 'anomaly', 'alive', 'run_resume', 'offer'] as const;
 export type EventName = (typeof EVENT_NAMES)[number];
 
 export type PropValue = string | number | boolean;
@@ -86,6 +75,10 @@ export interface EventBatch {
   locale: string;
   /** The game sending (game.ts); none from builds before the corgi, which were all Holy Kicker. */
   game?: Game;
+  /** The experiments the install is in (runWire.ts EXP_TAG: `first20:short`); none when in none, or from older builds. */
+  exp?: string;
+  /** The player marked the install as a tester (settings, the version tapped 7 times): the dashboard leaves it out. */
+  tester?: true;
   events: ClientEvent[];
 }
 
@@ -421,6 +414,8 @@ export interface RunReplay {
   run: string;
   end: ReplayEnd;
   replay: ReplayWire;
+  /** The install's experiment arms, as EventBatch `exp` (`npm run replays -- --exp=`). */
+  exp?: string;
 }
 
 /**
@@ -469,3 +464,4 @@ export * from './challengeWire';
 export * from './game';
 export * from './cloudWire';
 export * from './nameCheck';
+export * from './runWire';

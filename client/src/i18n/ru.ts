@@ -229,6 +229,7 @@ export const ru: Table<typeof en> = {
     gift: 'Подарок новичку: {gift}!',
     giftWorn: 'Надето на следующий забег: {gift}!',
     rankShort: 'Рейтинг #{rank}',
+    rankPending: 'Рейтинг #{rank} (проверка)',
   },
   remind: {
     offer: 'Напомнить, когда {patrol} закончится и будет готово испытание дня?',
@@ -365,6 +366,8 @@ export const ru: Table<typeof en> = {
     adPrivacy: 'Реклама и данные',
     dataNotice: 'Игровая статистика, повторы забегов и результаты для рекордов отправляются на наш сервер — для баланса игры и таблиц рекордов.',
     playId: 'Ваш игровой ID: {id}',
+    version: 'Версия {v}',
+    versionTester: 'Версия {v} · тестер',
     idCopied: 'ID скопирован',
     idCopyFailed: 'Не удалось скопировать ID',
   },

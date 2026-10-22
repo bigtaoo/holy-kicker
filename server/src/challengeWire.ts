@@ -124,6 +124,20 @@ export function dailySeed(ymd: number): number {
   return 1 + ((h >>> 0) % 0x7ffffffe);
 }
 
+/** A daily's waves. */
+export const DAILY_WAVES = 20;
+
+/**
+ * The daily of the UTC day `ms` falls on, for `engine`, whose mutators (MUTATOR_IDS) take turns a
+ * day each: the server lists it (challenge.ts) and the client makes the same one up offline.
+ */
+export function dailyChallenge(ms: number, engine: number, mutators: readonly string[]): Challenge {
+  const start = Math.floor(ms / DAY_MS) * DAY_MS;
+  const ymd = ymdOf(start);
+  const mutator = mutators[Math.floor(start / DAY_MS) % mutators.length];
+  return { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: dailySeed(ymd), chapter: 'furthest', waves: DAILY_WAVES, mutator, loadout: null, engine };
+}
+
 /** Monday 00:00 UTC of the week `ms` falls in (1970-01-01 was a Thursday). */
 export function weekStart(ms: number): number {
   return Math.floor((ms + 3 * DAY_MS) / WEEK_MS) * WEEK_MS - 3 * DAY_MS;

@@ -87,6 +87,15 @@ describe('mergeSaves', () => {
     expect(mergeSaves(m, m)).toEqual(m);
   });
 
+  it("keeps every experiment arm either save was put in, the leader's first, and the tester mark", () => {
+    const lead = { ...phone(), arms: { first20: 'short' } };
+    const trail = { ...browser(), arms: { first20: 'control', other: '' }, tester: true };
+    for (const m of [mergeSaves(lead, trail), mergeSaves(trail, lead)]) {
+      expect(m.arms).toEqual({ first20: leaderOf(lead, trail) === 'mine' ? 'short' : 'control', other: '' });
+      expect(m.tester).toBe(true);
+    }
+  });
+
   it('keeps the fields this build does not know from the leading save', () => {
     const lead = { ...phone(), later: 'kept' } as SaveData;
     expect((mergeSaves(browser(), lead) as unknown as Record<string, unknown>).later).toBeUndefined();

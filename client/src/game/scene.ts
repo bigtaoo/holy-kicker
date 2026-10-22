@@ -103,6 +103,8 @@ export interface SceneOptions {
   challenge: boolean;
   /** Dev: the weeks in the save count as closed, so their rewards are claimed now (?challenge=settle; offline: rank 2 of 10). */
   settleWeeks: boolean;
+  /** Dev: the experiment arms this save is put in, whatever it was in (?arm=first20:short, meta/experiments.ts); '' none. */
+  arm: string;
   /** Dev: the monk for every run, whatever the save says (?monk=fat); null keeps the save's. */
   monk: MonkId | null;
   /** Dev: the balance bot plays (?autoplay), for videos and soak tests. */
@@ -150,6 +152,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   hard: false,
   challenge: false,
   settleWeeks: false,
+  arm: '',
   monk: null,
   autoplay: false,
   record: 0,
@@ -218,6 +221,7 @@ export function parseScene(query: string): SceneOptions {
     hard: q.has('hard'),
     challenge: q.has('challenge'),
     settleWeeks: q.get('challenge') === 'settle',
+    arm: q.get('arm') ?? '',
     monk: MONK_IDS.find((m) => m === q.get('monk')) ?? DEFAULT_SCENE.monk,
     autoplay: q.has('autoplay'),
     record: num(q.get('record'), 1, 120, DEFAULT_SCENE.record),

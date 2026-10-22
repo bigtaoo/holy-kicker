@@ -230,6 +230,7 @@ export const tr: Table<typeof en> = {
     gift: 'Hoş geldin hediyesi: {gift}!',
     giftWorn: 'Sonraki oyun için kuşanıldı: {gift}!',
     rankShort: 'Sıralama #{rank}',
+    rankPending: 'Sıralama #{rank} (kontrol ediliyor)',
   },
   remind: {
     offer: '{patrol} dolduğunda ve Günlük Meydan Okuma hazır olduğunda hatırlatalım mı?',
@@ -366,6 +367,8 @@ export const tr: Table<typeof en> = {
     adPrivacy: 'Reklam gizliliği',
     dataNotice: 'Oyun istatistikleri, tur tekrarları ve sıralama turları, oyunu dengelemek ve sıralamaları yürütmek için sunucumuza gider.',
     playId: 'Oyun kimliğin: {id}',
+    version: 'Sürüm {v}',
+    versionTester: 'Sürüm {v} · test edici',
     idCopied: 'Kimlik kopyalandı',
     idCopyFailed: 'Kimlik kopyalanamadı',
   },
