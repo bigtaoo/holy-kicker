@@ -8,12 +8,13 @@ import type { Game, Host, ReplayEnd, ReplayWire } from './protocol';
 // (`npm run replays -- --collected`). Collection is for the early days only: COLLECT says how
 // many installs send them and until when, and the server tells each install whether it is one
 // (GET /v1/replays/wanted); past `until` nobody sends any. The replays are kept as gzipped files
-// on the box's disk (a docker volume), not in Mongo, and dropped after KEEP_DAYS.
+// on the box's disk (a docker volume), not in Mongo, and dropped after KEEP_DAYS, or the oldest
+// first when the shelf is full.
 
 /** Percent of installs asked for their replays, and the last day (UTC) they are asked. */
 export const COLLECT = { percent: 100, until: '2026-12-31' };
 export type CollectPlan = typeof COLLECT;
-/** Days a collected replay is kept, and the most the shelf holds (past it new ones are refused). */
+/** Days a collected replay is kept, and the most the shelf holds (past it the oldest make room). */
 export const KEEP_DAYS = 15;
 export const MAX_BYTES = 2 * 1024 ** 3;
 
@@ -39,7 +40,7 @@ export interface ShelfEntry {
 }
 
 export interface ReplayShelf {
-  /** Keeps `doc` under `name`, over an earlier one of that name; false when the shelf is full. */
+  /** Keeps `doc` under `name`, over an earlier one of that name, dropping the oldest to make room; false when it alone is too big. */
   put(name: string, doc: StoredReplay): Promise<boolean>;
   /** The newest `limit` entries. */
   list(limit: number): Promise<ShelfEntry[]>;
@@ -107,7 +108,8 @@ export class DiskShelf implements ReplayShelf {
 
   async put(name: string, doc: StoredReplay): Promise<boolean> {
     const zip = gzipSync(JSON.stringify(doc));
-    if (this.bytes - (this.files.get(name)?.bytes ?? 0) + zip.length > this.maxBytes) return false;
+    if (zip.length > this.maxBytes) return false;
+    await this.makeRoom(name, zip.length);
     // written aside and renamed, so a reader never sees half a file; dated `at`, as a reopened shelf reads it
     const path = join(this.dir, `${name}.json.gz`);
     await writeFile(`${path}.tmp`, zip);
@@ -115,6 +117,23 @@ export class DiskShelf implements ReplayShelf {
     await rename(`${path}.tmp`, path);
     this.files.set(name, { at: doc.at, bytes: zip.length });
     return true;
+  }
+
+  /** Drops the oldest replays (never `name`'s own) until `bytes` more fit beside the rest. */
+  private async makeRoom(name: string, bytes: number): Promise<void> {
+    let used = this.bytes - (this.files.get(name)?.bytes ?? 0);
+    if (used + bytes <= this.maxBytes) return;
+    const oldest = [...this.files].filter(([n]) => n !== name).sort((a, b) => a[1].at - b[1].at);
+    for (const [n, f] of oldest) {
+      if (used + bytes <= this.maxBytes) break;
+      await this.drop(n);
+      used -= f.bytes;
+    }
+  }
+
+  private async drop(name: string): Promise<void> {
+    await unlink(join(this.dir, `${name}.json.gz`)).catch(() => undefined);
+    this.files.delete(name);
   }
 
   async list(limit: number): Promise<ShelfEntry[]> {
@@ -130,8 +149,7 @@ export class DiskShelf implements ReplayShelf {
     let n = 0;
     for (const [name, f] of this.files) {
       if (f.at >= now - KEEP_MS) continue;
-      await unlink(join(this.dir, `${name}.json.gz`)).catch(() => undefined);
-      this.files.delete(name);
+      await this.drop(name);
       n++;
     }
     return n;

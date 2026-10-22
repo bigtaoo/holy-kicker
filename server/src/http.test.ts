@@ -1,7 +1,7 @@
 import { EventEmitter } from 'node:events';
 import type { IncomingMessage } from 'node:http';
 import { describe, expect, it } from 'vitest';
-import { ipOf, MAX_BODY, maxBody, pageLang, readBody } from './http';
+import { BodyGate, ipOf, MAX_BODY, maxBody, pageLang, readBody } from './http';
 import { LIMITS } from './protocol';
 
 /** A request that delivers `chunks` once read; `destroyed` tells whether it was cut off. */
@@ -62,5 +62,14 @@ describe('pageLang', () => {
     expect(pageLang(new URLSearchParams('lang=xx'), 'zh-TW')).toBe('zh');
     expect(pageLang(new URLSearchParams(), 'fr-FR,zh;q=0.5')).toBe('en');
     expect(pageLang(new URLSearchParams(), undefined)).toBe('en');
+  });
+});
+
+describe('BodyGate', () => {
+  it('lets a few big bodies be read at once and turns the next away until one is done', () => {
+    const g = new BodyGate(2);
+    expect([g.take(), g.take(), g.take()]).toEqual([true, true, false]);
+    g.give();
+    expect(g.take()).toBe(true);
   });
 });

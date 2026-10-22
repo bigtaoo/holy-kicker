@@ -1,3 +1,4 @@
+import { engineFor } from './engines';
 import { ENGINE_VERSION, MUTATOR_IDS } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
 import { challengeFor, DAILY_WAVES, dailyOf, dailySeed, misfit, weeklyOf, ymdOf, DAY_MS, LATE_MS } from './challenge';
@@ -70,7 +71,7 @@ describe('the daily', () => {
 
 describe('re-simulation', () => {
   it('passes a real run and gives its pick timeline', () => {
-    const v = resimulate(PLAYED.replay, PLAYED.run, ENGINE_VERSION);
+    const v = resimulate(PLAYED.replay, PLAYED.run);
     expect(v.ok).toBe(true);
     if (!v.ok) return;
     expect(v.picks.length).toBeGreaterThan(2);
@@ -84,13 +85,13 @@ describe('re-simulation', () => {
 
   it('refuses a forged hash, outcome, level or config', () => {
     const { run, replay } = PLAYED;
-    expect(resimulate({ ...replay, hash: replay.hash ^ 1 }, run, ENGINE_VERSION)).toEqual({ ok: false, why: 'hash' });
-    expect(resimulate(replay, { ...run, wave: run.wave + 1 }, ENGINE_VERSION)).toEqual({ ok: false, why: 'outcome' });
-    expect(resimulate(replay, { ...run, level: run.level + 1 }, ENGINE_VERSION)).toEqual({ ok: false, why: 'stats' });
-    expect(resimulate(replay, run, ENGINE_VERSION + 1)).toEqual({ ok: false, why: 'engine' });
+    expect(resimulate({ ...replay, hash: replay.hash ^ 1 }, run)).toEqual({ ok: false, why: 'hash' });
+    expect(resimulate(replay, { ...run, wave: run.wave + 1 })).toEqual({ ok: false, why: 'outcome' });
+    expect(resimulate(replay, { ...run, level: run.level + 1 })).toEqual({ ok: false, why: 'stats' });
+    expect(resimulate(replay, run, null)).toEqual({ ok: false, why: 'engine' });
     const cmds = [...replay.cmds];
     cmds[cmds.length - 3] ^= 0x4000;
-    expect(resimulate({ ...replay, cmds }, run, ENGINE_VERSION).ok).toBe(false);
+    expect(resimulate({ ...replay, cmds }, run).ok).toBe(false);
   });
 
   it('takes only a config a ranked run could have', () => {
@@ -112,7 +113,7 @@ describe('re-simulation', () => {
 function setup(now = NOW) {
   const store = new MemoryStore();
   const logs: string[] = [];
-  const resim = new ResimQueue(store, ENGINE_VERSION, () => now, (l) => logs.push(l), (fn) => setTimeout(fn, 0));
+  const resim = new ResimQueue(store, engineFor, () => now, (l) => logs.push(l), (fn) => setTimeout(fn, 0));
   const deps: Deps = { store, tagSalt: 'salt', adminKey: 'key', now: () => now, allow: () => true, resim };
   return { store, resim, deps, logs };
 }
@@ -203,7 +204,7 @@ describe('challenge routes', () => {
     const { store } = setup();
     const entry: ChallengeEntry = { board: challengeBoardId(DAILY.id, ENGINE_VERSION, 1), tag: 'tag1', challenge: DAILY.id, ...PLAYED };
     await store.challengeRun(entry, NOW);
-    const resim = new ResimQueue(store, ENGINE_VERSION, () => NOW, () => {}, (fn) => setTimeout(fn, 0));
+    const resim = new ResimQueue(store, engineFor, () => NOW, () => {}, (fn) => setTimeout(fn, 0));
     await resim.start();
     expect(resim.length).toBe(1);
     await resim.idle();

@@ -1,27 +1,17 @@
-import { ENGINE_VERSION, MONK_IDS, MUTATOR_IDS, RELIC_IDS, SUTRA_IDS, type MutatorId } from '@hk/engine';
-import { CHALLENGE_ID, DAY_MS, LATE_MS, WEEK_MS, dailySeed, weekIdOf, weekStart, ymdOf, type Challenge, type ChallengeLoadout, type ReplayWire, type RunEntry } from './protocol';
+import { ENGINE_VERSION, MONK_IDS, MUTATOR_IDS, RELIC_IDS, SUTRA_IDS } from '@hk/engine';
+import { CHALLENGE_ID, DAILY_WAVES, DAY_MS, LATE_MS, WEEK_MS, dailyChallenge, dailySeed, weekIdOf, weekStart, ymdOf, type Challenge, type ChallengeLoadout, type ReplayWire, type RunEntry } from './protocol';
 import { WEEKLIES } from './weeklies';
 
-export { DAY_MS, LATE_MS, WEEK_MS, dailySeed, weekIdOf, weekStart, ymdOf };
+export { DAILY_WAVES, DAY_MS, LATE_MS, WEEK_MS, dailySeed, weekIdOf, weekStart, ymdOf };
 
 // The challenge list (docs/design.md "Challenges"). A daily is a formula of its UTC day, so
 // there is nothing to store or schedule: every server answers the same record for the same
 // day. A weekly runs Monday 00:00 UTC to Monday with a fixed loadout, picked by hand in
 // weeklies.ts or, for a week without one there, from a rotation by week.
 
-/** The daily's waves: it ends as a win on wave 20's mid-boss (about 5 minutes). */
-export const DAILY_WAVES = 20;
-
-/** The daily's mutator: the engine's mutators in turn, one a UTC day. */
-export function dailyMutator(start: number): MutatorId {
-  return MUTATOR_IDS[Math.floor(start / DAY_MS) % MUTATOR_IDS.length];
-}
-
-/** The daily of the UTC day `ms` falls on. */
+/** The daily of the UTC day `ms` falls on (DAILY_WAVES: it ends as a win on wave 20's mid-boss, about 5 minutes). */
 export function dailyOf(ms: number, engine = ENGINE_VERSION): Challenge {
-  const start = Math.floor(ms / DAY_MS) * DAY_MS;
-  const ymd = ymdOf(start);
-  return { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: dailySeed(ymd), chapter: 'furthest', waves: DAILY_WAVES, mutator: dailyMutator(start), loadout: null, engine };
+  return dailyChallenge(ms, engine, MUTATOR_IDS);
 }
 
 /** The weekly's waves: one full chapter run. */

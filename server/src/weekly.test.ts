@@ -1,3 +1,4 @@
+import { engineFor } from './engines';
 import { ENGINE_VERSION, MONK_IDS, MUTATOR_IDS, RELIC_IDS, SUTRA_IDS } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
 import { DAY_MS, LATE_MS, WEEK_MS, challengeFor, misfit, rotationLoadout, weekIdOf, weekStart, weeklyOf } from './challenge';
@@ -110,11 +111,19 @@ describe('a weekly row', () => {
     expect(better).toMatchObject({ state: 'pending', at: 2, replay: LONG.replay });
     expect(settleDoc(better, 1, [])).toBeUndefined();
   });
+  it('keeps a run aside when no engine here can check it, and lets the next run replace it', () => {
+    const first = challengeUpdate(null, entry(LONG), 1, true) as ChallengeDoc;
+    const stale = settleDoc(first, 1, 'stale')!;
+    expect(stale).toMatchObject({ state: 'stale', replay: LONG.replay });
+    expect(challengeUpdate(stale, entry(SHORT), 2, true)).toMatchObject({ state: 'pending', at: 2 });
+    const waiting = challengeUpdate(entered(SHORT, 1), entry(LONG), 3, true) as ChallengeDoc;
+    expect(settleDoc(waiting, 3, 'stale')).toMatchObject({ at: 1, stale: { at: 3 } });
+  });
 });
 
 function setup(now = NOW) {
   const store = new MemoryStore();
-  const resim = new ResimQueue(store, ENGINE_VERSION, () => now, () => {}, (fn) => setTimeout(fn, 0));
+  const resim = new ResimQueue(store, engineFor, () => now, () => {}, (fn) => setTimeout(fn, 0));
   const deps: Deps = { store, tagSalt: 'salt', adminKey: 'key', now: () => now, allow: () => true, resim, marks: new WeekMarks(store, () => now) };
   return { store, resim, deps };
 }

@@ -1,8 +1,7 @@
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { gzipSync } from 'node:zlib';
-import { ENGINE_VERSION } from '@hk/engine';
 import DASH from './dash.html';
-import { ipOf, maxBody, pageLang, readBody } from './http';
+import { BodyGate, ipOf, MAX_BODY, maxBody, pageLang, readBody } from './http';
 import PRIVACY_EN from './privacy.en.html';
 import PRIVACY_ZH from './privacy.zh.html';
 import { pageGame, privacyPage } from './privacyPage';
@@ -10,13 +9,14 @@ import { WeekMarks } from './marks';
 import { MongoStore } from './mongoStore';
 import { MemoryVault, MongoVault } from './cloudVault';
 import { appleKeys } from './gameCenter';
+import { engineFor } from './engines';
 import { DiskShelf, MemoryShelf } from './replayShelf';
 import { ResimQueue } from './resimQueue';
-import { Limiter, RATES, route } from './routes';
+import { Limiter, RATES, rateOf, route } from './routes';
 import { MemoryStore, type Store } from './store';
 
-// The Holy Kicker backend process (server/README.md): one small HTTP server behind the box's
-// Caddy, which terminates TLS for hk.gamestao.com. Configuration comes from the environment:
+// The Holy Kicker backend process (server/README.md): one small HTTP server on daydayup's box,
+// reached only through the Cloudflare tunnel, which terminates TLS for hk.gamestao.com. Configuration comes from the environment:
 //   PORT            listen port (default 8080)
 //   HK_MONGO_URI    Atlas connection string; without it the store is in memory (development)
 //   HK_MONGO_DB     database name (default holykicker)
@@ -32,12 +32,13 @@ if (uri && !env.HK_TAG_SALT) throw new Error('HK_TAG_SALT is required with HK_MO
 const store: Store = uri ? await MongoStore.open(uri, env.HK_MONGO_DB || 'holykicker') : new MemoryStore();
 const limiter = new Limiter(RATES, Date.now);
 // challenge runs are re-simulated here, one at a time, off the request path
-const resim = new ResimQueue(store, ENGINE_VERSION, Date.now, (line) => console.log(line));
+const resim = new ResimQueue(store, engineFor, Date.now, (line) => console.log(line));
 await resim.start();
 const marks = new WeekMarks(store, Date.now);
 const replays = env.HK_REPLAY_DIR ? await DiskShelf.open(env.HK_REPLAY_DIR) : new MemoryShelf();
 // the cloud save's slots (cloudSave.ts), in Mongo beside the rest
 const cloud = { vault: uri ? await MongoVault.open(uri, env.HK_MONGO_DB || 'holykicker') : new MemoryVault(), gcKey: appleKeys() };
+const bigReads = new BodyGate();
 const deps = { store, tagSalt: env.HK_TAG_SALT || 'dev', adminKey: env.HK_ADMIN_KEY ?? '', now: Date.now, allow: limiter.allow.bind(limiter), resim, marks, replays, cloud };
 
 /** Replies longer than this (bytes of JSON) go gzipped to a client that takes it. */
@@ -70,15 +71,31 @@ async function serve(req: IncomingMessage, res: ServerResponse): Promise<void> {
     res.writeHead(200, { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'public, max-age=3600', 'referrer-policy': 'no-referrer' }).end(page);
     return;
   }
+  // the caller's rate is charged before its body is read, and big bodies are read a few at a time
+  const method = req.method ?? 'GET';
+  const ip = ipOf(req);
+  const rate = rateOf(method, url.pathname);
+  if (rate && !limiter.allow(rate, ip)) {
+    res.writeHead(429, { ...CORS, connection: 'close' }).end();
+    return;
+  }
+  const limit = maxBody(url.pathname);
+  const big = method === 'POST' && limit > MAX_BODY;
+  if (big && !bigReads.take()) {
+    res.writeHead(503, { ...CORS, 'retry-after': '5', connection: 'close' }).end();
+    return;
+  }
   let body: unknown;
   try {
-    body = req.method === 'POST' ? await readBody(req, maxBody(url.pathname)) : undefined;
+    body = method === 'POST' ? await readBody(req, limit) : undefined;
   } catch {
     res.writeHead(413, CORS).end();
     return;
+  } finally {
+    if (big) bigReads.give();
   }
   const headers = Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, Array.isArray(v) ? v[0] : v]));
-  const reply = await route({ method: req.method ?? 'GET', path: url.pathname, query: url.searchParams, headers, body, ip: ipOf(req) }, deps);
+  const reply = await route({ method, path: url.pathname, query: url.searchParams, headers, body, ip, rated: true }, deps);
   if (reply.body === undefined) res.writeHead(reply.status, CORS).end();
   else {
     // replays and boards with their pick timelines are big and compress well

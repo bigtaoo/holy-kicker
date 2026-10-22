@@ -47,9 +47,9 @@ export interface Store {
    */
   challengeRun(entry: ChallengeEntry, now: number): Promise<Omit<ChallengeRunReply, 'tag'>>;
   /** The re-simulation's verdict on the run made at `at`: it enters the board with its pick timeline, or (null) is dropped. */
-  settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void>;
+  settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null | 'stale'): Promise<void>;
   /** The re-simulation's verdict on the board run made at `at`: it shows on its board, or is dropped. */
-  settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void>;
+  settleBoardRun(board: string, tag: string, at: number, ok: boolean | 'stale'): Promise<void>;
   /** Every run still waiting for its re-simulation, as references (to queue again after a restart). */
   pendingResims(): Promise<ResimRef[]>;
   /** The run and replay `ref` names, while its row still holds it waiting; else null. */
@@ -90,7 +90,7 @@ export type { BoardDoc } from './boardDocs';
 export interface RunTaken {
   board: string;
   rank: number;
-  /** A new best for the install (verified or not). */
+  /** A new best for the install, kept and waiting for its re-simulation (`pending`); never for a run not kept. */
   best: boolean;
   status: 'pending' | 'lower' | 'unverified';
   at: number;
@@ -208,11 +208,13 @@ export class MemoryStore implements Store {
     if (typeof doc !== 'string') this.best.set(key, doc);
     const name = runName(run);
     if (name) await this.setName(tag, name);
-    const rank = provisionalRank(doc === 'lower' ? boardStanding(old!) : b, this.sorted(board));
-    return { board, rank, best: doc !== 'lower', status: typeof doc === 'string' ? doc : 'pending', at: now };
+    // a run not kept places nowhere: the install keeps the place it had (0: none yet)
+    const placed = typeof doc === 'string' ? (old && old.state !== 'stale' ? boardStanding(old) : null) : b;
+    const rank = placed ? provisionalRank(placed, this.sorted(board)) : 0;
+    return { board, rank, best: typeof doc !== 'string', status: typeof doc === 'string' ? doc : 'pending', at: now };
   }
 
-  async settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void> {
+  async settleBoardRun(board: string, tag: string, at: number, ok: boolean | 'stale'): Promise<void> {
     const key = `${board}/${tag}`;
     const doc = this.best.get(key);
     const next = doc && settleBoardDoc(doc, at, ok);
@@ -316,7 +318,7 @@ export class MemoryStore implements Store {
     return { board: e.board, status: waiting(doc) ? ('pending' as const) : ('ranked' as const), ...this.place(standing(doc)) };
   }
 
-  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void> {
+  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null | 'stale'): Promise<void> {
     const key = `${board}/${tag}`;
     const doc = this.challenges.get(key);
     const next = doc && settleDoc(doc, at, picks);

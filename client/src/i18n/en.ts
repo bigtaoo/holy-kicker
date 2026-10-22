@@ -222,6 +222,7 @@ export const en = {
     gift: 'Welcome gift: {gift}!',
     giftWorn: 'Equipped for your next run: {gift}!',
     rankShort: 'Leaderboard #{rank}',
+    rankPending: 'Leaderboard #{rank} (checking)',
   },
   remind: {
     offer: 'Want a reminder when {patrol} is full and the daily challenge is ready?',

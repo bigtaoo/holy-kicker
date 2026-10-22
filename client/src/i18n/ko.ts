@@ -222,6 +222,7 @@ export const ko: Table<typeof en> = {
     gift: '환영 선물: {gift}!',
     giftWorn: '다음 판에 장착 완료: {gift}!',
     rankShort: '순위 #{rank}',
+    rankPending: '순위 #{rank} (확인 중)',
   },
   remind: {
     offer: '{patrol}이 가득 차고 일일 도전이 열리면 알려 드릴까요?',

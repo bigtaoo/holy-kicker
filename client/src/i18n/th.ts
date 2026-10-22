@@ -223,6 +223,7 @@ export const th: Table<typeof en> = {
     gift: 'ของขวัญต้อนรับ: {gift}!',
     giftWorn: 'สวมใส่สำหรับรอบถัดไปแล้ว: {gift}!',
     rankShort: 'อันดับ #{rank}',
+    rankPending: 'อันดับ #{rank} (กำลังตรวจสอบ)',
   },
   remind: {
     offer: 'ให้เตือนเมื่อ{patrol}เต็มและภารกิจรายวันพร้อมไหม?',

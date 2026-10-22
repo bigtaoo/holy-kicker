@@ -27,7 +27,7 @@ before names) goes by a dice name made from its tag.
 | `GET /health` | `{ ok: true }` once the database answers a ping within 2 s (`HEALTH_TIMEOUT_MS`), else 503 `{ ok: false }`: the container's healthcheck, the deploy's wait and the uptime monitor read it |
 | `POST /v1/events` | an `EventBatch` (src/protocol.ts): up to 50 events, names from `EVENT_NAMES`; an event numbered `n` is kept once per session (`_id` `session/n`), so a batch sent again is not counted twice → 204 |
 | `GET /v1/beacon?h=crazygames&s=open_touch&b=<build>` | an anonymous load checkpoint (`BEACONS`: `open_*` from the CrazyGames page before the SDK, `loaded_*` from the game's first screen): counted per day, host, build and step, no id, whatever the privacy answer → 204 |
-| `POST /v1/runs` | a `RunPost`: a `RunEntry` and its replay (up to 3 MB). A new best for the install on its board is kept only with a replay the server can check (src/boardDocs.ts `boardReplay`: this engine, from wave 1, as long as the run, a config the run could have had, src/resim.ts `chapterConfig`) and shows once re-simulated → `{ board, rank, best, status: pending \| lower \| unverified, tag }`, the rank provisional (where it would place among the shown rows); its `name` or `dice`, if the rules take it, becomes the install's name |
+| `POST /v1/runs` | a `RunPost`: a `RunEntry` and its replay (up to 3 MB). A new best for the install on its board is kept only with a replay the server can check (src/boardDocs.ts `boardReplay`: an engine the server has, from wave 1, as long as the run, a config the run could have had, src/resim.ts `chapterConfig`) and shows once re-simulated → `{ board, rank, best, status: pending \| lower \| unverified, tag }`, the rank provisional (where it would place among the shown rows); `best` only for a run kept (`pending`), never for one `unverified` (rank 0), and the client shows a pending rank as still being checked (`results.rankPending`); its `name` or `dice`, if the rules take it, becomes the install's name |
 | `POST /v1/name` | a `NameEntry` `{ install, host, name \| dice }`: the install's name on every board → `{ ok: true }`, or 400 `bad name` |
 | `GET /v1/boards/c<N>[h]` | top 50 of chapter N (h: hard), plus the caller's own row (header `x-hk-install`) |
 | `GET /v1/challenge` | the open challenges (`ChallengeList`, src/challengeWire.ts) and the server's clock: today's daily, made from the UTC date (src/challenge.ts `dailyOf`: id `d20261019`, seed, chapter `furthest`, 50 waves for now, the server's `ENGINE_VERSION`), and this week's weekly (`weeklyOf`: id `w2026-43`, Monday 00:00 UTC to Monday, its relic, monk, sutras and chapter picked by hand in src/weeklies.ts, else a rotation) |
@@ -38,7 +38,7 @@ before names) goes by a dice name made from its tag.
 | `GET /v1/reports?limit=50` | the newest reports without their replays; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /v1/reports/<id>` | one report whole, replay included (same key) |
 | `GET /v1/replays/wanted` | `{ want }`: whether the install in `X-HK-Install` is asked for its run replays (`COLLECT` in src/replayShelf.ts) |
-| `POST /v1/replays` | a `RunReplay`: a run's id, how it ended (`won`, `lost`, `quit`, or `hidden` for the run so far when the game went to the background) and its replay; 403 from an install not asked, 507 when the shelf is full |
+| `POST /v1/replays` | a `RunReplay`: a run's id, how it ended (`won`, `lost`, `quit`, or `hidden` for the run so far when the game went to the background) and its replay; 403 from an install not asked; a full shelf drops its oldest replays to make room (507 only for one bigger than the whole shelf) |
 | `GET /v1/replays?limit=100` | the newest collected replays, `{ name, at, bytes }`; `GET /v1/replays/<name>` one whole (admin key) |
 | `GET /v1/stats?days=14&host=crazygames&to=2026-10-09` | operator numbers (src/stats.ts): daily actives, new installs, runs, boards (with the waves lost runs ended on), the first clears of each board (days and runs it took the window's new installs), retention cohorts (D1/3/7/14/30, null until the day is over), the new-player funnel, new installs by device, browser or app, browser, system and country (src/audience.ts: the user agent, the session's `device` and `app` (CrazyGames' `applicationType`, which tells its Android and iOS apps from browsers; else a web view guessed from the user agent) and Cloudflare's `CF-IPCountry`, kept once per install), D1 by what day 0 looked like, battle frame rates by device, system and build with the worst snapshots (`perf` events, src/perf.ts; GPU class, memory and cores from the launch's `session` event) with the textures, texture MB and display objects held, device anomalies by day, by build and kind, with the top errors by message and source (`anomaly`), and a `diagnosis`: findings over both (src/diagnose.ts: leaks within and across runs, memory, lost contexts, stalls, errors, slow devices, a frame-rate drop after a deploy) with the numbers and where in the client to look; `host` optional; `exp` (`first20` or `first20:short`) keeps the per-install numbers to one experiment's or arm's installs and `testers=1` keeps installs marked as testers in (docs/experiments.md); `to` (UTC day) ends the window early, for a past week or one finished day (`days=1`), while returns still count up to today; `Authorization: Bearer $HK_ADMIN_KEY` |
 | `GET /privacy` | the game's privacy policy (src/privacy.en.html; `?lang=zh` or a Chinese browser gets src/privacy.zh.html), linked from the game's settings and its consent card |
@@ -47,7 +47,11 @@ before names) goes by a dice name made from its tag.
 A run ranks by: a win over any loss, then more waves, then less time (`runScore`). Every request
 is checked whole (`src/rules.ts`) and refused on anything unexpected; a run that could not have
 happened (a win short of the last wave, under 4 s per wave) is refused too. Each caller IP has a
-token bucket per route (`RATES` in `src/routes.ts`).
+token bucket per route (`RATES` in `src/routes.ts`, the route's bucket named by `rateOf`), charged
+from the headers before the body is read (429 and the connection closed), and the buckets that
+have filled up again are swept once a minute (`Limiter.SWEEP_MS`). At most `BIG_READS` (4) bodies
+over 32 KB (`MAX_BODY`) are read at once (`BodyGate` in `src/http.ts`); past that a big POST gets 503 with
+`retry-after: 5`.
 
 **Chapter-board runs** are re-simulated by the same queue as challenge runs (below), with the
 chapter's config rules (`chapterConfig`: all 50 waves, the run's chapter, mode, relic and monk, up
@@ -55,14 +59,26 @@ to 3 revives, no mutator). A first best waits as a hidden `pending` row with its
 one waits as `next` beside the shown best, so a refused run never costs the install the best it
 had. Verified, the run shows and its replay is dropped; refused, it goes and its replay is kept as
 a problem report. Rows kept before the boards were checked have no `state` and stay shown. A run
-with no replay (an older client), from an older engine or resumed from a snapshot is not kept.
+with no replay (an older client), from an engine the server lacks or resumed from a snapshot is not kept.
+
+**Older engines.** A client not yet updated, or a run queued across a deploy, records on an older
+`ENGINE_VERSION`. The bundle carries the last 3 engines before the current one (`OLD_ENGINE_COUNT`
+in `build.mjs`): each version's `engine/` as git had it before the next bump (`build/engines.mjs`,
+shared with `npm run replays`), put in place of the empty `src/oldEngines.ts` and loaded on first
+use (`src/engines.ts` `engineFor`). A board run from one of them is kept and re-simulated on it (its
+config checked then, by that engine's lists). A run whose engine the server does not have, or an
+older engine that throws on it, is never deleted or reported: it is kept aside as `stale` (the row's
+`state`, or `stale` beside the shown best), on no board, and the install's next run takes its
+place. The deploy job checks out the whole history and fails when a version is missing
+(`HK_OLD_ENGINES_STRICT`); a shallow `npm run check` only warns and bundles fewer.
 
 **Challenge runs** (docs/design.md "Challenges") are re-simulated off the request path
 (src/resimQueue.ts): one pending run at a time, a slice of ticks per turn of the event loop. The
 replay must land on the `hashState`, outcome, wave, level and time the run claims
 (src/resim.ts); then the run enters the board with its pick timeline (each level-up and shrine:
 tick, wave, cards offered, card taken). A mismatch drops the run and is kept as a problem report
-with the replay (it may be a determinism bug, not a cheat). After a restart the queue picks up
+with the replay (it may be a determinism bug, not a cheat); a run with no engine here (`engine`) is
+kept aside `stale` instead, as for the boards. After a restart the queue picks up
 the store's pending runs again.
 
 **Problem reports** come from the pause panel's "Report a problem" (`client/src/ui/problemReport.ts`):
@@ -87,8 +103,9 @@ now 100% until 2026-12-31; lower it and push to stop sooner). The client asks on
 sends at the run's end and, for the run so far, when the game goes to the background
 (`client/src/net/runReplays.ts`), only while the player allows statistics. Each is kept under the
 install's tag and the run's id (a later send of the run replaces the earlier) as a gzipped file in
-`HK_REPLAY_DIR` (the `replays` docker volume, `/data/replays`), for 15 days, at most 2 GB; without
-`HK_REPLAY_DIR` in memory. `npm run replays -- --collected=200` reads them.
+`HK_REPLAY_DIR` (the `replays` docker volume, `/data/replays`), for 15 days, at most 2 GB (the
+oldest go first when full); without `HK_REPLAY_DIR` in memory. `npm run replays -- --collected=200`
+reads them; `--host=crazygames` or `--build=<build>` keeps only that host's or build's.
 
 The client side is `client/src/net/` (`Backend`: queue, flush every 20 s and on hide, best
 effort) and `client/src/ui/boardPanel.ts` (the Ranks button on the lobby's chapter card). A run
@@ -169,6 +186,11 @@ database first with `--nsFrom='holykicker.*' --nsTo='restore.*'`):
 ```bash
 ssh blightbloom 'cd /home/deploy/holykicker && docker run --rm --env-file .env -v holykicker_backups:/backups mongo:8.0 sh -c '''mongorestore --uri="$HK_MONGO_URI" --gzip --archive=/backups/holykicker-2026-10-22.archive.gz --nsInclude="holykicker.*" --drop''''
 ```
+
+The image is pinned: an exact Node image in `deploy/Dockerfile`, and in `deploy/package.json`
+mongodb and, through `overrides`, every package under it at the root lockfile's versions (no
+lockfile ships: the box's deploy script takes a fixed set of files). `src/deployPins.test.ts`
+fails when the root lockfile moves without them; bump both on purpose.
 
 ### Deploy from CI
 

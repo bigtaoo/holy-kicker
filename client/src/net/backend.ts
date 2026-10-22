@@ -43,11 +43,15 @@ export function apiBase(host: Host, dev: boolean, query: URLSearchParams, config
 export type RunResult = Omit<RunEntry, 'install' | 'host' | 'build' | 'game'>;
 export type ReportDraft = Omit<Report, 'install' | 'host' | 'build' | 'locale' | 'game'>;
 
-/** The server's answer to a run: the install's rank on the board, and whether this run is its new best there. */
+/**
+ * The server's answer to a run: the install's rank on the board, and whether this run is its new
+ * best there. A new best waits for the server's re-simulation (`pending`), its rank provisional.
+ */
 export interface RunRank {
   board: string;
   rank: number;
   best: boolean;
+  status?: 'pending' | 'lower' | 'unverified';
 }
 
 export class Backend {

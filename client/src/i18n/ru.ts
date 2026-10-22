@@ -223,6 +223,7 @@ export const ru: Table<typeof en> = {
     gift: 'Подарок новичку: {gift}!',
     giftWorn: 'Надето на следующий забег: {gift}!',
     rankShort: 'Рейтинг #{rank}',
+    rankPending: 'Рейтинг #{rank} (проверка)',
   },
   remind: {
     offer: 'Напомнить, когда {patrol} закончится и будет готово испытание дня?',
