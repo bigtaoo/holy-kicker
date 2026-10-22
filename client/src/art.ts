@@ -9,6 +9,10 @@ import type { Platform } from './platform/types';
 import type { SceneOptions } from './game/scene';
 import { sliceDeco, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
 import WEBP_ART from './webpArt.json';
+import { fill, loadLate, placeholder, toFill } from './lateArt';
+
+/** Loads of late art (lateArt.ts), started once the first screen's art is in. */
+type Late = (() => Promise<void>)[];
 
 // Loads the prototype art. Paths are relative so they resolve both under the web dev
 // server (client/public) and inside the WeChat package (client/wechat/art).
@@ -16,8 +20,11 @@ export async function loadArt(
   platform: Platform, scene: Pick<SceneOptions, 'ground' | 'deco' | 'softFace' | 'boss'>,
   /** Called as each load lands, with the share done (the loading screen's bar). */
   onProgress: (share: number) => void = () => {},
+  /** Leaves what a first run's opening never draws for behind its first frame (lateArt.ts): web hosts. */
+  lean = false,
 ): Promise<Art> {
   const { ground, deco } = scene;
+  const late: Late | null = lean ? [] : null;
   // every load is counted before the first lands (then() runs later), so the share only grows
   let started = 0;
   let done = 0;
@@ -32,32 +39,36 @@ export async function loadArt(
     });
   }
   // only what chapter 1's first run draws: the lobby's and chapter 2's come in behind the first
-  // screen (loadLobbyArt, chapterArt.ts loadChapterArt)
+  // screen (loadLobbyArt, chapterArt.ts loadChapterArt); where `lean`, what its opening never draws
+  // comes in behind its first frame: the fox runners, the other relics, the awakened ones, the
+  // Mountain Palm and the abbot's atlas
   const [hero, monkIcons, jiangshi, fox, cuju, staff, fish, meteor, ruyi, morningBell, lion, palm, mountain, groundTex, decoSheet, boss, icons] = await Promise.all([
     tick(loadTao(platform, 'art/hero')),
     // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
     tick(loadDeco(platform, 'art/icons/monks')),
     tick(loadSheet(platform, 'art/mobs/jiangshi', scene.softFace ? 'art/mobs/jiangshi_soft.png' : undefined)),
-    tick(loadSheet(platform, 'art/mobs/fox')),
+    tick(loadSheet(platform, 'art/mobs/fox', undefined, late)),
     // the relics and spell sprites are drawn at a third to a half of their size
     tick(loadPic('art/cuju.png').then(mipmapped)),
-    tick(loadPic('art/staff.png').then(mipmapped)),
-    tick(loadPic('art/fish.png').then(mipmapped)),
+    tick(pic('art/staff.png', late)),
+    tick(pic('art/fish.png', late)),
     // the awakened relics: Meteor Ball, Ruyi Staff, Morning Bell (art/monk/icons/evolved)
-    tick(Assets.load<Texture>('art/cuju_meteor.png').then(mipmapped)),
-    tick(Assets.load<Texture>('art/staff_ruyi.png').then(mipmapped)),
-    tick(Assets.load<Texture>('art/bell_relic.png').then(mipmapped)),
+    tick(pic('art/cuju_meteor.png', late)),
+    tick(pic('art/staff_ruyi.png', late)),
+    tick(pic('art/bell_relic.png', late)),
     // the Thunder Roar's lion head (art/monk/icons/evolved)
-    tick(Assets.load<Texture>('art/lion.png').then(mipmapped)),
+    tick(pic('art/lion.png', late)),
+    // a first run may deal the palm at its first level-up
     tick(Assets.load<Texture>('art/palm.png').then(mipmapped)),
     // the Mountain Palm's stone hand (art/monk/fx/mountain.txt)
-    tick(Assets.load<Texture>('art/mountain.png').then(mipmapped)),
+    tick(pic('art/mountain.png', late)),
     tick(ground === 'flat' ? null : loadPic(`art/ground/${ground}.png`)),
     tick(deco === 'none' ? null : loadDeco(platform, 'art/ground/deco')),
-    tick(scene.boss ? loadTao(platform, 'art/boss_monk') : null),
+    tick(scene.boss ? loadTao(platform, 'art/boss_monk', late) : null),
     // 128 px cells, drawn from about 40 to 100 px
     tick(loadDeco(platform, 'art/icons/icons')),
   ]);
+  if (late) void loadLate(() => Promise.all(late.map((load) => load())).then(() => undefined));
   return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
   ], monks: {}, boss, lobby: null, patrol: null, icons: new Map([...icons.frames, ...monkIcons.frames, ['fig_jiangshi', jiangshi.textures[0]]]), marsh: null, snow: null, ghost: null, peak: null, bosses: {} };
@@ -107,6 +118,14 @@ export function useWebp(on: boolean): void {
 export function loadPic(png: string): Promise<Texture> {
   if (!webp || !WEBP.has(png)) return Assets.load<Texture>(png);
   return Assets.load<Texture>(`${png.slice(0, -'.png'.length)}.webp`).catch(() => Assets.load<Texture>(png));
+}
+
+/** A picture, mipmapped; with `late`, a placeholder now that a late load fills. */
+function pic(png: string, late: Late | null): Promise<Texture> {
+  if (!late) return loadPic(png).then(mipmapped);
+  const tex = placeholder();
+  late.push(() => loadPic(png).then((real) => fill([tex], mipmapped(real).source)));
+  return Promise.resolve(tex);
 }
 
 /** Loads in flight or done, by name, so a load behind the first screen and a run's own share one fetch. */
@@ -191,19 +210,29 @@ export async function loadDeco(platform: Platform, path: string, mipmaps = true)
   return sliceDeco((JSON.parse(text) as { frames: DecoFrame[] }).frames, sheet);
 }
 
-/** A baked mob: <path>.json + <path>.png, or another png with the same layout. */
-export async function loadSheet(platform: Platform, path: string, png = `${path}.png`): Promise<MobSheet> {
-  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), Assets.load<Texture>(png)]);
-  return sliceSheet(JSON.parse(text) as SheetMeta, mipmapped(sheet));
+/** A baked mob: <path>.json + <path>.png, or another png with the same layout; with `late`, the png comes later. */
+export async function loadSheet(platform: Platform, path: string, png = `${path}.png`, late?: Late | null): Promise<MobSheet> {
+  const [text, sheet] = await Promise.all([platform.readText(`${path}.json`), late ? placeholder() : Assets.load<Texture>(png).then(mipmapped)]);
+  const out = sliceSheet(JSON.parse(text) as SheetMeta, sheet);
+  if (late) {
+    toFill(out.textures);
+    late.push(() => Assets.load<Texture>(png).then((real) => fill(out.textures, mipmapped(real).source)));
+  }
+  return out;
 }
 
-/** A .tao bundle unpacked into a folder: skeleton.json + atlas.png (tools/pack_tao.py). */
-export async function loadTao(platform: Platform, dir: string): Promise<TaoAsset> {
+/** A .tao bundle unpacked into a folder: skeleton.json + atlas.png (tools/pack_tao.py); with `late`, the atlas comes later. */
+export async function loadTao(platform: Platform, dir: string, late?: Late | null): Promise<TaoAsset> {
   const [text, atlas] = await Promise.all([
     platform.readText(`${dir}/skeleton.json`),
-    loadPic(`${dir}/atlas.png`),
+    late ? placeholder() : loadPic(`${dir}/atlas.png`).then(mipmapped),
   ]);
   const skeleton = JSON.parse(text) as TaoSkeleton;
   if (skeleton.version !== 1) throw new Error(`${dir}: unsupported .tao version ${skeleton.version}`);
-  return sliceAtlas(skeleton, mipmapped(atlas));
+  const out = sliceAtlas(skeleton, atlas);
+  if (late) {
+    toFill(out.textures.values());
+    late.push(() => loadPic(`${dir}/atlas.png`).then((real) => fill(out.textures.values(), mipmapped(real).source)));
+  }
+  return out;
 }

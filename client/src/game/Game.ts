@@ -45,6 +45,7 @@ import { monkRig, type Art } from './artTypes';
 import { frameWork } from './frameWork';
 import { drawStick, heroBacking, hurtTint, makeRing, nightTint, sideGround, stageGround, stickSprites } from './stageArt';
 import { sortSteadily } from './steadySort';
+import { lateHold } from '../lateArt';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -276,7 +277,7 @@ export class Game {
       this.picking = this.autoplay.pick(s, frameMs);
     }
     const over = this.watchEnd ? s.tick >= this.watchEnd : (s.outcome !== 'playing' && !this.reviving) || (s.players[0].offer.length > 0 && this.picking === undefined);
-    this.stepping = !this.paused && !over;
+    this.stepping = !this.paused && !over && !lateHold(s);
     const real = Math.min(frameMs / 1000, 0.05);
     if (!this.stepping) {
       // a stopped run stands still, but for the kill cam's slow motion after the hero goes down

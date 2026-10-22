@@ -2,6 +2,7 @@ import { Assets, type Renderer, type Texture } from 'pixi.js';
 import { mapOf, type MonkId } from '@hk/engine';
 import { loadDeco, loadMonkArt, loadSheet, loadTao } from './art';
 import { warmTextures } from './gpuWarm';
+import { lateArt } from './lateArt';
 import type { Art } from './game/Game';
 import { CHAPTER_PIECES, piecesFor, piecesKept, type ChapterPiece } from './game/chapterNeeds';
 import { GHOST_DECO, MARSH_DECO, PEAK_DECO, SNOW_DECO } from './game/decoView';
@@ -9,6 +10,9 @@ import { MARSH_MIST } from './game/mistView';
 import type { MobSheet } from './game/mobView';
 import type { SceneOptions } from './game/scene';
 import type { Platform } from './platform/types';
+
+/** The late art (lateArt.ts), for the shell's lobby-art queue. */
+export { lateArt };
 
 // The later chapters' art, piece by piece (game/chapterNeeds.ts): chapter 2's misty marsh (in
 // the main package, but no first run needs it), then the art packs (art/ch<n>/, WeChat
@@ -184,7 +188,7 @@ const FOES: ((art: Art) => MobSheet | undefined)[] = [
 
 /** Loads `chapter`'s art (so the next run starts sooner too) and picks its look from it. */
 export async function chapterLook(platform: Platform, scene: Scene, art: Art, chapter: number): Promise<ChapterLook> {
-  await loadChapterArt(platform, scene, art, chapter);
+  await Promise.all([loadChapterArt(platform, scene, art, chapter), lateArt()]);
   const map = mapOf(chapter);
   return { chapter, ground: art.stages[map - 1]?.ground ?? null, foe: FOES[map - 1](art)?.textures[0] ?? null };
 }
