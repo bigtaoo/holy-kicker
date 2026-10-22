@@ -12,6 +12,8 @@ export const es: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Supéralo para desbloquear: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} en cada partida',
     level: 'Nv.{level}',
     play: 'JUGAR',
     best: 'Récord: oleada {wave}',
@@ -188,6 +190,12 @@ export const es: Table<typeof en> = {
     runs: 'Termina {n} partidas',
   },
   results: {
+    newMonk: '¡{name} ya puede unirse!',
+    sutraCards: 'Ahora aparece en tus cartas de nivel',
+    newTier: '¡Ya cae equipo {tier}!',
+    tierMore: 'Equipo más fuerte a partir de ahora',
+    blessing: '¡Bendición estelar!',
+    blessingStat: '{stats} en cada partida',
     collect: 'Recoger en el lobby ({n})',
     lobby: 'Volver al lobby',
     mergeStep: 'Equipo para fusionar ×{n}',

@@ -12,7 +12,7 @@ describe('monks', () => {
   });
 
   it('buys a monk once with jade and plays him', () => {
-    const save = { ...newSave(), jade: monkPrice('novice') + 10 };
+    const save = { ...newSave(), cleared: 5, jade: monkPrice('novice') + 10 };
     expect(monkAffordable(save)).toBe(true);
     const bought = buyMonk(save, 'novice')!;
     expect(bought.jade).toBe(10);
@@ -23,8 +23,17 @@ describe('monks', () => {
     expect(chooseMonk(bought, 'kicker').monk).toBe('kicker');
   });
 
+  it('sells a monk only once his chapter is cleared', () => {
+    const rich = { ...newSave(), jade: 1000 };
+    expect(buyMonk(rich, 'novice')).toBeNull();
+    expect(monkAffordable(rich)).toBe(false);
+    expect(buyMonk({ ...rich, cleared: 5 }, 'novice')).not.toBeNull();
+    expect(buyMonk({ ...rich, cleared: 9 }, 'fat')).toBeNull();
+    expect(buyMonk({ ...rich, cleared: 10 }, 'fat')).not.toBeNull();
+  });
+
   it('reads back only owned monks', () => {
-    const save = buyMonk({ ...newSave(), jade: 1000 }, 'fat')!;
+    const save = buyMonk({ ...newSave(), cleared: 10, jade: 1000 }, 'fat')!;
     const back = parseSave(JSON.stringify(save));
     expect(back.monk).toBe('fat');
     expect(ownsMonk(back, 'fat')).toBe(true);

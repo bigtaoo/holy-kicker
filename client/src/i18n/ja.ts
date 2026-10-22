@@ -12,6 +12,8 @@ export const ja: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'クリアで解放：{list}',
+    nextBlessing: '★ {have}/{need}：毎回{stats}',
     level: 'Lv.{level}',
     play: '出陣',
     best: '最高：ウェーブ {wave}',
@@ -186,6 +188,12 @@ export const ja: Table<typeof en> = {
     runs: 'プレイを{n}回完了',
   },
   results: {
+    newMonk: '{name}が仲間にできる！',
+    sutraCards: 'レベルアップカードに出るようになった',
+    newTier: '{tier}の装備がドロップするように！',
+    tierMore: 'ここから装備が強くなる',
+    blessing: '星の加護！',
+    blessingStat: '毎回{stats}',
     collect: 'ロビーで受け取る ({n})',
     lobby: 'ロビーへ',
     mergeStep: '合成できる装備 ×{n}',

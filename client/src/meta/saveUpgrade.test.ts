@@ -29,7 +29,7 @@ describe('a save from the live build before lobby chests', () => {
     const pad = (a: number[], n = BALANCE.chapters) => [...a, ...Array(n - a.length).fill(0)];
     const { hardCleared: _, ...kept } = LIVE;
     expect(rest).toEqual({
-      ...kept, version: SAVE_VERSION, challenge: '', weeks: [],
+      ...kept, version: SAVE_VERSION, challenge: '', weeks: [], sutras: 1, // Lotus Steps (wave 25) stored by the unlock re-pacing
       best: pad(LIVE.best), chests: pad(LIVE.chests), stars: pad([1]), hardBest: pad([]), hardStars: pad([]), hardChests: pad([]),
       fell: pad([]), hardFell: pad([]),
       gear: Object.fromEntries(Object.entries(LIVE.gear).map(([k, v]) => [k, pad(v, TIERS)])),

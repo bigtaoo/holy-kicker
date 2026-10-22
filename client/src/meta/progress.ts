@@ -1,10 +1,12 @@
-import { RELIC_IDS, SUTRA_IDS, type RelicId, type SutraId } from '@hk/engine';
-import { BALANCE, type Chest, type SutraGoal } from './balance';
+import { BALANCE, type Chest } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { addDrops, grantRelics, rollDrops, type Drop } from './gear';
 import type { SaveData } from './save';
 import { trainingStats } from './training';
+import { earnedSutras, newUnlocks, sutraBits, unlockedRelics, type Unlock } from './unlocks';
 import type { FirstGift } from './welcome';
+
+export { earnedSutras, unlockedRelics } from './unlocks';
 
 // What a finished run pays and unlocks. Pure: takes a save (and, for the gear drops, a random
 // source giving [0, 1)), returns a new one.
@@ -49,12 +51,10 @@ export interface Reward {
   hardUnlocked: boolean;
   /** The run was hard mode. */
   hard: boolean;
-  /** The relic that first clear unlocked, if any. */
-  newRelic: RelicId | null;
+  /** What the run unlocked: relics, sutras, monks to buy, gear tiers, star blessings (unlocks.ts). */
+  unlocks: Unlock[];
   /** Evolutions done for the first time, now in the Codex. */
   newCodex: EvolveId[];
-  /** Sutras this run earned. */
-  newSutras: SutraId[];
   newBest: boolean;
   /** The chapter's best waves before this run (0 for a first try). */
   best: number;
@@ -172,7 +172,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   const stars = runStars(won, run.revived === true, run.lowest ?? 0);
   const bestStars = was.stars[i] ?? 0;
   const hardUnlocked = !hard && bestStars < 3 && stars >= 3;
-  const relics = RELIC_IDS.slice(0, cleared + 1);
+  const relics = unlockedRelics({ ...save, cleared });
   const drops = rollDrops(at, waves, relics, !save.firstRunDone, rand);
   // a real try on the first uncleared chapter that fell short gives grit for the next ones
   const tried = !won && atFrontier(save, run.chapter, hard) && waves >= BALANCE.grit.minWaves && save.grit < BALANCE.grit.max;
@@ -202,11 +202,11 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
     gear: grantRelics(addDrops(save.gear, drops), relics),
     grit,
   };
+  next.sutras = sutraBits(earnedSutras(next));
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
-    firstClear, stars, bestStars, hardUnlocked, hard, newRelic: firstClear ? (unlockedRelics(next).find((r) => !unlockedRelics(save).includes(r)) ?? null) : null,
+    firstClear, stars, bestStars, hardUnlocked, hard, unlocks: newUnlocks(save, next),
     newCodex: next.codex.filter((id) => !save.codex.includes(id)),
-    newSutras: earnedSutras(next).filter((id) => !earnedSutras(save).includes(id)),
     newBest: waves > was.best[i],
     best: was.best[i],
     drops,
@@ -243,7 +243,6 @@ export function tabLock(save: SaveData, tab: Tab): Lock | null {
   }
 }
 
-/** Relics the player may take into a run: the cuju, then one more per chapter cleared. */
 /** The tab is open but the player has never looked at it (Play is always seen). */
 export function tabNew(save: SaveData, tab: Tab): boolean {
   return tab !== 'play' && !tabLock(save, tab) && !(save.seen & (1 << TABS.indexOf(tab)));
@@ -252,32 +251,6 @@ export function tabNew(save: SaveData, tab: Tab): boolean {
 export function seeTab(save: SaveData, tab: Tab): SaveData {
   const bit = 1 << TABS.indexOf(tab);
   return save.seen & bit ? save : { ...save, seen: save.seen | bit };
-}
-
-export function unlockedRelics(save: SaveData): RelicId[] {
-  return RELIC_IDS.slice(0, save.cleared + 1);
-}
-
-/** The achievement that grants a sutra. */
-export function sutraGoal(id: SutraId): SutraGoal {
-  return BALANCE.sutras[SUTRA_IDS.indexOf(id)];
-}
-
-/** Whether the save has reached a sutra's goal. */
-function reached(save: SaveData, goal: SutraGoal): boolean {
-  if (goal.kind === 'wave') return save.best.some((b) => b >= goal.n);
-  if (goal.kind === 'codex') return save.codex.length >= goal.n;
-  if (goal.kind === 'runs') return save.runs >= goal.n;
-  return save.cleared >= goal.n;
-}
-
-/**
- * Sutras the player has earned (docs/design.md "Content line"): each adds a spell or a passive
- * to the run's level-up pool. Read from the progress the save already keeps, so nothing new is
- * stored and an earned sutra is never lost.
- */
-export function earnedSutras(save: SaveData): SutraId[] {
-  return SUTRA_IDS.filter((id) => reached(save, sutraGoal(id)));
 }
 
 /** The highest cleared stage (`stage`, a hard clear counting on), at least 1: what patrol and the shop pay by. */

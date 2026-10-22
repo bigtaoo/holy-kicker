@@ -12,6 +12,8 @@ export const th: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'ผ่านเพื่อปลดล็อก: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} ทุกรอบ',
     level: 'Lv.{level}',
     play: 'เล่น',
     best: 'ดีที่สุด: เวฟ {wave}',
@@ -187,6 +189,12 @@ export const th: Table<typeof en> = {
     runs: 'เล่นจบ {n} รอบ',
   },
   results: {
+    newMonk: '{name} เข้าร่วมได้แล้ว!',
+    sutraCards: 'ตอนนี้จะออกในการ์ดเลเวลอัป',
+    newTier: 'อุปกรณ์{tier}เริ่มดรอปแล้ว!',
+    tierMore: 'อุปกรณ์แข็งแกร่งขึ้นนับจากนี้',
+    blessing: 'พรแห่งดวงดาว!',
+    blessingStat: '{stats} ทุกรอบ',
     collect: 'ไปรับที่ล็อบบี้ ({n})',
     lobby: 'กลับล็อบบี้',
     mergeStep: 'อุปกรณ์ที่รวมได้ ×{n}',

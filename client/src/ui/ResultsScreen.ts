@@ -9,6 +9,7 @@ import type { DownInfo } from './deathInfo';
 import { menuCover } from './lobbyBars';
 import { nextStepPart, previewPart } from './resultsNext';
 import { fallPart, headerPart, newsLines, rewardsPart, type Part } from './resultsParts';
+import { unlocksPart } from './resultsUnlocks';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
 import { panelKey } from './panelKeys';
@@ -19,7 +20,7 @@ import { COLORS, button, buttonLabel, keyCap, label, panel, playTap } from './wi
 // a lost run a strip with what felled the hero, how near the next goal came and one short tip,
 // then the one step in the lobby that makes the next run go further (training the copper buys,
 // else gear to merge) with a button to its tab, and the rewards as icons (the copper counting up,
-// the gear in tier-coloured frames), with the rarer news (unlocks, chests, the welcome gift) in
+// the gear in tier-coloured frames), what the run unlocked as strips (resultsUnlocks.ts), the rarer news (chests, the welcome gift) in
 // short lines under them, and after a first clear the chapter it opened. The parts come in one
 // after another (resultsReveal.ts); a tap shows them all. Under the card two buttons: with
 // something waiting in the lobby (the count its red dots show, lobbyWaiting), Collect in the lobby
@@ -125,6 +126,8 @@ export class ResultsScreen implements Screen {
     const total = this.offer === 'paid' ? 2 * r.copper : r.copper;
     const rewards = rewardsPart(r, total, this.icons, INNER_W);
     zones.push(rewards);
+    const unlocks = unlocksPart(r.unlocks, this.icons, INNER_W);
+    if (unlocks) zones.push(unlocks);
     const news = new Container();
     let ny = 0;
     // a long line (a long translation) wraps rather than shrinking below the card's text size

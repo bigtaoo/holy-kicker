@@ -5,7 +5,6 @@ import type { Drop } from '../meta/gear';
 import type { Reward } from '../meta/progress';
 import type { RunRank } from '../net/backend';
 import { iconSprite, type IconSheet } from './buildBar';
-import { sutraName } from './cardText';
 import type { DownInfo } from './deathInfo';
 import { goalText } from './downPanel';
 import { fallFigures, fallIcon } from './fallIcons';
@@ -172,7 +171,7 @@ export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: n
 export type NewsLine = [string, number, number, { stroke: { color: number; width: number } }?];
 
 /**
- * The rarer news, one short line each: unlocks, the chests waiting in the lobby, the welcome gift
+ * The rarer news, one short line each: Codex entries, the chests waiting in the lobby, the welcome gift
  * and tomorrow's. One colour per meaning, as in the lobby: copper for copper, white for what the
  * run unlocked, jade for what waits to be claimed, the tier's colour for gear, red (outlined) for
  * hard mode.
@@ -181,9 +180,7 @@ export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
   const lines: NewsLine[] = [];
   if (doubled) lines.push([t('results.doubled'), 48, COLORS.copper]);
   if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 48, COLORS.danger, CARD_STROKE]);
-  if (r.newRelic) lines.push([t('results.newRelic', { name: t(`relic.${r.newRelic}.name`) }), 48, COLORS.text]);
   for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 48, COLORS.text]);
-  for (const id of r.newSutras) lines.push([t('results.newSutra', { name: sutraName(id) }), 48, COLORS.text]);
   if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.text]);
   // the chests reached wait in the lobby (progressChests.ts): one line, however many
   if (r.chests.length > 0) lines.push([t('results.chests', { n: r.chests.length }), 48, COLORS.jade]);

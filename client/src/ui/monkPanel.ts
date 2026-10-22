@@ -3,13 +3,14 @@ import { MONK_IDS, MONK_PASSIVE, MONK_STATS, type MonkId } from '@hk/engine';
 import { t } from '../i18n';
 import { monkPrice, ownsMonk } from '../meta/monks';
 import type { SaveData } from '../meta/save';
-import { iconSprite, type IconSheet } from './buildBar';
+import { monkChapter, monkOpen } from '../meta/unlocks';
+import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { breakAtPause } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The monk panel, opened from the lobby's avatar (docs/content.md "Monks"): one row per monk
 // with his portrait (art/icons/monks), his passive and stats, and a button to play as him or
-// to buy him with jade. Changes go to the lobby, which stores them and redraws.
+// to buy him with jade, or the chapter that puts him on sale. Changes go to the lobby, which stores them and redraws.
 
 export interface MonkActions {
   choose(id: MonkId): void;
@@ -25,7 +26,7 @@ const ROW_GAP = 20;
 const PORTRAIT: Record<MonkId, number> = { kicker: 310, fat: 310, novice: 270 };
 
 /** The numbers a monk's stats line shows, all as positive amounts (the text carries the sign). */
-function statArgs(id: MonkId): Record<string, number> {
+export function statArgs(id: MonkId): Record<string, number> {
   const s = MONK_STATS[id];
   return { hp: Math.abs(s.maxHp ?? 0), speed: Math.abs(s.speed ?? 0), xp: s.xp ?? 0, n: MONK_PASSIVE.dodgeEvery };
 }
@@ -74,6 +75,14 @@ function row(save: SaveData, id: MonkId, icons: IconSheet, a: MonkActions): { c:
     const b = button(t('monk.play'), 340, 96, () => a.choose(id), { size: 48 });
     b.position.set(bx, by);
     c.addChild(b);
+  } else if (!monkOpen(save, id)) {
+    // not for sale before his chapter (docs/unlocks.md): a lock and the chapter that opens him
+    const lock = lockIcon(icons, 56);
+    lock.position.set(textX + 28, by);
+    const l = fit(label(t('tab.unlockChapter', { n: monkChapter(id) }), 44, COLORS.dim, { align: 'left' }), textW - 120);
+    l.anchor.set(0, 0.5);
+    l.position.set(textX + 70, by);
+    c.addChild(l, lock);
   } else {
     const afford = save.jade >= monkPrice(id);
     const b = button(t('shop.price', { jade: monkPrice(id) }), 340, 96, () => a.buy(id), {

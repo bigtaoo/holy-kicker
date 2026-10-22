@@ -12,6 +12,8 @@ export const ru: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Пройди, чтобы открыть: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} в каждом забеге',
     level: 'Ур.{level}',
     play: 'ИГРАТЬ',
     best: 'Рекорд: волна {wave}',
@@ -187,6 +189,12 @@ export const ru: Table<typeof en> = {
     runs: 'Заверши забегов: {n}',
   },
   results: {
+    newMonk: '{name} теперь может присоединиться!',
+    sutraCards: 'Теперь выпадает в картах уровня',
+    newTier: 'Теперь выпадает снаряжение: {tier}!',
+    tierMore: 'Дальше снаряжение сильнее',
+    blessing: 'Звёздное благословение!',
+    blessingStat: '{stats} в каждом забеге',
     collect: 'Забрать в лобби ({n})',
     lobby: 'В лобби',
     mergeStep: 'Снаряжение для слияния ×{n}',

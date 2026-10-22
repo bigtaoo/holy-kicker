@@ -3,6 +3,7 @@ import { RELIC_IDS, type RelicId } from '@hk/engine';
 import { t } from '../i18n';
 import { unlockedRelics } from '../meta/progress';
 import type { SaveData } from '../meta/save';
+import { relicChapter } from '../meta/unlocks';
 import { THEME } from '../theme';
 import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
 import { COLORS, label } from './widgets';
@@ -56,7 +57,7 @@ export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId)
     c.eventMode = 'static';
     c.cursor = 'pointer';
     c.on('pointertap', () => {
-      if (!unlocked) return toast(t('tab.unlockChapter', { n: RELIC_IDS.indexOf(id) }));
+      if (!unlocked) return toast(t('tab.unlockChapter', { n: relicChapter(id) }));
       if (id !== chosen) select(id);
     });
     row.addChild(c);

@@ -12,6 +12,8 @@ export const pt: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Conclua para desbloquear: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} em cada partida',
     level: 'Nv.{level}',
     play: 'JOGAR',
     best: 'Recorde: onda {wave}',
@@ -188,6 +190,12 @@ export const pt: Table<typeof en> = {
     runs: 'Termine {n} partidas',
   },
   results: {
+    newMonk: '{name} já pode se juntar a você!',
+    sutraCards: 'Agora aparece nas suas cartas de nível',
+    newTier: 'Agora cai equipamento {tier}!',
+    tierMore: 'Equipamento mais forte daqui em diante',
+    blessing: 'Bênção estelar!',
+    blessingStat: '{stats} em cada partida',
     collect: 'Coletar no lobby ({n})',
     lobby: 'Voltar ao lobby',
     mergeStep: 'Equipamento para fundir ×{n}',

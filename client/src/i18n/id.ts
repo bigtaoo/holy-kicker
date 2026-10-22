@@ -12,6 +12,8 @@ export const id: Table<typeof en> = {
     keyEsc: 'Esc',
   },
   lobby: {
+    clearFor: 'Selesaikan untuk membuka: {list}',
+    nextBlessing: '★ {have}/{need}: {stats} tiap permainan',
     level: 'Lv.{level}',
     play: 'MAIN',
     best: 'Terbaik: gelombang {wave}',
@@ -188,6 +190,12 @@ export const id: Table<typeof en> = {
     runs: 'Selesaikan {n} permainan',
   },
   results: {
+    newMonk: '{name} kini bisa bergabung!',
+    sutraCards: 'Kini muncul di kartu naik level',
+    newTier: 'Perlengkapan {tier} kini jatuh!',
+    tierMore: 'Perlengkapan lebih kuat mulai sekarang',
+    blessing: 'Berkah bintang!',
+    blessingStat: '{stats} tiap permainan',
     collect: 'Ambil di lobi ({n})',
     lobby: 'Kembali ke lobi',
     mergeStep: 'Perlengkapan siap digabung ×{n}',
