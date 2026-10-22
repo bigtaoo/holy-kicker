@@ -113,14 +113,14 @@ export const monkJa: Table<typeof monkEn> = {
     knives: { name: '戒刀陣', desc: '最大 {n} 本の刀が周りを回り、揃うと一斉に飛ぶ', count: '刀 {a} → {b}' },
   },
   passive: {
-    calm: { name: '禅心', desc: '術のクールダウン −{n}%' },
+    calm: { name: '禅心', desc: '術のクールダウン −{n}%', blurb: '術がより早く使える' },
     iron: { name: '鉄頭功' },
     legs: { name: '羅漢脚' },
-    eye: { name: '慧眼', desc: '術の範囲 +{n}%' },
+    eye: { name: '慧眼', desc: '術の範囲 +{n}%', blurb: '術がより広く当たる' },
     rice: { name: '斎飯' },
     wrath: { name: '怒目' },
     karma: { name: '善縁' },
-    focus: { name: '定力', desc: '術の持続 +{n}%、被弾後の無敵 +{m}%' },
+    focus: { name: '定力', desc: '術の持続 +{n}%、被弾後の無敵 +{m}%', blurb: '術が長く続き、被弾後も安全' },
   },
   boss: {
     abbot: '堕ちた方丈',

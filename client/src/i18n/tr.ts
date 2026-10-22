@@ -130,6 +130,7 @@ export const tr: Table<typeof en> = {
   card: {
     levelUp: 'Seviye atladın!',
     pickOne: 'Birini seç',
+    suggested: 'Öneri',
     gained: 'Öğrenildi: {name}',
     new: 'Yeni!',
     level: 'Sv. {a} → {b}',
@@ -166,11 +167,11 @@ export const tr: Table<typeof en> = {
     bolt: { count: 'Sıçrama {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'Azami can +%{n}' },
-    legs: { desc: 'Hareket hızı +%{n}' },
-    rice: { desc: 'Saniyede %{n} can yenile' },
-    wrath: { desc: 'Kritik şansı +%{n}' },
-    karma: { desc: 'TP +%{n}, toplama alanı +%{m}' },
+    iron: { desc: 'Azami can +%{n}', blurb: 'Daha çok darbeye dayan' },
+    legs: { desc: 'Hareket hızı +%{n}', blurb: 'Daha hızlı koş, kolay kaç' },
+    rice: { desc: 'Saniyede %{n} can yenile', blurb: 'Savaşırken yavaşça iyileş' },
+    wrath: { desc: 'Kritik şansı +%{n}', blurb: 'Daha sık kritik vur' },
+    karma: { desc: 'TP +%{n}, toplama alanı +%{m}', blurb: 'Daha hızlı seviye atla' },
   },
   story: {
     quote: '“{text}”',

@@ -113,14 +113,14 @@ export const monkPt: Table<typeof monkEn> = {
     knives: { name: 'Círculo de Lâminas', desc: 'Até {n} facas giram ao seu redor e depois disparam', count: 'Facas {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Mente Calma', desc: 'Recarga de magias −{n}%' },
+    calm: { name: 'Mente Calma', desc: 'Recarga de magias −{n}%', blurb: 'Suas magias voltam mais cedo' },
     iron: { name: 'Cabeça de Ferro' },
     legs: { name: 'Pernas de Arhat' },
-    eye: { name: 'Olho da Sabedoria', desc: 'Área de magias +{n}%' },
+    eye: { name: 'Olho da Sabedoria', desc: 'Área de magias +{n}%', blurb: 'Suas magias cobrem uma área maior' },
     rice: { name: 'Arroz de Esmola' },
     wrath: { name: 'Ira' },
     karma: { name: 'Carma' },
-    focus: { name: 'Foco', desc: 'Duração de magias +{n}%, proteção após um golpe +{m}%' },
+    focus: { name: 'Foco', desc: 'Duração de magias +{n}%, proteção após um golpe +{m}%', blurb: 'Magias duram mais, mais seguro após um golpe' },
   },
   boss: {
     abbot: 'Abade Caído',

@@ -129,6 +129,7 @@ export const ru: Table<typeof en> = {
   card: {
     levelUp: 'Новый уровень!',
     pickOne: 'Выбери одно',
+    suggested: 'Совет',
     gained: 'Изучено: {name}',
     new: 'Новое!',
     level: 'Ур. {a} → {b}',
@@ -165,11 +166,11 @@ export const ru: Table<typeof en> = {
     bolt: { count: 'Прыжки {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'Макс. здоровье +{n}%' },
-    legs: { desc: 'Скорость +{n}%' },
-    rice: { desc: 'Лечит {n}% здоровья в секунду' },
-    wrath: { desc: 'Шанс крита +{n}%' },
-    karma: { desc: 'Опыт +{n}%, радиус сбора +{m}%' },
+    iron: { desc: 'Макс. здоровье +{n}%', blurb: 'Выдерживай больше ударов' },
+    legs: { desc: 'Скорость +{n}%', blurb: 'Бегай быстрее, уворачивайся легче' },
+    rice: { desc: 'Лечит {n}% здоровья в секунду', blurb: 'Понемногу лечись в бою' },
+    wrath: { desc: 'Шанс крита +{n}%', blurb: 'Чаще наноси критические удары' },
+    karma: { desc: 'Опыт +{n}%, радиус сбора +{m}%', blurb: 'Быстрее повышай уровень' },
   },
   story: {
     quote: '«{text}»',

@@ -130,6 +130,7 @@ export const vi: Table<typeof en> = {
   card: {
     levelUp: 'Lên cấp!',
     pickOne: 'Chọn một',
+    suggested: 'Gợi ý',
     gained: 'Đã học: {name}',
     new: 'Mới!',
     level: 'Lv {a} → {b}',
@@ -166,11 +167,11 @@ export const vi: Table<typeof en> = {
     bolt: { count: 'Lần nhảy {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'Máu tối đa +{n}%' },
-    legs: { desc: 'Tốc độ chạy +{n}%' },
-    rice: { desc: 'Hồi {n}% máu mỗi giây' },
-    wrath: { desc: 'Tỉ lệ chí mạng +{n}%' },
-    karma: { desc: 'EXP +{n}%, tầm nhặt +{m}%' },
+    iron: { desc: 'Máu tối đa +{n}%', blurb: 'Chịu được nhiều đòn hơn' },
+    legs: { desc: 'Tốc độ chạy +{n}%', blurb: 'Chạy nhanh hơn, dễ né hơn' },
+    rice: { desc: 'Hồi {n}% máu mỗi giây', blurb: 'Hồi máu dần khi chiến đấu' },
+    wrath: { desc: 'Tỉ lệ chí mạng +{n}%', blurb: 'Chí mạng thường xuyên hơn' },
+    karma: { desc: 'EXP +{n}%, tầm nhặt +{m}%', blurb: 'Lên cấp nhanh hơn' },
   },
   story: {
     quote: '“{text}”',

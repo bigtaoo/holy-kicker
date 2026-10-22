@@ -114,14 +114,14 @@ export const corgiKo: Table<typeof corgiEn> = {
     knives: { name: '나이프 링', desc: '칼 최대 {n}자루가 주위를 돌다 한꺼번에 날아감', count: '칼 {a} → {b}' },
   },
   passive: {
-    calm: { name: '냉각수', desc: '가젯 재사용 대기 −{n}%' },
+    calm: { name: '냉각수', desc: '가젯 재사용 대기 −{n}%', blurb: '가젯을 더 빨리 다시 쓴다' },
     iron: { name: '장갑판' },
     legs: { name: '제트 부츠' },
-    eye: { name: '광각 렌즈', desc: '가젯 범위 +{n}%' },
+    eye: { name: '광각 렌즈', desc: '가젯 범위 +{n}%', blurb: '가젯이 더 넓게 맞힌다' },
     rice: { name: '사료' },
     wrath: { name: '조준경' },
     karma: { name: '간식 자석' },
-    focus: { name: '배터리', desc: '가젯 지속 +{n}%, 피격 후 무적 +{m}%' },
+    focus: { name: '배터리', desc: '가젯 지속 +{n}%, 피격 후 무적 +{m}%', blurb: '가젯이 오래가고, 맞은 뒤 더 안전' },
   },
   boss: {
     abbot: '타이탄 딱정벌레',

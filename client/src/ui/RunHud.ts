@@ -83,7 +83,7 @@ export class RunHud implements Screen {
   private cards: CardPanel | null = null;
   /** The card the keys would take, on a desktop. */
   private cardFocus = { focus: 0 };
-  private cardNudge: CardNudgeState = { suggest: 0, touched: false };
+  private cardNudge: CardNudgeState = { suggest: 0, touched: false, tagged: false };
   private picked = false;
   private build: BuildBar | null = null;
   private slots: readonly BuildSlot[] = [];
@@ -196,9 +196,12 @@ export class RunHud implements Screen {
     if (this.levelText && this.levelText.text !== t('run.level', { level })) this.levelText.text = t('run.level', { level });
   }
 
-  /** The level-up or shrine cards under `title`, a hand tapping card `suggest` for a player who hesitates; they stay until hideOffer. */
-  showOffer(title: string, cards: CardText[], suggest = 0): void {
-    this.cardNudge = { suggest, touched: false };
+  /**
+   * The level-up or shrine cards under `title`, a hand tapping card `suggest` for a player who
+   * hesitates and, if `tagged`, a tag on it from the start; they stay until hideOffer.
+   */
+  showOffer(title: string, cards: CardText[], suggest = 0, tagged = false): void {
+    this.cardNudge = { suggest, touched: false, tagged };
     this.offer = cards;
     this.offerTitle = title;
     this.offerAge = 0;

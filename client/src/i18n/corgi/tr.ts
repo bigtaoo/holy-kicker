@@ -114,14 +114,14 @@ export const corgiTr: Table<typeof corgiEn> = {
     knives: { name: 'Bıçak Halkası', desc: 'En fazla {n} bıçak etrafında döner, sonra fırlar', count: 'Bıçak {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Soğutucu', desc: 'Gadget bekleme −%{n}' },
+    calm: { name: 'Soğutucu', desc: 'Gadget bekleme −%{n}', blurb: 'Gadget’ların daha çabuk hazır olur' },
     iron: { name: 'Zırh Plakası' },
     legs: { name: 'Jet Botlar' },
-    eye: { name: 'Geniş Lens', desc: 'Gadget alanı +%{n}' },
+    eye: { name: 'Geniş Lens', desc: 'Gadget alanı +%{n}', blurb: 'Gadget’ların daha geniş alana vurur' },
     rice: { name: 'Mama' },
     wrath: { name: 'Dürbün' },
     karma: { name: 'İkram Mıknatısı' },
-    focus: { name: 'Pil', desc: 'Gadget süresi +%{n}, darbe sonrası koruma +%{m}' },
+    focus: { name: 'Pil', desc: 'Gadget süresi +%{n}, darbe sonrası koruma +%{m}', blurb: 'Gadget’lar daha uzun sürer, darbeden sonra daha güvende' },
   },
   boss: {
     abbot: 'Titan Böcek',

@@ -37,6 +37,8 @@ export function lyingShare(s: SimState, p: Player): number {
 
 export interface RunWatchDeps {
   chapter: number;
+  /** One of a new player's first runs (BALANCE.novice.runs): the suggested card wears a tag. */
+  novice?: boolean;
   portal: Portal;
   ads: Ads;
   net: Backend;
@@ -162,7 +164,7 @@ export class RunWatch {
         hud.gained(cardText(p.offer[i], p).name);
       } else {
         const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
-        hud.showOffer(title, p.offer.map((c) => cardText(c, p)), suggestCard(p));
+        hud.showOffer(title, p.offer.map((c) => cardText(c, p)), suggestCard(p), !!this.d.novice);
       }
     } else if (p.offer.length === 0 && this.shownOffer) {
       this.shownOffer = null;

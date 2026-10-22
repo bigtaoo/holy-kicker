@@ -113,14 +113,14 @@ export const corgiIt: Table<typeof corgiEn> = {
     knives: { name: 'Anello di Coltelli', desc: 'Fino a {n} coltelli ti girano intorno, poi partono', count: 'Coltelli {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Refrigerante', desc: 'Ricarica gadget −{n}%' },
+    calm: { name: 'Refrigerante', desc: 'Ricarica gadget −{n}%', blurb: 'I tuoi gadget tornano prima' },
     iron: { name: 'Placcatura' },
     legs: { name: 'Stivali a Reazione' },
-    eye: { name: 'Grandangolo', desc: 'Area gadget +{n}%' },
+    eye: { name: 'Grandangolo', desc: 'Area gadget +{n}%', blurb: 'I tuoi gadget coprono più area' },
     rice: { name: 'Crocchette' },
     wrath: { name: 'Mirino' },
     karma: { name: 'Calamita per Bocconcini' },
-    focus: { name: 'Batteria', desc: 'Durata gadget +{n}%, protezione dopo un colpo +{m}%' },
+    focus: { name: 'Batteria', desc: 'Durata gadget +{n}%, protezione dopo un colpo +{m}%', blurb: 'Gadget più lunghi, più sicuro dopo un colpo' },
   },
   boss: {
     abbot: 'Scarabeo Titano',

@@ -114,14 +114,14 @@ export const corgiVi: Table<typeof corgiEn> = {
     knives: { name: 'Vòng Dao', desc: 'Tối đa {n} con dao xoay quanh bạn, rồi bay ra', count: 'Dao {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Chất Làm Mát', desc: 'Hồi chiêu gadget −{n}%' },
+    calm: { name: 'Chất Làm Mát', desc: 'Hồi chiêu gadget −{n}%', blurb: 'Gadget hồi lại nhanh hơn' },
     iron: { name: 'Giáp Tấm' },
     legs: { name: 'Giày Phản Lực' },
-    eye: { name: 'Kính Góc Rộng', desc: 'Phạm vi gadget +{n}%' },
+    eye: { name: 'Kính Góc Rộng', desc: 'Phạm vi gadget +{n}%', blurb: 'Gadget đánh trúng vùng rộng hơn' },
     rice: { name: 'Hạt Thức Ăn' },
     wrath: { name: 'Ống Ngắm' },
     karma: { name: 'Nam Châm Đồ Ăn Vặt' },
-    focus: { name: 'Pin', desc: 'Thời gian gadget +{n}%, bất tử sau khi trúng đòn +{m}%' },
+    focus: { name: 'Pin', desc: 'Thời gian gadget +{n}%, bất tử sau khi trúng đòn +{m}%', blurb: 'Gadget kéo dài hơn, an toàn hơn sau khi trúng đòn' },
   },
   boss: {
     abbot: 'Bọ Cánh Cứng Titan',

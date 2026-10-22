@@ -113,14 +113,14 @@ export const monkFr: Table<typeof monkEn> = {
     knives: { name: 'Cercle de Lames', desc: 'Jusqu’à {n} couteaux tournent autour de toi, puis partent', count: 'Couteaux {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Esprit calme', desc: 'Recharge des sorts −{n}%' },
+    calm: { name: 'Esprit calme', desc: 'Recharge des sorts −{n}%', blurb: 'Tes sorts reviennent plus vite' },
     iron: { name: 'Tête de fer' },
     legs: { name: 'Jambes d’arhat' },
-    eye: { name: 'Œil de sagesse', desc: 'Zone des sorts +{n}%' },
+    eye: { name: 'Œil de sagesse', desc: 'Zone des sorts +{n}%', blurb: 'Tes sorts touchent une zone plus large' },
     rice: { name: 'Riz d’aumône' },
     wrath: { name: 'Colère' },
     karma: { name: 'Karma' },
-    focus: { name: 'Concentration', desc: 'Durée des sorts +{n}%, protection après un coup +{m}%' },
+    focus: { name: 'Concentration', desc: 'Durée des sorts +{n}%, protection après un coup +{m}%', blurb: 'Sorts plus longs, plus sûr après un coup' },
   },
   boss: {
     abbot: 'Abbé déchu',

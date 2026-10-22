@@ -113,14 +113,14 @@ export const corgiEs: Table<typeof corgiEn> = {
     knives: { name: 'Anillo de Cuchillos', desc: 'Hasta {n} cuchillos giran a tu alrededor y luego salen disparados', count: 'Cuchillos {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Refrigerante', desc: 'Recarga de gadgets −{n}%' },
+    calm: { name: 'Refrigerante', desc: 'Recarga de gadgets −{n}%', blurb: 'Tus gadgets vuelven antes' },
     iron: { name: 'Blindaje' },
     legs: { name: 'Botas propulsoras' },
-    eye: { name: 'Gran angular', desc: 'Área de gadgets +{n}%' },
+    eye: { name: 'Gran angular', desc: 'Área de gadgets +{n}%', blurb: 'Tus gadgets cubren más área' },
     rice: { name: 'Pienso' },
     wrath: { name: 'Mirilla' },
     karma: { name: 'Imán de golosinas' },
-    focus: { name: 'Batería', desc: 'Duración de gadgets +{n}%, protección tras un golpe +{m}%' },
+    focus: { name: 'Batería', desc: 'Duración de gadgets +{n}%, protección tras un golpe +{m}%', blurb: 'Gadgets más largos, más seguro tras un golpe' },
   },
   boss: {
     abbot: 'Escarabajo titán',

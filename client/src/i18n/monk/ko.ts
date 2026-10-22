@@ -113,14 +113,14 @@ export const monkKo: Table<typeof monkEn> = {
     knives: { name: '계도진', desc: '칼 최대 {n}자루가 주위를 돌다 한꺼번에 날아감', count: '칼 {a} → {b}' },
   },
   passive: {
-    calm: { name: '선심', desc: '술법 재사용 대기 −{n}%' },
+    calm: { name: '선심', desc: '술법 재사용 대기 −{n}%', blurb: '술법을 더 빨리 다시 쓴다' },
     iron: { name: '철두공' },
     legs: { name: '나한각' },
-    eye: { name: '혜안', desc: '술법 범위 +{n}%' },
+    eye: { name: '혜안', desc: '술법 범위 +{n}%', blurb: '술법이 더 넓게 맞힌다' },
     rice: { name: '공양밥' },
     wrath: { name: '분노' },
     karma: { name: '선연' },
-    focus: { name: '집중', desc: '술법 지속 +{n}%, 피격 후 무적 +{m}%' },
+    focus: { name: '집중', desc: '술법 지속 +{n}%, 피격 후 무적 +{m}%', blurb: '술법이 오래가고, 맞은 뒤 더 안전' },
   },
   boss: {
     abbot: '타락한 방장',

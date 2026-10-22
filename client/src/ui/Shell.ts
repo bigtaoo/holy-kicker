@@ -358,7 +358,7 @@ export class Shell {
     // the first run teaches moving; a replayed first chapter, a resumed run or a dev bot's does not
     const teach = !this.save.firstRunDone && this.scene.waves && !left && !this.scene.autoplay && !this.scene.record;
     this.watch = new RunWatch(this.game, this.hud, {
-      chapter, portal: this.portal, ads: this.ads, net: this.net, past: runPast(this.save, chapter, this.hard),
+      chapter, novice: this.save.runs < BALANCE.novice.runs, portal: this.portal, ads: this.ads, net: this.net, past: runPast(this.save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
       kills: () => this.kills, keepRun: () => this.keepRun(), end: () => this.endRun(), cheer: () => this.sound.play('cleared'),
     }, !!teach);

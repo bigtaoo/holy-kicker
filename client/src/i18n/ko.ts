@@ -128,6 +128,7 @@ export const ko: Table<typeof en> = {
   card: {
     levelUp: '레벨 업!',
     pickOne: '하나를 고르세요',
+    suggested: '추천',
     gained: '습득: {name}',
     new: 'NEW!',
     level: 'Lv {a} → {b}',
@@ -164,11 +165,11 @@ export const ko: Table<typeof en> = {
     bolt: { count: '도약 {a} → {b}회' },
   },
   passive: {
-    iron: { desc: '최대 체력 +{n}%' },
-    legs: { desc: '이동 속도 +{n}%' },
-    rice: { desc: '초당 체력 {n}% 회복' },
-    wrath: { desc: '치명타 확률 +{n}%' },
-    karma: { desc: '경험치 +{n}%, 획득 범위 +{m}%' },
+    iron: { desc: '최대 체력 +{n}%', blurb: '더 많이 맞아도 버틴다' },
+    legs: { desc: '이동 속도 +{n}%', blurb: '더 빨리 달려 피하기 쉬워진다' },
+    rice: { desc: '초당 체력 {n}% 회복', blurb: '싸우는 동안 조금씩 회복' },
+    wrath: { desc: '치명타 확률 +{n}%', blurb: '치명타가 더 자주 터진다' },
+    karma: { desc: '경험치 +{n}%, 획득 범위 +{m}%', blurb: '더 빨리 레벨업' },
   },
   story: {
     quote: '“{text}”',

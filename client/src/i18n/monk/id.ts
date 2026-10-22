@@ -113,14 +113,14 @@ export const monkId: Table<typeof monkEn> = {
     knives: { name: 'Lingkaran Pisau', desc: 'Hingga {n} pisau berputar di sekitarmu, lalu melesat', count: 'Pisau {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Pikiran Tenang', desc: 'Jeda jurus −{n}%' },
+    calm: { name: 'Pikiran Tenang', desc: 'Jeda jurus −{n}%', blurb: 'Jurus siap lagi lebih cepat' },
     iron: { name: 'Kepala Besi' },
     legs: { name: 'Kaki Arhat' },
-    eye: { name: 'Mata Bijak', desc: 'Area jurus +{n}%' },
+    eye: { name: 'Mata Bijak', desc: 'Area jurus +{n}%', blurb: 'Jurus mengenai area lebih luas' },
     rice: { name: 'Nasi Sedekah' },
     wrath: { name: 'Murka' },
     karma: { name: 'Karma' },
-    focus: { name: 'Fokus', desc: 'Durasi jurus +{n}%, kebal usai kena +{m}%' },
+    focus: { name: 'Fokus', desc: 'Durasi jurus +{n}%, kebal usai kena +{m}%', blurb: 'Jurus bertahan lebih lama, lebih aman usai kena' },
   },
   boss: {
     abbot: 'Kepala Biara Sesat',

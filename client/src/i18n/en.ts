@@ -128,6 +128,7 @@ export const en = {
   card: {
     levelUp: 'Level up!',
     pickOne: 'Pick one',
+    suggested: 'Top pick',
     gained: 'Learned: {name}',
     new: 'New!',
     level: 'Lv.{a} → {b}',
@@ -164,11 +165,11 @@ export const en = {
     bolt: { count: 'Jumps {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'Max health +{n}%' },
-    legs: { desc: 'Move speed +{n}%' },
-    rice: { desc: 'Heal {n}% health per second' },
-    wrath: { desc: 'Crit chance +{n}%' },
-    karma: { desc: 'XP +{n}%, pickup range +{m}%' },
+    iron: { desc: 'Max health +{n}%', blurb: 'Take more hits before you fall' },
+    legs: { desc: 'Move speed +{n}%', blurb: 'Run faster and dodge more easily' },
+    rice: { desc: 'Heal {n}% health per second', blurb: 'Slowly heal while you fight' },
+    wrath: { desc: 'Crit chance +{n}%', blurb: 'Land critical hits more often' },
+    karma: { desc: 'XP +{n}%, pickup range +{m}%', blurb: 'Level up faster' },
   },
   story: {
     quote: '"{text}"',

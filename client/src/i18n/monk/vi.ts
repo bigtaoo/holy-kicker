@@ -113,14 +113,14 @@ export const monkVi: Table<typeof monkEn> = {
     knives: { name: 'Vòng Đao', desc: 'Tối đa {n} con dao xoay quanh bạn, rồi bay ra', count: 'Dao {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Thiền Tâm', desc: 'Hồi chiêu phép −{n}%' },
+    calm: { name: 'Thiền Tâm', desc: 'Hồi chiêu phép −{n}%', blurb: 'Phép hồi lại nhanh hơn' },
     iron: { name: 'Thiết Đầu Công' },
     legs: { name: 'Chân La Hán' },
-    eye: { name: 'Tuệ Nhãn', desc: 'Phạm vi phép +{n}%' },
+    eye: { name: 'Tuệ Nhãn', desc: 'Phạm vi phép +{n}%', blurb: 'Phép đánh trúng vùng rộng hơn' },
     rice: { name: 'Cơm Chay' },
     wrath: { name: 'Nộ Mục' },
     karma: { name: 'Thiện Duyên' },
-    focus: { name: 'Định Lực', desc: 'Thời gian phép +{n}%, bất tử sau khi trúng đòn +{m}%' },
+    focus: { name: 'Định Lực', desc: 'Thời gian phép +{n}%, bất tử sau khi trúng đòn +{m}%', blurb: 'Phép kéo dài hơn, an toàn hơn sau khi trúng đòn' },
   },
   boss: {
     abbot: 'Phương Trượng Sa Ngã',

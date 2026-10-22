@@ -114,14 +114,14 @@ export const corgiPl: Table<typeof corgiEn> = {
     knives: { name: 'Pierścień Noży', desc: 'Do {n} noży krąży wokół ciebie, potem wylatują', count: 'Noże {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Chłodziwo', desc: 'Odnowienie gadżetów −{n}%' },
+    calm: { name: 'Chłodziwo', desc: 'Odnowienie gadżetów −{n}%', blurb: 'Gadżety wracają szybciej' },
     iron: { name: 'Pancerz' },
     legs: { name: 'Odrzutowe Buty' },
-    eye: { name: 'Szerokie Soczewki', desc: 'Obszar gadżetów +{n}%' },
+    eye: { name: 'Szerokie Soczewki', desc: 'Obszar gadżetów +{n}%', blurb: 'Gadżety trafiają większy obszar' },
     rice: { name: 'Chrupki' },
     wrath: { name: 'Luneta' },
     karma: { name: 'Magnes na Smakołyki' },
-    focus: { name: 'Akumulator', desc: 'Czas trwania gadżetów +{n}%, ochrona po trafieniu +{m}%' },
+    focus: { name: 'Akumulator', desc: 'Czas trwania gadżetów +{n}%, ochrona po trafieniu +{m}%', blurb: 'Gadżety działają dłużej, bezpieczniej po trafieniu' },
   },
   boss: {
     abbot: 'Tytaniczny Żuk',

@@ -113,14 +113,14 @@ export const monkZh: Table<typeof monkEn> = {
     knives: { name: '戒刀阵', desc: '最多 {n} 把刀绕身旋转，满了齐射', count: '飞刀 {a} → {b} 把' },
   },
   passive: {
-    calm: { name: '禅心', desc: '法术冷却 −{n}%' },
+    calm: { name: '禅心', desc: '法术冷却 −{n}%', blurb: '法术更快再次释放' },
     iron: { name: '铁头功' },
     legs: { name: '罗汉腿' },
-    eye: { name: '慧眼', desc: '法术范围 +{n}%' },
+    eye: { name: '慧眼', desc: '法术范围 +{n}%', blurb: '法术打得更大片' },
     rice: { name: '斋饭' },
     wrath: { name: '怒目' },
     karma: { name: '善缘' },
-    focus: { name: '定力', desc: '法术持续 +{n}%，受击后无敌 +{m}%' },
+    focus: { name: '定力', desc: '法术持续 +{n}%，受击后无敌 +{m}%', blurb: '法术持续更久，挨打后更安全' },
   },
   boss: {
     abbot: '堕落方丈',

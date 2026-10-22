@@ -198,7 +198,9 @@ export function cardText(card: Card, p: Player): CardText {
   const id = card.id as PassiveId;
   const slot = p.passives.find((s) => s.id === id);
   return {
-    kind: 'passive', name: t(`passive.${id}.name`), tag: slot ? levelTag(slot.level) : t('card.new'), fresh: !slot, lines: slot ? passiveLines(id, slot.level) : [passiveDesc(id)], ...item,
+    kind: 'passive', name: t(`passive.${id}.name`), tag: slot ? levelTag(slot.level) : t('card.new'), fresh: !slot,
+    // a new passive says in words what it is for before its number, which alone means little to a new player
+    lines: slot ? passiveLines(id, slot.level) : [t(`passive.${id}.blurb`), passiveDesc(id)], ...item,
   };
 }
 

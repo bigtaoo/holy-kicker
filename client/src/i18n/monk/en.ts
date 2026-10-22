@@ -112,14 +112,14 @@ export const monkEn = {
     knives: { name: 'Blade Circle', desc: 'Up to {n} knives circle you, then fly out', count: 'Knives {a} → {b}' },
   },
   passive: {
-    calm: { name: 'Calm Mind', desc: 'Spell cooldown −{n}%' },
+    calm: { name: 'Calm Mind', desc: 'Spell cooldown −{n}%', blurb: 'Your spells come back sooner' },
     iron: { name: 'Iron Head' },
     legs: { name: 'Arhat Legs' },
-    eye: { name: 'Wisdom Eye', desc: 'Spell area +{n}%' },
+    eye: { name: 'Wisdom Eye', desc: 'Spell area +{n}%', blurb: 'Your spells hit a wider area' },
     rice: { name: 'Alms Rice' },
     wrath: { name: 'Wrath' },
     karma: { name: 'Karma' },
-    focus: { name: 'Focus', desc: 'Spell duration +{n}%, invincibility after a hit +{m}%' },
+    focus: { name: 'Focus', desc: 'Spell duration +{n}%, invincibility after a hit +{m}%', blurb: 'Spells last longer; safer after a hit' },
   },
   boss: {
     abbot: 'Fallen Abbot',

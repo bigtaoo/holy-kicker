@@ -128,6 +128,7 @@ export const zh: Table<typeof en> = {
   card: {
     levelUp: '升级！',
     pickOne: '选择一项',
+    suggested: '推荐',
     gained: '习得：{name}',
     new: '新！',
     level: '等级 {a} → {b}',
@@ -164,11 +165,11 @@ export const zh: Table<typeof en> = {
     bolt: { count: '跳跃 {a} → {b} 次' },
   },
   passive: {
-    iron: { desc: '生命上限 +{n}%' },
-    legs: { desc: '移速 +{n}%' },
-    rice: { desc: '每秒回复 {n}% 生命' },
-    wrath: { desc: '暴击率 +{n}%' },
-    karma: { desc: '经验 +{n}%，拾取范围 +{m}%' },
+    iron: { desc: '生命上限 +{n}%', blurb: '更耐打，不容易倒下' },
+    legs: { desc: '移速 +{n}%', blurb: '跑得更快，更容易躲开' },
+    rice: { desc: '每秒回复 {n}% 生命', blurb: '战斗中慢慢回血' },
+    wrath: { desc: '暴击率 +{n}%', blurb: '更常打出暴击' },
+    karma: { desc: '经验 +{n}%，拾取范围 +{m}%', blurb: '升级更快' },
   },
   story: {
     quote: '“{text}”',

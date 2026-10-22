@@ -129,6 +129,7 @@ export const th: Table<typeof en> = {
   card: {
     levelUp: 'เลเวลอัป!',
     pickOne: 'เลือก 1 อย่าง',
+    suggested: 'แนะนำ',
     gained: 'ได้เรียนรู้: {name}',
     new: 'ใหม่!',
     level: 'Lv {a} → {b}',
@@ -165,11 +166,11 @@ export const th: Table<typeof en> = {
     bolt: { count: 'กระโดด {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'พลังชีวิตสูงสุด +{n}%' },
-    legs: { desc: 'ความเร็วเดิน +{n}%' },
-    rice: { desc: 'ฟื้นฟู {n}% พลังชีวิตต่อวินาที' },
-    wrath: { desc: 'โอกาสคริ +{n}%' },
-    karma: { desc: 'XP +{n}%, ระยะเก็บของ +{m}%' },
+    iron: { desc: 'พลังชีวิตสูงสุด +{n}%', blurb: 'ทนการโจมตีได้มากขึ้น' },
+    legs: { desc: 'ความเร็วเดิน +{n}%', blurb: 'วิ่งเร็วขึ้น หลบง่ายขึ้น' },
+    rice: { desc: 'ฟื้นฟู {n}% พลังชีวิตต่อวินาที', blurb: 'ค่อย ๆ ฟื้นพลังระหว่างสู้' },
+    wrath: { desc: 'โอกาสคริ +{n}%', blurb: 'ติดคริบ่อยขึ้น' },
+    karma: { desc: 'XP +{n}%, ระยะเก็บของ +{m}%', blurb: 'เลเวลอัปเร็วขึ้น' },
   },
   story: {
     quote: '"{text}"',

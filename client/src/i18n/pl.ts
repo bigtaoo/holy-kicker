@@ -130,6 +130,7 @@ export const pl: Table<typeof en> = {
   card: {
     levelUp: 'Awans!',
     pickOne: 'Wybierz jedno',
+    suggested: 'Polecane',
     gained: 'Nauczono: {name}',
     new: 'Nowe!',
     level: 'Poz. {a} → {b}',
@@ -166,11 +167,11 @@ export const pl: Table<typeof en> = {
     bolt: { count: 'Przeskoki {a} → {b}' },
   },
   passive: {
-    iron: { desc: 'Maks. zdrowie +{n}%' },
-    legs: { desc: 'Szybkość ruchu +{n}%' },
-    rice: { desc: 'Leczy {n}% zdrowia na sekundę' },
-    wrath: { desc: 'Szansa na trafienie krytyczne +{n}%' },
-    karma: { desc: 'XP +{n}%, zasięg zbierania +{m}%' },
+    iron: { desc: 'Maks. zdrowie +{n}%', blurb: 'Wytrzymasz więcej ciosów' },
+    legs: { desc: 'Szybkość ruchu +{n}%', blurb: 'Biegaj szybciej, łatwiej unikaj' },
+    rice: { desc: 'Leczy {n}% zdrowia na sekundę', blurb: 'Powoli leczysz się w walce' },
+    wrath: { desc: 'Szansa na trafienie krytyczne +{n}%', blurb: 'Częściej trafiasz krytycznie' },
+    karma: { desc: 'XP +{n}%, zasięg zbierania +{m}%', blurb: 'Szybciej zdobywasz poziomy' },
   },
   story: {
     quote: '„{text}”',
