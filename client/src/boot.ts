@@ -6,6 +6,7 @@ import { watchAnomalies } from './net/anomaly';
 import { apiBase, Backend } from './net/backend';
 import { hitchContext, liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
 import { deviceTimeZone, PrivacyChoice } from './net/privacyChoice';
+import { patchGraphicsDestroy } from './game/graphicsDestroy';
 import { levelRange, lowBattery, useMsaa } from './game/quality';
 import { QualityRuntime, gpuName } from './game/qualityRuntime';
 import type { SceneOptions } from './game/scene';
@@ -27,6 +28,8 @@ function bootBar(share: number): void {
 export async function boot(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean } = {}) {
   // the script is in: about a third of the way (the bar crept there on its own while it came)
   bootBar(0.3);
+  // destroyed trees free their graphics' contexts (game/graphicsDestroy.ts)
+  patchGraphicsDestroy();
   const since = () => (typeof performance === 'undefined' ? 0 : performance.now());
   const script = since();
   const settings = loadSettings(platform.storage);
