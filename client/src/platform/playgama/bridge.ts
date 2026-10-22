@@ -1,3 +1,5 @@
+import { adWatchdog, type AdTimer } from '../adTimeout';
+
 // The Playgama Bridge SDK (v2, https://wiki.playgama.com/playgama/bridge-sdk), wrapped like the
 // CrazyGames SDK so nothing in the game can be broken by it: the script is missing in local dev,
 // under an adblocker and in tests, so every call is a no-op without it, every throw or rejection
@@ -70,6 +72,7 @@ export class PlaygamaBridge {
   constructor(
     private readonly global: BridgeGlobal = globalThis as BridgeGlobal,
     private readonly wait: (ms: number) => Promise<void> = (ms) => new Promise((r) => setTimeout(r, ms)),
+    private readonly timer?: AdTimer,
   ) {}
 
   /** Runs initialize(); false without the script, on a rejection or after BRIDGE_WAIT_MS. */
@@ -178,10 +181,15 @@ export class PlaygamaBridge {
     this.listen?.('failed');
     return new Promise<boolean>((resolve) => {
       let paid = false;
+      // a state that never comes gives the ad up as failed (adTimeout.ts); later states go nowhere
+      const watch = adWatchdog(() => listen('failed'), this.timer);
       const listen = (state: unknown) => {
-        if (state === 'opened') guard(() => started?.());
-        else if (state === 'rewarded') paid = true;
+        if (state === 'opened') {
+          watch.started();
+          guard(() => started?.());
+        } else if (state === 'rewarded') paid = true;
         else if (state === 'closed' || state === 'failed') {
+          watch.done();
           if (this.listen === listen) this.listen = null;
           resolve(paid && state === 'closed');
         }

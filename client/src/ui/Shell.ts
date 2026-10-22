@@ -35,6 +35,7 @@ import { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { ResumeScreen } from './ResumeScreen';
+import { FaultGuard } from './faultGuard';
 import { ReminderBook } from './reminders';
 import { RunFlow } from './runFlow';
 import { storedSettings, type SettingsActions } from './settingsPanel';
@@ -79,6 +80,11 @@ export class Shell {
   private readonly runs: RunFlow;
   /** The iOS app's reminders, booked on the way to the lobby and to the background; null on hosts without them. */
   private readonly reminders: ReminderBook | null;
+  private readonly faults = new FaultGuard();
+  /** The run on screen was resumed after a fault: one more fault settles it rather than offering it again. */
+  private faultedRun = false;
+  /** Reports a frame that threw (boot.ts wires it to the `anomaly` event). */
+  onFault: (err: unknown) => void = () => {};
 
   constructor(
     private readonly app: Application,
@@ -282,7 +288,11 @@ export class Shell {
   private play(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: Challenge | null = null): Promise<void> {
     // the tap starts the perf event's ready time
     this.perf?.tapped();
-    return this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => this.runs.start(chapter, left, from, c));
+    return this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => {
+      // a run other than the one resumed after a fault starts with a clean slate
+      if (!left) this.faultedRun = false;
+      this.runs.start(chapter, left, from, c);
+    });
   }
 
   /** Runs `then` once `chapter`'s art and `monk`'s rig are in; on a failure, the lobby (the next tap tries again). */
@@ -321,7 +331,54 @@ export class Shell {
     return paid;
   }
 
+  /** A frame threw (here or anywhere in the ticker, qualityRuntime.ts): reported, then the run or the screen is put up afresh (ui/faultGuard.ts). Never throws. */
+  fault(err: unknown): void {
+    const { report, act } = this.faults.fault();
+    if (report) {
+      console.error(err);
+      try {
+        this.onFault(err);
+      } catch {
+        /* the report is best effort */
+      }
+    }
+    if (act === 'wait') return;
+    const reload = globalThis.location?.reload?.bind(globalThis.location);
+    if (act === 'restart' && reload) return reload();
+    try {
+      this.recover();
+    } catch (again) {
+      // the next fault tries again, and restarts the page once recoveries stop helping
+      console.error(again);
+    }
+  }
+
+  /** A run goes to the resume offer (settled like a give-up when it faulted once already, or is never kept); anything else to a fresh lobby. */
+  private recover(): void {
+    if (this.runs.game) {
+      const left = this.faultedRun ? null : this.runs.shelve();
+      this.faultedRun = !!left;
+      if (left) return this.offerResume(left);
+      try {
+        this.runs.end();
+        return;
+      } catch {
+        this.runs.drop();
+      }
+    }
+    this.faultedRun = false;
+    this.showLobby();
+  }
+
   private tick(): void {
+    try {
+      this.frame();
+    } catch (err) {
+      this.fault(err);
+    }
+  }
+
+  private frame(): void {
     // frames only come while the game is on screen; a long stall (a breakpoint, a suspended tab) counts as one second
     this.shownMs += Math.min(this.app.ticker.deltaMS, 1000);
     const { width, height } = this.app.screen;

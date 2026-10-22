@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import { SUTRA_IDS, TICK_RATE, type SimState } from '@hk/engine';
+import { SUTRA_IDS, type SimState } from '@hk/engine';
 import { Game, type Art } from '../game/Game';
 import type { DragStick } from '../game/dragStick';
 import type { LevelSettings } from '../game/quality';
@@ -14,7 +14,7 @@ import { runWaves } from '../meta/experiments';
 import { noteFall, runPast } from '../meta/falls';
 import { loadout } from '../meta/loadout';
 import { doubleCopper, earnedSutras, settleRun, type Reward, type Tab } from '../meta/progress';
-import { dropRun, keepRun, type SavedRun } from '../meta/resume';
+import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
 import { afterRun } from '../meta/welcome';
@@ -38,6 +38,7 @@ import { canReport, reportProblem } from './problemReport';
 import type { PlayerName } from './playerName';
 import type { DownInfo } from './deathInfo';
 import { RunWatch } from './runWatch';
+import { clearedWaves, keepable, runSummary } from './runSummary';
 import type { Screen } from './uiLayout';
 
 // A run's life (docs/design.md "Flow"), the shell's other half: the run started from the lobby, a
@@ -170,7 +171,7 @@ export class RunFlow {
   private keep(): void {
     const s = this.game?.engine.state;
     const { scene, platform, challenge } = this.host;
-    if (!s || s.config.waves === 0 || scene.autoplay || scene.record || challenge.run) return;
+    if (!s || !keepable(s, scene, !!challenge.run)) return;
     keepRun(platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills });
   }
 
@@ -198,7 +199,35 @@ export class RunFlow {
     return true;
   }
 
-  private end(): void {
+  /** A frame threw in this run (Shell.fault): takes it off screen unsettled and kept for the resume
+   *  offer, as a fresh view may well play on; null, with nothing done, for a run that is never kept. */
+  shelve(): SavedRun | null {
+    if (!this.game) return null;
+    try {
+      this.keep();
+    } catch {
+      return null;
+    }
+    const left = loadRun(this.host.platform.storage);
+    if (left?.state.tick !== this.game.engine.state.tick) return null;
+    this.drop();
+    return left;
+  }
+
+  /** Takes the run off screen without settling it (its kept copy, if any, stays for the resume offer). */
+  drop(): void {
+    const game = this.game;
+    [this.game, this.hud, this.watch] = [null, null, null];
+    this.host.portal.gameplayStop();
+    try {
+      game?.destroy();
+    } catch {
+      /* a half-built run: whatever it holds goes with the page */
+    }
+  }
+
+  /** Ends the run in play as a give-up: paid out, and on to its results. */
+  end(): void {
     if (!this.game) return;
     const s = this.game.engine.state;
     const replay = this.host.challenge.capture(this.game);
@@ -226,12 +255,9 @@ export class RunFlow {
     const h = this.host;
     const cause = fall?.cause;
     dropRun(h.platform.storage);
-    const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
+    const waves = clearedWaves(s);
     const p = s.players[0];
-    const run = {
-      chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
-      level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
-    };
+    const run = runSummary(s, this.chapter, this.hard, this.kills);
     h.perf()?.end();
     h.net.track('run_end', { ...run, waves: s.config.waves, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
     // a run shorter than the chapter (an experiment's first run) is never on a board
