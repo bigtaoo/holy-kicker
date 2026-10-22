@@ -2,6 +2,7 @@ import { Container, Graphics, Sprite, type Texture } from 'pixi.js';
 import type { MonkId } from '@hk/engine';
 import type { IconSheet } from './buildBar';
 import type { DeathCause } from './deathInfo';
+import { gemColor } from '../game/dropView';
 import { COLORS, shade } from './widgets';
 
 // The death panel's picture of what went wrong and what to do instead, staged with the game's
@@ -16,7 +17,8 @@ const BIG_FOE = 0x6c4f9a;
 const EYE = 0xff3030;
 const DANGER = COLORS.danger;
 const MOVE = COLORS.text;
-const GEM = 0x7fd8ff;
+/** The run's experience gem, in the colour it is drawn in (game/dropView.ts). */
+const GEM = gemColor();
 /** The charging elite's tint (game/cast.ts ELITE_TINTS). */
 const ELITE_TINT = 0x9fb2d8;
 

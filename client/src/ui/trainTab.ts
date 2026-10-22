@@ -8,7 +8,7 @@ import { statsPanel } from './gearTab';
 import { BADGE } from './playCard';
 import { statLines, statText } from './statText';
 import { boardPage, boardPos, boardRows, BOARD_ROW, pageCount, pageRange, ringPulse } from './trainBoard';
-import { COLORS, button, fit, label, panel } from './widgets';
+import { COLORS, button, fit, label, panel, shade } from './widgets';
 
 // The lobby's Train tab (docs/design.md "Training", "Lobby layout"): the whole line on its own
 // dark board as a path of nodes in three plain states (trained: full colour on a lit badge;
@@ -35,12 +35,12 @@ const GAP = 30;
 const CARD_H = 380;
 const LINE_H = 62;
 /** The road between future nodes, and the board's dark discs. */
-const ROAD = 0x46524b;
-const SLOT = 0x1c2320;
+const ROAD = shade(COLORS.panel, 0.12);
+const SLOT = shade(COLORS.bg, -0.04);
 
 /** One colour per stat, so the line reads as a pattern. */
 const STAT_COLOR: Partial<Record<TrainStat, number>> = {
-  attack: 0xf07040, maxHp: COLORS.danger, xp: COLORS.trim, copper: COLORS.copper, magnet: COLORS.jade, revive: COLORS.gold,
+  attack: 0xf07040, maxHp: 0xffa98a, xp: COLORS.trim, copper: COLORS.copper, magnet: COLORS.jade, revive: COLORS.gold,
 };
 
 /** Each stat's painted icon on the icon sheet (art/monk/icons/train_*). */

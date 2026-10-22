@@ -8,8 +8,8 @@ import { gearIcon } from './gearIcons';
 import { itemName, mergeReady, TIER_COLORS, tierName } from './gearText';
 import { statLines } from './statText';
 import { DOLL_H, gearDoll, HERO_FEET, HERO_H } from './gearDoll';
-import { CARD, CARD_STROKE } from './playCard';
-import { COLORS, backdrop, button, fit, label, panel, shade } from './widgets';
+import { CARD_STROKE } from './playCard';
+import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
 // The lobby's Gear tab (docs/design.md "Meta progression", "Lobby layout"): the six worn slots
 // around the hero (gearDoll.ts), "Merge all" and what they add up to; tapping a slot opens its item, with its stats now and at the next
@@ -83,7 +83,7 @@ function badge(icons: IconSheet, item: ItemId, tier: Tier | -1, r: number): Cont
 /**
  * The tab centred on x = 0 from y = 0 down: the doll with the hero `hero` makes (the lobby's
  * figure, as tall as asked, feet at its origin) in the middle, "Merge all" at his feet when anything can merge (a
- * quiet line saying how merging works when nothing can) and the light card of what gear adds up to.
+ * quiet line saying how merging works when nothing can) and the panel of what gear adds up to.
  */
 export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, hero?: (height: number) => Container): Container {
   const c = new Container();
@@ -105,22 +105,22 @@ export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, 
   return c;
 }
 
-/** What the worn gear adds up to: the Play tab's light card, its lines in two columns. */
+/** What the worn gear adds up to: a dark panel like the other tabs', its lines in two columns. */
 function statsCard(title: string, lines: string[]): [Container, number] {
   const c = new Container();
   const body = new Container();
-  const head = label(title, 52, COLORS.text, CARD_STROKE);
+  const head = label(title, 52, COLORS.saffron);
   head.y = 56;
   if (lines.length === 0) lines = ['—'];
   const colW = (STATS_W - 80) / 2;
-  const fill = shade(CARD.quiet, -0.35);
+  const fill = COLORS.text;
   const one = lines.length === 1;
   const left = lines.filter((_, i) => one || i % 2 === 0);
   const right = one ? [] : lines.filter((_, i) => i % 2 === 1);
   const h = 100 + statGrid(body, [[one ? 0 : -colW / 2, left, fill], [colW / 2, right, fill]], colW, ROW_H, 100) + 36;
   body.addChild(head);
   body.y = -h / 2;
-  c.addChild(panel(STATS_W, h, CARD.fill), body);
+  c.addChild(panel(STATS_W, h), body);
   return [c, h];
 }
 

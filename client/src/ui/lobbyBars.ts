@@ -1,4 +1,4 @@
-import { BlurFilter, ColorMatrixFilter, Container, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { BlurFilter, ColorMatrixFilter, Container, FillGradient, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { seeTab, TABS, tabLock, tabNew, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -22,8 +22,15 @@ const TAB_ICONS: Record<Tab, string> = { shop: 'shop', gear: 'robe', play: 'ball
 
 /** How far the backdrop steps back: saturation and contrast change, brightness factor. */
 const STAGE_TONE = { saturate: -0.4, contrast: -0.18, brightness: 1.04 };
-/** Behind the menu tabs (Shop, Gear, Train, Codex) the courtyard goes out of focus and dusk-dark, so their dark panels sit on it like the bars do. */
-const MENU_TONE = { saturate: -0.6, contrast: -0.3, brightness: 0.5, blur: 12 };
+/**
+ * Behind the menu tabs (Shop, Train, Codex) the courtyard goes out of focus and grey, then under
+ * a veil of the shell's own background and a darker rim, so it reads as the theme's surface with
+ * a hint of the place rather than a muddy photograph, and the dark panels sit on it like the bars.
+ */
+const MENU_TONE = { saturate: -0.85, contrast: -0.25, brightness: 0.9, blur: 16 };
+/** How much of the background colour lies over the blurred courtyard, and how dark the rim gets. */
+const MENU_VEIL = 0.45;
+const MENU_RIM = 0.5;
 
 function toned(k: typeof STAGE_TONE): ColorMatrixFilter {
   const tone = new ColorMatrixFilter();
@@ -45,12 +52,21 @@ export function menuBackdrop(renderer: Renderer, tex: Texture): Texture;
 export function menuBackdrop(renderer: Renderer, tex: Texture | null): Texture | null;
 export function menuBackdrop(renderer: Renderer, tex: Texture | null): Texture | null {
   if (!tex || tex === baked?.from) return baked?.out ?? null;
+  const scene = new Container();
   const pic = new Sprite(tex);
   const blur = new BlurFilter({ strength: MENU_TONE.blur, quality: 3 });
   blur.repeatEdgePixels = true;
   pic.filters = [blur, toned(MENU_TONE)];
-  const out = renderer.generateTexture({ target: pic, frame: new Rectangle(0, 0, tex.width, tex.height), resolution: 0.5 });
-  pic.destroy();
+  const rim = new FillGradient({
+    type: 'radial', center: { x: 0.5, y: 0.45 }, innerRadius: 0, outerCenter: { x: 0.5, y: 0.45 }, outerRadius: 0.75,
+    colorStops: [{ offset: 0, color: 'rgba(0,0,0,0)' }, { offset: 0.55, color: 'rgba(0,0,0,0)' }, { offset: 1, color: `rgba(0,0,0,${MENU_RIM})` }],
+    textureSpace: 'local',
+  });
+  scene.addChild(pic, new Graphics().rect(0, 0, tex.width, tex.height).fill({ color: COLORS.bg, alpha: MENU_VEIL })
+    .rect(0, 0, tex.width, tex.height).fill(rim));
+  const out = renderer.generateTexture({ target: scene, frame: new Rectangle(0, 0, tex.width, tex.height), resolution: 0.5 });
+  scene.destroy({ children: true });
+  rim.destroy();
   baked?.out.destroy(true);
   baked = { from: tex, out };
   return out;

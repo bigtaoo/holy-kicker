@@ -5,7 +5,7 @@
 import { CHAPTERS, MONK_IDS, RELIC_IDS, SPELL_KINDS, type MonkId, type RelicId, type SpellKind } from '@hk/engine';
 import type { RingMode } from './spells';
 import { QUALITY_MODES, type QualityMode } from './quality';
-import { GEM_PALETTES, type GemPalette } from './dropView';
+import { GEM_PALETTE, GEM_PALETTES, type GemPalette } from './dropView';
 import { CRIT_LOOKS, type CritLook } from './damage';
 import { BULLET_LOOKS, type BulletLook, type ZoneLayer, type ZoneLook } from './threatView';
 
@@ -125,7 +125,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   mobs: 40, ground: 'grass', heroOnTop: true, ring: true, heroOverFx: true, eliteRing: true,
   types: 1, page: 0, mobRes: 1,
   spells: [], rate: 1, stack: 0, ringFx: 'band', blur: false, fxBudget: 0, quality: null,
-  gem: 'pink', drops: 0,
+  gem: GEM_PALETTE, drops: 0,
   threats: false, bullet: 'violet', zone: 'fill', zoneLayer: 'top',
   crit: 'orange', numFade: true, heroBack: true, eliteColor: 'white', foxTint: true,
   deco: 'props',

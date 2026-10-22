@@ -1,5 +1,6 @@
 import { Container, Graphics, Text, type TextStyleOptions } from 'pixi.js';
 import { getLocale } from '../i18n';
+import { THEME } from '../theme';
 import { DISPLAY_SIZE, fontFor } from './fonts';
 
 // Small UI building blocks in logical units (the 1080-wide design), in the sticker style of the
@@ -7,19 +8,27 @@ import { DISPLAY_SIZE, fontFor } from './fonts';
 // shadow with a thin light rim inside and gold corner brackets; buttons are raised, a darker lip
 // under a lighter face that sinks onto the lip while pressed.
 
+/**
+ * The shell's surfaces: a temple's dark green-grey lacquer with gold trim for the monk, a
+ * spacecraft's cool steel with pale steel-blue trim for the corgi (his white suit and chapter card).
+ */
+const SURFACES = THEME === 'corgi'
+  ? { bg: 0x1b2026, panel: 0x2b333b, panelLocked: 0x22282e, outline: 0x0a0d10, dim: 0x8e99a3, trim: 0x9db8c9 }
+  : { bg: 0x1d2420, panel: 0x2c3631, panelLocked: 0x232a26, outline: 0x0b0e0c, dim: 0x8f9a94, trim: 0xc9a35a };
+
 export const COLORS = {
-  bg: 0x1d2420,
-  panel: 0x2c3631,
-  panelLocked: 0x232a26,
-  outline: 0x0b0e0c,
+  bg: SURFACES.bg,
+  panel: SURFACES.panel,
+  panelLocked: SURFACES.panelLocked,
+  outline: SURFACES.outline,
   text: 0xffffff,
-  dim: 0x8f9a94,
+  dim: SURFACES.dim,
   saffron: 0xf0a020,
   copper: 0xd88a4a,
   jade: 0x4fd1a0,
   danger: 0xe0303a,
   /** The panels' corner brackets and the bars' trim. */
-  trim: 0xc9a35a,
+  trim: SURFACES.trim,
   /** The one bright highlight gold: selected, evolved, found, the key caps. */
   gold: 0xffd860,
   /** Spells' discs and rims: a deep slate, the cool note next to saffron and jade. */

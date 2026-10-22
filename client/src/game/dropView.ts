@@ -21,6 +21,12 @@ const COLORS: Record<GemPalette, number[]> = {
   pink: [0xff8ad8, 0xff4fa3, 0xff2fd0],
   lime: [0xc6ff5a, 0x6cf07a, 0x2fd6b0],
 };
+/** The palette the game ships (?gem= compares the others in development). */
+export const GEM_PALETTE: GemPalette = 'pink';
+/** A palette's fill for a tier (0 the commonest), for pictures of gems outside the run. */
+export function gemColor(palette: GemPalette = GEM_PALETTE, tier = 0): number {
+  return COLORS[palette][tier];
+}
 /** Gem height in world units per tier. */
 const SIZES = [34, 44, 58];
 const OUTLINE = 0x1a1424;
