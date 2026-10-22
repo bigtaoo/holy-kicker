@@ -1,6 +1,6 @@
 import { freeLobbyArt, loadLobbyArt } from '../art';
 import type { Art } from '../game/Game';
-import type { Renderer } from 'pixi.js';
+import { TexturePool, type Renderer } from 'pixi.js';
 import type { Platform } from '../platform/types';
 import { menuBackdrop } from './lobbyBars';
 
@@ -31,6 +31,8 @@ export class LobbyArtLoad {
   free(): void {
     menuBackdrop(this.renderer, this.art.lobby);
     freeLobbyArt(this.art);
+    // and its filters' screen-sized scratch textures, which Pixi's pool would keep for good (~30 MB at 2x)
+    TexturePool.clear();
     this.load = null;
     this.in = false;
   }
