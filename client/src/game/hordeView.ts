@@ -4,7 +4,7 @@ import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { depthShade } from './mobAnim';
 import { MobView, type MobLook } from './mobView';
-import { SHADOW_Z } from './shadow';
+import { SHADOW_Z, ShadowBatch } from './shadow';
 
 // Draws the horde: one MobView per sim mob, made when the mob joins (a mob keeps its kind for
 // the run), plus chapter 2's tells. A water ghost under the ground is hidden; on its last
@@ -45,6 +45,8 @@ export interface HordeOptions {
 export class HordeView {
   private readonly mobs: MobView[] = [];
   private readonly marks = new Graphics();
+  /** Every shown mob's ground shadow, at the shadows' depth: the world does not sort them one by one. */
+  private readonly shadows: ShadowBatch;
   /** The run was won: the horde fell with the last boss and is drawn no more. */
   routed = false;
 
@@ -56,7 +58,11 @@ export class HordeView {
   ) {
     // on the ground with the shadows, so the horde stands on it
     this.marks.zIndex = SHADOW_Z + 0.5;
-    world.addChild(this.marks);
+    // over the other shadows (the hero's, the bosses'), as when each mob's shadow joined the world after them
+    // (the horde's looks share one shadow texture)
+    this.shadows = new ShadowBatch(Object.values(looks)[0][0].shadowTex);
+    this.shadows.view.zIndex = SHADOW_Z + 0.25;
+    world.addChild(this.shadows.view, this.marks);
   }
 
   /** The view of mob i, if it has one yet. */
@@ -82,7 +88,7 @@ export class HordeView {
     while (this.mobs.length < mobs.length) {
       const m = mobs[this.mobs.length];
       const looks = this.looks[m.kind];
-      const v = new MobView(looks[this.mobs.length % looks.length], this.world, this.opts.calm);
+      const v = new MobView(looks[this.mobs.length % looks.length], this.world, this.opts.calm, this.shadows);
       // a multiply tint is free: it turns the pale fox lavender, away from the teal jiangshi
       if (this.opts.foxTint && m.kind === 'runner') v.tint(FOX_TINT);
       const tint = looks[this.mobs.length % looks.length].tint;
@@ -90,8 +96,10 @@ export class HordeView {
       this.mobs.push(v);
     }
     const g = this.marks.clear();
+    this.shadows.begin();
     if (this.routed) {
       for (const v of this.mobs) v.setVisible(false);
+      this.shadows.end();
       return;
     }
     for (let i = 0; i < this.mobs.length; i++) {
@@ -116,6 +124,7 @@ export class HordeView {
       v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : m.haste > 0 ? HASTE_CYCLE : 1, walk, this.opts.sway);
       if (this.opts.calm) v.shade(depthShade(Math.sqrt((x - hx) * (x - hx) + (y - hy) * (y - hy))));
     }
+    this.shadows.end();
   }
 
   /** A paper effigy tore at (x, y), world units: scraps of paper flutter off. */
