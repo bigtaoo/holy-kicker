@@ -221,6 +221,7 @@ export const vi: Table<typeof en> = {
     gift: 'Quà chào mừng: {gift}!',
     giftWorn: 'Đã trang bị cho lượt sau: {gift}!',
     rankShort: 'Xếp hạng #{rank}',
+    rankPending: 'Xếp hạng #{rank} (đang kiểm tra)',
   },
   remind: {
     offer: 'Nhắc bạn khi {patrol} đầy và thử thách hằng ngày sẵn sàng?',

@@ -221,6 +221,7 @@ export const pt: Table<typeof en> = {
     gift: 'Presente de boas-vindas: {gift}!',
     giftWorn: 'Equipado para a próxima partida: {gift}!',
     rankShort: 'Ranking #{rank}',
+    rankPending: 'Ranking #{rank} (verificando)',
   },
   remind: {
     offer: 'Quer um lembrete quando {patrol} estiver cheia e o desafio diário estiver pronto?',

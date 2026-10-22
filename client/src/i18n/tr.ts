@@ -221,6 +221,7 @@ export const tr: Table<typeof en> = {
     gift: 'Hoş geldin hediyesi: {gift}!',
     giftWorn: 'Sonraki oyun için kuşanıldı: {gift}!',
     rankShort: 'Sıralama #{rank}',
+    rankPending: 'Sıralama #{rank} (kontrol ediliyor)',
   },
   remind: {
     offer: '{patrol} dolduğunda ve Günlük Meydan Okuma hazır olduğunda hatırlatalım mı?',

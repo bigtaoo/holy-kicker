@@ -1,8 +1,9 @@
+import { engineFor } from './engines';
 import { ENGINE_VERSION } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
 import { boardReplay, boardUpdate, newBest, provisionalRank, settleBoardDoc, type BoardDoc } from './boardDocs';
 import type { BoardReply, ReplayWire, RunEntry } from './protocol';
-import { chapterConfig, resimulate } from './resim';
+import { CURRENT_ENGINE, chapterConfig, resimulate } from './resim';
 import { ResimQueue } from './resimQueue';
 import { route, type Deps, type Req } from './routes';
 import { MemoryStore } from './store';
@@ -15,7 +16,7 @@ const OTHER = 'zzzzzzzz9999';
 function setup() {
   const store = new MemoryStore();
   const logs: string[] = [];
-  const resim = new ResimQueue(store, ENGINE_VERSION, () => NOW, (l) => logs.push(l), (fn) => setTimeout(fn, 0));
+  const resim = new ResimQueue(store, engineFor, () => NOW, (l) => logs.push(l), (fn) => setTimeout(fn, 0));
   const deps: Deps = { store, tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, resim };
   return { store, resim, deps, logs };
 }
@@ -29,17 +30,20 @@ const board = async (d: Deps, install = INSTALL) => (await route(req('GET', '/v1
 
 describe('a chapter run\'s replay', () => {
   it('passes the re-simulation as played', () => {
-    expect(resimulate(PLAYED.replay, PLAYED.run, ENGINE_VERSION, chapterConfig).ok).toBe(true);
+    expect(resimulate(PLAYED.replay, PLAYED.run, CURRENT_ENGINE, chapterConfig).ok).toBe(true);
   });
 
   it('is kept only when the server can check it', () => {
     const { run, replay } = PLAYED;
-    expect(boardReplay(run, replay, ENGINE_VERSION)).toBe(replay);
-    expect(boardReplay(run, null, ENGINE_VERSION)).toBeNull();
+    expect(boardReplay(run, replay, [ENGINE_VERSION])).toBe(replay);
+    expect(boardReplay(run, null, [ENGINE_VERSION])).toBeNull();
     // an older engine, a run started past wave 1, a length that is not the run's
-    expect(boardReplay(run, replay, ENGINE_VERSION + 1)).toBeNull();
-    expect(boardReplay(run, { ...replay, wave: 5 }, ENGINE_VERSION)).toBeNull();
-    expect(boardReplay({ ...run, tenths: run.tenths + 10 }, replay, ENGINE_VERSION)).toBeNull();
+    expect(boardReplay(run, replay, [ENGINE_VERSION + 1])).toBeNull();
+    expect(boardReplay(run, { ...replay, wave: 5 }, [ENGINE_VERSION])).toBeNull();
+    expect(boardReplay({ ...run, tenths: run.tenths + 10 }, replay, [ENGINE_VERSION])).toBeNull();
+    // an older engine the server carries: its config is checked when it re-simulates
+    const older = { ...replay, engine: ENGINE_VERSION - 1, config: { ...replay.config, waves: 20 } };
+    expect(boardReplay(run, older, [ENGINE_VERSION, ENGINE_VERSION - 1])).toBe(older);
   });
 
   it('must have a config the chapter run could have had', () => {
@@ -79,6 +83,18 @@ describe('a board row', () => {
     expect(settleBoardDoc(waiting, NOW + 5, true)).toBeUndefined();
   });
 
+  it('is kept aside, never dropped, when no engine here can check its run', () => {
+    const first = boardUpdate(null, best(5), PLAYED.replay) as BoardDoc;
+    const stale = settleBoardDoc(first, at, 'stale')!;
+    expect(stale).toMatchObject({ state: 'stale', score: 5 });
+    expect(provisionalRank(best(1, NOW, 'b'), [stale])).toBe(1);
+    // a later run takes the stale row's place, even a lower one
+    expect(boardUpdate(stale, best(2, NOW), PLAYED.replay)).toMatchObject({ state: 'pending', score: 2 });
+    const shown = settleBoardDoc(first, at, true)!;
+    const waiting = boardUpdate(shown, best(9, NOW), PLAYED.replay) as BoardDoc;
+    expect(settleBoardDoc(waiting, NOW, 'stale')).toMatchObject({ score: 5, stale: { score: 9 } });
+  });
+
   it('ranks among the shown rows only, its own aside', () => {
     const rows: BoardDoc[] = [best(9, at, 'b'), { ...best(20, at, 'c'), state: 'pending' }, best(30, at, 'a'), best(3, at, 'd')];
     expect(provisionalRank(best(7, NOW, 'a'), rows)).toBe(2);
@@ -114,10 +130,23 @@ describe('the chapter boards', () => {
 
   it('keep no run from an older engine or with no replay', async () => {
     const { deps, resim } = setup();
-    expect((await send(deps, { run: PLAYED.run, replay: null })).body).toMatchObject({ status: 'unverified', best: true });
+    expect((await send(deps, { run: PLAYED.run, replay: null })).body).toMatchObject({ status: 'unverified', best: false, rank: 0 });
     expect((await send(deps, { run: PLAYED.run, replay: { ...PLAYED.replay, engine: ENGINE_VERSION - 1 } })).body).toMatchObject({ status: 'unverified' });
     expect(resim.length).toBe(0);
     expect((await board(deps)).total).toBe(0);
+  });
+
+  it('keep a run aside, unreported, when its engine is not here', async () => {
+    const store = new MemoryStore();
+    const logs: string[] = [];
+    const resim = new ResimQueue(store, async () => null, () => NOW, (l) => logs.push(l), (fn) => setTimeout(fn, 0));
+    const deps: Deps = { store, tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, resim, boardReplay: (_run, replay) => replay };
+    expect((await send(deps, PLAYED)).body).toMatchObject({ status: 'pending', best: true });
+    await resim.idle();
+    expect(store.reportList.length).toBe(0);
+    expect(logs[0]).toContain('kept aside');
+    expect((await board(deps)).total).toBe(0);
+    expect(await store.pendingResims()).toEqual([]);
   });
 
   it('still show a row kept before the boards were checked', async () => {
@@ -133,7 +162,7 @@ describe('the chapter boards', () => {
   it('queue the waiting runs again after a restart', async () => {
     const { store } = setup();
     await store.submitRun(PLAYED.run, 'tag1', PLAYED.replay, NOW);
-    const resim = new ResimQueue(store, ENGINE_VERSION, () => NOW, () => {}, (fn) => setTimeout(fn, 0));
+    const resim = new ResimQueue(store, engineFor, () => NOW, () => {}, (fn) => setTimeout(fn, 0));
     await resim.start();
     expect(resim.length).toBe(1);
     await resim.idle();

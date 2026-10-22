@@ -59,8 +59,8 @@ interface ChallengeRow extends ChallengeDoc {
 
 type BestDoc = BoardDoc & { _id: string };
 
-/** A board row's shown run only: no pending row, no replay. */
-const SHOWN = { state: { $ne: 'pending' as const } };
+/** A board row's shown run only: no pending or stale row (boardDocs.ts shown). */
+const SHOWN = { state: { $nin: ['pending', 'stale'] as ('pending' | 'stale')[] } };
 const NO_REPLAY = { projection: { replay: 0, 'next.replay': 0 } };
 /** What finds the rows with a run waiting, in either collection. */
 const WAITING = { $or: [{ state: 'pending' as const }, { 'next.at': { $exists: true } }] };
@@ -180,11 +180,13 @@ export class MongoStore implements Store {
     }
     const name = runName(run);
     if (name) await this.setName(tag, name, now);
-    const rank = await this.rankOf(doc === 'lower' && old ? boardStanding(old) : b);
-    return { board, rank, best: doc !== 'lower', status: typeof doc === 'string' ? doc : 'pending', at: now };
+    // a run not kept places nowhere: the install keeps the place it had (0: none yet)
+    const placed = typeof doc === 'string' ? (old && old.state !== 'stale' ? boardStanding(old) : null) : b;
+    const rank = placed ? await this.rankOf(placed) : 0;
+    return { board, rank, best: typeof doc !== 'string', status: typeof doc === 'string' ? doc : 'pending', at: now };
   }
 
-  async settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void> {
+  async settleBoardRun(board: string, tag: string, at: number, ok: boolean | 'stale'): Promise<void> {
     const _id = `${board}/${tag}`;
     const doc = await this.best.findOne({ _id }, NO_REPLAY);
     const next = doc && settleBoardDoc(doc, at, ok);
@@ -241,7 +243,7 @@ export class MongoStore implements Store {
     return { board: e.board, status: waiting(doc) ? ('pending' as const) : ('ranked' as const), ...(await this.place(standing(doc))) };
   }
 
-  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void> {
+  async settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null | 'stale'): Promise<void> {
     const _id = `${board}/${tag}`;
     const doc = await this.challenges.findOne({ _id });
     const next = doc && settleDoc(doc, at, picks);

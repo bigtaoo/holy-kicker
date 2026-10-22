@@ -221,6 +221,7 @@ export const id: Table<typeof en> = {
     gift: 'Hadiah sambutan: {gift}!',
     giftWorn: 'Dipakai untuk permainan berikutnya: {gift}!',
     rankShort: 'Peringkat #{rank}',
+    rankPending: 'Peringkat #{rank} (diperiksa)',
   },
   remind: {
     offer: 'Ingatkan saat {patrol} penuh dan Tantangan Harian siap?',

@@ -78,7 +78,7 @@ describe('the disk shelf', () => {
   afterAll(() => rmSync(dir, { recursive: true, force: true }));
   const doc = (at: number): StoredReplay => ({ tag: 'abcdefghij', host: 'web', build: '1', locale: 'en', end: 'won', at, replay });
 
-  it('keeps, reopens, lists newest first, prunes the old and stops when full', async () => {
+  it('keeps, reopens, lists newest first and prunes the old', async () => {
     const shelf = await DiskShelf.open(dir);
     expect(await shelf.put('abcdefghij-run0000001', doc(NOW - (KEEP_DAYS + 1) * DAY))).toBe(true);
     expect(await shelf.put('abcdefghij-run0000002', doc(NOW))).toBe(true);
@@ -90,5 +90,20 @@ describe('the disk shelf', () => {
     expect((await again.list(10)).map((e) => e.name)).toEqual(['abcdefghij-run0000002']);
     const tiny = await DiskShelf.open(dir, 10);
     expect(await tiny.put('abcdefghij-run0000004', doc(NOW))).toBe(false);
+  });
+
+  it('makes room when full by dropping the oldest replays', async () => {
+    const own = mkdtempSync(join(tmpdir(), 'hk-shelf-'));
+    const probe = await DiskShelf.open(own);
+    await probe.put('abcdefghij-run0000020', doc(NOW));
+    const [{ bytes }] = await probe.list(1);
+    // room for two and a half replays: the third and fourth each drop the oldest
+    const shelf = await DiskShelf.open(own, bytes * 2.5);
+    for (let i = 1; i <= 3; i++) expect(await shelf.put(`abcdefghij-run000002${i}`, doc(NOW + i))).toBe(true);
+    expect((await shelf.list(10)).map((e) => e.name)).toEqual(['abcdefghij-run0000023', 'abcdefghij-run0000022']);
+    // a later send of a kept run replaces it, dropping nothing else
+    expect(await shelf.put('abcdefghij-run0000022', doc(NOW + 5))).toBe(true);
+    expect((await (await DiskShelf.open(own)).list(10)).length).toBe(2);
+    rmSync(own, { recursive: true, force: true });
   });
 });

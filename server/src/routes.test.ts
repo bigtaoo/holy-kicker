@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { DICE, LIMITS, checkName, packDice, rollDice, runScore, unpackDice, type RunEntry } from './protocol';
-import { HEALTH_TIMEOUT_MS, Limiter, route, tagOf, type Deps, type Req } from './routes';
+import { HEALTH_TIMEOUT_MS, Limiter, rateOf, route, tagOf, type Deps, type Req } from './routes';
 import { checkBatch, checkReport, checkRun } from './rules';
 import { MemoryStore, type ResimRef } from './store';
 
@@ -287,5 +287,37 @@ describe('routes', () => {
     expect(l.allow('runs', 'a')).toBe(true);
     expect(l.allow('runs', 'a')).toBe(false);
     expect(l.allow('other', 'a')).toBe(true);
+  });
+
+  it('forgets the callers whose buckets have refilled, so the map does not grow forever', () => {
+    let t = 0;
+    const l = new Limiter({ runs: { burst: 2, perMinute: 1 } }, () => t);
+    for (let i = 0; i < 1000; i++) l.allow('runs', `ip${i}`);
+    expect(l.size).toBe(1000);
+    t += Limiter.SWEEP_MS;
+    l.allow('runs', 'late');
+    expect(l.size).toBe(1);
+    // a caller still short of tokens is kept, and stays limited
+    t += 1;
+    l.allow('runs', 'late');
+    l.allow('runs', 'late');
+    t += Limiter.SWEEP_MS - 1;
+    l.allow('runs', 'other');
+    expect(l.size).toBe(2);
+  });
+});
+
+describe('rateOf', () => {
+  it('names every limited route from its method and path, before the body is read', () => {
+    expect(rateOf('POST', '/v1/runs')).toBe('runs');
+    expect(rateOf('POST', '/v1/reports')).toBe('reports');
+    expect(rateOf('POST', '/v1/replays')).toBe('replays');
+    expect(rateOf('POST', '/v1/challenge/runs')).toBe('challenge');
+    expect(rateOf('POST', '/v1/cloud/new')).toBe('cloudNew');
+    expect(rateOf('POST', '/v1/cloud/write')).toBe('cloud');
+    expect(rateOf('GET', '/v1/boards/2026-W40')).toBe('boards');
+    expect(rateOf('GET', '/v1/beacon')).toBe('beacons');
+    expect(rateOf('GET', '/health')).toBeNull();
+    expect(rateOf('GET', '/v1/stats')).toBeNull();
   });
 });

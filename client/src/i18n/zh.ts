@@ -219,6 +219,7 @@ export const zh: Table<typeof en> = {
     gift: '见面礼：{gift}！',
     giftWorn: '已为下一局装备：{gift}！',
     rankShort: '排行榜 #{rank}',
+    rankPending: '排行榜 #{rank}（审核中）',
   },
   remind: {
     offer: '{patrol}满了、每日挑战开放时，要提醒你吗？',

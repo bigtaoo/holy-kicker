@@ -219,6 +219,7 @@ export const ja: Table<typeof en> = {
     gift: '歓迎の贈り物：{gift}！',
     giftWorn: '次の挑戦に装備済み：{gift}！',
     rankShort: 'ランキング #{rank}',
+    rankPending: 'ランキング #{rank}（確認中）',
   },
   remind: {
     offer: '{patrol}がいっぱいになった時とデイリーチャレンジが始まった時にお知らせしますか？',

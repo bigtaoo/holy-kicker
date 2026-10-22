@@ -1,3 +1,4 @@
+import type { Engines } from './engines';
 import { Resim, chapterConfig, rankedConfig, type Verdict } from './resim';
 import type { ResimLoad, ResimRef, Store } from './store';
 
@@ -6,8 +7,9 @@ import type { ResimLoad, ResimRef, Store } from './store';
 // answering while a long run replays. The queue holds only references: a run's replay is read
 // from the store at its turn, so memory stays flat however many wait. A verdict settles the run
 // in the store; a mismatch is also kept as a problem report with the replay, for the operator (it
-// may be a determinism bug, not a cheat). The queue lives in the process: after a restart,
-// start() queues the store's pending runs again.
+// may be a determinism bug, not a cheat). A run with no engine here to check it on (engines.ts) is
+// kept aside `stale` instead, neither deleted nor reported. The queue lives in the process: after
+// a restart, start() queues the store's pending runs again.
 
 /** Ticks stepped per turn (a few milliseconds of simulation). */
 export const SLICE_TICKS = 300;
@@ -22,7 +24,7 @@ export class ResimQueue {
 
   constructor(
     private readonly store: Store,
-    private readonly engineVersion: number,
+    private readonly engines: Engines,
     private readonly now: () => number,
     private readonly log: (line: string) => void = () => {},
     private readonly later: (fn: () => void) => void = setImmediate,
@@ -57,7 +59,7 @@ export class ResimQueue {
     }
     this.running = true;
     void this.store.resimJob(ref).then(
-      (job) => (job ? this.run(ref, job) : this.next()),
+      (job) => (job ? void this.run(ref, job) : this.next()),
       (err) => {
         this.log(`resim load failed on ${ref.board}: ${err}`);
         this.next();
@@ -65,8 +67,9 @@ export class ResimQueue {
     );
   }
 
-  private run(ref: ResimRef, job: ResimLoad): void {
-    const resim = new Resim(job.replay, job.run, this.engineVersion, ref.kind === 'challenge' ? rankedConfig : chapterConfig);
+  private async run(ref: ResimRef, job: ResimLoad): Promise<void> {
+    const engine = await this.engines(job.replay.engine);
+    const resim = new Resim(job.replay, job.run, engine, ref.kind === 'challenge' ? rankedConfig : chapterConfig);
     const turn = () => {
       const v = resim.step(SLICE_TICKS);
       if (!v) return this.later(turn);
@@ -76,10 +79,12 @@ export class ResimQueue {
   }
 
   private async settle(ref: ResimRef, job: ResimLoad, v: Verdict): Promise<void> {
+    const stale = !v.ok && v.why === 'engine';
     try {
-      if (ref.kind === 'challenge') await this.store.settleChallengeRun(ref.board, ref.tag, ref.at, v.ok ? v.picks : null);
-      else await this.store.settleBoardRun(ref.board, ref.tag, ref.at, v.ok);
+      if (ref.kind === 'challenge') await this.store.settleChallengeRun(ref.board, ref.tag, ref.at, v.ok ? v.picks : stale ? 'stale' : null);
+      else await this.store.settleBoardRun(ref.board, ref.tag, ref.at, stale ? 'stale' : v.ok);
       if (v.ok) return;
+      if (stale) return this.log(`${ref.kind} run on ${ref.board} kept aside: no engine ${job.replay.engine} here`);
       this.log(`${ref.kind} run refused on ${ref.board}: ${v.why}`);
       const r = job.run;
       await this.store.addReport({

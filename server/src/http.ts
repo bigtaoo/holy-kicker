@@ -8,6 +8,23 @@ export const MAX_BODY = 32 * 1024;
 const BIG = ['/v1/reports', '/v1/runs', '/v1/challenge/runs', '/v1/replays'];
 export const maxBody = (path: string) => (BIG.includes(path) ? LIMITS.reportBytes : MAX_BODY);
 
+/** Big bodies (up to LIMITS.reportBytes each) read at once; one more is turned away with 503, so slow uploads cannot pile up memory. */
+export const BIG_READS = 4;
+
+/** Counts the big bodies being read: take() before reading one (false: too many already), give() when done. */
+export class BodyGate {
+  private open = 0;
+  constructor(private readonly limit = BIG_READS) {}
+  take(): boolean {
+    if (this.open >= this.limit) return false;
+    this.open++;
+    return true;
+  }
+  give(): void {
+    this.open = Math.max(0, this.open - 1);
+  }
+}
+
 export function readBody(req: IncomingMessage, limit: number): Promise<unknown> {
   return new Promise((resolve, reject) => {
     let size = 0;
@@ -28,6 +45,8 @@ export function readBody(req: IncomingMessage, limit: number): Promise<unknown> 
       }
     });
     req.on('error', reject);
+    // a client gone mid-body may end with neither 'end' nor 'error'; settled promises ignore this
+    req.on('close', () => reject(new Error('closed')));
   });
 }
 

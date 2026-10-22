@@ -3,7 +3,8 @@ import { WATCH_TOP, runScore, type PickWire, type ReplayWire, type RunEntry, typ
 // How challenge runs are kept (docs/design.md "Challenges"), the same for both stores: one row
 // per install per challenge board. A daily row keeps the install's first run; a weekly row its
 // best, with a better run that is still being re-simulated waiting beside it in `next`, so a
-// refused run never costs the install the best it had.
+// refused run never costs the install the best it had. A run this server has no engine for is
+// kept aside `stale` (the row's state, or `stale` beside its best), never deleted or reported.
 
 export interface Best {
   board: string;
@@ -35,15 +36,18 @@ export interface NextRun {
 
 /**
  * A challenge run as kept: `pending` until re-simulated (with its replay), then `entered` with
- * its pick timeline; a run outside the top RESIM_TOP enters unverified, with neither.
+ * its pick timeline; a run outside the top RESIM_TOP enters unverified, with neither. `stale`:
+ * kept with its replay, on no board, as no engine here can check it.
  */
 export interface ChallengeDoc extends Best {
   challenge: string;
-  state: 'pending' | 'entered';
+  state: 'pending' | 'entered' | 'stale';
   verified: boolean;
   replay?: ReplayWire;
   picks?: PickWire[];
   next?: NextRun;
+  /** A better run kept beside the best with no engine to check it on, inert. */
+  stale?: NextRun;
 }
 
 /** Whether `a` ranks above `b` on a board: the higher score, then whoever got there first. */
@@ -73,7 +77,7 @@ export function freshDoc(e: ChallengeEntry, now: number): ChallengeDoc {
 export function challengeUpdate(old: ChallengeDoc | null, e: ChallengeEntry, now: number, top: boolean): ChallengeDoc | 'repeat' | 'lower' {
   const doc = freshDoc(e, now);
   if (old && !bestOf(e.challenge)) return 'repeat';
-  if (old && doc.score <= Math.max(old.score, old.next?.score ?? -1)) return 'lower';
+  if (old && old.state !== 'stale' && doc.score <= Math.max(old.score, old.next?.score ?? -1)) return 'lower';
   if (!top) return { ...doc, state: 'entered' };
   if (old?.state === 'entered') return { ...old, next: { score: doc.score, run: doc.run, at: now, replay: e.replay } };
   return { ...doc, replay: e.replay };
@@ -91,14 +95,19 @@ export function standing(doc: ChallengeDoc): ChallengeDoc {
 export const waiting = (doc: ChallengeDoc) => doc.state === 'pending' || doc.next !== undefined;
 
 /**
- * The re-simulation's verdict on the run made at `at`: the row as it becomes (the run entered,
- * verified, with its pick timeline), null to delete it (a refused first run), or undefined when
- * the row no longer holds that run (a better one replaced it meanwhile).
+ * The re-simulation's verdict on the run made at `at` (`stale`: no engine to check it on): the
+ * row as it becomes (the run entered, verified, with its pick timeline; or kept aside, stale),
+ * null to delete it (a refused first run), or undefined when the row no longer holds that run
+ * (a better one replaced it meanwhile).
  */
-export function settleDoc(doc: ChallengeDoc, at: number, picks: PickWire[] | null): ChallengeDoc | null | undefined {
-  if (doc.state === 'pending' && doc.at === at) return picks ? { ...keptReplay(doc), state: 'entered', verified: true, picks } : null;
+export function settleDoc(doc: ChallengeDoc, at: number, picks: PickWire[] | null | 'stale'): ChallengeDoc | null | undefined {
+  if (doc.state === 'pending' && doc.at === at) {
+    if (picks === 'stale') return { ...doc, state: 'stale' };
+    return picks ? { ...keptReplay(doc), state: 'entered', verified: true, picks } : null;
+  }
   if (doc.next?.at !== at) return undefined;
   const { next, ...best } = doc;
+  if (picks === 'stale') return { ...best, stale: next };
   if (!picks) return best;
   return keptReplay({ ...best, score: next.score, run: next.run, at: next.at, replay: next.replay, state: 'entered', verified: true, picks });
 }

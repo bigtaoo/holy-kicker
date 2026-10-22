@@ -80,13 +80,18 @@ jobs:
       group: server-deploy
       cancel-in-progress: false
     steps:
+      # the whole history: the bundle carries the last few engines from git (server/build.mjs)
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
       - name: build server
+        env:
+          HK_OLD_ENGINES_STRICT: '1'
         run: node server/build.mjs
       - name: deploy over ssh
         env:

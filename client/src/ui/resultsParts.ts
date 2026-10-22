@@ -63,7 +63,7 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   const badges: Container[] = [];
   if (r.newBest) badges.push(pill(t('results.newBest'), COLORS.gold, 48));
   else if (!won && r.best > 0) badges.push(pill(t('results.best', { wave: r.best }), COLORS.dim));
-  if (rank) badges.push(pill(t(rank.best ? 'results.rankNew' : 'results.rankShort', { rank: rank.rank }), rank.best ? COLORS.gold : COLORS.dim));
+  if (rank) badges.push(rankPill(rank));
   if (badges.length === 0) return [c, top];
   const row = new Container();
   let x = 0;
@@ -196,4 +196,10 @@ export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
   const tomorrow = r.gift?.next;
   if (tomorrow) lines.push([t('gift.tomorrow', { gift: haulName(tomorrow) }), 48, COLORS.jade]);
   return lines;
+}
+
+/** The leaderboard place: a new best stays "checking" until the server has re-simulated it. */
+function rankPill(rank: RunRank): Container {
+  if (rank.status === 'pending') return pill(t('results.rankPending', { rank: rank.rank }), COLORS.dim);
+  return pill(t(rank.best ? 'results.rankNew' : 'results.rankShort', { rank: rank.rank }), rank.best ? COLORS.gold : COLORS.dim);
 }

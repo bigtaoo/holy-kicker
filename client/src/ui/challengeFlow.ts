@@ -1,4 +1,4 @@
-import { LIMITS, challengeBoardId, dailySeed, weekIdOf, weekStart, ymdOf, WEEK_MS, type Challenge, type ChallengeList, type ChallengeRunReply, type ReplayWire, type TopRun } from '@hk/protocol';
+import { LIMITS, challengeBoardId, dailyChallenge, weekIdOf, weekStart, WEEK_MS, type Challenge, type ChallengeList, type ChallengeRunReply, type ReplayWire, type TopRun } from '@hk/protocol';
 import { ENGINE_VERSION, MUTATOR_IDS, takeReplay, type LocalInputSource, type Replay, type SimState } from '@hk/engine';
 import type { Game } from '../game/Game';
 import { evolvedIn } from '../meta/codex';
@@ -24,7 +24,6 @@ import type { ReplayView } from './replayWatch';
 const STALE_MS = 10 * 60 * 1000;
 /** A daily made up on the device asks the backend again after this long. */
 const RETRY_MS = 60 * 1000;
-const DAY_MS = 86_400_000;
 
 /** The daily as the lobby shows it. */
 export interface DailyView {
@@ -284,11 +283,9 @@ export class ChallengeFlow {
   }
 }
 
-/** The UTC day's daily as the server makes it (server/src/challenge.ts dailyOf): its id, bounds, seed, waves and mutator. */
+/** The UTC day's daily as the server makes it (server/src/challenge.ts dailyOf, both @hk/protocol dailyChallenge). */
 export function localDaily(now: number): Challenge {
-  const start = now - (now % DAY_MS);
-  const ymd = ymdOf(start);
-  return { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: dailySeed(ymd), chapter: 'furthest', waves: 20, mutator: MUTATOR_IDS[(start / DAY_MS) % MUTATOR_IDS.length], loadout: null, engine: ENGINE_VERSION };
+  return dailyChallenge(now, ENGINE_VERSION, MUTATOR_IDS);
 }
 
 /** The challenges as the device makes them up (?challenge offline): the daily, and the ISO week's weekly with a fixed loadout. */
