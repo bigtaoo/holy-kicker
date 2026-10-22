@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_RUN, Engine, hashState, newMob, replayEngine, takeReplay, type LocalInputSource, type RunConfig } from '@hk/engine';
 import { Bot } from '@hk/engine/bot/bot';
 import { analyzeRun, hordeAround } from './replayStats';
-import { formatPicks, formatRun, formatTable } from './replayReport';
+import { formatBuilds, formatPicks, formatRun, formatTable } from './replayReport';
 
 // A bot's run, taken as a replay and read back: the reading agrees with what the live run counted.
 
@@ -51,6 +51,18 @@ describe('replay stats', () => {
     expect(formatRun(m, r).length).toBeGreaterThan(4);
     expect(formatTable([{ m, r }])).toHaveLength(2);
     expect(formatPicks([{ m, r }]).length).toBeGreaterThan(1);
+  });
+
+  it('reads the final build and tallies it per card, with and without', () => {
+    const p = engine.state.players[0];
+    expect(r.build.spells).toEqual(p.spells.map((sp) => ({ id: sp.id, level: sp.level, evolved: sp.evolved })));
+    expect(r.build.relicLv).toBe(p.relic);
+    const m = { id: 'test', tags: [], chapter: 1, relic: 'ball', monk: 'kicker', engine: 0, hashOk: true, note: '' };
+    const won = { ...r, outcome: 'won', build: { ...r.build, spells: [{ id: 'palm', level: 5, evolved: true }], passives: [{ id: 'eye', level: 2 }] } };
+    const lost = { ...r, outcome: 'lost', wave: 10, build: { ...r.build, spells: [{ id: 'bolt', level: 3, evolved: false }], passives: [] } };
+    const rows = formatBuilds([{ m, r: won }, { m, r: lost }]);
+    expect(rows.find((l) => l.includes('evolve:palm'))).toMatch(/evolve:palm\s+1\s+1\s+100%/);
+    expect(rows.find((l) => l.includes('spell:bolt'))).toMatch(/spell:bolt\s+1\s+0\s+0%\s+10 \|\s+1\s+100%/);
   });
 });
 

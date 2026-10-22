@@ -11,7 +11,7 @@ describe('codex', () => {
     expect(entries.find((e) => e.id === 'palm')).toEqual({ id: 'palm', found: true, pair: 'eye', relic: false, sutra: null });
     expect(entries.find((e) => e.id === 'staff')).toMatchObject({ found: false, pair: 'iron', relic: true });
     // a sutra spell names its sutra until it is earned
-    expect(codexEntries([], []).find((e) => e.id === 'halo')).toMatchObject({ pair: 'calm', sutra: 'halo' });
+    expect(codexEntries([], []).find((e) => e.id === 'halo')).toMatchObject({ pair: 'focus', sutra: 'halo' });
     expect(codexEntries([], ['halo']).find((e) => e.id === 'halo')).toMatchObject({ sutra: null });
   });
 

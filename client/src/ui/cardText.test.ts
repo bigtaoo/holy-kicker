@@ -35,7 +35,7 @@ describe('card text', () => {
     p.passives = [{ id: 'rice', level: 3 }, { id: 'calm', level: 2 }, { id: 'karma', level: 1 }];
     expect(cardText({ kind: 'passive', id: 'rice' }, p)).toMatchObject({ tag: 'Lv.3 → 4', fresh: false, lines: ['Heal 1.2% → 1.6% health/s'] });
     expect(cardText({ kind: 'passive', id: 'calm' }, p).lines).toEqual(['Spell cooldown −16% → −24%']);
-    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['XP +8% → +16%', 'Pickup range +15% → +30%']);
+    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['XP +12% → +24%', 'Pickup range +20% → +40%']);
     setLocale('zh');
     expect(cardText({ kind: 'passive', id: 'rice' }, p).lines).toEqual(['每秒回复 1.2% → 1.6% 生命']);
   });
@@ -78,7 +78,7 @@ describe('card text', () => {
 
   it('describes the wooden fish and its Stunning Bell', () => {
     const p = newPlayer(0, 0, 0, 100, 0, 'fish');
-    expect(cardText({ kind: 'relic', id: 'fish' }, p)).toMatchObject({ name: 'Wooden Fish', icon: 'fish', pairs: ['calm'] });
+    expect(cardText({ kind: 'relic', id: 'fish' }, p)).toMatchObject({ name: 'Wooden Fish', icon: 'fish', pairs: ['rice'] });
     const awaken = cardText({ kind: 'evolve', id: 'fish' }, p);
     expect(awaken).toMatchObject({ name: 'Stunning Bell', tag: 'Awaken!' });
     expect(awaken.lines).toEqual(['Every 4th ring stuns for 1s', expect.stringMatching(/^Reach \+\d+%$/)]);
@@ -89,7 +89,7 @@ describe('card text', () => {
   it('describes the prayer beads and the 108 Beads', () => {
     const p = newPlayer(0, 0, 0, 100, 0, 'beads');
     const step = cardText({ kind: 'relic', id: 'beads' }, p);
-    expect(step).toMatchObject({ name: 'Prayer Beads', icon: 'beads', pairs: ['eye'] });
+    expect(step).toMatchObject({ name: 'Prayer Beads', icon: 'beads', pairs: ['calm'] });
     expect(step.lines).toEqual(['Beads 3 → 4']);
     p.relic = 2;
     expect(cardText({ kind: 'relic', id: 'beads' }, p).lines).toEqual(['Damage +29%', 'Spin +14%']);
@@ -106,7 +106,7 @@ describe('card text', () => {
     const awaken = cardText({ kind: 'evolve', id: 'bowl' }, p);
     expect(awaken).toMatchObject({ name: 'Bottomless Bowl', tag: 'Awaken!' });
     expect(awaken.lines).toEqual(['Swallows 8 enemies a throw, XP at once', 'Reach +7%']);
-    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['Level up faster', 'XP +8%, pickup range +15%']);
+    expect(cardText({ kind: 'passive', id: 'karma' }, p).lines).toEqual(['Level up faster', 'XP +12%, pickup range +20%']);
   });
 
   it('describes the sutra spells, their evolutions, Focus and the sutras', () => {
