@@ -5,7 +5,8 @@
 // origin that fails, and when no fight is seen: the run is kept in storage at each wave
 // (hk.run, runWatch.ts) and the canvas keeps changing.
 // The portal SDKs are fakes served in place of their CDN scripts, and every other outside request
-// is answered empty, so the test needs no network and sends nothing (?api=off for the backend).
+// is answered empty, the backend's too (a release reads no ?api=), so the test needs no network
+// and sends nothing anywhere.
 //   node build/smoke.mjs                 every dist below (build them first)
 //   node build/smoke.mjs web ios         just those
 //   SMOKE_SECONDS=10 node build/smoke.mjs
@@ -126,7 +127,7 @@ async function smoke(browser, name, { root, page: path }) {
   let fought = 0;
   let moving = false;
   try {
-    await page.goto(`${origin}${path}?api=off`, { waitUntil: 'load', timeout: 30_000 });
+    await page.goto(`${origin}${path}`, { waitUntil: 'load', timeout: 30_000 });
     const end = start + SECONDS * 1000;
     let last = null;
     while (Date.now() < end) {
