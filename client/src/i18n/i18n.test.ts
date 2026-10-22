@@ -15,7 +15,7 @@ import { vi } from './vi';
 import { en } from './en';
 import { MORE_NAMES } from './more';
 import { zh } from './zh';
-import { detectLocale, formatAmount, loadLocale, LOCALES, localeName, setLocale, t } from './index';
+import { detectLocale, formatAmount, loadLocale, LOCALES, localeName, pluralCategory, setLocale, t } from './index';
 
 const TABLES = { en, zh, de, es, fr, id, it: italian, ja, ko, pl, pt, ru, th, tr, vi };
 
@@ -48,7 +48,7 @@ describe('i18n', () => {
   });
 
   it('keeps the same placeholders in every language', () => {
-    const holes = (s: string) => (s.match(/\{\w+(?=[:}])/g) ?? []).sort().join();
+    const holes = (s: string) => [...new Set(s.match(/\{\w+(?=[:}|])/g) ?? [])].sort().join();
     setLocale('en');
     const english = leaves(en).map((k) => holes(t(k as never)));
     for (const l of LOCALES) {
@@ -85,14 +85,48 @@ describe('i18n', () => {
 
   it('formats amounts compactly per language', () => {
     expect(formatAmount(950, 'en')).toBe('950');
-    expect(formatAmount(1234, 'en')).toBe('1.2k');
-    expect(formatAmount(12345, 'en')).toBe('12k');
+    expect(formatAmount(1234, 'en')).toBe('1.2K');
+    expect(formatAmount(12345, 'en')).toBe('12K');
     expect(formatAmount(4_560_000, 'en')).toBe('4.5M');
     expect(formatAmount(9999, 'zh')).toBe('9999');
     expect(formatAmount(12345, 'zh')).toBe('1.2万');
     expect(formatAmount(340_000_000, 'zh')).toBe('3.4亿');
     expect(formatAmount(12345, 'ja')).toBe('1.2万');
     expect(formatAmount(12345, 'ko')).toBe('1.2만');
-    expect(formatAmount(12345, 'de')).toBe('12k');
+    expect(formatAmount(4_560_000, 'de').replace(/\s/g, ' ')).toBe('4,5 Mio.');
+    expect(formatAmount(1234, 'fr').replace(/\s/g, ' ')).toBe('1,2 k');
+  });
+
+  it('picks the plural form by the language rules', () => {
+    expect(pluralCategory(1, 'en')).toBe('one');
+    expect(pluralCategory(3, 'ru')).toBe('few');
+    expect(pluralCategory(5, 'ru')).toBe('many');
+    expect(pluralCategory(22, 'pl')).toBe('few');
+    expect(pluralCategory(0, 'fr')).toBe('one');
+    expect(t('challenge.streak', { n: 1 })).toBe('Daily streak: 1 day');
+    expect(t('challenge.streak', { n: 3 })).toBe('Daily streak: 3 days');
+    setLocale('ru');
+    expect(t('challenge.streak', { n: 2 })).toMatch(/2 дня$/);
+    expect(t('challenge.streak', { n: 5 })).toMatch(/5 дней$/);
+    expect(t('challenge.streak', { n: 21 })).toMatch(/21 день$/);
+    setLocale('pl');
+    expect(t('challenge.streak', { n: 3 })).toMatch(/3 dni$/);
+    setLocale('fr');
+    expect(t('patrol.quickInfo', { copper: 5, n: 1 })).not.toMatch(/1 équipements/);
+  });
+
+  it('writes every plural form a language needs', () => {
+    for (const l of LOCALES) {
+      setLocale(l);
+      // fr/es/it/pt's `many` is for millions only; their `other` serves.
+      const needs = new Intl.PluralRules(l).resolvedOptions().pluralCategories.filter((c) => c !== 'other' && (c !== 'many' || l === 'pl' || l === 'ru'));
+      for (const key of leaves(en)) {
+        for (const m of t(key as never).matchAll(/\{\w+\|([^{}]+)\}/g)) {
+          const forms = m[1]!.split('|').map((f) => f.split(':')[0]);
+          expect(forms, `${l} ${key}`).toContain('other');
+          for (const c of needs) expect(forms, `${l} ${key} ${c}`).toContain(c);
+        }
+      }
+    }
   });
 });

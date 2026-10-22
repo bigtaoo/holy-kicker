@@ -241,7 +241,7 @@ export const monkPl: Table<typeof monkEn> = {
     kills: 'Pokonaj łącznie wrogów: {n}',
     clear: 'Ukończ rozdział {n}',
     hard: 'Ukończ trudny rozdział {n}',
-    trained: 'Trenuj {n} razy',
+    trained: 'Trenuj {n} {n|one:raz|few:razy|many:razy|other:razy}',
     monks: 'Zdobądź wszystkich mnichów ({n})',
     reward: '+{jade} jadeitu',
     claimAll: 'Odbierz wszystko: +{jade} jadeitu',

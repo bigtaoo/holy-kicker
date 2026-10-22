@@ -60,3 +60,12 @@ export function computeViewport(screenW: number, screenH: number, wide = false):
     playH,
   };
 }
+
+/**
+ * A touch-only device held sideways: the game is portrait only, so it asks to be turned upright
+ * rather than squeezing a pillarboxed strip into the middle (Shell's upright cover). Desktops
+ * and laptops, wide as they are, play in the 3:4 frame.
+ */
+export function wantsUpright(screenW: number, screenH: number, touchOnly: boolean): boolean {
+  return touchOnly && screenW > screenH;
+}

@@ -70,9 +70,9 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   const shift = SCENE_H + 40;
   const gauge = meter(BAR_W, 0, COLORS.saffron);
   gauge.view.y = top + 260 + shift;
-  const pays = label('', 44, COLORS.copper);
+  const pays = label('', 48, COLORS.copper);
   pays.y = top + 340 + shift;
-  const rate = fit(label(t('patrol.rate', { h: P.dropHours, cap: P.capHours }), 40, COLORS.dim), 840);
+  const rate = fit(label(t('patrol.rate', { h: P.dropHours, cap: P.capHours }), 48, COLORS.dim), 840, 70);
   rate.y = top + 410 + shift;
   box.addChild(title, stored, scene.view, gauge.view, pays, rate);
   const refresh = () => {
@@ -82,7 +82,7 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
     gauge.set(hours / P.capHours);
     scene.set(hours, P.capHours, patrolDrops(hours));
     pays.text = t('patrol.pays', { copper: formatAmount(Math.floor(copperPerHour(save) * hours)), n: patrolDrops(hours) });
-    fit(pays, 840);
+    fit(pays, 840, 70);
   };
   refresh();
   live.push(refresh);
@@ -107,7 +107,7 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   y = top + 960 + shift;
   const quick = label(t('patrol.quick'), 56);
   quick.y = y - 100;
-  const info = fit(label(t('patrol.quickInfo', { copper: formatAmount(Math.floor(copperPerHour(save) * P.quickHours)), n: P.quickDrops }), 40, COLORS.dim), 840);
+  const info = fit(label(t('patrol.quickInfo', { copper: formatAmount(Math.floor(copperPerHour(save) * P.quickHours)), n: P.quickDrops }), 48, COLORS.dim), 840, 70);
   info.y = y - 35;
   box.addChild(new Graphics().rect(-400, y - 160, 800, 4).fill(COLORS.panelLocked), quick, info);
   const adsLeft = quickLeft(save, now(), 'ad');
@@ -116,7 +116,7 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   if (adOk) {
     const ok = adsLeft > 0 && !playing;
     buttons.push(button(playing ? '…' : t('patrol.quickAd', { n: adsLeft }), 400, 130, () => (adsLeft > 0 ? a.quick('ad') : a.toast(t('patrol.noneLeft'))), {
-      fill: ok ? COLORS.saffron : COLORS.panelLocked, textFill: ok ? COLORS.text : COLORS.dim, video: !playing, size: 44,
+      fill: ok ? COLORS.saffron : COLORS.panelLocked, textFill: ok ? COLORS.text : COLORS.dim, video: !playing, size: 48,
     }));
   }
   const jadeOk = jadeLeft > 0 && save.jade >= P.quickJade;
@@ -124,7 +124,7 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
     if (jadeLeft === 0) a.toast(t('patrol.noneLeft'));
     else if (save.jade < P.quickJade) a.toast(t('shop.noJade'));
     else a.quick('jade');
-  }, { fill: jadeOk ? COLORS.jade : COLORS.panelLocked, textFill: jadeOk ? COLORS.outline : COLORS.dim, size: 44 }));
+  }, { fill: jadeOk ? COLORS.jade : COLORS.panelLocked, textFill: jadeOk ? COLORS.outline : COLORS.dim, size: 48 }));
   buttons.forEach((b, i) => {
     b.position.set((i - (buttons.length - 1) / 2) * 430, y + 70);
     box.addChild(b);
@@ -168,7 +168,7 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
   const D = BALANCE.daily;
   const d = today(save, now);
   const c = new Container();
-  const reward = fit(label(t('tasks.reward', { copper: D.copper, jade: D.jade }), 40, COLORS.dim), 880);
+  const reward = fit(label(t('tasks.reward', { copper: D.copper, jade: D.jade }), 48, COLORS.dim), 880, 130);
   reward.y = top + 215;
   c.addChild(reward);
   D.tasks.forEach((goal, i) => {
@@ -176,20 +176,20 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
     row.y = top + ROWS_TOP + i * ROW_H;
     const state = taskState(save, d, i);
     const n = taskGoal(save, d, i);
-    const name = fit(label(t(`tasks.${goal.kind}`, { n }), 46, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
+    const name = fit(label(t(`tasks.${goal.kind}`, { n }), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560, 70);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
     const done = Math.min(n, d.progress[i]);
     const gauge = meter(380, done / n, state === 'open' ? COLORS.copper : COLORS.jade);
     gauge.view.position.set(-240, 40);
-    const count = label(`${done}/${n}`, 42, COLORS.dim);
+    const count = label(`${done}/${n}`, 48, COLORS.dim);
     count.anchor.set(0, 0.5);
     count.position.set(-20, 40);
     row.addChild(name, gauge.view, count);
     if (state !== 'open') {
       const ready = state === 'ready';
       const b = button(ready ? t('tasks.claim') : t('tasks.done'), 230, 110, () => ready && a.claimTask(i), {
-        fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim, size: 44,
+        fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim, size: 48,
       });
       b.x = 320;
       row.addChild(b);
@@ -201,7 +201,7 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
     fill: ready ? COLORS.jade : COLORS.panelLocked, textFill: ready ? COLORS.outline : COLORS.dim, size: 48,
   });
   bonus.y = top + ROWS_TOP + D.tasks.length * ROW_H + 10;
-  const resets = label(t('tasks.resets'), 38, COLORS.dim);
+  const resets = fit(label(t('tasks.resets'), 48, COLORS.dim), 880, 130);
   resets.y = bonus.y + 110;
   c.addChild(bonus, resets);
   return c;

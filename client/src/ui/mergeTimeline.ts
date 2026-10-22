@@ -12,17 +12,22 @@ export interface MergeTiming {
   flight: number;
   charge: number;
   flash: number;
+  /** The white flash's opacity at its start (1, or CALM_FLASH for reduced motion). */
+  flashPeak: number;
   drop: number;
   card: number;
   /** Seconds the card's numbers count up. */
   count: number;
 }
 
-const FULL: MergeTiming = { stagger: 0.14, flight: 0.28, charge: 0.6, flash: 0.18, drop: 0.55, card: 0.3, count: 0.5 };
+const FULL: MergeTiming = { stagger: 0.14, flight: 0.28, charge: 0.6, flash: 0.18, flashPeak: 1, drop: 0.55, card: 0.3, count: 0.5 };
 const FAST: MergeTiming = { ...FULL, stagger: 0.05, flight: 0.16, charge: 0.25 };
+/** With the system's reduce-motion wish the white flash only tints the screen. */
+const CALM_FLASH = 0.3;
 
-export function mergeTiming(fast: boolean): MergeTiming {
-  return fast ? FAST : FULL;
+export function mergeTiming(fast: boolean, calm = false): MergeTiming {
+  const m = fast ? FAST : FULL;
+  return calm ? { ...m, flashPeak: CALM_FLASH } : m;
 }
 
 /** When the last copy lands, the charge ends (the flash), the drop ends and the card is up. */
@@ -59,7 +64,7 @@ export function mergeFrame(t: number, m: MergeTiming): MergeFrame {
     copies.push(k >= 1 ? null : easeIn(clamp(k)));
   }
   const charge = t >= mk.landed && t < mk.burst ? (t - mk.landed) / m.charge : 0;
-  const flash = t >= mk.burst ? Math.max(0, 1 - (t - mk.burst) / m.flash) : 0;
+  const flash = t >= mk.burst ? m.flashPeak * Math.max(0, 1 - (t - mk.burst) / m.flash) : 0;
   let item: MergeFrame['item'] = null;
   if (t >= mk.burst) {
     const k = clamp((t - mk.burst) / m.drop);

@@ -33,6 +33,7 @@ import type { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { RunHud } from './RunHud';
+import { runSwitches } from './pausePanel';
 import { keepLanguage } from './settingsPanel';
 import { canReport, reportProblem } from './problemReport';
 import type { PlayerName } from './playerName';
@@ -40,6 +41,7 @@ import type { DownInfo } from './deathInfo';
 import { RunWatch } from './runWatch';
 import { clearedWaves, keepable, runSummary } from './runSummary';
 import type { Screen } from './uiLayout';
+import { reducedMotion } from './media';
 
 // A run's life (docs/design.md "Flow"), the shell's other half: the run started from the lobby, a
 // resumed one or a challenge's, its HUD and RunWatch, the pause, the revives, its end, the payout
@@ -78,6 +80,9 @@ export interface RunHost {
   raiseUi(): void;
 }
 
+/** Seconds between two buzzes: a swarm's hits would otherwise rattle the phone without a break. */
+const BUZZ_GAP = 0.4;
+
 export class RunFlow {
   game: Game | null = null;
   private hud: RunHud | null = null;
@@ -87,6 +92,8 @@ export class RunFlow {
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
   private freeRevives = 0;
   kills = 0; // enemies defeated in this run, for the daily tasks
+  /** When the phone last buzzed (performance.now()). */
+  private buzzed = 0;
 
   constructor(private readonly host: RunHost) {}
 
@@ -123,13 +130,15 @@ export class RunFlow {
     h.perf()?.start(rankedRun(h.scene) && !h.scene.record, chapter);
     const quality = h.quality();
     if (quality) game.applyQuality(quality);
-    game.shake.on = loadSettings(h.platform.storage).shake;
+    // the system's reduce-motion wish turns it off for the run; the pause switch can still turn it on
+    game.shake.on = loadSettings(h.platform.storage).shake && !reducedMotion();
     game.onEvents = (events) => {
       this.watch?.see(events);
       for (const e of events) {
         if (e.type === 'mobDown') this.kills++;
         const cue = eventCue(e, 0);
         if (cue) h.sound.play(cue);
+        if (cue === 'levelUp' || cue === 'hurt') this.buzz(cue === 'hurt');
       }
     };
     game.onHeartbeat = () => h.sound.play('heartbeat');
@@ -144,6 +153,7 @@ export class RunFlow {
       revive: () => this.revive(),
       pick: (index) => this.game?.pick(index),
       setLanguage: (locale) => keepLanguage(h.platform.storage, locale),
+      switches: runSwitches(h.platform.storage, h.sound, game.shake, !!h.platform.vibrate),
       report: canReport(h.net, import.meta.env.DEV) ? () => reportProblem(h.platform, h.net, () => this.game, h.scene) : null,
     }, h.art.icons, h.device === 'desktop', () => h.platform.keysReach?.() ?? true));
     // the run adds itself to the stage; keep the UI above it
@@ -156,7 +166,9 @@ export class RunFlow {
       // the death panel asks the host only when it would offer the ad's revive
       ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', h.ads.rewardedAvailable()) }, past: runPast(save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
-      kills: () => this.kills, keepRun: () => this.keep(), end: () => this.end(), cheer: () => h.sound.play('cleared'),
+      kills: () => this.kills,
+      pairHint: { due: () => !loadSettings(h.platform.storage).pairsTold, done: () => updateSettings(h.platform.storage, { pairsTold: true }) },
+      keepRun: () => this.keep(), end: () => this.end(), cheer: () => h.sound.play('cleared'),
     }, !!teach);
     // the fast-forward choice carries over from the last run
     hud.setFast(loadSettings(h.platform.storage).fast);
@@ -173,6 +185,15 @@ export class RunFlow {
     const { scene, platform, challenge } = this.host;
     if (!s || !keepable(s, scene, !!challenge.run)) return;
     keepRun(platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills });
+  }
+
+  /** A short buzz where the phone can and the player lets it, at most one per BUZZ_GAP seconds. */
+  private buzz(strong: boolean): void {
+    const { platform } = this.host;
+    const now = performance.now();
+    if (!platform.vibrate || now - this.buzzed < BUZZ_GAP * 1000 || !loadSettings(platform.storage).haptics) return;
+    this.buzzed = now;
+    platform.vibrate(strong);
   }
 
   /** The run is ticking: not paused (by the player or a held panel's pause). */

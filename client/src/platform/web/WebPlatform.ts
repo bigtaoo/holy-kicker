@@ -50,6 +50,8 @@ export class WebPlatform implements Platform {
   readonly store: Store | null = import.meta.env.DEV && new URLSearchParams(location.search).get('store') === 'fake' ? fakeStore() : null;
   readonly notify?: Notifier = import.meta.env.DEV && new URLSearchParams(location.search).get('notify') === 'fake' ? fakeNotifier() : undefined;
   readonly audio: AudioHost | null = webAudioHost();
+  // a phone's browser; desktop Chrome has the call too but nothing to buzz
+  readonly vibrate = typeof navigator.vibrate === 'function' && navigator.maxTouchPoints > 0 ? (strong: boolean) => void navigator.vibrate(strong ? 40 : 15) : undefined;
 
   askText(o: TextAsk): Promise<string | null> {
     return askTextDom(o);

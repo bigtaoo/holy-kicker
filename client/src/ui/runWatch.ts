@@ -8,7 +8,7 @@ import type { Backend } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
 import type { Ads, Portal } from '../platform/types';
 import { buildChanged, buildSlots, spellCharges, type Charge } from './buildSlots';
-import { cardText } from './cardText';
+import { cardText, pairsLine } from './cardText';
 import { deathCause, nearestGoal, type DownInfo } from './deathInfo';
 import type { RunHud } from './RunHud';
 import { GATHER, GatherNudge, gatherDir } from './gatherNudge';
@@ -35,6 +35,12 @@ export function lyingShare(s: SimState, p: Player): number {
   return xp / Math.max(1, xpToNext(p.level) - p.xp);
 }
 
+/** The wave of the next chest (BALANCE.chests) a run on `wave` can still earn, `claimed` a bit per chest; 0 for none. */
+export function nextChest(wave: number, claimed: number): number {
+  const cleared = Math.max(0, wave - 1);
+  return BALANCE.chests.find((c, k) => !(claimed & (1 << k)) && c.wave > cleared)?.wave ?? 0;
+}
+
 export interface RunWatchDeps {
   chapter: number;
   /** One of a new player's first runs (BALANCE.novice.runs): the suggested card wears a tag. */
@@ -52,6 +58,8 @@ export interface RunWatchDeps {
   keepRun(): void;
   /** The run is over (won, after the monk's line). */
   end(): void;
+  /** Whether the evolution badge is still to be explained on a card, once per device. */
+  pairHint?: { due(): boolean; done(): void };
   /** Plays the new-record fanfare. */
   cheer?(): void;
 }
@@ -62,6 +70,8 @@ export function autoPick(offer: readonly Card[]): number {
 }
 
 export class RunWatch {
+  /** The wave of the chest the run was last heading for (0 for none). */
+  private chestAhead = 0;
   /** The wave the HUD last showed, and whether the death panel is up. */
   private shownWave = -1;
   downShown = false;
@@ -121,12 +131,18 @@ export class RunWatch {
       this.shownWave = s.wave;
       hud.setWave(s.wave);
       hud.setLastFall(s.wave <= fell ? fell : 0);
+      const ahead = d.past ? nextChest(s.wave, d.past.chests) : 0;
+      const chest = ahead <= s.config.waves ? ahead : 0;
+      // the chest the last shown wave was heading for has just been earned
+      const earned = this.chestAhead > 0 && s.wave - 1 >= this.chestAhead;
+      this.chestAhead = chest;
+      hud.setNextChest(chest);
       const last = s.config.waves;
       const warning = isBossWave(s.wave, last) ? t('run.boss') : isEliteWave(s.wave, last) ? t('run.elite') : null;
       if (s.wave > 0) {
         const cheer = record ? t('run.newRecord') : broke ? t('run.brokeThrough') : null;
-        hud.announce(s.wave, warning, waveLine(d.chapter, s.wave, last), cheer, record);
-        if (record) d.cheer?.();
+        hud.announce(s.wave, warning, waveLine(d.chapter, s.wave, last), cheer, record, earned);
+        if (record || earned) d.cheer?.();
         // kept at each wave too, in case the game dies without going to the background first
         d.keepRun();
       }
@@ -167,7 +183,14 @@ export class RunWatch {
         hud.gained(cardText(p.offer[i], p).name);
       } else {
         const title = p.offer[0].kind === 'shrine' ? t('card.shrine') : t('card.levelUp');
-        hud.showOffer(title, p.offer.map((c) => cardText(c, p)), suggestCard(p), !!this.d.novice);
+        const texts = p.offer.map((c) => cardText(c, p));
+        // the evolution badge, explained on the first card that wears one and has a line to spare
+        const paired = d.pairHint?.due() ? texts.find((c) => c.pairs.length > 0 && c.lines.length < 3) : undefined;
+        if (paired) {
+          paired.lines.push(pairsLine(paired));
+          d.pairHint!.done();
+        }
+        hud.showOffer(title, texts, suggestCard(p), !!this.d.novice);
       }
     } else if (p.offer.length === 0 && this.shownOffer) {
       this.shownOffer = null;

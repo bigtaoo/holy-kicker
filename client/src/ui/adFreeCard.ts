@@ -32,8 +32,8 @@ export function adFreeCard(store: Store, busy: boolean, w: number, h: number, a:
   const owned = store.owned();
   const lines: [string, number, number][] = [
     [t('shop.adFree'), 56, COLORS.text],
-    [t('shop.adFreeInfo'), 40, COLORS.dim],
-    owned ? [t('shop.adFreeOwned'), 38, COLORS.saffron] : [t('shop.adFreeCaps'), 38, COLORS.dim],
+    [t('shop.adFreeInfo'), 48, COLORS.dim],
+    owned ? [t('shop.adFreeOwned'), 48, COLORS.saffron] : [t('shop.adFreeCaps'), 48, COLORS.dim],
   ];
   lines.forEach(([text, size, fill], i) => {
     const l = fit(label(text, size, fill, { align: 'left' }), 420);
@@ -54,7 +54,7 @@ export function adFreeCard(store: Store, busy: boolean, w: number, h: number, a:
     fill: ok ? COLORS.saffron : COLORS.panelLocked, textFill: ok ? COLORS.text : COLORS.dim, size: 48,
   });
   buy.position.set(320, -50);
-  const restore = button(t('shop.restore'), 300, 90, () => a.restore(), { fill: COLORS.panelLocked, textFill: busy ? COLORS.dim : COLORS.text, size: 40 });
+  const restore = button(t('shop.restore'), 300, 90, () => a.restore(), { fill: COLORS.panelLocked, textFill: busy ? COLORS.dim : COLORS.text, size: 48 });
   restore.position.set(320, 85);
   if (busy) buy.eventMode = restore.eventMode = 'none';
   card.addChild(buy, restore);

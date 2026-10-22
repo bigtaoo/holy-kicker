@@ -4,7 +4,7 @@ import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
 import type { SceneOptions } from '../game/scene';
-import { computeViewport } from '../game/viewport';
+import { computeViewport, wantsUpright } from '../game/viewport';
 import { setupOf } from '../game/runSetup';
 import { BALANCE } from '../meta/balance';
 import { EXPERIMENTS, enroll, experimentTag, forcedArms } from '../meta/experiments';
@@ -42,6 +42,8 @@ import { storedSettings, type SettingsActions } from './settingsPanel';
 import { PlayerName } from './playerName';
 import { ReplayScreen, type ReplayView } from './replayWatch';
 import { uiFrame, type Screen } from './uiLayout';
+import { uprightCover } from './uprightCover';
+import { touchOnly } from './media';
 import { onButtonTap } from './widgets';
 
 // The game's flow (docs/design.md "Flow"): the first launch goes straight into chapter 1, afterwards lobby -> run ->
@@ -59,6 +61,9 @@ export class Shell {
   private screen: Screen | null = null;
   private shownMs = 0; // milliseconds on screen since the last `leave` event
   private screenKey = '';
+  /** The "turn upright" cover while a touch-only device is held sideways, and the size it was drawn for. */
+  private upright: { view: Container; key: string } | null = null;
+  private readonly touchOnly = touchOnly();
   private bannerUp = false; // the lobby's banner is up: its band is kept clear like a safe-area inset
   private quality: LevelSettings | null = null;
   /** Switches the render quality mode (boot.ts wires it to the quality runtime). */
@@ -176,6 +181,11 @@ export class Shell {
     return this.runs.game;
   }
 
+  /** The first run's opening hint (drag to move) is on screen; the privacy toast waits for it. */
+  get teachingMove(): boolean {
+    return this.runs.watch?.tutorial?.step === 'move';
+  }
+
   /** Records a share from the host's menu, with the screen it was made from. */
   shared(to: 'chat' | 'moments'): void {
     const from = this.screen instanceof LobbyScreen ? 'lobby' : this.place() === 'results' ? 'results' : 'run';
@@ -255,6 +265,7 @@ export class Shell {
         setQuality: (quality) => this.onQualityMode(quality),
         privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform), cloud: this.cloud,
         account: this.platform.portal, adPrivacy: this.platform.adPrivacy, reminders: this.reminders ?? undefined,
+        canVibrate: !!this.platform.vibrate,
         version: __HK_BUILD__, tester: () => this.save.tester, markTester: () => this.commit({ ...this.save, tester: true }),
       }),
       commit: (save) => this.commit(save),
@@ -389,6 +400,7 @@ export class Shell {
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
       this.screen.layout(uiFrame(computeViewport(width, height, this.scene.record > 0), insets));
     }
+    this.coverSideways(width, height, key);
     // only a run ticking on screen counts towards the next interstitial
     if (this.runs.playing) this.ads.played(this.app.ticker.deltaMS);
     if (this.runs.watch) this.runs.watch.update(this.app.ticker.deltaMS / 1000);
@@ -396,5 +408,21 @@ export class Shell {
     // the run has the battle music (the boss's on the mid-boss and boss waves, through to the results), every screen around it the lobby's
     const s = this.runs.game?.engine.state;
     this.sound.flush(s ? (s.config.waves > 0 && isBossWave(s.wave, s.config.waves) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS, this.runs.game?.downCamBusy() ? 0.25 : 1);
+  }
+
+  /** Covers the game while the phone is on its side; a fight behind it waits on the pause panel. */
+  private coverSideways(width: number, height: number, key: string): void {
+    if (!wantsUpright(width, height, this.touchOnly)) {
+      this.upright?.view.destroy({ children: true });
+      this.upright = null;
+      return;
+    }
+    if (!this.upright) this.runs.hidden();
+    if (this.upright?.key !== key) {
+      this.upright?.view.destroy({ children: true });
+      this.upright = { view: uprightCover(uiFrame(computeViewport(width, height), this.platform.safeInsets())), key };
+    }
+    // over the run, the HUD and any toast added after it
+    if (this.app.stage.children[this.app.stage.children.length - 1] !== this.upright.view) this.app.stage.addChild(this.upright.view);
   }
 }

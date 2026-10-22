@@ -242,7 +242,7 @@ export const corgiPl: Table<typeof corgiEn> = {
     kills: 'Pokonaj łącznie robali: {n}',
     clear: 'Ukończ planetę {n}',
     hard: 'Ukończ trudną planetę {n}',
-    trained: 'Trenuj w obozie {n} razy',
+    trained: 'Trenuj w obozie {n} {n|one:raz|few:razy|many:razy|other:razy}',
     monks: 'Zwerbuj wszystkich bohaterów ({n})',
     reward: '+{jade} klejnotów',
     claimAll: 'Odbierz wszystko: +{jade} klejnotów',

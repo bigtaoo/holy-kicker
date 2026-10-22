@@ -10,6 +10,7 @@ import { dropName, TIER_COLORS } from './gearText';
 import { COPIES, mergeFrame, mergeTiming, skipTo, type MergeTiming } from './mergeTimeline';
 import { statText } from './statText';
 import { COLORS, backdrop, fit, label, panel } from './widgets';
+import { reducedMotion } from './media';
 
 // The merge effect over the lobby (docs/design.md "Merge screen and effect"), timed by
 // mergeTimeline.ts: copies fly into the centre, the ring charges in the new tier's colour, a
@@ -41,6 +42,8 @@ export class MergeView {
   private readonly cy: number;
   private t = 0;
   private shake = 0;
+  /** The system asks for reduced motion: no shake, a soft flash. */
+  private readonly calm = reducedMotion();
   private landed = 0;
   private burst = false;
   private counted = -1;
@@ -54,7 +57,7 @@ export class MergeView {
     private readonly show: MergeShow,
     private readonly onClose: () => void,
   ) {
-    this.timing = mergeTiming(!!show.all);
+    this.timing = mergeTiming(!!show.all, this.calm);
     this.cy = h / 2 - 260;
     this.view.addChild(backdrop(w, h, 0.94));
     this.stage.position.set(w / 2, this.cy);
@@ -120,7 +123,7 @@ export class MergeView {
     while (this.landed < down) {
       this.landed++;
       this.pop(TIER_COLORS[this.show.tier - 1], 6, 500);
-      this.shake = 0.12;
+      if (!this.calm) this.shake = 0.12;
     }
     this.ring.clear();
     if (f.charge > 0) {

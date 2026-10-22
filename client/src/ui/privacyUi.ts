@@ -17,17 +17,29 @@ const FADE = 0.6;
 /** The toast's centre from the top of the frame, below the wave counter and the pause button. */
 const TOAST_Y = 480;
 
-/** Shows the one-time data toast over whatever is on screen; it cannot be tapped and goes by itself. */
-export function privacyToast(app: Application, insets: () => Insets): void {
+/**
+ * Shows the one-time data toast over whatever is on screen; it cannot be tapped and goes by itself.
+ * Its clock stands still while `hold` says so (the first run's move hint, which it would cover);
+ * `shown` runs once, when it starts to fade in.
+ */
+export function privacyToast(app: Application, insets: () => Insets, hold: () => boolean, shown: () => void): void {
   const view = new Container();
   view.eventMode = 'none';
-  const text = label(t('privacy.toast'), 44, COLORS.text, { wordWrap: true, wordWrapWidth: 920, breakWords: true });
+  const text = label(t('privacy.toast'), 48, COLORS.text, { wordWrap: true, wordWrapWidth: 920, breakWords: true });
   view.addChild(panel(text.width + 80, text.height + 50), text);
   const layer = new Container();
   layer.addChild(view);
   let age = 0;
   const tick = () => {
+    if (hold()) {
+      // still hidden, or faded back out if the hint came up after it
+      age = Math.min(age, TOAST_AFTER);
+      layer.alpha = 0;
+      return;
+    }
+    const before = age;
     age += app.ticker.deltaMS / 1000;
+    if (before <= TOAST_AFTER && age > TOAST_AFTER) shown();
     const left = TOAST_AFTER + TOAST_FOR - age;
     if (left <= 0) {
       app.ticker.remove(tick);
@@ -64,7 +76,7 @@ export function watched(p: PrivacyUi | null, after: () => void): PrivacyUi | nul
 export function consentCard(w: number, y: number, privacy: PrivacyUi): Container {
   const card = new Container();
   card.position.set(w / 2, y);
-  const text = label(t('privacy.ask'), 40, COLORS.text, { wordWrap: true, wordWrapWidth: 940, breakWords: true });
+  const text = label(t('privacy.ask'), 48, COLORS.text, { wordWrap: true, wordWrapWidth: 940, breakWords: true });
   const h = text.height + 210;
   card.addChild(panel(1000, h));
   text.y = -h / 2 + 30 + text.height / 2;
@@ -73,7 +85,7 @@ export function consentCard(w: number, y: number, privacy: PrivacyUi): Container
   const pick = (on: boolean) => () => privacy.set(on);
   const allow = button(t('privacy.allow'), 340, 110, pick(true), { fill: COLORS.saffron, textFill: COLORS.outline, size: 48 });
   const decline = button(t('privacy.decline'), 320, 110, pick(false), { fill: COLORS.panelLocked, size: 48 });
-  const policy = button(t('privacy.link'), 240, 110, () => privacy.openPolicy(), { fill: COLORS.panelLocked, size: 40 });
+  const policy = button(t('privacy.link'), 240, 110, () => privacy.openPolicy(), { fill: COLORS.panelLocked, size: 48 });
   allow.position.set(-290, row);
   decline.position.set(60, row);
   policy.position.set(350, row);

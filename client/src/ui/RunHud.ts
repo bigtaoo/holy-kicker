@@ -1,5 +1,5 @@
 import { Container, Graphics, type Text } from 'pixi.js';
-import { getLocale, localeName, t, type Locale } from '../i18n';
+import { t, type Locale } from '../i18n';
 import { BuildBar, type IconSheet } from './buildBar';
 import { buildKey, type BuildSlot, type Charge } from './buildSlots';
 import { cardPanel, type CardNudgeState, type CardPanel } from './cardPanel';
@@ -7,17 +7,19 @@ import { panelKey } from './panelKeys';
 import type { DownInfo } from './deathInfo';
 import { downPanel, type Down } from './downPanel';
 import { languagePanel } from './languagePanel';
+import { GIVE_UP_WAIT, pausePanel, type PauseSwitches } from './pausePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
 import type { Dir8 } from './gatherNudge';
 import { tutorialHint, type HintStep, type TutorialHint } from './tutorialHint';
 import type { Screen, UiFrame } from './uiLayout';
-import { COLORS, backdrop, button, fit, keyCap, label, meter, panel, playTap } from './widgets';
+import { COLORS, button, label, meter, playTap } from './widgets';
 import { RECORD_BURST } from './recordBurst';
-import { RecordBurstView } from './recordBurstView';
+import type { RecordBurstView } from './recordBurstView';
+import { waveBanner } from './waveBanner';
 
 // The in-run overlay: the experience bar and level, the build strip with the spells' recharge, the wave counter,
-// the fast-forward toggle, a pause button and the pause panel (resume, language, report a problem, give up), a banner when a wave starts, the level-up cards, and the death panel (downPanel.ts).
+// the fast-forward toggle, a pause button and the pause panel (pausePanel.ts), a banner when a wave starts, the level-up cards, and the death panel (downPanel.ts).
 // Under the wave counter, the wave the last run of the chapter fell on, until this run passes it.
 
 export interface RunActions {
@@ -34,6 +36,8 @@ export interface RunActions {
   setLanguage(locale: Locale): Promise<void>;
   /** Asks what went wrong and sends it with the run's replay; null where a report could go nowhere. */
   report: (() => Promise<ReportOutcome>) | null;
+  /** The pause panel's sound switches (pausePanel.ts); null for none. */
+  switches: PauseSwitches | null;
 }
 
 export type ReportOutcome = 'sent' | 'failed' | 'cancelled';
@@ -62,11 +66,16 @@ export class RunHud implements Screen {
   /** The language picker over the pause panel. */
   private languages = false;
   private reporting: Reporting = 'idle';
+  /** Seconds the armed give-up button still waits for its second tap; null when not armed. */
+  private giveUpArmed: number | null = null;
   private down: Down | null = null;
   /** What the death panel says about the fall, and the last run's fall (0 for none shown). */
   private downInfo: DownInfo | null = null;
   private lastFall = 0;
   private lastFallText: Text | null = null;
+  /** The wave of the next chest this run can earn (0 for none), shown under the counter. */
+  private nextChest = 0;
+  private goalText: Text | null = null;
   /** The wave banner; `record` makes its cheer line the new-record burst, `age` its seconds up. */
   private banner: { lines: [string, number][]; story: StoryLine | null; t: number; record: boolean; age: number } | null = null;
   private burst: RecordBurstView | null = null;
@@ -121,7 +130,10 @@ export class RunHud implements Screen {
     const fell = (this.lastFallText = label('', 48, COLORS.dim, { stroke: { color: COLORS.outline, width: 8 } }));
     fell.anchor.set(0, 0.5);
     fell.position.set(40, 370);
-    this.view.addChild(wave, fell);
+    const goal = (this.goalText = label('', 48, COLORS.gold, { stroke: { color: COLORS.outline, width: 8 } }));
+    goal.anchor.set(0, 0.5);
+    goal.x = 40;
+    this.view.addChild(wave, fell, goal);
     this.xpBar(f);
     const build = (this.build = new BuildBar(this.icons));
     build.view.position.set(f.w / 2, BUILD_Y);
@@ -168,6 +180,17 @@ export class RunHud implements Screen {
     if (!this.lastFallText) return;
     this.lastFallText.visible = wave > 0 && this.wave > 0;
     this.lastFallText.text = t('run.lastFall', { wave });
+    this.setNextChest(this.nextChest);
+  }
+
+  /** The next chest's wave under the counter (and the last fall); 0 hides it. */
+  setNextChest(wave: number): void {
+    this.nextChest = wave;
+    const g = this.goalText;
+    if (!g) return;
+    g.visible = wave > 0 && this.wave > 0;
+    g.text = t('run.nextChest', { wave });
+    g.y = this.lastFallText?.visible ? 430 : 370;
   }
 
   /** The hero's build; the strip is redrawn only when it looks different. */
@@ -221,11 +244,13 @@ export class RunHud implements Screen {
 
   /**
    * A banner across the middle: the wave number, for elite and boss waves a warning, and around
-   * a boss its line of the story; `cheer` (passing the last run's fall) under the number.
+   * a boss its line of the story; `cheer` (passing the last run's fall) under the number, and
+   * `chest` says the wave just cleared earned a chest.
    */
-  announce(wave: number, warning: string | null, story: StoryLine | null = null, cheer: string | null = null, record = false): void {
+  announce(wave: number, warning: string | null, story: StoryLine | null = null, cheer: string | null = null, record = false, chest = false): void {
     const lines: [string, number][] = [[t('run.waveStart', { wave }), 96]];
     if (cheer) lines.push([cheer, record ? 88 : 72]);
+    if (chest) lines.push([t('run.chestEarned'), 64]);
     if (warning) lines.push([warning, 64]);
     const time = Math.max(story ? STORY_TIME : BANNER_TIME, record ? RECORD_BURST.length : 0);
     this.banner = { lines, story, t: time, record: record && !!cheer, age: 0 };
@@ -273,6 +298,10 @@ export class RunHud implements Screen {
       this.cards.update(this.offerAge);
     }
     this.hint?.update(this.clock);
+    if (this.giveUpArmed !== null && (this.giveUpArmed -= dt) <= 0) {
+      this.giveUpArmed = null;
+      this.relayout();
+    }
     // a banner waits out the card choice
     if (!this.banner || this.offer) return;
     this.banner.t -= dt;
@@ -303,6 +332,7 @@ export class RunHud implements Screen {
   private setPaused(paused: boolean): void {
     this.paused = paused;
     this.languages = false;
+    this.giveUpArmed = null;
     if (this.reporting !== 'busy') this.reporting = 'idle';
     if (paused) this.actions.pause();
     else this.actions.resume();
@@ -373,78 +403,30 @@ export class RunHud implements Screen {
   }
 
   private drawBanner(f: UiFrame): void {
-    const box = new Container();
+    const b = this.banner!;
+    const { box, burst } = waveBanner(f.w, b.lines, b.story, b.record, b.age);
     box.position.set(f.w / 2, f.h * 0.36);
-    let y = 0;
-    for (const [i, [text, size]] of this.banner!.lines.entries()) {
-      const l = fit(label(text, size, size > 90 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), f.w - 80);
-      if (i === 1 && this.banner!.record) {
-        // the new record: the cheer line pops in over turning rays and a burst of sparks
-        const burst = (this.burst = new RecordBurstView(l));
-        burst.view.y = y;
-        burst.update(this.banner!.age);
-        box.addChildAt(burst.view, 0);
-      } else {
-        l.y = y;
-        box.addChild(l);
-      }
-      y += size + 24;
-    }
-    const story = this.banner!.story;
-    if (story) {
-      const who = label(t(story.who), 48, COLORS.saffron, { stroke: { color: COLORS.outline, width: 8 } });
-      who.y = y + 16;
-      const say = label(t('story.quote', { text: t(story.say) }), 52, COLORS.text, {
-        stroke: { color: COLORS.outline, width: 8 },
-        wordWrap: true,
-        wordWrapWidth: f.w - 160,
-        breakWords: true,
-      });
-      say.anchor.set(0.5, 0);
-      say.y = who.y + 44;
-      box.addChild(who, say);
-    }
-    box.eventMode = 'none';
+    this.burst = burst;
     this.bannerView = box;
     this.view.addChild(box);
   }
 
   private pausePanel(f: UiFrame): void {
-    this.view.addChild(backdrop(f.w, f.h));
-    const box = new Container();
-    box.position.set(f.w / 2, f.h / 2);
-    // stacked top down: [view, height it takes]
-    const items: [Container, number][] = [[label(t('run.paused'), 72), 150]];
-    const resume = button(t('run.resume'), 560, 150, () => this.setPaused(false));
-    if (this.keys) keyCap(resume, 560, 150, t('common.keyEsc'));
-    items.push([resume, 190]);
-    const lang = button(`${t('run.language')} · ${localeName(getLocale())}`, 560, 120, () => {
-      this.languages = true;
-      this.relayout();
-    }, { fill: COLORS.panelLocked, size: 48 });
-    items.push([lang, 150]);
-    if (this.actions.report) {
-      const busy = this.reporting === 'busy';
-      const report = button(busy ? t('report.sending') : t('run.report'), 560, 120, () => void this.sendReport(), { fill: COLORS.panelLocked, size: 48 });
-      if (busy) report.eventMode = 'none';
-      items.push([report, 150]);
-      if (this.reporting === 'sent' || this.reporting === 'failed') {
-        const note = label(t(this.reporting === 'sent' ? 'report.sent' : 'report.failed'), 48, this.reporting === 'sent' ? COLORS.jade : COLORS.dim, {
-          wordWrap: true, wordWrapWidth: 640, breakWords: true,
-        });
-        items.push([note, 110]);
-      }
-    }
-    items.push([button(t('run.giveUp'), 560, 120, () => this.actions.giveUp(), { fill: COLORS.panelLocked }), 150]);
-    const h = items.reduce((sum, [, step]) => sum + step, 0) + 80;
-    box.addChild(panel(760, h));
-    let y = -h / 2 + 40;
-    for (const [view, step] of items) {
-      view.y = y + step / 2;
-      box.addChild(view);
-      y += step;
-    }
-    this.view.addChild(box);
+    const r = this.reporting;
+    const report = this.actions.report ? {
+      text: r === 'busy' ? t('report.sending') : t('run.report'),
+      busy: r === 'busy',
+      note: r === 'sent' || r === 'failed' ? { text: t(r === 'sent' ? 'report.sent' : 'report.failed'), ok: r === 'sent' } : null,
+    } : null;
+    this.view.addChild(pausePanel(f.w, f.h, { keys: this.keys, report, confirming: this.giveUpArmed !== null }, this.actions.switches, {
+      resume: () => this.setPaused(false),
+      languages: () => {
+        this.languages = true;
+        this.relayout();
+      },
+      report: () => void this.sendReport(),
+      giveUp: () => this.tapGiveUp(),
+    }, () => this.relayout()));
     if (this.languages) {
       this.view.addChild(languagePanel(f.w, f.h, (l) => {
         this.languages = false;
@@ -455,6 +437,17 @@ export class RunHud implements Screen {
         this.relayout();
       }));
     }
+  }
+
+  /** Give up on the pause panel: the first tap arms it for GIVE_UP_WAIT seconds, the second ends the run. */
+  private tapGiveUp(): void {
+    if (this.giveUpArmed !== null) {
+      this.giveUpArmed = null;
+      this.actions.giveUp();
+      return;
+    }
+    this.giveUpArmed = GIVE_UP_WAIT;
+    this.relayout();
   }
 
   /** The text box, then the send; the panel says how it went. */

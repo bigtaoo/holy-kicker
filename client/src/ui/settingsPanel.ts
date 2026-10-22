@@ -11,6 +11,7 @@ import { cloudRows } from './cloudRows';
 import { languagePanel } from './languagePanel';
 import type { ReminderUi } from './reminders';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
+import { toggle } from './toggle';
 
 // The settings panel, opened from the lobby's gear: language (a button to the picker,
 // languagePanel.ts) beside the screen shake on or off, the sound effects' and the
@@ -30,6 +31,8 @@ export interface SettingsActions {
   setQuality(mode: QualityMode): void;
   shake(): boolean;
   setShake(on: boolean): void;
+  /** Vibration on level-ups and hits; unset where the device cannot buzz. */
+  haptics?: { on(): boolean; set(on: boolean): void };
   /** Where the game talks to its backend, the player's privacy answer (net/privacyChoice.ts); null offline. */
   privacy: PrivacyUi | null;
   /** Signing in to the host's account from here (Game Center); never offered elsewhere. */
@@ -63,7 +66,7 @@ export async function keepLanguage(kv: KeyValueStore, locale: Locale): Promise<v
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders' | 'cloud' | 'version' | 'tester' | 'markTester'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders' | 'cloud' | 'version' | 'tester' | 'markTester'> & { canVibrate: boolean },
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: (locale) => void keepLanguage(kv, locale).then(() => o.setLanguage(locale)),
@@ -84,6 +87,7 @@ export function storedSettings(
     },
     shake: () => loadSettings(kv).shake,
     setShake: (shake) => updateSettings(kv, { shake }),
+    haptics: o.canVibrate ? { on: () => loadSettings(kv).haptics, set: (haptics) => updateSettings(kv, { haptics }) } : undefined,
     privacy: o.privacy,
     account: o.account,
     adPrivacy: o.adPrivacy,
@@ -177,20 +181,20 @@ function dataRows(
   const share = button(on ? t('settings.shareOn') : t('settings.shareOff'), bw, 110, () => p.set(!on), {
     fill: on ? COLORS.saffron : COLORS.panelLocked,
     textFill: on ? COLORS.outline : COLORS.text,
-    size: 44,
+    size: 48,
   });
-  const policy = button(t('settings.policy'), bw, 110, () => p.openPolicy(), { fill: COLORS.panelLocked, size: 44 });
+  const policy = button(t('settings.policy'), bw, 110, () => p.openPolicy(), { fill: COLORS.panelLocked, size: 48 });
   row.addChild(share, policy);
-  if (n === 3) row.addChild(button(t('settings.adPrivacy'), bw, 110, () => ads.open(), { fill: COLORS.panelLocked, size: 44 }));
+  if (n === 3) row.addChild(button(t('settings.adPrivacy'), bw, 110, () => ads.open(), { fill: COLORS.panelLocked, size: 48 }));
   row.children.forEach((b, i) => (b.x = (i - (n - 1) / 2) * (bw + 24)));
   add(row, 140);
   const id = p.id();
   const style = { wordWrap: true, wordWrapWidth: W - 100, breakWords: true };
-  const notice = label(t('settings.dataNotice'), 42, COLORS.dim, style);
+  const notice = label(t('settings.dataNotice'), 48, COLORS.dim, style);
   if (!id) return add(notice, notice.height + 40);
   add(notice, notice.height + 16);
   // the ID on a line of its own, which copies itself when tapped (players quote it in a problem)
-  const line = label(t('settings.playId', { id }), 42, copyId ? COLORS.text : COLORS.dim, style);
+  const line = label(t('settings.playId', { id }), 48, copyId ? COLORS.text : COLORS.dim, style);
   if (copyId) {
     line.eventMode = 'static';
     line.cursor = 'pointer';
@@ -209,30 +213,6 @@ function reminderRow(r: ReminderUi, add: (c: Container, step: number) => void, h
   heading(t(`remind.${state}`));
   if (state === 'blocked') return;
   add(toggle(state === 'on', ROW + 160, (on) => void r.set(on)), 140);
-}
-
-/** An on/off switch, `w` wide: a pill with its knob at the right and saffron when on. */
-function toggle(on: boolean, w: number, set: (on: boolean) => void): Container {
-  const c = new Container();
-  const pw = 200;
-  const ph = 96;
-  const knob = ph / 2 - 12;
-  c.addChild(new Graphics()
-    .roundRect(-pw / 2, -ph / 2, pw, ph, ph / 2)
-    .fill(on ? COLORS.saffron : COLORS.panelLocked)
-    .stroke({ color: COLORS.outline, width: 6 })
-    .circle(on ? pw / 2 - ph / 2 : -pw / 2 + ph / 2, 0, knob)
-    .fill(on ? COLORS.text : COLORS.dim)
-    .stroke({ color: COLORS.outline, width: 6 }));
-  // the whole half row is the hit area
-  c.hitArea = { contains: (px: number, py: number) => Math.abs(px) <= w / 2 && Math.abs(py) <= 60 };
-  c.eventMode = 'static';
-  c.cursor = 'pointer';
-  c.on('pointertap', () => {
-    playTap();
-    set(!on);
-  });
-  return c;
 }
 
 /** The language (a button to the picker) and, beside it, the screen shake as a switch, each
@@ -277,6 +257,11 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   const top = topRow(view, w, h, a);
   add(top.heads, 90);
   add(top.row, 150);
+  if (a.haptics) {
+    const on = a.haptics.on();
+    heading(t(on ? 'settings.hapticsOn' : 'settings.hapticsOff'));
+    add(toggle(on, ROW + 160, (v) => a.haptics!.set(v)), 140);
+  }
 
   const volume = a.volume();
   heading(volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }));
@@ -288,7 +273,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   const mode = a.quality();
   heading(t('settings.quality'));
   add(choices(QUALITY_MODES, (m) => t(`settings.${m}`), mode, (m) => a.setQuality(m)), 140);
-  const hint = label(t(HINT[mode]), 44, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 60, breakWords: true });
+  const hint = label(t(HINT[mode]), 48, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 60, breakWords: true });
   add(hint, hint.height + 30);
 
   if (a.reminders) reminderRow(a.reminders, add, heading);
@@ -305,7 +290,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
     // no room for a row of its own on a 16:9 phone, and it is rarely there: Game Center signs
     // most players in by itself
     const row = new Container();
-    const gc = button(t('settings.gameCenter'), 400, 110, () => a.account.signIn(), { fill: COLORS.panelLocked, size: 44 });
+    const gc = button(t('settings.gameCenter'), 400, 110, () => a.account.signIn(), { fill: COLORS.panelLocked, size: 48 });
     gc.x = -210;
     back.x = 210;
     row.addChild(gc, back);

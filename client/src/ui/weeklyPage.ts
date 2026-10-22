@@ -104,22 +104,22 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
     s.position.set((i - (ids.length - 1) / 2) * 150, top + 265);
     box.addChild(s);
   });
-  add(`${t(`relic.${l.relic}.name` as never)} · ${t(`monk.${l.monk}.name` as never)}`, 44, COLORS.saffron, 360);
-  add(l.sutras.map((s) => t(`spell.${s}.name` as never)).join(' · '), 40, COLORS.dim, 412);
+  add(`${t(`relic.${l.relic}.name` as never)} · ${t(`monk.${l.monk}.name` as never)}`, 48, COLORS.saffron, 360);
+  add(l.sutras.map((s) => t(`spell.${s}.name` as never)).join(' · '), 48, COLORS.dim, 412);
   const mutator = mutatorLine(w.challenge.mutator);
-  if (mutator) add(mutator, 38, COLORS.saffron, 462);
+  if (mutator) add(mutator, 48, COLORS.saffron, 462);
   rules.view.y = top + (mutator ? 492 : 455);
   box.addChild(rules.view);
   add(t('weekly.rewards'), 48, COLORS.text, 665);
   weeklyTiers().forEach((tier, i) => box.addChild(tierRow(t(tier.key as never), tier.jade, i, top + rules.grow + 740 + i * 68, icons)));
-  if (w.state === 'update') add(t('weekly.update'), 44, COLORS.danger, 1025);
+  if (w.state === 'update') add(t('weekly.update'), 48, COLORS.danger, 1025);
   else add(w.best > 0 ? t('weekly.best', { wave: w.best }) : t('weekly.noBest'), 46, w.best > 0 ? COLORS.saffron : COLORS.dim, 1025);
   let y = 1080;
   if (w.reply && w.state === 'open') {
-    add(t('weekly.rank', { rank: w.reply.rank, total: w.reply.total }), 42, COLORS.text, y);
+    add(t('weekly.rank', { rank: w.reply.rank, total: w.reply.total }), 48, COLORS.text, y);
     y += 52;
   }
-  add(w.days > 0 ? t('weekly.ends', { d: w.days, h: w.hours }) : t('challenge.ends', { h: w.hours }), 40, COLORS.dim, y); // no "0d" on the last day
+  add(w.days > 0 ? t('weekly.ends', { d: w.days, h: w.hours }) : t('challenge.ends', { h: w.hours }), 48, COLORS.dim, y); // no "0d" on the last day
   const buttons: Container[] = [];
   if (w.state === 'open') buttons.push(button(t('lobby.play'), 420, 125, actions.play, { fill: COLORS.saffron, size: 60 }));
   if (actions.ranks) buttons.push(button(t('board.button'), 360, 125, actions.ranks, { fill: COLORS.panelLocked, size: 52 }));
@@ -138,7 +138,7 @@ function tierRow(name: string, jade: number, tier: number, y: number, icons: Ico
     medal.x = -380;
     row.addChild(medal);
   }
-  const text = label(name, 42, COLORS.text, { align: 'left' });
+  const text = label(name, 48, COLORS.text, { align: 'left' });
   text.anchor.set(0, 0.5);
   text.x = -340;
   row.addChild(text);
@@ -147,7 +147,7 @@ function tierRow(name: string, jade: number, tier: number, y: number, icons: Ico
     s.x = 230;
     row.addChild(s);
   }
-  const n = label(`+${jade}`, 42, COLORS.jade);
+  const n = label(`+${jade}`, 48, COLORS.jade);
   n.anchor.set(0, 0.5);
   n.x = 270;
   row.addChild(n);
@@ -173,7 +173,7 @@ export function claimCard(w: number, h: number, c: WeekClaim, icons: IconSheet, 
     medal.y = top + 230;
     box.addChild(medal);
   }
-  const line = fit(label(c.rank > 0 ? t('weekly.claimRank', { rank: c.rank, total: c.total }) : t('weekly.claimNoRank'), 46, COLORS.text), CLAIM_W - 80);
+  const line = fit(label(c.rank > 0 ? t('weekly.claimRank', { rank: c.rank, total: c.total }) : t('weekly.claimNoRank'), 48, COLORS.text), CLAIM_W - 80);
   line.y = top + (medal ? 360 : 260);
   box.addChild(line);
   const gain = new Container();

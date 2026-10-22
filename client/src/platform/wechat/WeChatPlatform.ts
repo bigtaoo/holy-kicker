@@ -74,6 +74,10 @@ export class WeChatPlatform implements Platform {
     wx.onUnhandledRejection?.((r) => cb(r?.reason, r?.reason instanceof Error ? r.reason.stack : undefined));
   }
 
+  vibrate(strong: boolean): void {
+    wx.vibrateShort?.({ type: strong ? 'heavy' : 'light', fail: () => {} });
+  }
+
   onBattery(cb: (b: Battery) => void): void {
     // no change event for mini-games: ask once a minute (the level moves slower than that)
     const ask = () => wx.getBatteryInfo?.({ success: (r) => cb({ level: Number(r.level) / 100, charging: !!r.isCharging }) });

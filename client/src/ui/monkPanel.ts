@@ -51,8 +51,8 @@ function row(save: SaveData, id: MonkId, icons: IconSheet, a: MonkActions): { c:
     return l;
   };
   const name = line(t(`monk.${id}.name`), 60, chosen ? COLORS.saffron : COLORS.text, 20);
-  const role = line(t(`monk.${id}.role`, statArgs(id)), 44, COLORS.text, name.y + name.height + 8, true);
-  const stats = line(t(`monk.${id}.stats`, statArgs(id)), 44, COLORS.dim, role.y + role.height + 10, true);
+  const role = line(t(`monk.${id}.role`, statArgs(id)), 48, COLORS.text, name.y + name.height + 8, true);
+  const stats = line(t(`monk.${id}.stats`, statArgs(id)), 48, COLORS.dim, role.y + role.height + 10, true);
   // the button (96 high) sits under the text, at the row's foot unless the text runs lower
   const bx = textX + 170;
   const by = Math.max(ROW_H - 62, stats.y + stats.height + 16 + 48);
@@ -79,7 +79,7 @@ function row(save: SaveData, id: MonkId, icons: IconSheet, a: MonkActions): { c:
     // not for sale before his chapter (docs/unlocks.md): a lock and the chapter that opens him
     const lock = lockIcon(icons, 56);
     lock.position.set(textX + 28, by);
-    const l = fit(label(t('tab.unlockChapter', { n: monkChapter(id) }), 44, COLORS.dim, { align: 'left' }), textW - 120);
+    const l = fit(label(t('tab.unlockChapter', { n: monkChapter(id) }), 48, COLORS.dim, { align: 'left' }), textW - 120);
     l.anchor.set(0, 0.5);
     l.position.set(textX + 70, by);
     c.addChild(l, lock);

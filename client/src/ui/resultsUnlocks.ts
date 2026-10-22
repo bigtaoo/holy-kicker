@@ -60,7 +60,7 @@ export function unlocksPart(unlocks: readonly Unlock[], icons: IconSheet, width:
     const head: Text = fit(label(title, 52, color, { stroke: { color: COLORS.outline, width: 6 } }), textW);
     head.anchor.set(0, 0.5);
     head.position.set(textX, y + 50);
-    const sub: Text = fit(label(line, 44, COLORS.dim), textW);
+    const sub: Text = fit(label(line, 48, COLORS.dim), textW);
     sub.anchor.set(0, 0.5);
     sub.position.set(textX, y + 106);
     icon.position.set(-width / 2 + 85, y + STRIP_H / 2);
