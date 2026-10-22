@@ -1,5 +1,5 @@
 import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi.js';
-import { beadsRings, Engine, EVOLVE, FP, inZen, isMidBoss, mapOf, TICK_RATE, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState } from '@hk/engine';
+import { beadsRings, Engine, inZen, isMidBoss, mapOf, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
 import { Balls } from './ballView';
@@ -14,7 +14,7 @@ import { ThreatLayer } from './threatView';
 import { FxLayer } from './fxView';
 import { Corpses } from './mobView';
 import { HealthBar, starMarkAt } from './healthBar';
-import { blockFx, howlFx, nearestElite, type EliteCrowd } from './eliteView';
+import type { EliteCrowd } from './eliteView';
 import { HordeView } from './hordeView';
 import { guardAlpha } from './guardPulse';
 import { HitFeedback } from './hitFeedback';
@@ -22,7 +22,6 @@ import { AuraStack } from './aura';
 import { ZenRing } from './zenView';
 import type { BossStage } from './bossStage';
 import { hordeLooks, makeBosses, makeElites } from './cast';
-import { summonFx } from './witchView';
 import { SpellView } from './spellView';
 import { ArsenalView } from './arsenalView';
 import { learnSpells } from '../dev/learn';
@@ -46,6 +45,7 @@ import { frameWork } from './frameWork';
 import { drawStick, heroBacking, hurtTint, makeRing, nightTint, sideGround, stageGround, stickSprites } from './stageArt';
 import { sortSteadily } from './steadySort';
 import { lateHold } from '../lateArt';
+import { LOCAL, reactTo, type EventViews } from './simEvents';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -54,7 +54,7 @@ import { lateHold } from '../lateArt';
 // integer state, fed only by stick commands, so a run is reproducible from its seed and inputs
 // and can later run in lockstep online. This class turns the screen's frames into sim ticks
 // (FixedStep), draws every sim body interpolated between its last two tick positions, and
-// turns the sim's events into animations, effects and numbers.
+// turns the sim's events into animations, effects and numbers (simEvents.ts).
 
 export type { Art, GhostArt, PeakArt } from './artTypes';
 
@@ -69,8 +69,6 @@ const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
 const SCREEN_AREA = 1080 * 1920;
 const DOWN_TINT = 0x8a8a8a;
-/** The local player's owner id; online play would get it from the match. */
-const LOCAL = 0;
 
 export class Game {
   readonly engine: Engine;
@@ -115,6 +113,7 @@ export class Game {
   /** The slow-motion look at the killing blow, and the low-health heartbeat. */
   private readonly downCam: KillCamView;
   private readonly lowHp: LowHealthView;
+  private readonly views: EventViews;
   /** Every tick's events after the view reacted, for the shell (sounds). */
   onEvents: (events: readonly SimEvent[]) => void = () => {};
   /** Each beat of the low-health heartbeat, for the shell (its sound). */
@@ -205,6 +204,8 @@ export class Game {
     this.zen = new ZenRing(this.world);
     this.downCam = new KillCamView(this.world, { hero: this.hero.view, horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
     this.lowHp = new LowHealthView(app.renderer, () => this.onHeartbeat());
+    const { hero, downCam, lowHp, spells, arsenal, sutras, threats, drops } = this;
+    this.views = { hero, feedback: this.feedback, staff, fish, downCam, lowHp, fx, horde, boss, shake, threats, drops, spells, arsenal, sutras, hurt: () => (this.hurtFlash = HURT_FLASH) };
 
     this.root.addChild(this.world, this.label);
     if (this.boss) this.root.addChild(...this.boss.huds);
@@ -293,7 +294,7 @@ export class Game {
       const events = this.engine.advance();
       // null only while a network input source waits for the server; never offline
       if (!events) break;
-      this.react(events);
+      reactTo(this.views, events, this.engine.state);
       this.onEvents(events);
     }
     frameWork.sim += performance.now() - start; // engine steps, with the reactions to their events
@@ -315,122 +316,6 @@ export class Game {
     this.picking = undefined;
     const move = this.autoplay ? this.autoplay.move(this.engine.state) : quantizeMove(s.x + k.x, s.y + k.y);
     return { owner: LOCAL, tick: this.engine.nextTick, ...move, revive, pick };
-  }
-
-  /** One tick's events: animations, effects and numbers. Positions arrive in FP. */
-  private react(events: readonly SimEvent[]): void {
-    const s = this.engine.state;
-    for (const e of events) {
-      switch (e.type) {
-        case 'kick':
-          if (e.owner === LOCAL) this.hero.attack(s.players[0].relicId);
-          break;
-        case 'sweep': {
-          this.feedback.sweep(e);
-          const p = s.players.find((q) => q.owner === e.owner);
-          if (e.owner !== LOCAL || !p) break;
-          this.staff.swing(e.brad, e.reach / FP, e.full, p.facing);
-          this.hero.swing();
-          break;
-        }
-        case 'ring': {
-          const p = s.players.find((q) => q.owner === e.owner);
-          if (e.owner === LOCAL && p) this.fish.tap(e.x / FP, e.y / FP, e.reach / FP, e.stun, p.awakened, p.facing, this.hero.hand('hand_b'));
-          break;
-        }
-        case 'hurt':
-          if (e.owner === LOCAL) {
-            this.hero.hurt();
-            this.hurtFlash = HURT_FLASH;
-            this.downCam.struck(e.src, e.x, e.y);
-          }
-          break;
-        case 'heroDown':
-          if (e.owner === LOCAL && s.config.waves > 0) this.downCam.down(s);
-          break;
-        case 'revive':
-          if (e.owner === LOCAL) [this.downCam, this.lowHp].forEach((v) => v.reset());
-          break;
-        case 'hit':
-          this.feedback.hit(e, s);
-          break;
-        case 'eliteDown':
-          this.feedback.eliteDown(e);
-          break;
-        case 'cleared':
-          this.feedback.rout(s);
-          break;
-        case 'mobDown':
-          this.feedback.mobDown(e, s);
-          break;
-        case 'block': {
-          // a door god's shield, or a fallen monk's gong (held toward the hero)
-          const g = e.index < s.mobs.length ? null : nearestElite(s.elites, e.x, e.y);
-          blockFx(this.fx.pool, e.x / FP, e.y / FP, g ? g.vx : s.players[0].x - e.x, g ? 80 : 45);
-          break;
-        }
-        case 'emerge':
-          this.horde.emerge(e.x / FP, e.y / FP);
-          break;
-        case 'howl':
-          howlFx(this.fx.pool, e.x / FP, e.y / FP, e.radius / FP);
-          break;
-        case 'summon':
-          summonFx(this.fx.pool, e.x / FP, e.y / FP);
-          break;
-        case 'bossCast':
-        case 'bossDive':
-        case 'bossWindup':
-        case 'bossSlam':
-        case 'bossDown':
-        case 'bossBack':
-        case 'bossNext': // the rush's next boss enters as a boss coming back
-          if (e.type === 'bossDown') this.shake.blow();
-          if (s.boss) this.boss?.react(e, s.boss);
-          break;
-        case 'blast':
-          this.threats?.blast(e.x / FP, e.y / FP, e.radius / FP);
-          break;
-        case 'pickup': {
-          const p = s.players.find((q) => q.owner === e.owner);
-          if (p && e.owner === LOCAL) this.drops.pickup(p.x / FP, p.y / FP, e.tier);
-          break;
-        }
-        case 'cast':
-        case 'palm':
-        case 'clang':
-          this.spells.cast(e);
-          break;
-        case 'bomb':
-        case 'boom':
-        case 'seal':
-          if (e.type === 'boom') this.feedback.boom(e);
-          this.arsenal.on(e);
-          break;
-        case 'bolt':
-          this.spells.bolt(e.x0 / FP, e.y0 / FP, e.x1 / FP, e.y1 / FP, e.gold);
-          break;
-        case 'bloom':
-        case 'roar':
-        case 'bounce':
-          this.sutras.react(e);
-          break;
-        case 'dodge': {
-          const p = s.players.find((q) => q.owner === e.owner);
-          if (p) this.sutras.dodge(p.x / FP, p.y / FP);
-          break;
-        }
-        case 'bellUp':
-          if (e.owner === LOCAL) this.spells.bellUp();
-          break;
-        case 'bellBreak':
-          if (e.owner === LOCAL && s.players[0].spells.some((sp) => sp.id === 'bell' && sp.evolved)) {
-            this.spells.guard(EVOLVE.bellGuard / TICK_RATE);
-          }
-          break;
-      }
-    }
-    this.feedback.tick(s);
   }
 
   /** Draws the sim state `alpha` of the way through its last tick; dt is the frame's view time, real its real time. */
