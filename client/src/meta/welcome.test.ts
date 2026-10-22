@@ -3,8 +3,9 @@ import { BALANCE } from './balance';
 import { dayKey, today } from './daily';
 import { settleRun } from './progress';
 import { newSave } from './save';
-import { addDrops, itemStats } from './gear';
-import { afterRun, claimGift, giftGain, giftReady, nextGift } from './welcome';
+import { addDrops, itemStats, type ItemId } from './gear';
+import { ownsMonk } from './monks';
+import { afterRun, claimGift, giftGain, giftHaul, giftReady, nextGift } from './welcome';
 
 const NOON = new Date(2026, 9, 4, 12).getTime();
 const EVENING = new Date(2026, 9, 4, 20).getTime();
@@ -16,8 +17,10 @@ describe('welcome gifts', () => {
     const run = settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save;
     const { save, gift } = afterRun(run, NOON, 3, 40);
     const first = BALANCE.welcome[0];
-    expect(gift!.drops).toEqual([{ item: first.item, tier: first.tier }]);
-    expect(save.gear[first.item][first.tier]).toBe(run.gear[first.item][first.tier] + 1);
+    const item = first.item as ItemId;
+    expect(gift!.drops).toEqual([{ item, tier: first.tier }]);
+    expect(save.gear[item][first.tier]).toBe(run.gear[item][first.tier] + 1);
+    expect(gift!.next).toEqual(giftHaul(save, BALANCE.welcome[1]));
     expect(save.gifts).toBe(1);
     expect(save.firstDay).toBe(dayKey(NOON));
     expect(today(save, NOON).progress[0]).toBe(1);
@@ -77,6 +80,33 @@ describe('welcome gifts', () => {
     const run = settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save;
     const { gift } = afterRun(run, NOON, 3, 40);
     const first = BALANCE.welcome[0];
-    expect(gift!.gain).toEqual(giftGain(run, { item: first.item, tier: first.tier }));
+    expect(gift!.gain).toEqual(giftGain(run, { item: first.item as ItemId, tier: first.tier }));
+  });
+
+  it('runs a week and ends in a monk; a missed day only delays the next gift', () => {
+    expect(BALANCE.welcome).toHaveLength(7);
+    let s = afterRun(settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save, NOON, 3, 40).save;
+    // ten days away, then every other day: each visit pays the next one in order
+    for (let n = 1; n < 7; n++) {
+      const got = claimGift(s, NOON + (8 + 2 * n) * 24 * 3600 * 1000)!;
+      expect(got.n).toBe(n);
+      s = got.save;
+    }
+    const last = BALANCE.welcome[6];
+    expect(last.monk).toBeDefined();
+    expect(ownsMonk(s, last.monk!)).toBe(true);
+    expect(nextGift(s)).toBeNull();
+  });
+
+  it('gives the chosen relic, and a monk already owned as its price in jade', () => {
+    const relicGift = BALANCE.welcome.find((g) => g.item === 'relic')!;
+    const s = { ...newSave(), relic: 'staff' as const };
+    expect(giftHaul(s, relicGift).drops).toEqual([{ item: 'staff', tier: relicGift.tier }]);
+    const monkGift = BALANCE.welcome.find((g) => g.monk)!;
+    expect(giftHaul(newSave(), monkGift)).toMatchObject({ monk: monkGift.monk, jade: 0, drops: [] });
+    const owned = { ...newSave(), monks: 0b111 };
+    const paid = giftHaul(owned, monkGift);
+    expect(paid.monk).toBeUndefined();
+    expect(paid.jade).toBe(BALANCE.monks[monkGift.monk!]);
   });
 });

@@ -109,6 +109,21 @@ export const WEEK_MS = 7 * DAY_MS;
 /** A run that ends this long after its challenge closed still counts (it began before the close); a week's ranks are final after it. */
 export const LATE_MS = 2 * 3600 * 1000;
 
+/** The UTC day of `ms` as the number YYYYMMDD. */
+export function ymdOf(ms: number): number {
+  const d = new Date(ms);
+  return d.getUTCFullYear() * 10_000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
+}
+
+/** A day's seed: its date mixed into 1..2^31-2, so neighbouring days share nothing (the client makes the same daily up offline). */
+export function dailySeed(ymd: number): number {
+  let h = Math.imul(ymd ^ 0x9e3779b9, 0x85ebca6b);
+  h ^= h >>> 13;
+  h = Math.imul(h, 0xc2b2ae35);
+  h ^= h >>> 16;
+  return 1 + ((h >>> 0) % 0x7ffffffe);
+}
+
 /** Monday 00:00 UTC of the week `ms` falls in (1970-01-01 was a Thursday). */
 export function weekStart(ms: number): number {
   return Math.floor((ms + 3 * DAY_MS) / WEEK_MS) * WEEK_MS - 3 * DAY_MS;

@@ -4,6 +4,8 @@
   "stars": { "lowest": 50 },
   "waves": 50,
   "revives": 1,
+  "ads": { "interstitialMinutes": 3 },
+  "reminders": { "askAfterRuns": 3, "dailyHour": 19, "gapHours": 6, "quietFrom": 22, "quietTo": 8 },
   "lowHealth": { "percent": 30, "hysteresis": 5, "bpm": [66, 120] },
   "grit": {"max": 20, "minWaves": 5, "bonus": {"attack": 3, "maxHp": 4}},
   "novice": {"runs": 3, "bonus": {"attack": 25, "maxHp": 40}},
@@ -108,7 +110,11 @@
   "welcome": [
     { "item": "robe", "tier": 1, "copper": 0, "jade": 0 },
     { "item": "pendant", "tier": 2, "copper": 0, "jade": 30 },
-    { "item": "bracers", "tier": 2, "copper": 300, "jade": 0 }
+    { "item": "bracers", "tier": 2, "copper": 300, "jade": 0 },
+    { "item": "sash", "tier": 2, "copper": 300, "jade": 0 },
+    { "item": "sandals", "tier": 2, "copper": 0, "jade": 30 },
+    { "item": "relic", "tier": 2, "copper": 300, "jade": 0 },
+    { "item": null, "tier": 0, "copper": 0, "jade": 0, "monk": "novice" }
   ],
   "achievements": [
     { "kind": "runs", "n": 5, "jade": 10 },
@@ -140,7 +146,10 @@
     { "kind": "monks", "n": 3, "jade": 30 },
     { "kind": "clear", "n": 10, "jade": 60 },
     { "kind": "clear", "n": 20, "jade": 120 },
-    { "kind": "hard", "n": 10, "jade": 100 }
+    { "kind": "hard", "n": 10, "jade": 100 },
+    { "kind": "streak", "n": 3, "jade": 15 },
+    { "kind": "streak", "n": 7, "jade": 30 },
+    { "kind": "streak", "n": 14, "jade": 60 }
   ],
   "monks": { "kicker": 0, "fat": 500, "novice": 300 },
   "firstRun": { "seed": 92, "autoPicks": 5 },
@@ -153,6 +162,7 @@
       { "wave": 15, "copper": 150, "jade": 2 },
       { "wave": 20, "copper": 200, "jade": 3 }
     ],
-    "weekly": { "participation": 10, "tiers": [10, 30, 80] }
+    "weekly": { "participation": 10, "tiers": [10, 30, 80] },
+    "streak": { "jade": 2, "cap": 7 }
   }
 }

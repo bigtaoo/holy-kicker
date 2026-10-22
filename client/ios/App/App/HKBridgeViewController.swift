@@ -10,7 +10,7 @@ import WebKit
 //
 // Calls from JS are messages `{ op, ... }`. Answers are pushed back into the page rather than
 // settled by id: Game Center's, AdMob's and the store's states go to `HKNative._gameCenter`,
-// `_adState` and `_store` whenever they change and when the page asks (a reloaded page asks again);
+// `_adState`, `_store` and `_notify` whenever they change and when the page asks (a reloaded page asks again);
 // an ad's progress goes to `_adEvent`, how a buy or a restore went to `_storeResult`. Every member
 // the page reads is feature-detected there, so a newer web bundle on an older shell falls back to
 // the browser's behaviour.
@@ -18,12 +18,13 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
 
     static let handlerName = "hk"
     /// Raised whenever the contract gains calls (HKNative.v in bridge.ts).
-    static let bridgeVersion = 4
+    static let bridgeVersion = 5
 
     private let keyStore = KeyStore()
     private let gameCenter = GameCenter()
     private let adMob = AdMob()
     private let store = Store()
+    private let notifications = Notifications()
 
     override func capacitorDidLoad() {
         guard let webView = webView else { return }
@@ -42,6 +43,8 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
         store.onChange = { [weak self] state in self?.push("_store", state.json) }
         store.onResult = { [weak self] op, outcome in self?.push("_storeResult", ["op": op, "outcome": outcome]) }
         store.start()
+        notifications.onChange = { [weak self] status in self?.push("_notify", ["status": status.rawValue]) }
+        notifications.start()
         #if DEBUG
         // Safari's Web Inspector, for the day a Mac is at hand (release builds stay closed)
         if #available(iOS 16.4, *) { webView.isInspectable = true }
@@ -94,6 +97,17 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             store.buy(id)
         case "restore":
             store.restore()
+        case "notifyState":
+            if let status = notifications.status { push("_notify", ["status": status.rawValue]) }
+        case "notifyAsk":
+            notifications.ask()
+        case "notifySchedule":
+            guard let id = body["id"] as? String, let at = body["at"] as? Double,
+                  let title = body["title"] as? String, let text = body["body"] as? String else { return }
+            notifications.schedule(id: id, at: at, title: title, body: text)
+        case "notifyCancel":
+            guard let id = body["id"] as? String else { return }
+            notifications.cancel(id: id)
         default:
             return
         }
@@ -130,7 +144,7 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
               push: function(v){ last = v; for (var i = 0; i < cbs.length; i++) { try { cbs[i](v); } catch (e) {} } }
             };
           }
-          var gc = feed(), ad = feed(), adEvent = feed(), store = feed(), storeResult = feed();
+          var gc = feed(), ad = feed(), adEvent = feed(), store = feed(), storeResult = feed(), notify = feed();
           window.HKNative = {
             v: c.v, saved: c.saved || {}, languages: c.languages || [], device: c.device || '',
             save: function(k, v){ post({ op: 'save', key: String(k), value: String(v) }); },
@@ -148,15 +162,22 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             onStoreResult: storeResult.on,
             buy: function(id){ post({ op: 'buy', id: String(id) }); },
             restore: function(){ post({ op: 'restore' }); },
+            notify: notify.get,
+            onNotify: notify.on,
+            notifyAsk: function(){ post({ op: 'notifyAsk' }); },
+            notifySchedule: function(id, at, title, body){ post({ op: 'notifySchedule', id: String(id), at: Number(at), title: String(title), body: String(body) }); },
+            notifyCancel: function(id){ post({ op: 'notifyCancel', id: String(id) }); },
             _gameCenter: gc.push,
             _adState: ad.push,
             _adEvent: adEvent.push,
             _store: store.push,
-            _storeResult: storeResult.push
+            _storeResult: storeResult.push,
+            _notify: notify.push
           };
           post({ op: 'gameCenter' });
           post({ op: 'adState' });
           post({ op: 'store' });
+          post({ op: 'notifyState' });
         })();
         """
     }

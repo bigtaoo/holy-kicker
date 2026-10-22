@@ -42,6 +42,21 @@ export interface HKNative {
   buy(id: string): void;
   /** Restore purchases: AppStore.sync(), then the entitlements again; only from a tap (v4). */
   restore(): void;
+  /** Whether reminders may be shown, null until the system has answered (v5). */
+  notify(): NotifyState | null;
+  /** Called with every new answer, and after notifyAsk even when nothing changed (v5). */
+  onNotify(cb: (state: NotifyState) => void): void;
+  /** Shows the system's permission sheet; only from a tap (v5). */
+  notifyAsk(): void;
+  /** Books a local notification at `at` (ms since 1970), replacing one with the same id (v5). */
+  notifySchedule(id: string, at: number, title: string, body: string): void;
+  /** Drops a booked notification (v5). */
+  notifyCancel(id: string): void;
+}
+
+/** Local notifications as the shell sees them (Notifications.swift): 'unknown' while never asked. */
+export interface NotifyState {
+  status: 'unknown' | 'on' | 'off';
 }
 
 /** StoreKit as the shell sees it (Store.swift). */

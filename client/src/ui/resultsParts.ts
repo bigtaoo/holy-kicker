@@ -9,7 +9,7 @@ import { sutraName } from './cardText';
 import type { DownInfo } from './deathInfo';
 import { goalText } from './downPanel';
 import { fallFigures, fallIcon } from './fallIcons';
-import { dropName, TIER_COLORS } from './gearText';
+import { dropName, haulName, TIER_COLORS } from './gearText';
 import { goalShare } from './resultsReveal';
 import { statLines } from './statText';
 import { CARD_STROKE } from './playCard';
@@ -196,7 +196,7 @@ export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
     const stats = statLines(gain);
     if (stats.length > 0) lines.push([stats.join('  ·  '), 48, COLORS.text]);
   } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
-  const tomorrow = r.gift ? BALANCE.welcome[1] : undefined;
-  if (tomorrow) lines.push([t('gift.tomorrow', { gift: dropName(tomorrow) }), 48, COLORS.jade]);
+  const tomorrow = r.gift?.next;
+  if (tomorrow) lines.push([t('gift.tomorrow', { gift: haulName(tomorrow) }), 48, COLORS.jade]);
   return lines;
 }

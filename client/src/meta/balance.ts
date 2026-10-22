@@ -7,6 +7,7 @@ import type { DailyBalance } from './daily';
 import type { LowHealthBalance } from '../game/lowHealth';
 import type { GearBalance } from './gear';
 import type { PatrolBalance } from './patrol';
+import type { ReminderBalance } from './reminders';
 import type { ShopBalance } from './shop';
 import type { TrainingBalance } from './training';
 import type { WelcomeGift } from './welcome';
@@ -29,6 +30,8 @@ export interface Balance {
   waves: number;
   /** Rewarded-ad revives per run; wave length and the wave plan are engine rules (engine/config.ts). */
   revives: number;
+  /** At most one interstitial every this many minutes of play, on every host (platform/adPacing.ts). */
+  ads: { interstitialMinutes: number };
   /** The low-health warning (game/lowHealth.ts): when the heart beats and how fast. */
   lowHealth: LowHealthBalance;
   grit: GritBalance;
@@ -51,10 +54,12 @@ export interface Balance {
   training: TrainingBalance;
   shop: ShopBalance;
   patrol: PatrolBalance;
+  /** The iOS app's local reminders (reminders.ts): when they are offered and when they ring. */
+  reminders: ReminderBalance;
   daily: DailyBalance;
   /** A new player's welcome gifts (welcome.ts), one a day from the first run's day. */
   welcome: WelcomeGift[];
-  /** The long-term goals and the jade each pays once (achievements.ts), at most 30 (bits of `achieved`); new ones go last. */
+  /** The long-term goals and the jade each pays once (achievements.ts), one bit of `achieved` each; new ones go last. */
   achievements: AchievementGoal[];
   /** Jade price of each monk (monks.ts); the kicker is free. */
   monks: Record<MonkId, number>;

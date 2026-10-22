@@ -1,8 +1,8 @@
-import { LIMITS, challengeBoardId, weekIdOf, weekStart, WEEK_MS, type Challenge, type ChallengeList, type ChallengeRunReply, type ReplayWire, type TopRun } from '@hk/protocol';
+import { LIMITS, challengeBoardId, dailySeed, weekIdOf, weekStart, ymdOf, WEEK_MS, type Challenge, type ChallengeList, type ChallengeRunReply, type ReplayWire, type TopRun } from '@hk/protocol';
 import { ENGINE_VERSION, MUTATOR_IDS, takeReplay, type LocalInputSource, type Replay, type SimState } from '@hk/engine';
 import type { Game } from '../game/Game';
 import { evolvedIn } from '../meta/codex';
-import { challengeChapter, challengeState, hoursLeft, settleChallenge, type ChallengeReward, type ChallengeState } from '../meta/challenge';
+import { challengeChapter, challengeDay, challengeState, dailyBestOf, hoursLeft, settleChallenge, streakJade, streakOn, type ChallengeReward, type ChallengeState } from '../meta/challenge';
 import type { SaveData } from '../meta/save';
 import { claimWeek, closedWeeks, settleWeekly, weekClaim, weekOf, weeklyState, type WeekClaim, type WeekEntry, type WeeklyState } from '../meta/weekly';
 import type { Backend, RunResult } from '../net/backend';
@@ -14,11 +14,16 @@ import type { ReplayView } from './replayWatch';
 // backend with the server's clock, the run in play, its replay taken as it ends, and the run sent
 // with that replay. The shell asks it for the lobby's card, starts the run from its record and
 // hands it the run's end to settle. A weekly also has its closed weeks paid (their final rank
-// asked once a session) and its top runs' replays fetched to watch. Offline, or while the backend
-// does not answer, there is no challenge to show.
+// asked once a session) and its top runs' replays fetched to watch. Offline (the Playgama sandbox,
+// a host without the backend) or while the backend does not answer, the device makes the UTC
+// day's daily up itself, the same record the server would answer: no board, the day's best as the
+// score, its milestones and streak paid once a day as online (the same id). The server's record
+// wins as soon as it answers. There is no weekly offline.
 
 /** A record this old is fetched again when the lobby shows (it may have closed meanwhile). */
 const STALE_MS = 10 * 60 * 1000;
+/** A daily made up on the device asks the backend again after this long. */
+const RETRY_MS = 60 * 1000;
 const DAY_MS = 86_400_000;
 
 /** The daily as the lobby shows it. */
@@ -31,6 +36,13 @@ export interface DailyView {
   hours: number;
   /** The counted run's answer from the server this session, once in. */
   reply: ChallengeRunReply | null;
+  /** Made up on the device (offline): no board, the day's best instead. */
+  local: boolean;
+  /** The day's best waves, 0 before a run. */
+  best: number;
+  /** The streak as it stands today (0: broken or none), and what the next counted run's day of it pays. */
+  streak: number;
+  nextStreakJade: number;
 }
 
 /** The weekly as the lobby shows it. */
@@ -59,6 +71,8 @@ export interface ChallengeSettled {
   reply: Promise<ChallengeRunReply | null>;
   /** A weekly run: the week's best waves before it (0 for the first). */
   weekly?: { before: number };
+  /** A daily made up on the device: the day's best waves before this run. */
+  local?: { before: number };
 }
 
 export class ChallengeFlow {
@@ -67,6 +81,8 @@ export class ChallengeFlow {
   private offset = 0;
   private fetchedAt = -Infinity;
   private fetching = false;
+  /** The list is the device's own daily, not the server's. */
+  private local = false;
   /** The challenge of the run in play, null for a chapter run. */
   run: Challenge | null = null;
   private replay: ReplayWire | null = null;
@@ -90,19 +106,36 @@ export class ChallengeFlow {
     return this.now() + this.offset;
   }
 
-  /** Fetches the records when there are none, they are old, or one of them is over. */
+  /** Fetches the records when there are none, they are old, or one of them is over; offline, or with no answer, makes the daily up. */
   refresh(): void {
-    if ((!this.net.online && !this.fake) || this.fetching) return;
-    if (this.list && this.now() - this.fetchedAt < STALE_MS && this.list.every((c) => this.serverNow() < c.end)) return;
+    if (this.fetching) return;
+    const age = this.now() - this.fetchedAt;
+    if (this.list && age < (this.local ? RETRY_MS : STALE_MS) && this.list.every((c) => this.serverNow() < c.end)) return;
+    if (!this.net.online && !this.fake) return this.makeUp();
     this.fetching = true;
     void (this.net.online ? this.net.challenges() : Promise.resolve(madeUp(this.now()))).then((r) => {
       this.fetching = false;
-      if (!r) return;
+      if (!r) return this.makeUp();
       this.offset = r.now - this.now();
       this.fetchedAt = this.now();
       this.list = r.challenges;
+      this.local = false;
       this.changed();
     });
+  }
+
+  /** The device's own daily, unless the server's open record stands (a later fetch failed). */
+  private makeUp(): void {
+    if (this.list && !this.local && this.list.every((c) => this.serverNow() < c.end)) {
+      this.fetchedAt = this.now(); // asked again once stale
+      return;
+    }
+    const id = this.list?.[0]?.id;
+    this.offset = 0;
+    this.fetchedAt = this.now();
+    this.list = [localDaily(this.now())];
+    this.local = true;
+    if (id !== this.list[0].id) this.changed();
   }
 
   private open(kind: Challenge['kind']): Challenge | null {
@@ -115,7 +148,11 @@ export class ChallengeFlow {
     const c = this.open('daily');
     const state = c && challengeState(save, c);
     if (!c || !state || state === 'locked') return null;
-    return { challenge: c, state, chapter: challengeChapter(save, c), hours: hoursLeft(c.end, this.serverNow()), reply: this.replies.get(c.id) ?? null };
+    const streak = streakOn(save, challengeDay(c));
+    return {
+      challenge: c, state, chapter: challengeChapter(save, c), hours: hoursLeft(c.end, this.serverNow()), reply: this.replies.get(c.id) ?? null,
+      local: this.local, best: dailyBestOf(save, c), streak, nextStreakJade: streakJade(streak + 1),
+    };
   }
 
   /** This week's weekly for `save`, or null: none fetched, chapter 1 not cleared yet, or closed. */
@@ -140,7 +177,7 @@ export class ChallengeFlow {
     const weekly = this.weekly(save);
     const claim = this.claim(save);
     if (!daily && !weekly && !claim) return null;
-    const online = ranked && this.net.online;
+    const online = ranked && this.net.online && !this.local;
     return {
       daily, weekly, claim,
       play,
@@ -225,20 +262,28 @@ export class ChallengeFlow {
     };
     if (c.loadout) {
       const week = settleWeekly(save, c, challengeBoardId(c.id, c.engine, chapter, THEME), result);
-      const reward = { counted: true, reached: [], copper: 0, jade: 0 };
+      const reward = { counted: true, reached: [], copper: 0, jade: 0, streak: 0, streakJade: 0 };
       return { save: week.save, reward, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(waves >= week.before), weekly: { before: week.before } };
     }
+    const before = dailyBestOf(save, c);
     const settled = settleChallenge(save, c, chapter, result);
-    // a give-up is a finished run too: it counts, so giving up is no way to try again
-    return { ...settled, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(settled.reward.counted) };
+    // a give-up is a finished run too: it counts, so giving up is no way to try again; a made-up
+    // daily is the server's own record, so its counted run is sent too once the backend answers
+    const local = this.local ? { local: { before } } : {};
+    return { ...settled, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(settled.reward.counted), ...local };
   }
 }
 
-/** The challenges as the device makes them up (?challenge offline): the UTC day's and ISO week's ids and bounds, a seed from each, the daily's mutator by the day as the server picks it. */
-function madeUp(now: number): ChallengeList {
+/** The UTC day's daily as the server makes it (server/src/challenge.ts dailyOf): its id, bounds, seed, waves and mutator. */
+export function localDaily(now: number): Challenge {
   const start = now - (now % DAY_MS);
-  const ymd = Number(new Date(start).toISOString().slice(0, 10).replace(/-/g, ''));
-  const daily: Challenge = { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: ymd, chapter: 'furthest', waves: 20, mutator: MUTATOR_IDS[(start / DAY_MS) % MUTATOR_IDS.length], loadout: null, engine: ENGINE_VERSION };
+  const ymd = ymdOf(start);
+  return { id: `d${ymd}`, kind: 'daily', start, end: start + DAY_MS, seed: dailySeed(ymd), chapter: 'furthest', waves: 20, mutator: MUTATOR_IDS[(start / DAY_MS) % MUTATOR_IDS.length], loadout: null, engine: ENGINE_VERSION };
+}
+
+/** The challenges as the device makes them up (?challenge offline): the daily, and the ISO week's weekly with a fixed loadout. */
+function madeUp(now: number): ChallengeList {
+  const daily = localDaily(now);
   const week = weekStart(now);
   const id = weekIdOf(now);
   const loadout = { relic: 'bowl', monk: 'novice', sutras: ['lotus', 'roar'], chapter: 2 };

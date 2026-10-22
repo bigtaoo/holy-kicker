@@ -94,7 +94,7 @@ client/
 
 Every member is feature-detected so a newer JS bundle on an older shell degrades instead of
 throwing; `v` is raised when the shell gains calls (2 with Game Center, 3 with AdMob, 4 with the
-store). Answers are pushed, not settled by id: the shell calls `_gameCenter(state)`,
+store, 5 with the reminders). Answers are pushed, not settled by id: the shell calls `_gameCenter(state)`,
 `_adState(state)` and `_store(state)` whenever a state changes and when the page posts
 `gameCenter` / `adState` / `store` as it loads (a reloaded page asks again), `_adEvent(e)` as an ad
 the page asked for comes and goes, and `_storeResult(r)` when a buy or a restore is over.
@@ -122,6 +122,12 @@ interface HKNative {
   // buy: 'owned' | 'cancelled' | 'pending' (Ask to Buy) | 'failed'; restore: 'owned' | 'none' | 'cancelled' | 'failed'
   buy(id: string): void; // Apple's purchase sheet, only from a tap
   restore(): void; // AppStore.sync(), then the entitlements again
+  // reminders (v5, "Reminders")
+  notify(): { status: 'unknown' | 'on' | 'off' } | null; // null until the shell has answered
+  onNotify(cb: (s: { status: 'unknown' | 'on' | 'off' }) => void): void;
+  notifyAsk(): void; // the system's permission sheet, only from a tap; answers through onNotify
+  notifySchedule(id: string, at: number, title: string, body: string): void; // ms; replaces `id`
+  notifyCancel(id: string): void;
   // shell (step 1, built)
   v: number;
   openUrl(url: string): void; // UIApplication.open, Safari; http(s) only
@@ -255,6 +261,38 @@ Built (step 4) in `App/Store.swift`, `platform/ios/storeKit.ts`, `adFree.ts` and
   the first lobby on, so a reviewer finds the card without clearing a chapter.
 - Analytics: a new `iap` event (`what`: buy or restore, `item`: adfree, `outcome`), and the `ad`
   event gets `free: true` when the card paid it; the dashboard's "watched an ad" leaves those out.
+
+## Reminders
+
+Two local notifications, no server push: **the patrol is full** (12 h after it set out) and
+**today's daily challenge is ready** (19:00 local, at least 6 h after the game was last open,
+only once the daily is unlocked and not yet played that UTC day). A patrol that fills between
+22:00 and 08:00 local rings at 08:00 (`balance.json` `reminders`). The page books both again
+whenever the lobby opens and when the app goes to the background, so the times follow the save;
+the texts are in the player's language at that moment.
+
+They are off until the player agrees. Never on a launch: a card at the foot of the lobby asks
+once, after a finished run, from the third run on ("Remind me" / "No thanks"); only "Remind me"
+brings up Apple's sheet. Settings has a switch; refused in the iPhone Settings, it says so, since
+only those can undo it. Native: `Notifications.swift` (UNUserNotificationCenter, alert and
+sound, no badge), refreshed whenever the app becomes active; web: `platform/ios/notify.ts`, which
+offers nothing on a shell older than v5 (a hot update on an old binary).
+
+To verify on a device (no Mac here, so none of this has run yet):
+
+1. Fresh install: no sheet at launch; after the third finished run the card shows once.
+2. "Remind me" → Apple's sheet; Allow → Settings shows "Reminders: on". "No thanks" → no sheet,
+   the card does not come back, the switch can still turn them on (and then asks).
+3. Background the app with a patrol out: Settings → Notifications → the scheduled time is not
+   visible, so test with a short patrol (`balance.json` `patrol.capHours`) in a debug build, or
+   set the clock forward; the banner reads "<patrol> is full" in the game's language.
+4. The daily: with the daily unplayed, background the app; the reminder comes at 19:00. Play
+   the daily, background again: it moves to the next day.
+5. Quiet hours: a patrol filling at night rings at 08:00.
+6. Deny in the sheet, or turn the app's notifications off in iPhone Settings: the switch row
+   says they are off in Settings; turning them back on there shows "on" when the app returns.
+7. A web bundle with these changes on a shell built before v5 (hot update): no card, no row.
+8. The corgi app: the patrol's own word in the title ("Patrol"/"巡逻").
 
 ## Hot updates
 

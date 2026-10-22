@@ -1,19 +1,19 @@
 import { BALANCE } from './balance';
 import { ITEM_IDS, TIERS } from './gear';
 import { hardClears } from './progress';
-import type { SaveData } from './save';
+import { ACHIEVED_BITS, type SaveData } from './save';
 
 // Achievements (docs/design.md "Retention"): long-term goals that each pay jade once, claimed
 // in the tasks panel. Progress is read from what the save already keeps (plus the lifetime
 // kills), so a goal reached before the achievements existed simply waits to be claimed. Pure:
 // functions take a save and return a new one.
 
-export type AchievementKind = 'runs' | 'kills' | 'clear' | 'hard' | 'codex' | 'level' | 'trained' | 'tier' | 'monks';
+export type AchievementKind = 'runs' | 'kills' | 'clear' | 'hard' | 'codex' | 'level' | 'trained' | 'tier' | 'monks' | 'streak';
 
 /**
  * Finish `n` runs, defeat `n` enemies, clear chapter `n` (or hard chapter `n`), record `n` Codex
  * entries, reach level `n`, buy `n` training nodes, own an item of tier `n` (gear.ts Tier) or
- * own `n` monks; it pays `jade` once.
+ * own `n` monks, or play the daily challenge `n` days in a row; it pays `jade` once.
  */
 export interface AchievementGoal {
   kind: AchievementKind;
@@ -38,6 +38,18 @@ function bits(n: number): number {
   return c;
 }
 
+function claimed(achieved: readonly number[], i: number): boolean {
+  return ((achieved[Math.floor(i / ACHIEVED_BITS)] ?? 0) & (1 << (i % ACHIEVED_BITS))) !== 0;
+}
+
+function withClaimed(achieved: readonly number[], i: number): number[] {
+  const out = [...achieved];
+  const w = Math.floor(i / ACHIEVED_BITS);
+  while (out.length <= w) out.push(0);
+  out[w] |= 1 << (i % ACHIEVED_BITS);
+  return out;
+}
+
 /** Where the save stands on a goal's kind, in the goal's own unit. */
 export function achievementProgress(save: SaveData, kind: AchievementKind): number {
   switch (kind) {
@@ -59,11 +71,13 @@ export function achievementProgress(save: SaveData, kind: AchievementKind): numb
       return Math.max(0, bestTier(save));
     case 'monks':
       return bits(save.monks);
+    case 'streak':
+      return save.bestStreak;
   }
 }
 
 export function achievementState(save: SaveData, i: number): AchievementState {
-  if (save.achieved & (1 << i)) return 'claimed';
+  if (claimed(save.achieved, i)) return 'claimed';
   const g = GOALS[i];
   return achievementProgress(save, g.kind) >= g.n ? 'ready' : 'open';
 }
@@ -80,13 +94,13 @@ export function achievementOrder(save: SaveData): number[] {
 }
 
 export function achievementsClaimed(save: SaveData): number {
-  return bits(save.achieved);
+  return save.achieved.reduce((n, w) => n + bits(w), 0);
 }
 
 /** Pays achievement `i` when it is reached and not yet claimed. */
 export function claimAchievement(save: SaveData, i: number): SaveData {
   if (achievementState(save, i) !== 'ready') return save;
-  return { ...save, jade: save.jade + GOALS[i].jade, achieved: save.achieved | (1 << i) };
+  return { ...save, jade: save.jade + GOALS[i].jade, achieved: withClaimed(save.achieved, i) };
 }
 
 /** Pays every reached achievement at once. */

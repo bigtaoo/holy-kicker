@@ -10,7 +10,9 @@ import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
+/** Bits per word of `achieved`: 30 keeps every word a small positive integer. */
+export const ACHIEVED_BITS = 30;
 /** Chapters a save before version 6 had; clearing them all opened hard mode on every one. */
 const OLD_CHAPTERS = 5;
 
@@ -67,8 +69,8 @@ export interface SaveData {
   monks: number;
   /** Enemies defeated over every run, for the achievements (achievements.ts). */
   kills: number;
-  /** Claimed achievements, bit i for BALANCE.achievements[i]. */
-  achieved: number;
+  /** Claimed achievements, bit i % 30 of word i / 30 for BALANCE.achievements[i] (achievements.ts). */
+  achieved: number[];
   /** The dice name on the boards (protocol.ts packDice), 0 until the first launch rolls one (ui/playerName.ts). */
   dice: number;
   /** Welcome gifts claimed (welcome.ts), and the local date (yyyymmdd) of the last one. */
@@ -80,6 +82,12 @@ export interface SaveData {
   challenge: string;
   /** Weeks with a finished weekly run, until paid once their ranks are final (weekly.ts). */
   weeks: WeekEntry[];
+  /** The daily challenge's streak (challenge.ts): its length, the UTC day number of its last counted run, and the longest one. */
+  streak: number;
+  streakDay: number;
+  bestStreak: number;
+  /** The best waves of a daily's runs, counted or practice, and which daily ('' for none): offline it has no board, so this is the score. */
+  dailyBest: { id: string; waves: number };
 }
 
 export function newSave(): SaveData {
@@ -89,7 +97,7 @@ export function newSave(): SaveData {
     chapter: 1, cleared: 0, best: zeros(), stars: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
     hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
-    kills: 0, achieved: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [],
+    kills: 0, achieved: [], dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 },
   };
 }
 
@@ -120,6 +128,24 @@ function inventory(v: unknown): Inventory {
   return out;
 }
 
+/** The claimed achievements: words of ACHIEVED_BITS bits, none past the last goal; before version 7 it was one number. */
+function achievedOf(v: unknown): number[] {
+  const words = typeof v === 'number' ? [v] : Array.isArray(v) ? v : [];
+  const goals = BALANCE.achievements.length;
+  const out: number[] = [];
+  for (let w = 0; w * ACHIEVED_BITS < goals; w++) {
+    const bits = Math.min(ACHIEVED_BITS, goals - w * ACHIEVED_BITS);
+    out.push(int(words[w], 0, 2 ** bits - 1, 0));
+  }
+  while (out.length && !out[out.length - 1]) out.pop();
+  return out;
+}
+
+function dailyBestOf(v: unknown): { id: string; waves: number } {
+  const raw = (v !== null && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+  return typeof raw.id === 'string' && CHALLENGE_ID.test(raw.id) ? { id: raw.id, waves: int(raw.waves, 0, BALANCE.waves, 0) } : { id: '', waves: 0 };
+}
+
 /** Whether `id` names a monk in the `monks` bits. */
 function owned(monks: number, id: unknown): boolean {
   const i = MONK_IDS.indexOf(id as MonkId);
@@ -137,6 +163,7 @@ function owned(monks: number, id: unknown): boolean {
  * Version 5 had five chapters, no stars and hard mode open on all of them once all were cleared:
  * its clears read as one star, its hard clears as a count from chapter 1, and a player who had
  * hard mode keeps it with three stars on those five chapters.
+ * Version 6 kept the claimed achievements in one number: it becomes the first word, no streak yet.
  * A save without the last falls reads as none fallen yet.
  */
 export function parseSave(text: string | null): SaveData {
@@ -201,12 +228,16 @@ export function parseSave(text: string | null): SaveData {
     monk: owned(monks, raw.monk) ? (raw.monk as MonkId) : 'kicker',
     monks,
     kills: int(raw.kills, 0, max, 0),
-    achieved: int(raw.achieved, 0, (2 ** BALANCE.achievements.length) - 1, 0),
+    achieved: achievedOf(raw.achieved),
     dice: isDice(raw.dice) ? raw.dice : 0,
     gifts: int(raw.gifts, 0, BALANCE.welcome.length, 0),
     giftDay: int(raw.giftDay, 0, 99999999, 0),
     firstDay: int(raw.firstDay, 0, 99999999, 0),
     challenge: typeof raw.challenge === 'string' && CHALLENGE_ID.test(raw.challenge) ? raw.challenge : '',
     weeks: parseWeeks(raw.weeks),
+    streak: int(raw.streak, 0, max, 0),
+    streakDay: int(raw.streakDay, 0, max, 0),
+    bestStreak: Math.max(int(raw.bestStreak, 0, max, 0), int(raw.streak, 0, max, 0)),
+    dailyBest: dailyBestOf(raw.dailyBest),
   };
 }

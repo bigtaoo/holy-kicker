@@ -1,36 +1,31 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, SUTRA_IDS, TICK_RATE, type MonkId, type SimState } from '@hk/engine';
+import { isBossWave, type MonkId } from '@hk/engine';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
-import { rankedRun, type SceneOptions } from '../game/scene';
+import type { SceneOptions } from '../game/scene';
 import { computeViewport } from '../game/viewport';
 import { setupOf } from '../game/runSetup';
 import { BALANCE } from '../meta/balance';
-import { challengeSetup } from '../meta/challenge';
-import { evolvedIn } from '../meta/codex';
-import { noteFall, runPast } from '../meta/falls';
-import { loadout } from '../meta/loadout';
 import { rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
-import { chooseTrack, doubleCopper, earnedSutras, selectChapter, settleRun, type Reward, type Tab } from '../meta/progress';
-import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
+import { chooseTrack, selectChapter, type Tab } from '../meta/progress';
+import { dropRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
-import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
-import { afterRun } from '../meta/welcome';
 import type { SaveStore } from '../meta/saveStore';
-import { loadSettings, updateSettings } from '../meta/settings';
+import { loadSettings } from '../meta/settings';
+import { pacedAds, type PacedAds } from '../platform/adPacing';
 import { bracketed } from '../platform/brackets';
-import type { Ads, Platform, Portal } from '../platform/types';
+import type { Platform, Portal } from '../platform/types';
 import { Sound } from '../audio/Sound';
-import { languageProps, type Backend, type RunRank, type RunResult } from '../net/backend';
+import { languageProps, type Backend } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
-import { chapterLook, lateArt, loadChapterArt, loadRunArt } from '../chapterArt';
+import { loadRunArt, lateArt, loadChapterArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
 import { menuBackdrop } from './lobbyBars';
 import { LobbyScreen } from './LobbyScreen';
@@ -39,20 +34,18 @@ import { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { ResumeScreen } from './ResumeScreen';
-import { RunHud } from './RunHud';
-import { keepLanguage, storedSettings, type SettingsActions } from './settingsPanel';
-import { canReport, reportProblem } from './problemReport';
+import { ReminderBook } from './reminders';
+import { RunFlow } from './runFlow';
+import { storedSettings, type SettingsActions } from './settingsPanel';
 import { PlayerName } from './playerName';
-import type { DownInfo } from './deathInfo';
-import { RunWatch } from './runWatch';
 import { ReplayScreen, type ReplayView } from './replayWatch';
 import { uiFrame, type Screen } from './uiLayout';
 import { onButtonTap } from './widgets';
 
 // The game's flow (docs/design.md "Flow"): the first launch goes straight into chapter 1, afterwards lobby -> run ->
-// results -> lobby. Owns the save, the current screen and the current run, and tells the portal when gameplay starts and
-// stops. The engine runs the chapter's waves; RunWatch follows each run frame by frame. A run ends won, lost, or when the
-// player gives up; a lost one's results offer to play the chapter again.
+// results -> lobby. Owns the save, the current screen, the lobby and its routes (a chapter, a challenge, a replay, the
+// resume offer), and the host's ads and portal hooks. The run itself, from its start to its results, is RunFlow's
+// (runFlow.ts); the engine runs the chapter's waves and RunWatch follows each run frame by frame.
 
 const RESUME_FROM_WAVE = 3; // the first wave a run left unfinished must have reached to be offered again on the next launch
 
@@ -63,11 +56,6 @@ export class Shell {
   private readonly ui = new Container();
   private screen: Screen | null = null;
   private shownMs = 0; // milliseconds on screen since the last `leave` event
-  private game: Game | null = null;
-  private hud: RunHud | null = null;
-  private watch: RunWatch | null = null;
-  private chapter = 1;
-  private hard = false; // the run in play is hard mode
   private screenKey = '';
   private bannerUp = false; // the lobby's banner is up: its band is kept clear like a safe-area inset
   private quality: LevelSettings | null = null;
@@ -75,19 +63,20 @@ export class Shell {
   onQualityMode: (mode: QualityMode) => void = () => {};
   /** The `perf` sender (boot.ts feeds it the battle frames); a meter per real run. */
   perf: PerfReport | null = null;
-  /** Free revives (training) left in this run; they come before the rewarded-ad one. */
-  private freeRevives = 0;
-  private kills = 0; // enemies defeated in this run, for the daily tasks
   private loading = false; // a chapter's art pack is being fetched; taps on play wait for it
   private readonly lobbyArt: LobbyArtLoad;
   private readonly challenge: ChallengeFlow; // the challenges: their records, the run in play and its replay, the weeks to pay
   private readonly replays: RunReplays; // each real run's replay, while the server collects them
   readonly sound: Sound;
-  /** The host's ads, with the game silent while one plays. */
-  private readonly ads: Ads;
+  /** The host's ads, with the game silent while one plays and the interstitials paced (platform/adPacing.ts). */
+  private readonly ads: PacedAds;
   /** The host's session hooks, each gameplay start or stop sent once. */
   private readonly portal: Portal;
   private readonly names: PlayerName;
+  /** The run in play, from its start to its results (runFlow.ts). */
+  private readonly runs: RunFlow;
+  /** The iOS app's reminders, booked on the way to the lobby and to the background; null on hosts without them. */
+  private readonly reminders: ReminderBook | null;
 
   constructor(
     private readonly app: Application,
@@ -111,15 +100,24 @@ export class Shell {
     store.save(this.save);
     const settings = loadSettings(platform.storage);
     this.sound = new Sound(platform, settings.volume, settings.music);
-    this.ads = this.sound.muteDuring(platform.ads);
+    this.ads = pacedAds(this.sound.muteDuring(platform.ads), BALANCE.ads.interstitialMinutes * 60_000);
     this.portal = bracketed(platform.portal);
+    this.reminders = platform.notify ? new ReminderBook(platform.notify, platform.storage, () => this.save) : null;
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
     platform.onKey?.((code, repeat) => this.screen?.key?.(code, repeat));
     // coming back to a run mid-fight is unfair; it waits on the pause panel instead, and is kept in case the game is closed for good
     platform.onHide(() => {
-      this.hud?.pauseForHost();
-      this.keepRun();
+      this.runs.hidden();
+      this.reminders?.sync();
+    });
+    this.runs = new RunFlow({
+      app, platform, art, scene, stick: this.stick, net, device, sound: this.sound, ads: this.ads, portal: this.portal, names: this.names,
+      challenge: this.challenge, replays: this.replays,
+      save: () => this.save, commit: (save) => this.commit(save), setScreen: (screen) => this.setScreen(screen),
+      showLobby: (tab) => this.showLobby(tab ?? null), play: (chapter, left, from) => void this.play(chapter, left, from),
+      rewarded: (at) => this.rewarded(at), quality: () => this.quality, perf: () => this.perf,
+      freeLobbyArt: () => this.lobbyArt.free(), raiseUi: () => this.app.stage.addChild(this.ui),
     });
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
@@ -132,7 +130,8 @@ export class Shell {
     const secs = Math.round(this.shownMs / 1000);
     this.shownMs = 0;
     const place = this.place();
-    if (place === 'run' && this.game) return { place, secs, ...runLeave(this.game.engine.state, this.chapter, this.kills, this.watch?.tutorial?.step ?? null, this.platform.attention?.()) };
+    const r = this.runs;
+    if (place === 'run' && r.game) return { place, secs, ...runLeave(r.game.engine.state, r.chapter, r.kills, r.watch?.tutorial?.step ?? null, this.platform.attention?.()) };
     return { place, secs };
   }
 
@@ -140,7 +139,7 @@ export class Shell {
   place(): 'lobby' | 'results' | 'run' | 'other' {
     if (this.screen instanceof LobbyScreen) return 'lobby';
     if (this.screen instanceof ResultsScreen || this.screen instanceof ChallengeResultsScreen) return 'results';
-    return this.game ? 'run' : 'other';
+    return this.runs.game ? 'run' : 'other';
   }
 
   // The first screen, settled once it is up (`direct`, ?direct: no lobby); then the late art, the lobby's, chapter 2's.
@@ -166,7 +165,7 @@ export class Shell {
   }
 
   get run(): Game | null { // the current run, for dev console hooks
-    return this.game;
+    return this.runs.game;
   }
 
   /** Records a share from the host's menu, with the screen it was made from. */
@@ -177,7 +176,7 @@ export class Shell {
 
   applyQuality(s: LevelSettings): void {
     this.quality = s;
-    this.game?.applyQuality(s);
+    this.runs.game?.applyQuality(s);
   }
 
   /** Re-reads the save after the portal account changed (a guest signed in). */
@@ -227,6 +226,7 @@ export class Shell {
     this.names.sync(this.save);
     loadMonkArt(this.platform, this.art, this.save.monk).catch(() => undefined); // the patrol panel shows the chosen monk
     this.challenge.refresh();
+    this.reminders?.sync(now);
     const lobby = new LobbyScreen(this.save, this.names, {
       play: (chapter) => this.play(chapter),
       selectChapter: (chapter) => this.relobby(selectChapter(this.save, chapter)),
@@ -236,7 +236,7 @@ export class Shell {
         setLanguage: () => this.showLobby('settings'),
         setQuality: (quality) => this.onQualityMode(quality),
         privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform),
-        account: this.platform.portal, adPrivacy: this.platform.adPrivacy,
+        account: this.platform.portal, adPrivacy: this.platform.adPrivacy, reminders: this.reminders ?? undefined,
       }),
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
@@ -259,10 +259,7 @@ export class Shell {
   /** The last run was left unfinished: go on with it, or give it up (settled like a give-up in the run). */
   private offerResume(left: SavedRun): void {
     const { config: c, outcome, players } = left.state;
-    const giveUp = () => {
-      [this.chapter, this.hard, this.kills] = [c.chapter, c.hard, left.kills];
-      this.settle(left.state);
-    };
+    const giveUp = () => this.runs.giveUp(left);
     // fallen with no revive left, there is nothing to go on with
     if (outcome === 'lost' && players[0].revives === 0) return giveUp();
     this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => menuBackdrop(this.app.renderer, this.art.lobby)), this.device === 'desktop'));
@@ -270,7 +267,7 @@ export class Shell {
 
   /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
   private play(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: Challenge | null = null): Promise<void> {
-    return this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => this.startRun(chapter, left, from, c));
+    return this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => this.runs.start(chapter, left, from, c));
   }
 
   /** Runs `then` once `chapter`'s art and `monk`'s rig are in; on a failure, the lobby (the next tap tries again). */
@@ -301,182 +298,11 @@ export class Shell {
     });
   }
 
-  /** `c`: a run of that daily challenge (its own setup, no revives, never kept for the next launch). */
-  private startRun(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: Challenge | null = null): void {
-    c = this.challenge.begin(left ? null : c);
-    this.chapter = chapter;
-    this.hard = left ? left.state.config.hard : !c && (this.scene.hard || this.save.hard);
-    this.setScreen(null);
-    // no run draws the lobby: its art goes until the next lobby asks for it again
-    this.lobbyArt.free();
-    const { bonus, freeRevives } = loadout(this.save, chapter, this.hard);
-    this.freeRevives = left ? left.freeRevives : c ? 0 : freeRevives;
-    this.game = new Game(this.app, this.platform, this.art, this.scene, this.stick, left ? setupOf(left.state.config) : c ? challengeSetup(this.save, c) : {
-      chapter,
-      waves: this.scene.waves ? BALANCE.waves : 0,
-      revives: BALANCE.revives + freeRevives,
-      relic: this.scene.relic ?? this.save.relic,
-      sutras: this.scene.sutras ? SUTRA_IDS : earnedSutras(this.save),
-      bonus: this.scene.bare ? {} : bonus,
-      hard: this.hard,
-      monk: this.scene.monk ?? this.save.monk, firstRun: !this.save.firstRunDone && this.scene.waves,
-    }, left?.state);
-    this.replays.begin(this.game, rankedRun(this.scene) && !this.scene.record);
-    this.kills = left?.kills ?? 0;
-    this.perf?.start(rankedRun(this.scene) && !this.scene.record);
-    if (this.quality) this.game.applyQuality(this.quality);
-    this.game.shake.on = loadSettings(this.platform.storage).shake;
-    this.game.onEvents = (events) => {
-      this.watch?.see(events);
-      for (const e of events) {
-        if (e.type === 'mobDown') this.kills++;
-        const cue = eventCue(e, 0);
-        if (cue) this.sound.play(cue);
-      }
-    };
-    this.game.onHeartbeat = () => this.sound.play('heartbeat');
-    // the run adds itself to the stage; keep the UI above it
-    this.app.stage.addChild(this.ui);
-    this.hud = new RunHud(this.game.engine.state.config.waves || BALANCE.waves, this.hard, {
-      pause: () => this.setPaused(true),
-      resume: () => this.setPaused(false),
-      setFast: (fast) => {
-        if (this.game) this.game.speed = fast ? 2 : 1;
-        updateSettings(this.platform.storage, { fast });
-      },
-      giveUp: () => this.endRun(),
-      revive: () => this.revive(),
-      pick: (index) => this.game?.pick(index),
-      setLanguage: (locale) => keepLanguage(this.platform.storage, locale),
-      report: canReport(this.net, import.meta.env.DEV) ? () => reportProblem(this.platform, this.net, () => this.game, this.scene) : null,
-    }, this.art.icons, this.device === 'desktop', () => this.platform.keysReach?.() ?? true);
-    this.setScreen(this.hud);
-    // the first run teaches moving; a replayed first chapter, a resumed run or a dev bot's does not
-    const teach = !this.save.firstRunDone && this.scene.waves && !left && !this.scene.autoplay && !this.scene.record;
-    this.watch = new RunWatch(this.game, this.hud, {
-      chapter, novice: this.save.runs < BALANCE.novice.runs, portal: this.portal, ads: this.ads, net: this.net, past: runPast(this.save, chapter, this.hard),
-      freeRevives: () => this.freeRevives,
-      kills: () => this.kills, keepRun: () => this.keepRun(), end: () => this.endRun(), cheer: () => this.sound.play('cleared'),
-    }, !!teach);
-    // the fast-forward choice carries over from the last run
-    this.hud.setFast(loadSettings(this.platform.storage).fast);
-    this.portal.gameplayStart();
-    // a resumed fight waits on the pause panel until the player looks (a card choice or the death panel holds it anyway)
-    const s = this.game.engine.state;
-    if (!left) this.net.track('run_start', { chapter, hard: this.hard, monk: c?.loadout?.monk ?? this.scene.monk ?? this.save.monk, relic: c?.loadout?.relic ?? this.scene.relic ?? this.save.relic, ...(from && { [from]: true }), ...(c && { challenge: c.id }) });
-    else if (s.outcome === 'playing' && s.players[0].offer.length === 0) this.hud.pauseForHost();
-  }
-
-  /** Keeps the run in play for the next launch (meta/resume.ts); not the sandbox or a dev bot's run. */
-  private keepRun(): void {
-    const s = this.game?.engine.state;
-    if (!s || s.config.waves === 0 || this.scene.autoplay || this.scene.record || this.challenge.run) return;
-    keepRun(this.platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills });
-  }
-
   /** A rewarded ad, counted when it paid (`at` says where it was offered). */
   private async rewarded(at: string): Promise<boolean> {
     const paid = await this.ads.rewarded();
     if (paid) this.net.track('ad', this.ads.adFree() ? { at, free: true } : { at });
     return paid;
-  }
-
-  private setPaused(paused: boolean): void {
-    if (!this.game) return;
-    this.game.paused = paused;
-    this.portal[paused ? 'gameplayStop' : 'gameplayStart']();
-  }
-
-  private async revive(): Promise<boolean> {
-    if (this.freeRevives > 0 && this.game) {
-      this.freeRevives--;
-      this.game.revive();
-      return true;
-    }
-    const paid = await this.rewarded('revive');
-    if (!paid || !this.game) return false;
-    // the engine stands the hero up on its next tick; watchRun then resumes the portal
-    this.game.revive();
-    return true;
-  }
-
-  private endRun(): void {
-    if (!this.game) return;
-    const s = this.game.engine.state;
-    this.challenge.capture(this.game);
-    void this.replays.end();
-    this.game.destroy();
-    this.game = null;
-    this.hud = null;
-    // the death panel already told the portal
-    if (!this.watch?.downShown) this.portal.gameplayStop();
-    const fall = this.watch?.fall ?? null;
-    this.watch = null;
-    this.settle(s, fall);
-  }
-
-  // Pays out the run that ended in `s` (`waves` fully cleared), tells the backend, enters it on its board when no dev switch
-  // bent the rules (the results show the rank once it comes) and shows the results, with what felled the hero (`fall`).
-  private settle(s: SimState, fall: DownInfo | null = null): void {
-    const cause = fall?.cause;
-    dropRun(this.platform.storage);
-    const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
-    const p = s.players[0];
-    const run = {
-      chapter: this.chapter, hard: this.hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
-      level: p.level, kills: this.kills, monk: p.monk, relic: p.relicId,
-    };
-    this.perf?.end();
-    this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(this.challenge.run && { challenge: this.challenge.run.id }) });
-    const name = rankedRun(this.scene) ? this.names.board(this.save) : null;
-    const rank = name && !this.challenge.run ? this.net.submitRun({ ...run, ...name }) : Promise.resolve(null);
-    void this.net.flush();
-    if (this.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
-    const { reward, save: played } = settleRun(noteFall(this.save, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
-    const { save, gift } = afterRun(played, Date.now(), waves, this.kills);
-    // paid before the results show, so closing the tab now keeps the reward
-    this.commit(save);
-    if (gift) this.net.track('claim', { what: 'gift', n: 0, copper: gift.copper, jade: gift.jade, drops: gift.drops.length });
-    if (reward.firstClear) this.portal.celebrate();
-    this.showResults({ ...reward, gift }, waves, rank, s.outcome === 'lost' ? fall : null);
-  }
-
-  /** A challenge run's end: its milestones paid (the day's first run only), sent with its replay, and its own results. */
-  private settleChallenge(s: SimState, run: RunResult, waves: number, ranked: boolean): void {
-    const done = this.challenge.settle(this.save, s, run, waves, this.kills, ranked);
-    this.commit(afterRun(done.save, Date.now(), waves, this.kills).save);
-    this.setScreen(new ChallengeResultsScreen(done, {
-      double: async () => {
-        const paid = await this.rewarded('double');
-        if (paid) this.commit({ ...this.save, copper: this.save.copper + done.reward.copper });
-        return paid;
-      },
-      next: () => void this.ads.midgame().then(() => this.showLobby()),
-    }, this.ads.rewardedAvailable(), this.art.icons, this.device === 'desktop', menuBackdrop(this.app.renderer, this.art.lobby)));
-  }
-
-  private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>, fall: DownInfo | null): void {
-    let leaving = false;
-    // the interstitial sits on the break after the results, never inside a run, and never after the first run (the tutorial)
-    const leave = (then: () => void) => {
-      if (leaving) return;
-      leaving = true;
-      void (this.save.runs > 1 ? this.ads.midgame() : Promise.resolve()).then(then);
-    };
-    // a lost run's way back is the same chapter again (not the tutorial: firstRunDone is set), a first clear's the chapter it opened
-    const opened = reward.firstClear && (this.save.chapter !== this.chapter || this.save.hard !== this.hard);
-    this.setScreen(new ResultsScreen(reward, waves, {
-      double: async () => {
-        const paid = await this.rewarded('double');
-        if (paid) this.commit(doubleCopper(this.save, reward));
-        return paid;
-      },
-      next: (tab) => leave(() => this.showLobby(tab)),
-      again: !reward.firstClear ? () => leave(() => this.play(this.chapter, undefined, 'again')) : opened ? () => leave(() => this.play(this.save.chapter, undefined, 'next')) : null,
-      waiting: () => waitingCount(lobbyWaiting(this.save, Date.now())), step: () => (fall ? lossStep(this.save) : null),
-      // the opened chapter's art, loaded now for its preview and the run Next chapter starts
-      preview: opened ? chapterLook(this.platform, this.scene, this.art, this.save.chapter).catch(() => null) : undefined,
-    }, this.ads.rewardedAvailable(), rank, fall, this.art.icons, this.device === 'desktop', menuBackdrop(this.app.renderer, this.art.lobby)));
   }
 
   private tick(): void {
@@ -490,10 +316,12 @@ export class Shell {
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
       this.screen.layout(uiFrame(computeViewport(width, height, this.scene.record > 0), insets));
     }
-    if (this.watch) this.watch.update(this.app.ticker.deltaMS / 1000);
+    // only a run ticking on screen counts towards the next interstitial
+    if (this.runs.playing) this.ads.played(this.app.ticker.deltaMS);
+    if (this.runs.watch) this.runs.watch.update(this.app.ticker.deltaMS / 1000);
     else this.screen?.update?.(this.app.ticker.deltaMS / 1000);
     // the run has the battle music (the boss's on the mid-boss and boss waves, through to the results), every screen around it the lobby's
-    const s = this.game?.engine.state;
-    this.sound.flush(s ? (s.config.waves > 0 && isBossWave(s.wave, s.config.waves) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS, this.game?.downCamBusy() ? 0.25 : 1);
+    const s = this.runs.game?.engine.state;
+    this.sound.flush(s ? (s.config.waves > 0 && isBossWave(s.wave, s.config.waves) ? 'boss' : 'battle') : 'lobby', this.app.ticker.deltaMS, this.runs.game?.downCamBusy() ? 0.25 : 1);
   }
 }

@@ -1,8 +1,8 @@
 import { ENGINE_VERSION, MONK_IDS, MUTATOR_IDS, RELIC_IDS, SUTRA_IDS, type MutatorId } from '@hk/engine';
-import { CHALLENGE_ID, DAY_MS, LATE_MS, WEEK_MS, weekIdOf, weekStart, type Challenge, type ChallengeLoadout, type ReplayWire, type RunEntry } from './protocol';
+import { CHALLENGE_ID, DAY_MS, LATE_MS, WEEK_MS, dailySeed, weekIdOf, weekStart, ymdOf, type Challenge, type ChallengeLoadout, type ReplayWire, type RunEntry } from './protocol';
 import { WEEKLIES } from './weeklies';
 
-export { DAY_MS, LATE_MS, WEEK_MS, weekIdOf, weekStart };
+export { DAY_MS, LATE_MS, WEEK_MS, dailySeed, weekIdOf, weekStart, ymdOf };
 
 // The challenge list (docs/design.md "Challenges"). A daily is a formula of its UTC day, so
 // there is nothing to store or schedule: every server answers the same record for the same
@@ -15,21 +15,6 @@ export const DAILY_WAVES = 20;
 /** The daily's mutator: the engine's mutators in turn, one a UTC day. */
 export function dailyMutator(start: number): MutatorId {
   return MUTATOR_IDS[Math.floor(start / DAY_MS) % MUTATOR_IDS.length];
-}
-
-/** The UTC day of `ms` as the number YYYYMMDD. */
-export function ymdOf(ms: number): number {
-  const d = new Date(ms);
-  return d.getUTCFullYear() * 10_000 + (d.getUTCMonth() + 1) * 100 + d.getUTCDate();
-}
-
-/** A day's seed: its date mixed into 1..2^31-2, so neighbouring days share nothing. */
-export function dailySeed(ymd: number): number {
-  let h = Math.imul(ymd ^ 0x9e3779b9, 0x85ebca6b);
-  h ^= h >>> 13;
-  h = Math.imul(h, 0xc2b2ae35);
-  h ^= h >>> 16;
-  return 1 + ((h >>> 0) % 0x7ffffffe);
 }
 
 /** The daily of the UTC day `ms` falls on. */

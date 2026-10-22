@@ -16,7 +16,8 @@ import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 // The challenges in the lobby (docs/design.md "Challenges"): a round button on the Play tab's right rail with the daily's
 // time left (or Done; the weekly's when there is no daily), which opens a panel with a tab for
 // each. The daily's: its mutator, the rules, the milestones and what they pay, the player's share of the board
-// once their run is in, and Play (Practice once the day's run counted) and Ranks. The weekly's:
+// once their run is in (offline, made up on the device: the day's best instead, and no Ranks), the
+// streak and what its next day pays, and Play (Practice once the day's run counted) and Ranks. The weekly's:
 // ui/weeklyPage.ts, its board with the top runs to watch. On another engine version than the
 // record's, the button says to update and the panel offers no run. A closed week waiting to be paid
 // shows its claim card over the lobby. The lobby shows no button while there is no challenge
@@ -40,8 +41,8 @@ export interface ChallengeLobby {
 type Tab = 'daily' | 'weekly';
 
 const BOX_W = 960;
-/** Each page's box before its rules' grow: Back 40 under the page's own buttons (daily's at 1170, weekly's at 1235). */
-const DAILY_H = 1430;
+/** Each page's box before its rules' grow: Back 40 under the page's own buttons (daily's at 1240, weekly's at 1235). */
+const DAILY_H = 1500;
 const WEEKLY_H = 1490;
 
 export class ChallengeUi {
@@ -168,16 +169,22 @@ export class ChallengeUi {
     box.addChild(rules.view);
     add(t('challenge.milestones'), 48, COLORS.text, 470 + grow);
     BALANCE.challenge.milestones.forEach((m, i) => box.addChild(this.milestoneRow(milestonePay(m, d.chapter), top + grow + 560 + i * 90, d.state === 'done')));
-    // where the day stands: time left, done (with the board share once known), or update
+    // the streak and what its next day pays, then where the day stands: time left, done (with the
+    // board share once known, or the day's best offline), or update
     let y = 920 + grow;
+    if (d.state !== 'update') {
+      box.addChild(this.streakRow(d, top + y));
+      y += 70;
+    }
     if (d.state === 'update') add(t('challenge.update'), 44, COLORS.danger, y);
     else if (d.state === 'done') add(t('challenge.done'), 48, COLORS.jade, y);
     else add(t('challenge.ends', { h: d.hours }), 44, COLORS.text, y);
     y += 65;
     if (d.state === 'done') {
-      if (d.reply) add(t('challenge.top', { n: topPercent(d.reply.rank, d.reply.total) }), 52, COLORS.saffron, y);
+      if (d.local) add(t('challenge.best', { wave: d.best }), 52, COLORS.saffron, y);
+      else if (d.reply) add(t('challenge.top', { n: topPercent(d.reply.rank, d.reply.total) }), 52, COLORS.saffron, y);
       add(t('challenge.next', { h: d.hours }), 40, COLORS.dim, y + 60);
-    }
+    } else if (d.local) add(t('challenge.offline'), 40, COLORS.dim, y);
     const buttons: Container[] = [];
     if (d.state !== 'update') {
       buttons.push(button(t(d.state === 'done' ? 'challenge.practice' : 'lobby.play'), 420, 140, () => {
@@ -193,9 +200,29 @@ export class ChallengeUi {
       }, { fill: COLORS.panelLocked, size: 52 }));
     }
     buttons.forEach((b, i) => {
-      b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + grow + 1170);
+      b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + grow + 1240);
       box.addChild(b);
     });
+  }
+
+  /** The streak in days (or none yet), and the jade its next day pays. */
+  private streakRow(d: DailyView, y: number): Container {
+    const row = new Container();
+    row.y = y;
+    const text = label(d.streak > 0 ? t('challenge.streak', { n: d.streak }) : t('challenge.streakNone'), 44, COLORS.gold);
+    const s = iconSprite(this.icons, 'jade', 56);
+    const pay = label(t(d.state === 'done' ? 'challenge.streakTomorrow' : 'challenge.streakToday', { n: d.nextStreakJade }), 44, COLORS.jade);
+    text.anchor.set(0, 0.5);
+    pay.anchor.set(0, 0.5);
+    const w = text.width + 30 + (s ? 60 : 0) + pay.width;
+    text.x = -w / 2;
+    if (s) {
+      s.x = text.x + text.width + 30 + 28;
+      row.addChild(s);
+    }
+    pay.x = text.x + text.width + 30 + (s ? 60 : 0);
+    row.addChild(text, pay);
+    return row;
   }
 
   /** "Clear wave N" and what it pays, copper and jade, on one row. */

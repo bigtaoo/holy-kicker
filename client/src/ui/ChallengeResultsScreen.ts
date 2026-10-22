@@ -14,8 +14,9 @@ import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from 
 
 // The results of a daily challenge run (docs/design.md "Challenges"): the waves cleared, the four
 // milestones with the ones reached lit, what the counted run paid (a later run of the day is
-// practice and pays nothing), the player's share of the board ("top N %") once the server
-// answers, and the hours to the next challenge. Under the card the rewarded "double copper" offer
+// practice and pays nothing), the streak it made, the player's share of the board ("top N %") once
+// the server answers (offline: a new best or the day's best that stands), and the hours to the next
+// challenge. Under the card the rewarded "double copper" offer
 // and Continue side by side at the same size, font and colour, as on the chapter results. A
 // weekly run's results have no milestones and pay nothing now: a new best or the best that
 // stands, the week's rank once the server answers, and that rewards come when the week ends.
@@ -44,6 +45,8 @@ export class ChallengeResultsScreen implements Screen {
   private readonly hours: number;
   /** A weekly run: the week's best waves before it. */
   private readonly weekly: { before: number } | undefined;
+  /** A daily made up on the device: the day's best waves before it. */
+  private readonly local: { before: number } | undefined;
 
   constructor(
     run: ChallengeSettled,
@@ -54,7 +57,7 @@ export class ChallengeResultsScreen implements Screen {
     /** The lobby's baked menu courtyard (menuBackdrop) to sit on; null for the flat background. */
     private readonly backdrop: Texture | null = null,
   ) {
-    ({ reward: this.reward, chapter: this.chapter, waves: this.waves, hours: this.hours, weekly: this.weekly } = run);
+    ({ reward: this.reward, chapter: this.chapter, waves: this.waves, hours: this.hours, weekly: this.weekly, local: this.local } = run);
     const reward = this.reward;
     void run.reply.then((r) => {
       if (r && !this.view.destroyed) {
@@ -116,10 +119,19 @@ export class ChallengeResultsScreen implements Screen {
         y += 84;
         add(t('results.doubled'), 48, COLORS.copper, y);
       }
+      if (r.streak > 0) {
+        y += 84;
+        add(t('challenge.streak', { n: r.streak }), 48, COLORS.gold, y);
+      }
     } else add(t('challenge.practiceNote'), 48, COLORS.dim, y);
     y += 100;
     const rep = this.reply;
-    if (rep) {
+    const local = this.local;
+    if (local && !rep) {
+      if (this.waves > local.before) add(t('weekly.newBest'), 56, COLORS.gold, y);
+      else add(t('challenge.best', { wave: local.before }), 56, COLORS.gold, y);
+      y += 72;
+    } else if (rep) {
       add(t('challenge.top', { n: topPercent(rep.rank, rep.total) }), 56, COLORS.gold, y);
       y += 72;
       if (rep.status === 'pending') {

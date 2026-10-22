@@ -7,6 +7,7 @@ import type { PrivacyUi } from '../net/privacyChoice';
 import type { AdPrivacy, Portal } from '../platform/types';
 import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
 import { languagePanel } from './languagePanel';
+import type { ReminderUi } from './reminders';
 import { COLORS, backdrop, button, fit, label, panel, playTap } from './widgets';
 
 // The settings panel, opened from the lobby's gear: language (a button to the picker,
@@ -35,6 +36,8 @@ export interface SettingsActions {
   adPrivacy: AdPrivacy;
   /** Copies the play ID when it is tapped (false when the host refused); unset where there is no clipboard. */
   copyId?: (id: string) => Promise<boolean>;
+  /** The iOS app's reminders (ui/reminders.ts); unset where the host has no notifications. */
+  reminders?: ReminderUi;
   close(): void;
 }
 
@@ -49,7 +52,7 @@ export async function keepLanguage(kv: KeyValueStore, locale: Locale): Promise<v
 export function storedSettings(
   kv: KeyValueStore,
   sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>,
-  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId'>,
+  o: Pick<SettingsActions, 'setLanguage' | 'setQuality' | 'privacy' | 'account' | 'adPrivacy' | 'copyId' | 'reminders'>,
 ): Omit<SettingsActions, 'close'> {
   return {
     setLanguage: (locale) => void keepLanguage(kv, locale).then(() => o.setLanguage(locale)),
@@ -74,6 +77,7 @@ export function storedSettings(
     account: o.account,
     adPrivacy: o.adPrivacy,
     copyId: o.copyId,
+    reminders: o.reminders,
   };
 }
 
@@ -168,6 +172,15 @@ function dataRows(
   add(line, line.height + 30);
 }
 
+/** The reminders' switch under a heading that says whether they are on; refused in the phone's
+ *  settings, only the heading, since a tap here cannot undo that. */
+function reminderRow(r: ReminderUi, add: (c: Container, step: number) => void, heading: (text: string) => void): void {
+  const state = r.state();
+  heading(t(`remind.${state}`));
+  if (state === 'blocked') return;
+  add(toggle(state === 'on', ROW + 160, (on) => void r.set(on)), 140);
+}
+
 /** An on/off switch, `w` wide: a pill with its knob at the right and saffron when on. */
 function toggle(on: boolean, w: number, set: (on: boolean) => void): Container {
   const c = new Container();
@@ -248,6 +261,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   const hint = label(t(HINT[mode]), 44, COLORS.dim, { wordWrap: true, wordWrapWidth: W - 60, breakWords: true });
   add(hint, hint.height + 30);
 
+  if (a.reminders) reminderRow(a.reminders, add, heading);
   if (a.privacy) dataRows(a.privacy, a.adPrivacy, a.copyId, add, heading);
 
   y += 40;

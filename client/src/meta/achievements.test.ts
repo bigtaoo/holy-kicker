@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { achievementOrder, achievementProgress, achievementState, achievementsReady, claimAchievement, claimAllAchievements, readyJade } from './achievements';
+import { achievementOrder, achievementProgress, achievementState, achievementsClaimed, achievementsReady, claimAchievement, claimAllAchievements, readyJade } from './achievements';
 import { BALANCE } from './balance';
 import { settleRun } from './progress';
 import { newSave, parseSave } from './save';
@@ -8,8 +8,7 @@ const GOALS = BALANCE.achievements;
 const at = (kind: string, n: number) => GOALS.findIndex((g) => g.kind === kind && g.n === n);
 
 describe('achievements', () => {
-  it('fit in the claimed bits, each kind climbing', () => {
-    expect(GOALS.length).toBeLessThanOrEqual(30);
+  it('each pay jade', () => {
     for (const g of GOALS) expect(g.jade).toBeGreaterThan(0);
   });
 
@@ -54,7 +53,30 @@ describe('achievements', () => {
     expect(achievementState(back, at('kills', 1000))).toBe('claimed');
     // a version 3 save starts with none claimed and its progress waiting
     const old = parseSave(JSON.stringify({ version: 3, runs: 6 }));
-    expect(old.achieved).toBe(0);
+    expect(old.achieved).toEqual([]);
     expect(achievementState(old, at('runs', 5))).toBe('ready');
+  });
+
+  it('keep claims past the thirtieth goal and read a version 6 number as the first word', () => {
+    expect(BALANCE.achievements.length).toBeGreaterThan(30);
+    const last = BALANCE.achievements.length - 1;
+    const s = { ...newSave(), bestStreak: 99 };
+    const paid = claimAchievement(s, last);
+    expect(achievementState(paid, last)).toBe('claimed');
+    expect(achievementState(paid, last - 1)).toBe('ready');
+    const back = parseSave(JSON.stringify(paid));
+    expect(achievementState(back, last)).toBe('claimed');
+    expect(achievementsClaimed(back)).toBe(1);
+    const v6 = parseSave(JSON.stringify({ version: 6, runs: 30, achieved: 0b11 }));
+    expect(v6.achieved).toEqual([0b11]);
+    expect(achievementState(v6, 0)).toBe('claimed');
+    expect(achievementState(v6, 1)).toBe('claimed');
+    expect(achievementsClaimed(v6)).toBe(2);
+  });
+
+  it('count the longest daily streak', () => {
+    const at3 = at('streak', 3);
+    expect(achievementState({ ...newSave(), bestStreak: 2, streak: 2 }, at3)).toBe('open');
+    expect(achievementState({ ...newSave(), bestStreak: 3, streak: 0 }, at3)).toBe('ready');
   });
 });

@@ -11,8 +11,12 @@ import { weeklySetup, type WeeklyBalance } from './weekly';
 
 // The daily challenge (docs/design.md "Challenges"): one shared run a UTC day, built from the
 // server's record (net/backend.ts challenges) with the player's own loadout. The first finished
-// run of the day counts and pays its milestones; later ones are practice and pay nothing. Pure:
-// takes a save and the record, returns a new save.
+// run of the day counts and pays its milestones; later ones are practice and pay nothing. Counted
+// dailies on days in a row make a streak that pays a little jade more each day up to a cap; a
+// missed day starts it again from one, nothing else is lost. Pure: takes a save and the record,
+// returns a new save.
+
+const DAY_MS = 86_400_000;
 
 export interface Milestone {
   /** Waves cleared to reach it (20: the mid-boss down). */
@@ -28,6 +32,8 @@ export interface ChallengeBalance {
   milestones: Milestone[];
   /** The weekly's rewards (weekly.ts). */
   weekly: WeeklyBalance;
+  /** The daily streak's bonus: `jade` per day of the streak, counted up to `cap` days. */
+  streak: { jade: number; cap: number };
 }
 
 /** Where the daily stands for this player: closed below the level, on another engine version, counted, or open. */
@@ -77,7 +83,32 @@ export interface ChallengeReward {
   reached: Milestone[];
   /** Their sum; the copper is the part a rewarded ad doubles. */
   copper: number;
+  /** The milestones' and the streak's jade. */
   jade: number;
+  /** The streak this counted daily made (0 for practice), and the part of `jade` it paid. */
+  streak: number;
+  streakJade: number;
+}
+
+/** The UTC day number of a challenge (its start's). */
+export function challengeDay(c: Challenge): number {
+  return Math.floor(c.start / DAY_MS);
+}
+
+/** The daily streak as it stands on UTC day `day`: kept through yesterday's counted run, else broken (0). */
+export function streakOn(save: SaveData, day: number): number {
+  return save.streakDay >= day - 1 ? save.streak : 0;
+}
+
+/** The best waves of `c`'s runs so far, 0 before the first. */
+export function dailyBestOf(save: SaveData, c: Challenge): number {
+  return save.dailyBest.id === c.id ? save.dailyBest.waves : 0;
+}
+
+/** The streak's bonus jade on its `n`th day. */
+export function streakJade(n: number): number {
+  const b = BALANCE.challenge.streak;
+  return Math.min(n, b.cap) * b.jade;
 }
 
 /** What a finished challenge run reached: waves fully cleared, enemies defeated, evolutions made. */
@@ -96,13 +127,17 @@ export function settleChallenge(save: SaveData, c: Challenge, chapter: number, r
   const counted = save.challenge !== c.id;
   const reached = counted ? BALANCE.challenge.milestones.filter((m) => run.waves >= m.wave).map((m) => milestonePay(m, chapter)) : [];
   const copper = reached.reduce((n, m) => n + m.copper, 0);
-  const jade = reached.reduce((n, m) => n + m.jade, 0);
+  const day = challengeDay(c);
+  const streak = !counted ? 0 : save.streakDay === day - 1 ? save.streak + 1 : save.streakDay === day ? save.streak : 1;
+  const bonus = counted ? streakJade(streak) : 0;
+  const jade = reached.reduce((n, m) => n + m.jade, 0) + bonus;
+  const streaked = counted ? { streak, streakDay: day, bestStreak: Math.max(save.bestStreak, streak) } : {};
   return {
     save: {
-      ...save, challenge: c.id, copper: save.copper + copper, jade: save.jade + jade,
+      ...save, ...streaked, challenge: c.id, dailyBest: { id: c.id, waves: Math.max(dailyBestOf(save, c), Math.floor(run.waves)) }, copper: save.copper + copper, jade: save.jade + jade,
       runs: save.runs + 1, kills: save.kills + Math.max(0, Math.floor(run.kills)), codex: mergeCodex(save.codex, run.evolved),
     },
-    reward: { counted, reached, copper, jade },
+    reward: { counted, reached, copper, jade, streak, streakJade: bonus },
   };
 }
 

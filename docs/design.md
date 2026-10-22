@@ -361,9 +361,24 @@ Two currencies only:
 - Achievements (also the sutra source). Implemented as a second page of the tasks panel
   (`client/src/meta/achievements.ts`, goals in `balance.json` `achievements`): 27 long-term
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
-  gear tier, monks), each paying jade once, about 800 in all. Progress is read from the save,
+  gear tier, monks, daily-challenge streaks), each paying jade once, about 1200 in all. Progress is read from the save,
   so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.
 - Daily and weekly challenges (both built, with mutators): see "Challenges" below.
+- **Welcome week** (`meta/welcome.ts`, `ui/giftPanel.ts`, `balance.json` `welcome`): seven gifts,
+  one per calendar day the game is opened (a missed day only moves the next gift to the next
+  visit), shown as a calendar from the lobby's gift badge. Days 1–3 are the old starter gifts
+  (robe t1, pendant t2 + 30 jade, bracers t2 + 300 copper); days 4–7 carry the player past the
+  point where about 29 % leave at a results screen: sash t2 + 300 copper, sandals t2 + 30 jade,
+  the chosen relic at t2 + 300 copper, and on day 7 the novice monk (worth 300 jade, about four
+  days of tasks; a player who owns him already gets the 300 jade). The bigger gifts sit late so
+  coming back is what pays, not the first session.
+- **Daily-challenge streak** (`challenge.streak`): consecutive UTC days with a counted daily run.
+  Each counted run pays 2 jade per streak day, at most 14 (day 7 and on), on top of the
+  milestones, and streaks of 3 / 7 / 14 days are achievements (15 / 30 / 60 jade). Small on
+  purpose: the reason to come back is the run, the jade only marks the habit. A missed day
+  starts again at 1.
+- **iOS reminders** (`meta/reminders.ts`, `ui/reminders.ts`, docs/ios.md "Reminders"): the patrol
+  full and today's daily ready, as local notifications, only after the player said yes.
 
 ## Challenges (daily and weekly built)
 
@@ -484,8 +499,13 @@ Numbers are *tune* values and live in `balance.json` under `challenge`, like eve
 
 ### Platforms
 
-Challenges need the server. They are hidden where the game plays offline (Playgama's sandbox,
-development without `?api`) and while the backend does not answer, rather than shown broken.
+The weekly needs the server and is hidden where the game plays offline (Playgama's sandbox,
+development without `?api`) and while the backend does not answer. The daily does not: offline
+the device makes the day's daily up itself (`ui/challengeFlow.ts` `localDaily`), with the seed
+the server would use (`dailySeed` of the UTC date, `@hk/protocol`), so the run is the same one.
+It keeps a personal best instead of a board, pays its milestones and the streak once per day like
+the online one, and the results say the board needs a connection. When the server answers, its
+record wins.
 WeChat reaches the server already; its review may lag a version behind, which the version-keyed
 boards absorb.
 
@@ -539,7 +559,7 @@ boards absorb.
 | Double results | Results | Main revenue |
 | Patrol double / instant | Lobby | Brings players back |
 | Ad chest | Shop | 3 per day |
-| Interstitial | Results → lobby (not after the first run) | Per platform rules (CrazyGames `requestAd('midgame')`) |
+| Interstitial | Results → lobby or the next chapter, never on "again" and not after the first run; at most once per 3 minutes of play (`ads.interstitialMinutes`, `platform/adPacing.ts`, every host) | Per platform rules (CrazyGames `requestAd('midgame')`) |
 | Banner | Lobby, every tab | 320×50 in a band under the tab bar, which moves up to keep it clear; down in runs and on results; at most one request per 30 s (`platform/web/banner.ts`) |
 
 - No reroll ad on the in-run pick: it breaks the pace.

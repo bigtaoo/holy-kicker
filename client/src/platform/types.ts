@@ -78,6 +78,8 @@ export interface Platform {
   /** The host's page lets no request reach the game's backend (Playgama's sandbox, by its CSP): the
    *  game then plays offline there, the privacy answer still governing the host's own analytics. */
   readonly backendBlocked?: boolean;
+  /** Local notifications (the iOS app's reminders, meta/reminders.ts); unset where the host has none. */
+  readonly notify?: Notifier;
 }
 
 /** A host's analytics (Playgama's telemetry, through Bridge). */
@@ -179,6 +181,19 @@ export interface Store {
   restore(): Promise<RestoreOutcome>;
 }
 
+/**
+ * Local notifications booked on the device (docs/ios.md "Reminders"). The permission is the
+ * system's: 'unknown' until asked, and asked only from a tap of the player's.
+ */
+export interface Notifier {
+  status(): 'unknown' | 'on' | 'off';
+  /** The system's permission sheet, from a tap; resolves with the answer. */
+  ask(): Promise<'on' | 'off'>;
+  /** Books one at `at` (ms since 1970), replacing the one with the same id; ignored unless on. */
+  schedule(id: string, at: number, title: string, body: string): void;
+  cancel(id: string): void;
+}
+
 export type BuyOutcome = 'owned' | 'cancelled' | 'pending' | 'failed';
 export type RestoreOutcome = 'owned' | 'none' | 'cancelled' | 'failed';
 
@@ -244,6 +259,18 @@ export function fakeStore(): Store {
     owned: () => owned,
     buy: () => later(() => ((owned = true), 'owned' as const)),
     restore: () => later(() => (owned ? 'owned' : 'none')),
+  };
+}
+
+/** Dev stand-in (?notify=fake): the iOS reminders, whose sheet says yes after a moment and whose
+ *  bookings go to the console. */
+export function fakeNotifier(): Notifier {
+  let status: 'unknown' | 'on' | 'off' = 'unknown';
+  return {
+    status: () => status,
+    ask: () => new Promise((r) => setTimeout(() => r((status = 'on')), 400)),
+    schedule: (id, at, title, body) => console.info('reminder', id, new Date(at).toString(), title, body),
+    cancel: (id) => console.info('reminder off', id),
   };
 }
 

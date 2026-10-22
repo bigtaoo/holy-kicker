@@ -22,6 +22,7 @@
 		4B4B00000000000000000014 /* GameCenter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000004 /* GameCenter.swift */; };
 		4B4B00000000000000000016 /* AdMob.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000006 /* AdMob.swift */; };
 		4B4B00000000000000000017 /* Store.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000007 /* Store.swift */; };
+		4B4B0000000000000000001A /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4B4B0000000000000000000A /* Notifications.swift */; };
 		4B4B00000000000000000018 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 4B4B00000000000000000009 /* InfoPlist.strings */; };
 /* End PBXBuildFile section */
 
@@ -45,6 +46,7 @@
 		4B4B00000000000000000004 /* GameCenter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameCenter.swift; sourceTree = "<group>"; };
 		4B4B00000000000000000006 /* AdMob.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdMob.swift; sourceTree = "<group>"; };
 		4B4B00000000000000000007 /* Store.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Store.swift; sourceTree = "<group>"; };
+		4B4B0000000000000000000A /* Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications.swift; sourceTree = "<group>"; };
 		4B4B00000000000000000005 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
 		4B4B00000000000000000008 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -99,6 +101,7 @@
 				4B4B00000000000000000004 /* GameCenter.swift */,
 				4B4B00000000000000000006 /* AdMob.swift */,
 				4B4B00000000000000000007 /* Store.swift */,
+				4B4B0000000000000000000A /* Notifications.swift */,
 				4B4B00000000000000000005 /* App.entitlements */,
 				504EC30B1FED79650016851F /* Main.storyboard */,
 				504EC30E1FED79650016851F /* Assets.xcassets */,
@@ -245,6 +248,7 @@
 				4B4B00000000000000000014 /* GameCenter.swift in Sources */,
 				4B4B00000000000000000016 /* AdMob.swift in Sources */,
 				4B4B00000000000000000017 /* Store.swift in Sources */,
+				4B4B0000000000000000001A /* Notifications.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

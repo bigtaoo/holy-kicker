@@ -1,12 +1,13 @@
 import type { Host } from '@hk/protocol';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_PORTAL, type AdPrivacy, type Ads, type Portal, type Store, type TextAsk } from '../types';
+import { NO_PORTAL, type AdPrivacy, type Ads, type Notifier, type Portal, type Store, type TextAsk } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { adFree } from './adFree';
 import { AdMob } from './admob';
 import { hkNative, type HKNative } from './bridge';
 import { GameCenterAccount } from './gameCenter';
 import { MirrorStore } from './mirrorStore';
+import { nativeNotifier } from './notify';
 import { StoreKit } from './storeKit';
 
 // The iOS app (docs/ios.md): the browser host inside the Capacitor shell's WKWebView, with the
@@ -24,6 +25,7 @@ export class IosPlatform extends WebPlatform {
   override readonly ads: Ads;
   override readonly adPrivacy: AdPrivacy;
   override readonly store: Store | null;
+  override readonly notify?: Notifier;
   /** main.ios.ts redraws the lobby on its `onChange`. */
   readonly gameCenter: GameCenterAccount;
   /** main.ios.ts redraws the lobby on its `onChange` too. */
@@ -52,6 +54,8 @@ export class IosPlatform extends WebPlatform {
     this.store = storeKit.available() ? storeKit : null;
     this.ads = adFree(this.admob, () => storeKit.owned());
     this.adPrivacy = this.admob;
+    const notifier = nativeNotifier(native);
+    if (notifier) this.notify = notifier;
     // game sound obeys the silent switch and mixes with the player's music (iOS 17+; the shell
     // sets the same AVAudioSession category for older systems)
     const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;

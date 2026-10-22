@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { BALANCE } from '../meta/balance';
 import { newSave } from '../meta/save';
 import { openChest } from '../meta/shop';
 import { train } from '../meta/training';
@@ -23,7 +24,7 @@ describe('lobby hint', () => {
   });
 
   it('skips training it cannot pay for, and stays quiet before the first run and after chapter 1', () => {
-    const poor = { ...newSave(), firstRunDone: true, gifts: 3 };
+    const poor = { ...newSave(), firstRunDone: true, gifts: BALANCE.welcome.length };
     expect(hintTab(poor, NOON, 'play')).toBe('shop');
     expect(hintTab(newSave(), NOON, 'play')).toBeNull();
     expect(hintTab({ ...poor, cleared: 1 }, NOON, 'play')).toBeNull();

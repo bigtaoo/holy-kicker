@@ -3,7 +3,8 @@ import { ENGINE_VERSION, type SimState } from '@hk/engine';
 import type { Challenge, ChallengeBoardReply, ChallengeList, ReplayWire } from '@hk/protocol';
 import { newSave, type SaveData } from '../meta/save';
 import type { Backend, RunResult } from '../net/backend';
-import { ChallengeFlow } from './challengeFlow';
+import { dailySeed, ymdOf } from '@hk/protocol';
+import { ChallengeFlow, localDaily } from './challengeFlow';
 
 const HOUR = 3_600_000;
 const START = 20_379 * 24 * HOUR;
@@ -50,18 +51,35 @@ describe('challenge flow', () => {
     expect(net.challenges).toHaveBeenCalledOnce();
   });
 
-  it('shows nothing offline, without an answer, below the unlock level or once the day closed', async () => {
+  it("makes the day's daily up offline or without an answer, and shows nothing below the unlock level or once the day closed", async () => {
     const offline = { ...fakeNet({ now: START, challenges: [daily] }), online: false };
-    const a = new ChallengeFlow(offline as unknown as Backend, () => {}, false, false, () => START);
+    const changed = vi.fn();
+    const a = new ChallengeFlow(offline as unknown as Backend, changed, false, false, () => START + HOUR);
     a.refresh();
-    await settle();
     expect(offline.challenges).not.toHaveBeenCalled();
-    expect(a.daily(player)).toBeNull();
+    expect(changed).toHaveBeenCalledOnce();
+    // the server's record for the day: the same id, seed, waves and mutator
+    expect(a.daily(player)).toMatchObject({ state: 'open', local: true, best: 0, hours: 23, challenge: localDaily(START) });
+    expect(localDaily(START + HOUR)).toMatchObject({ id: `d${ymdOf(START)}`, start: START, end: daily.end, seed: dailySeed(ymdOf(START)), waves: 20 });
+    // no board and no weekly offline
+    expect(a.lobby(player, true, vi.fn(), vi.fn(), vi.fn())).toMatchObject({ board: null, watch: null, weekly: null });
+    a.refresh();
+    expect(changed).toHaveBeenCalledOnce();
 
-    const silent = new ChallengeFlow(fakeNet(null) as unknown as Backend, () => {}, false, false, () => START);
+    const net = fakeNet(null);
+    const silent = new ChallengeFlow(net as unknown as Backend, () => {}, false, false, () => START);
     silent.refresh();
     await settle();
-    expect(silent.daily(player)).toBeNull();
+    expect(silent.daily(player)).toMatchObject({ local: true });
+    // the server's record wins once it answers
+    net.challenges.mockResolvedValue({ now: START, challenges: [daily, weekly] });
+    silent.refresh();
+    await settle();
+    expect(net.challenges).toHaveBeenCalledOnce(); // asked again only after a minute
+    const later = new ChallengeFlow(net as unknown as Backend, () => {}, false, false, () => START + 2 * 60_000);
+    later.refresh();
+    await settle();
+    expect(later.daily(player)).toMatchObject({ local: false, challenge: daily });
 
     let now = START;
     const b = new ChallengeFlow(fakeNet({ now: START, challenges: [daily] }) as unknown as Backend, () => {}, false, false, () => now);
@@ -70,6 +88,23 @@ describe('challenge flow', () => {
     expect(b.daily({ ...player, level: 1 })).toBeNull();
     now = daily.end;
     expect(b.daily(player)).toBeNull();
+  });
+
+  it("settles a made-up daily as the server's: paid once a day, its best kept, the streak grown", async () => {
+    const offline = { ...fakeNet(null), online: false };
+    const flow = new ChallengeFlow(offline as unknown as Backend, () => {}, false, false, () => START);
+    flow.refresh();
+    const c = flow.daily(player)!.challenge;
+    flow.begin(c);
+    const first = flow.settle({ ...player, streak: 2, streakDay: 20_378 }, ended, run, 12, 300, false);
+    expect(first.reward).toMatchObject({ counted: true, streak: 3 });
+    expect(first.local).toEqual({ before: 0 });
+    expect(flow.daily(first.save)).toMatchObject({ state: 'done', best: 12, streak: 3 });
+    flow.begin(c);
+    const again = flow.settle(first.save, ended, run, 15, 300, false);
+    expect(again.reward.counted).toBe(false);
+    expect(again.local).toEqual({ before: 12 });
+    expect(again.save.dailyBest.waves).toBe(15);
   });
 
   it('offers the board only to a player with a name on the boards', async () => {

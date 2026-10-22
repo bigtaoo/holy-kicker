@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ENGINE_VERSION } from '@hk/engine';
 import type { Challenge } from '@hk/protocol';
 import { BALANCE } from './balance';
-import { challengeBonus, challengeChapter, challengeSetup, challengeState, hoursLeft, milestonePay, settleChallenge } from './challenge';
+import { challengeBonus, challengeChapter, challengeSetup, challengeState, hoursLeft, milestonePay, settleChallenge, streakJade, streakOn } from './challenge';
 import { EVOLVE_IDS } from './codex';
 import { gearStats } from './gear';
 import { chapterMul } from './progress';
@@ -53,7 +53,8 @@ describe('daily challenge', () => {
     expect(reward.counted).toBe(true);
     expect(reward.reached.map((m) => m.wave)).toEqual([5, 10]);
     expect(reward.copper).toBe(Math.round(m5.copper * chapterMul(3)) + Math.round(m10.copper * chapterMul(3)));
-    expect(reward.jade).toBe(m5.jade + m10.jade);
+    expect(reward.jade).toBe(m5.jade + m10.jade + streakJade(1));
+    expect(reward.streak).toBe(1);
     expect(save.copper).toBe(player().copper + reward.copper);
     expect(save.jade).toBe(player().jade + reward.jade);
     expect(save.challenge).toBe(daily.id);
@@ -65,10 +66,15 @@ describe('daily challenge', () => {
     expect(save.xp).toBe(player().xp);
   });
 
-  it('pays nothing for a run with no milestone or a practice run', () => {
-    expect(settleChallenge(player(), daily, 1, { waves: 4, kills: 10 }).reward).toEqual({ counted: true, reached: [], copper: 0, jade: 0 });
-    const practice = settleChallenge(player({ challenge: daily.id }), daily, 3, { waves: 50, kills: 900 });
-    expect(practice.reward).toEqual({ counted: false, reached: [], copper: 0, jade: 0 });
+  it('pays only the streak for a run with no milestone, and nothing for a practice run', () => {
+    const one = streakJade(1);
+    expect(settleChallenge(player(), daily, 1, { waves: 4, kills: 10 }).reward).toEqual({ counted: true, reached: [], copper: 0, jade: one, streak: 1, streakJade: one });
+    const practice = settleChallenge(player({ challenge: daily.id, streak: 4, streakDay: 20_379 }), daily, 3, { waves: 50, kills: 900 });
+    expect(practice.reward).toEqual({ counted: false, reached: [], copper: 0, jade: 0, streak: 0, streakJade: 0 });
+    expect(practice.save.streak).toBe(4);
+    // the day's best counts every run, practice too
+    expect(practice.save.dailyBest).toEqual({ id: daily.id, waves: 50 });
+    expect(settleChallenge(practice.save, daily, 3, { waves: 7, kills: 0 }).save.dailyBest.waves).toBe(50);
     expect(practice.save.copper).toBe(player().copper);
     expect(practice.save.runs).toBe(player().runs + 1);
   });
@@ -76,6 +82,26 @@ describe('daily challenge', () => {
   it('pays every milestone for a full clear', () => {
     const { reward } = settleChallenge(player(), daily, 1, { waves: 50, kills: 0 });
     expect(reward.reached).toEqual(BALANCE.challenge.milestones.map((m) => milestonePay(m, 1)));
+  });
+
+  it('grows the streak on days in a row up to its cap, and starts it over after a missed day', () => {
+    const { cap, jade } = BALANCE.challenge.streak;
+    const day = (n: number): Challenge => ({ ...daily, id: `d${20261018 + n}`, start: (20_379 + n) * DAY, end: (20_380 + n) * DAY });
+    let s = player();
+    const paid: number[] = [];
+    for (let n = 0; n < cap + 2; n++) {
+      const r = settleChallenge(s, day(n), 1, { waves: 0, kills: 0 });
+      paid.push(r.reward.streakJade);
+      s = r.save;
+    }
+    expect(paid).toEqual([...Array(cap + 2)].map((_, i) => Math.min(i + 1, cap) * jade));
+    expect(s.streak).toBe(cap + 2);
+    expect(streakOn(s, 20_379 + cap + 2)).toBe(cap + 2);
+    // a missed day: the lobby shows it broken, the next run starts at one and the best stays
+    expect(streakOn(s, 20_379 + cap + 3)).toBe(0);
+    const after = settleChallenge(s, day(cap + 3), 1, { waves: 0, kills: 0 });
+    expect(after.reward.streak).toBe(1);
+    expect(after.save.bestStreak).toBe(cap + 2);
   });
 
   it('counts whole hours left, at least one while the day is open', () => {

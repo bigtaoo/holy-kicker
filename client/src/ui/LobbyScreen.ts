@@ -30,6 +30,7 @@ import type { Screen, UiFrame } from './uiLayout';
 import { BoardUi, type FetchBoard } from './boardPanel';
 import { ChallengeUi, type ChallengeLobby } from './challengePanel';
 import { consentCard, watched } from './privacyUi';
+import { redrawn, reminderCard } from './reminders';
 import { COLORS, fit, label, panel } from './widgets';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
@@ -184,7 +185,9 @@ export class LobbyScreen implements Screen {
     if (this.hint) this.view.addChild(this.hint);
     // the consent card waits at the foot of the lobby, under every panel, until it is answered
     const privacy = watched(this.actions.settings.privacy, () => this.relayout());
+    const reminders = this.actions.settings.reminders && redrawn(this.actions.settings.reminders, () => this.relayout());
     if (privacy?.asking()) this.view.addChild(consentCard(f.w, f.h - TAB_H - 200, privacy));
+    else if (reminders?.offering()) this.view.addChild(reminderCard(f.w, f.h - TAB_H - 200, reminders));
     if (this.tab === 'gear' && this.gearOpen) this.view.addChild(gearDetail(this.save, this.gearOpen, this.icons, f.w, f.h, this.gearActions()));
     const overlay = this.econ.overlay(f.w, f.h);
     if (overlay) this.view.addChild(overlay);
@@ -197,6 +200,7 @@ export class LobbyScreen implements Screen {
       this.view.addChild(settingsPanel(f.w, f.h, {
         ...set,
         privacy,
+        reminders,
         // the toast stands below the panel, where the tab bar is
         copyId: set.copyId && ((id) => set.copyId!(id).then((ok) => {
           this.showToast(t(ok ? 'settings.idCopied' : 'settings.idCopyFailed'));

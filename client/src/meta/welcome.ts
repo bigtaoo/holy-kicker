@@ -1,26 +1,32 @@
-import type { Stat } from '@hk/engine';
+import type { MonkId, Stat } from '@hk/engine';
 import { BALANCE } from './balance';
 import { bump, dayKey } from './daily';
 import { bestTier, isRelic, itemStats, type Drop, type ItemId, type Tier } from './gear';
 import { payHaul, type Haul } from './haul';
+import { monkPrice, ownsMonk } from './monks';
 import type { SaveData } from './save';
 
 // Welcome gifts (docs/retention.md): a new player gets one when the first run ends, won or
-// lost, and one more on each of the next days they come back, until BALANCE.welcome runs out.
-// The results and the lobby name the next one, so there is something waiting tomorrow, and
-// say when the first one is worn in the next run.
+// lost, and one more on each of the next days they come back, until BALANCE.welcome runs out
+// (a week, ending in a monk). A missed day costs nothing: the next gift waits for the next
+// visit. The results and the lobby's calendar (ui/giftPanel.ts) name the next one, so there is
+// something waiting tomorrow, and the results say when the first one is worn in the next run.
 // Pure: functions take a save and `now` (ms) and return a new save.
 
 export interface WelcomeGift {
-  item: ItemId;
+  /** The gear given at `tier`: 'relic' is the relic chosen when it is claimed, null for none. */
+  item: ItemId | 'relic' | null;
   tier: Tier;
   copper: number;
   jade: number;
+  /** A monk given; one already owned pays its price in jade instead. */
+  monk?: MonkId;
 }
 
-/** The first gift as the results show it: what it paid, and what it adds to the worn gear. */
+/** The first gift as the results show it: what it paid, what it adds to the worn gear, and tomorrow's. */
 export interface FirstGift extends Haul {
   gain: Partial<Record<Stat, number>> | null;
+  next: Haul | null;
 }
 
 const GIFTS = BALANCE.welcome;
@@ -35,15 +41,27 @@ export function giftReady(save: SaveData, now: number): boolean {
   return save.firstRunDone && nextGift(save) !== null && save.giftDay !== dayKey(now);
 }
 
-export function giftHaul(gift: WelcomeGift): Haul {
-  return { copper: gift.copper, jade: gift.jade, drops: [{ item: gift.item, tier: gift.tier }] };
+/** The gift's gear as `save` would get it, or null for none. */
+export function giftDrop(save: SaveData, gift: WelcomeGift): Drop | null {
+  return gift.item === null ? null : { item: gift.item === 'relic' ? save.relic : gift.item, tier: gift.tier };
+}
+
+export function giftHaul(save: SaveData, gift: WelcomeGift): Haul {
+  const drop = giftDrop(save, gift);
+  const owned = gift.monk !== undefined && ownsMonk(save, gift.monk);
+  return {
+    copper: gift.copper,
+    jade: gift.jade + (owned ? monkPrice(gift.monk!) : 0),
+    drops: drop ? [drop] : [],
+    ...(gift.monk && !owned ? { monk: gift.monk } : {}),
+  };
 }
 
 /** Pays the waiting gift; null when none waits. `n` is its place, 0 for the first. */
 export function claimGift(save: SaveData, now: number): { save: SaveData; haul: Haul; n: number } | null {
   const gift = nextGift(save);
   if (!gift || !giftReady(save, now)) return null;
-  const haul = giftHaul(gift);
+  const haul = giftHaul(save, gift);
   return { save: { ...payHaul(save, haul), gifts: save.gifts + 1, giftDay: dayKey(now) }, haul, n: save.gifts };
 }
 
@@ -75,5 +93,6 @@ export function afterRun(save: SaveData, now: number, waves: number, kills: numb
   const first = save.gifts === 0 && save.runs === 1 ? claimGift(s, now) : null;
   if (!first) return { save: s, gift: null };
   const drop = first.haul.drops[0];
-  return { save: first.save, gift: { ...first.haul, gain: drop ? giftGain(s, drop) : null } };
+  const next = nextGift(first.save);
+  return { save: first.save, gift: { ...first.haul, gain: drop ? giftGain(s, drop) : null, next: next && giftHaul(first.save, next) } };
 }

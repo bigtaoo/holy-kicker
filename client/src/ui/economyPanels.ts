@@ -213,6 +213,7 @@ export function haulPanel(haul: Haul, icons: IconSheet, w: number, h: number, cl
   const lines: [string, number, number, string][] = [];
   if (haul.copper > 0) lines.push([t('haul.copper', { n: formatAmount(haul.copper) }), 56, COLORS.copper, 'copper']);
   if (haul.jade > 0) lines.push([t('haul.jade', { n: formatAmount(haul.jade) }), 56, COLORS.jade, 'jade']);
+  if (haul.monk) lines.push([t('haul.monk', { name: t(`monk.${haul.monk}.name`) }), 56, COLORS.gold, `monk_${haul.monk}`]);
   const tiles = new Container();
   const tilesH = placeTiles(gearTiles(haul.drops, icons).map((tile) => tiles.addChild(tile)), 5);
   const root = new Container();

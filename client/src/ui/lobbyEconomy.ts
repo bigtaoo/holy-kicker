@@ -11,11 +11,11 @@ import type { SaveData } from '../meta/save';
 import { lobbyWaiting } from '../meta/waiting';
 import type { Store } from '../platform/types';
 import { claimGift, giftReady, nextGift } from '../meta/welcome';
+import { giftPanel } from './giftPanel';
 import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
 import type { TasksView } from './achievePanel';
 import { adFreeCard } from './adFreeCard';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
-import { dropName } from './gearText';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
 import { railButton, setRailSub } from './lobbyRail';
 import { COLORS, button, dot, fit, label, panel } from './widgets';
@@ -49,7 +49,7 @@ export interface EconomyHost {
 /** Reports a lobby purchase or payout to analytics (Backend.track). */
 export type LobbyTrack = (e: 'buy' | 'claim' | 'iap', p: Record<string, PropValue>) => void;
 
-type Modal = 'patrol' | 'tasks' | null;
+type Modal = 'patrol' | 'tasks' | 'gift' | null;
 
 /** What the player is told after an ad-free buy or restore (nothing after a cancel). */
 const AD_FREE_TOASTS: Record<'buy' | 'restore', Record<string, Key>> = {
@@ -147,7 +147,8 @@ export class EconomyUi {
 
   /**
    * The welcome gift (meta/welcome.ts) for the right rail: lit with a dot when today's is waiting,
-   * dim with "tomorrow" once it is taken; null before the first run and after the last.
+   * dim with "tomorrow" once it is taken; null before the first run and after the last. It opens
+   * the week's calendar (giftPanel.ts).
    */
   giftRail(): Container | null {
     const save = this.host.save();
@@ -162,11 +163,7 @@ export class EconomyUi {
       lit: ready,
       dim: !ready,
       dot: ready,
-    }, () => {
-      const r = claimGift(this.host.save(), this.now());
-      if (!r) return this.host.toast(t('gift.tomorrow', { gift: dropName(gift) }));
-      this.pay(r, 'claim', { what: 'gift', n: r.n });
-    }).view;
+    }, () => this.show('gift')).view;
   }
 
   /** Opens a progress chest the runs reached (progressChests.ts) and shows what it paid. */
@@ -242,6 +239,14 @@ export class EconomyUi {
           this.tasksView = v;
           this.achievePage = 0;
           this.host.relayout();
+        },
+        close: () => this.show(null),
+      }));
+    } else if (this.modal === 'gift') {
+      c.addChild(giftPanel(save, this.now(), w, h, this.host.icons, {
+        claim: () => {
+          const r = claimGift(this.host.save(), this.now());
+          if (r) this.pay(r, 'claim', { what: 'gift', n: r.n, ...(r.haul.monk ? { monk: r.haul.monk } : {}) });
         },
         close: () => this.show(null),
       }));

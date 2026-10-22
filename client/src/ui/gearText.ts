@@ -1,5 +1,6 @@
-import { t } from '../i18n';
+import { formatAmount, t } from '../i18n';
 import { canMerge, isRelic, TIERS, type Drop, type ItemId, type Tier } from '../meta/gear';
+import type { Haul } from '../meta/haul';
 import type { SaveData } from '../meta/save';
 
 // Names and colours for gear in the UI (docs/design.md "Merge screen and effect": tier
@@ -28,6 +29,14 @@ export function dropName(d: Drop): string {
   const forms = t(`tier.${d.tier}`).split('|');
   const tier = forms[Number(t(`gear.form.${d.item}`))] ?? forms[0]!;
   return t('gear.drop', { tier, item: itemName(d.item) });
+}
+
+/** A welcome gift's name for one line: its monk, else its gear, else its coins. */
+export function haulName(h: Haul): string {
+  if (h.monk) return t(`monk.${h.monk}.name`);
+  const d = h.drops[0];
+  if (d) return dropName(d);
+  return h.jade > 0 ? t('haul.jade', { n: formatAmount(h.jade) }) : t('haul.copper', { n: formatAmount(h.copper) });
 }
 
 /** One line per item and tier found, the best first, with its colour. */
