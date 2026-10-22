@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { MAX_LEVEL, newPlayer, TICK_RATE } from '@hk/engine';
-import { buildKey, buildSlots, pairsOf, spellCharges } from './buildSlots';
+import { buildChanged, buildKey, buildSlots, pairsOf, spellCharges, type Charge } from './buildSlots';
 
 describe('build slots', () => {
   it('lists the relic, four spell and four passive slots, empty ones included', () => {
@@ -74,5 +74,37 @@ describe('build slots', () => {
     const p = newPlayer(0, 0, 0);
     p.spells.push({ id: 'halo', level: 1, cd: 0, evolved: false }, { id: 'lotus', level: 1, cd: 5, evolved: false });
     expect(spellCharges(p).slice(0, 2)).toEqual([null, null]);
+  });
+
+  it('tells a changed build from an unchanged one without building the slots', () => {
+    const p = newPlayer(0, 0, 0);
+    const seen: unknown[] = [];
+    expect(buildChanged(seen, p)).toBe(true);
+    expect(buildChanged(seen, p)).toBe(false);
+    p.spells.push({ id: 'bolt', level: 1, cd: 0, evolved: false });
+    expect(buildChanged(seen, p)).toBe(true);
+    p.spells[0].cd = 9;
+    expect(buildChanged(seen, p)).toBe(false);
+    p.spells[0].level = 2;
+    expect(buildChanged(seen, p)).toBe(true);
+    p.passives.push({ id: 'iron', level: 1 });
+    expect(buildChanged(seen, p)).toBe(true);
+    p.spells[0].evolved = true;
+    expect(buildChanged(seen, p)).toBe(true);
+    p.awakened = true;
+    expect(buildChanged(seen, p)).toBe(true);
+    expect(buildChanged(seen, p)).toBe(false);
+  });
+
+  it('fills the recharges in place, reusing their objects', () => {
+    const p = newPlayer(0, 0, 0);
+    p.spells.push({ id: 'bell', level: 1, cd: 4 * TICK_RATE, evolved: false });
+    const out: (Charge | null)[] = [];
+    const first = spellCharges(p, out)[0];
+    p.spells[0].cd = 2 * TICK_RATE;
+    expect(spellCharges(p, out)).toBe(out);
+    expect(out[0]).toBe(first);
+    expect(out[0]).toEqual({ share: 0.25, secs: 2 });
+    expect(out.slice(1)).toEqual([null, null, null]);
   });
 });

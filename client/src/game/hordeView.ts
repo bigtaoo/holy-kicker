@@ -52,6 +52,8 @@ export interface HordeOptions {
 export class HordeView {
   private readonly mobs: MobView[] = [];
   private readonly marks = new Graphics();
+  /** Marks were drawn last frame: clearing an empty Graphics still makes Pixi rebuild it. */
+  private marked = false;
   /** Every shown mob's ground shadow, at the shadows' depth: the world does not sort them one by one. */
   private readonly shadows: ShadowBatch;
   /** The world's transform has been set by a frame's camera, so it can be culled against. */
@@ -105,7 +107,9 @@ export class HordeView {
       if (tint !== undefined) v.tint(tint);
       this.mobs.push(v);
     }
-    const g = this.marks.clear();
+    const g = this.marks;
+    if (this.marked) g.clear();
+    this.marked = false;
     this.shadows.begin();
     if (this.routed) {
       for (const v of this.mobs) v.setVisible(false);
@@ -164,6 +168,7 @@ export class HordeView {
   /** A water ghost's mark, `k` (0..1) of the way to its rising. */
   private mark(g: Graphics, x: number, y: number, k: number): void {
     const r = EMERGE.grab / FP;
+    this.marked = true;
     k = Math.max(0, Math.min(1, k));
     // flattened like the shadows: it lies on the ground
     const flat = 0.45;

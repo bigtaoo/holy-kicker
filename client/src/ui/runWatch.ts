@@ -7,7 +7,7 @@ import type { RunPast } from '../meta/falls';
 import type { Backend } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
 import type { Ads, Portal } from '../platform/types';
-import { buildSlots, spellCharges } from './buildSlots';
+import { buildChanged, buildSlots, spellCharges, type Charge } from './buildSlots';
 import { cardText } from './cardText';
 import { deathCause, nearestGoal, type DownInfo } from './deathInfo';
 import type { RunHud } from './RunHud';
@@ -86,6 +86,9 @@ export class RunWatch {
   private readonly gather = new GatherNudge();
   /** The line low on the screen the HUD was last told to show. */
   private hint: HintStep = 'done';
+  /** What the build strip was last drawn from (buildChanged), and the recharges filled in place every frame. */
+  private readonly buildSeen: unknown[] = [];
+  private readonly charges: (Charge | null)[] = [];
 
   constructor(
     private readonly game: Game,
@@ -148,8 +151,8 @@ export class RunWatch {
       d.net.track('tutorial', { step: this.toldStep, secs: Math.round(this.runSecs) });
     }
     hud.setXp(p.level, p.xp / xpToNext(p.level));
-    hud.setBuild(buildSlots(p));
-    hud.setCharges(spellCharges(p));
+    if (buildChanged(this.buildSeen, p)) hud.setBuild(buildSlots(p));
+    hud.setCharges(spellCharges(p, this.charges));
     // offers come one after another (several levels at once, a shrine's insight), each a new list
     if (p.offer.length > 0 && this.shownOffer !== p.offer) {
       this.shownOffer = p.offer;
