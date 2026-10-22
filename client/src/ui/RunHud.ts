@@ -75,6 +75,8 @@ export class RunHud implements Screen {
   private xpGauge: ReturnType<typeof meter> | null = null;
   private levelText: Text | null = null;
   private xp = { level: 1, share: 0 };
+  /** The level levelText shows (0 for none yet): the label is formatted only when it changes. */
+  private levelShown = 0;
   /** The open level-up cards, and whether one was tapped (waiting for the engine). */
   private offer: CardText[] | null = null;
   private offerTitle = '';
@@ -191,9 +193,10 @@ export class RunHud implements Screen {
 
   /** The level and how far the experience is toward the next one, 0..1. */
   setXp(level: number, share: number): void {
-    this.xp = { level, share: Math.max(0, Math.min(1, share)) };
+    this.xp.level = level;
+    this.xp.share = Math.max(0, Math.min(1, share));
     this.xpGauge?.set(this.xp.share);
-    if (this.levelText && this.levelText.text !== t('run.level', { level })) this.levelText.text = t('run.level', { level });
+    if (this.levelText && level !== this.levelShown) this.levelText.text = t('run.level', { level: (this.levelShown = level) });
   }
 
   /**
@@ -327,6 +330,7 @@ export class RunHud implements Screen {
     level.anchor.set(1, 0.5);
     level.position.set(f.w - 40, XP_Y);
     this.levelText = level;
+    this.levelShown = 0;
     bar.addChild(gauge.view, level);
     this.view.addChild(bar);
     this.setXp(this.xp.level, this.xp.share);

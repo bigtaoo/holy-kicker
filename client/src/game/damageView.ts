@@ -1,6 +1,6 @@
 import { Container, Particle, ParticleContainer, Rectangle, Text, Texture, type Renderer } from 'pixi.js';
 import { digitFont } from '../ui/fonts';
-import { bakeTexture } from './bake';
+import { bakeTexture, keepForSession } from './bake';
 import { DamagePool, damageAlpha, damageScale, heroClear, type CritLook } from './damage';
 
 // Draws the DamagePool through one ParticleContainer, one particle per digit. The ten digit
@@ -40,7 +40,6 @@ function drawGlyphs(renderer: Renderer): Glyphs {
     box.addChild(g);
   });
   const atlas = bakeTexture(renderer, { target: box, frame: new Rectangle(0, 0, w * 10, h), resolution: 1 });
-  box.destroy({ children: true });
   const textures = glyphs.map((_, i) => new Texture({ source: atlas.source, frame: new Rectangle(i * w, 0, w, h) }));
   return { textures, advances, height: h };
 }
@@ -67,7 +66,7 @@ export class DamageLayer {
   /** `clearHero` fades numbers that float over the hero's figure. */
   constructor(renderer: Renderer, crit: CritLook = 'gold', private readonly clearHero = false) {
     this.crit = CRIT[crit];
-    this.glyphs = drawGlyphs(renderer);
+    this.glyphs = keepForSession(renderer, `digits:${digitFont()}`, () => drawGlyphs(renderer));
     this.view.texture = this.glyphs.textures[0];
     // above the effects
     this.view.zIndex = 1e7 + 1;

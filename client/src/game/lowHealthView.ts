@@ -24,7 +24,6 @@ function stripTexture(renderer: Renderer): Texture {
     g.rect(0, y, STRIP_W, 1).fill({ color: COLOR, alpha: EDGE_ALPHA * k * k });
   }
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, STRIP_W, STRIP_H), resolution: 1 });
-  g.destroy();
   return tex;
 }
 

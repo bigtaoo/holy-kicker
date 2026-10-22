@@ -4,7 +4,8 @@ import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { depthShade } from './mobAnim';
 import { MobView, type MobLook } from './mobView';
-import { SHADOW_Z } from './shadow';
+import { SHADOW_Z, ShadowBatch } from './shadow';
+import type { Viewport } from './viewport';
 
 // Draws the horde: one MobView per sim mob, made when the mob joins (a mob keeps its kind for
 // the run), plus chapter 2's tells. A water ghost under the ground is hidden; on its last
@@ -14,6 +15,10 @@ import { SHADOW_Z } from './shadow';
 // layer's), a mob a howl drives runs its cycle fast and kicks up snow, and a fallen skeleton
 // or shard lies hidden under the ground until the witch calls it up again. Chapter 4: a paper
 // effigy tears into flying scraps of paper as it falls (its scraps are small effigies).
+//
+// A mob outside the view (by more than a mob's size) is still stepped, so it comes back in at
+// its true place and pose, but not drawn. The view is the world's transform as the last frame
+// left it (the camera is set after the figures are drawn); the margin covers a frame's move.
 
 /** In-world height by mob kind. */
 export const MOB_HEIGHT: Record<MobKind, number> = {
@@ -34,6 +39,8 @@ const HASTE_CYCLE = 1.7;
 const HASTE_PUFFS = 5;
 const SNOW = 0xc8d4ec;
 const PAPER = 0xc4ccdc;
+/** World units past the view's edge a mob is still drawn: more than any mob's frame reaches from its feet. */
+const CULL_MARGIN = 300;
 
 export interface HordeOptions {
   calm: boolean;
@@ -45,6 +52,12 @@ export interface HordeOptions {
 export class HordeView {
   private readonly mobs: MobView[] = [];
   private readonly marks = new Graphics();
+  /** Marks were drawn last frame: clearing an empty Graphics still makes Pixi rebuild it. */
+  private marked = false;
+  /** Every shown mob's ground shadow, at the shadows' depth: the world does not sort them one by one. */
+  private readonly shadows: ShadowBatch;
+  /** The world's transform has been set by a frame's camera, so it can be culled against. */
+  private placed = false;
   /** The run was won: the horde fell with the last boss and is drawn no more. */
   routed = false;
 
@@ -56,7 +69,11 @@ export class HordeView {
   ) {
     // on the ground with the shadows, so the horde stands on it
     this.marks.zIndex = SHADOW_Z + 0.5;
-    world.addChild(this.marks);
+    // over the other shadows (the hero's, the bosses'), as when each mob's shadow joined the world after them
+    // (the horde's looks share one shadow texture)
+    this.shadows = new ShadowBatch(Object.values(looks)[0][0].shadowTex);
+    this.shadows.view.zIndex = SHADOW_Z + 0.25;
+    world.addChild(this.shadows.view, this.marks);
   }
 
   /** The view of mob i, if it has one yet. */
@@ -78,29 +95,38 @@ export class HordeView {
     }
   }
 
-  draw(mobs: readonly Mob[], alpha: number, dt: number, hx: number, hy: number): void {
+  /** `vp` and the world's transform give the view to cull against (nothing is culled without it). */
+  draw(mobs: readonly Mob[], alpha: number, dt: number, hx: number, hy: number, vp?: Viewport): void {
     while (this.mobs.length < mobs.length) {
       const m = mobs[this.mobs.length];
       const looks = this.looks[m.kind];
-      const v = new MobView(looks[this.mobs.length % looks.length], this.world, this.opts.calm);
+      const v = new MobView(looks[this.mobs.length % looks.length], this.world, this.opts.calm, this.shadows);
       // a multiply tint is free: it turns the pale fox lavender, away from the teal jiangshi
       if (this.opts.foxTint && m.kind === 'runner') v.tint(FOX_TINT);
       const tint = looks[this.mobs.length % looks.length].tint;
       if (tint !== undefined) v.tint(tint);
       this.mobs.push(v);
     }
-    const g = this.marks.clear();
+    const g = this.marks;
+    if (this.marked) g.clear();
+    this.marked = false;
+    this.shadows.begin();
     if (this.routed) {
       for (const v of this.mobs) v.setVisible(false);
+      this.shadows.end();
       return;
     }
+    const w = this.world, k = w.scale.x, cull = this.placed && vp;
+    const x0 = cull ? -w.x / k - CULL_MARGIN : -Infinity, y0 = cull ? -w.y / k - CULL_MARGIN : -Infinity;
+    const x1 = cull ? (vp.playW - w.x) / k + CULL_MARGIN : Infinity, y1 = cull ? (vp.playH - w.y) / k + CULL_MARGIN : Infinity;
+    this.placed = true;
     for (let i = 0; i < this.mobs.length; i++) {
       const m = mobs[i];
       const v = this.mobs[i];
       const x = lerpX(m, alpha);
       const y = lerpY(m, alpha);
       const hidden = underground(m);
-      v.setVisible(!hidden);
+      v.setVisible(!hidden && x >= x0 && x <= x1 && y >= y0 && y <= y1);
       if (hidden) {
         if (rising(m, EMERGE.warn)) this.mark(g, x, y, 1 - (m.t - alpha) / EMERGE.warn);
         continue;
@@ -116,6 +142,7 @@ export class HordeView {
       v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : m.haste > 0 ? HASTE_CYCLE : 1, walk, this.opts.sway);
       if (this.opts.calm) v.shade(depthShade(Math.sqrt((x - hx) * (x - hx) + (y - hy) * (y - hy))));
     }
+    this.shadows.end();
   }
 
   /** A paper effigy tore at (x, y), world units: scraps of paper flutter off. */
@@ -141,6 +168,7 @@ export class HordeView {
   /** A water ghost's mark, `k` (0..1) of the way to its rising. */
   private mark(g: Graphics, x: number, y: number, k: number): void {
     const r = EMERGE.grab / FP;
+    this.marked = true;
     k = Math.max(0, Math.min(1, k));
     // flattened like the shadows: it lies on the ground
     const flat = 0.45;

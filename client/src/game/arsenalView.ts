@@ -36,7 +36,6 @@ const SEAL_SCALE = 1.2;
 
 function bake(renderer: Renderer, g: Graphics, w: number, h: number): Texture {
   const tex = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, w, h), resolution: 1, antialias: true });
-  g.destroy();
   return tex;
 }
 

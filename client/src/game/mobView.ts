@@ -1,6 +1,6 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { faceSide } from './camera';
-import { makeShadow, sizeShadow } from './shadow';
+import { makeShadow, sizeShadow, type ShadowBatch } from './shadow';
 import { SETTLE, corpseAlpha, frameAt, greyTint, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
 
 // Draws mobs from their baked sheets: a looping animated sprite over a ground shadow that
@@ -58,7 +58,7 @@ const FLASH_TIME = 0.09;
 export const HOLD_TIME = 0.05;
 export class MobView {
   readonly sprite: Sprite;
-  private readonly shadow: Sprite;
+  private readonly shadow: Sprite | null;
   private readonly scale: number;
   private readonly phase = Math.random();
   private time = 0;
@@ -88,12 +88,14 @@ export class MobView {
 
   /**
    * `calm` gives each mob a slightly different size and brightness, and draws it easing after
-   * its simulated position so crowd jostle does not show.
+   * its simulated position so crowd jostle does not show. The shadow is drawn into `shadows` when
+   * given (the horde's one batch of them), else as a sprite in `layer` under the mob's.
    */
   constructor(
     private readonly look: MobLook,
     layer: Container,
     private readonly calm = false,
+    private readonly shadows?: ShadowBatch,
   ) {
     const vary = calm;
     const { meta, textures } = look.sheet;
@@ -101,13 +103,14 @@ export class MobView {
     this.tone = vary ? 0.9 + Math.random() * 0.1 : 1;
     this.sprite = new Sprite(textures[0]);
     this.sprite.anchor.set(meta.anchor[0] / meta.frameW, meta.anchor[1] / meta.frameH);
-    this.shadow = makeShadow(look.shadowTex, ...look.shadow);
-    layer.addChild(this.shadow, this.sprite);
+    this.shadow = shadows ? null : layer.addChild(makeShadow(look.shadowTex, ...look.shadow));
+    layer.addChild(this.sprite);
   }
 
   /** Hides a mob that is not in the sim right now (an elite that has not come yet, or fell). */
   setVisible(v: boolean): void {
-    this.sprite.visible = this.shadow.visible = v;
+    this.sprite.visible = v;
+    if (this.shadow) this.shadow.visible = v;
   }
 
   /** Draws the mob at a fixed order instead of by its y (the elite, over the horde). */
@@ -201,9 +204,15 @@ export class MobView {
     if (Number.isNaN(this.z) && Math.abs(y - this.sprite.zIndex) > Z_DEAD) this.sprite.zIndex = y;
     // the shadow shrinks while the mob is in the air
     const air = (meta.lift[f] ?? 0) / meta.height;
-    this.shadow.position.set(x, y);
-    const shadow = this.look.shadow;
-    sizeShadow(this.shadow, shadow[0], shadow[1], 1 - air * 1.5);
+    const [rx, ry] = this.look.shadow;
+    const k = 1 - air * 1.5;
+    if (this.shadows) {
+      if (this.sprite.visible) this.shadows.add(x, y, rx * k, ry * k);
+    }
+    else if (this.shadow) {
+      this.shadow.position.set(x, y);
+      sizeShadow(this.shadow, rx, ry, k);
+    }
   }
 }
 

@@ -47,6 +47,36 @@ export function buildSlots(p: Player): BuildSlot[] {
   return slots;
 }
 
+/**
+ * Whether anything buildSlots reads changed since `seen` was last given this player, without
+ * building the slots (it runs every frame); `seen` keeps the values, one per entry, in place.
+ */
+export function buildChanged(seen: unknown[], p: Player): boolean {
+  let n = 0;
+  let changed = put(seen, n++, p.relicId);
+  changed = put(seen, n++, p.relic) || changed;
+  changed = put(seen, n++, p.awakened) || changed;
+  changed = put(seen, n++, p.spells.length) || changed;
+  for (const sp of p.spells) {
+    changed = put(seen, n++, sp.id) || changed;
+    changed = put(seen, n++, sp.level) || changed;
+    changed = put(seen, n++, sp.evolved) || changed;
+  }
+  changed = put(seen, n++, p.passives.length) || changed;
+  for (const ps of p.passives) {
+    changed = put(seen, n++, ps.id) || changed;
+    changed = put(seen, n++, ps.level) || changed;
+  }
+  seen.length = n;
+  return changed;
+}
+
+function put(seen: unknown[], i: number, v: unknown): boolean {
+  if (seen[i] === v) return false;
+  seen[i] = v;
+  return true;
+}
+
 /** A key that changes whenever the strip would look different, so it is redrawn only then. */
 export function buildKey(slots: readonly BuildSlot[]): string {
   return slots.map((s) => `${s.icon ?? '-'}${s.level}${s.state[0]}${s.needs ?? ''}`).join('|');
@@ -73,19 +103,21 @@ const COUNTED: readonly SpellId[] = ['bell', 'incense'];
 /**
  * The recharge of each spell slot, in slot order; null for an empty slot, the halo (it never
  * waits) and spells quicker than a second, whose sweep would only flicker. A bell that is up
- * is ready: its recharge starts when a blow breaks it.
+ * is ready: its recharge starts when a blow breaks it. Fills `out` in place, reusing its charges.
  */
-export function spellCharges(p: Player): (Charge | null)[] {
-  const out: (Charge | null)[] = [];
+export function spellCharges(p: Player, out: (Charge | null)[] = []): (Charge | null)[] {
+  out.length = MAX_SPELLS;
   for (let i = 0; i < MAX_SPELLS; i++) {
     const sp = p.spells[i];
     const total = sp ? spellCooldown(p, sp) : 0;
     if (!sp || sp.id === 'halo' || total < TICK_RATE) {
-      out.push(null);
+      out[i] = null;
       continue;
     }
     const left = sp.id === 'bell' && p.bell ? 0 : Math.max(0, sp.cd);
-    out.push({ share: Math.min(1, left / total), secs: COUNTED.includes(sp.id) ? Math.ceil(left / TICK_RATE) : 0 });
+    const c = (out[i] ??= { share: 0, secs: 0 });
+    c.share = Math.min(1, left / total);
+    c.secs = COUNTED.includes(sp.id) ? Math.ceil(left / TICK_RATE) : 0;
   }
   return out;
 }

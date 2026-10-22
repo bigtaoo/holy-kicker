@@ -268,6 +268,8 @@ export class Shell {
 
   /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
   private play(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: Challenge | null = null): Promise<void> {
+    // the tap starts the perf event's ready time
+    this.perf?.tapped();
     return this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => this.runs.start(chapter, left, from, c));
   }
 

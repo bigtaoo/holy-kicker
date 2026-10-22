@@ -176,6 +176,11 @@ export interface PerfProps {
   draw95?: number;
   /** Runs started since launch, this one included. */
   nth: number;
+  /** The run's chapter (builds from 2026-10-22 on). */
+  chapter?: number;
+  /** Ms from the tap on Play (or Play again, Next chapter, Resume) to the run's first battle frame:
+   *  its art fetched, its scene built and first drawn. Absent for a run no tap started (`?direct`). */
+  ready?: number;
   /** JS heap in use and its change since the run started, MB; only where the host exposes it (Chrome's performance.memory). */
   heap?: number;
   heapUp?: number;

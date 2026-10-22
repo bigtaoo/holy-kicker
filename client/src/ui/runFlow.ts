@@ -116,7 +116,7 @@ export class RunFlow {
     }, left?.state));
     h.replays.begin(game, rankedRun(h.scene) && !h.scene.record);
     this.kills = left?.kills ?? 0;
-    h.perf()?.start(rankedRun(h.scene) && !h.scene.record);
+    h.perf()?.start(rankedRun(h.scene) && !h.scene.record, chapter);
     const quality = h.quality();
     if (quality) game.applyQuality(quality);
     game.shake.on = loadSettings(h.platform.storage).shake;

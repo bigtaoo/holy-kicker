@@ -82,6 +82,8 @@ interface Sweep {
   dark: Graphics;
   secs: Text;
   step: number;
+  /** The seconds the count shows, 0 for none. */
+  shown: number;
 }
 
 export class BuildBar {
@@ -122,14 +124,15 @@ export class BuildBar {
 
   /** Each spell's recharge, in spell slot order (spellCharges). */
   setCharges(charges: readonly (Charge | null)[]): void {
-    this.sweeps.forEach((w, i) => {
-      if (!w) return;
+    for (let i = 0; i < this.sweeps.length; i++) {
+      const w = this.sweeps[i];
+      if (!w) continue;
       const c = charges[i];
       const step = c ? Math.round(c.share * SWEEP_STEPS) : 0;
       if (step !== w.step) w.dark.context = sweepShape((w.step = step));
-      const secs = c && c.secs > 0 ? String(c.secs) : '';
-      if (w.secs.text !== secs) w.secs.text = secs;
-    });
+      const secs = c ? c.secs : 0;
+      if (secs !== w.shown) w.secs.text = (w.shown = secs) > 0 ? String(secs) : '';
+    }
   }
 
   private badge(slot: BuildSlot): Container {
@@ -150,7 +153,7 @@ export class BuildBar {
     }
     const icon = slot.icon && iconSprite(this.icons, slot.icon, R * 1.6);
     if (icon) c.addChild(icon);
-    const sweep = slot.kind === 'spell' ? { dark: new Graphics(sweepShape(0)), secs: label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }), step: 0 } : null;
+    const sweep = slot.kind === 'spell' ? { dark: new Graphics(sweepShape(0)), secs: label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }), step: 0, shown: 0 } : null;
     if (sweep) {
       this.sweeps.push(sweep);
       c.addChild(sweep.dark);

@@ -1,5 +1,5 @@
 import { Container, Graphics, Particle, ParticleContainer, Rectangle, Texture, type Renderer } from 'pixi.js';
-import { bakeTexture } from './bake';
+import { bakeTexture, keepForSession } from './bake';
 import { TICK_RATE, type Gem } from '@hk/engine';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
@@ -68,7 +68,6 @@ function drawGems(renderer: Renderer, colors: number[]): Texture[] {
   });
   const h = Math.max(...SIZES) + PAD * 2;
   const atlas = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, x, h), resolution: BAKE_RES, antialias: true });
-  g.destroy();
   return boxes.map((b) => new Texture({ source: atlas.source, frame: b }));
 }
 
@@ -112,7 +111,7 @@ export class DropLayer {
 
   constructor(renderer: Renderer, world: Container, palette: GemPalette, private readonly fx: FxPool) {
     this.colors = COLORS[palette];
-    const textures = drawGems(renderer, this.colors);
+    const textures = keepForSession(renderer, `gems:${palette}`, () => drawGems(renderer, this.colors));
     this.resting = new GemBatch(textures);
     this.flying = new GemBatch(textures);
     // over the ground and the shadows, under every standing figure and corpse
