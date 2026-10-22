@@ -282,8 +282,36 @@ cloud (`capacitor.config.ts`: `autoUpdate: false`, `statsUrl: ''`).
   `client/dist-ota` to the `holy-kicker-ota` worker (`wrangler/ota.jsonc`, Workers static assets,
   the Cloudflare secrets of the web deploy). A deploy replaces the whole set, so only the latest
   update is served. `_headers` allows any origin (the page is `capacitor://localhost`) and keeps
-  the manifest out of caches. `minNativeVersion` (the workflow's input) holds an update back from
-  shells too old for it.
+  the manifest out of caches. The workflow also smokes the bundle in headless Chrome
+  (`npm run smoke -- ios`) before it zips it.
+- **Who takes it** (`wantsDownload`): a device downloads the manifest's bundle when it is newer
+  than the running one and the shell meets both gates. `minBridge` (input `min_bridge`, by default
+  `bridgeVersion` in `HKBridgeViewController.swift` at that commit) is the oldest `HKNative.v` the
+  bundle needs. That is the real gate: every shell reports it, and it rises with each new bridge
+  call. `minNativeVersion` (input `min_native`, default `1.0`) compares the shell's
+  CFBundleShortVersionString, which stays `1.0` across builds, so it only tells marketing
+  versions apart.
+- **Stopping and taking back**: run `ota-ios` with action `stop` to publish a manifest that has
+  no bundle in it (`stop: true`, no url or checksum, `minNativeVersion: "999"`), under the live
+  version, so the next publish counts on from it. `revoke` (space-separated versions, added to the
+  live list, which only grows) names bad updates. A device never downloads or switches to a revoked
+  version. A device running one remembers the list (`hk.ota.revoke`) and, at its next launch, goes
+  back to its shell's own bundle with `reset()`; a shell's own bundle is never taken back. To
+  replace a bad update rather than drop it, publish a fixed commit with the bad version in
+  `revoke`. The device downloads the new one and switches to it at the next launch.
+- **What older bundles honour**: the gate runs in the web bundle, not in the shell. So every
+  bundle built before the gate (the built-in bundle of each shell up to 1.0 (29), and every update
+  published for them) reads `version`, `url`, `checksum` and `minNativeVersion` only, and ignores
+  `minBridge`, `stop` and `revoke`:
+  - **Stop** still holds them back, because a stop manifest has no url or checksum and its
+    `minNativeVersion` is out of reach.
+  - **Revoke** does not reach them. Such a device keeps a bad update it has already switched to
+    until a newer one replaces it, so for them the way back is to roll forward.
+  - **`minBridge`** does not gate them: they take any newer update their `minNativeVersion`
+    allows. An update for a newer bridge must therefore still feature-detect (`hkNative()`) on
+    older shells, as the bridge contract already requires.
+
+  Once such a device has switched to a bundle with the gate, it honours all three.
 - **What may travel**: JS, art and sound only. Anything that needs a new bridge call or a new
   native setting needs a shell first (and the web side feature-detects it anyway). Guideline
   3.3.1 allows interpreted code that does not change the app's purpose; never use it to add a

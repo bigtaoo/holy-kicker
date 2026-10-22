@@ -7,7 +7,8 @@ import APPS from './apps.json';
 import capConfig from '../../../capacitor.config.ts?raw';
 import podfile from '../../../ios/App/Podfile?raw';
 import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
-import { applyDownloaded, checkOta, isNewer, MANIFEST_URL, pickDownloaded, wantsDownload, type Bundle, type Updater } from './ota';
+import bridgeSwift from '../../../ios/App/App/HKBridgeViewController.swift?raw';
+import { applyDownloaded, checkOta, isNewer, MANIFEST_URL, pickDownloaded, REVOKE_KEY, wantsDownload, type Bundle, type Updater } from './ota';
 
 const manifest = { version: '1.0.18.2', url: 'https://hk-ota.gamestao.com/1.0.18.2.zip', checksum: 'ab12', minNativeVersion: '1.0' };
 
@@ -20,7 +21,13 @@ function fakeUpdater(bundles: Bundle[] = [], native = '1.0'): Updater & { calls:
     list: async () => ({ bundles }),
     download: async (o) => { calls.push(`download ${o.version} ${o.checksum}`); return { id: 'x', version: o.version, status: 'pending' }; },
     set: async (o) => { calls.push(`set ${o.id}`); },
+    reset: async () => { calls.push('reset'); },
   };
+}
+
+function kv(start: Record<string, string> = {}) {
+  const m = new Map(Object.entries(start));
+  return { getItem: (k: string) => m.get(k) ?? null, setItem: (k: string, v: string) => void m.set(k, v), m };
 }
 
 describe('version order', () => {
@@ -35,17 +42,33 @@ describe('version order', () => {
 
 describe('wantsDownload', () => {
   it('takes a newer bundle this shell can run', () => {
-    expect(wantsDownload(manifest, '1.0.18.1', '1.0', [])).toBe(true);
+    expect(wantsDownload(manifest, '1.0.18.1', '1.0', 4, [])).toBe(true);
   });
 
   it('refuses what is not newer, needs a newer shell, has no checksum or is on the device', () => {
-    expect(wantsDownload(manifest, '1.0.18.2', '1.0', [])).toBe(false);
-    expect(wantsDownload(manifest, '1.0.19', '1.0', [])).toBe(false);
-    expect(wantsDownload({ ...manifest, minNativeVersion: '1.1' }, '1.0.18', '1.0', [])).toBe(false);
-    expect(wantsDownload({ ...manifest, checksum: '' }, '1.0.18', '1.0', [])).toBe(false);
-    expect(wantsDownload({ version: '9' }, '1.0.18', '1.0', [])).toBe(false);
-    expect(wantsDownload(null, '1.0.18', '1.0', [])).toBe(false);
-    expect(wantsDownload(manifest, '1.0.18', '1.0', [{ id: 'a', version: '1.0.18.2', status: 'error' }])).toBe(false);
+    expect(wantsDownload(manifest, '1.0.18.2', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload(manifest, '1.0.19', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload({ ...manifest, minNativeVersion: '1.1' }, '1.0.18', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload({ ...manifest, checksum: '' }, '1.0.18', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload({ version: '9' }, '1.0.18', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload(null, '1.0.18', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload(manifest, '1.0.18', '1.0', 4, [{ id: 'a', version: '1.0.18.2', status: 'error' }])).toBe(false);
+  });
+
+  it('refuses a bundle that needs a newer bridge, one taken back, and anything while stopped', () => {
+    expect(wantsDownload({ ...manifest, minBridge: 4 }, '1.0.18', '1.0', 4, [])).toBe(true);
+    expect(wantsDownload({ ...manifest, minBridge: 5 }, '1.0.18', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload({ ...manifest, revoke: ['1.0.18.2'] }, '1.0.18', '1.0', 4, [])).toBe(false);
+    expect(wantsDownload({ ...manifest, stop: true }, '1.0.18', '1.0', 4, [])).toBe(false);
+  });
+
+  it('keeps a stop manifest out of reach of the bundles that predate `stop`', () => {
+    // what the workflow writes for a stop, read the way those bundles read it
+    const stopped: Record<string, unknown> = { version: '1.0.18.2', stop: true, revoke: [], minNativeVersion: '999' };
+    const old = (m: Record<string, unknown>) =>
+      typeof m.url === 'string' && typeof m.checksum === 'string' && !isNewer(String(m.minNativeVersion), '1.0');
+    expect(old(stopped)).toBe(false);
+    expect(otaWorkflow).toContain('{version: $v, stop: true, revoke: $revoke, minNativeVersion: "999"}');
   });
 });
 
@@ -59,13 +82,14 @@ describe('pickDownloaded', () => {
     ];
     expect(pickDownloaded(have, '1.0.18')?.id).toBe('c');
     expect(pickDownloaded(have, '1.0.18.2')).toBeNull();
+    expect(pickDownloaded(have, '1.0.18', ['1.0.18.2'])?.id).toBe('a');
   });
 });
 
 describe('the updater calls', () => {
   it('confirm the bundle, then download a newer one for the next launch', async () => {
     const u = fakeUpdater();
-    expect(await checkOta('1.0.18', true, u, async () => manifest)).toBe('downloaded');
+    expect(await checkOta('1.0.18', true, u, async () => manifest, kv(), 4)).toBe('downloaded');
     expect(u.calls).toEqual(['ready', 'download 1.0.18.2 ab12']);
   });
 
@@ -81,10 +105,36 @@ describe('the updater calls', () => {
 
   it('switch to a downloaded bundle at launch', async () => {
     const u = fakeUpdater([{ id: 'c', version: '1.0.18.2', status: 'pending' }]);
-    expect(await applyDownloaded('1.0.18', true, u)).toBe(true);
+    expect(await applyDownloaded('1.0.18', true, u, kv())).toBe(true);
     expect(u.calls).toEqual(['set c']);
-    expect(await applyDownloaded('1.0.18.2', true, fakeUpdater())).toBe(false);
+    expect(await applyDownloaded('1.0.18.2', true, fakeUpdater(), kv())).toBe(false);
     expect(await applyDownloaded('0.0.0', true, u)).toBe(false);
+  });
+
+  it("keep the manifest's revoke list, and at the next launch leave a bundle taken back", async () => {
+    const store = kv();
+    const u = fakeUpdater([{ id: 'c', version: '1.0.18.2', status: 'success' }]);
+    const stopped = { version: '1.0.18.2', stop: true, revoke: ['1.0.18.2'], minNativeVersion: '999' };
+    expect(await checkOta('1.0.18.2', true, u, async () => stopped, store, 4)).toBe('none');
+    expect(store.m.get(REVOKE_KEY)).toBe('["1.0.18.2"]');
+    expect(await applyDownloaded('1.0.18.2', true, u, store)).toBe(true);
+    expect(u.calls).toEqual(['ready', 'reset']);
+    // a downloaded bundle taken back is never switched to, and a shell's own is never left
+    const shell = fakeUpdater([{ id: 'c', version: '1.0.18.2', status: 'pending' }]);
+    expect(await applyDownloaded('1.0.18', true, shell, store)).toBe(false);
+    expect(await applyDownloaded('1.0.18', true, shell, kv({ [REVOKE_KEY]: '["1.0.18"]' }))).toBe(true);
+    expect(shell.calls).toEqual(['set c']);
+  });
+
+  it("pass the shell's bridge contract to the gate", async () => {
+    const u = fakeUpdater();
+    expect(await checkOta('1.0.18', true, u, async () => ({ ...manifest, minBridge: 5 }), kv(), 4)).toBe('none');
+    expect(await checkOta('1.0.18', true, u, async () => ({ ...manifest, minBridge: 5 }), kv(), 5)).toBe('downloaded');
+  });
+
+  it('read the bridge gate from the shell this commit builds', () => {
+    expect(otaWorkflow).toContain("sed -nE 's/.*static let bridgeVersion = ([0-9]+).*/\\1/p' client/ios/App/App/HKBridgeViewController.swift");
+    expect(bridgeSwift).toMatch(/static let bridgeVersion = \d+/);
   });
 });
 

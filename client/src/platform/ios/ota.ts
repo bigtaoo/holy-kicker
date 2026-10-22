@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
 import { IOS_APP } from './app';
+import { hkNative } from './bridge';
 
 // Hot updates of the web layer (docs/ios.md "Hot updates"), after D:\funny's platform/ota.ts: the
 // Capgo plugin in the shell, driven by hand from here against our own static manifest, never
@@ -12,6 +13,11 @@ import { IOS_APP } from './app';
 // whenever the app goes to the background, which would throw away a run the player only switched
 // away from. Instead `applyDownloaded`, first thing at the next launch, switches to it before
 // anything is drawn.
+//
+// The manifest gates who takes an update on the shell's bridge contract (`minBridge`, the
+// HKNative.v every shell reports) and can stop the rollout (`stop`) or take bundles back
+// (`revoke`). Only bundles with this file honour those three; the ones before it read
+// `minNativeVersion` alone (docs/ios.md "Hot updates": what older bundles honour).
 
 /** Each app updates from its own host (apps.json `ota`, ota-ios.yml). */
 export const MANIFEST_URL = `${IOS_APP.ota}/manifest.json`;
@@ -24,9 +30,35 @@ export interface OtaManifest {
   url: string;
   /** sha256 of the zip, hex; the plugin refuses a download without one. */
   checksum: string;
-  /** The oldest shell (CFBundleShortVersionString) the bundle runs on. */
+  /**
+   * The oldest shell (CFBundleShortVersionString) the bundle runs on. Every bundle honours it,
+   * so a stop sets it out of reach ('999') for the bundles that predate `stop`.
+   */
   minNativeVersion?: string;
+  /** The oldest bridge contract (HKNative.v, HKBridgeViewController.bridgeVersion) the bundle needs. */
+  minBridge?: number;
+  /** The kill switch: no device downloads anything while it is set. */
+  stop?: boolean;
+  /** Bundles taken back: never downloaded or switched to, and a device running one goes back to its shell's own. */
+  revoke?: string[];
 }
+
+/** Where the last manifest's `revoke` is kept for the next launch, which acts on it before drawing. */
+export const REVOKE_KEY = 'hk.ota.revoke';
+
+type Kv = Pick<Storage, 'getItem' | 'setItem'>;
+
+function revoked(kv: Kv): string[] {
+  try {
+    const list: unknown = JSON.parse(kv.getItem(REVOKE_KEY) ?? '[]');
+    return Array.isArray(list) ? list.filter((v): v is string => typeof v === 'string') : [];
+  } catch {
+    return [];
+  }
+}
+
+/** A hot update (`<shell>.<n>`), as against a shell's own bundle (`<version>.<build>`). */
+const isUpdate = (version: string) => version.split('.').length > 3;
 
 /** A bundle the plugin keeps on the device. */
 export interface Bundle {
@@ -47,22 +79,25 @@ export function isNewer(a: string, b: string): boolean {
 }
 
 /**
- * Whether the bundle running at `running` on shell `native` should download the manifest's: newer,
- * runnable here, and not on the device already (waiting, or failed once: a bundle that never
- * booted is not fetched again until a newer one is published).
+ * Whether the bundle running at `running` on shell `native` with bridge contract `bridge` should
+ * download the manifest's: not stopped, newer, runnable here, not taken back, and not on the
+ * device already (waiting, or failed once: a bundle that never booted is not fetched again until
+ * a newer one is published).
  */
-export function wantsDownload(m: Partial<OtaManifest> | null, running: string, native: string, have: Bundle[]): m is OtaManifest {
+export function wantsDownload(m: Partial<OtaManifest> | null, running: string, native: string, bridge: number, have: Bundle[]): m is OtaManifest {
   if (!m || typeof m.version !== 'string' || typeof m.url !== 'string' || typeof m.checksum !== 'string') return false;
-  if (!m.checksum || !isNewer(m.version, running)) return false;
+  if (m.stop || !m.checksum || !isNewer(m.version, running)) return false;
   if (m.minNativeVersion && isNewer(m.minNativeVersion, native)) return false;
+  if (typeof m.minBridge === 'number' && bridge < m.minBridge) return false;
+  if (Array.isArray(m.revoke) && m.revoke.includes(m.version)) return false;
   return !have.some((b) => b.version === m.version);
 }
 
-/** The newest downloaded bundle above the running one, if any. */
-export function pickDownloaded(have: Bundle[], running: string): Bundle | null {
+/** The newest downloaded bundle above the running one and not taken back, if any. */
+export function pickDownloaded(have: Bundle[], running: string, revoke: string[] = []): Bundle | null {
   let best: Bundle | null = null;
   for (const b of have) {
-    if ((b.status === 'pending' || b.status === 'success') && isNewer(b.version, best?.version ?? running)) best = b;
+    if ((b.status === 'pending' || b.status === 'success') && !revoke.includes(b.version) && isNewer(b.version, best?.version ?? running)) best = b;
   }
   return best;
 }
@@ -74,6 +109,8 @@ export interface Updater {
   list(): Promise<{ bundles: Bundle[] }>;
   download(o: { url: string; version: string; checksum: string }): Promise<Bundle>;
   set(o: { id: string }): Promise<void>;
+  /** Back to the shell's own bundle; the page reloads. */
+  reset(): Promise<void>;
 }
 
 const plugin = CapacitorUpdater as unknown as Updater;
@@ -82,15 +119,22 @@ const plugin = CapacitorUpdater as unknown as Updater;
 const active = (running: string, inShell: boolean) => running !== '0.0.0' && inShell;
 
 /**
- * First thing at launch: switch to a bundle the last session downloaded. True when it did, and the
- * page is about to reload into it, so the caller boots nothing.
+ * First thing at launch: switch to a bundle the last session downloaded, or, when the running one
+ * was taken back, to the shell's own. True when it did, and the page is about to reload into it,
+ * so the caller boots nothing.
  */
-export async function applyDownloaded(running = __HK_BUNDLE__, inShell = Capacitor.isNativePlatform(), updater = plugin): Promise<boolean> {
+export async function applyDownloaded(running = __HK_BUNDLE__, inShell = Capacitor.isNativePlatform(), updater = plugin, kv: Kv = localStorage): Promise<boolean> {
   if (!active(running, inShell)) return false;
   try {
-    const next = pickDownloaded((await updater.list()).bundles, running);
-    if (!next) return false;
-    await updater.set({ id: next.id });
+    const revoke = revoked(kv);
+    const next = pickDownloaded((await updater.list()).bundles, running, revoke);
+    if (next) {
+      await updater.set({ id: next.id });
+      return true;
+    }
+    // a shell's own bundle is never taken back: resetting to it again would loop
+    if (!isUpdate(running) || !revoke.includes(running)) return false;
+    await updater.reset();
     return true;
   } catch (e) {
     console.warn('[ota] kept the running bundle:', e);
@@ -118,13 +162,17 @@ export async function checkOta(
   inShell = Capacitor.isNativePlatform(),
   updater = plugin,
   manifest: (running: string) => Promise<Partial<OtaManifest> | null> = fetchManifest,
+  kv: Kv = localStorage,
+  bridge = hkNative()?.v ?? 0,
 ): Promise<'none' | 'downloaded'> {
   if (!active(running, inShell)) return 'none';
   try {
     await updater.notifyAppReady();
     const m = await manifest(running);
+    // the next launch takes back what this manifest revokes (applyDownloaded)
+    if (m) kv.setItem(REVOKE_KEY, JSON.stringify(Array.isArray(m.revoke) ? m.revoke.filter((v) => typeof v === 'string') : []));
     const { native } = await updater.current();
-    if (!wantsDownload(m, running, native, (await updater.list()).bundles)) return 'none';
+    if (!wantsDownload(m, running, native, bridge, (await updater.list()).bundles)) return 'none';
     await updater.download({ url: m.url, version: m.version, checksum: m.checksum });
     return 'downloaded';
   } catch (e) {
