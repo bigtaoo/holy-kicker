@@ -287,6 +287,25 @@ export interface RunEntry {
   dice?: number;
 }
 
+/**
+ * What POST /v1/runs takes: the run and, when the client has one, its replay from the first wave.
+ * A new best counts on its board only once the server has re-simulated it with that replay.
+ */
+export interface RunPost extends RunEntry {
+  replay?: ReplayWire | null;
+}
+
+/** What POST /v1/runs answers: the board, where the run places among the shown rows (provisional until verified), and what was done with it. */
+export interface RunReply {
+  board: string;
+  rank: number;
+  /** A new best for the install. */
+  best: boolean;
+  /** `pending`: kept, shown once re-simulated; `lower`: no better than the install's best; `unverified`: a better run with no replay the server can check, not kept. */
+  status: 'pending' | 'lower' | 'unverified';
+  tag: string;
+}
+
 /** A board's id: the chapter, the mode and, for a game but the first, the game (`c3h-corgi`). */
 export function boardId(chapter: number, hard: boolean, game?: Game): string {
   return `c${chapter}${hard ? 'h' : ''}${boardSuffix(game)}`;

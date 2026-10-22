@@ -106,6 +106,7 @@ export const ko: Table<typeof en> = {
     practice: '연습',
     practiceNote: '연습 판: 오늘의 보상은 이미 받았습니다',
     checking: '기록 확인 중…',
+    outdated: '플레이 중에 게임이 업데이트되어 이번 기록은 순위에 들어가지 않습니다. 게임을 다시 시작하세요',
     top: '상위 {n}%',
   },
   mutator: {

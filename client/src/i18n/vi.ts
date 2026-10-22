@@ -106,6 +106,7 @@ export const vi: Table<typeof en> = {
     practice: 'Luyện tập',
     practiceNote: 'Lượt luyện tập: bạn đã nhận phần thưởng hôm nay',
     checking: 'Đang kiểm tra lượt chơi…',
+    outdated: 'Trò chơi đã cập nhật trong lượt chơi của bạn nên lượt này không được xếp hạng. Hãy khởi động lại trò chơi',
     top: 'Top {n}%',
   },
   mutator: {

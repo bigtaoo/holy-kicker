@@ -27,7 +27,7 @@ import { languageProps, type Backend, type RunRank, type RunResult } from '../ne
 import { runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import { RunReplays } from '../net/runReplays';
-import type { Challenge, Device, PropValue } from '@hk/protocol';
+import type { Challenge, Device, PropValue, ReplayWire } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
 import { chapterLook, lateArt, loadChapterArt, loadRunArt } from '../chapterArt';
@@ -403,7 +403,7 @@ export class Shell {
   private endRun(): void {
     if (!this.game) return;
     const s = this.game.engine.state;
-    this.challenge.capture(this.game);
+    const replay = this.challenge.capture(this.game);
     void this.replays.end();
     this.game.destroy();
     this.game = null;
@@ -412,12 +412,12 @@ export class Shell {
     if (!this.watch?.downShown) this.portal.gameplayStop();
     const fall = this.watch?.fall ?? null;
     this.watch = null;
-    this.settle(s, fall);
+    this.settle(s, fall, replay);
   }
 
   // Pays out the run that ended in `s` (`waves` fully cleared), tells the backend, enters it on its board when no dev switch
-  // bent the rules (the results show the rank once it comes) and shows the results, with what felled the hero (`fall`).
-  private settle(s: SimState, fall: DownInfo | null = null): void {
+  // bent the rules, with its replay for the server to check (the results show the rank once it comes), and shows the results, with what felled the hero (`fall`).
+  private settle(s: SimState, fall: DownInfo | null = null, replay: ReplayWire | null = null): void {
     const cause = fall?.cause;
     dropRun(this.platform.storage);
     const waves = s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
@@ -429,7 +429,7 @@ export class Shell {
     this.perf?.end();
     this.net.track('run_end', { ...run, gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(this.challenge.run && { challenge: this.challenge.run.id }) });
     const name = rankedRun(this.scene) ? this.names.board(this.save) : null;
-    const rank = name && !this.challenge.run ? this.net.submitRun({ ...run, ...name }) : Promise.resolve(null);
+    const rank = name && !this.challenge.run ? this.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(null);
     void this.net.flush();
     if (this.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
     const { reward, save: played } = settleRun(noteFall(this.save, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });

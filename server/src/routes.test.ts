@@ -1,14 +1,17 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DICE, LIMITS, checkName, packDice, rollDice, runScore, unpackDice, type RunEntry } from './protocol';
-import { Limiter, route, tagOf, type Deps, type Req } from './routes';
+import { HEALTH_TIMEOUT_MS, Limiter, route, tagOf, type Deps, type Req } from './routes';
 import { checkBatch, checkReport, checkRun } from './rules';
-import { MemoryStore } from './store';
+import { MemoryStore, type ResimRef } from './store';
 
 const NOW = Date.parse('2026-10-05T12:00:00Z');
 const INSTALL = 'abcdefgh1234';
 
+// a board run's replay is taken as it is and its re-simulation passes at once (board.test.ts checks the real thing)
 function deps(over: Partial<Deps> = {}): Deps & { store: MemoryStore } {
-  return { store: new MemoryStore(), tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, resim: { push() {} }, ...over } as Deps & { store: MemoryStore };
+  const store = new MemoryStore();
+  const resim = { push: (r: ResimRef) => void store.settleBoardRun(r.board, r.tag, r.at, true) };
+  return { store, tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, resim, boardReplay: (_r, p) => p, ...over } as Deps & { store: MemoryStore };
 }
 
 function req(method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Req {
@@ -27,6 +30,7 @@ const run = (over: Partial<RunEntry> = {}): RunEntry => ({
 });
 
 const replay = { engine: 31, config: { seed: 5, waves: 50 }, wave: 1, cmds: [1, 0, 16384, 255, 0, 31, 0, 0, 0, 6], tick: 900, hash: 123456 };
+const post = (over: Partial<RunEntry> = {}) => ({ ...run(over), replay });
 const report = (over: object = {}) => ({
   install: INSTALL, host: 'web', build: '0.0.1', locale: 'de', text: 'The boss got stuck', device: 'Mozilla/5.0', chapter: 1, wave: 12, replay, ...over,
 });
@@ -72,6 +76,23 @@ describe('checks', () => {
 });
 
 describe('routes', () => {
+  it('answers /health only while the database does', async () => {
+    vi.useFakeTimers();
+    try {
+      const d = deps();
+      expect(await route(req('GET', '/health'), d)).toEqual({ status: 200, body: { ok: true } });
+      d.store.ping = () => Promise.reject(new Error('down'));
+      expect((await route(req('GET', '/health'), d)).status).toBe(503);
+      // a database that never answers: unhealthy after HEALTH_TIMEOUT_MS, not a hung check
+      d.store.ping = () => new Promise(() => {});
+      const hung = route(req('GET', '/health'), d);
+      await vi.advanceTimersByTimeAsync(HEALTH_TIMEOUT_MS);
+      expect((await hung).status).toBe(503);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('keeps a checked batch and refuses the rest', async () => {
     const d = deps();
     expect((await route(req('POST', '/v1/events', batch()), d)).status).toBe(204);
@@ -105,12 +126,12 @@ describe('routes', () => {
 
   it('keeps each install\'s best run per board and ranks it', async () => {
     const d = deps();
-    const first = await route(req('POST', '/v1/runs', run()), d);
+    const first = await route(req('POST', '/v1/runs', post()), d);
     expect(first.body).toMatchObject({ board: 'c1', rank: 1, best: true, tag: tagOf(INSTALL, 'salt') });
     // a worse run does not replace it, a better one from someone else goes above
-    expect((await route(req('POST', '/v1/runs', run({ wave: 10, tenths: 1000 })), d)).body).toMatchObject({ best: false, rank: 1 });
-    await route(req('POST', '/v1/runs', run({ install: 'zzzzzzzz9999', wave: 30, tenths: 5000 })), d);
-    await route(req('POST', '/v1/runs', run({ hard: true })), d);
+    expect((await route(req('POST', '/v1/runs', post({ wave: 10, tenths: 1000 })), d)).body).toMatchObject({ best: false, rank: 1 });
+    await route(req('POST', '/v1/runs', post({ install: 'zzzzzzzz9999', wave: 30, tenths: 5000 })), d);
+    await route(req('POST', '/v1/runs', post({ hard: true })), d);
     const b = await route(req('GET', '/v1/boards/c1', undefined, { 'x-hk-install': INSTALL }), d);
     const body = b.body as { total: number; rows: { wave: number; tag: string }[]; mine: { rank: number } };
     expect(body.total).toBe(2);
@@ -125,15 +146,15 @@ describe('routes', () => {
   it('shows portal names from CrazyGames and dice names from everyone', async () => {
     const d = deps();
     const dice = packDice(3, 7, 42);
-    await route(req('POST', '/v1/runs', run()), d);
-    await route(req('POST', '/v1/runs', run({ install: 'zzzzzzzz9999', wave: 30, tenths: 5000, name: 'kicker42' })), d);
+    await route(req('POST', '/v1/runs', post()), d);
+    await route(req('POST', '/v1/runs', post({ install: 'zzzzzzzz9999', wave: 30, tenths: 5000, name: 'kicker42' })), d);
     expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', dice }), d)).body).toEqual({ ok: true });
     // only a portal with accounts names players in text, and a dice name has to be one
     expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', name: 'Iron Head' }), d)).status).toBe(400);
     expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'web', dice: 0 }), d)).status).toBe(400);
     expect((await route(req('POST', '/v1/name', { install: INSTALL, host: 'crazygames', name: 'Sh1t head' }), d)).status).toBe(400);
     // a run whose name is refused still counts, under the name kept before
-    expect((await route(req('POST', '/v1/runs', run({ wave: 25, tenths: 4000, host: 'poki', name: 'Iron Head' })), d)).status).toBe(200);
+    expect((await route(req('POST', '/v1/runs', post({ wave: 25, tenths: 4000, host: 'poki', name: 'Iron Head' })), d)).status).toBe(200);
     const b = (await route(req('GET', '/v1/boards/c1', undefined, { 'x-hk-install': INSTALL }), d)).body as { rows: { name: string; dice: number }[]; mine: { dice: number } };
     expect(b.rows.map((r) => [r.name, r.dice])).toEqual([['kicker42', 0], ['', dice]]);
     expect(b.mine.dice).toBe(dice);
@@ -175,7 +196,7 @@ describe('routes', () => {
       expect((await route(req('GET', `/v1/stats?to=${to}`, undefined, { authorization: 'Bearer key' }), deps())).status).toBe(400);
     }
     expect((await route(req('GET', '/v1/stats', undefined, { authorization: 'Bearer key' }), deps({ adminKey: '' }))).status).toBe(401);
-    expect((await route(req('POST', '/v1/runs', run()), deps({ allow: () => false }))).status).toBe(429);
+    expect((await route(req('POST', '/v1/runs', post()), deps({ allow: () => false }))).status).toBe(429);
     expect((await route(req('GET', '/nope'), deps())).status).toBe(404);
   });
 

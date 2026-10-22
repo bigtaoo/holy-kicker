@@ -5,7 +5,7 @@ import { LIMITS } from './protocol';
 
 /** A request body's limit: a problem report, a challenge run and a collected replay carry a replay, everything else is small. */
 export const MAX_BODY = 32 * 1024;
-const BIG = ['/v1/reports', '/v1/challenge/runs', '/v1/replays'];
+const BIG = ['/v1/reports', '/v1/runs', '/v1/challenge/runs', '/v1/replays'];
 export const maxBody = (path: string) => (BIG.includes(path) ? LIMITS.reportBytes : MAX_BODY);
 
 export function readBody(req: IncomingMessage, limit: number): Promise<unknown> {

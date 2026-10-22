@@ -56,7 +56,8 @@ export interface ChallengeSettled {
   waves: number;
   /** Hours until the next challenge opens. */
   hours: number;
-  reply: Promise<ChallengeRunReply | null>;
+  /** The board's answer; `outdated`: the server moved to another engine during the run, so it was refused. */
+  reply: Promise<ChallengeRunReply | 'outdated' | null>;
   /** A weekly run: the week's best waves before it (0 for the first). */
   weekly?: { before: number };
 }
@@ -197,11 +198,16 @@ export class ChallengeFlow {
     return c;
   }
 
-  /** Takes the challenge run's replay as it ends, before the game is destroyed (a run too long for the wire has none). */
-  capture(game: Game): void {
-    if (!this.run || game.resumed) return;
-    const replay = takeReplay(game.engine, (game.engine.input as LocalInputSource).history, 1);
-    this.replay = replay.cmds.length <= LIMITS.replayNumbers ? { ...replay, config: { ...replay.config } } : null;
+  /**
+   * Takes the run's replay as it ends, before the game is destroyed, keeps it for a challenge run's
+   * settle() and returns it (for the chapter boards). A resumed run (its first ticks are not in the
+   * input history) and a run too long for the wire have none.
+   */
+  capture(game: Game): ReplayWire | null {
+    const replay = game.resumed ? null : takeReplay(game.engine, (game.engine.input as LocalInputSource).history, 1);
+    const wire = replay && replay.cmds.length <= LIMITS.replayNumbers ? { ...replay, config: { ...replay.config } } : null;
+    if (this.run) this.replay = wire;
+    return wire;
   }
 
   /**
@@ -219,7 +225,11 @@ export class ChallengeFlow {
     const send = (ok: boolean) => {
       const reply = ok && ranked && replay ? this.net.submitChallengeRun(c.id, run, replay) : Promise.resolve(null);
       void reply.then((r) => {
-        if (r) this.replies.set(c.id, r);
+        if (r === 'outdated') {
+          // the record names the server's new engine now: fetch it, so the card says to update
+          this.fetchedAt = -Infinity;
+          this.refresh();
+        } else if (r) this.replies.set(c.id, r);
       });
       return reply;
     };

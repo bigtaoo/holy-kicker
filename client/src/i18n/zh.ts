@@ -106,6 +106,7 @@ export const zh: Table<typeof en> = {
     practice: '练习',
     practiceNote: '练习局：今天的奖励已经领过了',
     checking: '正在核对你的成绩…',
+    outdated: '你这局进行时游戏已更新，本局不计入排名。重启游戏后再来挑战',
     top: '前 {n}%',
   },
   mutator: {

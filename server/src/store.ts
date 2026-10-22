@@ -1,8 +1,9 @@
 import { randomBytes } from 'node:crypto';
 import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, type Player } from './players';
-import { ahead, challengeUpdate, freshDoc, settleDoc, standing, topRuns, waiting, type Best, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
-import { RESIM_TOP, WATCH_TOP, boardId, keptGame, runScore, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Game, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { ahead, challengeUpdate, freshDoc, jobOf, settleDoc, standing, topRuns, waiting, type Best, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
+import { boardJob, boardStanding, boardUpdate, boardWaiting, newBest, provisionalRank, settleBoardDoc, shown, type BoardDoc } from './boardDocs';
+import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Game, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
 import { StatsFold, windowOf, type BeaconCount, type DayCounts, type EndCount, type Stats } from './stats';
@@ -15,8 +16,13 @@ export interface Store {
   addEvents(batch: EventBatch, now: number, aud?: Audience): Promise<void>;
   /** Counts one anonymous load checkpoint for its day, host, build and game, and its load-time bucket (protocol loadBucket) if it has one. */
   beacon(host: Host, step: Beacon, build: string, now: number, bucket: string | null, game?: Game): Promise<void>;
-  /** Keeps the run if it is the install's best on its board; returns the run's board and the install's rank there. */
-  submitRun(run: RunEntry, tag: string, now: number): Promise<{ board: string; rank: number; best: boolean }>;
+  /**
+   * Takes a run for its chapter board (boardDocs.ts boardUpdate). A new best with a replay the
+   * server can check waits for its re-simulation (`pending`, made `at`; settleBoardRun); one
+   * without is not kept (`unverified`). The rank is where the run (or the install's standing
+   * best, for `lower`) places among the shown rows: provisional until it is verified.
+   */
+  submitRun(run: RunEntry, tag: string, replay: ReplayWire | null, now: number): Promise<RunTaken>;
   /** Keeps the name the boards show for `tag`: a portal account's or a dice name. */
   setName(tag: string, name: BoardName, now: number): Promise<void>;
   /** The top `limit` rows of a board, and the row of `tag` (may be null). */
@@ -41,8 +47,12 @@ export interface Store {
   challengeRun(entry: ChallengeEntry, now: number): Promise<Omit<ChallengeRunReply, 'tag'>>;
   /** The re-simulation's verdict on the run made at `at`: it enters the board with its pick timeline, or (null) is dropped. */
   settleChallengeRun(board: string, tag: string, at: number, picks: PickWire[] | null): Promise<void>;
-  /** The rows with a run still waiting for its re-simulation (to queue again after a restart). */
-  pendingChallengeRuns(): Promise<ChallengeDoc[]>;
+  /** The re-simulation's verdict on the board run made at `at`: it shows on its board, or is dropped. */
+  settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void>;
+  /** Every run still waiting for its re-simulation, as references (to queue again after a restart). */
+  pendingResims(): Promise<ResimRef[]>;
+  /** The run and replay `ref` names, while its row still holds it waiting; else null. */
+  resimJob(ref: ResimRef): Promise<ResimLoad | null>;
   /** The top `limit` rows of a challenge board, and the row of `tag` (pending or entered). */
   challengeBoard(board: string, limit: number, tag: string | null): Promise<ChallengeBoardReply>;
   /** The replay of `tag`'s run on a weekly board, while it is verified and in the top WATCH_TOP; else null. */
@@ -55,6 +65,8 @@ export interface Store {
    * Returns how many went, or null when it was not due. No other event or collection is touched.
    */
   prune(now: number): Promise<number | null>;
+  /** Resolves once the database answers a round trip (`/health`); rejects or hangs when it does not. */
+  ping(): Promise<void>;
   close(): Promise<void>;
 }
 
@@ -71,6 +83,51 @@ export const pruneDue = (last: number | null, now: number) => last === null || n
 export const pruneKeepFrom = (now: number) => dayOf(now - PERF_KEEP_DAYS * DAY_MS);
 
 export type { Best, ChallengeDoc, ChallengeEntry } from './challengeDocs';
+export type { BoardDoc } from './boardDocs';
+
+/** What submitRun did with a run. */
+export interface RunTaken {
+  board: string;
+  rank: number;
+  /** A new best for the install (verified or not). */
+  best: boolean;
+  status: 'pending' | 'lower' | 'unverified';
+  at: number;
+}
+
+/** A run waiting for its re-simulation, named but not held (its replay stays in the store until its turn). */
+export interface ResimRef {
+  kind: 'challenge' | 'board';
+  board: string;
+  tag: string;
+  at: number;
+}
+
+/** A waiting run as the queue steps it; `what` names it in a problem report. */
+export interface ResimLoad {
+  run: RunEntry;
+  replay: ReplayWire;
+  what: string;
+}
+
+/** The references to a challenge row's and a board row's waiting runs. */
+export function resimRefs(challenges: Iterable<Pick<ChallengeDoc, 'board' | 'tag' | 'at' | 'state' | 'next'>>, boards: Iterable<Pick<BoardDoc, 'board' | 'tag' | 'at' | 'state' | 'next'>>): ResimRef[] {
+  const refs: ResimRef[] = [];
+  for (const d of challenges) if (d.next || d.state === 'pending') refs.push({ kind: 'challenge', board: d.board, tag: d.tag, at: d.next?.at ?? d.at });
+  for (const d of boards) if (d.next || d.state === 'pending') refs.push({ kind: 'board', board: d.board, tag: d.tag, at: d.next?.at ?? d.at });
+  return refs;
+}
+
+/** The run `ref` names from its row (null: gone, or no longer waiting with that run). */
+export function resimLoad(ref: ResimRef, doc: ChallengeDoc | BoardDoc | null | undefined): ResimLoad | null {
+  if (!doc) return null;
+  if (ref.kind === 'challenge') {
+    const job = jobOf(doc as ChallengeDoc);
+    return job && job.at === ref.at ? { run: job.run, replay: job.replay, what: `challenge ${job.challenge}` } : null;
+  }
+  const job = boardJob(doc as BoardDoc);
+  return job && job.at === ref.at ? { run: job.run, replay: job.replay, what: `board ${ref.board}` } : null;
+}
 
 /** A report's id: 16 hex digits, unguessable (the reports are only for the operator anyway). */
 export function reportId(): string {
@@ -100,7 +157,7 @@ export class MemoryStore implements Store {
   readonly players = new Map<string, Player>();
   /** `day/install` of every day an install sent anything. */
   private readonly active = new Set<string>();
-  private readonly best = new Map<string, Best>();
+  private readonly best = new Map<string, BoardDoc>();
   /** The boards' names by tag. */
   readonly names = new Map<string, BoardName>();
   /** Load checkpoints by `day/host/build/step/game` (game empty for the first): the count, and the counts by load-time bucket. */
@@ -136,21 +193,39 @@ export class MemoryStore implements Store {
     this.players.set(batch.install, p);
   }
 
-  private sorted(board: string): Best[] {
+  private sorted(board: string): BoardDoc[] {
     // ties go to whoever got there first
-    return [...this.best.values()].filter((b) => b.board === board).sort((a, b) => b.score - a.score || a.at - b.at);
+    return [...this.best.values()].filter((b) => b.board === board && shown(b)).sort((a, b) => b.score - a.score || a.at - b.at);
   }
 
-  async submitRun(run: RunEntry, tag: string, now: number) {
+  async submitRun(run: RunEntry, tag: string, replay: ReplayWire | null, now: number): Promise<RunTaken> {
     const board = boardId(run.chapter, run.hard, run.game);
     const key = `${board}/${tag}`;
-    const score = runScore(run);
-    const old = this.best.get(key);
-    const best = !old || score > old.score;
-    if (best) this.best.set(key, { board, tag, score, run, at: now });
+    const old = this.best.get(key) ?? null;
+    const b = newBest(board, tag, run, now);
+    const doc = boardUpdate(old, b, replay);
+    if (typeof doc !== 'string') this.best.set(key, doc);
     const name = runName(run);
     if (name) await this.setName(tag, name);
-    return { board, rank: this.sorted(board).findIndex((b) => b.tag === tag) + 1, best };
+    const rank = provisionalRank(doc === 'lower' ? boardStanding(old!) : b, this.sorted(board));
+    return { board, rank, best: doc !== 'lower', status: typeof doc === 'string' ? doc : 'pending', at: now };
+  }
+
+  async settleBoardRun(board: string, tag: string, at: number, ok: boolean): Promise<void> {
+    const key = `${board}/${tag}`;
+    const doc = this.best.get(key);
+    const next = doc && settleBoardDoc(doc, at, ok);
+    if (next === null) this.best.delete(key);
+    else if (next) this.best.set(key, next);
+  }
+
+  async pendingResims(): Promise<ResimRef[]> {
+    return resimRefs([...this.challenges.values()].filter(waiting), [...this.best.values()].filter(boardWaiting));
+  }
+
+  async resimJob(ref: ResimRef): Promise<ResimLoad | null> {
+    const key = `${ref.board}/${ref.tag}`;
+    return resimLoad(ref, ref.kind === 'challenge' ? this.challenges.get(key) : this.best.get(key));
   }
 
   async board(board: string, limit: number, tag: string | null): Promise<BoardReply> {
@@ -248,10 +323,6 @@ export class MemoryStore implements Store {
     else if (next) this.challenges.set(key, next);
   }
 
-  async pendingChallengeRuns(): Promise<ChallengeDoc[]> {
-    return [...this.challenges.values()].filter(waiting);
-  }
-
   async challengeBoard(board: string, limit: number, tag: string | null): Promise<ChallengeBoardReply> {
     const entered = this.entered(board);
     const own = tag ? this.challenges.get(`${board}/${tag}`) : undefined;
@@ -285,6 +356,8 @@ export class MemoryStore implements Store {
     this.lastPrune = now;
     return n;
   }
+
+  async ping(): Promise<void> {}
 
   async close(): Promise<void> {}
 }

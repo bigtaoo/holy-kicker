@@ -106,6 +106,7 @@ export const id: Table<typeof en> = {
     practice: 'Latihan',
     practiceNote: 'Permainan latihan: hadiah hari ini sudah kamu dapat',
     checking: 'Memeriksa permainanmu…',
+    outdated: 'Game diperbarui saat kamu bermain, jadi permainan ini tidak masuk peringkat. Mulai ulang game untuk bermain',
     top: 'Top {n}%',
   },
   mutator: {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CHALLENGE_BOARD, boardId, challengeBoardId, type RunEntry } from './protocol';
 import { route, type Deps, type Req } from './routes';
 import { checkBatch, checkReport, checkRun } from './rules';
-import { MemoryStore } from './store';
+import { MemoryStore, type ResimRef } from './store';
 
 // One backend for Holy Kicker and its corgi reskin (game.ts): each game's numbers and boards apart.
 
@@ -10,8 +10,11 @@ const NOW = Date.parse('2026-10-05T12:00:00Z');
 const MONK = 'abcdefgh1234';
 const CORGI = 'corgi0000001';
 
+// a board run's re-simulation passes at once (board.test.ts checks the real thing)
 function deps(): Deps & { store: MemoryStore } {
-  return { store: new MemoryStore(), tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, resim: { push() {} } } as Deps & { store: MemoryStore };
+  const store = new MemoryStore();
+  const resim = { push: (r: ResimRef) => void store.settleBoardRun(r.board, r.tag, r.at, true) };
+  return { store, tagSalt: 'salt', adminKey: 'key', now: () => NOW, allow: () => true, resim, boardReplay: (_r, p) => p } as Deps & { store: MemoryStore };
 }
 
 function req(method: string, path: string, body?: unknown, headers: Record<string, string> = {}): Req {
@@ -28,6 +31,9 @@ const run = (over: Partial<RunEntry> = {}): RunEntry => ({
   install: MONK, host: 'web', build: '0.0.1', chapter: 1, hard: false, won: false, wave: 20,
   tenths: 3000, level: 12, kills: 900, monk: 'kicker', relic: 'ball', ...over,
 });
+
+const replay = { engine: 1, config: {}, wave: 1, cmds: [], tick: 0, hash: 0 };
+const post = (over: Partial<RunEntry> = {}) => ({ ...run(over), replay });
 
 const admin = { authorization: 'Bearer key' };
 
@@ -55,8 +61,8 @@ describe('games', () => {
 
   it('rank each game\'s runs on its own boards', async () => {
     const d = deps();
-    expect((await route(req('POST', '/v1/runs', run()), d)).body).toMatchObject({ board: 'c1', rank: 1 });
-    expect((await route(req('POST', '/v1/runs', run({ install: CORGI, game: 'corgi', wave: 40 })), d)).body).toMatchObject({ board: 'c1-corgi', rank: 1 });
+    expect((await route(req('POST', '/v1/runs', post()), d)).body).toMatchObject({ board: 'c1', rank: 1 });
+    expect((await route(req('POST', '/v1/runs', post({ install: CORGI, game: 'corgi', wave: 40 })), d)).body).toMatchObject({ board: 'c1-corgi', rank: 1 });
     const monk = (await route(req('GET', '/v1/boards/c1'), d)).body as { total: number; rows: { wave: number }[] };
     expect(monk.total).toBe(1);
     expect(monk.rows[0].wave).toBe(20);

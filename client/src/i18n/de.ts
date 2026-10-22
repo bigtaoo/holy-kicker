@@ -106,6 +106,7 @@ export const de: Table<typeof en> = {
     practice: 'Üben',
     practiceNote: 'Übungslauf: Die Belohnungen von heute hast du schon',
     checking: 'Dein Lauf wird geprüft…',
+    outdated: 'Das Spiel wurde während deines Laufs aktualisiert, daher zählt er nicht für die Rangliste. Starte das Spiel neu',
     top: 'Top {n} %',
   },
   mutator: {
