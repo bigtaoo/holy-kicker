@@ -21,6 +21,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 
 import audio_corgi
 
@@ -135,6 +136,9 @@ def main() -> None:
         pick, _, start = pick.partition('@')
         rel = pick.removeprefix('source/')
         src = os.path.join(a.source, rel)
+        who = credit(rel, authors)
+        if '(CC0)' not in who:
+            sys.exit(f'{slot}: {rel} is {who}; only CC0 sounds ship (the game has no credits screen)')
         clip = clip_filter(start, cut)
         if slot.startswith('music.'):
             track = slot.removeprefix('music.')
@@ -145,7 +149,7 @@ def main() -> None:
             dst = f'sfx/{slot}.mp3'
             encode(src, os.path.join(out, dst), sfx_filters(min(float(cut or MAX_SFX), MAX_SFX), clip), '1', SFX_KBPS)
             manifest['sfx'][slot] = [f'audio/{dst}']
-        used.setdefault(credit(rel, authors), []).append(slot)
+        used.setdefault(who, []).append(slot)
     with open(os.path.join(out, 'sounds.json'), 'w', encoding='utf-8') as f:
         json.dump(manifest, f, indent=1)
         f.write('\n')
