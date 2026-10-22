@@ -4,6 +4,7 @@ import type { MemSample } from '../game/memProbe';
 import type { Platform } from '../platform/types';
 import type { Backend } from './backend';
 import { AnomalyStash } from './anomalyStash';
+import type { EarlyError } from './earlyErrors';
 
 // The `anomaly` event (server/src/protocol.ts AnomalyProps): something gone wrong on the device,
 // sent as it happens. A broken device can repeat the same thing every frame, so each kind is
@@ -79,16 +80,16 @@ function held(m: MemSample): Partial<AnomalyProps> {
   return { tex: m.tex, texMB: m.texMB, nodes: m.nodes, ...(m.heap !== undefined ? { heap: m.heap } : {}) };
 }
 
-/** Hooks the anomaly sources up; the returned `frame` takes each battle frame's length (ms). */
-export function watchAnomalies(app: Application, platform: Platform, net: Backend, probe: () => MemSample, where: Whereabouts): { frame(ms: number): void } {
+/** Hooks the anomaly sources up and reports `early` (earlyErrors.ts); the returned `frame` takes each battle frame's length (ms), `error` a caught error (a frame that threw, Shell.fault). */
+export function watchAnomalies(app: Application, platform: Platform, net: Backend, probe: () => MemSample, where: Whereabouts, early: EarlyError[] = []): { frame(ms: number): void; error(err: unknown): void } {
   const cap = new AnomalyCap();
   const stalls = new StallWatch();
   // a release without a backend keeps them on the device, for the first launch that has one
   const stash = new AnomalyStash(platform.storage);
   const hold = !net.online && !import.meta.env.DEV;
   if (net.online) for (const props of stash.take()) net.track('anomaly', props as unknown as Record<string, PropValue>);
-  const report = (kind: Kind, extra: Partial<AnomalyProps> = {}) => {
-    const { place, wave } = where();
+  const report = (kind: Kind, extra: Partial<AnomalyProps> = {}, at?: string) => {
+    const { place, wave } = at ? { place: at } : where();
     if (!cap.pass(kind)) {
       // past the cap nothing goes out; a development build still prints it (backend.ts prints the rest)
       if (import.meta.env.DEV && import.meta.env.MODE !== 'test') console.info(`[anomaly] ${JSON.stringify({ kind, place, wave, ...extra })}`);
@@ -109,6 +110,8 @@ export function watchAnomalies(app: Application, platform: Platform, net: Backen
     });
     win.addEventListener('unhandledrejection', (e) => report('error', { msg: cleanMsg(e.reason) }));
   }
+  // what went wrong while the game was still booting (earlyErrors.ts)
+  for (const e of early) report('error', e, 'boot');
   platform.onScriptError?.((err, stack) => {
     const src = stackSource(stack);
     report('error', { msg: cleanMsg(err), ...(src ? { src } : {}) });
@@ -119,6 +122,10 @@ export function watchAnomalies(app: Application, platform: Platform, net: Backen
   return {
     frame(ms) {
       if (stalls.frame(ms, hidden())) report('stall', { ms: Math.round(ms) });
+    },
+    error(err) {
+      const src = stackSource((err as { stack?: unknown } | null)?.stack);
+      report('error', { msg: cleanMsg(err), ...(src ? { src } : {}) });
     },
   };
 }

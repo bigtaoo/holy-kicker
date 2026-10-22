@@ -20,12 +20,18 @@ export class MemoryStore implements KeyValueStore {
   }
 }
 
-/** Reads `primary`, and keeps going in memory when it throws (blocked storage, quota). */
+/**
+ * Reads `primary`, and keeps going in memory when it throws (blocked storage, quota). A key whose
+ * last write failed is read from memory until a write of it goes through again: the primary still
+ * holds the older value, and reading it would roll the session back.
+ */
 export class SafeStore implements KeyValueStore {
   private readonly memory = new MemoryStore();
+  private readonly unwritten = new Set<string>();
   constructor(private readonly primary: KeyValueStore | null) {}
 
   getItem(key: string): string | null {
+    if (this.unwritten.has(key)) return this.memory.getItem(key);
     try {
       return this.primary?.getItem(key) ?? this.memory.getItem(key);
     } catch {
@@ -37,8 +43,10 @@ export class SafeStore implements KeyValueStore {
     this.memory.setItem(key, value);
     try {
       this.primary?.setItem(key, value);
+      this.unwritten.delete(key);
     } catch {
-      /* the memory copy keeps this session going */
+      // the memory copy keeps this session going
+      this.unwritten.add(key);
     }
   }
 }

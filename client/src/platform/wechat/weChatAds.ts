@@ -1,3 +1,4 @@
+import { AD_START_MS, within } from '../adTimeout';
 import { NO_ADS, type Ads } from '../types';
 import UNITS from './adUnits.json';
 
@@ -64,7 +65,8 @@ class Slot<Close> {
     if (this.closed) return undefined;
     const close = new Promise<Close | undefined>((r) => (this.closed = r));
     try {
-      await this.ad.show();
+      // a show that never answers is given up like a failed one (adTimeout.ts)
+      await within(this.ad.show(), AD_START_MS);
     } catch {
       this.closed = null;
       if (!retry) {
@@ -73,7 +75,7 @@ class Slot<Close> {
         return undefined;
       }
       try {
-        await this.ad.load();
+        await within(this.ad.load(), AD_START_MS);
       } catch {
         return undefined;
       }
