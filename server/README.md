@@ -49,9 +49,11 @@ is checked whole (`src/rules.ts`) and refused on anything unexpected; a run that
 happened (a win short of the last wave, under 4 s per wave) is refused too. Each caller IP has a
 token bucket per route (`RATES` in `src/routes.ts`, the route's bucket named by `rateOf`), charged
 from the headers before the body is read (429 and the connection closed), and the buckets that
-have filled up again are swept once a minute (`Limiter.SWEEP_MS`). At most `BIG_READS` (4) bodies
+have filled up again are swept once a minute (`Limiter.SWEEP_MS`). At most `BIG_READS` (32) bodies
 over 32 KB (`MAX_BODY`) are read at once (`BodyGate` in `src/http.ts`); past that a big POST gets 503 with
-`retry-after: 5`.
+`retry-after: 5`. Clients before 10-22 drop a run or a report on a 503 rather than retry, and every run
+end sends its replay next to its run, hence the room. A body not fully read within `BODY_MS` (20 s) is
+cut off with 408, so a slow upload cannot hold a place.
 
 **Chapter-board runs** are re-simulated by the same queue as challenge runs (below), with the
 chapter's config rules (`chapterConfig`: all 50 waves, the run's chapter, mode, relic and monk, up
