@@ -35,16 +35,16 @@ export const corgiPt: Table<typeof corgiEn> = {
       crowd: { cause: 'Engolido pelo enxame', tip: 'Contorne o enxame, não entre nele' },
       touch: { cause: 'Esmagado por um inseto grande', tip: 'Fique longe de elites e chefes: deixe sua arma acertá-los' },
       emerge: { cause: 'Agarrado por baixo', tip: 'Chão rachado é inseto cavando: saia das rachaduras' },
-      level: { cause: 'Fraco demais para a onda {wave}', tip: 'Pegue cada petisco: níveis vencem as últimas ondas' },
+      level: { cause: 'Fraco demais para a onda {wave}', tip: 'Pegue todos os petiscos: os níveis decidem as últimas ondas' },
     },
     goal: {
-      shrine: 'Só mais {n} até o suprimento da onda {wave}',
+      shrine: 'Só mais {n} até os suprimentos da onda {wave}',
       clear: 'Só mais {n} para vencer o planeta',
     },
   },
   board: {
     title: 'Planeta {n}: {name}',
-    nouns: 'Corgi|Cometa|Foguete|Filhote|Nova|Biscoito|Meteoro|Pixel|Gatinho|Órbita|Seixo|Rover|Estrela|Lua|Laser|Rosquinha',
+    nouns: 'Corgi|Cometa|Foguete|Filhote|Asteroide|Biscoito|Meteoro|Pixel|Gatinho|Satélite|Seixo|Rover|Astro|Robô|Laser|Bolinho',
   },
   challenge: {
     rule2: 'Seu próprio equipamento e arma, sem reviver',
@@ -71,7 +71,7 @@ export const corgiPt: Table<typeof corgiEn> = {
     },
   },
   evolve: {
-    ball: { name: 'Quebra-Estrelas', desc: 'Divide-se em {n} tiros a cada quique' },
+    ball: { name: 'Quebra-Estrelas', desc: 'Se divide em {n} tiros a cada quique' },
     staff: { name: 'Sabre Duplo' },
     fish: { name: 'Núcleo de Choque', desc: 'A cada {n} pulsos, atordoa por {s}s' },
     beads: { name: 'Enxame de Drones', desc: 'Um segundo anel de drones gira ao contrário' },
@@ -91,7 +91,7 @@ export const corgiPt: Table<typeof corgiEn> = {
   shrine: {
     heal: { name: 'Kit Médico' },
     insight: { name: 'Informações' },
-    offering: { name: 'Recompensa', desc: 'Sobreviva até o próximo suprimento ou o fim:', more: 'parafusos da partida +{n}%' },
+    offering: { name: 'Recompensa', desc: 'Sobreviva até os próximos suprimentos ou o fim:', more: 'parafusos da partida +{n}%' },
   },
   relic: {
     ball: { name: 'Blaster Ricochete', desc: 'Dispara um tiro que quica entre os insetos' },
@@ -235,7 +235,7 @@ export const corgiPt: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Colete da patrulha',
     kills: 'Estoure {n} {n|one:inseto|other:insetos}',
-    reward: 'Cada: {copper} parafusos, {jade} gemas',
+    reward: 'Cada uma: {copper} parafusos, {jade} gemas',
     bonus: 'Tudo resgatado: +{jade} gemas',
   },
   achieve: {

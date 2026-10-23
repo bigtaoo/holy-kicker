@@ -32,9 +32,9 @@ export const monkVi: Table<typeof monkEn> = {
     reviveFree: 'Hồi sinh (tu luyện)',
     fall: {
       crowd: { cause: 'Bị bầy quái nhấn chìm', tip: 'Đi vòng quanh bầy quái, đừng lao vào' },
-      touch: { cause: 'Bị kẻ thù lớn đè bẹp', tip: 'Tránh xa tinh anh và trùm: để bảo vật đánh chúng' },
-      emerge: { cause: 'Bị tóm từ dưới đất', tip: 'Đất nứt là quái sắp trồi lên: rời khỏi vết nứt' },
-      level: { cause: 'Quá yếu cho đợt {wave}', tip: 'Nhặt hết ngọc: cấp độ quyết định các đợt cuối' },
+      touch: { cause: 'Bị kẻ địch lớn đè bẹp', tip: 'Tránh xa tinh anh và trùm: để pháp khí đánh chúng' },
+      emerge: { cause: 'Bị tóm từ dưới đất', tip: 'Đất nứt là kẻ địch sắp trồi lên: rời khỏi vết nứt' },
+      level: { cause: 'Quá yếu cho đợt {wave}', tip: 'Nhặt hết đá quý: cấp độ quyết định các đợt cuối' },
     },
     goal: {
       shrine: 'Chỉ còn {n} đến miếu đợt {wave}',
@@ -46,13 +46,13 @@ export const monkVi: Table<typeof monkEn> = {
     nouns: 'Sư|Sen|Hạc|Hổ|Thông|Chuông|Lồng Đèn|Gấu Trúc|Rồng|Liễu|Sỏi|Khỉ|Cá Chép|Mây|Trống|Trúc',
   },
   challenge: {
-    rule2: 'Trang bị và thánh vật của bạn, không hồi sinh',
+    rule2: 'Trang bị và pháp khí của bạn, không hồi sinh',
   },
   mutator: {
     swift: 'Bầy nhanh nhẹn', swiftInfo: 'bầy quái di chuyển nhanh hơn', glass: 'Nhà sư thủy tinh',
   },
   weekly: {
-    rule1: 'Mọi người chơi cùng một lượt: cùng kẻ địch, nhà sư, bảo vật và phép', rule2: 'Không trang bị, không tu luyện, không hồi sinh',
+    rule1: 'Mọi người chơi cùng một trận: cùng kẻ địch, nhà sư, pháp khí và phép', rule2: 'Không trang bị, không tu luyện, không hồi sinh',
   },
   tutorial: {
     auto: 'Cú đá của bạn là tự động',
@@ -107,8 +107,8 @@ export const monkVi: Table<typeof monkEn> = {
     cymbal: { name: 'Chũm Chọe Bay', desc: '{n} chũm chọe bay ra xuyên thấu và nảy bật', count: 'Chũm chọe {a} → {b}' },
     lotus: { name: 'Bước Sen', desc: 'Đi đến đâu gieo hạt sen, sen nở tung cánh hoa' },
     halo: { name: 'Phật Quang', desc: 'Tia sáng xoay và bắn kim sáng, đứng yên thì dài hơn', count: 'Tia {a} → {b}' },
-    roar: { name: 'Sư Tử Hống', desc: 'Hét vào kẻ địch gần nhất, đẩy lùi kẻ thù' },
-    talisman: { name: 'Bùa Hàng Ma', desc: '{n} lá bùa đuổi theo các kẻ thù khác nhau', count: 'Bùa {a} → {b}' },
+    roar: { name: 'Sư Tử Hống', desc: 'Hét vào kẻ địch gần nhất, đẩy lùi chúng' },
+    talisman: { name: 'Bùa Hàng Ma', desc: '{n} lá bùa đuổi theo các kẻ địch khác nhau', count: 'Bùa {a} → {b}' },
     bomb: { name: 'Lửa Sấm Sét', desc: 'Quả bom ném ra nổ thành {n} bom con', count: 'Bom con {a} → {b}' },
     knives: { name: 'Vòng Đao', desc: 'Tối đa {n} con dao xoay quanh bạn, rồi bay ra', count: 'Dao {a} → {b}' },
   },

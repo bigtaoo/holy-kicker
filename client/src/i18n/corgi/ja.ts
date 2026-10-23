@@ -74,7 +74,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     ball: { name: 'スターブレイカー', desc: 'バウンドのたびに{n}発に分裂' },
     staff: { name: 'ツインセイバー' },
     fish: { name: 'ショックコア', desc: '{n}回目ごとのパルスが{s}秒スタン' },
-    beads: { name: 'ドローン群', desc: '逆回転する輪がもう一つ' },
+    beads: { name: 'ドローン群', desc: '逆回転するドローンの輪がもう一つ' },
     bowl: { name: 'ソーストーム', desc: '1投で虫を{n}匹撃ち抜き、経験値を即獲得' },
     palm: { name: '軌道砲撃', desc: 'クレーターが残り、虫を{s}秒釘付け' },
     bolt: { name: 'テスラストーム' },
@@ -86,7 +86,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     roar: { name: 'ソニックバーク', desc: '全方位に吠え、弾を砕く' },
     talisman: { name: 'ミサイルストーム', desc: '命中したミサイルが炸裂し、周りの虫も巻き込む' },
     bomb: { name: '絨毯爆撃', desc: '一度に{n}個の手榴弾を別々の虫へ投げる' },
-    knives: { name: 'ブレードストーム', desc: '放った刀が戻ってきて、行きも帰りも斬る' },
+    knives: { name: 'ブレードストーム', desc: '放ったナイフが戻ってきて、行きも帰りも斬る' },
   },
   shrine: {
     heal: { name: 'メディキット' },
@@ -109,9 +109,9 @@ export const corgiJa: Table<typeof corgiEn> = {
     lotus: { name: '近接地雷', desc: '歩くと地雷を落とし、爆発で破片が飛ぶ' },
     halo: { name: 'レーザータレット', desc: 'レーザーが回り光弾を撃つ、立ち止まると長くなる', count: 'レーザー {a} → {b}本' },
     roar: { name: 'メガバーク', desc: '最も近い虫へ吠え、群れを押し返す' },
-    talisman: { name: '追尾ミサイル', desc: '{n} 発のミサイルがそれぞれ別の虫を追う', count: 'ミサイル {a} → {b}' },
-    bomb: { name: 'クラスター弾', desc: '投げた手榴弾が {n} 個の子爆弾に弾ける', count: '子爆弾 {a} → {b}' },
-    knives: { name: 'ナイフリング', desc: '最大 {n} 本の刀が周りを回り、揃うと一斉に飛ぶ', count: '刀 {a} → {b}' },
+    talisman: { name: '追尾ミサイル', desc: '{n}発のミサイルがそれぞれ別の虫を追う', count: 'ミサイル {a} → {b}' },
+    bomb: { name: 'クラスター弾', desc: '投げた手榴弾が{n}個の子爆弾に弾ける', count: '子爆弾 {a} → {b}' },
+    knives: { name: 'ナイフリング', desc: '最大{n}本のナイフが周りを回り、揃うと一斉に飛ぶ', count: 'ナイフ {a} → {b}' },
   },
   passive: {
     calm: { name: 'クーラント', desc: 'ガジェットのクールダウン −{n}%', blurb: 'ガジェットがより早く使える' },
@@ -197,7 +197,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     sutra: '設計図：{goal}',
   },
   sutra: {
-    wave: 'いずれかの惑星でウェーブ{n}に到達',
+    wave: 'いずれかの惑星でウェーブ {n}に到達',
     clear: '惑星{n}をクリア',
   },
   results: {
@@ -215,12 +215,12 @@ export const corgiJa: Table<typeof corgiEn> = {
     doubled: 'ボルトが2倍に！',
   },
   shop: {
-    jade: 'ジェムの箱',
+    jade: 'ジェム宝箱',
     freeInfo: 'ボルト{copper}と装備{n}個',
     adInfo: 'ジェム{jade}と装備{n}個',
     jadeInfo: '惑星{chapter}の装備{n}個',
     price: 'ジェム{jade}',
-    noJade: 'ジェムが足りない',
+    noJade: 'ジェムが足りません',
   },
   patrol: {
     title: '巡回',
@@ -252,7 +252,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     jade: 'ジェム +{n}',
   },
   gear: {
-    noCopper: 'ボルトが足りない',
+    noCopper: 'ボルトが足りません',
     item: {
       pendant: 'ドッグタグ',
       bracers: 'ガントレット',

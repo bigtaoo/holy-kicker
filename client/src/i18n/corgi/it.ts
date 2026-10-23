@@ -34,11 +34,11 @@ export const corgiIt: Table<typeof corgiEn> = {
       crowd: { cause: 'Travolto dallo sciame', tip: 'Gira intorno allo sciame, non entrarci' },
       touch: { cause: 'Schiacciato da un grosso insetto', tip: 'Stai lontano da élite e boss: lascia colpire la tua arma' },
       emerge: { cause: 'Afferrato dal basso', tip: 'Il terreno crepato annuncia un insetto che scava: allontanati dalle crepe' },
-      level: { cause: 'Troppo debole per l’ondata {wave}', tip: 'Raccogli ogni bocconcino: i livelli vincono le ultime ondate' },
+      level: { cause: 'Troppo debole per l’ondata {wave}', tip: 'Raccogli ogni bocconcino: sono i livelli a vincere le ultime ondate' },
     },
     goal: {
-      shrine: 'Solo {n} al rifornimento dell’ondata {wave}',
-      clear: 'Solo {n} per finire il pianeta',
+      shrine: 'Ancora {n} per il rifornimento dell’ondata {wave}',
+      clear: 'Ancora {n} per finire il pianeta',
     },
   },
   board: {
@@ -46,13 +46,13 @@ export const corgiIt: Table<typeof corgiEn> = {
     nouns: 'Corgi|Cucciolo|Razzo|Meteorite|Pixel|Gattino|Rover|Satellite|Pianeta|Laser|Bagel|Biscotto|Astronauta|Robot|Sasso|Asteroide',
   },
   challenge: {
-    rule2: 'Il tuo equipaggiamento e la tua arma, niente rianimazioni',
+    rule2: 'Il tuo equipaggiamento e la tua arma, niente rinascite',
   },
   mutator: {
     swift: 'Sciame rapido', swiftInfo: 'lo sciame si muove più veloce', glass: 'Corgi di vetro',
   },
   weekly: {
-    rule1: 'Tutti giocano con lo stesso eroe, arma e progetti', rule2: 'Niente equipaggiamento, campo o rinascite',
+    rule1: 'Tutti giocano con lo stesso eroe, la stessa arma e gli stessi progetti', rule2: 'Niente equipaggiamento, campo o rinascite',
   },
   tutorial: {
     auto: 'La tua arma spara da sola',
@@ -135,7 +135,7 @@ export const corgiIt: Table<typeof corgiEn> = {
     twins: 'Scarabei Ariete Gemelli',
   },
   story: {
-    monk: 'Comando',
+    monk: 'Commando',
     c1: {
       midBefore: 'Due di loro? Allora due colpi.',
       midAfter: 'E ora, dov’è il grosso?',
@@ -242,7 +242,7 @@ export const corgiIt: Table<typeof corgiEn> = {
     clear: 'Completa il pianeta {n}',
     hard: 'Completa il pianeta difficile {n}',
     trained: 'Allenati {n} {n|one:volta|other:volte} al campo',
-    monks: 'Possiedi tutti i {n} eroi',
+    monks: 'Recluta tutti i {n} eroi',
     reward: '+{jade} gemme',
     claimAll: 'Riscuoti tutto: +{jade} gemme',
   },

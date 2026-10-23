@@ -4,7 +4,7 @@ import type { monkEn } from './en';
 // Holy Kicker in German: the same keys as monk/en.ts.
 export const monkDe: Table<typeof monkEn> = {
   lobby: {
-    guest: 'Mönch',
+    guest: 'Kleiner Mönch',
     chapterTitle: 'Kapitel {n}: {name}',
     unlockAtChapter: 'Schaffe Kapitel {n} zum Freischalten',
     hardLocked: 'Schaffe dieses Kapitel mit 3 Sternen für den schweren Modus',
@@ -15,11 +15,11 @@ export const monkDe: Table<typeof monkEn> = {
     play: 'Mit ihm spielen',
     kicker: { name: 'Kickermönch' },
     fat: { name: 'Dicker Mönch', role: 'Bauchprall: Jeder Treffer, den er einsteckt, stößt nahe Feinde weg' },
-    novice: { name: 'Kleiner Novize', role: 'Leichtfuß: Im Lauf verfehlt ihn 1 von {n} Treffern' },
+    novice: { name: 'Kleiner Novize', role: 'Leichtfuß: In Bewegung verfehlt ihn 1 von {n} Treffern' },
   },
   tab: {
     train: 'Training',
-    unlockChapter: 'Ab Kapitel {n} geschafft',
+    unlockChapter: 'Nach Kapitel {n}',
   },
   chapter: {
     1: 'Tempelruine',
@@ -34,7 +34,7 @@ export const monkDe: Table<typeof monkEn> = {
       crowd: { cause: 'Von der Horde überrannt', tip: 'Lauf um die Horde herum, nicht in sie hinein' },
       touch: { cause: 'Von einem großen Feind zermalmt', tip: 'Halte Abstand zu Elites und Bossen: lass deine Reliquie treffen' },
       emerge: { cause: 'Von unten gepackt', tip: 'Risse im Boden heißen, ein Feind steigt auf: geh von den Rissen weg' },
-      level: { cause: 'Zu schwach für Welle {wave}', tip: 'Sammle jedes Juwel: Stufen gewinnen die späten Wellen' },
+      level: { cause: 'Zu schwach für Welle {wave}', tip: 'Sammle jeden Edelstein: Stufen gewinnen die späten Wellen' },
     },
     goal: {
       shrine: 'Nur noch {n} bis zum Schrein bei Welle {wave}',
@@ -52,7 +52,7 @@ export const monkDe: Table<typeof monkEn> = {
     swift: 'Flinke Horde', swiftInfo: 'die Horde ist schneller', glass: 'Gläserner Mönch',
   },
   weekly: {
-    rule1: 'Alle spielen denselben Lauf: gleiche Feinde, gleicher Mönch, Relikt und Zauber', rule2: 'Keine Ausrüstung, kein Training, keine Wiederbelebung',
+    rule1: 'Alle spielen denselben Lauf: gleiche Feinde, gleicher Mönch, gleiche Reliquie und Zauber', rule2: 'Keine Ausrüstung, kein Training, keine Wiederbelebung',
   },
   tutorial: {
     auto: 'Deine Tritte gehen automatisch',
@@ -105,9 +105,9 @@ export const monkDe: Table<typeof monkEn> = {
     incense: { name: 'Weihrauchring', desc: 'Ein Ring brennt {s}s lang zu deinen Füßen' },
     bell: { name: 'Goldene Glocke', desc: 'Blockt alle {s}s einen Treffer, dann knallt sie' },
     cymbal: { name: 'Fliegende Becken', desc: '{n} Becken fliegen los, durchbohren und prallen ab', count: 'Becken {a} → {b}' },
-    lotus: { name: 'Lotusschritte', desc: 'Beim Gehen säst du Lotussamen, Blüten verstreuen Blätter' },
+    lotus: { name: 'Lotusschritte', desc: 'Beim Gehen säst du Lotussamen, die unter Feinden in Blütenblätter zerplatzen' },
     halo: { name: 'Heiligenstrahl', desc: 'Ein Strahl kreist und schießt Nadeln, länger im Stillstand', count: 'Strahlen {a} → {b}' },
-    roar: { name: 'Löwengebrüll', desc: 'Ein Schrei zum nächsten Feind stößt Gegner zurück' },
+    roar: { name: 'Löwengebrüll', desc: 'Ein Schrei zum nächsten Feind stößt Feinde zurück' },
     talisman: { name: 'Bannsiegel', desc: '{n} Siegel jagen verschiedene Feinde', count: 'Siegel {a} → {b}' },
     bomb: { name: 'Donnerfeuer', desc: 'Eine geworfene Bombe zerplatzt in {n} Minibomben', count: 'Minibomben {a} → {b}' },
     knives: { name: 'Klingenkreis', desc: 'Bis zu {n} Messer kreisen um dich, dann fliegen sie los', count: 'Messer {a} → {b}' },
@@ -140,7 +140,7 @@ export const monkDe: Table<typeof monkEn> = {
       midBefore: 'Zwei von euch? Dann eben zwei Tritte.',
       midAfter: 'So, wo steckt der Abt?',
       bossBefore: 'Zehn Jahre hast du meine Hallen gefegt. Heute fege ich dich hinaus.',
-      bossAfter: 'Meisters Augen waren voller Finsternis... Sie kam aus dem Sumpf.',
+      bossAfter: 'Die Augen des Meisters waren voller Finsternis... Sie kam aus dem Sumpf.',
     },
     c2: {
       midBefore: 'Die Finsternis gab mir ein zweites Leben!',
@@ -188,7 +188,7 @@ export const monkDe: Table<typeof monkEn> = {
       bossAfter: 'Sie kommen immer wieder, einer nach dem anderen. Er muss nah sein.',
     },
     finale: {
-      bossBefore: 'Jeder Gegner, den du je getreten hast, hier auf einmal. Und ich führe sie an.',
+      bossBefore: 'Jeder Feind, den du je getreten hast, hier auf einmal. Und ich führe sie an.',
       bossAfter: 'Alle ruhen sie, und du auch. Jetzt kann ich endlich den Tempel fegen.',
     },
   },
@@ -215,9 +215,9 @@ export const monkDe: Table<typeof monkEn> = {
   },
   shop: {
     jade: 'Jadetruhe',
-    freeInfo: '{copper} Kupfer und {n} Ausrüstung',
-    adInfo: '{jade} Jade und {n} Ausrüstung',
-    jadeInfo: '{n} Ausrüstung aus Kapitel {chapter}',
+    freeInfo: '{copper} Kupfer und {n}× Ausrüstung',
+    adInfo: '{jade} Jade und {n}× Ausrüstung',
+    jadeInfo: '{n}× Ausrüstung aus Kapitel {chapter}',
     price: '{jade} Jade',
     noJade: 'Nicht genug Jade',
   },
@@ -227,8 +227,8 @@ export const monkDe: Table<typeof monkEn> = {
     tooSoon: 'Patrouilliere erst noch etwas länger',
     quick: 'Schnellpatrouille',
     quickAd: 'Schnell (noch {n})',
-    pays: 'Bisher: {copper} Kupfer, {n} Ausrüstung',
-    quickInfo: '{copper} Kupfer und {n} Ausrüstung sofort',
+    pays: 'Bisher: {copper} Kupfer, {n}× Ausrüstung',
+    quickInfo: '{copper} Kupfer und {n}× Ausrüstung sofort',
     quickJade: '{jade} Jade (noch {n})',
   },
   tasks: {

@@ -33,9 +33,9 @@ export const corgiTr: Table<typeof corgiEn> = {
     reviveFree: 'Diril (kamp)',
     fall: {
       crowd: { cause: 'Sürüye boğuldun', tip: 'Sürünün etrafında dön, içine yürüme' },
-      touch: { cause: 'Büyük bir böcek ezdi', tip: 'Seçkinlerden ve patronlardan uzak dur: silahın vursun' },
+      touch: { cause: 'Büyük bir böcek seni ezdi', tip: 'Seçkinlerden ve patronlardan uzak dur: silahın vursun' },
       emerge: { cause: 'Aşağıdan yakalandın', tip: 'Çatlak zemin, kazıp çıkan bir böcek demek: çatlaklardan uzaklaş' },
-      level: { cause: '{wave}. dalga için çok zayıf', tip: 'Her ikramı topla: son dalgaları seviye kazanır' },
+      level: { cause: '{wave}. dalga için çok zayıftın', tip: 'Her ikramı topla: son dalgaları seviye kazanır' },
     },
     goal: {
       shrine: '{wave}. dalgadaki ikmale sadece {n} kaldı',
@@ -53,7 +53,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     swift: 'Hızlı sürü', swiftInfo: 'sürü daha hızlı hareket eder', glass: 'Cam corgi',
   },
   weekly: {
-    rule1: 'Herkes aynı kahraman, silah ve şemalarla oynar', rule2: 'Ekipman, kamp ve dirilme yok',
+    rule1: 'Herkes aynı kahraman, silah ve şemalarla oynar', rule2: 'Ekipman, kamp ve diriliş yok',
   },
   tutorial: {
     auto: 'Silahın kendiliğinden ateş eder',
@@ -63,7 +63,7 @@ export const corgiTr: Table<typeof corgiEn> = {
   card: {
     beads: 'Dron {a} → {b}',
     shrine: 'İkmal',
-    awaken: 'Aşırı Yük!',
+    awaken: 'Tam Güç!',
     step: {
       cooldown: 'Gadget bekleme {a} → {b}',
       area: 'Gadget alanı {a} → {b}',
@@ -108,7 +108,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     cymbal: { name: 'Testere Bıçağı', desc: '{n} testere fırlar, deler geçer ve seker', count: 'Testere {a} → {b}' },
     lotus: { name: 'Yakınlık Mayınları', desc: 'Yürürken mayın bırakır, patlayınca şarapnel saçar' },
     halo: { name: 'Lazer Kulesi', desc: 'Bir lazer döner ve dart atar, dururken uzar', count: 'Lazer {a} → {b}' },
-    roar: { name: 'Mega Havlama', desc: 'En yakın böceğe havlamak sürüyü geri iter' },
+    roar: { name: 'Mega Havlama', desc: 'En yakın böceğe doğru bir havlama sürüyü geri iter' },
     talisman: { name: 'Güdümlü Füzeler', desc: '{n} füze farklı böceklerin peşine düşer', count: 'Füze {a} → {b}' },
     bomb: { name: 'Misket Bombası', desc: 'Atılan el bombası {n} küçük bombaya ayrılır', count: 'Küçük bomba {a} → {b}' },
     knives: { name: 'Bıçak Halkası', desc: 'En fazla {n} bıçak etrafında döner, sonra fırlar', count: 'Bıçak {a} → {b}' },
@@ -119,7 +119,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     legs: { name: 'Jet Botlar' },
     eye: { name: 'Geniş Lens', desc: 'Gadget alanı +%{n}', blurb: 'Gadget’ların daha geniş alana vurur' },
     rice: { name: 'Mama' },
-    wrath: { name: 'Dürbün' },
+    wrath: { name: 'Nişangâh' },
     karma: { name: 'İkram Mıknatısı' },
     focus: { name: 'Pil', desc: 'Gadget süresi +%{n}, darbe sonrası koruma +%{m}', blurb: 'Gadget’lar daha uzun sürer, darbeden sonra daha güvende' },
   },
@@ -157,7 +157,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     },
     c4: {
       midBefore: 'Bir kraliçenin yumurtası hiç bitmez.',
-      midAfter: 'Benim de atışlarım.',
+      midAfter: 'Benim de atışlarım bitmez.',
       bossBefore: 'Aklını okudum, küçük köpek. İkramla dolu.',
       bossAfter: 'Yıldız haritasına göre sinyal Kovan Çekirdeği\'nden geliyor. Sağ ol!',
     },
@@ -218,7 +218,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     jade: 'Elmas sandık',
     freeInfo: '{copper} cıvata ve {n} eşya',
     adInfo: '{jade} elmas ve {n} eşya',
-    jadeInfo: 'Gezegen {chapter} eşyası: {n} adet',
+    jadeInfo: '{chapter}. gezegenden {n} eşya',
     price: '{jade} elmas',
     noJade: 'Elmas yetersiz',
   },

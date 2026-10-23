@@ -124,7 +124,7 @@ export const corgiEn: Table<typeof monkEn> = {
     rice: { name: 'Kibble' },
     wrath: { name: 'Scope' },
     karma: { name: 'Treat Magnet' },
-    focus: { name: 'Battery', desc: 'Gadget duration +{n}%, guard after a hit +{m}%', blurb: 'Gadgets last longer; safer after a hit' },
+    focus: { name: 'Battery', desc: 'Gadget duration +{n}%, invincibility after a hit +{m}%', blurb: 'Gadgets last longer; safer after a hit' },
   },
   boss: {
     abbot: 'Titan Beetle',

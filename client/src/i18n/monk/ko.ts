@@ -4,10 +4,10 @@ import type { monkEn } from './en';
 // Holy Kicker in Korean: the same keys as monk/en.ts.
 export const monkKo: Table<typeof monkEn> = {
   lobby: {
-    guest: '동자승',
+    guest: '꼬마 스님',
     chapterTitle: '{n}장: {name}',
     unlockAtChapter: '{n}장 클리어 시 해금',
-    hardLocked: '이 장을 별 3개로 클리어하면 어려움 모드가 열립니다',
+    hardLocked: '이 장을 별 3개로 클리어하면 어려움 모드가 열려요',
     relic: '법구',
   },
   monk: {
@@ -31,14 +31,14 @@ export const monkKo: Table<typeof monkEn> = {
   run: {
     reviveFree: '부활 (수련)',
     fall: {
-      crowd: { cause: '무리에 휩쓸림', tip: '무리 주위를 돌아요, 안으로 들어가지 마세요' },
-      touch: { cause: '거대한 적에게 짓눌림', tip: '정예와 보스에게서 떨어져 성물이 때리게 하세요' },
+      crowd: { cause: '무리에 휩쓸림', tip: '무리 주위를 돌고, 안으로 들어가지 마세요' },
+      touch: { cause: '거대한 적에게 짓눌림', tip: '정예와 보스에게서 떨어져 법구가 때리게 하세요' },
       emerge: { cause: '땅속에서 붙잡힘', tip: '갈라진 땅은 적이 솟아오른다는 뜻: 균열에서 벗어나세요' },
       level: { cause: '{wave} 웨이브에는 레벨 부족', tip: '보석을 모두 주우세요: 후반은 레벨 싸움이에요' },
     },
     goal: {
       shrine: '{wave} 웨이브 사당까지 {n} 남음',
-      clear: '챕터 클리어까지 {n} 남음',
+      clear: '이 장 클리어까지 {n} 남음',
     },
   },
   board: {
@@ -46,13 +46,13 @@ export const monkKo: Table<typeof monkEn> = {
     nouns: '스님|연꽃|학|호랑이|소나무|종|등롱|판다|용|버들|조약돌|원숭이|잉어|구름|북|대나무',
   },
   challenge: {
-    rule2: '내 장비와 유물로, 부활 없이',
+    rule2: '내 장비와 법구로, 부활 없이',
   },
   mutator: {
     swift: '날쌘 무리', swiftInfo: '적 무리가 더 빨리 움직임', glass: '유리 몸',
   },
   weekly: {
-    rule1: '모두 같은 판: 같은 적, 승려, 유물, 술법', rule2: '장비, 수련, 부활 없음',
+    rule1: '모두 같은 판: 같은 적, 무승, 법구, 술법', rule2: '장비, 수련, 부활 없음',
   },
   tutorial: {
     auto: '발차기는 자동이에요',
@@ -74,7 +74,7 @@ export const monkKo: Table<typeof monkEn> = {
     staff: { name: '여의 선장' },
     fish: { name: '새벽종', desc: '{n}번째 음파마다 {s}초 기절' },
     beads: { name: '백팔 염주', desc: '두 번째 고리가 반대로 회전' },
-    bowl: { name: '밑 빠진 발우', desc: '한 번 던질 때 적 {n}명을 삼키고 경험치 즉시 획득' },
+    bowl: { name: '밑 빠진 발우', desc: '한 번 던질 때 적 {n}마리를 삼키고 경험치 즉시 획득' },
     palm: { name: '오지산', desc: '그 자리에 남아 적을 {s}초 묶음' },
     bolt: { name: '뇌음' },
     incense: { name: '치유의 향' },
@@ -83,9 +83,9 @@ export const monkKo: Table<typeof monkEn> = {
     lotus: { name: '보보생련', desc: '걸음마다 연꽃, 피어나며 보석을 끌어옴' },
     halo: { name: '무량광', desc: '광선 {n}줄이 주위를 돌며 빛의 바늘을 쏨' },
     roar: { name: '사자왕 포효', desc: '사방으로 포효, 탄환을 부숨' },
-    talisman: { name: '천강부진', desc: '명중한 부적이 부인으로 터진다' },
-    bomb: { name: '벽력뇌우', desc: '화뢰 {n}개를 한 번에 서로 다른 적에게 던진다' },
-    knives: { name: '만인귀종', desc: '날린 칼이 돌아와 오가며 벤다' },
+    talisman: { name: '천강부진', desc: '명중한 부적이 부인으로 터짐' },
+    bomb: { name: '벽력뇌우', desc: '화뢰 {n}개를 한 번에 서로 다른 적에게 던짐' },
+    knives: { name: '만인귀종', desc: '날린 칼이 돌아와 오가며 벰' },
   },
   shrine: {
     heal: { name: '치유' },
@@ -101,7 +101,7 @@ export const monkKo: Table<typeof monkEn> = {
   },
   spell: {
     palm: { name: '여래장', desc: '거대한 손바닥이 가장 큰 무리를 내리침', count: '손바닥 {a} → {b}' },
-    bolt: { name: '금강뢰', desc: '번개가 적 {n}명을 건너뜀' },
+    bolt: { name: '금강뢰', desc: '번개가 적 {n}마리를 건너뜀' },
     incense: { name: '향불진', desc: '발밑에서 향불 고리가 {s}초간 탐' },
     bell: { name: '금종조', desc: '{s}초마다 공격을 한 번 막고 폭발' },
     cymbal: { name: '비발', desc: '바라 {n}개를 연달아 던져 관통하고 튕김', count: '바라 {a} → {b}개' },
@@ -113,14 +113,14 @@ export const monkKo: Table<typeof monkEn> = {
     knives: { name: '계도진', desc: '칼 최대 {n}자루가 주위를 돌다 한꺼번에 날아감', count: '칼 {a} → {b}' },
   },
   passive: {
-    calm: { name: '선심', desc: '술법 재사용 대기 −{n}%', blurb: '술법을 더 빨리 다시 쓴다' },
+    calm: { name: '선심', desc: '술법 재사용 대기 −{n}%', blurb: '술법을 더 빨리 다시 써요' },
     iron: { name: '철두공' },
     legs: { name: '나한각' },
-    eye: { name: '혜안', desc: '술법 범위 +{n}%', blurb: '술법이 더 넓게 맞힌다' },
+    eye: { name: '혜안', desc: '술법 범위 +{n}%', blurb: '술법 범위가 넓어져요' },
     rice: { name: '공양밥' },
     wrath: { name: '분노' },
     karma: { name: '선연' },
-    focus: { name: '집중', desc: '술법 지속 +{n}%, 피격 후 무적 +{m}%', blurb: '술법이 오래가고, 맞은 뒤 더 안전' },
+    focus: { name: '집중', desc: '술법 지속 +{n}%, 피격 후 무적 +{m}%', blurb: '술법이 오래가고, 맞은 뒤 더 안전해요' },
   },
   boss: {
     abbot: '타락한 방장',
@@ -233,12 +233,12 @@ export const monkKo: Table<typeof monkEn> = {
   },
   tasks: {
     patrol: '순찰 보상 받기',
-    kills: '적 {n}명 처치',
+    kills: '적 {n}마리 처치',
     reward: '각각: 동전 {copper}개, 옥 {jade}개',
     bonus: '모두 받음: 옥 +{jade}',
   },
   achieve: {
-    kills: '누적 적 {n}명 처치',
+    kills: '누적 적 {n}마리 처치',
     clear: '{n}장 클리어',
     hard: '어려움 {n}장 클리어',
     trained: '수련 {n}회',
@@ -268,7 +268,7 @@ export const monkKo: Table<typeof monkEn> = {
     3: '귀중',
     4: '신성',
     5: '천상',
-    6: '신품',
+    6: '신령',
     7: '지고',
   },
   stat: {
