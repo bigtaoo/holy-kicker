@@ -70,7 +70,6 @@ export class Shell {
   onQualityMode: (mode: QualityMode) => void = () => {};
   /** The `perf` sender (boot.ts feeds it the battle frames); a meter per real run. */
   perf: PerfReport | null = null;
-  cloud: SettingsActions['cloud'] = null; // the cloud save's settings rows (boot.ts), unset where the host has its own
   private loading = false; // a chapter's art pack is being fetched; taps on play wait for it
   private readonly lobbyArt: LobbyArtLoad;
   private readonly challenge: ChallengeFlow; // the challenges: their records, the run in play and its replay, the weeks to pay
@@ -265,7 +264,7 @@ export class Shell {
       settings: storedSettings(this.platform.storage, this.sound, {
         setLanguage: () => this.showLobby('settings'),
         setQuality: (quality) => this.onQualityMode(quality),
-        privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform), cloud: this.cloud,
+        privacy: this.privacy, copyId: this.platform.copyText?.bind(this.platform),
         account: this.platform.portal, adPrivacy: this.platform.adPrivacy, reminders: this.reminders ?? undefined,
         canVibrate: !!this.platform.vibrate,
         version: __HK_BUILD__, tester: () => this.save.tester, markTester: () => this.commit({ ...this.save, tester: true }),

@@ -53,34 +53,49 @@ raising `SAVE_VERSION`. Raise the version whenever a field's meaning changes.
 CrazyGames and Playgama keep the save in their own cloud (their data modules), so a signed-in
 player there already carries it between devices. Everywhere else the save lives on one device:
 the web build at h.gamestao.com, the iOS apps and, later, WeChat (offline for now: its request
-whitelist needs an ICP-filed domain). The cloud save gives those players a copy on the backend
-that another device can pull in.
+whitelist needs an ICP-filed domain; no `wx.login` id is used yet, so it will start as a slot per
+device). The cloud save gives those players a copy on the backend that another device pulls in.
 
-### A slot and its restore code
+**The player never sees it.** There is no button, no code and no status line: settings has no
+cloud rows (the "Account & data" panel holds only play data and the play ID). A sync that fails
+says nothing and waits for the next chance.
+
+### A slot and its key
 
 The backend keeps one **slot** per player: the save as text, its revision and its version. A slot
-is reached by its **restore code**, a secret of 12 Crockford base-32 characters (60 bits),
-shown as `ABCD-EFGH-JKMN`. Nothing else names a player: no install id, no account. The code is
-the only credential, so it never goes into a URL (every call is a POST with a JSON body) and
-the lookups are rate limited per address; at 6 a minute, finding any one of a million slots by
-guessing takes some 350,000 years from one address.
+is reached by a secret of 12 Crockford base-32 characters (60 bits), the server's "restore code"
+(the name stays on the wire). The device makes it and keeps it as `hk.cloud` beside the save (on
+iOS it is mirrored into UserDefaults with the save; the corgi keeps its own under `corgi:`). It is
+never shown, and it is not the play ID (`hk.install`, shown in settings and quoted in problem
+reports): knowing the play ID gives no way into the slot. The key never goes into a URL (every
+call is a POST with a JSON body) and the lookups are rate limited per address; at 6 a minute,
+finding any one of a million slots by guessing takes some 350,000 years from one address.
 
-In settings, under **Cloud save** (online hosts without their own cloud: web and iOS):
+`CloudSync` (`client/src/net/cloudSync.ts`) runs a **pass** at launch, as the game goes to the
+background (at most once a minute) and when the host's account signs in:
 
-- **Back up** makes a slot and uploads the save; from then on the button shows the code, which
-  copies itself when tapped. The player writes it down or keeps it in a note.
-- **Restore** asks for a code (the host's text box) and merges that slot into this device's save.
-  From then on this device syncs with that slot too.
+1. With a host account (Game Center, below) whose player is not the one `hk.cloud.gc` names, it
+   asks for that player's slot (`gc`, made when there is none). When that is not the slot the
+   device has, the device's own slot is synced first, so what it held is in the save, and then
+   the device switches to the account's slot.
+2. With no slot yet, it makes one of the device's own (`new`).
+3. It reads the slot, merges it with the save (below), puts a changed save in play and writes the
+   merge back. A slot that is gone (404: 30 days unwritten) is forgotten, and the next pass makes
+   one again.
 
-A device with a code syncs on its own: at launch, and as the game goes to the background (at
-most once a minute). The code is kept on the device as `hk.cloud` beside the save (on iOS it is
-mirrored into UserDefaults with the save; the corgi keeps its own under `corgi:`).
+The save is never touched during a run (the write waits for the next pass), and a device whose own
+save is read-only (a newer build's) does not sync. A slot made from a typed code by an older build
+works the same: it is just the slot `hk.cloud` names.
 
 ### iOS: Game Center
 
-On iOS, a player signed in to Game Center needs no code on a new phone: **Back up** keys the slot
-to their Game Center player, and **Restore** finds it by the same player before asking for a
-code. The code still shows, so the same save can be restored in a browser too.
+On iOS, a player signed in to Game Center has their slot keyed to their Game Center player: on a
+new phone signed in to the same player, the first pass finds it and merges it in. Game Center
+answers some time after launch, so the launch pass may run signed out and make a slot of the
+device's own; the sign-in (`GameCenterAccount.onChange` with a nickname, main.ios.ts) runs a pass
+at once (`CloudSync.account()`), which merges the device's slot into the account's. A player who
+signs in later from settings is merged the same way. `hk.cloud.gc` keeps the player the slot
+belongs to, so later launches skip the lookup.
 
 The shell proves the player to the server with Game Center's identity signature
 (`GKLocalPlayer.fetchItems(forIdentityVerificationSignature:)`, bridge v5,
@@ -95,12 +110,12 @@ must be one of the two apps' (`apps.json`), which also says the game. The slot i
 HMAC of the game and the player id (the tag salt), so the database holds no Game Center id.
 
 **Only a device can verify this part**: the Swift side compiles only on the macOS runner, and
-Game Center signs only on a phone signed in to it. Until a TestFlight build has backed up and
-restored through Game Center, treat it as unproven; the restore code works without it.
+Game Center signs only on a phone signed in to it. Until a TestFlight build has carried a save
+through Game Center to a second install, treat it as unproven; the device's own slot works without it.
 
 ### Merging two saves
 
-A restore, and every sync, merges the slot's save with the device's, field by field. Progress
+Every sync merges the slot's save with the device's, field by field. Progress
 is never lost to "the last write wins":
 
 - **Progress takes the furthest of the two**: level and xp as a pair; `cleared`; per chapter
@@ -126,7 +141,7 @@ wallet and selections since their last sync.
 
 The slot carries its save's version. A device syncs only when the slot's version is at most
 its own `SAVE_VERSION`: a slot written by a newer build is left alone (the device plays its own
-save and says the game needs an update to sync), and the server refuses an upload whose version
+save and syncs again once it is updated), and the server refuses an upload whose version
 is below the slot's. A device whose own save is read-only (a newer build's, above) never syncs.
 Uploading keeps what this build could not read of the slot's save (`keep` over the slot's
 object), so two builds of the same version never strip each other's chapters.
@@ -156,10 +171,10 @@ answer and tries once more, else waits for the next sync.
 
 ### Testing on a device
 
-- Web: open h.gamestao.com, play a run, settings → Cloud save → Back up; note the code. In a
-  private window (or another browser) play one run, settings → Restore, type the code: the
-  lobby shows the first browser's chapters and copper. Play a run in each, reload both: each
-  sees the other's runs and best waves.
-- iOS (TestFlight, signed in to Game Center): Back up; delete the app, install it again, settings
-  → Restore: no code is asked for and the save comes back. Then type the code from the iPhone
-  into a browser's Restore.
+- Web: open h.gamestao.com and play a run; in the browser's storage `hk.cloud` holds a key and the
+  backend has a slot with the run in it. Clear the site's data except `hk.cloud` (or copy it into
+  a private window's storage) and reload: the lobby comes back with the same chapters and copper.
+- iOS (TestFlight, signed in to Game Center): play a run, send the app to the background, delete
+  it and install it again: once Game Center greets the player, the save comes back by itself. On a
+  phone signed out of Game Center, play, then sign in from settings: the device's progress and the
+  account's merge.
