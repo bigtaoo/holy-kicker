@@ -79,6 +79,7 @@ export class LobbyScreen implements Screen {
   readonly view = new Container();
   private tab: Tab = 'play';
   private settingsOpen = false;
+  private accountOpen = false; // settings' second panel
   private monksOpen = false;
   /** The Codex entry shown in detail. */
   private codexPick: EvolveId | null = null;
@@ -160,6 +161,7 @@ export class LobbyScreen implements Screen {
       },
       settings: () => {
         this.settingsOpen = true;
+        this.accountOpen = false;
         this.relayout();
       },
     }));
@@ -232,8 +234,13 @@ export class LobbyScreen implements Screen {
             this.relayout();
           },
         },
+        accountOpen: this.accountOpen,
+        openAccount: (open) => {
+          this.accountOpen = open;
+          this.relayout();
+        },
         close: () => {
-          this.settingsOpen = false;
+          this.settingsOpen = this.accountOpen = false;
           this.relayout();
         },
       }));

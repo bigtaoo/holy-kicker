@@ -3,7 +3,7 @@ import { takeEarlyErrors } from './net/earlyErrors';
 import { Assets } from 'pixi.js';
 import { loadArt, useWebp, webpDecodes } from './art';
 import { warmTextures } from './gpuWarm';
-import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale, t } from './i18n';
+import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale } from './i18n';
 import { cleanMsg, watchAnomalies } from './net/anomaly';
 import { AnomalyStash } from './net/anomalyStash';
 import { apiBase, Backend } from './net/backend';
@@ -95,12 +95,7 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: { skipDet
   // the cloud save where the host keeps none of its own (docs/cloud-save.md "The cloud save")
   const cloud = base && (platform.host === 'web' || platform.host === 'ios') ? new CloudSync({
     base, game: THEME, kv: platform.storage, store, reload: () => shell.reloadSave(), playing: () => shell.place() === 'run',
-    askCode: () => platform.askText({
-      title: t('cloud.askTitle'), prompt: t('cloud.askPrompt'), placeholder: t('cloud.placeholder'), send: t('cloud.send'), cancel: t('cloud.cancel'), max: 20,
-    }),
-    copyText: platform.copyText?.bind(platform),
   }) : null;
-  shell.cloud = cloud;
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
   const probe = memProbe(app);

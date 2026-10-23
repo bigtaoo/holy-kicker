@@ -12,11 +12,15 @@ async function start() {
   // with the ad-free card, rewarded offers pay at once: no video badge on them
   showVideoBadges(!platform.storeKit.owned());
   const { shell, cloud } = await boot(platform, DEFAULT_SCENE);
-  // the cloud save finds a Game Center player's slot without a code (bridge v5)
+  // the cloud save keys a Game Center player's slot on the account (bridge v5)
   if (cloud) cloud.gcIdentity = () => platform.gameCenter.identity();
-  // Game Center answers some time after launch, and again after a sign-in; StoreKit at launch,
-  // after a purchase or a restore, and when a refund or a parent's approval comes in
-  platform.gameCenter.onChange = () => shell.reloadSave();
+  // Game Center answers some time after launch, and again after a sign-in (the cloud save then
+  // merges the device's slot with the account's); StoreKit at launch, after a purchase or a
+  // restore, and when a refund or a parent's approval comes in
+  platform.gameCenter.onChange = () => {
+    shell.reloadSave();
+    if (platform.gameCenter.alias()) cloud?.account();
+  };
   platform.storeKit.onChange = () => {
     showVideoBadges(!platform.storeKit.owned());
     shell.reloadSave();
