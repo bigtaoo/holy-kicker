@@ -202,10 +202,13 @@ jobs:
             -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
             -exportPath $RUNNER_TEMP/ipa
 
+      # Only a 'none' run keeps its IPA (the upload below is the copy otherwise); Actions storage is small.
       - uses: actions/upload-artifact@v4
+        if: inputs.destination == 'none'
         with:
           name: ${{ inputs.theme }}-App.ipa
           path: ${{ runner.temp }}/ipa/*.ipa
+          retention-days: 3
 
       - name: Upload to App Store Connect
         if: inputs.destination != 'none'
