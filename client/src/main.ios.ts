@@ -1,7 +1,7 @@
 import { boot } from './boot';
 import { DEFAULT_SCENE } from './game/scene';
 import { IosPlatform } from './platform/ios/IosPlatform';
-import { applyDownloaded, checkOta } from './platform/ios/ota';
+import { applyDownloaded, readyOta } from './platform/ios/ota';
 import { showVideoBadges } from './ui/widgets';
 
 // iOS entry (vite.ios.config.js swaps it in): the build the Capacitor shell packages (docs/ios.md).
@@ -21,7 +21,8 @@ async function start() {
     showVideoBadges(!platform.storeKit.owned());
     shell.reloadSave();
   };
-  void checkOta();
+  // this bundle booted, so the plugin keeps it; the lobby offers a newer one (ui/updatePrompt.ts)
+  void readyOta();
 }
 
 start().catch((err) => {

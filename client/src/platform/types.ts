@@ -85,6 +85,8 @@ export interface Platform {
   readonly backendBlocked?: boolean;
   /** Local notifications (the iOS app's reminders, meta/reminders.ts); unset where the host has none. */
   readonly notify?: Notifier;
+  /** A newer web layer the player can be asked to take (the iOS app's hot updates); unset elsewhere. */
+  readonly updates?: AppUpdates;
 }
 
 /** A host's analytics (Playgama's telemetry, through Bridge). */
@@ -186,6 +188,18 @@ export interface Store {
   buy(): Promise<BuyOutcome>;
   /** Restore purchases, from a tap: whether the card was found. */
   restore(): Promise<RestoreOutcome>;
+}
+
+/** Hot updates of the game itself (docs/ios.md "Hot updates"), offered from the lobby (ui/updatePrompt.ts). */
+export interface AppUpdates {
+  /** The update this device wants, or null: none, offline, or the manifest unreadable. Never throws. */
+  check(): Promise<UpdateOffer | null>;
+}
+
+export interface UpdateOffer {
+  readonly version: string;
+  /** Downloads it, reporting 0..1, then restarts the game into it. Rejects when that fails. */
+  install(progress: (f: number) => void): Promise<void>;
 }
 
 /**
@@ -295,3 +309,26 @@ export const FAKE_ADS: Ads = {
   },
   adFree: () => false,
 };
+
+/** Dev stand-in (?ota=fake, ?ota=fail): an update on every check whose download takes a few
+ *  seconds and then reloads the page, or stops at 60% and fails. */
+export function fakeUpdates(fail: boolean): AppUpdates {
+  const install = (progress: (f: number) => void) => new Promise<void>((resolve, reject) => {
+    let f = 0;
+    const step = setInterval(() => {
+      f = Math.min(1, f + 0.04);
+      progress(f);
+      if (fail && f >= 0.6) {
+        clearInterval(step);
+        reject(new Error('fake download failed'));
+      } else if (f >= 1) {
+        clearInterval(step);
+        setTimeout(() => {
+          resolve();
+          location.reload();
+        }, 600);
+      }
+    }, 120);
+  });
+  return { check: () => new Promise((r) => setTimeout(() => r({ version: '9.9.9.1', install }), 500)) };
+}

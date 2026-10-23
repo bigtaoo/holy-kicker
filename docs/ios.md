@@ -306,12 +306,21 @@ The web layer (everything in `client/dist-ios`) can change without App Review, a
 against our own static manifest at `https://hk-ota.gamestao.com/manifest.json`, never Capgo's
 cloud (`capacitor.config.ts`: `autoUpdate: false`, `statsUrl: ''`).
 
-- **When**: once the game is up, `checkOta` calls `notifyAppReady` (a bundle that never gets
-  there in `appReadyTimeout`, 30 s, is rolled back and not fetched again), reads the manifest and
-  downloads a newer bundle. At the next launch, before anything is drawn, `applyDownloaded`
-  switches to it with `set()`. It never arms one with `next()`: the plugin swaps an armed bundle
-  in whenever the app goes to the background, which would throw away a run the player only
-  switched away from.
+- **When**: once the game is up, `readyOta` calls `notifyAppReady` (a bundle that never gets
+  there in `appReadyTimeout`, 30 s, is rolled back and not fetched again). The manifest is read
+  only in the lobby with nothing over it (no run, panel or first-run step): once per launch and
+  once per return from the background (`ui/updateFlow.ts`, drawn by `ui/updatePrompt.ts`).
+  `findOta` applies every gate below; a newer bundle the device wants shows "Update available"
+  with Update and Later. A failed or offline read shows nothing. Later shows nothing more until
+  the next check. Update runs `installOta`: the download with a progress bar (Capgo's `download`
+  events), then `set()`, which restarts the game into it. A failed download (or one silent for
+  45 s) says so with Retry and Close, and the game stays playable. A bundle downloaded but not
+  switched to (an older web layer did that silently) is still switched to by `applyDownloaded`
+  at the next launch, before anything is drawn. It never arms one with `next()`: the plugin swaps
+  an armed bundle in whenever the app goes to the background, which would throw away a run the
+  player only switched away from. Shells in the field run a web layer that still downloads
+  silently, so the prompt reaches them only after one more update lands that way. In development
+  `?ota=fake` (or `?ota=fail`) fakes the offer and its download.
 - **Versions** (`__HK_BUNDLE__`, `build/buildId.mjs`): a shell's own bundle is
   `<MARKETING_VERSION>.<release run number>` (`1.0.18`); its hot updates are `1.0.18.1`,
   `1.0.18.2`, … So each update outranks the shell it was made for, and the next shell outranks
