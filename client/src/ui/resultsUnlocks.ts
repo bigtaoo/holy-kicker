@@ -15,6 +15,8 @@ import { COLORS, fit, label, shade } from './widgets';
 // its picture on the left, what it is in gold and one line on what it means under it.
 
 const STRIP_H = 150;
+/** Where the line under the title starts in its strip. */
+const SUB_TOP = 78;
 const GAP = 16;
 
 /** The picture, the title and the line under it for one unlock. */
@@ -60,13 +62,15 @@ export function unlocksPart(unlocks: readonly Unlock[], icons: IconSheet, width:
     const head: Text = fit(label(title, 52, color, { stroke: { color: COLORS.outline, width: 6 } }), textW);
     head.anchor.set(0, 0.5);
     head.position.set(textX, y + 50);
-    const sub: Text = fit(label(line, 48, COLORS.dim), textW);
-    sub.anchor.set(0, 0.5);
-    sub.position.set(textX, y + 106);
-    icon.position.set(-width / 2 + 85, y + STRIP_H / 2);
-    const strip = new Graphics().roundRect(-width / 2, y, width, STRIP_H, 28).fill({ color: COLORS.outline, alpha: 0.35 }).stroke({ color, width: 4 });
+    // a line that wraps grows its strip rather than running into the title
+    const sub: Text = fit(label(line, 48, COLORS.dim, { align: 'left' }), textW);
+    sub.anchor.set(0, 0);
+    sub.position.set(textX, y + SUB_TOP);
+    const h = Math.max(STRIP_H, SUB_TOP + sub.height + 18);
+    icon.position.set(-width / 2 + 85, y + h / 2);
+    const strip = new Graphics().roundRect(-width / 2, y, width, h, 28).fill({ color: COLORS.outline, alpha: 0.35 }).stroke({ color, width: 4 });
     c.addChild(strip, icon, head, sub);
-    y += STRIP_H + GAP;
+    y += h + GAP;
   }
   return [c, y - GAP];
 }
