@@ -23,7 +23,7 @@ export const zh: Table<typeof en> = {
     best: '最佳：第 {wave} 波',
     notPlayed: '还没打过',
     cleared: '已通关',
-    grit: '在这里倒下过，愈挫愈勇 ×{n}：攻击 +{attack}%，生命 +{hp}%',
+    grit: '愈挫愈勇 ×{n}：攻击 +{attack}%，生命 +{hp}%',
     normal: '普通',
     hard: '困难',
     hardTitle: '困难 {n}：{name}',

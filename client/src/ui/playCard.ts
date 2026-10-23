@@ -5,7 +5,7 @@ import { unlockedRelics } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { THEME } from '../theme';
 import { iconSprite, type IconSheet } from './buildBar';
-import { COLORS, label } from './widgets';
+import { COLORS, label, shade } from './widgets';
 
 // The Play tab's pieces around the chapter card (LobbyScreen.playTab, chapterCard.ts): its
 // colours and the relic row at the monk's feet.
@@ -13,14 +13,16 @@ import { COLORS, label } from './widgets';
 const RELIC_R = 60;
 
 /**
- * The chapter card's colours: a light card on the bright courtyard, warm parchment for the monk
- * and spacesuit white for the corgi, its words outlined white (`title`) or plain and dark (`quiet`).
+ * The chapter card's colours: warm parchment for the monk on the bright courtyard; for the corgi
+ * the lobby's dark slate with saffron, like its top bar and buttons, as a light grey card looked
+ * cold on the sand. Its title is outlined white, the other words plain: `quiet` the status, `accent`
+ * the lines under it; `starOff` fills a star not won yet.
  */
 export const CARD = THEME === 'corgi'
-  ? { fill: 0xe6edf1, quiet: 0x55636e, accent: 0x1f7aa8 }
-  : { fill: 0xf2e2bf, quiet: 0x7a6248, accent: 0xb4501c };
-/** The round badges on the courtyard (relics, the side rails): the card's light, greyer when out of reach. */
-export const BADGE = { fill: CARD.fill, off: THEME === 'corgi' ? 0xb4bec6 : 0xc4b496 };
+  ? { fill: COLORS.panel, quiet: COLORS.dim, accent: COLORS.saffron, starOff: shade(COLORS.panel, -0.45) }
+  : { fill: 0xf2e2bf, quiet: 0x7a6248, accent: 0xb4501c, starOff: undefined };
+/** The round badges on the courtyard (relics, the side rails): light, greyer when out of reach. */
+export const BADGE = THEME === 'corgi' ? { fill: 0xe6edf1, off: 0xb4bec6 } : { fill: CARD.fill, off: 0xc4b496 };
 /** The outline that keeps a light word readable on the light card. */
 export const CARD_STROKE = { stroke: { color: COLORS.outline, width: 10 } };
 /** The relic row's height: its name over the badges. */

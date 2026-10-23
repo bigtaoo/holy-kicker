@@ -23,7 +23,7 @@ export const ja: Table<typeof en> = {
     best: '最高：ウェーブ {wave}',
     notPlayed: '未挑戦',
     cleared: 'クリア済み',
-    grit: 'ここで倒れた分 不屈 ×{n}：攻撃 +{attack}%、HP +{hp}%',
+    grit: '不屈 ×{n}：攻撃 +{attack}%、HP +{hp}%',
     normal: 'ノーマル',
     hard: 'ハード',
     hardTitle: 'ハード {n}：{name}',

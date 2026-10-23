@@ -6,6 +6,7 @@ import { hardOpenAt, isCleared, playableChapters, track } from '../meta/progress
 import type { SaveData } from '../meta/save';
 import type { BoardUi } from './boardPanel';
 import { lockIcon, type IconSheet } from './buildBar';
+import { cardLinesLayout, CHESTS_TOP } from './chapterCardLayout';
 import { chestRow } from './chestRow';
 import { clearUnlocks, nextBlessing, starTotal } from '../meta/unlocks';
 import { sutraName } from './cardText';
@@ -61,13 +62,15 @@ export function trackSwitch(d: ChapterCardDeps): Container {
 export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Container {
   const { save } = d;
   const card = new Container();
-  // each line takes 55 units: the chests move down and the card grows
+  const hard = save.hard;
+  const ranks = open ? d.boards.button(n, hard) : null;
+  // a line fit() wrapped takes two rows: each line its own height, the chests under the last
   const lines = cardLines(save, n, open).map(([text, fill]) => fit(label(text, 48, fill), 840));
-  const shift = lines.length * 55;
+  const layout = cardLinesLayout(lines.map((l) => l.height), ranks !== null);
+  const shift = layout.chests - CHESTS_TOP;
   const back = panel(900, 370 + shift, CARD.fill);
   back.y = (370 + shift) / 2;
   card.addChild(back);
-  const hard = save.hard;
   const progress = track(save, hard);
   const name = chapterName(n);
   const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text, CARD_STROKE), 640);
@@ -76,7 +79,7 @@ export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Conta
   // waves cleared, the chests count those; the leaderboard and the HUD name the wave reached)
   const best = progress.best[n - 1] ?? 0;
   if (open && isCleared(save, n, hard)) {
-    const stars = starRow(progress.stars[n - 1] ?? 1, 70);
+    const stars = starRow(progress.stars[n - 1] ?? 1, 70, CARD.starOff);
     stars.y = 150;
     card.addChild(stars);
   } else {
@@ -88,17 +91,16 @@ export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Conta
     status.y = 155;
     card.addChild(status);
   }
-  const ranks = open ? d.boards.button(n, hard) : null;
   if (ranks) {
     // under the › arrow, with a gap: it is a smaller button than the arrow (boardPanel.ts)
     ranks.position.set(340, 160);
     card.addChild(ranks);
   }
   const chests = chestRow(save, n, d.icons, (i) => d.progressChest(n, hard, i));
-  chests.y = 200 + shift;
+  chests.y = layout.chests;
   card.addChild(title, chests);
   lines.forEach((l, i) => {
-    l.y = 215 + i * 55;
+    l.y = layout.ys[i];
     card.addChild(l);
   });
   // chapter arrows: through the cleared chapters and the first uncleared one; once there is more

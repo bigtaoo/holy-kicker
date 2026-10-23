@@ -23,7 +23,7 @@ export const pl: Table<typeof en> = {
     best: 'Rekord: fala {wave}',
     notPlayed: 'Jeszcze nie grano',
     cleared: 'Ukończono',
-    grit: 'Padłeś tu, więc Zawziętość ×{n}: +{attack}% ATK, +{hp}% PŻ',
+    grit: 'Zawziętość ×{n}: +{attack}% ATK, +{hp}% PŻ',
     normal: 'Normalny',
     hard: 'Trudny',
     hardTitle: 'Trudny {n}: {name}',

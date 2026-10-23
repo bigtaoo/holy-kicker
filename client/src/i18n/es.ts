@@ -23,7 +23,7 @@ export const es: Table<typeof en> = {
     best: 'Récord: oleada {wave}',
     notPlayed: 'Aún sin jugar',
     cleared: 'Superado',
-    grit: 'Caíste aquí: Tesón ×{n}, +{attack}% ATQ, +{hp}% PV',
+    grit: 'Tesón ×{n}: +{attack}% ATQ, +{hp}% PV',
     normal: 'Normal',
     hard: 'Difícil',
     hardTitle: 'Difícil {n}: {name}',

@@ -23,7 +23,7 @@ export const fr: Table<typeof en> = {
     best: 'Record : vague {wave}',
     notPlayed: 'Pas encore joué',
     cleared: 'Terminé',
-    grit: 'Tombé ici, donc Ténacité ×{n} : +{attack}% ATQ, +{hp}% PV',
+    grit: 'Ténacité ×{n} : +{attack}% ATQ, +{hp}% PV',
     normal: 'Normal',
     hard: 'Difficile',
     hardTitle: 'Difficile {n} : {name}',
