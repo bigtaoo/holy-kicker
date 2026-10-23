@@ -68,6 +68,8 @@ is recorded.
   (`game/bossFall.ts`, 1.3 s, on the view clock; mid-bosses fall the same way), and whatever
   is still standing drops as corpses with it, so the win never looks like a frozen screen.
 - Death: one rewarded-ad revive per run; otherwise results are paid by the wave reached.
+  The death panel asks the host for an ad at most 2 s (`DOWN_AD_WAIT_MS`, `ui/runWatch.ts`),
+  showing a spinner on the revive button meanwhile; no answer in time goes straight to the results.
 - **Progress chests** at waves 10/20/30/40/50 of each chapter, claimable once each, so a
   failed push still pays. A run only unlocks them; the player opens them on the lobby's chapter
   card (a lit chest with a dot), which keeps the results short and gives the lobby a first tap.
