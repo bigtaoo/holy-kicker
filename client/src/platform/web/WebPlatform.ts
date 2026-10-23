@@ -2,7 +2,7 @@ import type { Host } from '@hk/protocol';
 import { Application } from 'pixi.js';
 import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
-import type { Battery, DeviceInfo } from '../../game/quality';
+import { MAX_RESOLUTION, type Battery, type DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { themedStore } from '../../theme';
 import { FAKE_ADS, NO_ADS, fakeNotifier, fakeStore, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type Attention, type AudioHost, type Banner, type Insets, type Notifier, type Platform, type Portal, type Store, type TextAsk } from '../types';
@@ -132,7 +132,8 @@ export class WebPlatform implements Platform {
     const ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && nav.maxTouchPoints > 1);
     const mobile = nav.userAgentData?.mobile ?? (/Android|iPhone|iPod|Mobile/i.test(ua) || ipad);
     const tablet = ipad || /Tablet/i.test(ua) || (/Android/.test(ua) && !/Mobile/.test(ua));
-    return { mobile: mobile || tablet, tablet, cores: nav.hardwareConcurrency || 0, memoryGB: nav.deviceMemory || 0, gpu: '', modelLevel: 0 };
+    const apple = ipad || /iPhone|iPod/.test(ua);
+    return { mobile: mobile || tablet, tablet, apple, cores: nav.hardwareConcurrency || 0, memoryGB: nav.deviceMemory || 0, gpu: '', modelLevel: 0 };
   }
 
   async createApp(msaa: boolean): Promise<Application> {
@@ -142,7 +143,7 @@ export class WebPlatform implements Platform {
     const record = recordSize(location.search);
     await app.init({
       background: '#141816',
-      ...(record ? { ...record, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, 2) }),
+      ...(record ? { ...record, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION) }),
       antialias: msaa,
       autoDensity: !record,
       // WeChat has no WebGPU; use WebGL everywhere so both hosts behave the same.

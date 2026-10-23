@@ -1,7 +1,7 @@
 import type { Application, Renderer } from 'pixi.js';
 import { frameWork, type BattleFrame } from './frameWork';
 import { FrameClock } from './frameClock';
-import { FrameGate, FrameGovernor, LEVELS, refreshCap, targetFps, type LevelRange, type LevelSettings } from './quality';
+import { FrameGate, FrameGovernor, frameResolution, LEVELS, refreshCap, targetFps, type LevelRange, type LevelSettings } from './quality';
 
 // Drives the frame loop and applies quality levels. Pixi's own ticker.maxFPS cannot be used:
 // it still measures each frame's delta from the last skipped animation frame, so a 60 fps cap
@@ -9,7 +9,9 @@ import { FrameGate, FrameGovernor, LEVELS, refreshCap, targetFps, type LevelRang
 // stepped from our own requestAnimationFrame loop behind a FrameGate. Calm screens (no run
 // stepping) get a lower cap, and their frames are left out of the governor's measure. Each
 // update is timed for the perf telemetry (frameWork.ts). The ticker runs on a FrameClock, so
-// the sim and the view step whole refreshes however late the frame's callback ran.
+// the sim and the view step whole refreshes however late the frame's callback ran. Screens with
+// no run draw at the display's full density and battles at their level's resolution: the canvas
+// is resized once as the player goes in or out of a run, never mid-battle (frameResolution).
 
 /** The WebGL renderer string, '' when the browser hides it. */
 export function gpuName(renderer: Renderer): string {
@@ -41,6 +43,8 @@ export class QualityRuntime {
     private readonly onLevel: (s: LevelSettings, level: number) => void,
     /** True while nothing fast is on screen: no run, or a run that is not stepping. */
     private readonly calm: () => boolean = () => false,
+    /** True while no run is on screen (lobby, menus, results): drawn at full density. */
+    private readonly sharp: () => boolean = () => false,
   ) {
     this.governor = new FrameGovernor(range);
     this.maxResolution = app.renderer.resolution;
@@ -73,6 +77,7 @@ export class QualityRuntime {
       }
       this.last = now;
       this.wasCalm = calm;
+      this.fit();
       frameWork.sim = frameWork.run = 0;
       const start = performance.now();
       // a throw in any of the frame's listeners or the render goes to the shell, which recovers (ui/faultGuard.ts)
@@ -100,10 +105,14 @@ export class QualityRuntime {
   }
 
   private apply(): void {
-    const s = this.settings;
-    const res = Math.min(this.maxResolution, s.resolution);
+    this.fit();
+    this.onLevel(this.settings, this.governor.level);
+  }
+
+  /** Sizes the canvas for this frame's screen; a no-op unless a run came or went or the level moved. */
+  private fit(): void {
+    const res = frameResolution(this.sharp(), this.settings, this.maxResolution);
     const r = this.app.renderer;
     if (r.resolution !== res) r.resize(this.app.screen.width, this.app.screen.height, res);
-    this.onLevel(s, this.governor.level);
   }
 }

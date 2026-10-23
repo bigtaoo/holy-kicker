@@ -101,7 +101,7 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: { skipDet
     copyText: platform.copyText?.bind(platform),
   }) : null;
   shell.cloud = cloud;
-  const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping);
+  const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping, () => shell.place() !== 'run');
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
   const probe = memProbe(app);
   const perf = (shell.perf = new PerfReport(net, probe));
