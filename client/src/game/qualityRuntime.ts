@@ -1,13 +1,15 @@
 import type { Application, Renderer } from 'pixi.js';
 import { frameWork, type BattleFrame } from './frameWork';
-import { FrameGate, FrameGovernor, LEVELS, targetFps, type LevelRange, type LevelSettings } from './quality';
+import { FrameClock } from './frameClock';
+import { FrameGate, FrameGovernor, LEVELS, refreshCap, targetFps, type LevelRange, type LevelSettings } from './quality';
 
 // Drives the frame loop and applies quality levels. Pixi's own ticker.maxFPS cannot be used:
 // it still measures each frame's delta from the last skipped animation frame, so a 60 fps cap
 // on a 120 Hz screen would run the game at half speed. Instead the ticker is stopped and
 // stepped from our own requestAnimationFrame loop behind a FrameGate. Calm screens (no run
 // stepping) get a lower cap, and their frames are left out of the governor's measure. Each
-// update is timed for the perf telemetry (frameWork.ts).
+// update is timed for the perf telemetry (frameWork.ts). The ticker runs on a FrameClock, so
+// the sim and the view step whole refreshes however late the frame's callback ran.
 
 /** The WebGL renderer string, '' when the browser hides it. */
 export function gpuName(renderer: Renderer): string {
@@ -20,6 +22,7 @@ export function gpuName(renderer: Renderer): string {
 export class QualityRuntime {
   governor: FrameGovernor;
   private readonly gate: FrameGate;
+  private readonly clock = new FrameClock();
   private readonly maxResolution: number;
   private last = 0;
   private wasCalm = true;
@@ -56,7 +59,7 @@ export class QualityRuntime {
       // battle frame after them (its time runs from a calm frame)
       if (this.last > 0 && !calm && !this.wasCalm) {
         f.level = this.governor.level;
-        if (this.governor.sample((now - this.last) / 1000)) this.apply();
+        if (this.governor.sample((now - this.last) / 1000, refreshCap(this.gate.vsync))) this.apply();
         f.ms = now - this.last;
         f.target = this.gate.frameMs;
         f.vsync = this.gate.vsync;
@@ -74,7 +77,7 @@ export class QualityRuntime {
       const start = performance.now();
       // a throw in any of the frame's listeners or the render goes to the shell, which recovers (ui/faultGuard.ts)
       try {
-        app.ticker.update(now);
+        app.ticker.update(this.clock.tick(now, this.gate.vsync));
       } catch (err) {
         this.onFault(err);
       }

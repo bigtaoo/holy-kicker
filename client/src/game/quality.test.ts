@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { BATTLE_FPS, CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, lowBattery, SAVER, SLOW_FPS, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
+import { BATTLE_FPS, CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, lowBattery, refreshCap, SAVER, SLOW_FPS, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
 
 const PC: DeviceInfo = { mobile: false, cores: 8, memoryGB: 8, gpu: 'ANGLE (Intel, Intel(R) Arc(TM) Graphics)', modelLevel: 0 };
 const PHONE: DeviceInfo = { mobile: true, cores: 8, memoryGB: 8, gpu: 'Adreno (TM) 740', modelLevel: 0 };
 
 /** Feeds `seconds` of frames at `fps`; returns the levels the governor passed through. */
-function run(g: FrameGovernor, fps: number, seconds: number): number[] {
+function run(g: FrameGovernor, fps: number, seconds: number, cap = Infinity): number[] {
   const seen: number[] = [];
-  for (let t = 0; t < seconds; t += 1 / fps) if (g.sample(1 / fps)) seen.push(g.level);
+  for (let t = 0; t < seconds; t += 1 / fps) if (g.sample(1 / fps, cap)) seen.push(g.level);
   return seen;
 }
 
@@ -194,6 +194,21 @@ describe('FrameGovernor', () => {
     expect(run(g, 14, 10)).toEqual([0]);
     expect(run(g, 10, 30)).toEqual([]);
     expect(LEVELS[0].resolution).toBeLessThan(1);
+  });
+
+  it('holds an iPhone in Low Power Mode (30 Hz frames) on its level, not down to fewer pixels', () => {
+    const g = new FrameGovernor({ start: 4, min: 0, max: 4 });
+    expect(run(g, 30, 120, refreshCap(1000 / 30))).toEqual([]);
+    // still too slow for that 30: down as usual
+    expect(run(g, 20, 6, refreshCap(1000 / 30))).toEqual([3]);
+  });
+
+  it('reads only a refresh of about 30 Hz as a cap', () => {
+    expect(refreshCap(1000 / 30.6)).toBe(30);
+    expect(refreshCap(1000 / 32)).toBe(30);
+    expect(refreshCap(1000 / 60)).toBe(Infinity);
+    // a device too slow for its level, frames of one and two refreshes
+    expect(refreshCap(25)).toBe(Infinity);
   });
 
   it('a saver phone that holds 60 never goes under saver', () => {

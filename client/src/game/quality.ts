@@ -15,7 +15,7 @@
 // `crawl` also draws at a fraction of the screen's pixels. The run keeps going whatever the
 // frame rate (the sim keeps real time down to 6 fps, fixedStep.ts); a blurry picture at 30 beats
 // a sharp one at 12. Only the governor goes there, while saver itself still runs slow; a device
-// that holds saver never sees them.
+// that holds saver never sees them, nor does a display that only refreshes at 30 (refreshCap).
 
 export type QualityMode = 'auto' | 'high' | 'saver';
 export const QUALITY_MODES: readonly QualityMode[] = ['auto', 'high', 'saver'];
@@ -210,6 +210,19 @@ export interface GovernorOptions {
   probe: number;
 }
 
+/** A display refreshing at about this rate (an iPhone in Low Power Mode, which caps animation
+ *  frames at 30) cannot show more frames, whatever the level: the governor holds such a
+ *  display to it rather than stepping down for frames it could never have had. */
+const LOW_REFRESH = 30;
+
+/** The most frames a second the display can show, for the governor; Infinity unless the refresh
+ *  reads as LOW_REFRESH. A device too slow for its level reads as a refresh between rates
+ *  (frames of one and two refreshes) and is not held; one that ran every other refresh
+ *  throughout already draws the even 30 that stepping down would get it. */
+export function refreshCap(vsync: number): number {
+  return Math.abs(1000 / vsync - LOW_REFRESH) <= 3 ? LOW_REFRESH : Infinity;
+}
+
 export const GOVERNOR: GovernorOptions = { window: 2, slowWindows: 2, upAfter: 30, maxUpAfter: 240, probe: 10 };
 /** Under this share of the level's battle frame rate a window is slow; over the second, stable. */
 const SLOW = 0.8;
@@ -232,8 +245,8 @@ export class FrameGovernor {
     this.upAfter = opts.upAfter;
   }
 
-  /** Feeds one frame's length in seconds; true when the level changed. */
-  sample(dt: number): boolean {
+  /** Feeds one frame's length in seconds and the display's frame cap (refreshCap); true when the level changed. */
+  sample(dt: number, cap = Infinity): boolean {
     // pauses (hidden tab, app in background) and single hitches say nothing about load
     if (!(dt > 0 && dt < 0.25)) return false;
     this.frames++;
@@ -243,7 +256,7 @@ export class FrameGovernor {
     const fps = this.frames / this.time;
     const span = this.time;
     this.frames = this.time = 0;
-    const target = LEVELS[this.level].fps;
+    const target = Math.min(LEVELS[this.level].fps, cap);
     if (fps < target * SLOW) {
       this.stable = 0;
       if (++this.slow < this.opts.slowWindows || this.level <= this.range.min) return false;
