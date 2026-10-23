@@ -11,7 +11,7 @@ import { makeHero, type HeroView } from './heroes';
 import { DamageLayer } from './damageView';
 import { DropLayer } from './dropView';
 import { ThreatLayer } from './threatView';
-import { FxLayer } from './fxView';
+import { FxLayer, GROUND_FX_Z, GROUND_PREWARM } from './fxView';
 import { Corpses } from './mobView';
 import { HealthBar, starMarkAt } from './healthBar';
 import type { EliteCrowd } from './eliteView';
@@ -92,6 +92,8 @@ export class Game {
   private picking: number | undefined; // a level-up card to send with the next command
   private readonly corpses: Corpses;
   private readonly fx: FxLayer;
+  /** Effects lying on the ground, under the gems and the figures (fxView.ts GROUND_FX_Z). */
+  private readonly groundFx: FxLayer;
   private readonly damage: DamageLayer;
   private readonly drops: DropLayer;
   private readonly threats: ThreatLayer | null;
@@ -182,8 +184,9 @@ export class Game {
     this.sutras = new SutraView(app.renderer, this.world, HERO_TOP_Z - 3, art.awakened.lion);
     this.corpses = new Corpses(this.world);
     this.fx = new FxLayer(app.renderer);
+    this.groundFx = new FxLayer(app.renderer, GROUND_FX_Z, GROUND_PREWARM);
     this.damage = new DamageLayer(app.renderer, scene.crit, scene.numFade);
-    this.world.addChild(this.fx.view, this.damage.view);
+    this.world.addChild(this.groundFx.view, this.fx.view, this.damage.view);
     this.drops = new DropLayer(app.renderer, this.world, scene.gem, this.fx.pool);
     // a chapter's shooters fire bullets
     this.threats = scene.threats || chapter
@@ -198,8 +201,8 @@ export class Game {
     // like the elite, the boss draws over the horde
     if (this.boss && scene.eliteRing) this.boss.setZ(HERO_TOP_Z - 1);
     if (scene.blur) this.fx.view.filters = [new BlurFilter({ strength: 6, quality: 2 })];
-    this.spells = new SpellView(app.renderer, this.world, this.fx.pool, scene.ringFx, { tex: art.palm, mountain: art.mountain, z: HERO_TOP_Z - 2 });
-    this.arsenal = new ArsenalView(app.renderer, this.world, this.fx.pool, scene.ringFx, art.icons);
+    this.spells = new SpellView(app.renderer, this.world, this.fx.pool, this.groundFx.pool, scene.ringFx, { tex: art.palm, mountain: art.mountain, z: HERO_TOP_Z - 2 });
+    this.arsenal = new ArsenalView(app.renderer, this.world, this.fx.pool, this.groundFx.pool, scene.ringFx, art.icons);
     this.aura = new AuraStack(scene.stack);
     this.zen = new ZenRing(this.world);
     this.downCam = new KillCamView(this.world, { hero: this.hero.view, horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
@@ -231,7 +234,7 @@ export class Game {
   /** Quality level parts that live in the scene; the runtime handles resolution and fps. */
   applyQuality(s: LevelSettings): void {
     // an explicit ?fxbudget= in the URL wins, for stress tests
-    this.fx.pool.budget = (this.scene.fxBudget || s.fxBudget) * SCREEN_AREA;
+    this.fx.pool.budget = this.groundFx.pool.budget = (this.scene.fxBudget || s.fxBudget) * SCREEN_AREA;
     this.damage.pool.max = s.numbers;
     this.levelName = s.name;
   }
@@ -357,6 +360,7 @@ export class Game {
     this.zen.update(dt, inZen(p) && !p.dead, hx, hy);
     this.aura.update(dt, hx, hy, this.fx.pool);
     this.fx.update(dt, this.aura.parts);
+    this.groundFx.update(dt);
     this.damage.update(dt, hx, hy);
     this.drops.draw(s.gems, alpha);
     this.threats?.draw(s.bullets, s.zones, alpha);

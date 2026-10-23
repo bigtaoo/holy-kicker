@@ -1,6 +1,7 @@
 import { Graphics, Particle, ParticleContainer, Rectangle, Texture, type Renderer } from 'pixi.js';
 import { bakeTexture, keepForSession } from './bake';
 import { FxPool, fxAlpha, fxSize, type FxParticle, type FxShape } from './fx';
+import { SHADOW_Z } from './shadow';
 
 // Draws the FxPool through one ParticleContainer: every effect is a tinted particle on a
 // small atlas drawn with Graphics at start-up, so effects need no art files and the whole
@@ -11,6 +12,13 @@ const SHAPES: FxShape[] = ['spark', 'puff', 'ring', 'glow', 'band'];
 const MAX_PARTICLES = 3000;
 /** Particles allocated at start-up: a nova killing ~190 mobs peaks around 1600. */
 const PREWARM = 2000;
+/**
+ * The ground layer (blasts' light, rings and smoke) lies over the shadows and under the fields,
+ * the resting gems and every figure (SHADOW_Z + 1 and up).
+ */
+export const GROUND_FX_Z = SHADOW_Z + 0.75;
+/** Particles the ground layer allocates at start-up: Thunder Rain's 18 blasts peak around 700. */
+export const GROUND_PREWARM = 800;
 
 /** White shapes side by side, tinted per particle. */
 function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
@@ -54,13 +62,13 @@ export class FxLayer {
   /** Each particle's tint as last set: Pixi converts the colour (and allocates) on every set. */
   private readonly tints: number[] = [];
 
-  constructor(renderer: Renderer) {
+  /** `z` in the world: by default in front of every standing figure. */
+  constructor(renderer: Renderer, z = 1e7, prewarm = PREWARM) {
     this.textures = keepForSession(renderer, 'fx', () => drawAtlas(renderer));
     this.view.texture = this.textures.get('spark')!;
-    // in front of every standing figure
-    this.view.zIndex = 1e7;
-    this.pool.prewarm(PREWARM);
-    this.grow(PREWARM);
+    this.view.zIndex = z;
+    this.pool.prewarm(prewarm);
+    this.grow(prewarm);
   }
 
   private grow(count: number): void {
