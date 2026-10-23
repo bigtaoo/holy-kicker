@@ -59,6 +59,7 @@ export const zh: Table<typeof en> = {
     boss: '首领战！',
     down: '你倒下了',
     revive: '复活',
+    adLoading: '广告加载中…',
     fall: {
       charge: { cause: '被冲锋撞倒', tip: '精英冲锋前会瞄准：看到瞄准线就往旁边闪' },
       slam: { cause: '被重击砸中', tip: '地上亮起圆圈时，赶紧走出去' },

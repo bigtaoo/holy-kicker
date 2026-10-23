@@ -59,6 +59,7 @@ export const it: Table<typeof en> = {
     boss: 'Scontro col boss!',
     down: 'Sei caduto',
     revive: 'Rinasci',
+    adLoading: 'Caricamento annuncio…',
     fall: {
       charge: { cause: 'Preso da una carica', tip: 'Le élite mirano prima di caricare: quando vedi la linea di mira, spostati di lato' },
       slam: { cause: 'Preso da uno schianto', tip: 'Quando un cerchio si illumina a terra, esci' },

@@ -59,6 +59,7 @@ export const tr: Table<typeof en> = {
     boss: 'Patron savaşı!',
     down: 'Düştün',
     revive: 'Diril',
+    adLoading: 'Reklam yükleniyor…',
     fall: {
       charge: { cause: 'Bir hücuma yakalandın', tip: 'Seçkinler hücumdan önce nişan alır: nişan çizgisini görünce yana kaç' },
       slam: { cause: 'Bir darbeye yakalandın', tip: 'Yerde bir daire parlayınca dışına çık' },

@@ -6,6 +6,7 @@ import { cardPanel, type CardNudgeState, type CardPanel } from './cardPanel';
 import { panelKey } from './panelKeys';
 import type { DownInfo } from './deathInfo';
 import { downPanel, type Down } from './downPanel';
+import { spin } from './spinner';
 import { languagePanel } from './languagePanel';
 import { GIVE_UP_WAIT, pausePanel, type PauseSwitches } from './pausePanel';
 import type { CardText } from './cardText';
@@ -44,7 +45,7 @@ export type ReportOutcome = 'sent' | 'failed' | 'cancelled';
 /** The pause panel's report button: ready, waiting for the text box or the server, or done. */
 type Reporting = 'idle' | 'busy' | 'sent' | 'failed';
 
-export type ReviveOffer = 'none' | 'free' | 'ad';
+export type ReviveOffer = 'none' | 'free' | 'checking' | 'ad';
 
 /** Seconds a wave banner stays (longer with a story line to read), the last of them fading. */
 const BANNER_TIME = 2;
@@ -69,6 +70,8 @@ export class RunHud implements Screen {
   /** Seconds the armed give-up button still waits for its second tap; null when not armed. */
   private giveUpArmed: number | null = null;
   private down: Down | null = null;
+  /** The death panel's waiting ring, turned each frame; null when it shows none. */
+  private downSpinner: Graphics | null = null;
   /** What the death panel says about the fall, and the last run's fall (0 for none shown). */
   private downInfo: DownInfo | null = null;
   private lastFall = 0;
@@ -158,8 +161,11 @@ export class RunHud implements Screen {
       this.view.addChild(this.cards.view);
     }
     if (this.paused) this.pausePanel(f);
+    this.downSpinner = null;
     if (this.down) {
-      this.view.addChild(downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }, this.icons, this.keys));
+      const panel = downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }, this.icons, this.keys);
+      this.downSpinner = panel.spinner;
+      this.view.addChild(panel.view);
     }
   }
 
@@ -269,10 +275,11 @@ export class RunHud implements Screen {
     this.relayout();
   }
 
-  /** The hero went down: offers a free revive, the rewarded ad or nothing; `info` says what did it (kept when left out). */
+  /** The hero went down: offers a free revive, the rewarded ad (`checking` while the host says whether one can play)
+   *  or nothing; `info` says what did it (kept when left out). */
   showDown(offer: ReviveOffer, info: DownInfo | null = this.downInfo): void {
     this.downInfo = info;
-    this.down = offer === 'free' ? 'free' : offer === 'ad' ? 'offered' : 'none';
+    this.down = offer === 'free' ? 'free' : offer === 'ad' ? 'offered' : offer === 'checking' ? 'checking' : 'none';
     this.paused = false;
     this.relayout();
   }
@@ -293,6 +300,7 @@ export class RunHud implements Screen {
   update(dt: number): void {
     this.build?.update(dt);
     this.clock += dt;
+    if (this.downSpinner) spin(this.downSpinner, this.clock);
     if (this.cards) {
       this.offerAge += dt;
       this.cards.update(this.offerAge);
@@ -375,7 +383,7 @@ export class RunHud implements Screen {
     const k = panelKey(code, repeat);
     if (!k || this.down === 'playing') return;
     if (this.down) {
-      if (k === 'ok' && this.down !== 'none') void this.playRevive();
+      if (k === 'ok') void this.playRevive();
       else if (k === 'back') this.actions.giveUp();
       else return;
     } else if (this.languages) {

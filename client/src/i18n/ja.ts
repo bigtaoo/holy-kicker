@@ -59,6 +59,7 @@ export const ja: Table<typeof en> = {
     boss: 'ボス戦！',
     down: '倒れてしまった',
     revive: '復活',
+    adLoading: '広告を読み込み中…',
     fall: {
       charge: { cause: '突進に捕まった', tip: 'エリートは突進前に狙いを定める：照準の線が見えたら横へ' },
       slam: { cause: '叩きつけを食らった', tip: '地面に円が光ったら、外へ歩こう' },

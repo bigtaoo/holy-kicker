@@ -1,8 +1,9 @@
-import { Container } from 'pixi.js';
+import { Container, type Graphics } from 'pixi.js';
 import { t } from '../i18n';
 import type { DownInfo, Goal } from './deathInfo';
 import type { IconSheet } from './buildBar';
 import { fallFigures, fallIcon } from './fallIcons';
+import { spinner } from './spinner';
 import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, button, fit, keyCap, label, panel } from './widgets';
 
@@ -10,8 +11,15 @@ import { COLORS, backdrop, button, fit, keyCap, label, panel } from './widgets';
 // and one tip for next time, the nearest goal the run fell short of, then the revive (free from
 // training or with an ad) and the way out. With no revive the results say the same (fallLines).
 
-/** Death panel: no revive to offer, a free one (training), the ad offered, or the ad playing. */
-export type Down = 'none' | 'free' | 'offered' | 'playing';
+/** Death panel: no revive to offer, a free one (training), the host asked whether an ad can play,
+ *  the ad offered, or the ad playing (or still starting). */
+export type Down = 'none' | 'free' | 'checking' | 'offered' | 'playing';
+
+/** The panel, and the spinner on its revive while it waits on the host (RunHud turns it). */
+export interface DownPanel {
+  view: Container;
+  spinner: Graphics | null;
+}
 
 export interface DownActions {
   revive(): void;
@@ -45,8 +53,9 @@ export function fallLines(info: DownInfo, wave: number, width: number, icons: Ic
 }
 
 /** `keys`: a desktop, where the buttons wear their keys (Enter revives, Escape gives up; RunHud.key). */
-export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: number, actions: DownActions, icons: IconSheet, keys = false): Container {
+export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: number, actions: DownActions, icons: IconSheet, keys = false): DownPanel {
   const layer = new Container();
+  let wait: Graphics | null = null;
   layer.addChild(backdrop(f.w, f.h));
   // stacked top down: [view, height it takes]
   const items: [Container, number][] = [[label(t('run.down'), 80, COLORS.text), 120]];
@@ -57,14 +66,19 @@ export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: n
   items.push([new Container(), 24]);
   const giveUp = button(t('run.giveUp'), 640, 150, () => actions.giveUp(), { fill: COLORS.panelLocked });
   if (down !== 'none') {
-    const playing = down === 'playing';
+    // waiting on the host: a turning ring says so instead of a panel that looks stuck
+    const waiting = down === 'checking' || down === 'playing';
     const free = down === 'free';
-    const revive = button(playing ? '…' : free ? t('run.reviveFree') : t('run.revive'), 640, 150, () => actions.revive(), {
-      fill: playing ? COLORS.panelLocked : COLORS.saffron,
-      video: !playing && !free,
+    if (waiting) wait = spinner(30, COLORS.text);
+    const revive = button(waiting ? t('run.adLoading') : free ? t('run.reviveFree') : t('run.revive'), 640, 150, () => actions.revive(), {
+      fill: waiting ? COLORS.panelLocked : COLORS.saffron,
+      video: !waiting && !free,
+      icon: wait,
     });
-    if (playing) revive.eventMode = giveUp.eventMode = 'none';
-    else if (keys) keyCap(revive, 640, 150, t('common.keyEnter'));
+    // the way out stays open while the host is asked, never while an ad plays
+    if (waiting) revive.eventMode = 'none';
+    if (down === 'playing') giveUp.eventMode = 'none';
+    else if (keys && !waiting) keyCap(revive, 640, 150, t('common.keyEnter'));
     items.push([revive, 190]);
   }
   if (keys && down !== 'playing') keyCap(giveUp, 640, 150, t('common.keyEsc'));
@@ -80,5 +94,5 @@ export function downPanel(f: UiFrame, down: Down, info: DownInfo | null, wave: n
     y += step;
   }
   layer.addChild(box);
-  return layer;
+  return { view: layer, spinner: wait };
 }

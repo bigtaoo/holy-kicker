@@ -59,6 +59,7 @@ export const pt: Table<typeof en> = {
     boss: 'Luta contra o chefe!',
     down: 'Você caiu',
     revive: 'Reviver',
+    adLoading: 'Carregando anúncio…',
     fall: {
       charge: { cause: 'Pego por uma investida', tip: 'Elites miram antes de investir: ao ver a linha de mira, desvie para o lado' },
       slam: { cause: 'Pego por um golpe', tip: 'Quando um círculo acender no chão, saia dele' },

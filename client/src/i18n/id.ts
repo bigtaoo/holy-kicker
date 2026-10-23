@@ -59,6 +59,7 @@ export const id: Table<typeof en> = {
     boss: 'Lawan bos!',
     down: 'Kamu tumbang',
     revive: 'Bangkit',
+    adLoading: 'Memuat iklan…',
     fall: {
       charge: { cause: 'Kena serudukan', tip: 'Elite membidik sebelum menyeruduk: saat ada garis bidikan, menyamping' },
       slam: { cause: 'Kena hantaman', tip: 'Saat lingkaran menyala di tanah, keluar darinya' },

@@ -59,6 +59,7 @@ export const pl: Table<typeof en> = {
     boss: 'Walka z bossem!',
     down: 'Padłeś',
     revive: 'Wskrześ',
+    adLoading: 'Ładowanie reklamy…',
     fall: {
       charge: { cause: 'Trafiony szarżą', tip: 'Elity celują przed szarżą: gdy widzisz linię celowania, uskocz w bok' },
       slam: { cause: 'Trafiony uderzeniem', tip: 'Gdy na ziemi rozbłyśnie krąg, wyjdź z niego' },

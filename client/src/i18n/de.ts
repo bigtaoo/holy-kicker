@@ -59,6 +59,7 @@ export const de: Table<typeof en> = {
     boss: 'Bosskampf!',
     down: 'Du bist gefallen',
     revive: 'Wiederbeleben',
+    adLoading: 'Werbung lädt…',
     fall: {
       charge: { cause: 'Von einem Ansturm erwischt', tip: 'Elites zielen vor dem Ansturm: siehst du die Ziellinie, weiche seitlich aus' },
       slam: { cause: 'Von einem Stampfer erwischt', tip: 'Leuchtet ein Kreis am Boden auf, geh hinaus' },

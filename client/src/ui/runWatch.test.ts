@@ -148,17 +148,18 @@ describe('RunWatch', () => {
     expect(end).not.toHaveBeenCalled();
   });
 
-  it('offers the ad revive only when the host can play one, else ends the run', async () => {
+  it('spins while the host is asked, then offers the ad revive only when it can play one, else ends the run', async () => {
     const a = watch(false, undefined, undefined, { free: 0, ad: true });
     fell(a.game, 1, 1, 1);
     a.w.update(1 / 30);
+    expect(a.hud.calls.showDown?.[0][0]).toBe('checking');
     await Promise.resolve();
-    expect(a.hud.calls.showDown?.[0][0]).toBe('ad');
+    expect(a.hud.calls.showDown?.[1][0]).toBe('ad');
     const b = watch(false, undefined, undefined, { free: 0, ad: false });
     fell(b.game, 1, 1, 1);
     b.w.update(1 / 30);
     await Promise.resolve();
-    expect(b.hud.calls.showDown).toBeUndefined();
+    expect(b.hud.calls.showDown?.map((c) => c[0])).toEqual(['checking']);
     expect(b.end).toHaveBeenCalledTimes(1);
   });
 

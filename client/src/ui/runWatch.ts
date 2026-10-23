@@ -217,11 +217,12 @@ export class RunWatch {
       this.downShown = true;
       d.portal.gameplayStop();
       // the death panel only asks about a revive; with none to offer the results come at once
-      // (they say what felled the hero too), and the ad's offer waits for the host to say it can play
+      // (they say what felled the hero too), and the ad's offer waits, spinning, for the host to say it can play
       const info = this.fallInfo();
       if (p.revives === 0) d.end();
       else if (d.freeRevives() > 0) hud.showDown('free', info);
       else {
+        hud.showDown('checking', info);
         void d.ads.rewardedAvailable().then((ok) => {
           if (!this.downShown || hud.view.destroyed) return;
           if (ok) hud.showDown('ad', info);

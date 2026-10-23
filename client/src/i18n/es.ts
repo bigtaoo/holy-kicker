@@ -59,6 +59,7 @@ export const es: Table<typeof en> = {
     boss: '¡Combate de jefe!',
     down: 'Has caído',
     revive: 'Revivir',
+    adLoading: 'Cargando anuncio…',
     fall: {
       charge: { cause: 'Atrapado por una embestida', tip: 'Los élites apuntan antes de embestir: si ves la línea de mira, apártate' },
       slam: { cause: 'Atrapado en un golpe', tip: 'Cuando se ilumine un círculo en el suelo, sal de él' },

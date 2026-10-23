@@ -59,6 +59,7 @@ export const ko: Table<typeof en> = {
     boss: '보스전!',
     down: '쓰러졌다',
     revive: '부활',
+    adLoading: '광고 불러오는 중…',
     fall: {
       charge: { cause: '돌진에 당함', tip: '정예는 돌진 전에 조준해요: 조준선이 보이면 옆으로 피하세요' },
       slam: { cause: '내려찍기에 당함', tip: '바닥에 원이 빛나면 밖으로 나가세요' },

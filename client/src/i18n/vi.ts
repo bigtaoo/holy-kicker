@@ -59,6 +59,7 @@ export const vi: Table<typeof en> = {
     boss: 'Đánh trùm!',
     down: 'Bạn đã gục',
     revive: 'Hồi sinh',
+    adLoading: 'Đang tải quảng cáo…',
     fall: {
       charge: { cause: 'Bị lao húc trúng', tip: 'Tinh anh ngắm trước khi lao: thấy vạch ngắm thì né sang ngang' },
       slam: { cause: 'Bị đập trúng', tip: 'Khi một vòng tròn sáng lên dưới đất, hãy bước ra ngoài' },

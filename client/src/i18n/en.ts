@@ -57,6 +57,7 @@ export const en = {
     boss: 'Boss fight!',
     down: 'You fell',
     revive: 'Revive',
+    adLoading: 'Loading ad…',
     fall: {
       charge: { cause: 'Caught by a charge', tip: 'Elites aim before they charge: when you see the aim line, step sideways' },
       slam: { cause: 'Caught in a slam', tip: 'When a circle lights up on the ground, walk out of it' },
