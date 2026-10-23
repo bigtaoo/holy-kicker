@@ -43,6 +43,7 @@ import { PlayerName } from './playerName';
 import { ReplayScreen, type ReplayView } from './replayWatch';
 import { uiFrame, type Screen } from './uiLayout';
 import { uprightCover } from './uprightCover';
+import { UpdatePrompt } from './updatePrompt';
 import { touchOnly } from './media';
 import { onButtonTap } from './widgets';
 
@@ -84,6 +85,8 @@ export class Shell {
   private readonly runs: RunFlow;
   /** The iOS app's reminders, booked on the way to the lobby and to the background; null on hosts without them. */
   private readonly reminders: ReminderBook | null;
+  /** The iOS app's hot updates, offered over a free lobby; null on hosts without them. */
+  private readonly updates: UpdatePrompt | null;
   private readonly faults = new FaultGuard(Date.now, () => !!globalThis.location?.reload && !restartedLately());
   /** The run on screen was resumed after a fault: one more fault settles it rather than offering it again. */
   private faultedRun = false;
@@ -115,6 +118,7 @@ export class Shell {
     this.ads = pacedAds(this.sound.muteDuring(platform.ads), BALANCE.ads.interstitialMinutes * 60_000);
     this.portal = bracketed(platform.portal);
     this.reminders = platform.notify ? new ReminderBook(platform.notify, platform.storage, () => this.save) : null;
+    this.updates = platform.updates ? new UpdatePrompt(platform.updates, this.ui) : null;
     onButtonTap(() => this.sound.play('tap'));
     platform.bindStick(app, this.stick);
     platform.onKey?.((code, repeat) => this.screen?.key?.(code, repeat));
@@ -122,6 +126,7 @@ export class Shell {
     platform.onHide(() => {
       this.runs.hidden();
       this.reminders?.sync();
+      this.updates?.hidden();
     });
     this.runs = new RunFlow({
       app, platform, art, scene, stick: this.stick, net, device, sound: this.sound, ads: this.ads, portal: this.portal, names: this.names,
@@ -403,6 +408,7 @@ export class Shell {
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
       this.screen.layout(uiFrame(computeViewport(width, height, this.scene.record > 0), insets));
     }
+    this.updates?.update(this.screen instanceof LobbyScreen && this.screen.idle, key, () => uiFrame(computeViewport(width, height), this.platform.safeInsets()));
     this.coverSideways(width, height, key);
     // only a run ticking on screen counts towards the next interstitial
     if (this.runs.playing) this.ads.played(this.app.ticker.deltaMS);

@@ -2,17 +2,20 @@ import { Capacitor } from '@capacitor/core';
 import { CapacitorUpdater } from '@capgo/capacitor-updater';
 import { IOS_APP } from './app';
 import { hkNative } from './bridge';
+import type { AppUpdates } from '../types';
 
 // Hot updates of the web layer (docs/ios.md "Hot updates"), after D:\funny's platform/ota.ts: the
 // Capgo plugin in the shell, driven by hand from here against our own static manifest, never
 // Capgo's cloud (capacitor.config.ts turns its update loop and its stats off).
 //
-// Once the game is up, `checkOta` tells the plugin this bundle booted (else, after
-// appReadyTimeout, it rolls back to the one before), reads the manifest and downloads a newer
-// bundle this shell can run. It does not arm it with next(): the plugin swaps an armed bundle in
-// whenever the app goes to the background, which would throw away a run the player only switched
-// away from. Instead `applyDownloaded`, first thing at the next launch, switches to it before
-// anything is drawn.
+// Once the game is up, `readyOta` tells the plugin this bundle booted (else, after
+// appReadyTimeout, it rolls back to the one before). In the lobby, `findOta` reads the manifest
+// and names a newer bundle this shell can run; the player is asked (ui/updatePrompt.ts), and on a
+// yes `installOta` downloads it with its progress and switches to it with set(), which reloads
+// the page into it. It never arms one with next(): the plugin swaps an armed bundle in whenever
+// the app goes to the background, which would throw away a run the player only switched away
+// from. A bundle downloaded but not switched to (by the silent logic before the prompt, or a
+// set() that failed) is taken by `applyDownloaded`, first thing at the next launch.
 //
 // The manifest gates who takes an update on the shell's bridge contract (`minBridge`, the
 // HKNative.v every shell reports) and can stop the rollout (`stop`) or take bundles back
@@ -109,6 +112,8 @@ export interface Updater {
   list(): Promise<{ bundles: Bundle[] }>;
   download(o: { url: string; version: string; checksum: string }): Promise<Bundle>;
   set(o: { id: string }): Promise<void>;
+  /** Download progress, `percent` 0..100. */
+  addListener(event: 'download', cb: (e: { percent: number }) => void): Promise<{ remove(): Promise<void> }>;
   /** Back to the shell's own bundle; the page reloads. */
   reset(): Promise<void>;
 }
@@ -153,30 +158,62 @@ async function fetchManifest(running: string): Promise<Partial<OtaManifest> | nu
   }
 }
 
+/** Once the game is up: this bundle booted, so the plugin keeps it. Never throws. */
+export async function readyOta(running = __HK_BUNDLE__, inShell = Capacitor.isNativePlatform(), updater = plugin): Promise<void> {
+  if (!active(running, inShell)) return;
+  try {
+    await updater.notifyAppReady();
+  } catch (e) {
+    console.warn('[ota] not confirmed:', e);
+  }
+}
+
 /**
- * Once the game is up: confirm this bundle, then fetch a newer one for the next launch. Never
- * throws: offline, a bad manifest or a failed download leave the player on the bundle they have.
+ * In the lobby: the manifest's bundle when this device wants it, else null. Never throws:
+ * offline, a bad manifest or a stop all come back null, and nothing is asked.
  */
-export async function checkOta(
+export async function findOta(
   running = __HK_BUNDLE__,
   inShell = Capacitor.isNativePlatform(),
   updater = plugin,
   manifest: (running: string) => Promise<Partial<OtaManifest> | null> = fetchManifest,
   kv: Kv = localStorage,
   bridge = hkNative()?.v ?? 0,
-): Promise<'none' | 'downloaded'> {
-  if (!active(running, inShell)) return 'none';
+): Promise<OtaManifest | null> {
+  if (!active(running, inShell)) return null;
   try {
-    await updater.notifyAppReady();
     const m = await manifest(running);
     // the next launch takes back what this manifest revokes (applyDownloaded)
     if (m) kv.setItem(REVOKE_KEY, JSON.stringify(Array.isArray(m.revoke) ? m.revoke.filter((v) => typeof v === 'string') : []));
     const { native } = await updater.current();
-    if (!wantsDownload(m, running, native, bridge, (await updater.list()).bundles)) return 'none';
-    await updater.download({ url: m.url, version: m.version, checksum: m.checksum });
-    return 'downloaded';
+    return wantsDownload(m, running, native, bridge, (await updater.list()).bundles) ? m : null;
   } catch (e) {
     console.warn('[ota] no update:', e);
-    return 'none';
+    return null;
   }
+}
+
+/**
+ * The player said yes: download `m`, reporting 0..1, then switch to it; the page reloads into the
+ * new bundle. Rejects when the download or the switch fails, leaving the running bundle in play.
+ */
+export async function installOta(m: OtaManifest, progress: (f: number) => void, updater = plugin): Promise<void> {
+  const listener = await updater.addListener('download', (e) => progress(Math.min(1, Math.max(0, e.percent / 100))));
+  try {
+    const bundle = await updater.download({ url: m.url, version: m.version, checksum: m.checksum });
+    progress(1);
+    await updater.set({ id: bundle.id });
+  } finally {
+    void listener.remove().catch(() => undefined);
+  }
+}
+
+/** The shell's hot updates, as the lobby's prompt asks for them. */
+export function otaUpdates(): AppUpdates {
+  return {
+    check: async () => {
+      const m = await findOta();
+      return m && { version: m.version, install: (progress) => installOta(m, progress) };
+    },
+  };
 }

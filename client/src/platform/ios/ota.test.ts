@@ -8,18 +8,28 @@ import capConfig from '../../../capacitor.config.ts?raw';
 import podfile from '../../../ios/App/Podfile?raw';
 import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
 import bridgeSwift from '../../../ios/App/App/HKBridgeViewController.swift?raw';
-import { applyDownloaded, checkOta, isNewer, MANIFEST_URL, pickDownloaded, REVOKE_KEY, wantsDownload, type Bundle, type Updater } from './ota';
+import { applyDownloaded, findOta, installOta, isNewer, MANIFEST_URL, pickDownloaded, readyOta, REVOKE_KEY, wantsDownload, type Bundle, type Updater } from './ota';
 
 const manifest = { version: '1.0.18.2', url: 'https://hk-ota.gamestao.com/1.0.18.2.zip', checksum: 'ab12', minNativeVersion: '1.0' };
 
-function fakeUpdater(bundles: Bundle[] = [], native = '1.0'): Updater & { calls: string[] } {
+function fakeUpdater(bundles: Bundle[] = [], native = '1.0', fails = false): Updater & { calls: string[] } {
   const calls: string[] = [];
+  let progress: (e: { percent: number }) => void = () => {};
   return {
     calls,
+    addListener: async (_event, cb) => {
+      progress = cb;
+      return { remove: async () => { calls.push('unlisten'); } };
+    },
     notifyAppReady: async () => { calls.push('ready'); },
     current: async () => ({ native }),
     list: async () => ({ bundles }),
-    download: async (o) => { calls.push(`download ${o.version} ${o.checksum}`); return { id: 'x', version: o.version, status: 'pending' }; },
+    download: async (o) => {
+      calls.push(`download ${o.version} ${o.checksum}`);
+      progress({ percent: 50 });
+      if (fails) throw new Error('checksum');
+      return { id: 'x', version: o.version, status: 'pending' };
+    },
     set: async (o) => { calls.push(`set ${o.id}`); },
     reset: async () => { calls.push('reset'); },
   };
@@ -87,19 +97,38 @@ describe('pickDownloaded', () => {
 });
 
 describe('the updater calls', () => {
-  it('confirm the bundle, then download a newer one for the next launch', async () => {
+  it('confirm the bundle at launch', async () => {
     const u = fakeUpdater();
-    expect(await checkOta('1.0.18', true, u, async () => manifest, kv(), 4)).toBe('downloaded');
-    expect(u.calls).toEqual(['ready', 'download 1.0.18.2 ab12']);
+    await readyOta('1.0.18', true, u);
+    expect(u.calls).toEqual(['ready']);
+  });
+
+  it('offer a newer bundle without downloading it', async () => {
+    const u = fakeUpdater();
+    expect(await findOta('1.0.18', true, u, async () => manifest, kv(), 4)).toEqual(manifest);
+    expect(u.calls).toEqual([]);
+  });
+
+  it('download with progress on a yes, then switch to it', async () => {
+    const u = fakeUpdater();
+    const seen: number[] = [];
+    await installOta(manifest, (f) => seen.push(f), u);
+    expect(seen).toEqual([0.5, 1]);
+    expect(u.calls).toEqual(['download 1.0.18.2 ab12', 'set x', 'unlisten']);
+    const failing = fakeUpdater([], '1.0', true);
+    await expect(installOta(manifest, () => {}, failing)).rejects.toThrow('checksum');
+    expect(failing.calls).toEqual(['download 1.0.18.2 ab12', 'unlisten']);
   });
 
   it('do nothing in development, in a browser, or when the manifest fails', async () => {
     const u = fakeUpdater();
-    expect(await checkOta('0.0.0', true, u, async () => manifest, kv())).toBe('none');
-    expect(await checkOta('1.0.18', false, u, async () => manifest, kv())).toBe('none');
+    await readyOta('0.0.0', true, u);
+    expect(await findOta('0.0.0', true, u, async () => manifest, kv())).toBe(null);
+    expect(await findOta('1.0.18', false, u, async () => manifest, kv())).toBe(null);
     expect(u.calls).toEqual([]);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    expect(await checkOta('1.0.18', true, u, async () => { throw new Error('offline'); }, kv())).toBe('none');
+    expect(await findOta('1.0.18', true, u, async () => { throw new Error('offline'); }, kv())).toBe(null);
+    expect(await findOta('1.0.18', true, u, async () => null, kv())).toBe(null);
     warn.mockRestore();
   });
 
@@ -115,10 +144,10 @@ describe('the updater calls', () => {
     const store = kv();
     const u = fakeUpdater([{ id: 'c', version: '1.0.18.2', status: 'success' }]);
     const stopped = { version: '1.0.18.2', stop: true, revoke: ['1.0.18.2'], minNativeVersion: '999' };
-    expect(await checkOta('1.0.18.2', true, u, async () => stopped, store, 4)).toBe('none');
+    expect(await findOta('1.0.18.2', true, u, async () => stopped, store, 4)).toBe(null);
     expect(store.m.get(REVOKE_KEY)).toBe('["1.0.18.2"]');
     expect(await applyDownloaded('1.0.18.2', true, u, store)).toBe(true);
-    expect(u.calls).toEqual(['ready', 'reset']);
+    expect(u.calls).toEqual(['reset']);
     // a downloaded bundle taken back is never switched to, and a shell's own is never left
     const shell = fakeUpdater([{ id: 'c', version: '1.0.18.2', status: 'pending' }]);
     expect(await applyDownloaded('1.0.18', true, shell, store)).toBe(false);
@@ -128,8 +157,8 @@ describe('the updater calls', () => {
 
   it("pass the shell's bridge contract to the gate", async () => {
     const u = fakeUpdater();
-    expect(await checkOta('1.0.18', true, u, async () => ({ ...manifest, minBridge: 5 }), kv(), 4)).toBe('none');
-    expect(await checkOta('1.0.18', true, u, async () => ({ ...manifest, minBridge: 5 }), kv(), 5)).toBe('downloaded');
+    expect(await findOta('1.0.18', true, u, async () => ({ ...manifest, minBridge: 5 }), kv(), 4)).toBe(null);
+    expect(await findOta('1.0.18', true, u, async () => ({ ...manifest, minBridge: 5 }), kv(), 5)).not.toBe(null);
   });
 
   it('read the bridge gate from the shell this commit builds', () => {

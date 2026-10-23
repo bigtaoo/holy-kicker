@@ -1,6 +1,6 @@
 import type { Host } from '@hk/protocol';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_PORTAL, type AdPrivacy, type Ads, type Notifier, type Portal, type Store, type TextAsk } from '../types';
+import { NO_PORTAL, type AdPrivacy, type Ads, type AppUpdates, type Notifier, type Portal, type Store, type TextAsk } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { adFree } from './adFree';
 import { AdMob } from './admob';
@@ -8,6 +8,7 @@ import { hkNative, type HKNative } from './bridge';
 import { GameCenterAccount } from './gameCenter';
 import { MirrorStore } from './mirrorStore';
 import { nativeNotifier } from './notify';
+import { otaUpdates } from './ota';
 import { StoreKit } from './storeKit';
 
 // The iOS app (docs/ios.md): the browser host inside the Capacitor shell's WKWebView, with the
@@ -26,6 +27,8 @@ export class IosPlatform extends WebPlatform {
   override readonly adPrivacy: AdPrivacy;
   override readonly store: Store | null;
   override readonly notify?: Notifier;
+  /** Hot updates, offered from the lobby (ota.ts). */
+  override readonly updates: AppUpdates = otaUpdates();
   /** main.ios.ts redraws the lobby on its `onChange`. */
   readonly gameCenter: GameCenterAccount;
   /** main.ios.ts redraws the lobby on its `onChange` too. */

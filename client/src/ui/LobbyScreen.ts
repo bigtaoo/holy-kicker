@@ -94,6 +94,8 @@ export class LobbyScreen implements Screen {
   private readonly boards: BoardUi;
   private readonly challenge: ChallengeUi;
   private hint: Container | null = null;
+  /** No panel, card or first-steps arrow is up: a prompt from outside may show (ui/updatePrompt.ts). */
+  idle = false;
   private menuBack: Texture | null = null;
   /** The monk in the courtyard (Play tab) and the specks drifting over it. */
   private figure: LobbyFigure | null = null;
@@ -247,6 +249,8 @@ export class LobbyScreen implements Screen {
     }
     if (this.monksOpen) this.view.addChild(this.monkPanel(f));
     if (this.merging) this.view.addChild(this.merging.view);
+    this.idle = !nextStep(this.save, Date.now()) && !privacy?.asking() && !reminders?.offering() && !(this.tab === 'gear' && this.gearOpen)
+      && !overlay && !daily && !board && !this.settingsOpen && !this.monksOpen && !this.merging;
   }
 
   /** The monk panel over the lobby: buying a monk plays him at once. */
