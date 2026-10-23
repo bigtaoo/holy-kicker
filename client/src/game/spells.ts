@@ -149,15 +149,21 @@ export function fieldMotes(pool: FxPool, rand: () => number, x: number, y: numbe
 /** The Heavenly Seal's burst colours: vermilion and gold (the corgi's missile: orange and white-hot). */
 const SEAL = CORGI ? { ring: CORGI_FX.orange, glow: CORGI_FX.hot, spark: CORGI_FX.laserCore } : { ring: 0xff5a3c, glow: 0xffd36a, spark: 0xfff0b0 };
 
-/** A Heavenly Seal bursting where its talisman struck: a flash, a thick ring and a spray of scraps. */
-export function sealBurst(pool: FxPool, rand: () => number, x: number, y: number, r: number, mode: RingMode): void {
-  pool.emit({ shape: 'glow', x, y, vx: 0, vy: 0, life: 0.18, size0: r * 1.2, size1: r * 1.8, rotation: 0, spin: 0, drag: 1, color: SEAL.glow, alpha: 0.8 });
-  nova(pool, x, y, r * 0.3, r, 0.24, SEAL.ring, mode, 0.22);
+/**
+ * A Heavenly Seal bursting where its talisman struck (`y` on the ground, `lift` up to where it
+ * hangs): like a blast, its light and thick ring lie on `ground` under the mobs and the gems, and
+ * only a short core and the scraps go over them on `pool`.
+ */
+export function sealBurst(pool: FxPool, ground: FxPool, rand: () => number, x: number, y: number, r: number, mode: RingMode, lift = 0): void {
+  ground.emit({ shape: 'glow', x, y, vx: 0, vy: 0, life: 0.18, size0: r * 1.2, size1: r * 1.8, rotation: 0, spin: 0, drag: 1, color: SEAL.glow, alpha: BLAST.light }, FX_TIER.hero);
+  nova(ground, x, y, r * 0.3, r, 0.24, SEAL.ring, mode, 0.22);
+  const top = y - lift;
+  pool.emit({ shape: 'glow', x, y: top, vx: 0, vy: 0, life: BLAST.coreLife, size0: r * 0.6, size1: r * 0.3, rotation: 0, spin: 0, drag: 1, color: SEAL.spark, alpha: 0.9 });
   for (let i = 0; i < 6; i++) {
     const a = (i / 6) * Math.PI * 2 + rand() * 0.6;
     const v = r * (2.2 + rand() * 1.2);
     pool.emit({
-      shape: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.22 + rand() * 0.1,
+      shape: 'spark', x, y: top, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.22 + rand() * 0.1,
       size0: 30, size1: 6, rotation: a, spin: 0, drag: 0.05, color: SEAL.spark, alpha: 1,
     }, true);
   }

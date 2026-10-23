@@ -58,14 +58,15 @@ describe('spells', () => {
     expect(pool.live[pool.live.length - 1]).toMatchObject({ shape: 'glow', x: 300, y: 0 });
   });
 
-  it('keeps a seal burst flash and ring over budget, and drops its scraps and the blade trails', () => {
+  it('lays a seal burst light and ring on the ground, keeps its core over budget, and drops its scraps and the blade trails', () => {
     const pool = new FxPool(1000, () => 0.5, 1);
-    sealBurst(pool, () => 0.5, 0, 0, 150, 'band');
+    const ground = new FxPool(1000);
+    sealBurst(pool, ground, () => 0.5, 0, 0, 150, 'band', 50);
     bladeTrail(pool, 0, 0, 1);
-    expect(pool.live.some((p) => p.shape === 'glow')).toBe(true);
-    expect(pool.live.some((p) => p.shape === 'band')).toBe(true);
-    expect(pool.live.some((p) => p.shape === 'spark')).toBe(false);
-    expect(pool.live.filter((p) => p.shape === 'band')).toHaveLength(28);
+    expect(ground.live.filter((p) => p.shape === 'band')).toHaveLength(28);
+    expect(ground.live.some((p) => p.shape === 'glow')).toBe(true);
+    expect(pool.live.filter((p) => p.shape === 'glow')).toMatchObject([{ y: -50 }]);
+    expect(pool.live.some((p) => p.shape === 'spark' || p.shape === 'band')).toBe(false);
   });
 
   it('owns a halo and two orbs per aura layer', () => {

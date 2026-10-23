@@ -9,7 +9,7 @@ import { ViewPool } from './viewPool';
 // The sutra spells (engine systems/sutras.ts). Lotus Steps: the sim's seeds as small lotus buds
 // on the ground (gold for the Lotus Path) and a ring of petals opening where one blooms. Halo
 // Beam: the hero's beams drawn from his chest out to their length, over the horde, turning
-// with the sim's angle; the Boundless Light also rings his head with a gold nimbus. Lion's Roar: three sound waves rolling out through the cone (all the
+// with the sim's angle, the wedges they just swept lying on the ground under the horde and the gems; the Boundless Light also rings his head with a gold nimbus. Lion's Roar: three sound waves rolling out through the cone (all the
 // way round for the Thunder Roar, under a golden lion's head that rears up over the hero and
 // fades). The monks' passives (engine systems/monks.ts) use the same
 // bursts: the fat monk's Belly Bounce rolls saffron rings out over the ground, and the
@@ -40,6 +40,8 @@ const BOUNCE_LIFE = 0.35;
 const DODGE_LIFE = 0.3;
 /** Ground effects are drawn squashed like the spell fields (spellView.ts). */
 const GROUND = 0.45;
+/** The halo's wedges: over the ground effects (fxView.ts GROUND_FX_Z), under the resting gems. */
+const SWEEP_Z = SHADOW_Z + 0.8;
 
 function budTexture(renderer: Renderer, fill: number, pull: boolean): Texture {
   const r = BUD / 2;
@@ -65,6 +67,8 @@ export class SutraView {
   private readonly buds: Texture[];
   private readonly seeds = new Map<number, { sprite: Sprite; seen: boolean }>();
   private readonly beams = new Graphics();
+  /** The halo's swept wedges, on the ground under the gems and the figures. */
+  private readonly sweeps = new Graphics();
   private readonly bursts: Burst[] = [];
   private readonly lions: { sprite: Sprite; t: number }[] = [];
   private readonly seedPool: ViewPool<Sprite>;
@@ -83,8 +87,9 @@ export class SutraView {
     this.seedPool = new ViewPool(() => new Sprite({ anchor: { x: 0.5, y: 0.75 } }), place);
     this.lionPool = new ViewPool(() => new Sprite({ texture: lionTex, anchor: 0.5 }), place);
     this.burstPool = new ViewPool(() => new Graphics(), place);
-    this.beams.visible = false;
-    world.addChild(this.beams);
+    this.beams.visible = this.sweeps.visible = false;
+    this.sweeps.zIndex = SWEEP_Z;
+    world.addChild(this.beams, this.sweeps);
     this.darts = new DartView(world, overZ);
   }
 
@@ -230,7 +235,7 @@ export class SutraView {
 
   private drawHalo(p: Player, alpha: number, hx: number, hy: number): void {
     const slot = p.spells.find((sp) => sp.id === 'halo');
-    this.beams.visible = !!slot && !p.dead;
+    this.beams.visible = this.sweeps.visible = !!slot && !p.dead;
     if (!slot || p.dead) return;
     const l = slotStats(slot);
     const spin = haloSpin(p, l.life);
@@ -240,13 +245,15 @@ export class SutraView {
     const g = this.beams.clear();
     g.position.set(hx, hy - CHEST);
     g.zIndex = this.overZ;
+    const w = this.sweeps.clear();
+    w.position.set(hx, hy);
     for (let k = 0; k < l.count; k++) {
       const a = a0 + (k / l.count) * TAU;
       const c = Math.cos(a);
       const s = Math.sin(a);
-      // a soft wide glow, then the bright core, trailing a faint wedge where it just swept
+      // a faint wedge on the ground where it just swept, then a soft wide glow and the bright core
       const trail = (spin / BRADS) * TAU * 4;
-      g.moveTo(0, 0).arc(0, 0, len, a - trail, a).lineTo(0, 0).fill({ color: GOLD, alpha: 0.18 });
+      w.moveTo(0, 0).arc(0, 0, len, a - trail, a).lineTo(0, 0).fill({ color: GOLD, alpha: 0.18 });
       g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: GOLD, width: 26, alpha: 0.3, cap: 'round' });
       g.moveTo(c * 30, s * 30).lineTo(c * len, s * len).stroke({ color: BEAM, width: 12, alpha: 0.95, cap: 'round' });
     }

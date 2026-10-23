@@ -32,6 +32,7 @@ import { Mist } from './mistView';
 import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport } from './viewport';
+import { uiFrame } from '../ui/uiLayout';
 import { Autoplay, RUSH_SPEED } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { Shake } from './shake';
@@ -76,6 +77,8 @@ export class Game {
   readonly resumed: boolean;
   private readonly loop = new FixedStep();
   private readonly root = new Container();
+  /** The boss and elite bars, laid out in the HUD's units under its rows (and the notch). */
+  private readonly bars = new Container();
   private readonly world = new Container({ isRenderGroup: true }); // y-sorted each frame: a group keeps the stage's list cached
   private readonly playMask = new Graphics();
   private readonly sides: Container;
@@ -211,8 +214,9 @@ export class Game {
     this.views = { hero, feedback: this.feedback, staff, fish, downCam, lowHp, fx, horde, boss, shake, threats, drops, spells, arsenal, sutras, hurt: () => (this.hurtFlash = HURT_FLASH) };
 
     this.root.addChild(this.world, this.label);
-    if (this.boss) this.root.addChild(...this.boss.huds);
-    if (this.elites?.bar) this.root.addChild(this.elites.bar.view);
+    if (this.boss) this.bars.addChild(...this.boss.huds);
+    if (this.elites?.bar) this.bars.addChild(this.elites.bar.view);
+    this.root.addChild(this.bars);
     this.root.mask = this.playMask;
     [this.stickBase, this.stickKnob] = stickSprites(app.renderer, STICK_RADIUS);
     this.sides = sideGround(stage.ground, app.screen, this.root, this.world, setup.chapter);
@@ -253,8 +257,10 @@ export class Game {
     this.label.style.stroke = { color: 0x000000, width: Math.max(1, 4 * vp.scale) };
     // dev only, below the HUD strip, the wave counter and the boss bar
     this.label.position.set(24 * vp.scale, 460 * vp.scale);
-    this.boss?.layout(vp.playW, vp.scale);
-    this.elites?.bar?.layout(vp.playW, vp.scale);
+    const f = uiFrame(vp, this.platform.safeInsets());
+    this.bars.y = f.y - vp.playY;
+    this.boss?.layout(vp.playW, f.scale);
+    this.elites?.bar?.layout(vp.playW, f.scale);
   }
 
   /** Brings the downed hero back on the next tick (the engine checks he has a revive left). */

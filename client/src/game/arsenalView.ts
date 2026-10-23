@@ -118,7 +118,7 @@ export class ArsenalView {
       explosion(this.pool, this.ground, this.rand, x, y, e.radius / FP, this.ring, BOOM_SLOW, e.small);
       return;
     }
-    sealBurst(this.pool, this.rand, x, y - LIFT, e.radius / FP, this.ring);
+    sealBurst(this.pool, this.ground, this.rand, x, y, e.radius / FP, this.ring, LIFT);
     // the corgi's missile just bursts; the monk's talisman leaves its seal stamped in the air
     if (CORGI) return;
     const sprite = this.sprites.take();

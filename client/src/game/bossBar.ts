@@ -2,7 +2,7 @@ import { Container, type Text } from 'pixi.js';
 import { COLORS, fit, label, meter } from '../ui/widgets';
 
 // A boss's health bar across the top of the play area, under the build strip, the wave
-// counter, the last-fall line and the run buttons (RunHud, which end at about 400 on a phone):
+// counter, the last-fall and next-chest lines and the run buttons (RunHud, which end at about 460):
 // the name over a violet fill, drawn as the lobby's meter. The chapter boss has one; the mid-boss
 // twins share one.
 
@@ -10,8 +10,8 @@ import { COLORS, fit, label, meter } from '../ui/widgets';
 const VIOLET = 0xa064f0;
 const BAR_W = 760;
 const BAR_H = 28;
-/** The bar's top edge in play-area units; its name sits above it, clear of the HUD's rows. */
-export const BOSS_BAR_TOP = 480;
+/** The bar's top edge in HUD units (ui/uiLayout.ts); its name sits above it, clear of the HUD's rows. */
+export const BOSS_BAR_TOP = 550;
 export const BOSS_BAR_H = BAR_H;
 /** A long name ("Black Carp King, Empowered" in some languages) shrinks to this width. */
 const NAME_W = 960;
@@ -40,7 +40,7 @@ export class BossBar {
     this.gauge.set(Math.max(0, hp) / Math.max(1, maxHp));
   }
 
-  /** Keeps the bar centred across the top of the play area (play-area pixels and scale). */
+  /** Keeps the bar centred across the top of the play area (its width in pixels; the HUD's scale). */
   layout(playW: number, scale: number): void {
     this.view.scale.set(scale);
     this.view.position.set(playW / 2, (BOSS_BAR_TOP + BAR_H / 2) * scale);
