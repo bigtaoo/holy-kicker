@@ -23,7 +23,7 @@ export const ko: Table<typeof en> = {
     best: '최고: {wave} 웨이브',
     notPlayed: '아직 도전 안 함',
     cleared: '클리어',
-    grit: '여기서 쓰러진 만큼 불굴 ×{n}: 공격 +{attack}%, 체력 +{hp}%',
+    grit: '불굴 ×{n}: 공격 +{attack}%, 체력 +{hp}%',
     normal: '일반',
     hard: '어려움',
     hardTitle: '어려움 {n}: {name}',

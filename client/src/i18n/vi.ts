@@ -23,7 +23,7 @@ export const vi: Table<typeof en> = {
     best: 'Kỷ lục: đợt {wave}',
     notPlayed: 'Chưa chơi',
     cleared: 'Đã qua',
-    grit: 'Ngã ở đây nên Kiên cường ×{n}: +{attack}% công, +{hp}% máu',
+    grit: 'Kiên cường ×{n}: +{attack}% công, +{hp}% máu',
     normal: 'Thường',
     hard: 'Khó',
     hardTitle: 'Khó {n}: {name}',

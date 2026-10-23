@@ -21,7 +21,7 @@ export const en = {
     best: 'Best: wave {wave}',
     notPlayed: 'Not played yet',
     cleared: 'Cleared',
-    grit: 'You fell here, so Grit ×{n}: +{attack}% ATK, +{hp}% HP',
+    grit: 'Grit ×{n}: +{attack}% ATK, +{hp}% HP',
     normal: 'Normal',
     hard: 'Hard',
     hardTitle: 'Hard {n}: {name}',

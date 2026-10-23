@@ -23,7 +23,7 @@ export const th: Table<typeof en> = {
     best: 'ดีที่สุด: เวฟ {wave}',
     notPlayed: 'ยังไม่เคยเล่น',
     cleared: 'ผ่านแล้ว',
-    grit: 'ล้มที่นี่ จึงได้ใจสู้ ×{n}: ATK +{attack}%, HP +{hp}%',
+    grit: 'ใจสู้ ×{n}: ATK +{attack}%, HP +{hp}%',
     normal: 'ปกติ',
     hard: 'ยาก',
     hardTitle: 'ยาก {n}: {name}',

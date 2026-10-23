@@ -23,7 +23,7 @@ export const id: Table<typeof en> = {
     best: 'Terbaik: gelombang {wave}',
     notPlayed: 'Belum dimainkan',
     cleared: 'Tamat',
-    grit: 'Kamu tumbang di sini: Tekad ×{n}, +{attack}% SER, +{hp}% HP',
+    grit: 'Tekad ×{n}: +{attack}% SER, +{hp}% HP',
     normal: 'Normal',
     hard: 'Sulit',
     hardTitle: 'Sulit {n}: {name}',

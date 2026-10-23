@@ -23,7 +23,7 @@ export const it: Table<typeof en> = {
     best: 'Record: ondata {wave}',
     notPlayed: 'Non ancora giocato',
     cleared: 'Completato',
-    grit: 'Sei caduto qui: Tenacia ×{n}, +{attack}% ATT, +{hp}% PS',
+    grit: 'Tenacia ×{n}: +{attack}% ATT, +{hp}% PS',
     normal: 'Normale',
     hard: 'Difficile',
     hardTitle: 'Difficile {n}: {name}',

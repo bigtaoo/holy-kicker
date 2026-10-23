@@ -23,7 +23,7 @@ export const tr: Table<typeof en> = {
     best: 'Rekor: dalga {wave}',
     notPlayed: 'Henüz oynanmadı',
     cleared: 'Geçildi',
-    grit: 'Burada düştün, Azim ×{n}: +%{attack} SAL, +%{hp} CAN',
+    grit: 'Azim ×{n}: +%{attack} SAL, +%{hp} CAN',
     normal: 'Normal',
     hard: 'Zor',
     hardTitle: 'Zor {n}: {name}',
