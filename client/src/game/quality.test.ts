@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BATTLE_FPS, CALM_FPS, FrameGate, FrameGovernor, LEVELS, levelRange, lowBattery, refreshCap, SAVER, SLOW_FPS, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
+import { BATTLE_FPS, CALM_FPS, FrameGate, FrameGovernor, frameResolution, LEVELS, levelRange, lowBattery, refreshCap, SAVER, SLOW_FPS, startLevel, targetFps, useMsaa, type DeviceInfo } from './quality';
 
 const PC: DeviceInfo = { mobile: false, cores: 8, memoryGB: 8, gpu: 'ANGLE (Intel, Intel(R) Arc(TM) Graphics)', modelLevel: 0 };
 const PHONE: DeviceInfo = { mobile: true, cores: 8, memoryGB: 8, gpu: 'Adreno (TM) 740', modelLevel: 0 };
@@ -38,6 +38,33 @@ describe('levelRange and useMsaa', () => {
     expect(useMsaa('auto', PHONE)).toBe(false);
     expect(useMsaa('high', PHONE)).toBe(true);
     expect(useMsaa('saver', PC)).toBe(false);
+  });
+
+  it('gives auto MSAA to iPhones and iPads only among phones', () => {
+    const iphone: DeviceInfo = { ...PHONE, gpu: '', apple: true };
+    expect(useMsaa('auto', iphone)).toBe(true);
+    expect(useMsaa('auto', { ...iphone, tablet: true })).toBe(true);
+    expect(useMsaa('saver', iphone)).toBe(false);
+    expect(useMsaa('auto', { ...PHONE, apple: false })).toBe(false);
+  });
+});
+
+describe('frameResolution', () => {
+  const level = (name: string) => LEVELS.find((l) => l.name === name)!;
+
+  it('draws screens without a run at the full density', () => {
+    expect(frameResolution(true, level('saver'), 3)).toBe(3);
+    expect(frameResolution(true, level('crawl'), 3)).toBe(3);
+    expect(frameResolution(true, level('high'), 1)).toBe(1);
+  });
+
+  it("draws battles at the level's resolution, never over the density", () => {
+    expect(frameResolution(false, level('phone'), 3)).toBe(2);
+    expect(frameResolution(false, level('saver'), 3)).toBe(1.5);
+    expect(frameResolution(false, level('crawl'), 3)).toBe(0.75);
+    expect(frameResolution(false, level('high'), 1.25)).toBe(1.25);
+    // the battle cap stays under a 3x screen at every level
+    for (const l of LEVELS) expect(frameResolution(false, l, 3)).toBeLessThanOrEqual(2);
   });
 });
 

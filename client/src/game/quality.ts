@@ -74,6 +74,8 @@ export interface DeviceInfo {
   gpu: string;
   /** WeChat's device tier: 1 high, 2 mid, 3 low, 0 unknown. */
   modelLevel: number;
+  /** An iPhone or iPad (an Apple GPU), when the host can tell. */
+  apple?: boolean;
 }
 
 export interface LevelRange {
@@ -123,9 +125,22 @@ export function lowBattery(b: Battery, wasLow: boolean): boolean {
   return b.level <= (wasLow ? BATTERY_OK : LOW_BATTERY);
 }
 
-/** MSAA is fixed when the GL context is made: desktop auto and forced high get it. */
+/** MSAA is fixed when the GL context is made: desktop auto and forced high get it, and so does
+ *  auto on an iPhone or iPad, whose tile-based GPU resolves the samples on chip (without it every
+ *  drawn shape, the lobby's round badges and the buttons, has stair-step edges). Other phones'
+ *  GPUs pay for it in memory bandwidth, so they go without. */
 export function useMsaa(mode: QualityMode, d: DeviceInfo): boolean {
-  return mode === 'high' || (mode === 'auto' && !d.mobile);
+  return mode === 'high' || (mode === 'auto' && (!d.mobile || !!d.apple));
+}
+
+/** The most pixels per logical pixel a host renders: a 3x phone's full density. */
+export const MAX_RESOLUTION = 3;
+
+/** The render resolution for a frame. Calm screens with no run (lobby, menus, results) barely
+ *  move and draw little, so they get the display's full density (`device`, the most the host
+ *  allows); a battle, its pause and its level-up cards draw at the level's resolution. */
+export function frameResolution(sharp: boolean, level: LevelSettings, device: number): number {
+  return sharp ? device : Math.min(device, level.resolution);
 }
 
 /** A frame passes the gate once this many refreshes short of the cap's interval have gone by. */
