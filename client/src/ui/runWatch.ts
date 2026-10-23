@@ -27,6 +27,10 @@ import { newTutorial, stepTutorial, type Tutorial, type TutorialStep } from './t
 /** Seconds of play between two `alive` beats: a run whose page dies with no `leave` still says how far it got. */
 export const ALIVE_EVERY = 60;
 
+/** How long the death panel waits for the host to say a rewarded ad can play: a host still loading one
+ *  (iOS AdMob waits up to 20 s) would otherwise leave the fallen hero on screen with no panel and no results. */
+export const DOWN_AD_WAIT_MS = 2000;
+
 /** The experience in the gems resting within GATHER.reach of `p`, as a share of the next level's. */
 export function lyingShare(s: SimState, p: Player): number {
   const r2 = (GATHER.reach * FP) ** 2;

@@ -21,6 +21,7 @@ import { afterRun } from '../meta/welcome';
 import { loadSettings, updateSettings } from '../meta/settings';
 import type { Platform, Portal } from '../platform/types';
 import type { PacedAds } from '../platform/adPacing';
+import { within } from '../platform/adTimeout';
 import type { Sound } from '../audio/Sound';
 import type { Backend, RunRank, RunResult } from '../net/backend';
 import { runBuild } from '../net/leaveProps';
@@ -38,7 +39,7 @@ import { keepLanguage } from './settingsPanel';
 import { canReport, reportProblem } from './problemReport';
 import type { PlayerName } from './playerName';
 import type { DownInfo } from './deathInfo';
-import { RunWatch } from './runWatch';
+import { DOWN_AD_WAIT_MS, RunWatch } from './runWatch';
 import { clearedWaves, keepable, runSummary } from './runSummary';
 import type { Screen } from './uiLayout';
 import { reducedMotion } from './media';
@@ -163,8 +164,8 @@ export class RunFlow {
     const teach = !save.firstRunDone && h.scene.waves && !left && !h.scene.autoplay && !h.scene.record;
     this.watch = new RunWatch(game, hud, {
       chapter, novice: save.runs < BALANCE.novice.runs, portal: h.portal, net: h.net,
-      // the death panel asks the host only when it would offer the ad's revive
-      ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', h.ads.rewardedAvailable()) }, past: runPast(save, chapter, this.hard),
+      // the death panel asks the host only when it would offer the ad's revive, and waits on its answer only briefly
+      ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', within(h.ads.rewardedAvailable(), DOWN_AD_WAIT_MS).catch(() => false)) }, past: runPast(save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
       kills: () => this.kills,
       pairHint: { due: () => !loadSettings(h.platform.storage).pairsTold, done: () => updateSettings(h.platform.storage, { pairsTold: true }) },
