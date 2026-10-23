@@ -115,6 +115,8 @@ export class SpellView {
     renderer: Renderer,
     layer: Container,
     private readonly pool: FxPool,
+    /** Effects under the figures (Game's ground layer). */
+    private readonly ground: FxPool,
     private readonly ring: RingMode,
     /** The falling palm's art and the Mountain Palm's, drawn at this zIndex (over the horde). */
     palm: { tex: Texture; mountain: Texture; z: number },
@@ -218,7 +220,7 @@ export class SpellView {
     const r = e.radius / FP;
     if (e.type === 'palm') this.palms.drop(x, y, r, e.fall / TICK_RATE, e.print / TICK_RATE);
     else if (e.kind === 'nova') nova(this.pool, x, y, 60, r, NOVA_LIFE, NOVA, this.ring);
-    else if (e.kind === 'meteor') explosion(this.pool, this.rand, x, y, r, this.ring);
+    else if (e.kind === 'meteor') explosion(this.pool, this.ground, this.rand, x, y, r, this.ring);
   }
 
   /** The sim's fields and cymbals, and the falling palms. */

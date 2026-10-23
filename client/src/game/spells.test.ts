@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { FxPool } from './fx';
-import { bladeTrail, bolt, explosion, nova, sealBurst } from './spells';
+import { BLAST, bladeTrail, bolt, explosion, nova, sealBurst } from './spells';
 import { AuraStack } from './aura';
 
 describe('spells', () => {
@@ -19,9 +19,37 @@ describe('spells', () => {
 
   it('keeps an explosion core when over budget and drops its smoke', () => {
     const pool = new FxPool(1000, () => 0.5, 1);
-    explosion(pool, () => 0.5, 0, 0, 220, 'band');
+    const ground = new FxPool(1000, () => 0.5, 1);
+    explosion(pool, ground, () => 0.5, 0, 0, 220, 'band');
     expect(pool.live.some((p) => p.shape === 'glow')).toBe(true);
-    expect(pool.live.some((p) => p.shape === 'puff')).toBe(false);
+    expect(ground.live.some((p) => p.shape === 'band')).toBe(true);
+    expect(ground.live.some((p) => p.shape === 'puff')).toBe(false);
+  });
+
+  it('lays the light, ring and smoke of a blast under the figures, and only a small core and sparks over them', () => {
+    const pool = new FxPool(1000);
+    const ground = new FxPool(1000);
+    explosion(pool, ground, () => 0.5, 0, 0, 280, 'band');
+    expect(new Set(pool.live.map((p) => p.shape))).toEqual(new Set(['glow', 'spark']));
+    expect(ground.live.filter((p) => p.shape === 'puff')).toHaveLength(BLAST.smoke[0]);
+    const core = pool.live.find((p) => p.shape === 'glow')!;
+    const light = ground.live.find((p) => p.shape === 'glow')!;
+    // the core over the horde shades a small fraction of the light under it
+    expect(core.cost).toBeLessThan(light.cost / 5);
+  });
+
+  it('gives a bomblet and a hot battle fewer sparks and less smoke', () => {
+    const count = (heat: number, small: boolean) => {
+      const pool = new FxPool(1000);
+      const ground = new FxPool(1000);
+      pool.heat = heat;
+      explosion(pool, ground, () => 0.5, 0, 0, 280, 'band', 1, small);
+      return { sparks: pool.live.filter((p) => p.shape === 'spark').length, smoke: ground.live.filter((p) => p.shape === 'puff').length };
+    };
+    expect(count(0, false)).toEqual({ sparks: BLAST.sparks[0], smoke: BLAST.smoke[0] });
+    expect(count(1, false)).toEqual({ sparks: BLAST.sparks[1], smoke: BLAST.smoke[1] });
+    expect(count(1, true).sparks).toBeLessThan(BLAST.sparks[1]);
+    expect(count(1, true).smoke).toBeLessThan(BLAST.smoke[1]);
   });
 
   it('ends a bolt at its target', () => {

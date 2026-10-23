@@ -76,6 +76,8 @@ export class ArsenalView {
     renderer: Renderer,
     layer: Container,
     private readonly pool: FxPool,
+    /** Effects under the figures (Game's ground layer). */
+    private readonly ground: FxPool,
     private readonly ring: RingMode,
     icons: ReadonlyMap<string, Texture>,
     private readonly rand: () => number = Math.random,
@@ -113,7 +115,7 @@ export class ArsenalView {
     const x = e.x / FP;
     const y = e.y / FP;
     if (e.type === 'boom') {
-      explosion(this.pool, this.rand, x, y, e.radius / FP, this.ring, BOOM_SLOW);
+      explosion(this.pool, this.ground, this.rand, x, y, e.radius / FP, this.ring, BOOM_SLOW, e.small);
       return;
     }
     sealBurst(this.pool, this.rand, x, y - LIFT, e.radius / FP, this.ring);

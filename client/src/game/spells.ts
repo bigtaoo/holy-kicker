@@ -1,5 +1,6 @@
 import { CORGI, CORGI_FX } from './corgiFx';
-import type { FxPool } from './fx';
+import { FX_TIER, type FxPool } from './fx';
+import { byHeat } from './fxHeat';
 
 // Spell effects for the area-damage stress test, emitted as pool particles. Pure, so their
 // particle counts and fill can be tested without Pixi.
@@ -15,9 +16,9 @@ const SEGMENTS = 28;
 const OVERLAP = 1.12;
 
 /** An expanding ring from radius r0 to r1 over `life` seconds; `thick` is band over radius. */
-export function nova(pool: FxPool, x: number, y: number, r0: number, r1: number, life: number, color: number, mode: RingMode, thick = 0.12): void {
+export function nova(pool: FxPool, x: number, y: number, r0: number, r1: number, life: number, color: number, mode: RingMode, thick = 0.12, alpha = 0.9): void {
   if (mode === 'quad') {
-    pool.emit({ shape: 'ring', x, y, vx: 0, vy: 0, life, size0: r0 * 2.2, size1: r1 * 2.2, rotation: 0, spin: 0, drag: 1, color, alpha: 0.9 });
+    pool.emit({ shape: 'ring', x, y, vx: 0, vy: 0, life, size0: r0 * 2.2, size1: r1 * 2.2, rotation: 0, spin: 0, drag: 1, color, alpha });
     return;
   }
   const arc = ((Math.PI * 2) / SEGMENTS) * OVERLAP;
@@ -28,7 +29,7 @@ export function nova(pool: FxPool, x: number, y: number, r0: number, r1: number,
     const v = (r1 - r0) / life;
     pool.emit({
       shape: 'band', x: x + c * r0, y: y + s * r0, vx: c * v, vy: s * v, life,
-      size0: r0 * arc, size1: r1 * arc, aspect: thick / arc, rotation: a + Math.PI / 2, spin: 0, drag: 1, color, alpha: 0.9,
+      size0: r0 * arc, size1: r1 * arc, aspect: thick / arc, rotation: a + Math.PI / 2, spin: 0, drag: 1, color, alpha,
     });
   }
 }
@@ -39,19 +40,46 @@ export function nova(pool: FxPool, x: number, y: number, r0: number, r1: number,
  */
 export const BOOM_SLOW = CORGI ? 2 : 1;
 
-/** A meteor or bomb landing: a flash, a shock ring, smoke and sparks; `slow` times as long (the smoke drifting as far). */
-export function explosion(pool: FxPool, rand: () => number, x: number, y: number, r: number, mode: RingMode, slow = 1): void {
-  pool.emit({ shape: 'glow', x, y: y - r * 0.2, vx: 0, vy: 0, life: 0.22 * slow, size0: r * 1.4, size1: r * 2, rotation: 0, spin: 0, drag: 1, color: 0xffe6a0, alpha: 0.85 });
-  nova(pool, x, y, r * 0.2, r * 1.1, 0.3 * slow, 0xfff2c8, mode, 0.16);
-  for (let i = 0; i < 10; i++) {
+/**
+ * How a blast is split between the layers. Only a small core and the sparks go over the figures;
+ * the blast's light, its shock ring and its smoke lie on the ground under the mobs and the gems
+ * (Game's ground layer), so a screen full of Thunder Rain still shows what stands in it. A bomblet
+ * gets `small` of the sparks and smoke; a hot battle fewer still (fxHeat.ts).
+ */
+export const BLAST = {
+  /** The core over the figures: its diameter over the radius, cold and hot, and its life (s). */
+  core: [0.8, 0.5] as const,
+  coreLife: 0.1,
+  /** The light on the ground and its shock ring: peak opacity (the ring's cold and hot). */
+  light: 0.6,
+  ring: [0.9, 0.55] as const,
+  sparks: [12, 5] as const,
+  smoke: [10, 5] as const,
+  small: 0.5,
+};
+
+/**
+ * A meteor or bomb landing (`small`: a bomblet) on `pool`, over the figures, and `ground`, under
+ * them: a flash, a shock ring, smoke and sparks; `slow` times as long (the smoke drifting as far).
+ */
+export function explosion(pool: FxPool, ground: FxPool, rand: () => number, x: number, y: number, r: number, mode: RingMode, slow = 1, small = false): void {
+  const heat = pool.heat;
+  const share = small ? BLAST.small : 1;
+  ground.emit({ shape: 'glow', x, y, vx: 0, vy: 0, life: 0.22 * slow, size0: r * 1.4, size1: r * 2, rotation: 0, spin: 0, drag: 1, color: 0xffe6a0, alpha: BLAST.light }, FX_TIER.hero);
+  nova(ground, x, y, r * 0.2, r * 1.1, 0.3 * slow, 0xfff2c8, mode, 0.16, byHeat(heat, BLAST.ring[0], BLAST.ring[1]));
+  const core = r * byHeat(heat, BLAST.core[0], BLAST.core[1]);
+  pool.emit({ shape: 'glow', x, y: y - r * 0.2, vx: 0, vy: 0, life: BLAST.coreLife * slow, size0: core, size1: core * 0.5, rotation: 0, spin: 0, drag: 1, color: 0xfff8e0, alpha: 0.9 });
+  const smoke = Math.round(byHeat(heat, BLAST.smoke[0], BLAST.smoke[1]) * share);
+  for (let i = 0; i < smoke; i++) {
     const a = rand() * Math.PI * 2;
     const v = r * (0.6 + rand() * 0.8);
-    pool.emit({
+    ground.emit({
       shape: 'puff', x, y: y - r * 0.15, vx: (Math.cos(a) * v) / slow, vy: (Math.sin(a) * v * 0.6 - r * 0.4) / slow, life: (0.5 + rand() * 0.3) * slow,
       size0: r * 0.35, size1: r * 0.8, rotation: rand() * Math.PI, spin: (rand() - 0.5) * 2, drag: 0.1, color: i % 2 ? 0x7d6f86 : 0x5d5f73, alpha: 0.7,
     }, true);
   }
-  for (let i = 0; i < 12; i++) {
+  const sparks = Math.round(byHeat(heat, BLAST.sparks[0], BLAST.sparks[1]) * share);
+  for (let i = 0; i < sparks; i++) {
     const a = rand() * Math.PI * 2;
     const v = r * (2 + rand() * 2);
     pool.emit({
