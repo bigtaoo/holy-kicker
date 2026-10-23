@@ -321,6 +321,14 @@ cloud (`capacitor.config.ts`: `autoUpdate: false`, `statsUrl: ''`).
   player only switched away from. Shells in the field run a web layer that still downloads
   silently, so the prompt reaches them only after one more update lands that way. In development
   `?ota=fake` (or `?ota=fail`) fakes the offer and its download.
+- **Launch reports** (`platform/ios/bootTrail.ts`, `main.ios.ts`): each launch writes how far it
+  got to `localStorage` as it goes (`platform`, `probe`, `app`, `gl` with the canvas's resolution
+  and MSAA, `art`, `shell`, `start`, `started`) with the first errors caught, and clears it once
+  `readyOta` has run. A launch that finds an uncleared record (a throw, the web view killed for
+  memory, a rollback) sends it as a `boot_fail` anomaly (stage, ms, bundle, build, info, msg);
+  bundles the updater holds with status `error` go out once each as `ota_fail`. Both wait in the
+  anomaly stash until a launch gets online. Read them from the `events` collection
+  (`e: 'anomaly'`, `p.kind`).
 - **Versions** (`__HK_BUNDLE__`, `build/buildId.mjs`): a shell's own bundle is
   `<MARKETING_VERSION>.<release run number>` (`1.0.18`); its hot updates are `1.0.18.1`,
   `1.0.18.2`, … So each update outranks the shell it was made for, and the next shell outranks

@@ -137,6 +137,9 @@ export class WebPlatform implements Platform {
     return { mobile: mobile || tablet, tablet, apple, cores: nav.hardwareConcurrency || 0, memoryGB: nav.deviceMemory || 0, gpu: '', modelLevel: 0 };
   }
 
+  /** The most pixels per logical pixel this host's canvas gets. */
+  protected readonly maxResolution: number = MAX_RESOLUTION;
+
   async createApp(msaa: boolean): Promise<Application> {
     installTextCanvasFix();
     const app = new Application();
@@ -144,7 +147,7 @@ export class WebPlatform implements Platform {
     const record = recordSize(location.search);
     await app.init({
       background: '#141816',
-      ...(record ? { ...record, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, MAX_RESOLUTION) }),
+      ...(record ? { ...record, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, this.maxResolution) }),
       antialias: msaa,
       autoDensity: !record,
       // WeChat has no WebGPU; use WebGL everywhere so both hosts behave the same.

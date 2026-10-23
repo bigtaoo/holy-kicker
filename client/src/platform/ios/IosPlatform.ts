@@ -27,6 +27,10 @@ export class IosPlatform extends WebPlatform {
   override readonly adPrivacy: AdPrivacy;
   override readonly store: Store | null;
   override readonly notify?: Notifier;
+  /** 2x, not a 3x iPhone's full density: corgi 1.0.3.2, the first bundle at 3x with MSAA on,
+   *  never booted on an iPhone 15, and this rules the canvas's memory out (main.ios.ts reports
+   *  how far each launch got). */
+  protected override readonly maxResolution = 2;
   /** Hot updates, offered from the lobby (ota.ts). */
   override readonly updates: AppUpdates = otaUpdates();
   /** main.ios.ts redraws the lobby on its `onChange`. */

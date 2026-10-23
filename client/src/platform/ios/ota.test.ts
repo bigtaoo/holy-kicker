@@ -8,7 +8,7 @@ import capConfig from '../../../capacitor.config.ts?raw';
 import podfile from '../../../ios/App/Podfile?raw';
 import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
 import bridgeSwift from '../../../ios/App/App/HKBridgeViewController.swift?raw';
-import { applyDownloaded, findOta, installOta, isNewer, MANIFEST_URL, pickDownloaded, readyOta, REVOKE_KEY, wantsDownload, type Bundle, type Updater } from './ota';
+import { applyDownloaded, FAILED_KEY, failedOta, findOta, installOta, isNewer, MANIFEST_URL, pickDownloaded, readyOta, REVOKE_KEY, wantsDownload, type Bundle, type Updater } from './ota';
 
 const manifest = { version: '1.0.18.2', url: 'https://hk-ota.gamestao.com/1.0.18.2.zip', checksum: 'ab12', minNativeVersion: '1.0' };
 
@@ -130,6 +130,18 @@ describe('the updater calls', () => {
     expect(await findOta('1.0.18', true, u, async () => { throw new Error('offline'); }, kv())).toBe(null);
     expect(await findOta('1.0.18', true, u, async () => null, kv())).toBe(null);
     warn.mockRestore();
+  });
+
+  it('name each rolled-back bundle once', async () => {
+    const bundles: Bundle[] = [
+      { id: 'a', version: '1.0.3.2', status: 'error' },
+      { id: 'b', version: '1.0.3.1', status: 'success' },
+    ];
+    const store = kv();
+    expect(await failedOta('1.0.3.1', true, fakeUpdater(bundles), store)).toEqual(['1.0.3.2']);
+    expect(JSON.parse(store.m.get(FAILED_KEY)!)).toEqual(['1.0.3.2']);
+    expect(await failedOta('1.0.3.1', true, fakeUpdater(bundles), store)).toEqual([]);
+    expect(await failedOta('0.0.0', true, fakeUpdater(bundles), kv())).toEqual([]);
   });
 
   it('switch to a downloaded bundle at launch', async () => {

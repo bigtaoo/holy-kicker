@@ -208,6 +208,33 @@ export async function installOta(m: OtaManifest, progress: (f: number) => void, 
   }
 }
 
+/** The rolled-back bundles already told about, so each is reported once. */
+export const FAILED_KEY = 'hk.ota.failed';
+
+/**
+ * Bundles the plugin rolled back (status 'error': switched to, never confirmed by readyOta in
+ * time) that this device has not reported yet; they are marked reported on the way out. Never
+ * throws: the report is a diagnosis (main.ios.ts sends it as an `ota_fail` anomaly).
+ */
+export async function failedOta(running = __HK_BUNDLE__, inShell = Capacitor.isNativePlatform(), updater = plugin, kv: Kv = localStorage): Promise<string[]> {
+  if (!active(running, inShell)) return [];
+  try {
+    let told: string[] = [];
+    try {
+      const list: unknown = JSON.parse(kv.getItem(FAILED_KEY) ?? '[]');
+      if (Array.isArray(list)) told = list.filter((v): v is string => typeof v === 'string');
+    } catch {
+      /* a bad record: report again */
+    }
+    const fresh = (await updater.list()).bundles.filter((b) => b.status === 'error' && !told.includes(b.version)).map((b) => b.version);
+    if (fresh.length) kv.setItem(FAILED_KEY, JSON.stringify([...told, ...fresh].slice(-20)));
+    return fresh;
+  } catch (e) {
+    console.warn('[ota] no rollback list:', e);
+    return [];
+  }
+}
+
 /** The shell's hot updates, as the lobby's prompt asks for them. */
 export function otaUpdates(): AppUpdates {
   return {

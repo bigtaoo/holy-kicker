@@ -40,12 +40,10 @@ describe('levelRange and useMsaa', () => {
     expect(useMsaa('saver', PC)).toBe(false);
   });
 
-  it('gives auto MSAA to iPhones and iPads only among phones', () => {
+  it('keeps auto MSAA off on iPhones too', () => {
     const iphone: DeviceInfo = { ...PHONE, gpu: '', apple: true };
-    expect(useMsaa('auto', iphone)).toBe(true);
-    expect(useMsaa('auto', { ...iphone, tablet: true })).toBe(true);
-    expect(useMsaa('saver', iphone)).toBe(false);
-    expect(useMsaa('auto', { ...PHONE, apple: false })).toBe(false);
+    expect(useMsaa('auto', iphone)).toBe(false);
+    expect(useMsaa('high', iphone)).toBe(true);
   });
 });
 

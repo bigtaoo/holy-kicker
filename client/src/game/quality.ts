@@ -125,12 +125,11 @@ export function lowBattery(b: Battery, wasLow: boolean): boolean {
   return b.level <= (wasLow ? BATTERY_OK : LOW_BATTERY);
 }
 
-/** MSAA is fixed when the GL context is made: desktop auto and forced high get it, and so does
- *  auto on an iPhone or iPad, whose tile-based GPU resolves the samples on chip (without it every
- *  drawn shape, the lobby's round badges and the buttons, has stair-step edges). Other phones'
- *  GPUs pay for it in memory bandwidth, so they go without. */
+/** MSAA is fixed when the GL context is made: desktop auto and forced high get it. Phones' GPUs
+ *  pay for it in memory, so they go without, iPhones too until a launch report clears it (corgi
+ *  1.0.3.2, the bundle that gave it to them in auto, never booted on an iPhone 15). */
 export function useMsaa(mode: QualityMode, d: DeviceInfo): boolean {
-  return mode === 'high' || (mode === 'auto' && (!d.mobile || !!d.apple));
+  return mode === 'high' || (mode === 'auto' && !d.mobile);
 }
 
 /** The most pixels per logical pixel a host renders: a 3x phone's full density. */

@@ -32,7 +32,14 @@ function bootBar(share: number): void {
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.style.setProperty('--p', share.toFixed(3));
 }
 
-export async function boot(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean } = {}) {
+export interface BootOptions {
+  skipDetections?: boolean;
+  direct?: boolean;
+  /** Each step as boot reaches it, with what it says about itself (main.ios.ts's launch report). */
+  stage?: (stage: string, info?: string) => void;
+}
+
+export async function boot(platform: Platform, scene: SceneOptions, opts: BootOptions = {}) {
   try {
     return await bootGame(platform, scene, opts);
   } catch (err) {
@@ -47,7 +54,8 @@ export async function boot(platform: Platform, scene: SceneOptions, opts: { skip
   }
 }
 
-async function bootGame(platform: Platform, scene: SceneOptions, opts: { skipDetections?: boolean; direct?: boolean }) {
+async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptions) {
+  const stage = opts.stage ?? (() => undefined);
   // the script is in: about a third of the way (the bar crept there on its own while it came)
   bootBar(0.3);
   // destroyed trees free their graphics' contexts (game/graphicsDestroy.ts)
@@ -63,9 +71,13 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: { skipDet
   const webp = opts.skipDetections ? Promise.resolve(false) : webpDecodes();
   let mode = scene.quality ?? settings.quality;
   let low = false;
+  stage('probe');
   const device = await platform.probe();
-  const app = await platform.createApp(useMsaa(mode, device));
+  const msaa = useMsaa(mode, device);
+  stage('app', `msaa=${msaa ? 1 : 0}`);
+  const app = await platform.createApp(msaa);
   device.gpu = gpuName(app.renderer);
+  stage('gl', `res=${app.renderer.resolution} msaa=${msaa ? 1 : 0} ${app.screen.width}x${app.screen.height}`);
   await Assets.init({ skipDetections: opts.skipDetections });
   const query = new URLSearchParams(typeof location === 'undefined' ? '' : location.search);
   const api = apiBase(platform.host, import.meta.env.DEV, query, import.meta.env.VITE_HK_API);
@@ -84,12 +96,14 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: { skipDet
   const advice = platform.host === 'wechat' ? healthAdvice(app, () => platform.safeInsets()) : null;
   useWebp(await webp);
   // WeChat ships its art in the package and the iOS app on the device: only the web waits on a network
+  stage('art');
   const art = await loadArt(platform, scene, (k) => bootBar(0.35 + 0.55 * k), platform.host !== 'wechat' && platform.host !== 'ios');
   setDisplayFont(await font);
   // on the GPU behind the loading screen, not in the first run's first frame
   warmTextures(app.renderer, art);
   void lateArt().then(() => warmTextures(app.renderer, art));
   const artMs = since();
+  stage('shell');
   const store = new SaveStore(platform.storage);
   const shell = new Shell(app, platform, art, scene, store, net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   // the cloud save where the host keeps none of its own (docs/cloud-save.md "The cloud save")
@@ -121,7 +135,9 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: { skipDet
     quality.setRange(levelRange(mode, device, low));
   });
   bootBar(0.95);
+  stage('start');
   await shell.start(opts.direct);
+  stage('started');
   // the page's loading screen (index.html) goes once the first screen is up; no page on WeChat
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
   advice?.close();

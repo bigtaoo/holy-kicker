@@ -193,8 +193,12 @@ export interface SessionDeviceProps {
   gpu: (typeof GPU_CLASSES)[number];
 }
 
-/** What went wrong in an `anomaly`: the WebGL context lost, an uncaught error, the host's memory warning, or one frame stalled. */
-export const ANOMALY_KINDS = ['webgl_lost', 'error', 'memory', 'stall'] as const;
+/**
+ * What went wrong in an `anomaly`: the WebGL context lost, an uncaught error, the host's memory
+ * warning, or one frame stalled; on iOS also a launch that never finished (`boot_fail`, sent by
+ * the next launch) and a hot update the updater rolled back (`ota_fail`).
+ */
+export const ANOMALY_KINDS = ['webgl_lost', 'error', 'memory', 'stall', 'boot_fail', 'ota_fail'] as const;
 
 /** An `anomaly` event's props. */
 export interface AnomalyProps {
@@ -206,8 +210,16 @@ export interface AnomalyProps {
   src?: string;
   /** `memory`: WeChat's warning level (5, 10 or 15 on Android; 0 when not given). */
   level?: number;
-  /** `stall`: the frame's length in ms. */
+  /** `stall`: the frame's length in ms; `boot_fail`: ms from the script's start to the last step. */
   ms?: number;
+  /** `boot_fail`: the last step the launch reached, what that step said (canvas resolution, MSAA)
+   *  and how many errors it caught (the first is `msg`). */
+  stage?: string;
+  info?: string;
+  errors?: number;
+  /** `boot_fail` and `ota_fail`: the hot-update bundle (`<shell>.<n>`, or the shell's own) and, for `boot_fail`, its build. */
+  bundle?: string;
+  build?: string;
   /** In a run: the wave. */
   wave?: number;
   /** `memory` and `webgl_lost`: what the game held then (as PerfProps). */
