@@ -56,6 +56,7 @@ export class AffixBadges {
 
   /** `size` is a badge's width in the parent's units. */
   constructor(private readonly size = 64) {
+    this.view.label = 'affixes';
     this.view.visible = false;
   }
 

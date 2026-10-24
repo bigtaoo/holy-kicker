@@ -14,6 +14,7 @@ import { BALANCE } from '../meta/balance';
 import { parseScene, type SceneOptions } from '../game/scene';
 import { getLocale, t } from '../i18n';
 import { Shell } from '../ui/Shell';
+import type { Device } from '@hk/protocol';
 import { fakePlatform, type FakeHost, type FakePlatform } from './fakePlatform';
 import { fakeApp, installHeadless } from './headless';
 
@@ -48,6 +49,8 @@ export interface RigOptions extends FakeHost {
   storage?: MemoryStore;
   /** The device's time zone: Europe asks for consent first, elsewhere shares by default. */
   timeZone?: string;
+  /** The kind of device: a desktop's run takes the keys on the cards and names them in its hints. */
+  device?: Device;
 }
 
 /** Builds the shell the way boot.ts does, without starting it. */
@@ -60,14 +63,15 @@ export async function rigShell(o: RigOptions = {}): Promise<ShellRig> {
   const net = new Backend(platform, null, 'test', getLocale, new BoardOutbox(new SafeStore(null)));
   const privacy = new PrivacyChoice(net, platform, 'http://hk.test', o.timeZone ?? 'America/New_York');
   const store = new SaveStore(platform.storage);
-  const shell = new Shell(app, platform, await art, scene, store, net, 'mobile', privacy);
+  const shell = new Shell(app, platform, await art, scene, store, net, o.device ?? 'mobile', privacy);
   const faults: unknown[] = [];
   shell.onFault = (err) => faults.push(err);
   let now = 0;
   const tick = async (n = 1, ms = FRAME_MS) => {
     for (let i = 0; i < n; i++) {
       await flush();
-      now += ms;
+      // another driver may have stepped the ticker on (liveRun.ts): carry on from its clock
+      now = Math.max(now, app.ticker.lastTime) + ms;
       app.ticker.update(now);
     }
     await settle();

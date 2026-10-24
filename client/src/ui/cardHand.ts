@@ -32,6 +32,7 @@ export interface CardHand {
 
 export function cardHand(): CardHand {
   const view = new Container();
+  view.label = 'cardHand';
   view.eventMode = 'none';
   const ring = new Graphics();
   const hand = new Sprite();
