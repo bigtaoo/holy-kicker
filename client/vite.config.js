@@ -4,6 +4,7 @@ import { buildDefine } from '../build/buildId.mjs';
 import { themeAssets } from '../build/theme.mjs';
 import { preloadRenderer } from '../build/preloadRenderer.mjs';
 import { cacheHeaders } from '../build/cacheHeaders.mjs';
+import { coverage } from '../build/coverage.mjs';
 
 /**
  * The web build of one art set (build/theme.mjs). Monk: `npm run build` → client/dist, served at
@@ -26,6 +27,7 @@ export function webConfig(theme) {
       watch: { ignored: ['**/wechat/**', '**/dist*/**', '**/ios/**'] },
     },
     build: { target: 'es2020', outDir: monk ? 'dist' : 'dist-new/new', emptyOutDir: true },
+    test: { coverage: coverage('client', ['src/**/*.ts']) },
   }));
 }
 

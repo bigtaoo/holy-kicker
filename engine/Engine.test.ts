@@ -115,7 +115,8 @@ describe('Engine', () => {
     expect(run(FAT, 4800, 4800).hashes[0]).toBe(GOLDEN_FAT);
     expect(run(NOVICE, 4800, 4800).hashes[0]).toBe(GOLDEN_NOVICE);
     expect(MUTATED.map((c) => run(c, 4800, 4800).hashes[0])).toEqual(GOLDEN_MUTATED);
-  });
+    // Some 70 000 ticks: a few seconds plain, far more under coverage instrumentation.
+  }, 120_000);
 
   it('plays a chapter the same way twice', () => {
     const a = run(CHAPTER, 1200);
