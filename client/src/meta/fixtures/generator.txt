@@ -1,0 +1,62 @@
+// Copied into client/src/meta/ of an old checkout and run with vitest there: it builds a
+// mid-journey player with that build's own newSave and reads it back through that build's own
+// parseSave, so the JSON is exactly what that build would have stored.
+import { it } from 'vitest';
+import { writeFileSync } from 'node:fs';
+import * as engine from '@hk/engine';
+import * as save from './save';
+import { BALANCE } from './balance';
+import { EVOLVE_IDS } from './codex';
+
+it('writes the fixture', async () => {
+  const fresh = save.newSave() as unknown as Record<string, unknown>;
+  const has = (k: string) => k in fresh;
+  const gearPath = './gear';
+  const gear = has('gear') ? await import(/* @vite-ignore */ gearPath) : null;
+  const ch: number = BALANCE.chapters;
+  const waves: number = BALANCE.waves;
+  const full = 2 ** BALANCE.chests.length - 1;
+  const twenty = ch > 5;
+  // five-chapter builds with hard mode: every chapter cleared and two hard ones; earlier ones three of five
+  const cleared = twenty ? 7 : has('hard') ? 5 : 3;
+  const per = (f: (i: number) => number) => Array.from({ length: ch }, (_, i) => f(i));
+  const over: Record<string, unknown> = {
+    firstRunDone: true, level: 14, xp: 37, copper: 12345, jade: 321, chapter: 3, cleared, runs: 42,
+    best: per((i) => (i < cleared ? waves : i === cleared ? 37 : 0)),
+    stars: per((i) => (i < cleared ? [3, 3, 3, 2, 1, 2, 1][i] ?? 1 : 0)),
+    chests: per((i) => (i < cleared ? full : i === cleared ? 3 : 0)),
+    opened: per((i) => (i < cleared ? (i === 1 ? full & ~2 : full) : i === cleared ? 1 : 0)),
+    relic: 'fish', codex: EVOLVE_IDS.slice(0, 3),
+    trained: 7, patrol: 1792241537820, seen: 0b1011, grit: 2,
+    hard: true, hardCleared: 2,
+    hardBest: per((i) => (i < 2 ? waves : i === 2 ? 18 : 0)), hardStars: per((i) => (i < 2 ? 2 - i : 0)),
+    hardChests: per((i) => (i < 2 ? full : i === 2 ? 1 : 0)), hardOpened: per((i) => (i === 0 ? full : 0)),
+    fell: per((i) => (i === cleared ? 37 : 0)), hardFell: per((i) => (i === 2 ? 18 : 0)),
+    monk: 'fat', monks: 0b11, kills: 23456, achieved: 0b1011011, dice: 1524,
+    gifts: 3, giftDay: 20261016, firstDay: 20261013,
+    challenge: 'd20261017', weeks: [{ id: 'w2026-42', board: 'w2026-42-e46-c2', end: 1792540800000, best: 31 }],
+    // fields that came later without a version (sutras, clear times) and version 7's
+    sutras: 0b101, times: per((i) => (i < cleared ? 4200 + 130 * i : 0)), hardTimes: per((i) => (i < 2 ? 5100 + 40 * i : 0)),
+    streak: 3, streakDay: 20378, bestStreak: 5, dailyBest: { id: 'd20261017', waves: 33 }, arms: { first20: 'short' },
+  };
+  if (gear) {
+    const inv = gear.emptyInventory() as Record<string, number[]>;
+    gear.ITEM_IDS.forEach((id: string, i: number) => {
+      inv[id] = inv[id].map((_: number, t: number) => (t === 0 ? (i % 3) + 1 : t === 1 ? i % 2 : t === 2 && i < 3 ? 1 : t === 3 && i === 0 ? 1 : 0));
+    });
+    // relics: the cuju's base copy plus a merge, the staff one copy, the fish only at tier 2, the beads none
+    Object.assign(inv, { ball: inv.ball.map((_, t) => [2, 1][t] ?? 0), staff: inv.staff.map((_, t) => (t ? 0 : 1)) });
+    inv.fish = inv.fish.map((_, t) => (t === 1 ? 1 : 0));
+    inv.beads = inv.beads.map(() => 0);
+    over.gear = inv;
+  }
+  if (has('daily')) {
+    const d = fresh.daily as Record<string, unknown>;
+    over.daily = { ...d, day: 20261017, free: 1, progress: (d.progress as number[]).map((_, i) => [2, 0, 1][i] ?? 0), claimed: 1 };
+  }
+  const monks = (engine as unknown as { MONK_IDS?: string[] }).MONK_IDS;
+  if (monks && !monks.includes('fat')) over.monk = monks[1];
+  const stored = save.parseSave(JSON.stringify({ ...fresh, ...over })) as unknown as Record<string, unknown>;
+  const lost = Object.keys(over).filter((k) => has(k) && JSON.stringify(stored[k]) !== JSON.stringify(over[k]));
+  writeFileSync(process.env.HK_FIXTURE_OUT as string, JSON.stringify({ stored, lost }));
+});
