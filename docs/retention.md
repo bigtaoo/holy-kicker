@@ -79,7 +79,14 @@ talks to the backend as host `playgama`; whether its page lets that through is n
   loading screen (`client/index.html`) never stands still: its bar creeps on through the script
   and a percentage under it counts along, then follows the real load. Repeat visits skip it: web
   builds keep the hashed `assets/` scripts for a year (`build/cacheHeaders.mjs` writes Cloudflare's
-  `_headers`; everything else is revalidated on every visit).
+  `_headers`; everything else is revalidated on every visit). That cache is why the web build has
+  no single-page fallback (`wrangler/web.jsonc`): with one, a script a deploy removed came back as
+  index.html under the script's name and was kept a year, and an iPad whose Safari restored the
+  previous deploy's page sat on a black screen until its site data was cleared. A missing file is
+  a 404 now, and the page reloads itself once when its entry, a preloaded chunk or a later import
+  fails to load (the inline guard in `client/index.html`). Cloudflare's own request log (zone
+  GraphQL, `httpRequestsAdaptiveGroups`) shows what such a device actually fetched; Safari on an
+  iPad says Macintosh.
 
 Below ~100 new installs a day, any share swings by several points from noise alone. Pool a week
 before believing a change, and never read a single day.
