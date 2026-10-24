@@ -186,6 +186,27 @@ describe('weekly challenge flow', () => {
     expect(second.save.weeks[0].best).toBe(12);
   });
 
+  it("sends a weekly run that fell short of the end, unless short of the week's best", async () => {
+    const net = fakeNet(both);
+    const flow = new ChallengeFlow(net as unknown as Backend, () => {}, false, false, () => START);
+    const replay = { engine: ENGINE_VERSION, config: {}, wave: 1, cmds: [], tick: 9000, hash: 1 } as ReplayWire;
+    const play = (save: SaveData, r: RunResult, waves: number) => {
+      flow.begin(weekly);
+      (flow as unknown as { replay: ReplayWire }).replay = replay;
+      return flow.settle(save, ended, r, waves, 100, true);
+    };
+    // fell on wave 8: sent, and the week has its run
+    const lost = play(player, run, 7);
+    expect(await lost.reply).toMatchObject({ rank: 1 });
+    expect(net.submitChallengeRun).toHaveBeenLastCalledWith(weekly.id, run, replay);
+    // a clear later in the week is sent too, and a later fall on wave 5 is not
+    const won = { ...run, won: true, wave: 50, tenths: 9000 };
+    const cleared = play(lost.save, won, 50);
+    expect(net.submitChallengeRun).toHaveBeenLastCalledWith(weekly.id, won, replay);
+    play(cleared.save, { ...run, wave: 5 }, 4);
+    expect(net.submitChallengeRun).toHaveBeenCalledTimes(2);
+  });
+
   it('pays a closed week once its rank is in, asking once a session', async () => {
     const net = fakeNet(both);
     net.challengeBoard.mockResolvedValue({ rows: [], total: 40, mine: { rank: 3, tag: 'x' }, pending: false } as unknown as ChallengeBoardReply);

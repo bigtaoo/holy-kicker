@@ -102,14 +102,18 @@ export function checkBatch(v: unknown, now: number): Checked<EventBatch> {
   return { ok: true, value: { install: v.install, session: v.session, host: v.host, build: v.build, locale: v.locale, ...game, ...tags, events } };
 }
 
-/** A run for the leaderboard; a run that could not have happened is refused. */
-export function checkRun(v: unknown): Checked<RunEntry> {
+/**
+ * A run for the leaderboard; a run that could not have happened is refused. A won run ends on
+ * the chapter's last wave; a challenge run may be won earlier (a daily's 20), which misfit
+ * checks against its challenge (`anyWin`).
+ */
+export function checkRun(v: unknown, anyWin = false): Checked<RunEntry> {
   if (!isObj(v)) return { ok: false, reason: 'not an object' };
   if (!isId(v.install) || !isHost(v.host) || !isShort(v.build, LIMITS.build)) return { ok: false, reason: 'bad id' };
   const game = gameOf(v.game);
   if (!game) return { ok: false, reason: 'bad game' };
   if (!isInt(v.chapter, 1, LIMITS.chapters) || typeof v.hard !== 'boolean' || typeof v.won !== 'boolean') return { ok: false, reason: 'bad board' };
-  if (!isInt(v.wave, 1, LIMITS.waves) || (v.won && v.wave !== LIMITS.waves)) return { ok: false, reason: 'bad wave' };
+  if (!isInt(v.wave, 1, LIMITS.waves) || (v.won && !anyWin && v.wave !== LIMITS.waves)) return { ok: false, reason: 'bad wave' };
   if (!isInt(v.tenths, v.wave * LIMITS.minSecondsPerWave * 10, LIMITS.maxSeconds * 10)) return { ok: false, reason: 'bad time' };
   if (!isInt(v.level, 1, LIMITS.maxLevel) || !isInt(v.kills, 0, LIMITS.maxKills)) return { ok: false, reason: 'bad stats' };
   if (!isShort(v.monk, 16) || !isShort(v.relic, 16)) return { ok: false, reason: 'bad build' };
@@ -166,7 +170,7 @@ export function checkRunPost(v: unknown): Checked<{ run: RunEntry; replay: Repla
 /** A challenge run: the challenge's id, a plausible run and its replay (which re-simulation checks later). */
 export function checkChallengeRun(v: unknown): Checked<ChallengeRun> {
   if (!isObj(v) || typeof v.challenge !== 'string' || !CHALLENGE_ID.test(v.challenge)) return { ok: false, reason: 'bad challenge' };
-  const run = checkRun(v.run);
+  const run = checkRun(v.run, true);
   if (!run.ok) return run;
   const replay = checkReplay(v.replay);
   if (!replay) return { ok: false, reason: 'bad replay' };
