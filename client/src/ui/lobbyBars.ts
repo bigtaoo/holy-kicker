@@ -174,6 +174,7 @@ export function topBar(w: number, save: SaveData, shown: string, icons: IconShee
   const icon = iconSprite(icons, 'settings', 88);
   const gear = button(icon ? '' : '⚙', 100, 100, a.settings, { fill: COLORS.panelLocked, size: 56, icon });
   gear.position.set(w - 80, TOP_H / 2 - 4);
+  gear.label = 'settings'; // an icon alone: tests find it by name
   c.addChild(gear);
   // the currencies right-aligned, left of the settings button: a dark pill with the coin over its left end
   let x = w - 160;

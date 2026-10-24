@@ -424,6 +424,7 @@ export class LobbyScreen implements Screen {
     if (open) {
       this.play = playButton(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n));
       this.play.view.position.set(w / 2, playY);
+      this.play.view.label = 'play'; // tests tell it from the Play tab, which reads the same in Chinese
       this.view.addChild(this.play.view);
     }
 
