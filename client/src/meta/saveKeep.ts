@@ -12,6 +12,11 @@ const BITS = new Set(['monks', 'achieved', 'seen', 'chests', 'opened', 'hardChes
 /** Lists with no positions: the codex is a set (unknown evolutions stay), the weeks are this build's. */
 const SETS = new Set(['codex']);
 const OWN = new Set(['weeks']);
+/**
+ * Counts per item and tier: an item's counts go back together, since a stored count this build
+ * read differently (a relic's copy granted on load) would undo a merge or a drop beside it.
+ */
+const COUNTS = new Set(['gear']);
 
 type Obj = Record<string, unknown>;
 const isObj = (v: unknown): v is Obj => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -41,14 +46,14 @@ export function keep(data: unknown, seen: unknown, raw: unknown, key = ''): unkn
   if (Array.isArray(data)) {
     const r = Array.isArray(raw) ? raw : [];
     const s = Array.isArray(seen) ? seen : [];
-    const out = data.map((v, i) => keep(v, s[i], r[i], key));
+    const out = COUNTS.has(key) ? data : data.map((v, i) => keep(v, s[i], r[i], key));
     return r.length > out.length ? [...out, ...r.slice(out.length)] : out;
   }
   if (isObj(data)) {
     if (!isObj(raw)) return data;
     const s = isObj(seen) ? seen : {};
     const out: Obj = { ...raw };
-    for (const [k, v] of Object.entries(data)) out[k] = keep(v, s[k], raw[k], k);
+    for (const [k, v] of Object.entries(data)) out[k] = keep(v, s[k], raw[k], COUNTS.has(key) ? key : k);
     return out;
   }
   // a word of a bit field this build did not read at all (achieved) counts as none seen

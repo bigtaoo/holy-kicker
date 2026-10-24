@@ -32,6 +32,19 @@ describe('SaveStore keeps what this build cannot read', () => {
     expect(JSON.parse(kv.getItem(SAVE_KEY)!).codex).toEqual(['x', 'someday-evolution']);
   });
 
+  it('keeps the copy of a relic granted on load when a better one of it drops', () => {
+    const kv = new MemoryStore();
+    const store = new SaveStore(kv);
+    // a player past chapter 1 whose stored gear lacks the staff its clear unlocked
+    store.save({ ...newSave(), cleared: 1 });
+    const s = store.load();
+    expect(s.gear.staff[0]).toBe(1);
+    const staff = s.gear.staff.slice();
+    staff[1]++;
+    store.save({ ...s, gear: { ...s.gear, staff } });
+    expect(store.load().gear.staff.slice(0, 2)).toEqual([1, 1]);
+  });
+
   it('upgrades an older save without carrying its retired fields', () => {
     const kv = new MemoryStore();
     kv.setItem(SAVE_KEY, JSON.stringify({ version: 5, copper: 9, hardCleared: 2 }));
