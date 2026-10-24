@@ -1,6 +1,7 @@
 import type { Container } from 'pixi.js';
 import type { RelicId, SimState } from '@hk/engine';
 import { THEME } from '../theme';
+import type { CorgiMoment } from './corgiFace';
 import { CorgiHero } from './corgiHero';
 import { Hero } from './hero';
 import type { TaoAsset } from './tao/TaoActor';
@@ -20,6 +21,8 @@ export interface HeroView {
   /** A hand (or the corgi's raised muzzle), in the view's space, as of the last update. */
   hand(bone?: string): { x: number; y: number };
   hurt(): void;
+  /** A moment the face shows (the corgi's; the monks have no such faces). */
+  cheer?(moment: CorgiMoment): void;
   /** Advances the animation; `facing` is -1 left or 1 right; `s` and `alpha` place what the hero aims at. */
   update(dt: number, facing: number, moving: boolean, s: SimState, alpha: number): void;
 }

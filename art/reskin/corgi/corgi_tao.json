@@ -9,7 +9,10 @@
  "scale": 0.7,
  "variants": {
   "head": [
-   "head_fire",
+   "head_focus",
+   "head_happy",
+   "head_proud",
+   "head_worried",
    "head_hurt",
    "head_blink"
   ]
