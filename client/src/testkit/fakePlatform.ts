@@ -16,14 +16,17 @@ export interface FakeHost {
   country?: string | null;
 }
 
-export type FakePlatform = Platform & { calls: string[]; hide(): void };
+export type FakePlatform = Platform & { calls: string[]; hide(): void; press(code: string, repeat?: boolean): void };
 
 export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): FakePlatform {
   const calls: string[] = [];
   const hides: (() => void)[] = [];
+  const keys: ((code: string, repeat: boolean) => void)[] = [];
   return {
     calls,
     hide: () => hides.forEach((cb) => cb()),
+    press: (code, repeat = false) => keys.forEach((cb) => cb(code, repeat)),
+    onKey: (cb) => void keys.push(cb),
     host: 'web',
     probe: async () => ({ mobile: true, tablet: false, memory: 4, cores: 4, gpu: 'headless' }) as never,
     createApp: async () => fakeApp(),
