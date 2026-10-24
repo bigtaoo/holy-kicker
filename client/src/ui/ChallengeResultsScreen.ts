@@ -12,6 +12,7 @@ import { blockTop } from './ResultsScreen';
 import { panelKey } from './panelKeys';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from './widgets';
+import { spot } from './spots';
 
 // The results of a daily challenge run (docs/design.md "Challenges"): the waves cleared, the four
 // milestones with the ones reached lit, what the counted run paid (a later run of the day is
@@ -253,7 +254,7 @@ export class ChallengeResultsScreen implements Screen {
     next.position.set(pair ? x + w / 2 + 10 : x, y);
     if (busy) next.eventMode = 'none';
     else if (this.keys) keyCap(next, w, 140, t('common.keyEnter'));
-    this.view.addChild(next);
+    this.view.addChild(spot('next', next));
     if (pair) {
       // the same size, font and colour as Continue (CrazyGames' rewarded-ad rules)
       const ad = button(adText, w, 140, () => void this.playAd(), { fill: busy ? COLORS.panelLocked : COLORS.saffron, video: !busy, size });

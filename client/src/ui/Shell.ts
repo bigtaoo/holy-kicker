@@ -41,6 +41,7 @@ import { RunFlow } from './runFlow';
 import { storedSettings, type SettingsActions } from './settingsPanel';
 import { PlayerName } from './playerName';
 import { ReplayScreen, type ReplayView } from './replayWatch';
+import { publishSpots } from './spots';
 import { uiFrame, type Screen } from './uiLayout';
 import { uprightCover } from './uprightCover';
 import { UpdatePrompt } from './updatePrompt';
@@ -418,6 +419,7 @@ export class Shell {
     }
     this.updates?.update(this.screen instanceof LobbyScreen && this.screen.idle, key, () => uiFrame(computeViewport(width, height), this.platform.safeInsets()));
     this.coverSideways(width, height, key);
+    publishSpots(this.place(), this.app.stage, this.app.canvas, width, height, performance.now());
     // only a run ticking on screen counts towards the next interstitial
     if (this.runs.playing) this.ads.played(this.app.ticker.deltaMS);
     if (this.runs.watch) this.runs.watch.update(this.app.ticker.deltaMS / 1000);

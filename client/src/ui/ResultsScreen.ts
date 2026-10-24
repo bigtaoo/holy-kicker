@@ -13,6 +13,7 @@ import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
 import { panelKey } from './panelKeys';
 import { COLORS, button, buttonLabel, keyCap, label, panel, playTap } from './widgets';
+import { spot } from './spots';
 
 // Results after a run, in three zones on one card: the header (the title, the waves cleared as
 // one big number, a badge for the best and the leaderboard place once the server answers), after
@@ -183,7 +184,7 @@ export class ResultsScreen implements Screen {
       first.position.set(x, y);
       if (busy) first.eventMode = 'none';
       else if (this.keys) keyCap(first, 640, 150, t('common.keyEnter'));
-      c.addChild(first);
+      c.addChild(rows[0] === lobby ? spot('lobby', first) : first);
       y += 185;
     }
     const last = rows[rows.length - 1];
@@ -207,7 +208,7 @@ export class ResultsScreen implements Screen {
     if (busy) second.eventMode = 'none';
     // Escape is the lobby's key; Play again under Collect has none
     else if (this.keys && (rows.length === 1 || last === lobby)) keyCap(second, w, 140, t(rows.length === 1 ? 'common.keyEnter' : 'common.keyEsc'));
-    c.addChild(second);
+    c.addChild(last === lobby ? spot('lobby', second) : second);
     if (pair) {
       // the same size, font and colour as its neighbour (CrazyGames' rewarded-ad rules)
       const ad = button(adText, w, 140, () => void this.playAd(), { fill: busy ? COLORS.panelLocked : fill, video: !busy, size });
