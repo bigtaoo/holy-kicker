@@ -67,6 +67,9 @@ export interface SaveData {
   /** The wave the last lost run fell on per chapter, 0 for none (falls.ts), and hard mode's. */
   fell: number[];
   hardFell: number[];
+  /** The fastest won run per chapter in tenths of a simulated second, 0 for none (clearTimes.ts), and hard mode's. */
+  times: number[];
+  hardTimes: number[];
   /** The monk played as (monks.ts), and the monks owned, bit i for MONK_IDS[i] (the kicker always). */
   monk: MonkId;
   monks: number;
@@ -103,7 +106,7 @@ export function newSave(): SaveData {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), stars: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
     gear: grantRelics(emptyInventory(), ['ball']), sutras: 0, trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
-    hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), monk: 'kicker', monks: 1,
+    hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), times: zeros(), hardTimes: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: [], dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 },
     arms: {}, tester: false,
   };
@@ -183,7 +186,7 @@ function owned(monks: number, id: unknown): boolean {
  * its clears read as one star, its hard clears as a count from chapter 1, and a player who had
  * hard mode keeps it with three stars on those five chapters.
  * Version 6 kept the claimed achievements in one number: it becomes the first word, no streak yet.
- * A save without the last falls reads as none fallen yet.
+ * A save without the last falls reads as none fallen yet, one without clear times as none timed.
  * A save without stored sutras is from before the re-paced unlocks (docs/unlocks.md): it keeps
  * the relics and sutras the old gates gave (unlocks.ts keepUnlocks).
  * A save without experiment arms was offered none (experiments.ts enrolls it only while its first
@@ -272,6 +275,8 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
     hardOpened: openedOf(raw.hardOpened, hardChests),
     fell: ints(raw.fell, 0, BALANCE.waves),
     hardFell: ints(raw.hardFell, 0, BALANCE.waves),
+    times: ints(raw.times, 0, max),
+    hardTimes: ints(raw.hardTimes, 0, max),
     monk: owned(monks, raw.monk) ? (raw.monk as MonkId) : 'kicker',
     monks,
     kills: int(raw.kills, 0, max, 0),

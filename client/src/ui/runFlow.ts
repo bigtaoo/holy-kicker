@@ -11,9 +11,10 @@ import { BALANCE } from '../meta/balance';
 import { challengeSetup } from '../meta/challenge';
 import { evolvedIn } from '../meta/codex';
 import { runWaves } from '../meta/experiments';
+import { bestTime, noteTime } from '../meta/clearTimes';
 import { noteFall, runPast } from '../meta/falls';
 import { loadout } from '../meta/loadout';
-import { doubleCopper, earnedSutras, settleRun, type Reward, type Tab } from '../meta/progress';
+import { doubleCopper, earnedSutras, isCleared, settleRun, type Reward, type Tab } from '../meta/progress';
 import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
@@ -29,6 +30,7 @@ import { offered } from '../net/offers';
 import type { PerfReport } from '../net/perfReport';
 import type { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, InterPlace, OfferPlace, PropValue, ReplayWire } from '@hk/protocol';
+import { timerShown } from './clearTime';
 import { menuBackdrop } from './lobbyBars';
 import type { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
@@ -173,6 +175,8 @@ export class RunFlow {
     }, !!teach);
     // the fast-forward choice carries over from the last run
     hud.setFast(loadSettings(h.platform.storage).fast);
+    // the clock only where time already matters: a chapter cleared before on this track (against its best), or a challenge
+    hud.setTimer(timerShown(isCleared(save, chapter, this.hard), !!c) ? (c ? 0 : bestTime(save, chapter, this.hard)) : null);
     h.portal.gameplayStart();
     // a resumed fight waits on the pause panel until the player looks (a card choice or the death panel holds it anyway)
     const s = game.engine.state;
@@ -282,18 +286,22 @@ export class RunFlow {
     const run = runSummary(s, this.chapter, this.hard, this.kills);
     h.perf()?.end();
     h.net.track('run_end', { ...run, waves: s.config.waves, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
-    // a run shorter than the chapter (an experiment's first run) is never on a board
-    const name = rankedRun(h.scene) && s.config.waves === BALANCE.waves ? h.names.board(h.save()) : null;
+    // a run shorter than the chapter (an experiment's first run) is never on a board, nor timed
+    const counted = rankedRun(h.scene) && s.config.waves === BALANCE.waves;
+    const name = counted ? h.names.board(h.save()) : null;
     const rank = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(null);
     void h.net.flush();
     if (h.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
-    const { reward, save: played } = settleRun(noteFall(h.save(), this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
+    const won = s.outcome === 'won';
+    const time = won ? { tenths: run.tenths, best: bestTime(h.save(), this.chapter, this.hard) } : null;
+    const timed = won && counted ? noteTime(h.save(), this.chapter, this.hard, run.tenths) : h.save();
+    const { reward, save: played } = settleRun(noteFall(timed, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
     const { save, gift } = afterRun(played, Date.now(), waves, this.kills);
     // paid before the results show, so closing the tab now keeps the reward
     h.commit(save);
     if (gift) h.net.track('claim', { what: 'gift', n: 0, copper: gift.copper, jade: gift.jade, drops: gift.drops.length });
     if (reward.firstClear) h.portal.celebrate();
-    this.showResults({ ...reward, gift }, waves, rank, s.outcome === 'lost' ? fall : null);
+    this.showResults({ ...reward, gift, time }, waves, rank, s.outcome === 'lost' ? fall : null);
   }
 
   /** A challenge run's end: its milestones paid (the day's first run only), sent with its replay, and its own results. */
@@ -302,7 +310,7 @@ export class RunFlow {
     const done = h.challenge.settle(h.save(), s, run, waves, this.kills, ranked);
     h.commit(afterRun(done.save, Date.now(), waves, this.kills).save);
     if (done.reward.streak) h.net.track('claim', { what: 'streak', n: done.reward.streak, jade: done.reward.streakJade });
-    h.setScreen(new ChallengeResultsScreen(done, {
+    h.setScreen(new ChallengeResultsScreen({ ...done, time: run.won ? run.tenths : null }, {
       double: async () => {
         const paid = await h.rewarded('challenge_double');
         if (paid) h.commit({ ...h.save(), copper: h.save().copper + done.reward.copper });

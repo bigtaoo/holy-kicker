@@ -22,6 +22,8 @@ export function leaderOf(mine: SaveData, other: SaveData): 'mine' | 'other' {
 const most = (a: readonly number[], b: readonly number[]) => a.map((v, i) => Math.max(v, b[i] ?? 0));
 const either = (a: readonly number[], b: readonly number[]) => a.map((v, i) => v | (b[i] ?? 0));
 const earliest = (a: number, b: number) => (a && b ? Math.min(a, b) : a || b);
+/** Per chapter the faster of two clear times, 0 (none) losing to any time. */
+const fastest = (a: readonly number[], b: readonly number[]) => a.map((v, i) => earliest(v, b[i] ?? 0));
 /** The streak of the save that played the daily last; the same day keeps the longer one. */
 const streakOf = (a: SaveData, b: SaveData) => (b.streakDay > a.streakDay || (b.streakDay === a.streakDay && b.streak > a.streak) ? b : a);
 /** The later daily's best (ids sort by date); the same daily keeps the more waves. */
@@ -48,6 +50,8 @@ export function mergeSaves(mine: SaveData, other: SaveData): SaveData {
     opened: either(lead.opened, trail.opened),
     hardChests: either(lead.hardChests, trail.hardChests),
     hardOpened: either(lead.hardOpened, trail.hardOpened),
+    times: fastest(lead.times, trail.times),
+    hardTimes: fastest(lead.hardTimes, trail.hardTimes),
     runs: Math.max(lead.runs, trail.runs),
     kills: Math.max(lead.kills, trail.kills),
     trained: Math.max(lead.trained, trail.trained),

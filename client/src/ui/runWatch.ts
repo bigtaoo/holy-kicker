@@ -125,6 +125,7 @@ export class RunWatch {
     const { game, hud, d } = this;
     const s = game.engine.state;
     hud.update(dt);
+    hud.setTick(s.tick);
     if (s.wave !== this.shownWave) {
       // the last run's fall stays marked until this run gets past it, which the banner cheers;
       // clearing more waves than the chapter's best ever did is cheered louder (a new record)

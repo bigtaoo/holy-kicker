@@ -64,6 +64,8 @@ export interface Reward {
   grit: number;
   /** The wave of the chapter's next unclaimed progress chest, null with all of them claimed. */
   nextChest: number | null;
+  /** A won run's time in tenths of a simulated second, and the chapter's best before it (0 for none), set after settling. */
+  time?: { tenths: number; best: number } | null;
   /** The welcome gift the first run paid (welcome.ts afterRun), set after settling. */
   gift?: FirstGift | null;
 }

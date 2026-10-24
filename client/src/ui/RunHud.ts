@@ -8,6 +8,7 @@ import type { DownInfo } from './deathInfo';
 import { downPanel, type Down } from './downPanel';
 import { spin } from './spinner';
 import { languagePanel } from './languagePanel';
+import { HudColumn } from './hudColumn';
 import { GIVE_UP_WAIT, pausePanel, type PauseSwitches } from './pausePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
@@ -58,7 +59,8 @@ const BUILD_Y = 150;
 export class RunHud implements Screen {
   readonly view = new Container();
   private frame: UiFrame | null = null;
-  private waveText: Text | null = null;
+  /** The wave counter and the dim lines under it. */
+  private readonly column: HudColumn;
   private bannerView: Container | null = null;
   private wave = 0;
   private paused = false;
@@ -74,11 +76,6 @@ export class RunHud implements Screen {
   private downSpinner: Graphics | null = null;
   /** What the death panel says about the fall, and the last run's fall (0 for none shown). */
   private downInfo: DownInfo | null = null;
-  private lastFall = 0;
-  private lastFallText: Text | null = null;
-  /** The wave of the next chest this run can earn (0 for none), shown under the counter. */
-  private nextChest = 0;
-  private goalText: Text | null = null;
   /** The wave banner; `record` makes its cheer line the new-record burst, `age` its seconds up. */
   private banner: { lines: [string, number][]; story: StoryLine | null; t: number; record: boolean; age: number } | null = null;
   private burst: RecordBurstView | null = null;
@@ -109,16 +106,18 @@ export class RunHud implements Screen {
   private clock = 0;
 
   constructor(
-    private readonly total: number,
+    total: number,
     /** Hard mode: the wave counter says so. */
-    private readonly hard: boolean,
+    hard: boolean,
     private readonly actions: RunActions,
     private readonly icons: IconSheet,
     /** A desktop: the move hint shows the arrow keys. */
     private readonly keys = false,
     /** Whether the keys reach the game now: the move hint asks for a click first when they do not. */
     private readonly keysReach: () => boolean = () => true,
-  ) {}
+  ) {
+    this.column = new HudColumn(total, hard);
+  }
 
   layout(f: UiFrame): void {
     this.frame = f;
@@ -126,17 +125,7 @@ export class RunHud implements Screen {
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
     // below the boss health bar, which spans the top
-    const wave = label('', 52, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
-    wave.anchor.set(0, 0.5);
-    wave.position.set(40, 300);
-    this.waveText = wave;
-    const fell = (this.lastFallText = label('', 48, COLORS.dim, { stroke: { color: COLORS.outline, width: 8 } }));
-    fell.anchor.set(0, 0.5);
-    fell.position.set(40, 370);
-    const goal = (this.goalText = label('', 48, COLORS.gold, { stroke: { color: COLORS.outline, width: 8 } }));
-    goal.anchor.set(0, 0.5);
-    goal.x = 40;
-    this.view.addChild(wave, fell, goal);
+    this.column.layout(this.view);
     this.xpBar(f);
     const build = (this.build = new BuildBar(this.icons));
     build.view.position.set(f.w / 2, BUILD_Y);
@@ -172,31 +161,29 @@ export class RunHud implements Screen {
   /** Wave 0 is the sandbox, which has no counter and no levels. */
   setWave(wave: number): void {
     this.wave = wave;
-    if (!this.waveText) return;
-    this.waveText.visible = wave > 0;
-    this.waveText.text = t(this.hard ? 'run.hardWave' : 'run.wave', { wave, total: this.total });
+    this.column.setWave(wave);
     if (this.xpView) this.xpView.visible = wave > 0;
     if (this.build) this.build.view.visible = wave > 0;
-    this.setLastFall(this.lastFall);
   }
 
   /** The wave the chapter's last run fell on, under the wave counter; 0 hides it. */
   setLastFall(wave: number): void {
-    this.lastFall = wave;
-    if (!this.lastFallText) return;
-    this.lastFallText.visible = wave > 0 && this.wave > 0;
-    this.lastFallText.text = t('run.lastFall', { wave });
-    this.setNextChest(this.nextChest);
+    this.column.setLastFall(wave);
   }
 
   /** The next chest's wave under the counter (and the last fall); 0 hides it. */
   setNextChest(wave: number): void {
-    this.nextChest = wave;
-    const g = this.goalText;
-    if (!g) return;
-    g.visible = wave > 0 && this.wave > 0;
-    g.text = t('run.nextChest', { wave });
-    g.y = this.lastFallText?.visible ? 430 : 370;
+    this.column.setNextChest(wave);
+  }
+
+  /** The run's clock under the counter against a best in tenths (0 for none); null hides it. */
+  setTimer(best: number | null): void {
+    this.column.setTimer(best);
+  }
+
+  /** The simulated tick the clock reads. */
+  setTick(tick: number): void {
+    this.column.setTick(tick);
   }
 
   /** The hero's build; the strip is redrawn only when it looks different. */
