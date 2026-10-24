@@ -12,6 +12,7 @@ import { MemoryStore, SafeStore, SaveStore } from '../meta/saveStore';
 import { newSave, type SaveData } from '../meta/save';
 import { BALANCE } from '../meta/balance';
 import { parseScene, type SceneOptions } from '../game/scene';
+import { seeded } from '../game/deco';
 import { getLocale, t } from '../i18n';
 import { Shell } from '../ui/Shell';
 import type { Device } from '@hk/protocol';
@@ -53,11 +54,15 @@ export interface RigOptions extends FakeHost {
   device?: Device;
   /** The backend's address (boardServer.ts stubs fetch for it); none plays offline. */
   api?: string;
+  /** Seeds Math.random (1 by default), so a run's seed and the view's effects are the same every time. */
+  random?: number;
 }
 
 /** Builds the shell the way boot.ts does, without starting it. */
 export async function rigShell(o: RigOptions = {}): Promise<ShellRig> {
   installHeadless();
+  // a random run seed played a different run each time: coverage and timing moved from one go to the next
+  Math.random = seeded(o.random ?? 1);
   const platform = fakePlatform(o, o.storage);
   const scene: SceneOptions = parseScene(o.query ?? '');
   art ??= loadArt(platform, parseScene(''), () => {}, false);
