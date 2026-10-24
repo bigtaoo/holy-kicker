@@ -43,7 +43,8 @@ import { canReport, reportProblem } from './problemReport';
 import type { PlayerName } from './playerName';
 import type { DownInfo } from './deathInfo';
 import { DOWN_AD_WAIT_MS, RunWatch } from './runWatch';
-import { clearedWaves, keepable, runSummary } from './runSummary';
+import { keepable } from './runSummary';
+import { runEnd } from './runEnd';
 import type { Screen } from './uiLayout';
 import { reducedMotion } from './media';
 
@@ -282,20 +283,17 @@ export class RunFlow {
     const h = this.host;
     const cause = fall?.cause;
     dropRun(h.platform.storage);
-    const waves = clearedWaves(s);
     const p = s.players[0];
-    const run = runSummary(s, this.chapter, this.hard, this.kills);
+    const end = runEnd({
+      s, chapter: this.chapter, hard: this.hard, kills: this.kills, ranked: rankedRun(h.scene), challenge: h.challenge.run,
+      name: h.names.board(h.save()), named: h.names.ranked(), online: h.net.online, cause, build: runBuild(s, this.kills),
+    });
+    const { run, waves, counted } = end;
     h.perf()?.end();
-    h.net.track('run_end', { ...run, waves: s.config.waves, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
-    // a run shorter than the chapter (an experiment's first run) is never on a board, nor timed;
-    // a challenge's is on its own (a daily's 20 waves)
-    const counted = rankedRun(h.scene) && s.config.waves === BALANCE.waves;
-    const name = counted || (rankedRun(h.scene) && h.challenge.run) ? h.names.board(h.save()) : null;
-    // a portal guest is told why the run is on no board
-    const guest = counted && h.net.online && !h.names.ranked() ? 'guest' : null;
-    const rank: Promise<RankNote> = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(guest);
+    h.net.track('run_end', end.track);
+    const rank: Promise<RankNote> = end.board ? h.net.submitRun(end.board, replay) : Promise.resolve(end.note);
     void h.net.flush();
-    if (h.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
+    if (end.challenge) return this.settleChallenge(s, end.challenge.run, waves, end.challenge.ranked);
     const won = s.outcome === 'won';
     const time = won ? { tenths: run.tenths, best: bestTime(h.save(), this.chapter, this.hard) } : null;
     const timed = won && counted ? noteTime(h.save(), this.chapter, this.hard, run.tenths) : h.save();
