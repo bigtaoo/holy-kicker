@@ -193,7 +193,7 @@ export class LobbyScreen implements Screen {
     // one red dot at a time: the hinted tab's, else what is on this tab, then the tab bar, then the monk
     const content = this.view.children.slice(this.view.getChildIndex(bar) + 1, this.view.getChildIndex(tabs));
     oneDot(hint ? [tabs, ...content, bar] : [...content, tabs, bar]);
-    this.hint = hint ? hintArrow(f.w, f.h, this.save, hint) : null;
+    this.hint = hint ? hintArrow(f.w, f.h, hint) : null;
     if (this.hint) this.view.addChild(this.hint);
     // the consent card waits at the foot of the lobby, under every panel, until it is answered
     const privacy = watched(this.actions.settings.privacy, () => this.relayout());

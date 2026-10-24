@@ -8,7 +8,7 @@ import type { DownInfo } from './deathInfo';
 import { menuCover } from './lobbyBars';
 import { nextStepPart, previewPart } from './resultsNext';
 import { fallPart, headerPart, newsLines, rewardsPart, type Part, type RankNote } from './resultsParts';
-import { unlocksPart } from './resultsUnlocks';
+import { newcomerUnlocks, unlocksPart } from './resultsUnlocks';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
 import { panelKey } from './panelKeys';
@@ -25,7 +25,9 @@ import { spot } from './spots';
 // after another (resultsReveal.ts); a tap shows them all. Under the card two buttons: with
 // something waiting in the lobby (the count its red dots show, lobbyWaiting), Collect in the lobby
 // leads and Play again steps back; with nothing, Play again leads and Back to lobby steps back. A
-// first clear always leads with Next chapter, so a winner goes on. The lower one sits beside the
+// first clear always leads with Next chapter, so a winner goes on. Until a chapter is cleared
+// (Reward.newcomer) the card keeps to the title, the waves, the stars, the rewards, one unlock and
+// the chapter opened, so a player who just met the game is not handed a list. The lower one sits beside the
 // rewarded "double copper" offer at the same size, font and colour (CrazyGames' rewarded-ad rules).
 // On a desktop Enter takes the first button and Escape goes to the lobby; the buttons wear their
 // keys. The rewarded ad has no key: it plays only on a click.
@@ -126,7 +128,7 @@ export class ResultsScreen implements Screen {
     const total = this.offer === 'paid' ? 2 * r.copper : r.copper;
     const rewards = rewardsPart(r, total, this.icons, INNER_W);
     zones.push(rewards);
-    const unlocks = unlocksPart(r.unlocks, this.icons, INNER_W);
+    const unlocks = unlocksPart(r.newcomer ? newcomerUnlocks(r.unlocks) : r.unlocks, this.icons, INNER_W);
     if (unlocks) zones.push(unlocks);
     const news = new Container();
     let ny = 0;
