@@ -69,6 +69,8 @@ const MENU_TOP = 40;
 const PLAY_W = 820;
 const PLAY_H = 210;
 const RAIL_X = 130;
+/** A Train tap this soon after a node was bought is the same thumb's second tap. */
+const TRAIN_GAP_MS = 400;
 
 function lockText(lock: Lock): string {
   if (lock.kind === 'firstRun') return t('tab.unlockFirstRun');
@@ -87,6 +89,8 @@ export class LobbyScreen implements Screen {
   /** The gear slot open in detail, the training node shown, the merge effect playing. */
   private gearOpen: GearSlot | null = null;
   private trainPick: number | null = null;
+  /** When the last node was bought: a double tap's second tap lands on the next node's button, its price unseen. */
+  private trainedAt = -Infinity;
   private merging: MergeView | null = null;
   private frame: UiFrame | null = null;
   private toast: Container | null = null;
@@ -358,8 +362,13 @@ export class LobbyScreen implements Screen {
   private trainTab(w: number, top: number): void {
     const tab = trainTab(this.save, this.icons, this.trainPick, {
       train: () => {
+        const now = Date.now();
+        if (now - this.trainedAt < TRAIN_GAP_MS) return;
         const next = train(this.save);
-        if (next !== this.save) this.actions.track('buy', { item: 'train', node: next.trained, spent: this.save.copper - next.copper });
+        if (next !== this.save) {
+          this.trainedAt = now;
+          this.actions.track('buy', { item: 'train', node: next.trained, spent: this.save.copper - next.copper });
+        }
         this.change(next);
         this.trainPick = null;
         this.relayout();
