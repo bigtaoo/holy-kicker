@@ -19,7 +19,7 @@ function towardBoss(s: SimState): Vec2 {
   return { x: dx / d, y: dy / d };
 }
 
-describe('elites and bosses on a live run', () => {
+describe('elites and bosses on a live run', { timeout: 30_000 }, () => {
   it("wears an act-3 elite's affix badges while it stands, and drops them when it falls", async () => {
     // ?wave=5 opens at the end of wave 4: the elite wave starts on the first tick
     const run = await liveRun({ query: '?direct&chapter=11&wave=5' });

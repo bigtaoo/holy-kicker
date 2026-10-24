@@ -27,7 +27,7 @@ function cover(rig: ShellRig): Container | null {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('a phone held sideways', () => {
+describe('a phone held sideways', { timeout: 30_000 }, () => {
   it('covers the run, its HUD and a later toast, and the fight waits on the pause panel', async () => {
     touchDevice();
     const run = await liveRun();

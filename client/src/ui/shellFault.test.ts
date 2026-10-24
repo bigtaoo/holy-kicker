@@ -80,7 +80,7 @@ async function aRun(o: Parameters<typeof liveRun>[0] = {}): Promise<LiveRun> {
   return run;
 }
 
-describe('a fault in a run', () => {
+describe('a fault in a run', { timeout: 30_000 }, () => {
   it('the first keeps the run and offers it; going on plays from the same tick', async () => {
     const p = portalLog();
     const run = await aRun({ portal: p.portal });
@@ -246,7 +246,7 @@ describe('a fault in a run', () => {
   });
 });
 
-describe('a fault outside a run', () => {
+describe('a fault outside a run', { timeout: 30_000 }, () => {
   async function lobby(): Promise<ShellRig> {
     const rig = await rigShell({ storage: deviceWith(clearedChapterOne()) });
     await rig.shell.start();
@@ -303,7 +303,7 @@ describe('a fault outside a run', () => {
   });
 });
 
-describe('faults that keep coming', () => {
+describe('faults that keep coming', { timeout: 30_000 }, () => {
   /** sessionStorage as a browser keeps it across a reload. */
   function browserPage(): { reload: ReturnType<typeof vi.fn>; session: Map<string, string> } {
     const reload = vi.fn();

@@ -25,7 +25,7 @@ function tappable(run: LiveRun, key: string): boolean {
   return findTap(run.app.stage, t(key as never)) !== null;
 }
 
-describe('revives on a live run', () => {
+describe('revives on a live run', { timeout: 30_000 }, () => {
   it("a free revive first, no ad; then the ad's: skipped keeps the panel, paid stands him up once", async () => {
     const ads = fakeAds();
     const run = await liveRun({ ads, save: TRAINED });

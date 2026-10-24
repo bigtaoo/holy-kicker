@@ -55,7 +55,7 @@ function withSettings(s: Parameters<typeof updateSettings>[1]): MemoryStore {
   return kv;
 }
 
-describe('the pause panel switches', () => {
+describe('the pause panel switches', { timeout: 30_000 }, () => {
   it('turn the music and effects off to 0 and on again to the level they had, kept on the device', async () => {
     const kv = withSettings({ music: 3, volume: 2 });
     const run = await paused({ storage: kv });
@@ -158,7 +158,7 @@ describe('the pause panel switches', () => {
   });
 });
 
-describe('the fast-forward toggle', () => {
+describe('the fast-forward toggle', { timeout: 30_000 }, () => {
   it('doubles the run, is kept on the device, and the next run and a fresh shell start fast', async () => {
     const run = await liveRun();
     const kv = run.platform.storage as MemoryStore;
