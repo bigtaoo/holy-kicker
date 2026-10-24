@@ -251,7 +251,7 @@ export class ChallengeFlow {
   /**
    * Settles the challenge run that ended in `s` and sends it with its replay when `ranked` (no
    * dev switch bent it, sharing is on and the player has a name on the boards): a daily's counted
-   * run, a weekly's run unless short of the week's best (the server keeps the best).
+   * run, and every weekly run (the server keeps the best).
    */
   settle(save: SaveData, s: SimState, run: RunResult, waves: number, kills: number, ranked: boolean): ChallengeSettled {
     const c = this.run!;
@@ -274,7 +274,9 @@ export class ChallengeFlow {
     if (c.loadout) {
       const week = settleWeekly(save, c, challengeBoardId(c.id, c.engine, chapter, THEME), result);
       const reward = { counted: true, reached: [], copper: 0, jade: 0, streak: 0, streakJade: 0 };
-      return { save: week.save, reward, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(waves >= week.before), weekly: { before: week.before } };
+      // every weekly run goes and the server keeps the best: the save's best may be one the server never
+      // got (an older build carried a clear on the old engine's board over to the new one)
+      return { save: week.save, reward, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(true), weekly: { before: week.before } };
     }
     const before = dailyBestOf(save, c);
     const settled = settleChallenge(save, c, chapter, result);
