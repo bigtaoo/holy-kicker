@@ -218,6 +218,7 @@ function topRow(view: Container, w: number, h: number, a: SettingsActions): { he
   }, { fill: COLORS.panelLocked, size: 48 });
   lang.x = -half;
   const shake = toggle(on, bw, (v) => a.setShake(v));
+  shake.label = 'shake'; // a switch alone: tests find it by name
   shake.x = half;
   row.addChild(lang, shake);
   return { heads, row };
