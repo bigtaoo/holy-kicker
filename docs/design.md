@@ -119,6 +119,18 @@ health went under the threshold and stays gone for the run, even when he heals b
 steps through four colour bands by share of the max health, green from 75 %, yellow-green from
 50 %, amber from 25 % and a gently pulsing red below (game/healthBand.ts).
 
+### Clear time
+
+Chapter boards rank clears by simulated time to a tenth (pauses, ads and level-up cards do not
+count; fast-forward does not change it), and from chapter 3 a wave waits for its kills, so the
+time measures the build. A won run's results show it as m:ss.t against the chapter's best in
+that mode: a gold "new best, X s faster" or the best that stands (`ui/clearTime.ts`). The save
+keeps the best per chapter and mode (`times`, `hardTimes`, `meta/clearTimes.ts`; a merge keeps
+the faster), recorded only by a run that counts for the board (all waves, no dev switches).
+In the run, a dim clock ("1:49 / best 3:58") sits under the wave counter (`ui/hudColumn.ts`),
+only on a chapter already cleared in this mode and in challenges (time alone): a first attempt
+is about surviving, and a running clock there would read as an exam.
+
 ### Difficulty
 
 Measured with the balance bots (`npm run balance`, engine/README.md), without revives and
