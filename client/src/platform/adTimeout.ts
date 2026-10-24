@@ -39,10 +39,17 @@ export function adWatchdog(give: () => void, timer: AdTimer = realTimer): { star
   };
 }
 
-/** `work`, or a rejection once `ms` pass without it settling. */
+/** What `within` rejects with: the host never answered, unlike a refusal it may still send. */
+export class AdTimedOut extends Error {
+  constructor() {
+    super('ad timed out');
+  }
+}
+
+/** `work`, or a rejection (AdTimedOut) once `ms` pass without it settling. */
 export function within<T>(work: Promise<T>, ms: number, timer: AdTimer = realTimer): Promise<T> {
   return new Promise<T>((resolve, reject) => {
-    const handle = timer.set(() => reject(new Error('ad timed out')), ms);
+    const handle = timer.set(() => reject(new AdTimedOut()), ms);
     work.then(
       (v) => {
         timer.clear(handle);
@@ -54,4 +61,30 @@ export function within<T>(work: Promise<T>, ms: number, timer: AdTimer = realTim
       },
     );
   });
+}
+
+/**
+ * An ad the game gave up on may still be playing and report later: its late end must not reach
+ * the next ad (a free reward) and a second ad must not open over it. `mark` it when giving up;
+ * it is over at its own end (`clear`) or, if that never comes, after AD_PLAY_MS.
+ */
+export class StrayAd {
+  private handle: unknown = null;
+
+  constructor(private readonly timer: AdTimer = realTimer) {}
+
+  mark(): void {
+    this.clear();
+    this.handle = this.timer.set(() => (this.handle = null), AD_PLAY_MS);
+  }
+
+  clear(): void {
+    if (this.handle === null) return;
+    this.timer.clear(this.handle);
+    this.handle = null;
+  }
+
+  active(): boolean {
+    return this.handle !== null;
+  }
 }
