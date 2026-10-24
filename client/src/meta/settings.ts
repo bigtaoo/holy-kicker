@@ -20,6 +20,9 @@ export interface Settings {
   volume: number;
   /** Music volume, 0 (off) to VOLUME_STEPS. */
   music: number;
+  /** The levels the pause panel's switches turned effects and music off from: they come back on at these, in any later run. */
+  keptVolume: number;
+  keptMusic: number;
   /** Render quality; a ?quality= dev switch wins over it. */
   quality: QualityMode;
   /** Runs play at double speed (the HUD's fast-forward toggle). */
@@ -42,7 +45,7 @@ export interface Settings {
   pairsTold: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, haptics: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, pairsTold: false };
+export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, keptVolume: VOLUME_STEPS, keptMusic: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, haptics: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, pairsTold: false };
 
 function isStep(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= VOLUME_STEPS;
@@ -51,18 +54,21 @@ function isStep(v: unknown): v is number {
 export function loadSettings(kv: KeyValueStore): Settings {
   try {
     const raw: unknown = JSON.parse(kv.getItem(SETTINGS_KEY) ?? '{}');
-    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; quality?: unknown; fast?: unknown; shake?: unknown; haptics?: unknown; dataSharing?: unknown; boards?: unknown; noticeSeen?: unknown; reminders?: unknown; remindAsked?: unknown; pairsTold?: unknown } | null;
+    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; keptVolume?: unknown; keptMusic?: unknown; quality?: unknown; fast?: unknown; shake?: unknown; haptics?: unknown; dataSharing?: unknown; boards?: unknown; noticeSeen?: unknown; reminders?: unknown; remindAsked?: unknown; pairsTold?: unknown } | null;
     // files from before the volume steps only had sound on or off
     const v = r?.volume;
     const m = r?.music;
     const volume = isStep(v) ? v : r?.sound === false ? 0 : VOLUME_STEPS;
     const music = isStep(m) ? m : VOLUME_STEPS;
+    const kept = (k: unknown) => (isStep(k) && k > 0 ? k : VOLUME_STEPS);
     const q = r?.quality;
     const locale = r?.locale;
     return {
       locale: isLocale(locale) ? locale : null,
       volume,
       music,
+      keptVolume: kept(r?.keptVolume),
+      keptMusic: kept(r?.keptMusic),
       quality: QUALITY_MODES.includes(q as QualityMode) ? (q as QualityMode) : 'auto',
       fast: r?.fast === true,
       shake: r?.shake !== false,
