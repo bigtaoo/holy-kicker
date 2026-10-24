@@ -55,10 +55,12 @@ export function weekOf(save: SaveData, id: string): WeekEntry | undefined {
 /**
  * Settles a finished run of the weekly `c` on `board`: the week noted with its best waves (to pay
  * once it closes), and the run counted as a run (totals, the Codex). `before`: the best waves
- * before this run, 0 for the week's first.
+ * before this run on this board, 0 for its first: an update mid-week opens a new board (one per
+ * engine), where the best on the old one is not seen, so the week starts over on it.
  */
 export function settleWeekly(save: SaveData, c: Challenge, board: string, run: ChallengeResult): { save: SaveData; before: number } {
-  const old = weekOf(save, c.id);
+  const found = weekOf(save, c.id);
+  const old = found?.board === board ? found : undefined;
   const entry: WeekEntry = { id: c.id, board, end: c.end, best: Math.max(old?.best ?? 0, run.waves) };
   const weeks = [entry, ...save.weeks.filter((w) => w.id !== c.id)].slice(0, WEEKS_KEPT);
   return {

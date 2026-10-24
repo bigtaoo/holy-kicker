@@ -41,6 +41,12 @@ describe('weekly challenge', () => {
     expect(b.save.runs).toBe(2);
     expect(b.save.kills).toBe(200);
     expect(b.save.weeks).toHaveLength(1);
+    // an update mid-week moves the week to a new board, where the old best is not seen
+    const moved = `w2026-42-e${ENGINE_VERSION + 1}-c2`;
+    const m = settleWeekly(b.save, weekly, moved, run(9));
+    expect(m.before).toBe(0);
+    expect(weekOf(m.save, weekly.id)).toEqual({ id: weekly.id, board: moved, end: weekly.end, best: 9 });
+    expect(settleWeekly(m.save, weekly, moved, run(7)).before).toBe(9);
     // a long-unpaid week makes room
     let s = player();
     for (let k = 0; k < WEEKS_KEPT + 2; k++) s = settleWeekly(s, { ...weekly, id: `w2026-${10 + k}` }, `w2026-${10 + k}-e1-c2`, run(3)).save;
