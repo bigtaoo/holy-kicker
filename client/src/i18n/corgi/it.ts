@@ -77,7 +77,7 @@ export const corgiIt: Table<typeof corgiEn> = {
     bowl: { name: 'Tempesta di Seghe', desc: 'Fulmina {n} {n|one:insetto|other:insetti} a lancio, EXP subito' },
     palm: { name: 'Raffica Orbitale', desc: 'Il cratere resta e blocca gli insetti per {s}s' },
     bolt: { name: 'Tempesta Tesla' },
-    incense: { name: 'Pozza Riparatrice' },
+    incense: { name: 'Campo Riparatore' },
     bell: { name: 'Campo di Forza' },
     cymbal: { name: 'Anello di Seghe', desc: '{n} lame di sega ti girano intorno per sempre e ne lanciano altre' },
     lotus: { name: 'Mine Magnetiche', desc: 'Una mina a ogni passo, le esplosioni attirano i bocconcini' },
@@ -85,7 +85,7 @@ export const corgiIt: Table<typeof corgiEn> = {
     roar: { name: 'Abbaio Sonico', desc: 'Abbaia tutto intorno, frantuma i proiettili' },
     talisman: { name: 'Tempesta di Missili', desc: 'Ogni missile che colpisce esplode sugli insetti intorno' },
     bomb: { name: 'Bombardamento', desc: 'Lancia {n} granate insieme, su insetti diversi' },
-    knives: { name: 'Tempesta di Lame', desc: 'I coltelli lanciati tornano da te, tagliando all’andata e al ritorno' },
+    knives: { name: 'Tempesta di Stelle', desc: 'Le stelle lanciate tornano da te, tagliando all’andata e al ritorno' },
   },
   shrine: {
     heal: { name: 'Kit Medico' },
@@ -102,7 +102,7 @@ export const corgiIt: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Attacco Orbitale', desc: 'Un attacco dall’orbita colpisce la folla più grande', count: 'Attacchi {a} → {b}' },
     bolt: { name: 'Bobina Tesla', desc: 'Il fulmine salta tra {n} {n|one:insetto|other:insetti}' },
-    incense: { name: 'Pozza di Plasma', desc: 'Una pozza di plasma sfrigola ai tuoi piedi per {s}s' },
+    incense: { name: 'Campo di Plasma', desc: 'Un campo di plasma crepita ai tuoi piedi per {s}s' },
     bell: { name: 'Scudo a Bolla', desc: 'Blocca un colpo ogni {s}s, poi scoppia' },
     cymbal: { name: 'Lama di Sega', desc: '{n} lame volano via, trapassano e rimbalzano', count: 'Lame {a} → {b}' },
     lotus: { name: 'Mine di Prossimità', desc: 'Camminando lasci mine che esplodendo lanciano schegge' },
@@ -110,7 +110,7 @@ export const corgiIt: Table<typeof corgiEn> = {
     roar: { name: 'Mega Abbaio', desc: 'Un abbaio verso l’insetto più vicino respinge lo sciame' },
     talisman: { name: 'Missili a Ricerca', desc: '{n} missili inseguono insetti diversi', count: 'Missili {a} → {b}' },
     bomb: { name: 'Granata a Grappolo', desc: 'Una granata esplode in {n} bombette', count: 'Bombette {a} → {b}' },
-    knives: { name: 'Anello di Coltelli', desc: 'Fino a {n} coltelli ti girano intorno, poi partono', count: 'Coltelli {a} → {b}' },
+    knives: { name: 'Stelle al Plasma', desc: 'Fino a {n} stelle al plasma ti girano intorno, poi partono', count: 'Stelle {a} → {b}' },
   },
   passive: {
     calm: { name: 'Refrigerante', desc: 'Ricarica gadget −{n}%', blurb: 'I tuoi gadget tornano prima' },

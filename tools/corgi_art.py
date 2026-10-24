@@ -47,14 +47,16 @@ DECO = {
 # see-through hole); "auto" for the sheets whose rows came out uneven (split_sheet.py)
 ICON_SHEETS = {
     "icons/sheet_weapons.png": ("3x3", "ball staff - - beads - bolt - bell"),
-    "icons/sheet_spells.png": ("auto", "palm incense lotus halo roar - - legs calm eye"),
+    "icons/sheet_spells.png": ("auto", "palm - lotus halo roar - - legs calm eye"),
+    "icons/sheet_field.png": ("2x2", "- - incense -"),
     "icons/sheet_passives.png": ("auto", "rice focus - wrath - pendant - bracers - robe sandals"),
     "icons/sheet_shop.png": ("auto", "chest_free chest_jade train_attack chest_ad - train_hp train_xp "
                                      "train_copper - - train_magnet train_revive"),
     "icons/sheet_lobby.png": ("3x3", "jade copper shop codex lock@0.5,0.14 - patrol tasks chest"),
     "icons/sheet_fix.png": ("1x3", "iron karma sash@0.5,0.42"),
     "icons/sheet_relics.png": ("2x2", "bowl cymbal fish -"),
-    "icons/sheet_arsenal.png": ("1x3", "talisman bomb knives"),
+    "icons/sheet_arsenal.png": ("1x3", "talisman bomb -"),
+    "icons/sheet_star.png": ("auto", "- - - knives"),
     "icons/sheet_tabs.png": ("1x2", "daily tab_train@0.5,0.17"),
     "icons/sheet_bar.png": ("1x2", "dice settings@0.5,0.5"),
 }
@@ -70,6 +72,9 @@ GUN_ICONS = {
 }
 # the monk sheet's frame order (client/public/art/icons/icons.json), which the corgi sheet keeps
 ICONS = [f["name"] for f in json.loads((PUB / "art/icons/icons.json").read_text())["frames"]]
+# frames only the corgi sheet has, after the monk ones, in the page's spare cells: the evolved
+# Repair Field's own picture (the evolved card and HUD slot try "<id>_evo" before the base icon)
+CORGI_ONLY = ["incense_evo"]
 
 # item pictures: sheet, grid, names; each fitted into the monk picture's exact size (the bomb that
 # stands in for the palm is drawn nose up and falls nose down, so it is flipped)
@@ -153,14 +158,18 @@ def icons(cut):
     for n, gun in GUN_ICONS.items():
         im = clear_paper(Image.open(cut / f"{n}.png").convert("RGBA"), gun["paper"])
         recolor(glow(im, gun["glow"]), GUNMETAL).save(cut / f"{n}.png")
+    run(TOOLS / "corgi_icon_fx.py", "star", cut / "knives.png")
+    run(TOOLS / "corgi_icon_fx.py", "repair", cut / "incense.png", cut / "incense_evo.png")
     (OUT / "art/icons").mkdir(parents=True, exist_ok=True)
-    run(TOOLS / "pack_icons.py", OUT / "art/icons", *[cut / f"{n}.png" for n in ICONS])
+    run(TOOLS / "pack_icons.py", OUT / "art/icons", *[cut / f"{n}.png" for n in ICONS + CORGI_ONLY])
     for ext in ("png", "json"):
         a, b = PUB / f"art/icons/icons.{ext}", OUT / f"art/icons/icons.{ext}"
         if ext == "json":
             mine, monk = json.loads(b.read_text()), json.loads(a.read_text())
+            extra = mine["frames"][len(monk["frames"]):]
             assert [(f["name"], f["w"], f["h"]) for f in mine["frames"]] == \
-                [(f["name"], f["w"], f["h"]) for f in monk["frames"]], "icon frames differ from the monk sheet"
+                [(f["name"], f["w"], f["h"]) for f in monk["frames"] + extra] and \
+                [f["name"] for f in extra] == CORGI_ONLY, "icon frames differ from the monk sheet"
         else:
             assert Image.open(a).size == Image.open(b).size, "icon sheet size differs"
 

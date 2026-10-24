@@ -78,7 +78,7 @@ export const corgiPt: Table<typeof corgiEn> = {
     bowl: { name: 'Tempestade de Serras', desc: 'Eletrocuta {n} {n|one:inseto|other:insetos} por arremesso, XP na hora' },
     palm: { name: 'Barragem Orbital', desc: 'A cratera fica e prende os insetos por {s}s' },
     bolt: { name: 'Tempestade Tesla' },
-    incense: { name: 'Poça de Reparo' },
+    incense: { name: 'Campo de Reparo' },
     bell: { name: 'Campo de Força' },
     cymbal: { name: 'Anel de Serras', desc: '{n} serras giram ao seu redor para sempre e lançam mais' },
     lotus: { name: 'Minas Magnéticas', desc: 'Uma mina a cada passo, as explosões puxam petiscos' },
@@ -86,7 +86,7 @@ export const corgiPt: Table<typeof corgiEn> = {
     roar: { name: 'Latido Sônico', desc: 'Late em toda a volta, destrói projéteis' },
     talisman: { name: 'Tempestade de Mísseis', desc: 'Cada míssil que acerta explode nos insetos em volta' },
     bomb: { name: 'Bombardeio', desc: 'Lança {n} granadas de uma vez, em insetos diferentes' },
-    knives: { name: 'Tempestade de Lâminas', desc: 'As facas lançadas voltam para você, cortando na ida e na volta' },
+    knives: { name: 'Tempestade de Estrelas', desc: 'As estrelas lançadas voltam para você, cortando na ida e na volta' },
   },
   shrine: {
     heal: { name: 'Kit Médico' },
@@ -103,7 +103,7 @@ export const corgiPt: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Ataque Orbital', desc: 'Um ataque vindo da órbita atinge a maior multidão', count: 'Ataques {a} → {b}' },
     bolt: { name: 'Bobina Tesla', desc: 'O raio salta por {n} {n|one:inseto|other:insetos}' },
-    incense: { name: 'Poça de Plasma', desc: 'Uma poça de plasma borbulha aos seus pés por {s}s' },
+    incense: { name: 'Campo de Plasma', desc: 'Um campo de plasma crepita aos seus pés por {s}s' },
     bell: { name: 'Escudo de Bolha', desc: 'Bloqueia um golpe a cada {s}s, depois estoura' },
     cymbal: { name: 'Serra Giratória', desc: '{n} serras voam, atravessam e ricocheteiam', count: 'Serras {a} → {b}' },
     lotus: { name: 'Minas de Proximidade', desc: 'Andando, você solta minas que, ao explodir, lançam estilhaços' },
@@ -111,7 +111,7 @@ export const corgiPt: Table<typeof corgiEn> = {
     roar: { name: 'Mega Latido', desc: 'Um latido no inseto mais próximo empurra o enxame' },
     talisman: { name: 'Mísseis Teleguiados', desc: '{n} mísseis perseguem insetos diferentes', count: 'Mísseis {a} → {b}' },
     bomb: { name: 'Granada de Fragmentação', desc: 'Uma granada explode em {n} bombinhas', count: 'Bombinhas {a} → {b}' },
-    knives: { name: 'Anel de Facas', desc: 'Até {n} facas giram ao seu redor e depois disparam', count: 'Facas {a} → {b}' },
+    knives: { name: 'Estrelas de Plasma', desc: 'Até {n} estrelas de plasma giram ao seu redor e depois disparam', count: 'Estrelas {a} → {b}' },
   },
   passive: {
     calm: { name: 'Líquido Refrigerante', desc: 'Recarga de gadgets −{n}%', blurb: 'Seus gadgets voltam mais cedo' },

@@ -31,6 +31,12 @@ export function iconSprite(icons: IconSheet, id: string, size: number): Sprite |
   return s;
 }
 
+/** The evolved item's icon: its own "<id>_evo" frame where the sheet has one (the corgi's Repair
+ *  Field), else the base icon. */
+export function evolvedIcon(icons: IconSheet, id: string, size: number): Sprite | null {
+  return iconSprite(icons, `${id}_evo`, size) ?? iconSprite(icons, id, size);
+}
+
 /** The padlock on locked things, `size` across; a drawn one when the sheet has none. */
 export function lockIcon(icons: IconSheet, size: number): Container {
   const icon = iconSprite(icons, 'lock', size);
@@ -151,7 +157,7 @@ export class BuildBar {
       this.glows.push(glow);
       c.addChild(glow);
     }
-    const icon = slot.icon && iconSprite(this.icons, slot.icon, R * 1.6);
+    const icon = slot.icon && (slot.state === 'evolved' ? evolvedIcon : iconSprite)(this.icons, slot.icon, R * 1.6);
     if (icon) c.addChild(icon);
     const sweep = slot.kind === 'spell' ? { dark: new Graphics(sweepShape(0)), secs: label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }), step: 0, shown: 0 } : null;
     if (sweep) {

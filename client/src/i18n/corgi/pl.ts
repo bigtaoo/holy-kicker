@@ -78,7 +78,7 @@ export const corgiPl: Table<typeof corgiEn> = {
     bowl: { name: 'Burza Pił', desc: 'Razi {n} {n|one:robala|few:robale|many:robali|other:robala} na rzut, XP od razu' },
     palm: { name: 'Ostrzał Orbitalny', desc: 'Krater zostaje i przygważdża robale na {s}s' },
     bolt: { name: 'Burza Tesli' },
-    incense: { name: 'Basen Naprawczy' },
+    incense: { name: 'Pole Naprawcze' },
     bell: { name: 'Pole Siłowe' },
     cymbal: { name: 'Pierścień Pił', desc: 'Piły ({n}) krążą wokół ciebie bez końca i miotają kolejne' },
     lotus: { name: 'Miny Magnetyczne', desc: 'Mina przy każdym kroku, wybuchy przyciągają smakołyki' },
@@ -86,7 +86,7 @@ export const corgiPl: Table<typeof corgiEn> = {
     roar: { name: 'Szczekanie Soniczne', desc: 'Szczeka dookoła, rozbija pociski' },
     talisman: { name: 'Burza Rakiet', desc: 'Każda trafiająca rakieta wybucha, raniąc robale wokół' },
     bomb: { name: 'Nalot Dywanowy', desc: 'Rzuca {n} {n|one:granat|few:granaty|many:granatów|other:granatu} naraz w różne robale' },
-    knives: { name: 'Burza Ostrzy', desc: 'Rzucone noże wracają do ciebie i tną w obie strony' },
+    knives: { name: 'Burza Gwiazd', desc: 'Rzucone gwiazdy wracają do ciebie i tną w obie strony' },
   },
   shrine: {
     heal: { name: 'Apteczka' },
@@ -103,7 +103,7 @@ export const corgiPl: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Atak Orbitalny', desc: 'Uderzenie z orbity trafia w największy tłum', count: 'Uderzenia {a} → {b}' },
     bolt: { name: 'Cewka Tesli', desc: 'Błyskawica przeskakuje przez {n} {n|one:robala|few:robale|many:robali|other:robala}' },
-    incense: { name: 'Kałuża Plazmy', desc: 'U twoich stóp bulgocze kałuża plazmy przez {s}s' },
+    incense: { name: 'Pole Plazmy', desc: 'U twoich stóp trzeszczy pole plazmy przez {s}s' },
     bell: { name: 'Bąbel-Tarcza', desc: 'Co {s}s blokuje cios, po czym pęka' },
     cymbal: { name: 'Piła Tarczowa', desc: 'Piły ({n}) wylatują, przebijają i odbijają się', count: 'Piły {a} → {b}' },
     lotus: { name: 'Miny Zbliżeniowe', desc: 'Idąc, zrzucasz miny, które wybuchając, sieją odłamkami' },
@@ -111,7 +111,7 @@ export const corgiPl: Table<typeof corgiEn> = {
     roar: { name: 'Mega Szczek', desc: 'Szczeknięcie w stronę najbliższego robala odpycha rój' },
     talisman: { name: 'Rakiety Samonaprowadzające', desc: '{n} {n|one:rakieta goni|few:rakiety gonią|many:rakiet goni|other:rakiety goni} różne robale', count: 'Rakiety {a} → {b}' },
     bomb: { name: 'Granat Kasetowy', desc: 'Granat rozpada się na {n} {n|one:bombkę|few:bombki|many:bombek|other:bombki}', count: 'Bombki {a} → {b}' },
-    knives: { name: 'Pierścień Noży', desc: 'Do {n} noży krąży wokół ciebie, potem wylatują', count: 'Noże {a} → {b}' },
+    knives: { name: 'Gwiazdy Plazmowe', desc: 'Do {n} gwiazd plazmowych krąży wokół ciebie, potem wylatują', count: 'Gwiazdy {a} → {b}' },
   },
   passive: {
     calm: { name: 'Chłodziwo', desc: 'Odnowienie gadżetów −{n}%', blurb: 'Gadżety wracają szybciej' },

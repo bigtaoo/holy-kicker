@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import type { CardKind } from '@hk/engine';
 import type { PickWire } from '@hk/protocol';
-import { iconSprite, type IconSheet } from './buildBar';
+import { evolvedIcon, iconSprite, type IconSheet } from './buildBar';
 import { KIND_COLOR } from './cardPanel';
 import { timelineLayout } from './replaySeek';
 import { COLORS, label } from './widgets';
@@ -53,7 +53,7 @@ function pickCell(p: PickWire, icons: IconSheet, cell: number, ringed: boolean):
   if (ringed) disc.circle(0, 0, r + 8).fill(COLORS.saffron);
   disc.circle(0, 0, r).fill(KIND_COLOR[kind] ?? COLORS.dim).stroke({ color: kind === 'evolve' ? GOLD_RIM : COLORS.outline, width: kind === 'evolve' ? 6 : 4 });
   c.addChild(disc);
-  const icon = kind === 'shrine' ? null : iconSprite(icons, id, r * 1.5);
+  const icon = kind === 'shrine' ? null : (kind === 'evolve' ? evolvedIcon : iconSprite)(icons, id, r * 1.5);
   if (icon) c.addChild(icon);
   else {
     // an incense flame, as on the shrine's card

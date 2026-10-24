@@ -6,7 +6,7 @@ import { THEME } from '../theme';
 // metal, grey steel and cyan glass. Each view keeps Holy Kicker's look and takes these in a
 // corgi build; no build mixes the two. The Golden Bell becomes an energy bubble, the cymbals saw
 // blades, the beads drones, the bowl a striped disc, the lotus seeds mines, the incense ring a
-// plasma puddle (a cyan repair pool when evolved), the Mountain Palm's print a scorched crater.
+// plasma field (a green repair field when evolved), the Mountain Palm's print a scorched crater.
 
 export const CORGI = THEME === 'corgi';
 
@@ -21,30 +21,44 @@ export const CORGI_FX = {
   cyanPale: 0xd8f8ff,
   laser: 0xff5a30,
   laserCore: 0xffe4d8,
+  plasma: 0x4ff0c8,
+  plasmaPale: 0xd4fff2,
+  mend: 0x6ff08a,
+  mendPale: 0xdcffe2,
 } as const;
 
 const C = CORGI_FX;
 
-/** A ground pool in a 2r box: a wobbly blob, bubbles for plasma or a cross for the repair pool. */
+/** The Plasma Field in a 2r box, like its icon: a teal ring cast by a small orange
+ *  emitter in the middle, crackling at the rim; the evolved Repair Field is green with a cross. */
 export function corgiPuddle(r: number, heal: boolean): Graphics {
-  const fill = heal ? C.cyan : C.orange;
-  const rim = heal ? C.cyanPale : C.hot;
-  const pts: number[] = [];
-  for (let i = 0; i < 24; i++) {
-    const a = (i / 24) * Math.PI * 2;
-    const d = r * 0.9 * (1 + 0.04 * Math.sin(3 * a) + 0.03 * Math.sin(5 * a + 1));
-    pts.push(r + Math.cos(a) * d, r + Math.sin(a) * d);
-  }
+  const fill = heal ? C.mend : C.plasma;
+  const pale = heal ? C.mendPale : C.plasmaPale;
   const g = new Graphics()
-    .poly(pts).fill({ color: fill, alpha: 0.26 })
-    .poly(pts).stroke({ color: rim, width: r * 0.07, alpha: 0.9 });
-  if (heal) {
-    const arm = { color: C.cyanPale, alpha: 0.5 };
-    return g.roundRect(r - r * 0.09, r - r * 0.32, r * 0.18, r * 0.64, r * 0.05).fill(arm)
-      .roundRect(r - r * 0.32, r - r * 0.09, r * 0.64, r * 0.18, r * 0.05).fill(arm);
+    .circle(r, r, r * 0.94).fill({ color: fill, alpha: 0.18 })
+    .circle(r, r, r * 0.92).stroke({ color: fill, width: r * 0.07, alpha: 0.92 })
+    .circle(r, r, r * 0.88).stroke({ color: pale, width: r * 0.02, alpha: 0.8 })
+    .circle(r, r, r * 0.55).stroke({ color: fill, width: r * 0.03, alpha: 0.45 });
+  // six short zigzag arcs along the rim
+  for (let k = 0; k < 6; k++) {
+    const a0 = (k / 6) * Math.PI * 2 + 0.3;
+    for (let j = 0; j < 5; j++) {
+      const a = a0 + j * 0.09;
+      const d = r * (j % 2 ? 0.99 : 0.87);
+      if (j === 0) g.moveTo(r + Math.cos(a) * d, r + Math.sin(a) * d);
+      else g.lineTo(r + Math.cos(a) * d, r + Math.sin(a) * d);
+    }
+    g.stroke({ color: pale, width: r * 0.025, alpha: 0.95 });
   }
-  const bubbles: [number, number, number][] = [[-0.4, -0.2, 0.1], [0.25, -0.35, 0.07], [0.35, 0.25, 0.12], [-0.15, 0.4, 0.08], [0.05, 0, 0.06]];
-  for (const [bx, by, br] of bubbles) g.circle(r + bx * r, r + by * r, br * r).stroke({ color: rim, width: r * 0.025, alpha: 0.6 });
+  const e = r * 0.2;
+  g.ellipse(r, r, e, e * 0.8).fill(C.orange).stroke({ color: C.outline, width: r * 0.03 })
+    .ellipse(r, r, e * 0.45, e * 0.36).fill(fill);
+  if (heal) {
+    const arm = { color: 0xffffff, alpha: 0.85 };
+    const line = { color: fill, width: r * 0.02 };
+    g.roundRect(r - r * 0.08, r - r * 0.5, r * 0.16, r * 0.28, r * 0.03).fill(arm).stroke(line)
+      .roundRect(r - r * 0.22, r - r * 0.44, r * 0.44, r * 0.16, r * 0.03).fill(arm).stroke(line);
+  }
   return g;
 }
 

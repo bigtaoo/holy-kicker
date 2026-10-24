@@ -10,7 +10,7 @@ import { ViewPool } from './viewPool';
 
 // The talismans, the cluster bomb and the Blade Circle (engine systems/talismans.ts, bombs.ts,
 // knives.ts), drawn with their build icons (art/monk/icons; the corgi's homing missiles, grenade
-// and combat knives): talismans and knives from the sim's lists, bombs flown along an arc from
+// and plasma stars): talismans and knives from the sim's lists, bombs flown along an arc from
 // their 'bomb' events (the sim only knows where they land). The evolved forms: a Heavenly Seal
 // stamps its talisman big where it bursts, and the Thousand Blades leave streaks in flight.
 
@@ -21,12 +21,14 @@ const ARC = 320;
 const SMALL_ARC = 130;
 /**
  * How far each icon is turned from pointing along +x (the talisman and missile stand nose up; the
- * monk's knife points up and right, the corgi's straight up), and its size in the world.
+ * monk's knife points up and right), and its size in the world. The corgi's plasma star has no
+ * point to aim: it spins instead, at KNIFE_SPIN radians a second.
  */
 const TALISMAN_TURN = Math.PI / 2;
-const KNIFE_TURN = CORGI ? Math.PI / 2 : Math.PI / 4;
+const KNIFE_TURN = Math.PI / 4;
+const KNIFE_SPIN = 14;
 const TALISMAN_SCALE = 0.7;
-const KNIFE_SCALE = CORGI ? 0.85 : 0.65;
+const KNIFE_SCALE = CORGI ? 0.8 : 0.65;
 const BOMB_SCALE = 0.65;
 /** A seal's stamp grows from the talisman's size to this over STAMP seconds as it fades. */
 const STAMP_SCALE = 1.5;
@@ -65,6 +67,8 @@ export class ArsenalView {
   private readonly talismanTex: Texture;
   private readonly bombTex: Texture;
   private readonly knifeTex: Texture;
+  /** How far the corgi's plasma stars have spun. */
+  private spin = 0;
   private readonly shadowTex: Texture;
   private readonly sprites: ViewPool<Sprite>;
   private readonly bombs: Flying[] = [];
@@ -134,8 +138,13 @@ export class ArsenalView {
     this.flyBombs(dt);
     this.fadeStamps(dt);
     this.sync(this.talismans, talismans, this.talismanTex, alpha, (q) => (q.dir / 65536) * Math.PI * 2 + TALISMAN_TURN, (q) => TALISMAN_SCALE * (q.seal > 0 ? SEAL_SCALE : 1));
-    // a circling knife points along the circle (brads grow toward +y), a flying one along its flight
-    this.sync(this.knives, knives, this.knifeTex, alpha, (k, x, y) => (k.flying ? Math.atan2(k.vy, k.vx) : Math.atan2(y - hy, x - hx) + Math.PI / 2) + KNIFE_TURN, () => KNIFE_SCALE);
+    // a circling knife points along the circle (brads grow toward +y), a flying one along its flight;
+    // the corgi's stars spin, each a little out of step with the next
+    this.spin = (this.spin + dt * KNIFE_SPIN) % (Math.PI * 2);
+    const knifeAngle = CORGI
+      ? (k: Knife) => this.spin + k.id
+      : (k: Knife, x: number, y: number) => (k.flying ? Math.atan2(k.vy, k.vx) : Math.atan2(y - hy, x - hx) + Math.PI / 2) + KNIFE_TURN;
+    this.sync(this.knives, knives, this.knifeTex, alpha, knifeAngle, () => KNIFE_SCALE);
     for (const k of knives) if (k.flying && k.returns) bladeTrail(this.pool, lerpX(k, alpha), lerpY(k, alpha) - LIFT, Math.atan2(k.vy, k.vx));
   }
 

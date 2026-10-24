@@ -78,7 +78,7 @@ export const corgiId: Table<typeof corgiEn> = {
     bowl: { name: 'Badai Gergaji', desc: 'Menyambar {n} serangga per lempar, XP langsung' },
     palm: { name: 'Hujan Peluru Orbit', desc: 'Kawahnya tetap dan menahan serangga {s}d' },
     bolt: { name: 'Badai Tesla' },
-    incense: { name: 'Kolam Perbaikan' },
+    incense: { name: 'Medan Perbaikan' },
     bell: { name: 'Medan Gaya' },
     cymbal: { name: 'Cincin Gergaji', desc: '{n} bilah gergaji terus mengitarimu dan melempar lagi' },
     lotus: { name: 'Ranjau Magnet', desc: 'Ranjau tiap langkah, ledakannya menarik camilan' },
@@ -86,7 +86,7 @@ export const corgiId: Table<typeof corgiEn> = {
     roar: { name: 'Gonggongan Sonik', desc: 'Menggonggong ke segala arah, hancurkan peluru' },
     talisman: { name: 'Badai Rudal', desc: 'Setiap rudal yang kena meledak, mengenai serangga di sekitar' },
     bomb: { name: 'Bom Karpet', desc: 'Melempar {n} granat sekaligus ke serangga yang berbeda' },
-    knives: { name: 'Badai Pisau', desc: 'Pisau yang dilempar kembali padamu, memotong saat pergi dan pulang' },
+    knives: { name: 'Badai Bintang', desc: 'Bintang yang dilempar kembali padamu, memotong saat pergi dan pulang' },
   },
   shrine: {
     heal: { name: 'Kotak P3K' },
@@ -103,7 +103,7 @@ export const corgiId: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Serangan Orbit', desc: 'Serangan dari orbit menghantam kerumunan terbesar', count: 'Serangan {a} → {b}' },
     bolt: { name: 'Kumparan Tesla', desc: 'Petir melompati {n} serangga' },
-    incense: { name: 'Genangan Plasma', desc: 'Genangan plasma mendesis di kakimu {s}d' },
+    incense: { name: 'Medan Plasma', desc: 'Medan plasma berderak di kakimu {s}d' },
     bell: { name: 'Perisai Gelembung', desc: 'Menahan satu serangan tiap {s}d, lalu pecah' },
     cymbal: { name: 'Bilah Gergaji', desc: '{n} bilah gergaji terbang, menembus dan memantul', count: 'Bilah {a} → {b}' },
     lotus: { name: 'Ranjau Jarak Dekat', desc: 'Berjalan menjatuhkan ranjau, ledakannya menebar serpihan' },
@@ -111,7 +111,7 @@ export const corgiId: Table<typeof corgiEn> = {
     roar: { name: 'Gonggongan Mega', desc: 'Gonggongan ke serangga terdekat mendorong kawanan mundur' },
     talisman: { name: 'Rudal Pelacak', desc: '{n} rudal mengejar serangga yang berbeda', count: 'Rudal {a} → {b}' },
     bomb: { name: 'Granat Cluster', desc: 'Granat yang dilempar pecah jadi {n} bom kecil', count: 'Bom kecil {a} → {b}' },
-    knives: { name: 'Cincin Pisau', desc: 'Hingga {n} pisau berputar di sekitarmu, lalu melesat', count: 'Pisau {a} → {b}' },
+    knives: { name: 'Bintang Plasma', desc: 'Hingga {n} bintang plasma berputar di sekitarmu, lalu melesat', count: 'Bintang {a} → {b}' },
   },
   passive: {
     calm: { name: 'Pendingin', desc: 'Jeda gadget −{n}%', blurb: 'Gadget siap lagi lebih cepat' },

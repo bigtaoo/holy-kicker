@@ -78,7 +78,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     bowl: { name: 'Testere Fırtınası', desc: 'Her atışta {n} böceği çarpar, TP anında' },
     palm: { name: 'Yörünge Bombardımanı', desc: 'Krater kalır, böcekleri {s} sn çiviler' },
     bolt: { name: 'Tesla Fırtınası' },
-    incense: { name: 'Onarım Havuzu' },
+    incense: { name: 'Onarım Alanı' },
     bell: { name: 'Güç Alanı' },
     cymbal: { name: 'Testere Halkası', desc: '{n} testere sonsuza dek etrafında döner ve yenilerini fırlatır' },
     lotus: { name: 'Mıknatıs Mayınlar', desc: 'Her adımda bir mayın, patlamalar ikramları çeker' },
@@ -86,7 +86,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     roar: { name: 'Sonik Havlama', desc: 'Her yöne havlar, mermileri parçalar' },
     talisman: { name: 'Füze Fırtınası', desc: 'İsabet eden her füze patlar, etraftaki böcekleri de vurur' },
     bomb: { name: 'Halı Bombardımanı', desc: 'Aynı anda farklı böceklere {n} el bombası atar' },
-    knives: { name: 'Bıçak Fırtınası', desc: 'Atılan bıçaklar geri döner, gidişte de dönüşte de keser' },
+    knives: { name: 'Yıldız Fırtınası', desc: 'Atılan yıldızlar geri döner, gidişte de dönüşte de keser' },
   },
   shrine: {
     heal: { name: 'İlk Yardım' },
@@ -103,7 +103,7 @@ export const corgiTr: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Yörünge Saldırısı', desc: 'Yörüngeden gelen bir vuruş en kalabalık yere iner', count: 'Saldırı {a} → {b}' },
     bolt: { name: 'Tesla Bobini', desc: 'Şimşek {n} böcek arasında sıçrar' },
-    incense: { name: 'Plazma Gölcüğü', desc: 'Ayaklarının dibinde {s} sn bir plazma gölcüğü kabarır' },
+    incense: { name: 'Plazma Alanı', desc: 'Ayaklarının dibinde {s} sn bir plazma alanı çatırdar' },
     bell: { name: 'Balon Kalkan', desc: 'Her {s} sn bir darbeyi engeller, sonra patlar' },
     cymbal: { name: 'Testere Bıçağı', desc: '{n} testere fırlar, deler geçer ve seker', count: 'Testere {a} → {b}' },
     lotus: { name: 'Yakınlık Mayınları', desc: 'Yürürken mayın bırakır, patlayınca şarapnel saçar' },
@@ -111,7 +111,7 @@ export const corgiTr: Table<typeof corgiEn> = {
     roar: { name: 'Mega Havlama', desc: 'En yakın böceğe doğru bir havlama sürüyü geri iter' },
     talisman: { name: 'Güdümlü Füzeler', desc: '{n} füze farklı böceklerin peşine düşer', count: 'Füze {a} → {b}' },
     bomb: { name: 'Misket Bombası', desc: 'Atılan el bombası {n} küçük bombaya ayrılır', count: 'Küçük bomba {a} → {b}' },
-    knives: { name: 'Bıçak Halkası', desc: 'En fazla {n} bıçak etrafında döner, sonra fırlar', count: 'Bıçak {a} → {b}' },
+    knives: { name: 'Plazma Yıldızları', desc: 'En fazla {n} plazma yıldızı etrafında döner, sonra fırlar', count: 'Yıldız {a} → {b}' },
   },
   passive: {
     calm: { name: 'Soğutucu', desc: 'Gadget bekleme −%{n}', blurb: 'Gadget’ların daha çabuk hazır olur' },

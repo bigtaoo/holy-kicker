@@ -78,7 +78,7 @@ export const corgiZh: Table<typeof corgiEn> = {
     bowl: { name: '锯刃风暴', desc: '每次带走 {n} 只虫子，经验立刻到手' },
     palm: { name: '轨道齐射', desc: '弹坑留在原地，定住虫子 {s} 秒' },
     bolt: { name: '雷暴线圈' },
-    incense: { name: '修复池' },
+    incense: { name: '修复力场' },
     bell: { name: '力场' },
     cymbal: { name: '锯轮', desc: '{n} 片锯刃永远绕身旋转，还会甩出飞锯' },
     lotus: { name: '磁吸地雷', desc: '每步一颗地雷，爆炸时吸来零食' },
@@ -86,7 +86,7 @@ export const corgiZh: Table<typeof corgiEn> = {
     roar: { name: '音爆汪', desc: '四面狂吠，震碎子弹' },
     talisman: { name: '导弹风暴', desc: '每枚导弹命中后爆开，波及周围的虫子' },
     bomb: { name: '地毯轰炸', desc: '一次扔出 {n} 颗手雷，砸向不同的虫子' },
-    knives: { name: '刀刃风暴', desc: '射出的飞刀会飞回身边，来回都伤敌' },
+    knives: { name: '星镖风暴', desc: '射出的星镖会飞回身边，来回都伤敌' },
   },
   shrine: {
     heal: { name: '急救包' },
@@ -103,7 +103,7 @@ export const corgiZh: Table<typeof corgiEn> = {
   spell: {
     palm: { name: '轨道打击', desc: '从轨道轰向最密集的虫群', count: '打击 {a} → {b} 次' },
     bolt: { name: '特斯拉线圈', desc: '闪电在 {n} 只虫子之间跳跃' },
-    incense: { name: '等离子水洼', desc: '脚下冒出等离子水洼，持续 {s} 秒' },
+    incense: { name: '等离子力场', desc: '脚下展开等离子力场，持续 {s} 秒' },
     bell: { name: '泡泡护盾', desc: '每 {s} 秒挡一次伤害，破掉时爆开' },
     cymbal: { name: '飞锯', desc: '连飞 {n} 片锯刃，穿透并弹射', count: '锯刃 {a} → {b} 片' },
     lotus: { name: '感应地雷', desc: '行走时布下地雷，虫子踩中就炸出弹片' },
@@ -111,7 +111,7 @@ export const corgiZh: Table<typeof corgiEn> = {
     roar: { name: '超级汪汪', desc: '朝最近的虫子大叫一声，击退虫群' },
     talisman: { name: '追踪导弹', desc: '{n} 枚导弹各自追向不同的虫子', count: '导弹 {a} → {b} 枚' },
     bomb: { name: '子母雷', desc: '扔出手雷，炸开 {n} 颗子雷', count: '子雷 {a} → {b} 颗' },
-    knives: { name: '战术飞刀', desc: '最多 {n} 把刀绕身旋转，满了齐射', count: '飞刀 {a} → {b} 把' },
+    knives: { name: '等离子星镖', desc: '最多 {n} 枚星镖绕身旋转，满了齐射', count: '星镖 {a} → {b} 枚' },
   },
   passive: {
     calm: { name: '冷却液', desc: '技能冷却 −{n}%', blurb: '技能更快再次使用' },

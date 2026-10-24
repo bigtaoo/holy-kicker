@@ -63,7 +63,7 @@ rigs").
 |---|---|---|
 | palm | Orbital Strike | meteor slam |
 | bolt | Tesla Coil | chain lightning |
-| incense | Plasma Puddle | damage field at the feet |
+| incense | Plasma Field | damage field at the feet (evolved: Repair Field, its own green icon `incense_evo`) |
 | bell | Bubble Shield | shield, then nova |
 | cymbal | Saw Blade | piercing star |
 | lotus (sutra) | Proximity Mines | mines |
@@ -79,8 +79,9 @@ monk branch, and no build mixes the two:
 | Monk effect | Corgi effect |
 |---|---|
 | Mountain Palm print | scorched crater with a crosshair |
-| incense ring (green healing field) | orange plasma puddle (cyan repair pool with a cross) |
+| incense ring (green healing field) | teal plasma field round an orange emitter (green repair field with a cross) |
 | Golden Bell dome, gold nova | cyan energy bubble (glows at its rim, clear inside), pale cyan nova |
+| Blade Circle's knives | spinning plasma stars (Plasma Stars, evolved Star Storm) |
 | cymbals, gold wheel track | steel saw blades, orange track |
 | gold lightning | cyan tesla arcs |
 | lotus seeds | mines: orange dome, cyan dome when they pull (Magnet Mines) |
