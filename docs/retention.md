@@ -73,6 +73,13 @@ talks to the backend as host `playgama`; whether its page lets that through is n
   closed tab before the game showed anything, which no event can see. The `session` event also
   carries the CrazyGames SDK's environment and start (`sdk`: `crazygames/ok`, `/timeout`,
   `/noscript`), its start time in ms (`sdkMs`) and whether the game is in Basic Launch (`basic`).
+  The `script_*` and `art_*` beacons time the two phases of a load in seconds buckets: on
+  2026-10-24 an iPad in Safari took 10–20 s over the script and 20–30 s to the first screen
+  (desktop: under 1 s), so a slow network, not the game, sets the wait. For such a wait the page's
+  loading screen (`client/index.html`) never stands still: its bar creeps on through the script
+  and a percentage under it counts along, then follows the real load. Repeat visits skip it: web
+  builds keep the hashed `assets/` scripts for a year (`build/cacheHeaders.mjs` writes Cloudflare's
+  `_headers`; everything else is revalidated on every visit).
 
 Below ~100 new installs a day, any share swings by several points from noise alone. Pool a week
 before believing a change, and never read a single day.

@@ -10,7 +10,7 @@ the Chinese column is for the WeChat listing and the CrazyGames zh page.
 | Title | Holy Kicker (zh: 蹴鞠僧) |
 | Category | Action (secondary: Casual) |
 | Tags | survival, roguelite, bullet heaven, monster, one hand, upgrade, mobile, idle |
-| Orientation | Portrait; desktop plays in a 3:4 window |
+| Orientation | Portrait; desktop and tablets held sideways play in a 3:4 window (only a phone on its side is asked to turn) |
 | Devices | Desktop and mobile |
 | Multiplayer | No |
 | Languages | English, Simplified Chinese |
