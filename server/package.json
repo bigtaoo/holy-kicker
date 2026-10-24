@@ -9,6 +9,7 @@
     "dev": "node build.mjs && node dist/server.mjs",
     "deploy": "node build.mjs && sh deploy/deploy.sh",
     "test": "vitest run",
+    "coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

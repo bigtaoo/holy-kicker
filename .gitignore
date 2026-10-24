@@ -44,3 +44,6 @@ art/store/video/raw/
 
 # Release zips built for portal uploads (D:\standing\release)
 release/
+
+# Coverage reports (npm run coverage); the floors are build/coverage-floors.json
+coverage/

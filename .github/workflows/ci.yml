@@ -1,6 +1,7 @@
 name: ci
 
-# Every push and pull request runs `npm run check` (typecheck, file length, tests, the server,
+# Every push and pull request runs `npm run check` (typecheck, file length, tests with the coverage
+# ratchet of build/checkCoverage.mjs, the server,
 # WeChat, CrazyGames and iOS web builds, the WeChat package gate). The iOS app itself is built by
 # release-ios.yml on macOS. A push to main that passes then
 # ships the backend to blightbloom (hk.gamestao.com) and, after it, publishes the web build to

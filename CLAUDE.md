@@ -13,6 +13,9 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   responsibility instead of raising the limit.
 - **`npm run check` must pass before every commit**: typecheck, file length, tests, WeChat,
   CrazyGames and iOS web builds and the 4 MB main-package gate.
+- **Coverage only ratchets up**: check runs the tests as `npm run coverage` (about 10 s more), which fails when a
+  workspace's or a `client/src/<dir>`'s line coverage drops over 0.5 points below `build/coverage-floors.json`;
+  after adding tests, `npm run coverage -- --update` raises the floors (never lowers them) — commit it.
 - **No literal player-facing text in code**: every string goes through `t()` and the tables
   in `client/src/i18n/` (en is the source, zh must match key for key; a word that names the
   game's world goes into both themes' tables, `i18n/monk/` and `i18n/corgi/`, not the shared

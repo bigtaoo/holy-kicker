@@ -19,6 +19,7 @@
     "dev:crazygames": "npm run dev:crazygames -w client",
     "preview:crazygames": "npm run preview:crazygames -w client",
     "test": "npm run test --workspaces",
+    "coverage": "npm run coverage --workspaces && node build/checkCoverage.mjs",
     "typecheck": "npm run typecheck --workspaces",
     "check:filelength": "node build/checkFileLength.mjs",
     "balance": "node build/balance.mjs",
@@ -26,7 +27,7 @@
     "journey": "node build/journey.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
     "check:webp": "node build/checkWebp.mjs",
-    "check": "npm run typecheck && npm run check:filelength && npm run check:webp && npm run check:theme && npm run test && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run build:playgama && npm run build:ios && npm run check:wechatpackage",
+    "check": "npm run typecheck && npm run check:filelength && npm run check:webp && npm run check:theme && npm run coverage && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run build:playgama && npm run build:ios && npm run check:wechatpackage",
     "deploy:server": "npm run deploy -w server",
     "build:playgama": "npm run build:playgama -w client",
     "dev:playgama": "npm run dev:playgama -w client",
@@ -37,6 +38,7 @@
     "build:crazygames:new": "npm run build:crazygames:new -w client"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^4.1.11",
     "playwright-core": "^1.63.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
