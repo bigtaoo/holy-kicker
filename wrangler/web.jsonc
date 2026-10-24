@@ -10,8 +10,9 @@
   "name": "holy-kicker-web",
   "compatibility_date": "2026-10-05",
   "assets": {
-    "directory": "../client/dist",
-    "not_found_handling": "single-page-application"
+    // no single-page fallback: a missing file is a 404, never index.html under a script's name,
+    // which the year-long assets/ cache (build/cacheHeaders.mjs) would then keep
+    "directory": "../client/dist"
   },
   "routes": [
     { "pattern": "h.gamestao.com", "custom_domain": true }

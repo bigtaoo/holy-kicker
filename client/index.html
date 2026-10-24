@@ -4,6 +4,26 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
     <title>Holy Kicker</title>
+    <script>
+      // A page Safari kept from an earlier deploy asks for script files that deploy removed: the
+      // entry, a preloaded chunk or a later import (Vite's vite:preloadError) fails and nothing
+      // would ever draw, so reload once for the current page (at most once a minute, should it be
+      // a failure a reload cannot mend). It sits above Vite's entry and preload tags, which the
+      // build puts at the end of the head.
+      function reloadOnce() {
+        try {
+          var k = 'hk:reloaded', t = +sessionStorage.getItem(k) || 0;
+          if (Date.now() - t < 60000) return;
+          sessionStorage.setItem(k, String(Date.now()));
+        } catch (_) { return; }
+        location.reload();
+      }
+      addEventListener('error', function (e) {
+        var s = e.target;
+        if (s && ((s.tagName === 'SCRIPT' && s.type === 'module') || (s.tagName === 'LINK' && s.rel === 'modulepreload'))) reloadOnce();
+      }, true);
+      addEventListener('vite:preloadError', reloadOnce);
+    </script>
     <style>
       html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #141816; touch-action: none; }
       canvas { display: block; }
