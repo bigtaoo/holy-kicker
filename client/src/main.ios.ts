@@ -50,7 +50,8 @@ async function start() {
   };
   platform.storeKit.onChange = () => {
     showVideoBadges(!platform.storeKit.owned());
-    shell.reloadSave();
+    // where it stands: a reload would drop the player from the Shop tab and lose the buy's toast
+    shell.redrawLobby();
   };
   // this bundle booted, so the plugin keeps it; the lobby offers a newer one (ui/updatePrompt.ts)
   void readyOta().then(finished);

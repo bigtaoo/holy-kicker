@@ -167,7 +167,7 @@ function volumeRow(volume: number, set: (v: number) => void): Container {
 }
 
 /** A heading over a switch (or over nothing). */
-type Switch = { head: string; on: boolean | null; set: (on: boolean) => void };
+type Switch = { name: string; head: string; on: boolean | null; set: (on: boolean) => void };
 
 /** The reminders and the vibration, side by side when both are there, each a switch under a
  *  heading that says whether it is on. Reminders refused in the phone's settings show only the
@@ -177,10 +177,10 @@ function switchRows(a: SettingsActions, add: (c: Container, step: number) => voi
   const r = a.reminders;
   if (r) {
     const state = r.state();
-    items.push({ head: t(`remind.${state}`), on: state === 'blocked' ? null : state === 'on', set: (on) => void r.set(on) });
+    items.push({ name: 'reminders', head: t(`remind.${state}`), on: state === 'blocked' ? null : state === 'on', set: (on) => void r.set(on) });
   }
   const v = a.haptics;
-  if (v) items.push({ head: t(v.on() ? 'settings.hapticsOn' : 'settings.hapticsOff'), on: v.on(), set: (on) => v.set(on) });
+  if (v) items.push({ name: 'haptics', head: t(v.on() ? 'settings.hapticsOn' : 'settings.hapticsOff'), on: v.on(), set: (on) => v.set(on) });
   if (!items.length) return;
   const heads = new Container();
   const row = new Container();
@@ -192,6 +192,7 @@ function switchRows(a: SettingsActions, add: (c: Container, step: number) => voi
     heads.addChild(head);
     if (s.on === null) return;
     const sw = toggle(s.on, bw, s.set);
+    sw.label = s.name; // tests find it by name
     sw.x = x;
     row.addChild(sw);
   });

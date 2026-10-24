@@ -211,6 +211,11 @@ export class Shell {
     if (this.screen instanceof LobbyScreen) this.showLobby();
   }
 
+  /** Redraws the lobby on the tab the player is on, a buy or restore's toast kept (the ad-free card's price or ownership changed). */
+  redrawLobby(): void {
+    if (this.screen instanceof LobbyScreen) this.screen.relayout();
+  }
+
   private setScreen(screen: Screen | null): void {
     // the banner goes up on the way into the lobby (not on each rebuild of it) and down on the way out
     const lobby = screen instanceof LobbyScreen;
