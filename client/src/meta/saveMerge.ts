@@ -1,5 +1,7 @@
 import { mergeCodex } from './codex';
+import { grantRelics } from './gear';
 import { readSave, type SaveData } from './save';
+import { unlockedRelics } from './unlocks';
 
 // Two saves of the same player into one (docs/cloud-save.md "Merging two saves"): the cloud
 // save's copy and this device's. Progress takes the furthest of the two field by field, so a
@@ -20,7 +22,8 @@ export function leaderOf(mine: SaveData, other: SaveData): 'mine' | 'other' {
 }
 
 const most = (a: readonly number[], b: readonly number[]) => a.map((v, i) => Math.max(v, b[i] ?? 0));
-const either = (a: readonly number[], b: readonly number[]) => a.map((v, i) => v | (b[i] ?? 0));
+/** Bit fields word by word, as long as the longer (achievements' words trail off when none is set). */
+const either = (a: readonly number[], b: readonly number[]) => (a.length >= b.length ? a : b).map((_, i) => (a[i] ?? 0) | (b[i] ?? 0));
 const earliest = (a: number, b: number) => (a && b ? Math.min(a, b) : a || b);
 /** Per chapter the faster of two clear times, 0 (none) losing to any time. */
 const fastest = (a: readonly number[], b: readonly number[]) => a.map((v, i) => earliest(v, b[i] ?? 0));
@@ -38,6 +41,8 @@ export function mergeSaves(mine: SaveData, other: SaveData): SaveData {
   const streaked = streakOf(lead, trail);
   const merged: SaveData = {
     ...lead,
+    // a relic the other save unlocked by its copy alone (the old gates, unlocks.ts) stays unlocked
+    gear: grantRelics(lead.gear, unlockedRelics(trail)),
     firstRunDone: lead.firstRunDone || trail.firstRunDone,
     level: higher.level,
     xp: higher.xp,
@@ -56,6 +61,8 @@ export function mergeSaves(mine: SaveData, other: SaveData): SaveData {
     kills: Math.max(lead.kills, trail.kills),
     trained: Math.max(lead.trained, trail.trained),
     codex: mergeCodex(lead.codex, trail.codex),
+    // stored sutras are ones earned under goals since moved (unlocks.ts OLD_SUTRAS): never lost
+    sutras: lead.sutras | trail.sutras,
     seen: lead.seen | trail.seen,
     monks: lead.monks | trail.monks,
     achieved: either(lead.achieved, trail.achieved),

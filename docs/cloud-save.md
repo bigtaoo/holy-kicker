@@ -121,8 +121,8 @@ is never lost to "the last write wins":
 - **Progress takes the furthest of the two**: level and xp as a pair; `cleared`; per chapter
   `best`, `stars`, `hardBest`, `hardStars`; `runs`, `kills`, `trained`, `gifts` (with its
   `giftDay`); the bit fields `chests`, `opened`, `hardChests`, `hardOpened`, `monks`, `achieved`,
-  `seen` (OR, `achieved` word by word); `firstRunDone` (OR); the codex (union); `firstDay` (the
-  earliest set one); `bestStreak` (the higher).
+  `seen`, `sutras` (OR, `achieved` word by word to the longer of the two); `firstRunDone` (OR);
+  the codex (union); `firstDay` (the earliest set one); `bestStreak` (the higher).
 - **The daily streak follows the save that played a daily last**: `streak` with its `streakDay`
   (the later day; the same day keeps the longer streak). `dailyBest` is the later daily's best
   (its id sorts by date; the same daily keeps the more waves).
@@ -130,11 +130,14 @@ is never lost to "the last write wins":
   cleared, then the higher level and xp; a tie keeps the device's): the wallet (`copper`, `jade`),
   `gear`, the selected `relic`, `chapter`, `monk` and `hard`, the patrol clock, today's `daily`,
   `grit`, the falls, `dice`, `challenge` and the unpaid `weeks`. A wallet cannot be merged
-  without paying twice for one thing, so it follows the save that has played the most.
+  without paying twice for one thing, so it follows the save that has played the most. The
+  leader's gear gets a first copy of each relic only the other save had unlocked (one unlocked
+  by its copy alone, under the old gates, would be lost otherwise).
 - A field this build does not know follows the leading save as well (`keep`, as above).
 
 `mergeSaves` (`client/src/meta/saveMerge.ts`) is tested to be commutative on progress and to
-never lower any progress field. Two devices played at once lose at most the trailing device's
+never lower any progress field, over random pairs (`saveProps.test.ts`) and a save of every
+version (`saveCorpus.test.ts`, `fixtures/`). Two devices played at once lose at most the trailing device's
 wallet and selections since their last sync.
 
 ### Versions
