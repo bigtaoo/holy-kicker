@@ -1,6 +1,7 @@
 name: ci
 
-# Every push and pull request runs `npm run check` (typecheck, file length, tests, the server,
+# Every push and pull request runs `npm run check` (typecheck, file length, tests, the store
+# contract against a Mongo service as well, the server,
 # WeChat, CrazyGames and iOS web builds, the WeChat package gate). The iOS app itself is built by
 # release-ios.yml on macOS. A push to main that passes then
 # ships the backend to blightbloom (hk.gamestao.com) and, after it, publishes the web build to
@@ -40,6 +41,15 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # a throwaway Mongo, so the store contract (server/src/storeParity.test.ts) also runs
+    # against MongoStore, the production store
+    services:
+      mongo:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    env:
+      HK_TEST_MONGO_URL: mongodb://localhost:27017
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5

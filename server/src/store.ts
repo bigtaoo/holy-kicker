@@ -178,8 +178,14 @@ export class MemoryStore implements Store {
   }
 
   async addEvents(sent: EventBatch, now: number, aud?: Audience): Promise<void> {
-    const events = sent.events.filter((e) => e.n === undefined || !this.seen.has(`${sent.session}/${e.n}`));
-    for (const e of events) if (e.n !== undefined) this.seen.add(`${sent.session}/${e.n}`);
+    // a numbered event is kept once, even when the same batch carries it twice (Mongo's unique _id)
+    const events = sent.events.filter((e) => {
+      if (e.n === undefined) return true;
+      const id = `${sent.session}/${e.n}`;
+      if (this.seen.has(id)) return false;
+      this.seen.add(id);
+      return true;
+    });
     if (events.length === 0) return;
     const batch = { ...sent, events };
     this.events.push({ ...batch, at: now });
