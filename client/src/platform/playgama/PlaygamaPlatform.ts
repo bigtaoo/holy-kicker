@@ -34,14 +34,14 @@ export class PlaygamaPlatform extends WebPlatform {
   readonly analytics?: HostAnalytics;
   readonly backendBlocked: boolean;
 
-  private constructor(private readonly bridge: PlaygamaBridge, store: BridgeStore | null) {
+  private constructor(private readonly bridge: PlaygamaBridge, private readonly saves: BridgeStore | null) {
     super();
     const id = bridge.platformId();
     // a local preview reports to the backend as web, like every other test install
     this.host = id && !TEST_PLATFORMS.has(id) ? 'playgama' : 'web';
     // the sandbox's CSP admits Playgama's own hosts only; the catalog may differ, so it stays online
     this.backendBlocked = id === SANDBOX;
-    this.storage = new SafeStore(store ?? browserStorage());
+    this.storage = new SafeStore(saves ?? browserStorage());
     this.portal = !bridge.isReady() ? NO_PORTAL : {
       ...NO_PORTAL,
       loaded: () => bridge.send('game_ready'),
@@ -65,8 +65,13 @@ export class PlaygamaPlatform extends WebPlatform {
 
   /** The platform's pause counts as going to the background too. */
   override onHide(cb: () => void): void {
-    super.onHide(cb);
-    this.bridge.onPause((paused) => paused && cb());
+    // what the callback saves goes to Bridge now: a page on its way out may get no next tick
+    const hide = () => {
+      cb();
+      this.saves?.flush();
+    };
+    super.onHide(hide);
+    this.bridge.onPause((paused) => paused && hide());
   }
 
   /** The platform's language first, then the browser's. */
