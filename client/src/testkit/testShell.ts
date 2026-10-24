@@ -51,6 +51,8 @@ export interface RigOptions extends FakeHost {
   timeZone?: string;
   /** The kind of device: a desktop's run takes the keys on the cards and names them in its hints. */
   device?: Device;
+  /** The backend's address (boardServer.ts stubs fetch for it); none plays offline. */
+  api?: string;
 }
 
 /** Builds the shell the way boot.ts does, without starting it. */
@@ -60,7 +62,7 @@ export async function rigShell(o: RigOptions = {}): Promise<ShellRig> {
   const scene: SceneOptions = parseScene(o.query ?? '');
   art ??= loadArt(platform, parseScene(''), () => {}, false);
   const app = fakeApp();
-  const net = new Backend(platform, null, 'test', getLocale, new BoardOutbox(new SafeStore(null)));
+  const net = new Backend(platform, o.api ?? null, 'test', getLocale, new BoardOutbox(new SafeStore(null)));
   const privacy = new PrivacyChoice(net, platform, 'http://hk.test', o.timeZone ?? 'America/New_York');
   const store = new SaveStore(platform.storage);
   const shell = new Shell(app, platform, await art, scene, store, net, o.device ?? 'mobile', privacy);

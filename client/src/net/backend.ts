@@ -297,8 +297,8 @@ export class Backend {
 
   /** Sends a counted challenge run with its replay, which the server re-simulates when it would rank high. */
   /** The board's answer, `outdated` when the server's engine moved on during the run (a deploy: its record now names another), or null. */
-  async submitChallengeRun(challenge: string, run: RunResult, replay: ReplayWire): Promise<ChallengeRunReply | 'outdated' | null> {
-    if (!this.boards) return null;
+  async submitChallengeRun(challenge: string, run: RunResult, replay: ReplayWire): Promise<ChallengeRunReply | 'outdated' | 'off' | null> {
+    if (!this.boards) return 'off';
     const body: ChallengeRun = { challenge, run: { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME }, replay };
     const refused: string[] = [];
     const r = (await this.send('POST', '/v1/challenge/runs', body, REPORT_TIMEOUT_MS, false, refused)) as Partial<ChallengeRunReply> | null;

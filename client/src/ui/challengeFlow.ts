@@ -67,8 +67,8 @@ export interface ChallengeSettled {
   waves: number;
   /** Hours until the next challenge opens. */
   hours: number;
-  /** The board's answer; `outdated`: the server moved to another engine during the run, so it was refused. */
-  reply: Promise<ChallengeRunReply | 'outdated' | null>;
+  /** The board's answer; `outdated`: the server moved to another engine during the run, so it was refused; `off`: the leaderboards are off in Settings. */
+  reply: Promise<ChallengeRunReply | 'outdated' | 'off' | null>;
   /** A weekly run: the week's best waves before it (0 for the first). */
   weekly?: { before: number };
   /** A daily made up on the device: the day's best waves before this run. */
@@ -267,7 +267,7 @@ export class ChallengeFlow {
           // the record names the server's new engine now: fetch it, so the card says to update
           this.fetchedAt = -Infinity;
           this.refresh();
-        } else if (r) this.replies.set(c.id, r);
+        } else if (r && r !== 'off') this.replies.set(c.id, r);
       });
       return reply;
     };
