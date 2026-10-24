@@ -551,8 +551,10 @@ boards absorb.
    shows the weekly when there is no daily) once chapter 1 is cleared (`ui/weeklyPage.ts`): the
    week's relic, monk and sutras, owned or not, no gear, training or revives
    (`meta/weekly.ts` `weeklySetup`), unlimited attempts with the week's best kept in the save
-   and sent when it is at least as good (per board: after an update mid-week the new engine's
-   board starts the week over, since the old board's best is not seen there). Its results show a new best or the best that stands,
+   (per board: after an update mid-week the new engine's board starts the week over, since the
+   old board's best is not seen there). Every run is sent and the server keeps the install's
+   best: the save's best is no gate, since it may be one the server never got (a build before
+   57e428b noted the old board's clear as the new board's best). Its results show a new best or the best that stands,
    and the rank. The board shows 12 rows; the top 3 have Watch and a tap shows their pick
    timeline under it, a tap on a pick watches from there (`ui/weeklyBoard.ts`). The replay
    screen (`ui/replayWatch.ts`) plays the run view in a watch mode: play and pause, 1x/2x/4x,
