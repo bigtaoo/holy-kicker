@@ -6,6 +6,7 @@ import { cardHand } from './cardHand';
 import { CARD_NUDGE, nudgeOn } from './cardNudge';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
 import { cardKey } from './cardKeys';
+import { spot } from './spots';
 import type { CardText } from './cardText';
 import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, fit, label, panel } from './widgets';
@@ -237,6 +238,7 @@ export function cardPanel(
     ring.visible = false;
     const c = new Container();
     c.addChild(ring, body, rim);
+    if (i === 0) spot('card', body);
     if (keys) {
       // the card's number key, on its upper left corner
       const chip = new Container();

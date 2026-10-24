@@ -9,8 +9,9 @@ name: ci
 # live talking to routes the server does not have yet. A push that leaves the server bundle
 # unchanged restarts nothing (server/deploy/ci-deploy.sh compares the files).
 # Beside `check`, `smoke` builds every web dist (web, corgi, CrazyGames, Playgama, iOS) and plays
-# each for 30 s in headless Chrome (build/smoke.mjs): a page error, a console error or no fight
-# fails it, and no deploy runs without it.
+# each in headless Chrome through runs, results, lobby, the daily and a stale deploy's reload,
+# against the server's own router (build/smoke.mjs): a page error, a console error, a stuck step
+# or a post the server refuses fails it, and no deploy runs without it.
 # The corgi reskin (docs/reskin.md "Builds") publishes the same way to h.gamestao.com/new/
 # (wrangler/new.jsonc) once NEW_WEB_DEPLOY_ENABLED is set; its build fails while any corgi art
 # is missing, so the switch only goes on with the art complete. It shares hk.gamestao.com (server/src/game.ts).

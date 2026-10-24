@@ -1,23 +1,37 @@
 // The release smoke test (CI job `smoke`, before any deploy): each built dist is served as it
-// ships and played for SMOKE_SECONDS in headless Chrome (playwright-core), all at once. A fresh
-// browser goes straight into the first run (Shell.firstScreen), so a release build needs no dev
-// switch to fight. A build fails on any page error or console error, on a request to its own
-// origin that fails, and when no fight is seen: the run is kept in storage at each wave
-// (hk.run, runWatch.ts) and the canvas keeps changing.
+// ships and played in headless Chrome (playwright-core), all at once. A fresh browser goes
+// straight into the first run (Shell.firstScreen), so a release build needs no dev switch to
+// fight; the run is seen kept in storage at each wave (hk.run, runWatch.ts) and the canvas keeps
+// changing. Then the loop is walked by input (smokeLoop.mjs): the run given up, its results, the
+// lobby, a second run, the daily challenge played until it ends, and back to the lobby. Last the
+// dist is deployed anew under the open page and a lazy chunk asked for: the page must reload
+// once and come up (staleDeploy below).
+// A build fails on any page error or console error, on a request to its own origin that fails,
+// on a step that never comes, and on what the backend saw (smokeBackend.mjs): the server's own
+// router answers hk.gamestao.com in memory, and a post its checkers refuse, a run its
+// re-simulation refuses, or a ranked or challenge run that ended but was never posted fails it.
 // The portal SDKs are fakes served in place of their CDN scripts, and every other outside request
-// is answered empty, the backend's too (a release reads no ?api=), so the test needs no network
-// and sends nothing anywhere.
+// is answered empty, so the test needs no network and sends nothing anywhere.
 //   node build/smoke.mjs                 every dist below (build them first)
 //   node build/smoke.mjs web ios         just those
-//   SMOKE_SECONDS=10 node build/smoke.mjs
+//   SMOKE_QUICK=1 node build/smoke.mjs   only the first run's fight, for SMOKE_SECONDS (30)
 import { createServer } from 'node:http';
-import { existsSync, readFileSync, statSync } from 'node:fs';
-import { extname, join, normalize, resolve } from 'node:path';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { basename, dirname, extname, join, normalize, resolve } from 'node:path';
+import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { backend } from './smokeBackend.mjs';
+import { FIGHT_MS, moving, tap, waitFor, walkLoop } from './smokeLoop.mjs';
 
 const CLIENT = fileURLToPath(new URL('../client/', import.meta.url));
 const SECONDS = Number(process.env.SMOKE_SECONDS) || 30;
+/** SMOKE_QUICK=1: only the first run's fight, as before the loop (quick local runs). */
+const QUICK = process.env.SMOKE_QUICK === '1';
+/** The backend every release build calls (build/theme.mjs), answered by the server's own router. */
+const API = 'https://hk.gamestao.com/';
+/** Where a failed build's last screenshot goes. */
+const SHOTS = tmpdir();
 
 /** Each build: the folder served as the site's root and the page opened in it. */
 const TARGETS = {
@@ -34,17 +48,36 @@ const MIME = {
   '.mp3': 'audio/mpeg', '.m4a': 'audio/mp4', '.ogg': 'audio/ogg', '.wav': 'audio/wav', '.ico': 'image/x-icon', '.txt': 'text/plain',
 };
 
-/** A static server for one dist, on a free port. */
+/** A hashed build file's name (index-Ce1ZC4lK.js): what a new deploy renames. */
+const HASHED = /^[\w.-]+-[\w-]{8}\.(js|css)$/;
+
+/**
+ * A static server for one dist, on a free port. `deploy()` acts out a new release under the open
+ * page: every hashed file in assets/ gets a new name, the old names answer 404 (as the host's
+ * do once a deploy removed them, docs on 3d71274), and the pages and chunks name the new ones.
+ */
 function serve(root) {
+  let renamed = null;
+  const rewrite = (text) => text.replace(/[\w.-]+-[\w-]{8}\.(js|css)/g, (n) => (renamed.has(n) ? renamed.get(n) : n));
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     let file = normalize(join(root, path));
     if (!file.startsWith(root)) return void res.writeHead(403).end();
     if (existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
+    if (renamed) {
+      const name = basename(file);
+      if (renamed.has(name)) return void res.writeHead(404).end();
+      const old = [...renamed].find(([, n]) => n === name);
+      if (old) file = join(dirname(file), old[0]);
+    }
     if (!existsSync(file)) return void res.writeHead(404).end();
-    res.writeHead(200, { 'content-type': MIME[extname(file)] ?? 'application/octet-stream', 'cache-control': 'no-store' });
-    res.end(readFileSync(file));
+    const type = MIME[extname(file)] ?? 'application/octet-stream';
+    res.writeHead(200, { 'content-type': type, 'cache-control': 'no-store' });
+    res.end(renamed && /^text\//.test(type) ? rewrite(readFileSync(file, 'utf8')) : readFileSync(file));
   });
+  server.deploy = (assets) => {
+    renamed = new Map(readdirSync(assets).filter((n) => HASHED.test(n)).map((n) => [n, n.replace(/-([\w-]{8})\./, '-$1n.')]));
+  };
   return new Promise((ok) => server.listen(0, '127.0.0.1', () => ok(server)));
 }
 
@@ -95,59 +128,121 @@ const FAKES = [
 /** The run kept in storage (any theme or portal prefix), or null. */
 const keptRun = () => Object.keys(localStorage).find((k) => k.endsWith('hk.run')) ?? null;
 
+// The daily challenge opens at account level 2 (balance.json challenge.unlockLevel), some twenty
+// waves of play, beyond the smoke's minutes. So once the second run is done the smoke asks for a
+// raise (sessionStorage, which a reload keeps) and reloads; this script runs before the game's
+// own on that load and lifts the stored save (any prefix, its backup too) to level 2 with the
+// first run done. The game then reads it as any save it finds, cloud sync included.
+const LEVEL_UP = `(() => {
+  if (sessionStorage.getItem('smoke:level') !== '1') return;
+  sessionStorage.removeItem('smoke:level');
+  for (const k of Object.keys(localStorage).filter((k) => k.endsWith('hk.save') || k.endsWith('hk.save.bak'))) {
+    try {
+      const s = JSON.parse(localStorage.getItem(k));
+      localStorage.setItem(k, JSON.stringify({ ...s, level: Math.max(2, s.level || 1), firstRunDone: true }));
+    } catch {}
+  }
+})();`;
+
+/** Opens the stale page's language list and picks German, whose chunk the page has not loaded yet. */
+async function lazyChunk(page) {
+  await page.keyboard.press('Escape');
+  await tap(page, 'language');
+  await tap(page, 'lang:de');
+}
+
+/**
+ * The stale deploy (3d71274): with the page up in a run, the dist is deployed anew under it and a
+ * lazy chunk is asked for; its old name is gone, so the page must reload once on the new names
+ * and come up again (a screen placed, the canvas drawn), not stay black or reload again.
+ */
+async function staleDeploy(page, server, dir, path) {
+  await tap(page, 'play', 15_000);
+  await waitFor(page, (l) => l.screen === 'run', 20_000, 'the run before the deploy');
+  let loads = 0;
+  const onLoad = (f) => f === page.mainFrame() && loads++;
+  page.on('framenavigated', onLoad);
+  server.deploy(join(dir, path, 'assets'));
+  await lazyChunk(page);
+  const end = Date.now() + 20_000;
+  while (!loads && Date.now() < end) await page.waitForTimeout(250);
+  if (!loads) throw new Error('the stale page never reloaded after its chunk was gone');
+  await page.waitForLoadState('load');
+  await waitFor(page, (l) => l.screen && l.screen !== 'other' || Object.keys(l.spots).length > 0, 20_000, 'the page after its reload');
+  await page.waitForTimeout(3000);
+  page.off('framenavigated', onLoad);
+  if (loads > 1) throw new Error(`the stale page reloaded ${loads} times`);
+  const shot = await page.locator('canvas').first().screenshot();
+  if (shot.length < 5000) throw new Error('the canvas is blank after the reload');
+}
+
 async function smoke(browser, name, { root, page: path }) {
   const dir = resolve(CLIENT, root);
   const problems = [];
   if (!existsSync(join(dir, 'index.html')) && !existsSync(join(dir, path, 'index.html'))) return { name, problems: [`${root}/ is not built`], ms: 0 };
   const server = await serve(dir);
+  const api = await backend();
   const origin = `http://127.0.0.1:${server.address().port}`;
-  // a phone in portrait, as most players see it
-  const context = await browser.newContext({ viewport: { width: 405, height: 720 }, deviceScaleFactor: 1, locale: 'en-US' });
+  // a phone in portrait, as most players see it, in a time zone where stats go out without asking
+  const context = await browser.newContext({ viewport: { width: 405, height: 720 }, deviceScaleFactor: 1, locale: 'en-US', timezoneId: 'America/New_York' });
+  await context.addInitScript(LEVEL_UP);
   const page = await context.newPage();
   const outside = new Set();
   await context.route('**/*', (route) => {
     const url = route.request().url();
     if (url.startsWith(origin)) return route.continue();
+    if (url.startsWith(API)) return api.handle(route);
     const fake = FAKES.find(([re]) => re.test(url));
     if (fake) return route.fulfill({ status: 200, contentType: 'text/javascript', body: fake[1] });
     outside.add(new URL(url).host);
     return route.fulfill({ status: 204, body: '' });
   });
-  page.on('pageerror', (err) => problems.push(`page error: ${err.stack ?? err.message}`));
+  // from the stale deploy on, the old names' 404s and what they break are the point, not problems
+  let stale = false;
+  const problem = (p) => !stale && problems.push(p);
+  page.on('pageerror', (err) => problem(`page error: ${err.stack ?? err.message}`));
   page.on('console', (msg) => {
-    if (msg.type() === 'error') problems.push(`console error: ${msg.text()} ${msg.location().url ?? ''}:${msg.location().lineNumber ?? ''}`);
+    if (msg.type() === 'error') problem(`console error: ${msg.text()} ${msg.location().url ?? ''}:${msg.location().lineNumber ?? ''}`);
   });
   page.on('requestfailed', (req) => {
-    if (req.url().startsWith(origin)) problems.push(`request failed: ${req.url()} ${req.failure()?.errorText ?? ''}`);
+    if (req.url().startsWith(origin)) problem(`request failed: ${req.url()} ${req.failure()?.errorText ?? ''}`);
   });
   page.on('response', (res) => {
-    if (res.url().startsWith(origin) && res.status() >= 400) problems.push(`HTTP ${res.status()}: ${res.url()}`);
+    if (res.url().startsWith(origin) && res.status() >= 400) problem(`HTTP ${res.status()}: ${res.url()}`);
   });
   const start = Date.now();
+  const steps = [];
   let fought = 0;
-  let moving = false;
+  let moved = false;
   try {
     await page.goto(`${origin}${path}`, { waitUntil: 'load', timeout: 30_000 });
     const end = start + SECONDS * 1000;
-    let last = null;
-    while (Date.now() < end) {
+    // the quick smoke watches the first run for all its time; the loop goes on once it fights
+    while (Date.now() < end && (QUICK || !moved)) {
       await page.waitForTimeout(1000);
       if (!fought) fought = (await page.evaluate(keptRun)) ? Date.now() - start : 0;
-      else if (!moving) {
-        // two looks at the canvas a second apart: a drawn fight never holds still
-        const shot = (await page.locator('canvas').first().screenshot()).toString('base64');
-        moving = last !== null && shot !== last;
-        last = shot;
-      }
+      else if (!moved) moved = await moving(page);
+    }
+    // long enough a fight for the server to rank its give-up
+    if (fought) await page.waitForTimeout(Math.max(0, start + fought + FIGHT_MS - Date.now()));
+    if (!QUICK && moved) {
+      await walkLoop(page, (s) => steps.push(s));
+      stale = true;
+      await staleDeploy(page, server, dir, path);
+      steps.push('reloaded after a deploy');
     }
   } catch (err) {
+    stale = false;
     problems.push(`smoke: ${err.message}`);
+    await page.screenshot({ path: join(SHOTS, `smoke-${name}.png`) }).then(() => problems.push(`screenshot: ${join(SHOTS, `smoke-${name}.png`)}`), () => {});
   }
+  stale = false;
   if (!fought) problems.push(`no fight within ${SECONDS} s: no run was kept in storage`);
-  else if (!moving) problems.push('the fight never moved on the canvas');
+  else if (!moved) problems.push('the fight never moved on the canvas');
+  if (!QUICK) problems.push(...(await api.problems()));
   // the page stays open: closing Chrome's contexts can take longer than the test (main exits instead)
   server.closeAllConnections();
-  return { name, problems, outside: [...outside], fought, ms: Date.now() - start };
+  return { name, problems, outside: [...outside], fought, steps, posts: api.posts.length, ms: Date.now() - start };
 }
 
 async function main() {
@@ -161,7 +256,7 @@ async function main() {
   const results = await Promise.all(names.map((n) => smoke(browser, n, TARGETS[n])));
   let failed = 0;
   for (const r of results) {
-    const seen = r.fought ? `, fighting from ${(r.fought / 1000).toFixed(1)} s` : '';
+    const seen = (r.fought ? `, fighting from ${(r.fought / 1000).toFixed(1)} s` : '') + (r.steps?.length ? `, then ${r.steps.join(' > ')} (${r.posts} posts)` : '');
     const head = `${r.problems.length ? 'FAIL' : 'ok  '} ${r.name.padEnd(11)} ${(r.ms / 1000).toFixed(1)} s${seen}`;
     console.log(r.outside?.length ? `${head}  (answered empty: ${r.outside.join(', ')})` : head);
     for (const p of r.problems.slice(0, 10)) console.log(`       ${p}`);

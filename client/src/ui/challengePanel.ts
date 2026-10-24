@@ -12,6 +12,7 @@ import type { DailyView, WeeklyView } from './challengeFlow';
 import { railButton } from './lobbyRail';
 import { claimCard, mutatorLine, ruleLines, weeklyPage, weeklyRules, type Rules } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
+import { spot } from './spots';
 
 // The challenges in the lobby (docs/design.md "Challenges"): a round button on the Play tab's right rail with the daily's
 // time left (or Done; the weekly's when there is no daily), which opens a panel with a tab for
@@ -63,14 +64,14 @@ export class ChallengeUi {
     const d = lobby?.daily;
     if (!d) return lobby?.weekly ? this.weeklyRail(lobby.weekly) : null;
     // an open daily (or a weekly not played yet this week) wears a dot, like the tabs with something waiting
-    return railButton({
+    return spot('daily', railButton({
       icon: iconSprite(this.icons, 'daily', 100),
       name: t('challenge.tile'),
       sub: d.state === 'update' ? t('challenge.tileUpdate') : d.state === 'done' ? t('challenge.tileDone') : t('challenge.tileOpen', { h: d.hours }),
       lit: d.state === 'open',
       dim: d.state !== 'open',
       dot: d.state === 'open' || (lobby.weekly?.state === 'open' && lobby.weekly.best === 0),
-    }, () => this.show(true, 'daily')).view;
+    }, () => this.show(true, 'daily')).view);
   }
 
   /** The rail button when the weekly is the only challenge: its time left, a dot until played this week. */
@@ -187,10 +188,10 @@ export class ChallengeUi {
     } else if (d.local) add(t('challenge.offline'), 48, COLORS.dim, y);
     const buttons: Container[] = [];
     if (d.state !== 'update') {
-      buttons.push(button(t(d.state === 'done' ? 'challenge.practice' : 'lobby.play'), 420, 140, () => {
+      buttons.push(spot('challengePlay', button(t(d.state === 'done' ? 'challenge.practice' : 'lobby.play'), 420, 140, () => {
         this.open = false;
         lobby.play(d.challenge, d.chapter);
-      }, { fill: d.state === 'done' ? COLORS.panelLocked : COLORS.saffron, size: 60 }));
+      }, { fill: d.state === 'done' ? COLORS.panelLocked : COLORS.saffron, size: 60 })));
     }
     const fetchBoard = lobby.board;
     if (fetchBoard) {

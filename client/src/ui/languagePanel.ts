@@ -1,5 +1,6 @@
 import { Container } from 'pixi.js';
 import { LOCALES, getLocale, localeName, t, type Locale } from '../i18n';
+import { spot } from './spots';
 import { COLORS, backdrop, button, label, panel } from './widgets';
 
 // The language picker, from the lobby's settings and the pause panel: every language by its
@@ -33,7 +34,7 @@ export function languagePanel(w: number, h: number, pick: (locale: Locale) => vo
     const alone = i === LOCALES.length - 1 && col === 0;
     b.x = alone ? 0 : (col - (COLS - 1) / 2) * (BW + GAP);
     b.y = top + Math.floor(i / COLS) * (BH + GAP) + BH / 2;
-    box.addChild(b);
+    box.addChild(spot(`lang:${l}`, b));
   });
   const back = button(t('common.back'), 400, 110, close, { fill: COLORS.panelLocked });
   back.y = boxH / 2 - 100;

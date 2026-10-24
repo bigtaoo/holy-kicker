@@ -32,6 +32,7 @@ import { ChallengeUi, type ChallengeLobby } from './challengePanel';
 import { consentCard, watched } from './privacyUi';
 import { redrawn, reminderCard } from './reminders';
 import { COLORS, fit, label, oneDot, panel } from './widgets';
+import { spot } from './spots';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
 // chests, the monk on stage with the relic to play with at his feet and PLAY under them, round
@@ -425,7 +426,7 @@ export class LobbyScreen implements Screen {
       this.play = playButton(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n));
       this.play.view.position.set(w / 2, playY);
       this.play.view.label = 'play'; // tests tell it from the Play tab, which reads the same in Chinese
-      this.view.addChild(this.play.view);
+      this.view.addChild(spot('play', this.play.view));
     }
 
     // the side things on two rails beside the monk: Patrol and Tasks left, the challenge and the gift right

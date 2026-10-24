@@ -5,6 +5,7 @@ import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
 import type { KeyValueStore } from '../meta/saveStore';
 import { toggle } from './toggle';
 import { COLORS, backdrop, button, fit, keyCap, label, panel } from './widgets';
+import { spot } from './spots';
 
 // The in-run pause panel (RunHud.ts): resume, the sound switches (music, effects, screen shake and,
 // where the phone can buzz, vibration), the language, report a problem, and give up, which asks
@@ -105,7 +106,7 @@ export function pausePanel(w: number, h: number, st: PausePanelState, sw: PauseS
     items.push([holder, span + 40]);
   }
   const lang = button(`${t('run.language')} · ${localeName(getLocale())}`, 560, 120, () => a.languages(), { fill: COLORS.panelLocked, size: 48 });
-  items.push([lang, 150]);
+  items.push([spot('language', lang), 150]);
   if (st.report) {
     const report = button(st.report.text, 560, 120, () => a.report(), { fill: COLORS.panelLocked, size: 48 });
     if (st.report.busy) report.eventMode = 'none';
@@ -113,9 +114,9 @@ export function pausePanel(w: number, h: number, st: PausePanelState, sw: PauseS
     const note = st.report.note;
     if (note) items.push([label(note.text, 48, note.ok ? COLORS.jade : COLORS.dim, { wordWrap: true, wordWrapWidth: 640, breakWords: true }), 110]);
   }
-  const giveUp = st.confirming
+  const giveUp = spot('giveUp', st.confirming
     ? button(t('run.giveUpConfirm'), 560, 120, () => a.giveUp(), { fill: COLORS.danger, size: 48 })
-    : button(t('run.giveUp'), 560, 120, () => a.giveUp(), { fill: COLORS.panelLocked });
+    : button(t('run.giveUp'), 560, 120, () => a.giveUp(), { fill: COLORS.panelLocked }));
   items.push([giveUp, 150]);
   const boxH = items.reduce((sum, [, step]) => sum + step, 0) + 80;
   box.addChild(panel(W, boxH));
