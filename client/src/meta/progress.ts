@@ -53,8 +53,10 @@ export interface Reward {
   hard: boolean;
   /** What the run unlocked: relics, sutras, monks to buy, gear tiers, star blessings (unlocks.ts). */
   unlocks: Unlock[];
-  /** Evolutions done for the first time, now in the Codex. */
+  /** Evolutions done for the first time, now in the Codex; none while the Codex tab is still locked (it opens all new). */
   newCodex: EvolveId[];
+  /** No chapter was cleared before this run (it is the first clear or earlier): the results keep to the essentials. */
+  newcomer: boolean;
   newBest: boolean;
   /** The chapter's best waves before this run (0 for a first try). */
   best: number;
@@ -208,7 +210,8 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
     firstClear, stars, bestStars, hardUnlocked, hard, unlocks: newUnlocks(save, next),
-    newCodex: next.codex.filter((id) => !save.codex.includes(id)),
+    newCodex: tabLock(next, 'codex') ? [] : next.codex.filter((id) => !save.codex.includes(id)),
+    newcomer: save.cleared === 0,
     newBest: waves > was.best[i],
     best: was.best[i],
     drops,

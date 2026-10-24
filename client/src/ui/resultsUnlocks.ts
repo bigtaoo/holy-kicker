@@ -12,7 +12,8 @@ import { statLines } from './statText';
 import { COLORS, fit, label, shade } from './widgets';
 
 // The results screen's unlock moment (docs/unlocks.md): one strip per thing the run unlocked,
-// its picture on the left, what it is in gold and one line on what it means under it.
+// its picture on the left, what it is in gold and one line on what it means under it; a newcomer's
+// card shows one at most (newcomerUnlocks).
 
 const STRIP_H = 150;
 /** Where the line under the title starts in its strip. */
@@ -48,6 +49,18 @@ function content(u: Unlock, icons: IconSheet): { icon: Container; title: string;
 /** The icon `id` from the sheet at about 110 units (times `k`), or an empty spot while the sheet lacks it. */
 function iconOr(icons: IconSheet, id: string, k = 1): Container {
   return iconSprite(icons, id, 110 * k) ?? new Container();
+}
+
+/** What a newcomer's card names, most telling first: a sutra's spell needs no card, its level-up card says New. */
+const FIRST: readonly Unlock['kind'][] = ['relic', 'monk', 'tier', 'blessing'];
+
+/** The unlocks a newcomer's card shows: the most telling one, or none. */
+export function newcomerUnlocks(unlocks: readonly Unlock[]): Unlock[] {
+  for (const kind of FIRST) {
+    const u = unlocks.find((x) => x.kind === kind);
+    if (u) return [u];
+  }
+  return [];
 }
 
 /** The unlocks as strips down the card, or null when the run unlocked nothing. */

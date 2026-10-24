@@ -47,6 +47,19 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
 | Chapter 1 cleared | Patrol (idle income), second relic, weekly challenge *(planned)* |
 | Chapter 2 cleared | Codex |
 
+  All five tabs are in the bar from the first lobby; a locked one is a grey silhouette with a
+  padlock, and a tap says when it opens ("Unlocks after chapter 2", `tabLock`). While the Codex is
+  locked nothing announces "New in the Codex" (`settleRun` leaves `newCodex` empty); the entries
+  are kept and the tab opens with its new-dot.
+- **The results stay short until a chapter is cleared** (`Reward.newcomer`: the save had no chapter
+  cleared before the run, so the first clear of chapter 1 is the last such card). The card shows
+  the title, the waves, the stars, the copper and the drops row (the welcome gift's gear joins it),
+  at most one unlock (a new relic, else a monk, gear tier or blessing; a new sutra's spell gets no
+  card, its level-up card says New) and the chapter opened, over the two buttons. Left out: the
+  next-star hint, the time and the best and leaderboard badges, the Codex, grit, hard-mode, chest
+  and gift lines (the chests wait on the lobby's chapter card; tomorrow's gift is on the Play tab's
+  gift button, its calendar, and the hint arrow when it is ready). Afterwards the results tell all.
+
 ## Chapters (the run)
 
 A chapter is one map with 50 waves of about 15 s each (from chapter 3 a normal-mode wave also

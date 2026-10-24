@@ -101,6 +101,8 @@ Never take away what was earned:
 - **Unlock moment on the results**: a first clear or a star total that crosses a gate shows one
   card per unlock (icon, name, one line on what it does), replacing today's plain text lines
   "New relic: …" / "New spell: …". Gear tiers get one line ("Celestial gear now drops").
+  Until a chapter is cleared the card shows one at most, the relic first (`newcomerUnlocks`,
+  docs/design.md "Flow").
 - **Tests**: the schedule (`unlocks.ts`, pure), the migration (old saves at ch 2/3/4 keep their
   relics and sutras), the results reward, the teasers' text.
 
