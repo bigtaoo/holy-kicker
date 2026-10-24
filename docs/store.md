@@ -146,16 +146,26 @@ gameplay, ads, quality and SDK game-module pages). It was served from a sub-path
 The game sends its own analytics, leaderboard runs (with the CrazyGames username) and problem
 reports to hk.gamestao.com (server/README.md), so CrazyGames asks for a privacy notice. The policy
 is served by the backend at https://hk.gamestao.com/privacy (`?lang=zh` for Chinese;
-`server/src/privacy.{en,zh}.html`). The rules are in `client/src/meta/privacy.ts`, with as few taps
-as the law allows:
+`server/src/privacy.{en,zh}.html`). The consent covers the statistics only; the rules are in
+`client/src/meta/privacy.ts`, with as few taps as the law allows:
 
 | Where | What the player sees | What is sent |
 |---|---|---|
-| EEA, UK, Switzerland (the portal's `countryCode`, else a `Europe/*` time zone) | Nothing during the first run; then a card at the foot of the lobby: Allow / No thanks / Privacy. It blocks nothing and stays until answered | Nothing until Allow: events wait on the device, no run, name or install id goes out, and no install id is even stored. No thanks drops them |
+| EEA, UK, Switzerland (the portal's `countryCode`, else a `Europe/*` time zone) | Nothing during the first run; then a card at the foot of the lobby: Allow / No thanks / Privacy. It blocks nothing and stays until answered | No events until Allow: they wait on the device. No thanks drops them |
 | Everywhere else | A toast over the first run, once (no tap): data is sent, turn it off in Settings | Everything, until switched off |
 
-Settings → Play data has the sharing switch, the policy link and the install's play ID (what a
-deletion request names; tapping it copies it where the host has a clipboard, with a toast). A problem report is sent only when the player asks, so it always goes.
+The leaderboards are part of the game the player plays (GDPR Art. 6(1)(b)), not its statistics: runs
+and the board name go out whatever the consent says, unless the player turns the boards off
+(Settings → Account & data → Leaderboards, on by default; `settings.boards`). A run the server has
+not answered (offline, an adblocker) waits in the page's `hk.boardOutbox` and goes again every
+minute and when a board opens (`net/boardOutbox.ts`). The results say why a run got no place (boards
+off, waiting to be sent, could not be checked, a portal guest), and the board panel's foot why the
+player's own row is missing (`board.pending` / `refused` / `queued` / `off`; the server marks a run
+its re-simulation refused, `BoardReply.own`).
+
+Settings → Account & data has the sharing switch, the leaderboards switch, the policy link and the
+install's play ID (what a deletion request names; tapping it copies it where the host has a
+clipboard, with a toast). A problem report is sent only when the player asks, so it always goes.
 Offline builds and WeChat (no backend yet) show none of this.
 
 Still to check on the portal itself: upload the zip to the developer portal's QA preview, then
