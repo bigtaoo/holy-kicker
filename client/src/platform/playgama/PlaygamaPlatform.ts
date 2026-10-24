@@ -10,6 +10,7 @@ import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { webAudioHost } from '../web/webAudio';
 import { BridgeStore, PlaygamaBridge } from './bridge';
 import { bridgeAnalytics } from './bridgeAnalytics';
+import { deviceFields } from './telemetry';
 
 // The Playgama host: the browser host plus the Bridge SDK for saves, ads, the platform's pause and
 // sound switches and the lifecycle messages (game_ready once the lobby is up, gameplay brackets).
@@ -52,7 +53,7 @@ export class PlaygamaPlatform extends WebPlatform {
     const web = webAudioHost();
     this.audio = web && { ...web, onHostMute: (cb) => bridge.onMute(cb) };
     // only from the portal itself: a local preview and the QA tool stay out of the game's numbers
-    if (this.host === 'playgama') this.analytics = bridgeAnalytics(bridge, __HK_BUILD__, (cb) => this.onHide(cb));
+    if (this.host === 'playgama') this.analytics = bridgeAnalytics(bridge, __HK_BUILD__, (cb) => this.onHide(cb), deviceFields(navigator.userAgent, navigator.maxTouchPoints || 0, bridge.deviceType()));
     const rewardedOk = async () => bridge.rewardedSupported() && !(await bridge.hasAdblock());
     this.ads = {
       rewardedAvailable: rewardedOk,

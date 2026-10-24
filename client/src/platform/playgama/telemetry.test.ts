@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { armFields, GAP_MS, PerfSampler, progressionEvent, SAMPLE_MS, TARGET_FPS } from './telemetry';
+import { armFields, deviceFields, GAP_MS, PerfSampler, progressionEvent, SAMPLE_MS, TARGET_FPS } from './telemetry';
 
 describe('progressionEvent', () => {
   it('maps a run start to a bounded step', () => {
@@ -81,5 +81,28 @@ describe('armFields', () => {
     expect(armFields('a:x,first20:control')).toEqual({ experiment: 'a,first20', variant: 'x,control' });
     expect(armFields('')).toEqual({});
     expect(armFields('First20:short')).toEqual({});
+  });
+});
+
+describe('deviceFields', () => {
+  const ua = {
+    iphone: 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1',
+    ipad: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Safari/605.1.15',
+    android: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Mobile Safari/537.36',
+    windows: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36',
+  };
+
+  it('names the system family, the form Bridge reports and touch', () => {
+    expect(deviceFields(ua.iphone, 5, 'mobile')).toEqual({ device: 'ios', form: 'mobile', touch: true });
+    expect(deviceFields(ua.android, 5, 'tablet')).toEqual({ device: 'android', form: 'tablet', touch: true });
+    expect(deviceFields(ua.windows, 0, 'desktop')).toEqual({ device: 'desktop', form: 'desktop', touch: false });
+    // a touch laptop is still a desktop
+    expect(deviceFields(ua.windows, 10, null)).toEqual({ device: 'desktop', form: 'unknown', touch: true });
+  });
+
+  it('tells an iPad from a Mac by its touch points, and keeps odd values bounded', () => {
+    expect(deviceFields(ua.ipad, 5, 'tablet').device).toBe('ios');
+    expect(deviceFields(ua.ipad, 0, 'desktop').device).toBe('desktop');
+    expect(deviceFields('SomeConsole/1.0', 0, 'tv')).toEqual({ device: 'other', form: 'unknown', touch: false });
   });
 });

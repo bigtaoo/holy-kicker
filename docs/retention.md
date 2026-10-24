@@ -13,7 +13,9 @@ ad events, plus ours through `bridge.analytics.send` (`client/src/platform/playg
 `progression_started` / `_completed` / `_failed` per chapter and mode, the first run's tutorial
 funnel (`tutorial_step` as each hint comes up, `step_id` `move` / `auto` / `gems` with `step_index`
 1–3, then `tutorial_completed`, `done` and 4, each with `seconds` into the run), and a
-`performance_sample` every 30 s of battle. The users per `step_id`
+`performance_sample` every 30 s of battle. Each of ours also carries the player's device: `device`
+`ios` / `android` / `desktop` / `other`, `form` Bridge's `mobile` / `tablet` / `desktop` / `unknown`
+and `touch` (the field's top values give the split). The users per `step_id`
 (`get_game_telemetry_event_analytics`, event `tutorial_step`, field `step_id`) against
 `tutorial_completed` show the step first runs end on; a resumed run teaches nothing, so a player
 who relaunches mid-run never completes it. They go out unless the player turned sharing off (a held

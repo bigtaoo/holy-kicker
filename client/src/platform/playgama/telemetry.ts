@@ -51,6 +51,22 @@ export function armFields(exp: string): Props {
   return { experiment: pairs.map(([id]) => id).join(','), variant: pairs.map(([, arm]) => arm).join(',') };
 }
 
+/**
+ * Where the player plays, as fields on every event so each funnel splits by it: `device` the
+ * system family (`ios`, `android`, `desktop` for Windows, Mac, Linux and ChromeOS, else `other`),
+ * `form` Bridge's device type (`mobile`, `tablet`, `desktop`; `unknown` when it does not say) and
+ * `touch` whether the screen takes touches. An iPad passes for a Mac but has touch points.
+ */
+export function deviceFields(ua: string, touchPoints: number, bridgeType: string | null): Props {
+  const ipad = /iPad/.test(ua) || (/Macintosh/.test(ua) && touchPoints > 1);
+  const device = ipad || /iPhone|iPod/.test(ua) ? 'ios'
+    : /Android/.test(ua) ? 'android'
+    : /Windows|Macintosh|Linux|CrOS/.test(ua) ? 'desktop'
+    : 'other';
+  const form = bridgeType === 'mobile' || bridgeType === 'tablet' || bridgeType === 'desktop' ? bridgeType : 'unknown';
+  return { device, form, touch: touchPoints > 0 };
+}
+
 /** The frame rate the game aims for. */
 export const TARGET_FPS = 60;
 /** Active battle ms in one sample. */
