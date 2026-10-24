@@ -41,6 +41,8 @@ export class ChallengeResultsScreen implements Screen {
   private reply: ChallengeRunReply | null = null;
   /** The server refused the run: its engine moved on during it. */
   private outdated = false;
+  /** Not sent: the leaderboards are off in Settings. */
+  private off = false;
   private left = false;
   private readonly reward: ChallengeReward;
   private readonly chapter: number;
@@ -69,6 +71,7 @@ export class ChallengeResultsScreen implements Screen {
     void run.reply.then((r) => {
       if (r && !this.view.destroyed) {
         if (r === 'outdated') this.outdated = true;
+        else if (r === 'off') this.off = true;
         else this.reply = r;
         this.relayout();
       }
@@ -152,6 +155,7 @@ export class ChallengeResultsScreen implements Screen {
       add(t('challenge.outdated'), 48, COLORS.dim, y + 30);
       y += 170;
     }
+    y = this.offLine(add, y);
     y = this.timeLine(add, y);
     add(t('challenge.next', { h: this.hours }), 48, COLORS.text, y);
     return c;
@@ -178,9 +182,18 @@ export class ChallengeResultsScreen implements Screen {
       add(t('challenge.outdated'), 48, COLORS.dim, y + 30);
       y += 170;
     }
+    y = this.offLine(add, y);
     y = this.timeLine(add, y);
     add(t('weekly.after'), 48, COLORS.text, y);
     return c;
+  }
+
+  /** Why the run has no rank when the leaderboards are off, at `y`; the y under it. */
+  private offLine(add: (text: string, size: number, fill: number, y: number) => void, y: number): number {
+    if (!this.off) return y;
+    // two lines, wrapped about their centre, as the outdated note
+    add(t('results.rankOff'), 48, COLORS.dim, y + 30);
+    return y + 170;
   }
 
   /** A cleared run's time at `y`; the y under it. */

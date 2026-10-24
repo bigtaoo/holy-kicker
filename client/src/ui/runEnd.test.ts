@@ -293,7 +293,7 @@ describe('runEnd against the server', () => {
     const chapter = await play(CASES[0], net);
     const daily = await play(CASES.find((x) => x.what === 'daily lost')!, net);
     expect(chapter.rank).toBe('off');
-    expect(await daily.settled!.reply).toBeNull();
+    expect(await daily.settled!.reply).toBe('off'); // the results say why
     expect(s.posts.map((p) => p.path)).toEqual(['/v1/events', '/v1/events']);
     accepted(s.posts);
   });
