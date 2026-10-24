@@ -7,12 +7,12 @@ import { autoPick } from '../ui/runWatch';
 import { runConfig, runSeed, type RunSetup } from './runSetup';
 import { DEFAULT_SCENE } from './scene';
 
-// The first run deals FIRST_RUN_SPELLS first (engine content.ts), then plays a fixed seed
-// (BALANCE.firstRun), chosen with the balance bots for the cards
-// its opening level-ups take. The deals draw from their own random stream, so they follow from
-// the picks alone, wherever the hero walks. If an engine change reshuffles them this test fails:
-// run the seed search again (casual and standing-still bots, spell-first opening picks) and pick
-// a new seed before updating the expected cards.
+// The first run deals FIRST_RUN_DEALS first (engine content.ts), one card per level-up, and
+// plays a fixed seed (BALANCE.firstRun), chosen with the balance bots following the suggested
+// cards (casual and standing still) for an evolved incense around wave 8-10. The other cards
+// of each deal draw from their own random stream, so they follow from the picks alone, wherever
+// the hero walks. If an engine change reshuffles them this test fails: run the seed search again
+// and pick a new seed before updating the expected cards.
 
 /** A fresh player's first run, as the shell sets it up. */
 function firstRun(): Engine {
@@ -46,7 +46,7 @@ describe('the first run', () => {
       }
       e.step([{ owner: 0, tick: s.tick, moveBrad: 0, moveMag: 0, pick }]);
     }
-    expect(taken).toEqual(['spell:bomb', 'spell:knives', 'spell:talisman', 'spell:incense', 'spell:talisman']);
+    expect(taken).toEqual(['spell:bomb', 'spell:incense', 'spell:knives', 'spell:talisman', 'spell:incense']);
     expect(wave).toBeLessThanOrEqual(3);
   });
 });

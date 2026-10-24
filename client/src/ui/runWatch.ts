@@ -49,6 +49,8 @@ export interface RunWatchDeps {
   chapter: number;
   /** One of a new player's first runs (BALANCE.novice.runs): the suggested card wears a tag. */
   novice?: boolean;
+  /** A new player (chapter 1 never cleared): the suggested card steers to the healing incense (steerScore). */
+  steer?: boolean;
   portal: Portal;
   ads: Ads;
   net: Backend;
@@ -68,9 +70,12 @@ export interface RunWatchDeps {
   cheer?(): void;
 }
 
-/** The card an opening level-up takes: the first spell (new or stronger), else the first card. */
+/**
+ * The card an opening level-up takes: the first one, which in a first run is the card it steers
+ * to (FIRST_RUN_DEALS in the engine) or an evolution that is ready.
+ */
 export function autoPick(offer: readonly Card[]): number {
-  return Math.max(0, offer.findIndex((c) => c.kind === 'spell'));
+  return offer.length > 0 ? 0 : -1;
 }
 
 export class RunWatch {
@@ -195,7 +200,7 @@ export class RunWatch {
           paired.lines.push(pairsLine(paired));
           d.pairHint!.done();
         }
-        hud.showOffer(title, texts, suggestCard(p), !!this.d.novice);
+        hud.showOffer(title, texts, suggestCard(p, !!this.d.steer), !!this.d.novice);
       }
     } else if (p.offer.length === 0 && this.shownOffer) {
       this.shownOffer = null;

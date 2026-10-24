@@ -167,7 +167,7 @@ export class RunFlow {
     // the first run teaches moving; a replayed first chapter, a resumed run or a dev bot's does not
     const teach = !save.firstRunDone && h.scene.waves && !left && !h.scene.autoplay && !h.scene.record;
     this.watch = new RunWatch(game, hud, {
-      chapter, novice: save.runs < BALANCE.novice.runs, portal: h.portal, net: h.net,
+      chapter, novice: save.runs < BALANCE.novice.runs, steer: save.cleared === 0, portal: h.portal, net: h.net,
       // the death panel asks the host only when it would offer the ad's revive, and waits on its answer only briefly
       ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', within(h.ads.rewardedAvailable(), DOWN_AD_WAIT_MS).catch(() => false)) }, past: runPast(save, chapter, this.hard),
       freeRevives: () => this.freeRevives,

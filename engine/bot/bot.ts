@@ -235,13 +235,28 @@ function ownLevel(p: Player, c: Card): number {
 }
 
 /**
- * The card of `p`'s offer to suggest to a player who hesitates: the bot's choice without its
- * chance, the lower level winning a tie (so a build grows evenly), the first one after that.
+ * How much a new player (chapter 1 never cleared) is steered to card `c`: toward the healing
+ * incense until it is evolved, its pair the rice once, and whatever heals while below half
+ * health; anything else as the bot wants it.
  */
-export function suggestCard(p: Player): number {
+export function steerScore(p: Player, c: Card): number {
+  if (c.kind === 'evolve' && c.id === 'incense') return 200;
+  const hurt = p.hp * 2 < p.maxHp;
+  if (c.kind === 'passive' && c.id === 'rice') return hurt ? 160 : p.passives.some((ps) => ps.id === 'rice') ? cardScore(p, c) : 140;
+  if (c.kind === 'spell' && c.id === 'incense') return hurt ? 155 : 150;
+  return cardScore(p, c);
+}
+
+/**
+ * The card of `p`'s offer to suggest to a player who hesitates: the bot's choice without its
+ * chance (a new player's, `steer`, by steerScore), the lower level winning a tie (so a build
+ * grows evenly), the first one after that.
+ */
+export function suggestCard(p: Player, steer = false): number {
+  const score = steer ? steerScore : cardScore;
   let best = 0;
   p.offer.forEach((c, i) => {
-    const d = cardScore(p, c) - cardScore(p, p.offer[best]);
+    const d = score(p, c) - score(p, p.offer[best]);
     if (d > 0 || (d === 0 && ownLevel(p, c) < ownLevel(p, p.offer[best]))) best = i;
   });
   return best;

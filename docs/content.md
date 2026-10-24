@@ -47,6 +47,36 @@ Names are working names; every name ships through the string table (en / zh-CN s
   ring, 30 33 31 30 28 24 with it; 20 % more kills, level 6.8 → 7.2 at 60 s, health lost
   4.3 → 4.7 %. Fox runners now join from wave 15. Whole chapter 1, 30 runs: casual 4/30, skilled
   13/30 (3/30 and 14/30 at 30 mobs), health at wave 11 84 % (84).
+- **A first run steers to the healing pool** (ENGINE_VERSION 50, 2026-10-24). A new player who
+  follows the suggested card (the hand, or the desktop highlight) reached no evolution in chapter
+  1, and lost. The first run's first eleven level-ups each deal one fixed card first, while it can
+  still be taken (`FIRST_RUN_DEALS` in `engine/content.ts`): bomb, incense, knives, talisman,
+  incense, rice, incense, knives, incense, bomb, incense. The other two cards still come from the
+  usual random draw, and evolutions come before both. With five incense levels and the rice (its
+  evolution's pair) the evolved incense (Healing Incense / Repair Pool) heals the hero standing
+  in it from about wave 8. The 5 auto picks (`BALANCE.firstRun.autoPicks`) take the fixed card
+  (bomb, incense, knives, talisman, incense), not the bot's choice, so the player picks as often
+  as before. Until chapter 1 is cleared once, the suggestion steers too (`steerScore` in
+  `engine/bot/bot.ts`, `RunWatchDeps.steer`): the evolved incense first, the rice once, the
+  incense, and below half health whichever heals. Later runs, and the balance bot's own picks,
+  keep `cardScore`. The fixed seed is 146 (`BALANCE.firstRun.seed`, was 92). Search over seeds
+  61–160: the casual bot that takes the suggestion wins on 86 of them. On 6 of them a hero
+  standing still also gets the pool (wave 15) and lives past wave 20 (where all the rest fall).
+  On seed 146 the still hero reaches wave 49, and the casual bot evolves on wave 6 and never drops below 59 %
+  health. First run, chapter 1, no revive, seeds 1–60:
+
+  | Bot, picks | Wins before → after | Evolved (median wave) before → after |
+  |---|---|---|
+  | casual, takes the suggestion | 10 → 45 | 11 (26) → 60 (8) |
+  | casual, own picks | 11 → 13 | 12 (25) → 17 (15) |
+  | standing still, takes the suggestion | 0 → 0 (falls on wave 20) | 0 → 2 (17) |
+  | skilled, takes the suggestion | 28 → 57 | 26 (34) → 60 (8) |
+
+  This goes against "a first run should be lost in 5–10 minutes" (A harder curve, below): a new
+  player who follows the hint now usually clears chapter 1 on the first run. **To decide.** If the
+  first run should still be lost, the deals can end sooner, or the steer can stop after the rice.
+  The engine version bump split the week's challenge boards (docs/design.md "Challenge records and
+  engine versions"), so ship it on a Monday.
 - About 30 level-ups plus 5 shrines per full run, against 45 picks to max everything, so
   not everything can be maxed and choices matter.
 - **Evolution:** spell at level 5 + its paired passive (any level) → the next level-up offers
