@@ -7,16 +7,20 @@ import { runScore, type ReplayWire, type RunEntry } from './protocol';
 // How chapter-board runs are kept, the same for both stores: one row per install per board with
 // its best run. A new best counts only once re-simulated (resim.ts chapterConfig): it waits with
 // its replay as the row itself (`pending`, shown on no board) or beside the shown best as `next`,
-// so a refused run never costs the install the best it had. A run this server has no engine for
-// (one queued across a deploy that bumped it past the engines bundled) is kept aside `stale`, never
-// deleted or reported. Rows kept before the boards were checked carry no state and stay shown.
+// so a refused run never costs the install the best it had. A refused run leaves its time in
+// `refused`, so the board can tell the player why the run is missing (a refused first run stays as a
+// `refused` row, shown on no board). A run this server has no engine for (one queued across a deploy
+// that bumped it past the engines bundled) is kept aside `stale`, never deleted or reported. Rows
+// kept before the boards were checked carry no state and stay shown.
 
 export interface BoardDoc extends Best {
   /**
-   * Waiting for its re-simulation (`pending`), or kept with no engine to check it on (`stale`);
-   * either is shown on no board. Absent once shown.
+   * Waiting for its re-simulation (`pending`), kept with no engine to check it on (`stale`), or a
+   * first run the re-simulation refused (`refused`); none is shown on any board. Absent once shown.
    */
-  state?: 'pending' | 'stale';
+  state?: 'pending' | 'stale' | 'refused';
+  /** When the install's latest better run was made, if the re-simulation refused it. */
+  refused?: number;
   /** Re-simulated (absent on a row kept before the boards were checked). */
   verified?: true;
   /** The pending run's replay, dropped once verified. */
@@ -32,6 +36,16 @@ export const shown = (d: BoardDoc) => d.state === undefined;
 
 /** Whether the row has a run waiting for its re-simulation. */
 export const boardWaiting = (d: BoardDoc) => d.state === 'pending' || d.next !== undefined;
+
+/** Whether the row holds a place on its board, shown or provisional (a stale or refused row holds none). */
+export const holdsPlace = (d: BoardDoc) => d.state === undefined || d.state === 'pending';
+
+/** What the install is told about its own row beside its shown run: a run waiting for its check, or its latest better run refused. */
+export function ownState(d: BoardDoc | null | undefined): 'pending' | 'refused' | undefined {
+  if (!d) return undefined;
+  if (boardWaiting(d)) return 'pending';
+  return d.refused !== undefined ? 'refused' : undefined;
+}
 
 /**
  * The replay if the server can verify `run` with it: made on an engine it has (`engines`) from
@@ -55,11 +69,14 @@ export function boardStanding(d: BoardDoc): Best {
  * kept), or the row as it becomes, its new run waiting for the re-simulation.
  */
 export function boardUpdate(was: BoardDoc | null, best: Best, replay: ReplayWire | null): BoardDoc | 'lower' | 'unverified' {
-  // a stale row holds no place: the new run takes it over
-  const old = was?.state === 'stale' ? null : was;
+  // a stale or refused row holds no place: the new run takes it over
+  const old = was && holdsPlace(was) ? was : null;
   if (old && best.score <= Math.max(old.score, old.next?.score ?? -1)) return 'lower';
   if (!replay) return 'unverified';
-  if (old && shown(old)) return { ...old, next: { score: best.score, run: best.run, at: best.at, replay } };
+  if (old && shown(old)) {
+    const { refused: _, ...kept } = old;
+    return { ...kept, next: { score: best.score, run: best.run, at: best.at, replay } };
+  }
   return { ...best, state: 'pending', replay };
 }
 
@@ -77,20 +94,19 @@ export function provisionalRank(b: Best, rows: Iterable<BoardDoc>): number {
 
 /**
  * The re-simulation's verdict on the run made at `at` (`stale`: no engine to check it on): the
- * row as it becomes (the run shown, verified, its replay dropped; or kept aside, stale), null to
- * delete it (a refused first run), or undefined when the row no longer holds that run.
+ * row as it becomes (the run shown, verified, its replay dropped; kept aside, stale; or marked
+ * refused, a refused first run as a row shown nowhere), or undefined when the row no longer holds that run.
  */
-export function settleBoardDoc(doc: BoardDoc, at: number, ok: boolean | 'stale'): BoardDoc | null | undefined {
+export function settleBoardDoc(doc: BoardDoc, at: number, ok: boolean | 'stale'): BoardDoc | undefined {
   if (doc.state === 'pending' && doc.at === at) {
     if (ok === 'stale') return { ...doc, state: 'stale' };
-    if (!ok) return null;
     const { state: _s, replay: _r, ...rest } = doc;
-    return { ...rest, verified: true };
+    return ok ? { ...rest, verified: true } : { ...rest, state: 'refused', refused: at };
   }
   if (doc.next?.at !== at) return undefined;
   const { next, ...best } = doc;
   if (ok === 'stale') return { ...best, stale: next };
-  if (!ok) return best;
+  if (!ok) return { ...best, refused: at };
   return { board: best.board, tag: best.tag, score: next.score, run: next.run, at: next.at, verified: true };
 }
 

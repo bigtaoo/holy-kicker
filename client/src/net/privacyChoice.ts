@@ -17,6 +17,9 @@ export interface PrivacyUi {
   /** Play data goes out now. */
   sharing(): boolean;
   set(on: boolean): void;
+  /** Runs and the player's name go to the leaderboards: their own switch, apart from the play data. */
+  boards(): boolean;
+  setBoards(on: boolean): void;
   openPolicy(): void;
   /** The install's id once one is kept, for a request to see or delete its data; null before. */
   id(): string | null;
@@ -35,14 +38,16 @@ export class PrivacyChoice implements PrivacyUi {
   readonly region: PrivacyRegion;
 
   constructor(
-    private readonly net: Pick<Backend, 'setSharing'>,
+    private readonly net: Pick<Backend, 'setSharing' | 'setBoards'>,
     private readonly platform: Pick<Platform, 'host' | 'storage' | 'country' | 'openUrl'>,
     /** The backend's address, which serves the policy at /privacy. */
     private readonly base: string,
     timeZone: string | null,
   ) {
     this.region = platform.host === 'wechat' ? 'consent' : privacyRegion(platform.country(), timeZone);
-    net.setSharing(sharingOf(this.region, loadSettings(platform.storage).dataSharing));
+    const s = loadSettings(platform.storage);
+    net.setSharing(sharingOf(this.region, s.dataSharing));
+    net.setBoards(s.boards);
   }
 
   asking(): boolean {
@@ -56,6 +61,15 @@ export class PrivacyChoice implements PrivacyUi {
   set(on: boolean): void {
     updateSettings(this.platform.storage, { dataSharing: on ? 'yes' : 'no' });
     this.net.setSharing(on ? 'send' : 'off');
+  }
+
+  boards(): boolean {
+    return loadSettings(this.platform.storage).boards;
+  }
+
+  setBoards(on: boolean): void {
+    updateSettings(this.platform.storage, { boards: on });
+    this.net.setBoards(on);
   }
 
   /** The one-time toast is due: a player outside the consent region who has not seen it or answered. */

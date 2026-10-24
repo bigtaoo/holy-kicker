@@ -6,7 +6,7 @@ import { COLORS, backdrop, button, label, panel, playTap } from './widgets';
 
 // Settings' second panel, "Account & data", opened from the main one (settingsPanel.ts): play
 // data sharing on or off beside the privacy policy (and the ad network's privacy options where
-// they are due, iOS in the EEA/UK), what is sent, and the install's play ID, which copies itself
+// they are due, iOS in the EEA/UK), the leaderboards on or off (apart from sharing), what is sent, and the install's play ID, which copies itself
 // when tapped (players quote it in a problem report). The cloud save has no rows: it syncs by
 // itself (docs/cloud-save.md).
 
@@ -55,6 +55,14 @@ export function accountPanel(w: number, h: number, a: AccountActions, back: () =
   if (a.adPrivacy.offered()) row.addChild(button(t('settings.adPrivacy'), bw, 110, () => a.adPrivacy.open(), { fill: COLORS.panelLocked, size: 48 }));
   row.children.forEach((b, i) => (b.x = (i - (n - 1) / 2) * (bw + 24)));
   add(row, 140);
+  if (p) {
+    const on = p.boards();
+    add(button(on ? t('settings.boardsOn') : t('settings.boardsOff'), ROW, 110, () => p.setBoards(!on), {
+      fill: on ? COLORS.saffron : COLORS.panelLocked,
+      textFill: on ? COLORS.outline : COLORS.text,
+      size: 48,
+    }), 140);
+  }
 
   const style = { wordWrap: true, wordWrapWidth: W - 100, breakWords: true };
   if (p) {

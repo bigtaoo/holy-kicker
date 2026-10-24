@@ -20,13 +20,13 @@
 </head>
 <body>
   <h1>Privacy Policy</h1>
-  <p class="meta">Last updated: 2026-10-23 &nbsp;·&nbsp; Holy Kicker &nbsp;·&nbsp; <a href="mailto:support@gamestao.com">support@gamestao.com</a> &nbsp;·&nbsp; <a href="?lang=zh">中文</a></p>
+  <p class="meta">Last updated: 2026-10-24 &nbsp;·&nbsp; Holy Kicker &nbsp;·&nbsp; <a href="mailto:support@gamestao.com">support@gamestao.com</a> &nbsp;·&nbsp; <a href="?lang=zh">中文</a></p>
 
   <p>This policy explains what data the game Holy Kicker collects, why, and what you can do about it. It applies wherever you play the game, on our own site, on game portals such as CrazyGames and in the iPhone app. We follow the EU General Data Protection Regulation (GDPR) and the applicable data protection law.</p>
 
   <div class="callout">
     <strong>There is no account and no sign-up.</strong> Your progress and settings stay on your device (on CrazyGames, in the portal's own save). The game sends two things to our own server: <strong>gameplay statistics</strong> and <strong>leaderboard runs</strong>, linked to a random play ID rather than to who you are. On our site and in the iPhone app, a copy of your save is also kept on our server, so your progress is not lost with the device.
-    <strong>In the EEA, the UK and Switzerland, nothing is sent until you allow it.</strong> Everywhere else sending is on, and you can switch it off at any time: <em>Settings → Account &amp; data → Sharing</em>.
+    <strong>In the EEA, the UK and Switzerland, no statistics are sent until you allow it.</strong> Everywhere else sending is on, and you can switch it off at any time: <em>Settings → Account &amp; data → Sharing</em>. Leaderboard runs are part of the game you play rather than statistics, so they have their own switch, on unless you turn it off: <em>Settings → Account &amp; data → Leaderboards</em>.
   </div>
 
   <h2>1. Who is responsible</h2>
@@ -49,9 +49,9 @@
     </tr>
     <tr>
       <td>Leaderboards</td>
-      <td>Your best run on each chapter's board (the run fields above) and the name the boards show: your CrazyGames username if you are signed in there, in the iPhone app your Game Center nickname if you are signed in to Game Center, otherwise a name the game rolls at random (two words and a number). The boards show that name and a short tag made from your play ID with a secret key, never the play ID itself. A guest on CrazyGames is not entered.</td>
+      <td>Your best run on each chapter's board (the run fields above) and the name the boards show: your CrazyGames username if you are signed in there, in the iPhone app your Game Center nickname if you are signed in to Game Center, otherwise a name the game rolls at random (two words and a number). The boards show that name and a short tag made from your play ID with a secret key, never the play ID itself. A guest on CrazyGames is not entered. A run that does not reach our server (no network, for example) waits on your device and is sent again later. Nothing is sent to the boards while <em>Settings → Account &amp; data → Leaderboards</em> is off.</td>
       <td>Running the public leaderboards</td>
-      <td>As for gameplay statistics</td>
+      <td>Providing the game you play (Art. 6(1)(b))</td>
     </tr>
     <tr>
       <td>Cloud save</td>
@@ -89,7 +89,8 @@
     <li><code>hk.save</code>: your progress</li>
     <li><code>hk.settings</code>: your settings, including your answer about play data</li>
     <li><code>hk.run</code>: a run left unfinished, so you can continue it</li>
-    <li><code>hk.install</code>: the random play ID. It is only created once something is sent, so if you never allow sharing, it never exists. It is shown in <em>Settings → Account &amp; data</em>.</li>
+    <li><code>hk.install</code>: the random play ID. It is only created once something is sent, so if you neither allow sharing nor play with the leaderboards on, it never exists. It is shown in <em>Settings → Account &amp; data</em>.</li>
+    <li><code>hk.boardOutbox</code>: leaderboard runs that have not reached our server yet, until they do (emptied when you turn the leaderboards off)</li>
     <li><code>hk.named</code>: the leaderboard name last sent, so it is not sent again</li>
     <li><code>hk.cloud</code>: the device's key to its cloud save (§2), and <code>hk.cloud.gc</code>, the Game Center player it belongs to (iPhone app)</li>
     <li><code>hk.adFree</code> (iPhone app only): whether you own the Ad-free card, as the App Store last told the app</li>
@@ -120,7 +121,7 @@
   </ul>
 
   <h2>8. Your rights</h2>
-  <p>You can ask for access to your data, correction, deletion, restriction, a portable copy, and object to processing. Where we rely on your consent you can withdraw it at any time, as easily as you gave it: <em>Settings → Account &amp; data → Sharing: Off</em> stops all sending at once, and events not yet sent are discarded.</p>
+  <p>You can ask for access to your data, correction, deletion, restriction, a portable copy, and object to processing. Where we rely on your consent you can withdraw it at any time, as easily as you gave it: <em>Settings → Account &amp; data → Sharing: Off</em> stops sending statistics at once, and events not yet sent are discarded. <em>Leaderboards: Off</em> stops sending runs and names to the boards.</p>
   <p>Because we do not know who you are, we can only find your data by your play ID. To see or delete it, email <a href="mailto:support@gamestao.com">support@gamestao.com</a> with the play ID shown in Settings → Account &amp; data. A cloud save is not linked to the play ID, so we cannot find it from it; it is deleted 30 days after your device last updated it. We answer within 30 days, free of charge. You also have the right to complain to a data protection authority.</p>
 
   <h2>9. Children</h2>

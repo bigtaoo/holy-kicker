@@ -2,7 +2,7 @@ import { randomBytes } from 'node:crypto';
 import type { Audience } from './audience';
 import { counted, dayOffset, emptyDayZero, foldDayZero, foldProgress, retag, type Player } from './players';
 import { ahead, challengeUpdate, freshDoc, jobOf, settleDoc, standing, topRuns, waiting, type Best, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
-import { boardJob, boardStanding, boardUpdate, boardWaiting, newBest, provisionalRank, settleBoardDoc, shown, type BoardDoc } from './boardDocs';
+import { boardJob, boardStanding, boardUpdate, boardWaiting, holdsPlace, newBest, ownState, provisionalRank, settleBoardDoc, shown, type BoardDoc } from './boardDocs';
 import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Game, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
@@ -209,7 +209,7 @@ export class MemoryStore implements Store {
     const name = runName(run);
     if (name) await this.setName(tag, name);
     // a run not kept places nowhere: the install keeps the place it had (0: none yet)
-    const placed = typeof doc === 'string' ? (old && old.state !== 'stale' ? boardStanding(old) : null) : b;
+    const placed = typeof doc === 'string' ? (old && holdsPlace(old) ? boardStanding(old) : null) : b;
     const rank = placed ? provisionalRank(placed, this.sorted(board)) : 0;
     return { board, rank, best: typeof doc !== 'string', status: typeof doc === 'string' ? doc : 'pending', at: now };
   }
@@ -218,8 +218,7 @@ export class MemoryStore implements Store {
     const key = `${board}/${tag}`;
     const doc = this.best.get(key);
     const next = doc && settleBoardDoc(doc, at, ok);
-    if (next === null) this.best.delete(key);
-    else if (next) this.best.set(key, next);
+    if (next) this.best.set(key, next);
   }
 
   async pendingResims(): Promise<ResimRef[]> {
@@ -235,7 +234,8 @@ export class MemoryStore implements Store {
     const all = this.sorted(board);
     const i = tag ? all.findIndex((b) => b.tag === tag) : -1;
     const rows = all.slice(0, limit).map((b, k) => rowOf(b, k + 1, this.names));
-    return { board, total: all.length, rows, mine: i >= 0 ? rowOf(all[i], i + 1, this.names) : null };
+    const own = ownState(tag ? this.best.get(`${board}/${tag}`) : null);
+    return { board, total: all.length, rows, mine: i >= 0 ? rowOf(all[i], i + 1, this.names) : null, ...(own ? { own } : {}) };
   }
 
   async setName(tag: string, name: BoardName): Promise<void> {

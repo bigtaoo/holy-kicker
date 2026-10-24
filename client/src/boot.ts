@@ -7,6 +7,7 @@ import { DEFAULT_LOCALE, getLocale, loadLocale, setLocale } from './i18n';
 import { cleanMsg, watchAnomalies } from './net/anomaly';
 import { AnomalyStash } from './net/anomalyStash';
 import { apiBase, Backend } from './net/backend';
+import { BoardOutbox } from './net/boardOutbox';
 import { CloudSync } from './net/cloudSync';
 import { hitchContext, liveMobs, memProbe, PerfReport, sessionDevice } from './net/perfReport';
 import { deviceTimeZone, PrivacyChoice } from './net/privacyChoice';
@@ -14,7 +15,7 @@ import { patchGraphicsDestroy } from './game/graphicsDestroy';
 import { levelRange, lowBattery, useMsaa } from './game/quality';
 import { QualityRuntime, gpuName } from './game/qualityRuntime';
 import type { SceneOptions } from './game/scene';
-import { SaveStore } from './meta/saveStore';
+import { SafeStore, SaveStore, type KeyValueStore } from './meta/saveStore';
 import { loadSettings, pickLocale } from './meta/settings';
 import type { Platform } from './platform/types';
 import { healthAdvice } from './ui/healthAdvice';
@@ -22,7 +23,7 @@ import { privacyToast } from './ui/privacyUi';
 import { DISPLAY_FAMILY, DISPLAY_FILE, setDisplayFont } from './ui/fonts';
 import { Shell } from './ui/Shell';
 import { lateArt } from './lateArt';
-import { THEME } from './theme';
+import { THEME, themedStore } from './theme';
 
 // Boot shared by every entry: the language, the renderer, the art, then the shell. The
 // platform is fully initialised before this runs (CrazyGames waits for its SDK first, since
@@ -86,7 +87,7 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptio
   const api = apiBase(platform.host, import.meta.env.DEV, query, import.meta.env.VITE_HK_API);
   // a host that blocks the backend plays offline, but its own analytics still follow the privacy answer
   const base = platform.backendBlocked ? null : api;
-  const net = new Backend(platform, base, __HK_BUILD__, getLocale);
+  const net = new Backend(platform, base, __HK_BUILD__, getLocale, new BoardOutbox(new SafeStore(base ? pageStorage() : null)));
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
   const privacy = api ? new PrivacyChoice(net, platform, api, deviceTimeZone()) : null;
   // the display font, before the first text is measured; system fonts if it fails or is slow
@@ -151,4 +152,16 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptio
     privacyToast(app, () => platform.safeInsets(), () => shell.teachingMove, () => privacy.noticeShown());
   }
   return { app, shell, quality, device, cloud };
+}
+
+/**
+ * The page's own storage, for what is too big for a host's (a portal's cloud data): the board runs
+ * waiting to go (net/boardOutbox.ts); null where there is none.
+ */
+function pageStorage(): KeyValueStore | null {
+  try {
+    return typeof localStorage === 'undefined' ? null : themedStore(localStorage);
+  } catch {
+    return null;
+  }
 }

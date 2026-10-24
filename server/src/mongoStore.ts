@@ -2,7 +2,7 @@ import { MongoBulkWriteError, MongoClient, type Collection, type Db, type Object
 import type { Audience } from './audience';
 import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, retag, type Player } from './players';
 import { challengeUpdate, freshDoc, settleDoc, standing, topRuns, waiting } from './challengeDocs';
-import { boardStanding, boardUpdate, newBest, settleBoardDoc, type BoardDoc } from './boardDocs';
+import { boardStanding, boardUpdate, holdsPlace, newBest, ownState, settleBoardDoc, shown, type BoardDoc } from './boardDocs';
 import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type Game, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
@@ -59,8 +59,8 @@ interface ChallengeRow extends ChallengeDoc {
 
 type BestDoc = BoardDoc & { _id: string };
 
-/** A board row's shown run only: no pending or stale row (boardDocs.ts shown). */
-const SHOWN = { state: { $nin: ['pending', 'stale'] as ('pending' | 'stale')[] } };
+/** A board row's shown run only: no pending, stale or refused row (boardDocs.ts shown). */
+const SHOWN = { state: { $nin: ['pending', 'stale', 'refused'] as NonNullable<BoardDoc['state']>[] } };
 const NO_REPLAY = { projection: { replay: 0, 'next.replay': 0 } };
 /** What finds the rows with a run waiting, in either collection. */
 const WAITING = { $or: [{ state: 'pending' as const }, { 'next.at': { $exists: true } }] };
@@ -182,7 +182,7 @@ export class MongoStore implements Store {
     const name = runName(run);
     if (name) await this.setName(tag, name, now);
     // a run not kept places nowhere: the install keeps the place it had (0: none yet)
-    const placed = typeof doc === 'string' ? (old && old.state !== 'stale' ? boardStanding(old) : null) : b;
+    const placed = typeof doc === 'string' ? (old && holdsPlace(old) ? boardStanding(old) : null) : b;
     const rank = placed ? await this.rankOf(placed) : 0;
     return { board, rank, best: typeof doc !== 'string', status: typeof doc === 'string' ? doc : 'pending', at: now };
   }
@@ -190,12 +190,11 @@ export class MongoStore implements Store {
   async settleBoardRun(board: string, tag: string, at: number, ok: boolean | 'stale'): Promise<void> {
     const _id = `${board}/${tag}`;
     const doc = await this.best.findOne({ _id }, NO_REPLAY);
-    const next = doc && settleBoardDoc(doc, at, ok);
-    if (!doc || next === undefined) return;
+    const next = doc ? settleBoardDoc(doc, at, ok) : undefined;
+    if (!doc || !next) return;
     // only while the row still holds what was checked
     const same = { _id, at: doc.at, 'next.at': doc.next?.at ?? null };
-    if (next === null) await this.best.deleteOne(same);
-    else await this.best.replaceOne(same, withoutId(next));
+    await this.best.replaceOne(same, withoutId(next));
   }
 
   async pendingResims(): Promise<ResimRef[]> {
@@ -209,15 +208,17 @@ export class MongoStore implements Store {
   }
 
   async board(board: string, limit: number, tag: string | null): Promise<BoardReply> {
-    const [top, total, own] = await Promise.all([
+    const [top, total, row] = await Promise.all([
       this.best.find({ board, ...SHOWN }, NO_REPLAY).sort({ score: -1, at: 1 }).limit(limit).toArray(),
       this.best.countDocuments({ board, ...SHOWN }),
-      tag ? this.best.findOne({ _id: `${board}/${tag}`, ...SHOWN }, NO_REPLAY) : null,
+      tag ? this.best.findOne({ _id: `${board}/${tag}` }, NO_REPLAY) : null,
     ]);
+    const own = row && shown(row) ? row : null;
+    const state = ownState(row);
     const tags = [...new Set([...top.map((b) => b.tag), ...(own ? [own.tag] : [])])];
     const docs = await this.names.find({ _id: { $in: tags } }).toArray();
     const names = new Map(docs.map((n): [string, BoardName] => [n._id, n.name ? { name: n.name } : { dice: n.dice ?? 0 }]));
-    return { board, total, rows: top.map((b, k) => rowOf(b, k + 1, names)), mine: own ? rowOf(own, await this.rankOf(own), names) : null };
+    return { board, total, rows: top.map((b, k) => rowOf(b, k + 1, names)), mine: own ? rowOf(own, await this.rankOf(own), names) : null, ...(state ? { own: state } : {}) };
   }
 
   private async place(doc: ChallengeDoc): Promise<{ rank: number; total: number }> {

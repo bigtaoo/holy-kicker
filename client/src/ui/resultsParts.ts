@@ -3,7 +3,7 @@ import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import type { Drop } from '../meta/gear';
 import type { Reward } from '../meta/progress';
-import type { RunRank } from '../net/backend';
+import type { RunMiss, RunRank } from '../net/backend';
 import { iconSprite, type IconSheet } from './buildBar';
 import { clockTenths, verdict } from './clearTime';
 import type { DownInfo } from './deathInfo';
@@ -23,6 +23,14 @@ import { COLORS, fit, label, shade } from './widgets';
 
 export type Part = [Container, number];
 
+/**
+ * What the results say about the leaderboard: the run's place, or why it has none (RunMiss, or
+ * `guest`: a portal guest's runs are on no board); null says nothing (offline, or a run no board counts).
+ */
+export type RankNote = RunRank | RunMiss | 'guest' | null;
+
+const MISS = { off: 'results.rankOff', queued: 'results.rankQueued', unverified: 'results.rankUnverified', guest: 'results.rankGuest' } as const;
+
 /** A rounded pill with `text` in it, `fill` coloured. */
 function pill(text: string, color: number, size = 48): Container {
   const c = new Container();
@@ -34,7 +42,7 @@ function pill(text: string, color: number, size = 48): Container {
   return c;
 }
 
-export function headerPart(r: Reward, waves: number, rank: RunRank | null, width: number): Part {
+export function headerPart(r: Reward, waves: number, rank: RankNote, width: number): Part {
   const c = new Container();
   // a won run (a replay too: it may bring a star) is a clear, gold on the first one
   const won = r.stars > 0;
@@ -74,20 +82,30 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
   const v = r.time ? verdict(r.time.tenths, r.time.best) : null;
   if (v?.kind === 'faster') badges.push(pill(t('results.timeFaster', { s: v.s }), COLORS.gold, 48));
   else if (v) badges.push(pill(t('results.timeBest', { time: v.best }), COLORS.dim));
-  if (rank) badges.push(rankPill(rank));
-  if (badges.length === 0) return [c, top];
-  const row = new Container();
-  let x = 0;
-  for (const b of badges) {
-    b.x = x + b.width / 2;
-    x += b.width + 24;
-    row.addChild(b);
+  if (rank && typeof rank === 'object') badges.push(rankPill(rank));
+  if (badges.length > 0) {
+    const row = new Container();
+    let x = 0;
+    for (const b of badges) {
+      b.x = x + b.width / 2;
+      x += b.width + 24;
+      row.addChild(b);
+    }
+    row.pivot.x = (x - 24) / 2;
+    if (row.width > width) row.scale.set(width / row.width);
+    row.y = top + 52;
+    c.addChild(row);
+    top += 100;
   }
-  row.pivot.x = (x - 24) / 2;
-  if (row.width > width) row.scale.set(width / row.width);
-  row.y = top + 52;
-  c.addChild(row);
-  return [c, top + 100];
+  if (typeof rank === 'string') {
+    // why the run is on no board, under the badges
+    const why = label(t(MISS[rank]), 48, COLORS.dim, { wordWrap: true, wordWrapWidth: width, breakWords: true, align: 'center' });
+    why.anchor.set(0.5, 0);
+    why.y = top + 10;
+    c.addChild(why);
+    top += why.height + 30;
+  }
+  return [c, top];
 }
 
 /** What felled the hero (its picture beside it), the nearest goal across the strip with a bar for how near it came, and one short tip. */

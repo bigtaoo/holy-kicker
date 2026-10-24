@@ -1,7 +1,7 @@
 import { engineFor } from './engines';
 import { ENGINE_VERSION } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
-import { boardReplay, boardUpdate, newBest, provisionalRank, settleBoardDoc, type BoardDoc } from './boardDocs';
+import { boardReplay, boardUpdate, newBest, ownState, provisionalRank, settleBoardDoc, type BoardDoc } from './boardDocs';
 import type { BoardReply, ReplayWire, RunEntry } from './protocol';
 import { CURRENT_ENGINE, chapterConfig, resimulate } from './resim';
 import { ResimQueue } from './resimQueue';
@@ -72,13 +72,25 @@ describe('a board row', () => {
     const shown = settleBoardDoc(first, at, true)!;
     expect(shown).toMatchObject({ verified: true, score: 5 });
     expect(shown.replay).toBeUndefined();
-    expect(settleBoardDoc(first, at, false)).toBeNull();
+    // a refused first run stays as a row shown nowhere, telling its install why
+    const refused = settleBoardDoc(first, at, false)!;
+    expect(refused).toMatchObject({ state: 'refused', refused: at });
+    expect(refused.replay).toBeUndefined();
+    expect(ownState(first)).toBe('pending');
+    expect(ownState(refused)).toBe('refused');
+    expect(provisionalRank(best(1, NOW, 'b'), [refused])).toBe(1);
+    expect(boardUpdate(refused, best(2, NOW), PLAYED.replay)).toMatchObject({ state: 'pending', score: 2 });
     // a better run waits beside it; a worse one, or one no better than the one waiting, changes nothing
     const waiting = boardUpdate(shown, best(9, NOW), PLAYED.replay) as BoardDoc;
     expect(waiting).toMatchObject({ score: 5, next: { score: 9, at: NOW } });
     expect(boardUpdate(waiting, best(8, NOW + 1), PLAYED.replay)).toBe('lower');
     // refused, the old best stays; verified, the new one takes its place
-    expect(settleBoardDoc(waiting, NOW, false)).toEqual(shown);
+    const kept = settleBoardDoc(waiting, NOW, false)!;
+    expect(kept).toEqual({ ...shown, refused: NOW });
+    expect(ownState(shown)).toBeUndefined();
+    expect(ownState(kept)).toBe('refused');
+    // the next better run clears the mark
+    expect(boardUpdate(kept, best(10, NOW + 2), PLAYED.replay)).not.toHaveProperty('refused');
     expect(settleBoardDoc(waiting, NOW, true)).toMatchObject({ score: 9, at: NOW, verified: true });
     expect(settleBoardDoc(waiting, NOW + 5, true)).toBeUndefined();
   });
@@ -106,15 +118,16 @@ describe('the chapter boards', () => {
     const { deps, resim, store } = setup();
     const reply = await send(deps, PLAYED);
     expect(reply.body).toMatchObject({ board: 'c1', rank: 1, best: true, status: 'pending' });
-    expect((await board(deps)).rows).toEqual([]);
+    expect(await board(deps)).toMatchObject({ rows: [], own: 'pending' });
     await resim.idle();
     const after = await board(deps);
+    expect(after.own).toBeUndefined();
     expect(after.rows.length).toBe(1);
     expect(after.mine).toMatchObject({ rank: 1, wave: PLAYED.run.wave });
     expect(await store.pendingResims()).toEqual([]);
   });
 
-  it('drop a forged run and keep it as a report, the best before it still shown', async () => {
+  it('drop a forged run and keep it as a report, the best before it still shown and the install told', async () => {
     const { deps, resim, store, logs } = setup();
     const short = playChapter(900);
     await send(deps, short);
@@ -122,7 +135,7 @@ describe('the chapter boards', () => {
     const forged = { run: PLAYED.run, replay: { ...PLAYED.replay, hash: (PLAYED.replay.hash ^ 1) >>> 0 } };
     expect((await send(deps, forged)).body).toMatchObject({ status: 'pending' });
     await resim.idle();
-    expect((await board(deps)).mine).toMatchObject({ wave: short.run.wave });
+    expect(await board(deps)).toMatchObject({ mine: { wave: short.run.wave }, own: 'refused' });
     expect(store.reportList.length).toBe(1);
     expect(store.reportList[0].text).toContain('hash');
     expect(logs[0]).toContain('hash');

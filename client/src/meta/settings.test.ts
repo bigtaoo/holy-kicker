@@ -8,23 +8,23 @@ function memory(initial: Record<string, string> = {}) {
 
 describe('settings', () => {
   it('starts at full volume and auto quality for a new player or a broken file', () => {
-    expect(loadSettings(memory())).toEqual({ locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, dataSharing: 'ask', noticeSeen: false, reminders: true, remindAsked: false, haptics: true, pairsTold: false });
+    expect(loadSettings(memory())).toEqual({ locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, haptics: true, pairsTold: false });
     expect(loadSettings(memory({ 'hk.settings': 'not json' })).volume).toBe(VOLUME_STEPS);
     expect(loadSettings(memory({ 'hk.settings': '{"volume":9,"quality":"ultra"}' })))
-      .toEqual({ locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, dataSharing: 'ask', noticeSeen: false, reminders: true, remindAsked: false, haptics: true, pairsTold: false });
+      .toEqual({ locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, haptics: true, pairsTold: false });
   });
 
   it('reads an old file: sound off becomes volume 0', () => {
     expect(loadSettings(memory({ 'hk.settings': '{"locale":"zh","sound":true}' })))
-      .toEqual({ locale: 'zh', volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, dataSharing: 'ask', noticeSeen: false, reminders: true, remindAsked: false, haptics: true, pairsTold: false });
+      .toEqual({ locale: 'zh', volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, haptics: true, pairsTold: false });
     expect(loadSettings(memory({ 'hk.settings': '{"sound":false}' })).volume).toBe(0);
     expect(loadSettings(memory({ 'hk.settings': '{"sound":false}' })).music).toBe(VOLUME_STEPS);
   });
 
   it('keeps what the player chose', () => {
     const kv = memory();
-    saveSettings(kv, { locale: 'en', volume: 2, music: 1, quality: 'saver', fast: true, shake: false, dataSharing: 'no', noticeSeen: true, reminders: false, remindAsked: true, haptics: false, pairsTold: true });
-    expect(updateSettings(kv, { volume: 0 })).toEqual({ locale: 'en', volume: 0, music: 1, quality: 'saver', fast: true, shake: false, dataSharing: 'no', noticeSeen: true, reminders: false, remindAsked: true, haptics: false, pairsTold: true });
-    expect(loadSettings(kv)).toEqual({ locale: 'en', volume: 0, music: 1, quality: 'saver', fast: true, shake: false, dataSharing: 'no', noticeSeen: true, reminders: false, remindAsked: true, haptics: false, pairsTold: true });
+    saveSettings(kv, { locale: 'en', volume: 2, music: 1, quality: 'saver', fast: true, shake: false, dataSharing: 'no', boards: false, noticeSeen: true, reminders: false, remindAsked: true, haptics: false, pairsTold: true });
+    expect(updateSettings(kv, { volume: 0 })).toEqual({ locale: 'en', volume: 0, music: 1, quality: 'saver', fast: true, shake: false, dataSharing: 'no', boards: false, noticeSeen: true, reminders: false, remindAsked: true, haptics: false, pairsTold: true });
+    expect(loadSettings(kv)).toEqual({ locale: 'en', volume: 0, music: 1, quality: 'saver', fast: true, shake: false, dataSharing: 'no', boards: false, noticeSeen: true, reminders: false, remindAsked: true, haptics: false, pairsTold: true });
   });
 });

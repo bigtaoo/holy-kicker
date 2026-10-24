@@ -24,7 +24,7 @@ import type { Platform, Portal } from '../platform/types';
 import type { PacedAds } from '../platform/adPacing';
 import { within } from '../platform/adTimeout';
 import type { Sound } from '../audio/Sound';
-import type { Backend, RunRank, RunResult } from '../net/backend';
+import type { Backend, RunResult } from '../net/backend';
 import { runBuild } from '../net/leaveProps';
 import { offered } from '../net/offers';
 import type { PerfReport } from '../net/perfReport';
@@ -35,6 +35,7 @@ import { menuBackdrop } from './lobbyBars';
 import type { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
+import type { RankNote } from './resultsParts';
 import { RunHud } from './RunHud';
 import { runSwitches } from './pausePanel';
 import { keepLanguage } from './settingsPanel';
@@ -290,7 +291,9 @@ export class RunFlow {
     // a challenge's is on its own (a daily's 20 waves)
     const counted = rankedRun(h.scene) && s.config.waves === BALANCE.waves;
     const name = counted || (rankedRun(h.scene) && h.challenge.run) ? h.names.board(h.save()) : null;
-    const rank = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(null);
+    // a portal guest is told why the run is on no board
+    const guest = counted && h.net.online && !h.names.ranked() ? 'guest' : null;
+    const rank: Promise<RankNote> = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(guest);
     void h.net.flush();
     if (h.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);
     const won = s.outcome === 'won';
@@ -329,7 +332,7 @@ export class RunFlow {
     return () => this.host.net.track('ad', { kind: 'inter', at });
   }
 
-  private showResults(reward: Reward, waves: number, rank: Promise<RunRank | null>, fall: DownInfo | null): void {
+  private showResults(reward: Reward, waves: number, rank: Promise<RankNote>, fall: DownInfo | null): void {
     const h = this.host;
     let leaving = false;
     // the interstitial sits on the break after the results (adPacing.ts: at most one every few minutes of play), never

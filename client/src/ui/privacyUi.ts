@@ -67,6 +67,11 @@ export function watched(p: PrivacyUi | null, after: () => void): PrivacyUi | nul
       p.set(on);
       after();
     },
+    boards: () => p.boards(),
+    setBoards: (on) => {
+      p.setBoards(on);
+      after();
+    },
     openPolicy: () => p.openPolicy(),
     id: () => p.id(),
   };

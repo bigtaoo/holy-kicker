@@ -367,6 +367,8 @@ export interface BoardReply {
   rows: BoardRow[];
   /** The asking install's own row, when it has one. */
   mine: BoardRow | null;
+  /** The asking install's run not on the board: one waiting for its check, or its latest better run refused by it. */
+  own?: 'pending' | 'refused';
 }
 
 /**

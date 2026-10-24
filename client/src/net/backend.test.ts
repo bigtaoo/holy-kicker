@@ -1,7 +1,9 @@
 import { LIMITS } from '@hk/protocol';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Platform } from '../platform/types';
+import { MemoryStore } from '../meta/saveStore';
 import { Backend } from './backend';
+import { BoardOutbox } from './boardOutbox';
 
 // Backend: analytics batches, leaderboard runs and the install id, against a fake fetch.
 
@@ -170,9 +172,15 @@ describe('Backend', () => {
     ]);
   });
 
-  it('enters a run with its replay and reads back its rank, null for an answer without one', async () => {
-    const calls = server({ ok: true, body: { board: 'c2h', rank: 4, best: true } }, { ok: true, body: { rank: 0 } }, { ok: false, status: 429 });
-    const net = new Backend(platform(), 'https://api.test', '1.0.0', () => 'en');
+  it('enters a run with its replay and reads back its rank, or why it has none', async () => {
+    const calls = server(
+      { ok: true, body: { board: 'c2h', rank: 4, best: true } },
+      { ok: true, body: { rank: 0 } },
+      { ok: false, status: 429 },
+      { ok: true, body: { board: 'c2h', rank: 2, best: true } },
+      { ok: false, status: 400, body: { error: 'replay' } },
+    );
+    const net = new Backend(platform(), 'https://api.test', '1.0.0', () => 'en', new BoardOutbox(new MemoryStore()));
     const run = { chapter: 2, hard: true, won: false, wave: 12, tenths: 4000, level: 9, kills: 500, monk: 'kicker', relic: 'staff' };
     const replay = { engine: 48, config: { seed: 5 }, wave: 1, cmds: [1, 2, 3], tick: 12000, hash: 7 };
     expect(await net.submitRun(run, replay)).toEqual({ board: 'c2h', rank: 4, best: true });
@@ -181,32 +189,48 @@ describe('Backend', () => {
     expect(calls[0].init.keepalive).toBe(true);
     expect(await net.submitRun(run, { ...replay, cmds: new Array(LIMITS.replayNumbers).fill(255) })).toBeNull();
     expect(calls[1].init.keepalive).toBe(false);
-    expect(await net.submitRun(run)).toBeNull();
+    expect(net.boardQueued('c2h')).toBe(false);
+    // the rate limit answers nothing: the run waits on the device and goes again
+    expect(await net.submitRun(run, replay)).toBe('queued');
+    expect(net.boardQueued('c2h')).toBe(true);
+    await net.resendBoards();
+    expect(sent(calls[3])).toEqual(sent(calls[2]));
+    expect(net.boardQueued('c2h')).toBe(false);
+    // a refusal is an answer: nothing waits, and the player is told the run was not checked
+    expect(await net.submitRun(run)).toBe('unverified');
+    expect(net.boardQueued('c2h')).toBe(false);
   });
 
-  it('holds events until sharing is on, drops them once it is off, and keeps the install id home meanwhile', async () => {
+  it('holds events until sharing is on and drops them once it is off; the boards have their own switch', async () => {
     const calls = server({ ok: true, status: 204, body: { rows: [] } });
-    const kept = new Map<string, string>();
-    const net = new Backend(platform(kept), 'https://api.test', '1.0.0', () => 'en');
+    const net = new Backend(platform(), 'https://api.test', '1.0.0', () => 'en', new BoardOutbox(new MemoryStore()));
+    const run = { chapter: 1, hard: false, won: false, wave: 3, tenths: 900, level: 2, kills: 40, monk: 'kicker', relic: 'ball' };
     net.setSharing('hold');
+    net.setBoards(false);
     net.track('run_start');
     await net.flush();
-    expect(await net.submitRun({ chapter: 1, hard: false, won: false, wave: 3, tenths: 900, level: 2, kills: 40, monk: 'kicker', relic: 'ball' })).toBeNull();
+    expect(await net.submitRun(run)).toBe('off');
     expect(await net.sendName({ dice: 7 })).toBe(false);
     await net.board('c1');
     expect(calls.map((c) => c.url)).toEqual(['https://api.test/v1/boards/c1']);
     expect(calls[0].init.headers).toEqual({});
-    expect(kept.size).toBe(0);
+    // with the boards on, runs, names and board reads go as the install while events still wait
+    net.setBoards(true);
+    expect(await net.submitRun(run)).toBeNull();
+    expect(await net.sendName({ dice: 7 })).toBe(true);
+    await net.board('c1');
+    expect(calls.slice(1).map((c) => c.url)).toEqual(['https://api.test/v1/runs', 'https://api.test/v1/name', 'https://api.test/v1/boards/c1']);
+    expect(calls[3].init.headers).toEqual({ 'x-hk-install': net.install });
     net.setSharing('send');
     await vi.advanceTimersByTimeAsync(0);
-    expect(calls).toHaveLength(2);
-    expect(sent(calls[1]).events).toEqual([{ e: 'run_start', t: expect.any(Number), n: expect.any(Number) }]);
+    expect(calls).toHaveLength(5);
+    expect(sent(calls[4]).events).toEqual([{ e: 'run_start', t: expect.any(Number), n: expect.any(Number) }]);
     net.setSharing('off');
     net.track('run_end');
     net.setSharing('hold');
     net.setSharing('send');
     await vi.advanceTimersByTimeAsync(0);
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(5);
   });
 
   it('reads a board as this install', async () => {

@@ -17,11 +17,22 @@ function host(country: string | null, name: Platform['host'] = 'web') {
 
 function make(country: string | null, timeZone: string | null = null, h = host(country)) {
   const sent: Sharing[] = [];
-  const choice = new PrivacyChoice({ setSharing: (s) => void sent.push(s) }, h, 'https://hk.test', timeZone);
-  return { choice, sent, h };
+  const boards: boolean[] = [];
+  const choice = new PrivacyChoice({ setSharing: (s) => void sent.push(s), setBoards: (on) => void boards.push(on) }, h, 'https://hk.test', timeZone);
+  return { choice, sent, boards, h };
 }
 
 describe('PrivacyChoice', () => {
+  it('keeps the boards on whatever the data answer, until the player turns them off', () => {
+    const { choice, boards, h } = make('DE');
+    expect(boards).toEqual([true]);
+    choice.set(false);
+    expect(choice.boards()).toBe(true);
+    choice.setBoards(false);
+    expect(boards).toEqual([true, false]);
+    expect(make('DE', null, h).boards).toEqual([false]);
+  });
+
   it('asks in Germany and holds data until the answer, which it keeps', () => {
     const { choice, sent, h } = make('DE');
     expect(sent).toEqual(['hold']);

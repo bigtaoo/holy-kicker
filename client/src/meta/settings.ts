@@ -30,6 +30,8 @@ export interface Settings {
   haptics: boolean;
   /** Whether play data may go to the backend: not answered yet, yes or no. */
   dataSharing: SharingChoice;
+  /** Runs and the player's name go to the leaderboards (on unless the player turns it off; net/backend.ts). */
+  boards: boolean;
   /** The one-time data toast (outside the EEA) has been shown. */
   noticeSeen: boolean;
   /** The iOS app's reminders (meta/reminders.ts), while the system allows them. */
@@ -40,7 +42,7 @@ export interface Settings {
   pairsTold: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, haptics: true, dataSharing: 'ask', noticeSeen: false, reminders: true, remindAsked: false, pairsTold: false };
+export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, haptics: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, pairsTold: false };
 
 function isStep(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= VOLUME_STEPS;
@@ -49,7 +51,7 @@ function isStep(v: unknown): v is number {
 export function loadSettings(kv: KeyValueStore): Settings {
   try {
     const raw: unknown = JSON.parse(kv.getItem(SETTINGS_KEY) ?? '{}');
-    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; quality?: unknown; fast?: unknown; shake?: unknown; haptics?: unknown; dataSharing?: unknown; noticeSeen?: unknown; reminders?: unknown; remindAsked?: unknown; pairsTold?: unknown } | null;
+    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; quality?: unknown; fast?: unknown; shake?: unknown; haptics?: unknown; dataSharing?: unknown; boards?: unknown; noticeSeen?: unknown; reminders?: unknown; remindAsked?: unknown; pairsTold?: unknown } | null;
     // files from before the volume steps only had sound on or off
     const v = r?.volume;
     const m = r?.music;
@@ -66,6 +68,7 @@ export function loadSettings(kv: KeyValueStore): Settings {
       shake: r?.shake !== false,
       haptics: r?.haptics !== false,
       dataSharing: r?.dataSharing === 'yes' || r?.dataSharing === 'no' ? r.dataSharing : 'ask',
+      boards: r?.boards !== false,
       noticeSeen: r?.noticeSeen === true,
       reminders: r?.reminders !== false,
       remindAsked: r?.remindAsked === true,

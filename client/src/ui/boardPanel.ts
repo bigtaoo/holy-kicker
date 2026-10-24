@@ -14,7 +14,21 @@ import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 // dice name read here in the viewer's language; a row without either goes by a dice name made
 // from the tag. Offline (no backend) there is no button.
 
-export type FetchBoard = (id: string) => Promise<BoardReply | null>;
+/**
+ * Why the player's latest run is not on the board: still being checked or refused there
+ * (BoardReply.own), waiting on the device to go again (`queued`), or the boards are off (`off`).
+ */
+export type BoardNote = NonNullable<BoardReply['own']> | 'queued' | 'off';
+export type NotedBoard = BoardReply & { note?: BoardNote };
+export type FetchBoard = (id: string) => Promise<NotedBoard | null>;
+
+/** `r` with the note the player sees under it: the device's own reasons first, then the server's. */
+export function noted(r: BoardReply, off: boolean, queued: boolean): NotedBoard {
+  const note: BoardNote | undefined = off ? 'off' : queued ? 'queued' : r.own;
+  return note ? { ...r, note } : r;
+}
+
+const NOTES = { pending: 'board.pending', refused: 'board.refused', queued: 'board.queued', off: 'board.off' } as const;
 
 const BOX_W = 960;
 const BOX_H = 1640;
@@ -64,7 +78,7 @@ export interface BoardView {
 export class BoardUi {
   /** The board open, its reply once in ('failed' when the fetch did not work). */
   private open: BoardView | null = null;
-  private reply: BoardReply | 'loading' | 'failed' = 'loading';
+  private reply: NotedBoard | 'loading' | 'failed' = 'loading';
   private watch: WatchTop | null = null;
   private weekly: WeeklyBoardState = { chosen: 0, busy: null, failed: null };
 
@@ -125,6 +139,11 @@ export class BoardUi {
       const text = label(r === 'loading' ? t('board.loading') : r === 'failed' ? t('board.failed') : t('board.empty'), 48, COLORS.dim);
       text.y = y0 + 400;
       c.addChild(text);
+      if (typeof r === 'object' && r.note) {
+        const note = noteLabel(r.note);
+        note.y = y0 + 520;
+        c.addChild(note);
+      }
       return c;
     }
     const mineTag = r.mine?.tag ?? null;
@@ -156,10 +175,18 @@ export class BoardUi {
     // their run still waits for its re-simulation (ChallengeBoardReply.pending)
     const challenge = 'pending' in r;
     const pending = challenge && r.pending === true;
+    const footAt = footY + (r.mine && !shown ? rh + 10 : 0);
+    if (r.note) {
+      // why the latest run is not here takes the place of the board's size
+      const note = noteLabel(r.note, rh);
+      note.y = footAt;
+      c.addChild(note);
+      return c;
+    }
     if (r.mine && !shown && !challenge) return c;
     const text = pending ? t('challenge.checking') : challenge && r.mine ? t('challenge.top', { n: topPercent(r.mine.rank, r.total) }) : t('board.total', { n: r.total });
     const foot = label(text, 48, challenge && r.mine ? COLORS.saffron : COLORS.dim);
-    foot.y = footY + (r.mine && !shown ? rh + 10 : 0);
+    foot.y = footAt;
     c.addChild(foot);
     return c;
   }
@@ -215,6 +242,11 @@ function rowView(r: BoardRow, mine: boolean, y: number, o: { narrow: boolean; h:
   who.x = NAME_X;
   c.addChild(rank, who, result);
   return c;
+}
+
+/** The note on a board across it, on two lines at most (`maxH` keeps it to one in the footer, above Back). */
+function noteLabel(note: BoardNote, maxH = Infinity): Text {
+  return fit(label(t(NOTES[note]), 48, COLORS.saffron), BOX_W - 80, maxH);
 }
 
 /** Where a row's name starts, past the rank and the medal's slot. */

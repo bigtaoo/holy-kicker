@@ -46,6 +46,7 @@ import { uprightCover } from './uprightCover';
 import { UpdatePrompt } from './updatePrompt';
 import { touchOnly } from './media';
 import { onButtonTap } from './widgets';
+import { noted, type NotedBoard } from './boardPanel';
 
 // The game's flow (docs/design.md "Flow"): the first launch goes straight into chapter 1, afterwards lobby -> run ->
 // results -> lobby. Owns the save, the current screen, the lobby and its routes (a chapter, a challenge, a replay, the
@@ -277,13 +278,20 @@ export class Shell {
       commit: (save) => this.commit(save),
       adAvailable: () => this.ads.rewardedAvailable(),
       rewarded: (at) => this.rewarded(at),
-      board: this.net.online && this.names.ranked() ? (id) => this.net.board(id) : null, // no guests on account hosts
+      board: this.net.online && this.names.ranked() ? (id) => this.board(id) : null, // no guests on account hosts
       challenge: () => this.challenge.lobby(this.save, this.names.ranked(), (c, chapter) => void this.play(chapter, undefined, null, c), (v) => this.watchReplay(v), (save) => this.relobby(save)),
       track: (e, p) => this.net.track(e, p), store: this.platform.store,
     }, this.art.icons, this.app.renderer, this.art.lobby, () => ({ rig: monkRig(this.art, this.save.monk), art: this.art.patrol, icons: this.art.icons }));
     if (open === 'settings') lobby.openSettings();
     else if (open) lobby.openTab(open);
     this.setScreen(lobby);
+  }
+
+  /** A leaderboard with why the player's latest run is not on it; runs waiting go again first. */
+  private async board(id: string): Promise<NotedBoard | null> {
+    void this.net.resendBoards();
+    const r = await this.net.board(id);
+    return r && noted(r, this.privacy ? !this.privacy.boards() : false, this.net.boardQueued(id));
   }
 
   /** Keeps `save` and draws the lobby again with it. */

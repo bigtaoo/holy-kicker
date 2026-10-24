@@ -3,12 +3,11 @@ import type { ChapterLook } from '../chapterArt';
 import { t } from '../i18n';
 import type { Reward, Tab } from '../meta/progress';
 import type { NextStep } from '../meta/waiting';
-import type { RunRank } from '../net/backend';
 import type { IconSheet } from './buildBar';
 import type { DownInfo } from './deathInfo';
 import { menuCover } from './lobbyBars';
 import { nextStepPart, previewPart } from './resultsNext';
-import { fallPart, headerPart, newsLines, rewardsPart, type Part } from './resultsParts';
+import { fallPart, headerPart, newsLines, rewardsPart, type Part, type RankNote } from './resultsParts';
 import { unlocksPart } from './resultsUnlocks';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
 import type { Screen, UiFrame } from './uiLayout';
@@ -60,7 +59,7 @@ export class ResultsScreen implements Screen {
   readonly view = new Container();
   private frame: UiFrame | null = null;
   private offer: Offer = 'hidden';
-  private rank: RunRank | null = null;
+  private rank: RankNote = null;
   private age = 0;
   /** The parts in reveal order with where each rests, and the copper count with its part. */
   private parts: [Container, number][] = [];
@@ -74,7 +73,7 @@ export class ResultsScreen implements Screen {
     private readonly waves: number,
     private readonly actions: ResultsActions,
     adAvailable: Promise<boolean>,
-    rank: Promise<RunRank | null>,
+    rank: Promise<RankNote>,
     /** What felled the hero, for a lost run. */
     private readonly fall: DownInfo | null = null,
     private readonly icons: IconSheet = new Map(),
@@ -83,7 +82,7 @@ export class ResultsScreen implements Screen {
     /** The lobby's baked menu courtyard (menuBackdrop) to sit on; null for the flat background. */
     private readonly backdrop: Texture | null = null,
   ) {
-    // the leaderboard badge comes in when the server answers; offline or unranked runs have none
+    // the leaderboard badge, or why the run has none, comes in when the server answers; offline or unranked runs have none
     void rank.then((r) => {
       if (r && !this.view.destroyed) {
         this.rank = r;

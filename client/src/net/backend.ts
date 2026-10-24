@@ -2,17 +2,23 @@ import type { BoardName, BoardReply, ChallengeBoardReply, ChallengeList, Challen
 import type { Sharing } from '../meta/privacy';
 import type { Platform } from '../platform/types';
 import { THEME } from '../theme';
+import { BoardOutbox } from './boardOutbox';
 import { EventQueue, newId } from './events';
 
 // The game's link to its backend (server/README.md): analytics batches, leaderboard runs and
 // problem reports. Everything here is best effort: a failed send is retried later or dropped,
 // never in the way of the game (only a report says whether it went through). The player's privacy
 // answer (meta/privacy.ts) sets what may go out: with sharing held, events wait on the device; off,
-// they are dropped; either way no run, name, replay or install id leaves it. A problem report,
-// sent only when the player asks for it, always goes.
+// they are dropped; either way no event, collected replay or install id with them leaves it. The
+// boards are part of the game the player plays, not its statistics, so their own switch
+// (settings.boards, on unless turned off) alone decides whether runs and names go to them; a board
+// run the server has not answered waits on the device (boardOutbox.ts) and goes again. A problem
+// report, sent only when the player asks for it, always goes.
 
 /** Seconds between two analytics sends while the game runs. */
 const FLUSH_EVERY = 20;
+/** Unanswered board runs go again every this many analytics sends. */
+const RESEND_EVERY = 3;
 const TIMEOUT_MS = 8000;
 /** A report carries a replay of up to a few MB, so it gets longer on a slow phone. */
 const REPORT_TIMEOUT_MS = 45_000;
@@ -54,9 +60,18 @@ export interface RunRank {
   status?: 'pending' | 'lower' | 'unverified';
 }
 
+/**
+ * Why a run got no rank: the boards are switched off (`off`), the server has not answered yet and
+ * the run waits to go again (`queued`), or the server could not check it (`unverified`).
+ */
+export type RunMiss = 'off' | 'queued' | 'unverified';
+
 export class Backend {
   private id: string | null = null;
   private sharing: Sharing = 'send';
+  private boards = true;
+  private resending = false;
+  private ticks = 0;
   private readonly session = newId(Math.random);
   private readonly queue = new EventQueue();
   private sending = false;
@@ -72,9 +87,13 @@ export class Backend {
     private readonly base: string | null,
     private readonly build: string,
     private readonly locale: () => string,
+    private readonly outbox = new BoardOutbox(),
   ) {
     if (!base) return;
-    setInterval(() => void this.flush(), FLUSH_EVERY * 1000);
+    setInterval(() => {
+      void this.flush();
+      if (++this.ticks % RESEND_EVERY === 0) void this.resendBoards();
+    }, FLUSH_EVERY * 1000);
     platform.onHide(() => {
       if (this.leave) this.track('leave', this.leave());
       for (const cb of this.hidden) cb();
@@ -83,7 +102,7 @@ export class Backend {
   }
 
   /** The install's random id, made and kept the first time something needs it: a player who
-   *  never shares has none stored. */
+   *  neither shares nor plays on the boards has none stored. */
   get install(): string {
     if (this.id) return this.id;
     let id = this.platform.storage.getItem(INSTALL_KEY);
@@ -100,6 +119,18 @@ export class Backend {
     this.platform.analytics?.share(s !== 'off');
     if (s === 'off') this.queue.clear();
     if (s === 'send') void this.flush();
+  }
+
+  /** Whether runs and names go to the boards; off, the runs waiting are dropped. */
+  setBoards(on: boolean): void {
+    this.boards = on;
+    if (!on) this.outbox.clear();
+    else void this.resendBoards();
+  }
+
+  /** Whether a run for `board` waits to go again. */
+  boardQueued(board: string): boolean {
+    return this.boards && this.outbox.waiting(board);
   }
 
   /** Says where the player is each time the game goes to the background (the `leave` event, sent at once). */
@@ -192,19 +223,44 @@ export class Backend {
 
   /**
    * Enters a finished run on its board with its replay, which the server re-simulates before the
-   * run shows (a run without one is not kept); the reply has the install's rank there, or null offline.
+   * run shows (a run without one is not kept); the reply has the install's rank there, why it has
+   * none, or null offline or with no place on the board.
    */
-  async submitRun(run: RunResult, replay: ReplayWire | null = null): Promise<RunRank | null> {
-    if (this.sharing !== 'send') return null;
+  async submitRun(run: RunResult, replay: ReplayWire | null = null): Promise<RunRank | RunMiss | null> {
+    if (!this.base) return null;
+    if (!this.boards) return 'off';
     const entry: RunPost = { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME, replay };
+    this.outbox.put(entry);
+    const r = await this.enter(entry);
+    if (r === null) return 'queued';
+    if (r === 'refused' || r.status === 'unverified') return 'unverified';
+    return typeof r.rank === 'number' && r.rank > 0 ? (r as RunRank) : null;
+  }
+
+  /** Sends the board runs the server has not answered, oldest first, until one fails again. */
+  async resendBoards(): Promise<void> {
+    if (!this.base || !this.boards || this.resending) return;
+    this.resending = true;
+    try {
+      for (const entry of this.outbox.list()) if ((await this.enter(entry)) === null) break;
+    } finally {
+      this.resending = false;
+    }
+  }
+
+  /** Posts a board run: the reply, `refused` (a 4xx), or null to try again later. Answered, it leaves the outbox. */
+  private async enter(entry: RunPost): Promise<Partial<RunRank> | 'refused' | null> {
+    const refused: string[] = [];
     const small = JSON.stringify(entry).length <= KEEPALIVE_BYTES;
-    const r = (await this.send('POST', '/v1/runs', entry, REPORT_TIMEOUT_MS, small)) as Partial<RunRank> | null;
-    return r && typeof r.rank === 'number' && r.rank > 0 ? (r as RunRank) : null;
+    const r = (await this.send('POST', '/v1/runs', entry, REPORT_TIMEOUT_MS, small, refused)) as Partial<RunRank> | null;
+    if (r === null && refused.length === 0) return null;
+    this.outbox.done(entry);
+    return r ?? 'refused';
   }
 
   /** Gives the install its name on the boards; whether the server took it. */
   async sendName(name: BoardName): Promise<boolean> {
-    if (this.sharing !== 'send') return false;
+    if (!this.boards) return false;
     const entry: NameEntry = { install: this.install, host: this.platform.host, ...name };
     return (await this.send('POST', '/v1/name', entry)) !== null;
   }
@@ -228,7 +284,7 @@ export class Backend {
     return (await this.send('POST', '/v1/replays', body, REPORT_TIMEOUT_MS, JSON.stringify(body).length <= KEEPALIVE_BYTES)) !== null;
   }
 
-  /** Read as this install (with its own row) only while sharing; the top rows are anyone's. */
+  /** Read as this install (with its own row) while the boards are on; the top rows are anyone's. */
   async board(id: string): Promise<BoardReply | null> {
     return (await this.send('GET', `/v1/boards/${id}`)) as BoardReply | null;
   }
@@ -242,7 +298,7 @@ export class Backend {
   /** Sends a counted challenge run with its replay, which the server re-simulates when it would rank high. */
   /** The board's answer, `outdated` when the server's engine moved on during the run (a deploy: its record now names another), or null. */
   async submitChallengeRun(challenge: string, run: RunResult, replay: ReplayWire): Promise<ChallengeRunReply | 'outdated' | null> {
-    if (this.sharing !== 'send') return null;
+    if (!this.boards) return null;
     const body: ChallengeRun = { challenge, run: { ...run, install: this.install, host: this.platform.host, build: this.build, game: THEME }, replay };
     const refused: string[] = [];
     const r = (await this.send('POST', '/v1/challenge/runs', body, REPORT_TIMEOUT_MS, false, refused)) as Partial<ChallengeRunReply> | null;
@@ -261,7 +317,12 @@ export class Backend {
     return r && Array.isArray(r.cmds) && typeof r.tick === 'number' && typeof r.engine === 'number' ? (r as ReplayWire) : null;
   }
 
-  /** The reply's JSON ({} for an empty one), or null when anything went wrong; a 400's reason goes into `refused`. */
+  /** Whether a call names the install: a board read while the boards are on, anything else while sharing. */
+  private asInstall(path: string): boolean {
+    return path.startsWith('/v1/boards/') || path.startsWith('/v1/challenge/boards/') ? this.boards : this.sharing === 'send';
+  }
+
+  /** The reply's JSON ({} for an empty one), or null when anything went wrong; a refusal's reason (a 4xx but a timeout or the rate limit) goes into `refused`. */
   private async send(method: 'GET' | 'POST', path: string, body?: unknown, timeout = TIMEOUT_MS, keepalive = method === 'POST' && timeout === TIMEOUT_MS, refused?: string[]): Promise<unknown> {
     if (!this.base || typeof fetch !== 'function') return null;
     const abort = new AbortController();
@@ -269,15 +330,15 @@ export class Backend {
     try {
       const res = await fetch(this.base + path, {
         method,
-        headers: { ...(this.sharing === 'send' ? { 'x-hk-install': this.install } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
+        headers: { ...(this.asInstall(path) ? { 'x-hk-install': this.install } : {}), ...(body ? { 'content-type': 'application/json' } : {}) },
         body: body ? JSON.stringify(body) : undefined,
         signal: abort.signal,
         // a batch sent as the tab goes away still arrives (browsers cap keepalive bodies at 64 kB)
         keepalive,
       });
-      if (res.status === 400 && refused) {
+      if (res.status >= 400 && res.status < 500 && res.status !== 408 && res.status !== 429 && refused) {
         const why = ((await res.json().catch(() => null)) as { error?: unknown } | null)?.error;
-        if (typeof why === 'string') refused.push(why);
+        refused.push(typeof why === 'string' ? why : String(res.status));
       }
       if (!res.ok) return null;
       return res.status === 204 ? {} : await res.json();
