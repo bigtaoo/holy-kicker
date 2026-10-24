@@ -354,9 +354,9 @@ export class Shell {
     });
   }
 
-  /** A rewarded ad, counted when it paid (`at` says where it was offered), and the offer as taken or failed. */
+  /** A rewarded ad, counted when it paid (`at` says where it was offered), and the offer as taken or failed. A host that throws paid nothing: the screen waiting on it must get its answer. */
   private async rewarded(at: OfferPlace): Promise<boolean> {
-    const paid = await this.ads.rewarded();
+    const paid = await this.ads.rewarded().catch(() => false);
     if (paid) this.net.track('ad', this.ads.adFree() ? { at, free: true } : { at });
     this.net.track('offer', { at, outcome: paid ? 'taken' : 'failed' });
     return paid;
