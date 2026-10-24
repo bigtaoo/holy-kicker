@@ -36,7 +36,7 @@ mode and the act rules are new. A player who has seen everything by day 2 has no
 Open too early: all four sutras, all five relics, both monks. Spread already but invisible: the
 gear tiers. Nothing else exists to unlock: there are no cosmetics, no lobby decorations, and no
 spell or passive that is gated besides the four sutras (talisman, bomb and knives are in every
-pool, and the fixed first run deals them).
+pool, and the first run's fixed deals, `FIRST_RUN_DEALS`, rely on them).
 
 ## Proposed schedule
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newPlayer } from '../state';
 import { playChapter } from './balance';
-import { suggestCard } from './bot';
+import { steerScore, suggestCard } from './bot';
 
 // The balance bots: they must play through the real rules (picking cards, dying, winning)
 // and do so reproducibly, or the report (npm run balance) means nothing.
@@ -25,5 +25,24 @@ describe('balance bots', () => {
     p.hp = 10;
     p.offer = [{ kind: 'shrine', id: 'insight' }, { kind: 'shrine', id: 'heal' }];
     expect(suggestCard(p)).toBe(1);
+  });
+
+  it("steers a new player to the healing incense, its rice once, and healing when hurt", () => {
+    const p = newPlayer(0, 0, 0);
+    p.spells.push({ id: 'bolt', level: 2, cd: 0, evolved: false }, { id: 'incense', level: 1, cd: 0, evolved: false });
+    p.offer = [{ kind: 'spell', id: 'cymbal' }, { kind: 'passive', id: 'rice' }, { kind: 'spell', id: 'incense' }];
+    expect(suggestCard(p)).toBe(0);
+    expect(suggestCard(p, true)).toBe(2);
+    p.offer = [{ kind: 'spell', id: 'cymbal' }, { kind: 'passive', id: 'rice' }, { kind: 'spell', id: 'bolt' }];
+    expect(suggestCard(p, true)).toBe(1);
+    // the rice once: owned, it is a passive like any other
+    p.passives.push({ id: 'rice', level: 1 });
+    expect(suggestCard(p, true)).toBe(0);
+    // below half health whatever heals comes first
+    p.hp = Math.trunc(p.maxHp / 2) - 1;
+    expect(suggestCard(p, true)).toBe(1);
+    p.offer = [{ kind: 'passive', id: 'rice' }, { kind: 'evolve', id: 'incense' }, { kind: 'evolve', id: 'bolt' }];
+    expect(suggestCard(p, true)).toBe(1);
+    expect(steerScore(p, { kind: 'evolve', id: 'bolt' })).toBe(120);
   });
 });

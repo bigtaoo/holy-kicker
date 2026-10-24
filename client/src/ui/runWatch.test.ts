@@ -19,14 +19,14 @@ function fakeHud(): RunHud & { calls: Record<string, unknown[][]> } {
   }) as unknown as RunHud & { calls: Record<string, unknown[][]> };
 }
 
-function watch(teach: boolean, past?: RunPast, cam = { busy: false }, offer = { free: 0, ad: false }) {
+function watch(teach: boolean, past?: RunPast, cam = { busy: false }, offer = { free: 0, ad: false }, steer = false) {
   const game = { engine: new Engine({ ...DEFAULT_RUN, waves: 50, firstRun: teach }), paused: false, downCamBusy: () => cam.busy, pick: vi.fn() } as unknown as Game;
   const hud = fakeHud();
   const portal = { gameplayStart: vi.fn(), gameplayStop: vi.fn() } as unknown as Portal;
   const net = { track: vi.fn() } as unknown as Backend;
   const ads = { rewardedAvailable: () => Promise.resolve(offer.ad) } as unknown as Ads;
   const end = vi.fn();
-  const w = new RunWatch(game, hud, { chapter: 1, portal, ads, net, past, freeRevives: () => offer.free, kills: () => 9, keepRun: vi.fn(), end }, teach);
+  const w = new RunWatch(game, hud, { chapter: 1, portal, ads, net, past, freeRevives: () => offer.free, kills: () => 9, keepRun: vi.fn(), end, steer }, teach);
   return { game, hud, net, w, end };
 }
 
@@ -71,17 +71,17 @@ describe('RunWatch', () => {
     expect(told()).toEqual([{ step: 'move', secs: 0 }, { step: 'auto', secs: 5 }, { step: 'gems', secs: 8 }, { step: 'done', secs: 12 }]);
   });
 
-  it("takes the first run's opening cards, spells first, then deals them once the player moved", () => {
+  it("takes the first run's opening cards (the first, the one it steers to), then deals them once the player moved", () => {
     const { game, hud, w } = watch(true);
     const p = game.engine.state.players[0];
     for (let i = 0; i < BALANCE.firstRun.autoPicks; i++) {
-      p.offer = [{ kind: 'passive', id: 'iron' }, { kind: 'spell', id: 'palm' }, { kind: 'spell', id: 'bolt' }];
+      p.offer = [{ kind: 'passive', id: 'rice' }, { kind: 'spell', id: 'palm' }, { kind: 'spell', id: 'bolt' }];
       w.update(1 / 30);
-      expect(game.pick).toHaveBeenLastCalledWith(1);
+      expect(game.pick).toHaveBeenLastCalledWith(0);
     }
     expect(hud.calls.gained).toHaveLength(BALANCE.firstRun.autoPicks);
     expect(hud.calls.showOffer).toBeUndefined();
-    // no spell on offer: the first card
+    // before the player moved the first card is still taken
     p.offer = [{ kind: 'passive', id: 'iron' }, { kind: 'passive', id: 'eye' }, { kind: 'passive', id: 'rice' }];
     w.update(1 / 30);
     expect(game.pick).toHaveBeenLastCalledWith(0);
@@ -106,6 +106,18 @@ describe('RunWatch', () => {
     w.update(1 / 30);
     expect(game.pick).not.toHaveBeenCalled();
     expect(hud.calls.showOffer).toHaveLength(1);
+  });
+
+  it("suggests the healing incense to a new player, the bot's card to anyone else", () => {
+    const offer = () => [{ kind: 'spell', id: 'palm' }, { kind: 'spell', id: 'bolt' }, { kind: 'spell', id: 'incense' }];
+    for (const [steer, card] of [[true, 2], [false, 0]] as const) {
+      const { game, hud, w } = watch(false, undefined, undefined, undefined, steer);
+      const p = game.engine.state.players[0];
+      p.spells.push({ id: 'incense', level: 1, cd: 0, evolved: false }, { id: 'bolt', level: 1, cd: 0, evolved: false });
+      p.offer = offer() as typeof p.offer;
+      w.update(1 / 30);
+      expect(hud.calls.showOffer[0][2]).toBe(card);
+    }
   });
 
   it('teaches nothing on a later run', () => {
