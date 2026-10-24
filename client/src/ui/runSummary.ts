@@ -1,5 +1,6 @@
-import { TICK_RATE, type SimState } from '@hk/engine';
+import type { SimState } from '@hk/engine';
 import type { SceneOptions } from '../game/scene';
+import { tenthsOf } from './clearTime';
 
 // The pure parts of a run's start and end (runFlow.ts): which runs are kept for the next launch,
 // and what an ended run counts for.
@@ -18,7 +19,7 @@ export function clearedWaves(s: SimState): number {
 export function runSummary(s: SimState, chapter: number, hard: boolean, kills: number) {
   const p = s.players[0];
   return {
-    chapter, hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: Math.round((s.tick * 10) / TICK_RATE),
+    chapter, hard, won: s.outcome === 'won', wave: Math.max(1, s.wave), tenths: tenthsOf(s.tick),
     level: p.level, kills, monk: p.monk, relic: p.relicId,
   };
 }

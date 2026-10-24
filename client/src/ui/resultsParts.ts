@@ -5,6 +5,7 @@ import type { Drop } from '../meta/gear';
 import type { Reward } from '../meta/progress';
 import type { RunRank } from '../net/backend';
 import { iconSprite, type IconSheet } from './buildBar';
+import { clockTenths, verdict } from './clearTime';
 import type { DownInfo } from './deathInfo';
 import { goalText } from './downPanel';
 import { fallFigures, fallIcon } from './fallIcons';
@@ -59,10 +60,20 @@ export function headerPart(r: Reward, waves: number, rank: RunRank | null, width
       top = 530;
     }
   }
-  // the best (or a new one) and the leaderboard place, side by side under the number
+  // a won run's time, as the boards count it
+  if (r.time) {
+    const time = fit(label(t('results.time', { time: clockTenths(r.time.tenths) }), 56, COLORS.text), width);
+    time.y = top + 34;
+    c.addChild(time);
+    top += 76;
+  }
+  // the best (or a new one), the time against the best time and the leaderboard place, side by side under the number
   const badges: Container[] = [];
   if (r.newBest) badges.push(pill(t('results.newBest'), COLORS.gold, 48));
   else if (!won && r.best > 0) badges.push(pill(t('results.best', { wave: r.best }), COLORS.dim));
+  const v = r.time ? verdict(r.time.tenths, r.time.best) : null;
+  if (v?.kind === 'faster') badges.push(pill(t('results.timeFaster', { s: v.s }), COLORS.gold, 48));
+  else if (v) badges.push(pill(t('results.timeBest', { time: v.best }), COLORS.dim));
   if (rank) badges.push(rankPill(rank));
   if (badges.length === 0) return [c, top];
   const row = new Container();

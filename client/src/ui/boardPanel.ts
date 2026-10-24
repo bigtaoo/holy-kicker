@@ -4,6 +4,7 @@ import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
 import { THEME } from '../theme';
 import type { IconSheet } from './buildBar';
+import { clockTenths } from './clearTime';
 import { chosenTimeline, markMedal, topRows, watchButton, type WatchTop, type WeeklyBoardState } from './weeklyBoard';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
@@ -49,9 +50,7 @@ export function rowName(r: Pick<BoardRow, 'name' | 'dice' | 'tag'>): string {
  * clears rank by time, so the tenth splits runs within a second), else the wave it fell on.
  */
 export function resultOf(r: Pick<BoardRow, 'won' | 'wave' | 'tenths'>): string {
-  if (!r.won) return t('board.wave', { wave: r.wave });
-  const s = Math.floor(r.tenths / 10);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}.${r.tenths % 10}`;
+  return r.won ? clockTenths(r.tenths) : t('board.wave', { wave: r.wave });
 }
 
 /** A board to open: its id, its title and the line under it, and the title's colour. */

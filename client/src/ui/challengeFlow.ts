@@ -73,6 +73,8 @@ export interface ChallengeSettled {
   weekly?: { before: number };
   /** A daily made up on the device: the day's best waves before this run. */
   local?: { before: number };
+  /** A run that cleared every wave: its time in tenths of a simulated second (runFlow fills it in). */
+  time?: number | null;
 }
 
 export class ChallengeFlow {

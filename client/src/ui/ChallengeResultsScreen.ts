@@ -6,6 +6,7 @@ import { BALANCE } from '../meta/balance';
 import { milestonePay, type ChallengeReward } from '../meta/challenge';
 import type { ChallengeSettled } from './challengeFlow';
 import { iconSprite, type IconSheet } from './buildBar';
+import { clockTenths } from './clearTime';
 import { menuCover } from './lobbyBars';
 import { blockTop } from './ResultsScreen';
 import { panelKey } from './panelKeys';
@@ -49,6 +50,8 @@ export class ChallengeResultsScreen implements Screen {
   private readonly weekly: { before: number } | undefined;
   /** A daily made up on the device: the day's best waves before it. */
   private readonly local: { before: number } | undefined;
+  /** A run that cleared every wave: its time in tenths of a simulated second, as the boards count it. */
+  private readonly time: number | null;
 
   constructor(
     run: ChallengeSettled,
@@ -60,6 +63,7 @@ export class ChallengeResultsScreen implements Screen {
     private readonly backdrop: Texture | null = null,
   ) {
     ({ reward: this.reward, chapter: this.chapter, waves: this.waves, hours: this.hours, weekly: this.weekly, local: this.local } = run);
+    this.time = run.time ?? null;
     const reward = this.reward;
     void run.reply.then((r) => {
       if (r && !this.view.destroyed) {
@@ -147,6 +151,7 @@ export class ChallengeResultsScreen implements Screen {
       add(t('challenge.outdated'), 48, COLORS.dim, y + 30);
       y += 170;
     }
+    y = this.timeLine(add, y);
     add(t('challenge.next', { h: this.hours }), 48, COLORS.text, y);
     return c;
   }
@@ -172,8 +177,16 @@ export class ChallengeResultsScreen implements Screen {
       add(t('challenge.outdated'), 48, COLORS.dim, y + 30);
       y += 170;
     }
+    y = this.timeLine(add, y);
     add(t('weekly.after'), 48, COLORS.text, y);
     return c;
+  }
+
+  /** A cleared run's time at `y`; the y under it. */
+  private timeLine(add: (text: string, size: number, fill: number, y: number) => void, y: number): number {
+    if (this.time === null) return y;
+    add(t('results.time', { time: clockTenths(this.time) }), 52, COLORS.text, y);
+    return y + 84;
   }
 
   /** The four milestones as round badges, the reached ones lit jade (done), each with its copper under it. */
