@@ -17,6 +17,8 @@ export interface FakeHost {
   /** The iOS app's reminders and hot updates (testkit/iosHost.ts). */
   notify?: Notifier;
   updates?: AppUpdates;
+  /** The phone can buzz: each buzz is recorded in `calls` as `vibrate` or `vibrate strong`. */
+  vibrate?: boolean;
 }
 
 export type FakePlatform = Platform & { calls: string[]; hide(): void; press(code: string, repeat?: boolean): void };
@@ -59,5 +61,6 @@ export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): 
     openUrl: (url) => void calls.push(`open ${url}`),
     ...(host.notify && { notify: host.notify }),
     ...(host.updates && { updates: host.updates }),
+    ...(host.vibrate && { vibrate: (strong: boolean) => void calls.push(strong ? 'vibrate strong' : 'vibrate') }),
   };
 }
