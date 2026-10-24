@@ -34,7 +34,7 @@ export const monkPt: Table<typeof monkEn> = {
       crowd: { cause: 'Engolido pela horda', tip: 'Contorne a horda, não entre nela' },
       touch: { cause: 'Esmagado por um inimigo grande', tip: 'Fique longe de elites e chefes: deixe sua relíquia acertá-los' },
       emerge: { cause: 'Agarrado por baixo', tip: 'Chão rachado é inimigo surgindo: saia das rachaduras' },
-      level: { cause: 'Fraco demais para a onda {wave}', tip: 'Pegue cada gema: níveis vencem as últimas ondas' },
+      level: { cause: 'Fraco demais para a onda {wave}', tip: 'Pegue todas as gemas: os níveis decidem as últimas ondas' },
     },
     goal: {
       shrine: 'Só mais {n} até o santuário da onda {wave}',
@@ -70,7 +70,7 @@ export const monkPt: Table<typeof monkEn> = {
     },
   },
   evolve: {
-    ball: { name: 'Bola Meteoro', desc: 'Divide-se em {n} a cada quique' },
+    ball: { name: 'Bola Meteoro', desc: 'Se divide em {n} a cada quique' },
     staff: { name: 'Bastão Ruyi' },
     fish: { name: 'Sino Atordoante', desc: 'A cada {n} toques, atordoa por {s}s' },
     beads: { name: '108 Contas', desc: 'Um segundo anel gira ao contrário' },
@@ -82,7 +82,7 @@ export const monkPt: Table<typeof monkEn> = {
     cymbal: { name: 'Roda de Pratos', desc: '{n} pratos giram ao seu redor para sempre e lançam mais' },
     lotus: { name: 'Caminho de Lótus', desc: 'Um lótus a cada passo, as flores puxam gemas' },
     halo: { name: 'Luz Infinita', desc: '{n} raios giram ao seu redor e disparam agulhas' },
-    roar: { name: 'Rugido Trovão', desc: 'Ruge em toda a volta, destrói projéteis' },
+    roar: { name: 'Rugido do Trovão', desc: 'Ruge em toda a volta, destrói projéteis' },
     talisman: { name: 'Selo Celestial', desc: 'Cada talismã que acerta explode num selo' },
     bomb: { name: 'Chuva de Trovões', desc: 'Lança {n} bombas de uma vez, em inimigos diferentes' },
     knives: { name: 'Mil Lâminas', desc: 'As facas lançadas voltam para você, cortando na ida e na volta' },
@@ -234,7 +234,7 @@ export const monkPt: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Colete da patrulha',
     kills: 'Derrote {n} {n|one:inimigo|other:inimigos}',
-    reward: 'Cada: {copper} cobre, {jade} jade',
+    reward: 'Cada uma: {copper} cobre, {jade} jade',
     bonus: 'Tudo resgatado: +{jade} jade',
   },
   achieve: {

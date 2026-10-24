@@ -8,7 +8,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     guest: '신병',
     chapterTitle: '행성 {n}: {name}',
     unlockAtChapter: '행성 {n} 클리어 시 해금',
-    hardLocked: '이 행성을 별 3개로 클리어하면 어려움 모드가 열립니다',
+    hardLocked: '이 행성을 별 3개로 클리어하면 어려움 모드가 열려요',
     relic: '무기',
   },
   monk: {
@@ -32,7 +32,7 @@ export const corgiKo: Table<typeof corgiEn> = {
   run: {
     reviveFree: '부활 (부트캠프)',
     fall: {
-      crowd: { cause: '벌레 떼에 휩쓸림', tip: '무리 주위를 돌아요, 안으로 들어가지 마세요' },
+      crowd: { cause: '벌레 떼에 휩쓸림', tip: '무리 주위를 돌고, 안으로 들어가지 마세요' },
       touch: { cause: '거대한 벌레에게 짓눌림', tip: '정예와 보스에게서 떨어져 무기가 때리게 하세요' },
       emerge: { cause: '땅속에서 붙잡힘', tip: '갈라진 땅은 벌레가 파고 올라온다는 뜻: 균열에서 벗어나세요' },
       level: { cause: '{wave} 웨이브에는 레벨 부족', tip: '간식을 모두 주우세요: 후반은 레벨 싸움이에요' },
@@ -84,9 +84,9 @@ export const corgiKo: Table<typeof corgiEn> = {
     lotus: { name: '자석 지뢰', desc: '걸음마다 지뢰, 폭발하며 간식을 끌어옴' },
     halo: { name: '레이저 그리드', desc: '레이저 {n}줄이 주위를 돌며 광탄을 쏨' },
     roar: { name: '소닉 바크', desc: '사방으로 짖어 탄환을 부숨' },
-    talisman: { name: '미사일 폭풍', desc: '명중한 미사일이 터져 주변 벌레까지 휩쓴다' },
-    bomb: { name: '융단 폭격', desc: '수류탄 {n}개를 한 번에 서로 다른 벌레에게 던진다' },
-    knives: { name: '칼날 폭풍', desc: '날린 칼이 돌아와 오가며 벤다' },
+    talisman: { name: '미사일 폭풍', desc: '명중한 미사일이 터져 주변 벌레까지 휩씀' },
+    bomb: { name: '융단 폭격', desc: '수류탄 {n}개를 한 번에 서로 다른 벌레에게 던짐' },
+    knives: { name: '칼날 폭풍', desc: '날린 칼이 돌아와 오가며 벰' },
   },
   shrine: {
     heal: { name: '구급 키트' },
@@ -114,14 +114,14 @@ export const corgiKo: Table<typeof corgiEn> = {
     knives: { name: '나이프 링', desc: '칼 최대 {n}자루가 주위를 돌다 한꺼번에 날아감', count: '칼 {a} → {b}' },
   },
   passive: {
-    calm: { name: '냉각수', desc: '가젯 재사용 대기 −{n}%', blurb: '가젯을 더 빨리 다시 쓴다' },
+    calm: { name: '냉각수', desc: '가젯 재사용 대기 −{n}%', blurb: '가젯을 더 빨리 다시 써요' },
     iron: { name: '장갑판' },
     legs: { name: '제트 부츠' },
-    eye: { name: '광각 렌즈', desc: '가젯 범위 +{n}%', blurb: '가젯이 더 넓게 맞힌다' },
+    eye: { name: '광각 렌즈', desc: '가젯 범위 +{n}%', blurb: '가젯 범위가 넓어져요' },
     rice: { name: '사료' },
     wrath: { name: '조준경' },
     karma: { name: '간식 자석' },
-    focus: { name: '배터리', desc: '가젯 지속 +{n}%, 피격 후 무적 +{m}%', blurb: '가젯이 오래가고, 맞은 뒤 더 안전' },
+    focus: { name: '배터리', desc: '가젯 지속 +{n}%, 피격 후 무적 +{m}%', blurb: '가젯이 오래가고, 맞은 뒤 더 안전해요' },
   },
   boss: {
     abbot: '타이탄 딱정벌레',
@@ -163,7 +163,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     },
     c5: {
       midBefore: '나 같은 두뇌는 절대 꺼지지 않는다!',
-      midAfter: '전원 off.',
+      midAfter: '전원 꺼짐.',
       bossBefore: '여기까지 날아와 찾던 게 바로 나다. 나는 너, 업그레이드판이지.',
       bossAfter: '성질 고약한 복제품일 뿐이었네. 이제 간식 먹으러 집에 가자.',
     },
@@ -269,7 +269,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     3: '영웅',
     4: '전설',
     5: '신화',
-    6: '성휘',
+    6: '별빛',
     7: '우주',
   },
   stat: {

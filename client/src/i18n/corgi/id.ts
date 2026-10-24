@@ -33,7 +33,7 @@ export const corgiId: Table<typeof corgiEn> = {
     reviveFree: 'Bangkit (Kamp Latihan)',
     fall: {
       crowd: { cause: 'Dikepung kawanan serangga', tip: 'Kitari kawanan, jangan masuk ke dalamnya' },
-      touch: { cause: 'Digencet serangga besar', tip: 'Jauhi elite dan bos: biarkan senjatamu yang memukul' },
+      touch: { cause: 'Digencet serangga besar', tip: 'Jauhi elit dan bos: biarkan senjatamu yang memukul' },
       emerge: { cause: 'Ditangkap dari bawah', tip: 'Tanah retak berarti serangga menggali naik: menjauh dari retakan' },
       level: { cause: 'Terlalu lemah untuk gelombang {wave}', tip: 'Ambil semua camilan: level memenangkan gelombang akhir' },
     },
@@ -47,13 +47,13 @@ export const corgiId: Table<typeof corgiEn> = {
     nouns: 'Corgi|Komet|Roket|Anjing Kecil|Nova|Biskuit|Meteor|Piksel|Anak Kucing|Orbit|Kerikil|Penjelajah|Bintang|Bulan|Laser|Bagel',
   },
   challenge: {
-    rule2: 'Perlengkapan dan senjatamu sendiri, tanpa bangkit lagi',
+    rule2: 'Perlengkapan dan senjatamu sendiri, tanpa bangkit',
   },
   mutator: {
     swift: 'Kawanan gesit', swiftInfo: 'kawanan serangga bergerak lebih cepat', glass: 'Corgi kaca',
   },
   weekly: {
-    rule1: 'Semua main dengan pahlawan, senjata, dan cetak biru yang sama', rule2: 'Tanpa perlengkapan, kamp latihan, atau hidup lagi',
+    rule1: 'Semua main dengan pahlawan, senjata, dan cetak biru yang sama', rule2: 'Tanpa perlengkapan, kamp latihan, atau bangkit',
   },
   tutorial: {
     auto: 'Senjatamu menembak otomatis',
@@ -91,7 +91,7 @@ export const corgiId: Table<typeof corgiEn> = {
   shrine: {
     heal: { name: 'Kotak P3K' },
     insight: { name: 'Intel' },
-    offering: { name: 'Hadiah Perburuan', desc: 'Bertahan sampai suplai berikut atau akhir:', more: 'baut sesi ini +{n}%' },
+    offering: { name: 'Hadiah Perburuan', desc: 'Bertahan sampai suplai berikut atau akhir:', more: 'baut permainan ini +{n}%' },
   },
   relic: {
     ball: { name: 'Blaster Pantul', desc: 'Menembakkan peluru yang memantul di antara serangga' },
@@ -236,7 +236,7 @@ export const corgiId: Table<typeof corgiEn> = {
     patrol: 'Ambil hasil patroli',
     kills: 'Hancurkan {n} serangga',
     reward: 'Tiap tugas: {copper} baut, {jade} permata',
-    bonus: 'Semua diklaim: +{jade} permata',
+    bonus: 'Semua diambil: +{jade} permata',
   },
   achieve: {
     kills: 'Hancurkan total {n} serangga',
@@ -245,7 +245,7 @@ export const corgiId: Table<typeof corgiEn> = {
     trained: 'Berlatih {n} kali di Kamp Latihan',
     monks: 'Miliki semua {n} pahlawan',
     reward: '+{jade} permata',
-    claimAll: 'Klaim semua: +{jade} permata',
+    claimAll: 'Ambil semua: +{jade} permata',
   },
   haul: {
     copper: 'Baut +{n}',

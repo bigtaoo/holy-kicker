@@ -34,7 +34,7 @@ export const monkJa: Table<typeof monkEn> = {
       crowd: { cause: '群れに飲み込まれた', tip: '群れの周りを回ろう、突っ込まないで' },
       touch: { cause: '強敵に押し潰された', tip: 'エリートやボスから離れて、法具に任せよう' },
       emerge: { cause: '地中から掴まれた', tip: '地面のひびは敵が出てくる印：ひびから離れよう' },
-      level: { cause: 'ウェーブ {wave} にはレベル不足', tip: '宝石は全部拾おう：後半はレベルが勝負' },
+      level: { cause: 'ウェーブ {wave} にはレベル不足', tip: 'ジェムは全部拾おう：後半はレベルが勝負' },
     },
     goal: {
       shrine: 'あと {n} でウェーブ {wave} の祠',
@@ -52,7 +52,7 @@ export const monkJa: Table<typeof monkEn> = {
     swift: '俊足の群れ', swiftInfo: '敵の群れの移動が速い', glass: 'ガラスの体',
   },
   weekly: {
-    rule1: '全員が同じ一戦：同じ敵、同じ僧・法具・術', rule2: '装備・修行・復活なし',
+    rule1: '全員が同じ条件：同じ敵、同じ武僧・法具・術', rule2: '装備・修行・復活なし',
   },
   tutorial: {
     auto: 'キックは自動で出る',
@@ -108,9 +108,9 @@ export const monkJa: Table<typeof monkEn> = {
     lotus: { name: '蓮歩', desc: '歩くと蓮の種をまき、咲くと花びらが飛ぶ' },
     halo: { name: '仏光', desc: '光線が回り光の針を放つ、立ち止まると長くなる', count: '光線 {a} → {b}本' },
     roar: { name: '獅子吼', desc: '最も近い敵へ吼え、敵を押し返す' },
-    talisman: { name: '降魔符', desc: '{n} 枚の符がそれぞれ別の敵を追う', count: '符 {a} → {b}' },
-    bomb: { name: '霹靂火', desc: '投げた爆弾が {n} 個の子爆弾に弾ける', count: '子爆弾 {a} → {b}' },
-    knives: { name: '戒刀陣', desc: '最大 {n} 本の刀が周りを回り、揃うと一斉に飛ぶ', count: '刀 {a} → {b}' },
+    talisman: { name: '降魔符', desc: '{n}枚の符がそれぞれ別の敵を追う', count: '符 {a} → {b}' },
+    bomb: { name: '霹靂火', desc: '投げた爆弾が{n}個の子爆弾に弾ける', count: '子爆弾 {a} → {b}' },
+    knives: { name: '戒刀陣', desc: '最大{n}本の刀が周りを回り、揃うと一斉に飛ぶ', count: '刀 {a} → {b}' },
   },
   passive: {
     calm: { name: '禅心', desc: '術のクールダウン −{n}%', blurb: '術がより早く使える' },
@@ -196,7 +196,7 @@ export const monkJa: Table<typeof monkEn> = {
     sutra: '解放条件：{goal}',
   },
   sutra: {
-    wave: 'いずれかの章でウェーブ{n}に到達',
+    wave: 'いずれかの章でウェーブ {n}に到達',
     clear: '第{n}章をクリア',
   },
   results: {
@@ -214,12 +214,12 @@ export const monkJa: Table<typeof monkEn> = {
     doubled: '銅銭が2倍に！',
   },
   shop: {
-    jade: '玉の箱',
+    jade: '玉の宝箱',
     freeInfo: '銅銭{copper}と装備{n}個',
     adInfo: '玉{jade}と装備{n}個',
     jadeInfo: '第{chapter}章の装備{n}個',
     price: '玉{jade}',
-    noJade: '玉が足りない',
+    noJade: '玉が足りません',
   },
   patrol: {
     title: '巡回',
@@ -251,7 +251,7 @@ export const monkJa: Table<typeof monkEn> = {
     jade: '玉 +{n}',
   },
   gear: {
-    noCopper: '銅銭が足りない',
+    noCopper: '銅銭が足りません',
     item: {
       pendant: '玉佩',
       bracers: '鉄の籠手',

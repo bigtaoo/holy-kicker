@@ -73,7 +73,8 @@ export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Conta
   card.addChild(back);
   const progress = track(save, hard);
   const name = chapterName(n);
-  const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text, CARD_STROKE), 640);
+  // one line only: a second would cover the line under it, so a long name shrinks instead
+  const title = fit(label(hard ? t('lobby.hardTitle', { n, name }) : t('lobby.chapterTitle', { n, name }), 64, hard ? COLORS.danger : COLORS.text, CARD_STROKE), 640, 100);
   title.y = 70;
   // a cleared chapter shows its stars; otherwise the wave the best run reached (the save keeps
   // waves cleared, the chests count those; the leaderboard and the HUD name the wave reached)

@@ -4,7 +4,7 @@ import type { monkEn } from './en';
 // Holy Kicker in Polish: the same keys as monk/en.ts.
 export const monkPl: Table<typeof monkEn> = {
   lobby: {
-    guest: 'Mnich',
+    guest: 'Mały mnich',
     chapterTitle: 'Rozdział {n}: {name}',
     unlockAtChapter: 'Ukończ rozdział {n}, by odblokować',
     hardLocked: 'Ukończ ten rozdział na 3 gwiazdki, by otworzyć tryb trudny',
@@ -31,7 +31,7 @@ export const monkPl: Table<typeof monkEn> = {
   run: {
     reviveFree: 'Wskrześ (trening)',
     fall: {
-      crowd: { cause: 'Zalany przez hordę', tip: 'Okrążaj hordę, nie wchodź w nią' },
+      crowd: { cause: 'Stratowany przez hordę', tip: 'Okrążaj hordę, nie wchodź w nią' },
       touch: { cause: 'Zmiażdżony przez wielkiego wroga', tip: 'Trzymaj się z dala od elit i bossów: niech bije je relikwia' },
       emerge: { cause: 'Złapany od spodu', tip: 'Pęknięta ziemia to wróg, który wychodzi: zejdź z pęknięć' },
       level: { cause: 'Za słaby na falę {wave}', tip: 'Zbieraj każdy klejnot: poziomy wygrywają późne fale' },
@@ -52,7 +52,7 @@ export const monkPl: Table<typeof monkEn> = {
     swift: 'Szybka horda', swiftInfo: 'horda porusza się szybciej', glass: 'Szklany mnich',
   },
   weekly: {
-    rule1: 'Wszyscy grają tę samą rozgrywkę: ci sami wrogowie, mnich, relikt i zaklęcia', rule2: 'Bez ekwipunku, treningu i wskrzeszeń',
+    rule1: 'Wszyscy grają tę samą rozgrywkę: ci sami wrogowie, mnich, relikwia i zaklęcia', rule2: 'Bez ekwipunku, treningu i wskrzeszeń',
   },
   tutorial: {
     auto: 'Twoje kopnięcia są automatyczne',
@@ -74,7 +74,7 @@ export const monkPl: Table<typeof monkEn> = {
     staff: { name: 'Kij Ruyi' },
     fish: { name: 'Ogłuszający Dzwon', desc: 'Co {n}. uderzenie ogłusza na {s}s' },
     beads: { name: '108 Paciorków', desc: 'Drugi krąg kręci się w przeciwną stronę' },
-    bowl: { name: 'Misa bez Dna', desc: 'Połyka do {n} wrogów na rzut, XP od razu' },
+    bowl: { name: 'Misa bez Dna', desc: 'Połyka {n} {n|one:wroga|few:wrogów|many:wrogów|other:wroga} na rzut, XP od razu' },
     palm: { name: 'Dłoń Góry', desc: 'Zostaje i przygważdża wrogów na {s}s' },
     bolt: { name: 'Bezkresny Łańcuch' },
     incense: { name: 'Leczące Kadzidło' },
@@ -84,7 +84,7 @@ export const monkPl: Table<typeof monkEn> = {
     halo: { name: 'Bezkresne Światło', desc: 'Promienie ({n}) krążą wokół ciebie i strzelają igłami' },
     roar: { name: 'Grzmiący Ryk', desc: 'Ryk dookoła, rozbija pociski' },
     talisman: { name: 'Niebiańska Pieczęć', desc: 'Każdy trafiający talizman wybucha pieczęcią' },
-    bomb: { name: 'Deszcz Gromów', desc: 'Rzuca {n} bomby naraz w różnych wrogów' },
+    bomb: { name: 'Deszcz Gromów', desc: 'Rzuca {n} {n|one:bombę|few:bomby|many:bomb|other:bomby} naraz w różnych wrogów' },
     knives: { name: 'Tysiąc Ostrzy', desc: 'Rzucone noże wracają do ciebie i tną w obie strony' },
   },
   shrine: {
@@ -101,15 +101,15 @@ export const monkPl: Table<typeof monkEn> = {
   },
   spell: {
     palm: { name: 'Dłoń Buddy', desc: 'Olbrzymia dłoń miażdży największy tłum', count: 'Dłonie {a} → {b}' },
-    bolt: { name: 'Piorun Wadżry', desc: 'Błyskawica przeskakuje przez {n} wrogów' },
+    bolt: { name: 'Piorun Wadżry', desc: 'Błyskawica przeskakuje przez {n} {n|one:wroga|few:wrogów|many:wrogów|other:wroga}' },
     incense: { name: 'Krąg Kadzidła', desc: 'U twoich stóp płonie krąg przez {s}s' },
     bell: { name: 'Złoty Dzwon', desc: 'Co {s}s blokuje cios, po czym wybucha' },
     cymbal: { name: 'Latające Cymbały', desc: 'Cymbały ({n}) wylatują, przebijają i odbijają się', count: 'Cymbały {a} → {b}' },
     lotus: { name: 'Kroki Lotosu', desc: 'Idąc, siejesz lotosy, które kwitnąc, rozrzucają płatki' },
     halo: { name: 'Promień Aureoli', desc: 'Promień krąży i strzela igłami, dłuższy, gdy stoisz', count: 'Promienie {a} → {b}' },
     roar: { name: 'Ryk Lwa', desc: 'Okrzyk w stronę najbliższego wroga odpycha wrogów' },
-    talisman: { name: 'Talizmany Pieczęci', desc: '{n} talizmanów goni różnych wrogów', count: 'Talizmany {a} → {b}' },
-    bomb: { name: 'Ogień Gromu', desc: 'Rzucona bomba rozpada się na {n} bombek', count: 'Bombki {a} → {b}' },
+    talisman: { name: 'Talizmany Pieczęci', desc: '{n} {n|one:talizman goni|few:talizmany gonią|many:talizmanów goni|other:talizmanu goni} różnych wrogów', count: 'Talizmany {a} → {b}' },
+    bomb: { name: 'Ogień Gromu', desc: 'Rzucona bomba rozpada się na {n} {n|one:bombkę|few:bombki|many:bombek|other:bombki}', count: 'Bombki {a} → {b}' },
     knives: { name: 'Krąg Ostrzy', desc: 'Do {n} noży krąży wokół ciebie, potem wylatują', count: 'Noże {a} → {b}' },
   },
   passive: {
@@ -223,7 +223,7 @@ export const monkPl: Table<typeof monkEn> = {
   },
   patrol: {
     title: 'Patrol',
-    stored: 'Na patrolu: {time} z {cap}h',
+    stored: 'Na patrolu: {time} z {cap} godz.',
     tooSoon: 'Najpierw patroluj trochę dłużej',
     quick: 'Szybki patrol',
     quickAd: 'Szybki (zostało: {n})',
@@ -233,12 +233,12 @@ export const monkPl: Table<typeof monkEn> = {
   },
   tasks: {
     patrol: 'Odbierz z patrolu',
-    kills: 'Pokonaj wrogów: {n}',
-    reward: 'Każde: {copper} miedzi, {jade} jadeitu',
+    kills: 'Pokonaj {n} {n|one:wroga|few:wrogów|many:wrogów|other:wroga}',
+    reward: 'Za każde: {copper} miedzi, {jade} jadeitu',
     bonus: 'Wszystko odebrane: +{jade} jadeitu',
   },
   achieve: {
-    kills: 'Pokonaj łącznie wrogów: {n}',
+    kills: 'Pokonaj łącznie {n} {n|one:wroga|few:wrogów|many:wrogów|other:wroga}',
     clear: 'Ukończ rozdział {n}',
     hard: 'Ukończ trudny rozdział {n}',
     trained: 'Trenuj {n} {n|one:raz|few:razy|many:razy|other:razy}',

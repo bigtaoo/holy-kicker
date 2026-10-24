@@ -53,7 +53,7 @@ export const corgiZh: Table<typeof corgiEn> = {
     swift: '疾行虫潮', swiftInfo: '虫子移动更快', glass: '玻璃柯基',
   },
   weekly: {
-    rule1: '所有人用同样的英雄、武器和蓝图', rule2: '不带装备、不算训练营、不能复活',
+    rule1: '所有人用同样的英雄、武器和蓝图', rule2: '不带装备，没有训练营加成，不能复活',
   },
   tutorial: {
     auto: '武器会自动开火',
@@ -73,7 +73,7 @@ export const corgiZh: Table<typeof corgiEn> = {
   evolve: {
     ball: { name: '碎星炮', desc: '每次弹射分裂成 {n} 发子弹' },
     staff: { name: '双刃光剑' },
-    fish: { name: '震荡核心', desc: '每第 {n} 圈脉冲眩晕 {s} 秒' },
+    fish: { name: '震荡核心', desc: '每 {n} 圈脉冲有一圈眩晕虫子 {s} 秒' },
     beads: { name: '无人机群', desc: '外圈再多一队无人机，反向旋转' },
     bowl: { name: '锯刃风暴', desc: '每次带走 {n} 只虫子，经验立刻到手' },
     palm: { name: '轨道齐射', desc: '弹坑留在原地，定住虫子 {s} 秒' },
@@ -183,7 +183,7 @@ export const corgiZh: Table<typeof corgiEn> = {
     },
     a4: {
       open: '老朋友们，开机。小狗回来了。',
-      midBefore: '他把我从废料堆里重启了。再来一局！',
+      midBefore: '他把我从废料堆里重启了。再打一场！',
       midAfter: '关机吧，你该歇歇了。',
       bossBefore: '我们都为你回来了，一个接一个。',
       bossAfter: '一个接一个地回来。他就在不远处了。',

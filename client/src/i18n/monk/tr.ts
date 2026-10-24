@@ -32,9 +32,9 @@ export const monkTr: Table<typeof monkEn> = {
     reviveFree: 'Diril (talim)',
     fall: {
       crowd: { cause: 'Sürüye boğuldun', tip: 'Sürünün etrafında dön, içine yürüme' },
-      touch: { cause: 'Büyük bir düşman ezdi', tip: 'Seçkinlerden ve patronlardan uzak dur: kutsal eşyan vursun' },
+      touch: { cause: 'Büyük bir düşman seni ezdi', tip: 'Seçkinlerden ve patronlardan uzak dur: emanetin vursun' },
       emerge: { cause: 'Aşağıdan yakalandın', tip: 'Çatlak zemin, yükselen bir düşman demek: çatlaklardan uzaklaş' },
-      level: { cause: '{wave}. dalga için çok zayıf', tip: 'Her mücevheri topla: son dalgaları seviye kazanır' },
+      level: { cause: '{wave}. dalga için çok zayıftın', tip: 'Her mücevheri topla: son dalgaları seviye kazanır' },
     },
     goal: {
       shrine: '{wave}. dalga sunağına sadece {n} kaldı',
@@ -46,18 +46,18 @@ export const monkTr: Table<typeof monkEn> = {
     nouns: 'Keşiş|Nilüfer|Turna|Kaplan|Çam|Çan|Fener|Panda|Ejder|Söğüt|Çakıl|Maymun|Sazan|Bulut|Davul|Bambu',
   },
   challenge: {
-    rule2: 'Kendi ekipmanın ve kalıntın, diriliş yok',
+    rule2: 'Kendi ekipmanın ve emanetin, diriliş yok',
   },
   mutator: {
     swift: 'Hızlı sürü', swiftInfo: 'sürü daha hızlı hareket eder', glass: 'Cam keşiş',
   },
   weekly: {
-    rule1: 'Herkes aynı oyunu oynar: aynı düşmanlar, keşiş, kalıntı ve büyüler', rule2: 'Ekipman, antrenman ve dirilme yok',
+    rule1: 'Herkes aynı turu oynar: aynı düşmanlar, keşiş, emanet ve büyüler', rule2: 'Ekipman, talim ve diriliş yok',
   },
   tutorial: {
     auto: 'Tekmelerin otomatik',
-    gems: 'Seviye atlamak için taşları topla',
-    gather: 'Taşlar birikti! Üzerinden geç',
+    gems: 'Seviye atlamak için mücevherleri topla',
+    gather: 'Mücevherler birikti! Üzerinden geç',
   },
   card: {
     beads: 'Boncuk {a} → {b}',
@@ -80,7 +80,7 @@ export const monkTr: Table<typeof monkEn> = {
     incense: { name: 'Şifalı Tütsü' },
     bell: { name: 'Altın Beden' },
     cymbal: { name: 'Zil Çarkı', desc: '{n} zil sonsuza dek etrafında döner ve yenilerini fırlatır' },
-    lotus: { name: 'Nilüfer Yolu', desc: 'Her adımda bir nilüfer, açanlar taşları çeker' },
+    lotus: { name: 'Nilüfer Yolu', desc: 'Her adımda bir nilüfer, açanlar mücevherleri çeker' },
     halo: { name: 'Sınırsız Işık', desc: '{n} ışın etrafında döner ve iğne atar' },
     roar: { name: 'Gök Kükremesi', desc: 'Her yöne kükrer, mermileri parçalar' },
     talisman: { name: 'Gök Mührü', desc: 'İsabet eden her tılsım bir mühürle patlar' },
@@ -107,7 +107,7 @@ export const monkTr: Table<typeof monkEn> = {
     cymbal: { name: 'Uçan Ziller', desc: '{n} zil fırlar, deler geçer ve seker', count: 'Zil {a} → {b}' },
     lotus: { name: 'Nilüfer Adımları', desc: 'Yürürken nilüfer eker, açanlar yaprak saçar' },
     halo: { name: 'Hale Işını', desc: 'Bir ışın döner ve iğne atar, dururken uzar', count: 'Işın {a} → {b}' },
-    roar: { name: 'Aslan Kükremesi', desc: 'En yakın düşmana bağırış, düşmanları geri iter' },
+    roar: { name: 'Aslan Kükremesi', desc: 'En yakın düşmana doğru bir haykırış düşmanları geri iter' },
     talisman: { name: 'Mühür Tılsımları', desc: '{n} tılsım farklı düşmanların peşine düşer', count: 'Tılsım {a} → {b}' },
     bomb: { name: 'Gök Gürültüsü Ateşi', desc: 'Atılan bomba {n} küçük bombaya ayrılır', count: 'Küçük bomba {a} → {b}' },
     knives: { name: 'Bıçak Çemberi', desc: 'En fazla {n} bıçak etrafında döner, sonra fırlar', count: 'Bıçak {a} → {b}' },
@@ -217,7 +217,7 @@ export const monkTr: Table<typeof monkEn> = {
     jade: 'Yeşim sandık',
     freeInfo: '{copper} bakır ve {n} eşya',
     adInfo: '{jade} yeşim ve {n} eşya',
-    jadeInfo: 'Bölüm {chapter} eşyası: {n} adet',
+    jadeInfo: '{chapter}. bölümden {n} eşya',
     price: '{jade} yeşim',
     noJade: 'Yeşim yetersiz',
   },
@@ -264,7 +264,7 @@ export const monkTr: Table<typeof monkEn> = {
   tier: {
     0: 'Sıradan',
     1: 'Kaliteli',
-    2: 'Seçkin',
+    2: 'Zarif',
     3: 'Değerli',
     4: 'Kutsal',
     5: 'Göksel',

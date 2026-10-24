@@ -32,7 +32,7 @@ export const monkId: Table<typeof monkEn> = {
     reviveFree: 'Bangkit (latihan)',
     fall: {
       crowd: { cause: 'Dikepung gerombolan', tip: 'Kitari gerombolan, jangan masuk ke dalamnya' },
-      touch: { cause: 'Dihantam musuh besar', tip: 'Jauhi elite dan bos: biarkan relikmu yang memukul' },
+      touch: { cause: 'Dihantam musuh besar', tip: 'Jauhi elit dan bos: biarkan pusakamu yang memukul' },
       emerge: { cause: 'Ditangkap dari bawah', tip: 'Tanah retak berarti musuh muncul: menjauh dari retakan' },
       level: { cause: 'Terlalu lemah untuk gelombang {wave}', tip: 'Ambil setiap permata: level memenangkan gelombang akhir' },
     },
@@ -46,13 +46,13 @@ export const monkId: Table<typeof monkEn> = {
     nouns: 'Biksu|Teratai|Bangau|Harimau|Pinus|Lonceng|Lentera|Panda|Naga|Dedalu|Kerikil|Monyet|Koi|Awan|Gendang|Bambu',
   },
   challenge: {
-    rule2: 'Perlengkapan dan relikmu sendiri, tanpa bangkit lagi',
+    rule2: 'Perlengkapan dan pusakamu sendiri, tanpa bangkit',
   },
   mutator: {
     swift: 'Gerombolan gesit', swiftInfo: 'gerombolan bergerak lebih cepat', glass: 'Biksu kaca',
   },
   weekly: {
-    rule1: 'Semua main permainan yang sama: musuh, biksu, relik, dan jurus sama', rule2: 'Tanpa perlengkapan, latihan, atau hidup lagi',
+    rule1: 'Semua main permainan yang sama: musuh, biksu, pusaka, dan jurus sama', rule2: 'Tanpa perlengkapan, latihan, atau bangkit',
   },
   tutorial: {
     auto: 'Tendanganmu otomatis',
@@ -90,7 +90,7 @@ export const monkId: Table<typeof monkEn> = {
   shrine: {
     heal: { name: 'Pulih' },
     insight: { name: 'Pencerahan' },
-    offering: { name: 'Persembahan', desc: 'Bertahan sampai altar berikut atau akhir:', more: 'tembaga sesi ini +{n}%' },
+    offering: { name: 'Persembahan', desc: 'Bertahan sampai altar berikut atau akhir:', more: 'tembaga permainan ini +{n}%' },
   },
   relic: {
     ball: { name: 'Bola Cuju', desc: 'Ditendang, memantul di antara musuh' },
@@ -235,7 +235,7 @@ export const monkId: Table<typeof monkEn> = {
     patrol: 'Ambil hasil patroli',
     kills: 'Kalahkan {n} musuh',
     reward: 'Tiap tugas: {copper} tembaga, {jade} giok',
-    bonus: 'Semua diklaim: +{jade} giok',
+    bonus: 'Semua diambil: +{jade} giok',
   },
   achieve: {
     kills: 'Kalahkan total {n} musuh',
@@ -244,7 +244,7 @@ export const monkId: Table<typeof monkEn> = {
     trained: 'Berlatih {n} kali',
     monks: 'Miliki semua {n} biksu',
     reward: '+{jade} giok',
-    claimAll: 'Klaim semua: +{jade} giok',
+    claimAll: 'Ambil semua: +{jade} giok',
   },
   haul: {
     copper: 'Tembaga +{n}',

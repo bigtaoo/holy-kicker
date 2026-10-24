@@ -4,7 +4,7 @@ import type { monkEn } from './en';
 // Holy Kicker in French: the same keys as monk/en.ts.
 export const monkFr: Table<typeof monkEn> = {
   lobby: {
-    guest: 'Moine',
+    guest: 'Petit moine',
     chapterTitle: 'Chapitre {n} : {name}',
     unlockAtChapter: 'Termine le chapitre {n} pour débloquer',
     hardLocked: 'Termine ce chapitre avec 3 étoiles pour ouvrir le mode difficile',
@@ -29,12 +29,12 @@ export const monkFr: Table<typeof monkEn> = {
     5: 'Pic des démons',
   },
   run: {
-    reviveFree: 'Ressusciter (entraînement)',
+    reviveFree: 'Réanimer (entraînement)',
     fall: {
       crowd: { cause: 'Submergé par la horde', tip: 'Tourne autour de la horde, ne fonce pas dedans' },
       touch: { cause: 'Écrasé par un gros ennemi', tip: 'Garde tes distances avec les élites et les boss : laisse ta relique frapper' },
       emerge: { cause: 'Saisi par en dessous', tip: 'Un sol fissuré annonce un ennemi qui surgit : quitte les fissures' },
-      level: { cause: 'Trop faible pour la vague {wave}', tip: 'Ramasse chaque gemme : les niveaux gagnent les dernières vagues' },
+      level: { cause: 'Trop faible pour la vague {wave}', tip: 'Ramasse chaque gemme : les niveaux font gagner les dernières vagues' },
     },
     goal: {
       shrine: 'Plus que {n} avant l’autel de la vague {wave}',
@@ -52,7 +52,7 @@ export const monkFr: Table<typeof monkEn> = {
     swift: 'Horde rapide', swiftInfo: 'la horde se déplace plus vite', glass: 'Moine de verre',
   },
   weekly: {
-    rule1: 'Une même partie pour tous : mêmes ennemis, même moine, relique et sorts', rule2: "Pas d'équipement, pas d'entraînement, pas de réanimation",
+    rule1: 'Une même partie pour tous : mêmes ennemis, même moine, même relique, mêmes sorts', rule2: "Pas d’équipement, pas d’entraînement, pas de réanimation",
   },
   tutorial: {
     auto: 'Tes coups de pied sont automatiques',
@@ -83,9 +83,9 @@ export const monkFr: Table<typeof monkEn> = {
     lotus: { name: 'Chemin de lotus', desc: 'Un lotus à chaque pas, les fleurs attirent les gemmes' },
     halo: { name: 'Lumière infinie', desc: '{n} rayons tournent autour de toi et tirent des aiguilles' },
     roar: { name: 'Rugissement de tonnerre', desc: 'Rugit tout autour, brise les projectiles' },
-    talisman: { name: 'Sceau Céleste', desc: 'Chaque talisman qui touche éclate en un sceau' },
-    bomb: { name: 'Pluie de Tonnerre', desc: 'Lance {n} bombes à la fois, sur des ennemis différents' },
-    knives: { name: 'Mille Lames', desc: 'Les couteaux lancés reviennent et tranchent à l’aller et au retour' },
+    talisman: { name: 'Sceau céleste', desc: 'Chaque talisman qui touche éclate en un sceau' },
+    bomb: { name: 'Pluie de tonnerre', desc: 'Lance {n} bombes à la fois, sur des ennemis différents' },
+    knives: { name: 'Mille lames', desc: 'Les couteaux lancés reviennent et tranchent à l’aller et au retour' },
   },
   shrine: {
     heal: { name: 'Soin' },
@@ -108,9 +108,9 @@ export const monkFr: Table<typeof monkEn> = {
     lotus: { name: 'Pas de lotus', desc: 'En marchant, tu sèmes des lotus qui lancent des pétales en fleurissant' },
     halo: { name: 'Rayon de halo', desc: 'Un rayon tourne et tire des aiguilles, plus long à l’arrêt', count: 'Rayons {a} → {b}' },
     roar: { name: 'Rugissement du lion', desc: 'Un cri vers l’ennemi le plus proche repousse les ennemis' },
-    talisman: { name: 'Talismans Scellés', desc: '{n} talismans traquent des ennemis différents', count: 'Talismans {a} → {b}' },
-    bomb: { name: 'Feu du Tonnerre', desc: 'Une bombe lancée éclate en {n} petites bombes', count: 'Petites bombes {a} → {b}' },
-    knives: { name: 'Cercle de Lames', desc: 'Jusqu’à {n} couteaux tournent autour de toi, puis partent', count: 'Couteaux {a} → {b}' },
+    talisman: { name: 'Talismans d’entrave', desc: '{n} talismans traquent des ennemis différents', count: 'Talismans {a} → {b}' },
+    bomb: { name: 'Feu du tonnerre', desc: 'Une bombe lancée éclate en {n} petites bombes', count: 'Petites bombes {a} → {b}' },
+    knives: { name: 'Cercle de lames', desc: 'Jusqu’à {n} couteaux tournent autour de toi, puis partent', count: 'Couteaux {a} → {b}' },
   },
   passive: {
     calm: { name: 'Esprit calme', desc: 'Recharge des sorts −{n}%', blurb: 'Tes sorts reviennent plus vite' },
@@ -139,14 +139,14 @@ export const monkFr: Table<typeof monkEn> = {
     c1: {
       midBefore: 'Vous êtes deux ? Alors deux coups de pied.',
       midAfter: 'Bon, où est l’abbé ?',
-      bossBefore: 'Dix ans tu as balayé mes salles. Aujourd’hui, c’est toi que je balaie.',
+      bossBefore: 'Pendant dix ans, tu as balayé mes salles. Aujourd’hui, c’est toi que je balaie.',
       bossAfter: 'Les yeux du maître étaient pleins de ténèbres... Elles venaient du marais.',
     },
     c2: {
       midBefore: 'Les ténèbres m’ont offert une seconde vie !',
       midAfter: 'Reste à terre cette fois, Maître.',
       bossBefore: 'Personne ne quitte mon marais au sec.',
-      bossAfter: 'Encore les chaussettes mouillées. Les ténèbres sont montées au col enneigé.',
+      bossAfter: 'Encore des chaussettes mouillées. Les ténèbres sont montées au col enneigé.',
     },
     c3: {
       midBefore: 'J’ai remonté une cascade à la nage pour ça !',

@@ -4,7 +4,7 @@ import type { monkEn } from './en';
 // Holy Kicker in Italian: the same keys as monk/en.ts.
 export const monkIt: Table<typeof monkEn> = {
   lobby: {
-    guest: 'Monaco',
+    guest: 'Piccolo monaco',
     chapterTitle: 'Capitolo {n}: {name}',
     unlockAtChapter: 'Completa il capitolo {n} per sbloccarlo',
     hardLocked: 'Completa questo capitolo con 3 stelle per aprire la modalità difficile',
@@ -31,14 +31,14 @@ export const monkIt: Table<typeof monkEn> = {
   run: {
     reviveFree: 'Rinasci (allenamento)',
     fall: {
-      crowd: { cause: "Travolto dall'orda", tip: "Gira intorno all'orda, non entrarci" },
+      crowd: { cause: "Travolto dall’orda", tip: "Gira intorno all’orda, non entrarci" },
       touch: { cause: 'Schiacciato da un grosso nemico', tip: 'Stai lontano da élite e boss: lascia colpire la tua reliquia' },
       emerge: { cause: 'Afferrato dal basso', tip: 'Il terreno crepato annuncia un nemico che emerge: allontanati dalle crepe' },
-      level: { cause: "Troppo debole per l'ondata {wave}", tip: 'Raccogli ogni gemma: i livelli vincono le ultime ondate' },
+      level: { cause: "Troppo debole per l’ondata {wave}", tip: 'Raccogli ogni gemma: sono i livelli a vincere le ultime ondate' },
     },
     goal: {
-      shrine: "Solo {n} al santuario dell'ondata {wave}",
-      clear: 'Solo {n} per finire il capitolo',
+      shrine: "Ancora {n} per il santuario dell’ondata {wave}",
+      clear: 'Ancora {n} per finire il capitolo',
     },
   },
   board: {
@@ -46,13 +46,13 @@ export const monkIt: Table<typeof monkEn> = {
     nouns: 'Monaco|Loto|Airone|Leone|Pino|Gong|Lampione|Panda|Drago|Salice|Sasso|Macaco|Pesce|Vento|Tamburo|Bambù',
   },
   challenge: {
-    rule2: 'Il tuo equipaggiamento e la tua reliquia, niente rianimazioni',
+    rule2: 'Il tuo equipaggiamento e la tua reliquia, niente rinascite',
   },
   mutator: {
-    swift: 'Orda rapida', swiftInfo: "l'orda si muove più veloce", glass: 'Monaco di vetro',
+    swift: 'Orda rapida', swiftInfo: "l’orda si muove più veloce", glass: 'Monaco di vetro',
   },
   weekly: {
-    rule1: 'Tutti giocano la stessa partita: stessi nemici, monaco, reliquia e incantesimi', rule2: 'Niente equipaggiamento, allenamento o rinascite',
+    rule1: 'Tutti giocano la stessa partita: stessi nemici, stesso monaco, stessa reliquia, stessi incantesimi', rule2: 'Niente equipaggiamento, allenamento o rinascite',
   },
   tutorial: {
     auto: 'I tuoi calci sono automatici',
@@ -78,7 +78,7 @@ export const monkIt: Table<typeof monkEn> = {
     palm: { name: 'Palmo Montagna', desc: 'Resta e blocca i nemici per {s}s' },
     bolt: { name: 'Catena Infinita' },
     incense: { name: 'Incenso Curativo' },
-    bell: { name: 'Corpo d\'Oro' },
+    bell: { name: 'Corpo d’Oro' },
     cymbal: { name: 'Ruota di Cembali', desc: '{n} cembali ti girano intorno per sempre e ne lanciano altri' },
     lotus: { name: 'Sentiero di Loti', desc: 'Un loto a ogni passo, i fiori attirano gemme' },
     halo: { name: 'Luce Infinita', desc: '{n} raggi ruotano intorno a te e sparano aghi' },
@@ -95,18 +95,18 @@ export const monkIt: Table<typeof monkEn> = {
   relic: {
     ball: { name: 'Palla Cuju', desc: 'Calciata, rimbalza tra i nemici' },
     staff: { name: 'Bastone', desc: 'Spazza i nemici vicini e li respinge' },
-    fish: { name: 'Pesce di Legno', desc: 'Ogni colpo manda un\'onda su tutto ciò che è vicino' },
+    fish: { name: 'Pesce di Legno', desc: 'Ogni colpo manda un’onda su tutto ciò che è vicino' },
     beads: { name: 'Grani di Preghiera', desc: 'I grani ti girano intorno e colpiscono ciò che toccano' },
     bowl: { name: 'Ciotola delle Elemosine', desc: 'Lanciata e ripresa, trascina via i nemici' },
   },
   spell: {
     palm: { name: 'Palmo di Buddha', desc: 'Un palmo gigante schiaccia la folla più grande', count: 'Palmi {a} → {b}' },
     bolt: { name: 'Fulmine Vajra', desc: 'Il fulmine salta tra {n} {n|one:nemico|other:nemici}' },
-    incense: { name: 'Anello d\'Incenso', desc: 'Un anello brucia ai tuoi piedi per {s}s' },
-    bell: { name: 'Campana d\'Oro', desc: 'Blocca un colpo ogni {s}s, poi esplode' },
+    incense: { name: 'Anello d’Incenso', desc: 'Un anello brucia ai tuoi piedi per {s}s' },
+    bell: { name: 'Campana d’Oro', desc: 'Blocca un colpo ogni {s}s, poi esplode' },
     cymbal: { name: 'Cembali Volanti', desc: '{n} cembali volano via, trapassano e rimbalzano', count: 'Cembali {a} → {b}' },
     lotus: { name: 'Passi di Loto', desc: 'Camminando semini loti che sbocciando lanciano petali' },
-    halo: { name: 'Raggio d\'Aureola', desc: 'Un raggio gira e spara aghi, più lungo se stai fermo', count: 'Raggi {a} → {b}' },
+    halo: { name: 'Raggio d’Aureola', desc: 'Un raggio gira e spara aghi, più lungo se stai fermo', count: 'Raggi {a} → {b}' },
     roar: { name: 'Ruggito del Leone', desc: 'Un urlo verso il nemico più vicino respinge i nemici' },
     talisman: { name: 'Talismani Sigillanti', desc: '{n} talismani inseguono nemici diversi', count: 'Talismani {a} → {b}' },
     bomb: { name: 'Fuoco del Tuono', desc: 'Una bomba lanciata esplode in {n} bombette', count: 'Bombette {a} → {b}' },
@@ -115,7 +115,7 @@ export const monkIt: Table<typeof monkEn> = {
   passive: {
     calm: { name: 'Mente Calma', desc: 'Ricarica incantesimi −{n}%', blurb: 'I tuoi incantesimi tornano prima' },
     iron: { name: 'Testa di Ferro' },
-    legs: { name: 'Gambe dell\'Arhat' },
+    legs: { name: 'Gambe dell’Arhat' },
     eye: { name: 'Occhio della Saggezza', desc: 'Area incantesimi +{n}%', blurb: 'I tuoi incantesimi coprono più area' },
     rice: { name: 'Riso delle Elemosine' },
     wrath: { name: 'Ira' },
@@ -138,7 +138,7 @@ export const monkIt: Table<typeof monkEn> = {
     monk: 'Piccolo monaco',
     c1: {
       midBefore: 'Due di loro? Allora due calci.',
-      midAfter: 'E ora, dov\'è l\'abate?',
+      midAfter: 'E ora, dov’è l’abate?',
       bossBefore: 'Per dieci anni hai spazzato le mie sale. Oggi spazzo via te.',
       bossAfter: 'Gli occhi del maestro erano pieni di tenebra... Veniva dalla palude.',
     },
@@ -156,22 +156,22 @@ export const monkIt: Table<typeof monkEn> = {
     },
     c4: {
       midBefore: 'Le ossa si possono sempre rimettere insieme.',
-      midAfter: 'E riprendere a calci.',
+      midAfter: 'E di nuovo smontate a calci.',
       bossBefore: 'Il tuo nome è nel mio libro. Oggi è il tuo ultimo giorno.',
       bossAfter: 'Il suo libro dice che la tenebra vive sul Picco del Demone. Grazie!',
     },
     c5: {
       midBefore: 'Il tribunale dei morti non chiude mai!',
-      midAfter: 'L\'udienza è tolta.',
+      midAfter: 'L’udienza è tolta.',
       bossBefore: 'Sei salito fin qui per trovarmi. Io sono te.',
       bossAfter: 'La tenebra era anche in me. Ora a casa, a spazzare il tempio.',
     },
     a2: {
       open: 'Cala la notte sulle vecchie strade. Qualcosa cammina nelle ombre.',
-      midBefore: "Un'ombra mi ha prestato la sua forza. Vuole te, piccolo monaco.",
-      midAfter: "L'ombra gli è scivolata via. Era solo in prestito.",
-      bossBefore: "Di notte l'ombra vede attraverso i miei occhi. E vede te.",
-      bossAfter: "L'ombra è fuggita prima dell'alba. Sapeva di Demone Interiore.",
+      midBefore: "Un’ombra mi ha prestato la sua forza. Vuole te, piccolo monaco.",
+      midAfter: "L’ombra gli è scivolata via. Era solo in prestito.",
+      bossBefore: "Di notte l’ombra vede attraverso i miei occhi. E vede te.",
+      bossAfter: "L’ombra è fuggita prima dell’alba. Sapeva di Demone Interiore.",
     },
     a3: {
       open: 'Mi hai spezzato una volta. Ora ogni mio pezzo ha trovato un ospite.',
@@ -182,10 +182,10 @@ export const monkIt: Table<typeof monkEn> = {
     },
     a4: {
       open: 'Vecchi amici, svegliatevi. Il piccolo monaco torna a casa.',
-      midBefore: "Mi ha richiamato dal buio. Gli devo un'ultima battaglia.",
+      midBefore: "Mi ha richiamato dal buio. Gli devo un’ultima battaglia.",
       midAfter: 'Torna a dormire. Te lo sei meritato.',
-      bossBefore: "Siamo tornati tutti per te. Uno dopo l'altro.",
-      bossAfter: "Continuano a tornare, uno a uno. Dev'essere vicino.",
+      bossBefore: "Siamo tornati tutti per te. Uno dopo l’altro.",
+      bossAfter: "Continuano a tornare, uno a uno. Dev’essere vicino.",
     },
     finale: {
       bossBefore: 'Ogni nemico che hai preso a calci, qui tutti insieme. E li guido io.',
@@ -196,7 +196,7 @@ export const monkIt: Table<typeof monkEn> = {
     sutra: 'Sblocco: {goal}',
   },
   sutra: {
-    wave: 'Raggiungi l\'ondata {n} in un capitolo',
+    wave: 'Raggiungi l’ondata {n} in un capitolo',
     clear: 'Completa il capitolo {n}',
   },
   results: {
@@ -224,7 +224,7 @@ export const monkIt: Table<typeof monkEn> = {
   patrol: {
     title: 'Pattuglia',
     stored: 'In pattuglia: {time} su {cap}h',
-    tooSoon: 'Pattuglia ancora un po\' prima',
+    tooSoon: 'Pattuglia ancora un po’ prima',
     quick: 'Pattuglia rapida',
     quickAd: 'Rapida ({n} rimaste)',
     pays: 'Finora: {copper} rame, {n} equip',
@@ -282,7 +282,7 @@ export const monkIt: Table<typeof monkEn> = {
     progress: 'Allenamento {n}/{total}',
     buy: 'Allenati',
     done: 'Allenamento completato',
-    total: 'Statistiche dall\'allenamento',
+    total: 'Statistiche dall’allenamento',
   },
   currency: {
     copper: 'Rame',
