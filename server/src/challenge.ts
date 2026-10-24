@@ -53,7 +53,7 @@ export function challengeFor(id: string, now: number): Challenge | null {
 /**
  * Why a run and its replay cannot be a run of `c`, or null when they can (the cheap checks
  * before any re-simulation): the engine version, the seed, the mutator, no revives, the challenge's
- * waves from the start, the run's own fields matching its config, and a weekly's loadout
+ * waves from the start (a win on its last), the run's own fields matching its config, and a weekly's loadout
  * whole: its relic, monk and sutras, and no gear or training.
  */
 export function misfit(c: Challenge, run: RunEntry, replay: ReplayWire): string | null {
@@ -62,7 +62,7 @@ export function misfit(c: Challenge, run: RunEntry, replay: ReplayWire): string 
   if (cfg.seed !== c.seed) return 'seed';
   if ((cfg.mutator ?? null) !== c.mutator) return 'mutator';
   if (cfg.revives !== 0) return 'revives';
-  if (cfg.waves !== c.waves || replay.wave !== 1) return 'waves';
+  if (cfg.waves !== c.waves || replay.wave !== 1 || (run.won && run.wave !== c.waves)) return 'waves';
   if (run.hard || cfg.hard !== false || cfg.firstRun === true) return 'mode';
   if (cfg.chapter !== run.chapter || (c.chapter !== 'furthest' && c.chapter !== run.chapter)) return 'chapter';
   if (cfg.relic !== run.relic || cfg.monk !== run.monk) return 'loadout';

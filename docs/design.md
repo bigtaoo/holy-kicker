@@ -401,7 +401,7 @@ veterans something past hard mode that costs no new art.
 | Same for everyone | Seed and the day's mutator | Seed, chapter, mutator and the whole loadout (below) |
 | Player's own | Monk, relic, sutras, gear, training | Nothing |
 | Attempts | The first finished run of the UTC day counts; later runs are practice and pay nothing | Unlimited; the best run counts |
-| Ranked by | Reward milestones by wave reached; a board per chapter, shown as "top N %" | `runScore` (won, then wave, then time) on one board |
+| Ranked by | Reward milestones by wave reached; a board per chapter, shown as "top N %" (`runScore`, a win on its wave 20) | `runScore` on one board: every finished run enters, clears first by time, then the furthest wave, then the run's time (to its end) |
 | Pays | Milestones (below) | Participation and a rank tier, settled after the week |
 | Replays | Kept for verification only | Top 3 published, with their pick timeline |
 

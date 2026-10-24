@@ -2,7 +2,7 @@ import { engineFor } from './engines';
 import { ENGINE_VERSION, MONK_IDS, MUTATOR_IDS, RELIC_IDS, SUTRA_IDS } from '@hk/engine';
 import { describe, expect, it } from 'vitest';
 import { DAY_MS, LATE_MS, WEEK_MS, challengeFor, misfit, rotationLoadout, weekIdOf, weekStart, weeklyOf } from './challenge';
-import { challengeUpdate, settleDoc, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
+import { ahead, challengeUpdate, settleDoc, type ChallengeDoc, type ChallengeEntry } from './challengeDocs';
 import { WeekMarks, weekMarks } from './marks';
 import { WATCH_TOP, challengeBoardId, weekTier, type BoardReply, type ChallengeBoardReply, type ReplayWire } from './protocol';
 import { rankedConfig } from './resim';
@@ -103,6 +103,19 @@ describe('a weekly row', () => {
     expect(settleDoc(waiting, 3, null)).toEqual(best);
     expect(settleDoc(waiting, 3, [])).toMatchObject({ score: waiting.next!.score, at: 3, verified: true, replay: LONG.replay });
     expect(settleDoc(waiting, 99, [])).toBeUndefined();
+  });
+
+  it('ranks clears by time, then unfinished runs by furthest wave, then by time to it', () => {
+    const run = (won: boolean, wave: number, tenths: number) => ({ ...SHORT, run: { ...SHORT.run, won, wave, tenths } });
+    const runs = [run(false, 8, 900), run(true, 50, 9000), run(false, 30, 6000), run(true, 50, 8000), run(false, 30, 5000), run(false, 49, 12000)];
+    const docs = runs.map((r, k) => ({ ...entered(r, k), tag: `t${k}` }));
+    const order = [...docs].sort((a, b) => (ahead(a, b) ? -1 : 1)).map((d) => [d.run.won, d.run.wave, d.run.tenths]);
+    expect(order).toEqual([[true, 50, 8000], [true, 50, 9000], [false, 49, 12000], [false, 30, 5000], [false, 30, 6000], [false, 8, 900]]);
+    // a later clear replaces an earlier wave-8 loss; a later wave-8 loss leaves a clear alone
+    const lost = entered(run(false, 8, 900), 1);
+    expect(challengeUpdate(lost, entry(run(true, 50, 9000)), 2, false)).toMatchObject({ state: 'entered', run: { won: true } });
+    expect(challengeUpdate(entered(run(true, 50, 9000), 1), entry(run(false, 8, 900)), 2, false)).toBe('lower');
+    expect(challengeUpdate(lost, entry(run(false, 8, 1200)), 2, false)).toBe('lower');
   });
 
   it('replaces a first run still waiting with a better one, whose check alone counts', () => {

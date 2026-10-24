@@ -286,9 +286,10 @@ export class RunFlow {
     const run = runSummary(s, this.chapter, this.hard, this.kills);
     h.perf()?.end();
     h.net.track('run_end', { ...run, waves: s.config.waves, ...runBuild(s, this.kills), gaveUp: s.outcome === 'playing', ...(s.outcome === 'lost' && cause ? { cause } : {}), ...(h.challenge.run && { challenge: h.challenge.run.id }) });
-    // a run shorter than the chapter (an experiment's first run) is never on a board, nor timed
+    // a run shorter than the chapter (an experiment's first run) is never on a board, nor timed;
+    // a challenge's is on its own (a daily's 20 waves)
     const counted = rankedRun(h.scene) && s.config.waves === BALANCE.waves;
-    const name = counted ? h.names.board(h.save()) : null;
+    const name = counted || (rankedRun(h.scene) && h.challenge.run) ? h.names.board(h.save()) : null;
     const rank = name && !h.challenge.run ? h.net.submitRun({ ...run, ...name }, replay) : Promise.resolve(null);
     void h.net.flush();
     if (h.challenge.run) return this.settleChallenge(s, { ...run, ...name }, waves, !!name);

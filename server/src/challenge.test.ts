@@ -6,6 +6,7 @@ import { RESIM_TOP, challengeBoardId, topPercent, type ChallengeBoardReply, type
 import { rankedConfig, resimulate } from './resim';
 import { ResimQueue } from './resimQueue';
 import { route, type Deps, type Req } from './routes';
+import { checkChallengeRun } from './rules';
 import { MemoryStore, type ChallengeEntry } from './store';
 import { INSTALL, playRun } from './testPlay';
 
@@ -59,6 +60,10 @@ describe('the daily', () => {
     expect(misfit(DAILY, run, { ...replay, wave: 20 })).toBe('waves');
     expect(misfit(DAILY, { ...run, chapter: 2 }, replay)).toBe('chapter');
     expect(misfit(DAILY, { ...run, relic: 'staff' }, replay)).toBe('loadout');
+    // a daily is won on its own last wave (the mid-boss of 20), not the chapter's 50
+    expect(misfit(DAILY, { ...run, won: true, wave: DAILY_WAVES }, replay)).toBeNull();
+    expect(misfit(DAILY, { ...run, won: true, wave: DAILY_WAVES - 1 }, replay)).toBe('waves');
+    expect(checkChallengeRun({ challenge: DAILY.id, run: { ...run, won: true, wave: DAILY_WAVES, tenths: 3000 }, replay }).ok).toBe(true);
   });
 
   it('shows a rank as the top share of the board', () => {
