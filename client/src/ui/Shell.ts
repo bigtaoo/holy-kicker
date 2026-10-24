@@ -310,8 +310,8 @@ export class Shell {
   private offerResume(left: SavedRun): void {
     const { config: c, outcome, players } = left.state;
     const giveUp = () => this.runs.giveUp(left);
-    // fallen with no revive left, there is nothing to go on with
-    if (outcome === 'lost' && players[0].revives === 0) return giveUp();
+    // won (kept in the moment before its results), or fallen with no revive left, there is nothing to go on with
+    if (outcome === 'won' || (outcome === 'lost' && players[0].revives === 0)) return giveUp();
     this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => menuBackdrop(this.app.renderer, this.art.lobby)), this.device === 'desktop'));
   }
 
