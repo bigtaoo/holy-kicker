@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { expPairs, expTag } from '@hk/protocol';
 import { BALANCE } from './balance';
-import { EXPERIMENTS, armOf, enroll, experimentTag, forcedArms, pickArm, runWaves, type Experiments } from './experiments';
+import { EXPERIMENTS, armOf, enroll, enrollsNew, experimentTag, forcedArms, pickArm, runWaves, type Experiments } from './experiments';
 import { newSave, parseSave } from './save';
 
 const TABLE: Experiments = {
@@ -55,6 +55,21 @@ describe('experiments', () => {
     for (const x of Object.values(EXPERIMENTS)) expect(x.hosts).toEqual([]);
     expect(enroll(newSave(), 'crazygames', () => 0).arms).toEqual({});
     expect(runWaves(enroll(newSave(), 'web', () => 0, EXPERIMENTS, { first20: 'short' }))).toBe(BALANCE.waves);
+  });
+
+  it('tells a save about to be enrolled, reading it only where an experiment runs', () => {
+    let reads = 0;
+    const read = (s = newSave()) => () => (reads++, s);
+    expect(enrollsNew(read(), 'wechat', TABLE)).toBe(false);
+    expect(reads).toBe(0);
+    expect(enrollsNew(read(), 'web', TABLE)).toBe(true);
+    expect(enrollsNew(read({ ...newSave(), runs: 1 }), 'web', TABLE)).toBe(false);
+    expect(enrollsNew(read({ ...newSave(), firstRunDone: true }), 'web', TABLE)).toBe(false);
+    expect(enrollsNew(read({ ...newSave(), arms: { later: 'a' } }), 'web', TABLE)).toBe(false);
+    expect(enrollsNew(read(), 'web', { x: { note: '', hosts: ['web'], arms: { a: 0 } } })).toBe(false);
+    // nothing runs anywhere today: no boot waits on the cloud for an arm
+    expect(enrollsNew(read(), 'web')).toBe(false);
+    expect(enrollsNew(read(), 'ios')).toBe(false);
   });
 
   it('reads the arms and the tester mark from a save, dropping malformed ones', () => {

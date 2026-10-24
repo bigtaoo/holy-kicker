@@ -66,6 +66,17 @@ export function enroll(save: SaveData, host: Host, random: () => number, table: 
   return changed ? { ...save, arms } : save;
 }
 
+/**
+ * Whether `enroll` would roll an arm for the save on `host`: an experiment running there that the
+ * save has none for, and a save with no run yet. `save` is read only when an experiment runs there.
+ */
+export function enrollsNew(save: () => SaveData, host: Host, table: Experiments = EXPERIMENTS): boolean {
+  const running = Object.entries(table).filter(([id, x]) => EXP_NAME.test(id) && x.hosts.includes(host) && pickArm(x.arms, () => 0) !== '');
+  if (!running.length) return false;
+  const s = save();
+  return !s.firstRunDone && s.runs === 0 && running.some(([id]) => !(id in s.arms));
+}
+
 /** The arm `save` plays in experiment `id`, '' when not enrolled or the experiment is gone from the table. */
 export function armOf(save: SaveData, id: string, table: Experiments = EXPERIMENTS): string {
   return id in table ? save.arms[id] ?? '' : '';

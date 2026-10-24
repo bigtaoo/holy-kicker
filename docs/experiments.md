@@ -27,7 +27,10 @@ The table is `client/src/meta/experiments.json`, one entry per experiment:
   client/src/meta/experiments.ts). Anyone older gets `''`, not enrolled, and stays out for good,
   even when the experiment reaches their host later. The arm is picked once by the device's own
   random, kept in the save (`arms`), carried through cloud merges (saveMerge.ts) and never
-  re-rolled.
+  re-rolled. On the web and iOS a save about to be enrolled is merged with the cloud save first
+  (`enrollsNew`, boot.ts): the pass runs behind the art and the shell waits on it at most 4 s, so
+  a player back on a new device keeps the cloud's arm (or stays out), and only a save no cloud
+  answered for in time rolls on its own. Nothing waits while no experiment runs on the host.
 - **Reading the arm in code**: `armOf(save, 'first20')` returns the arm, `''` when not enrolled
   or once the experiment is gone from the table. Keep arm checks in one function (like
   `runWaves`), not spread through the UI.

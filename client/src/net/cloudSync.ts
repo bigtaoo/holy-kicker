@@ -49,12 +49,12 @@ export class CloudSync {
     return this.working;
   }
 
-  /** A sync in the background (launch, the game going away): at most once a minute. */
-  auto(): void {
+  /** A sync in the background (launch, the game going away): at most once a minute. Settles with the pass, `skipped` when there was none. */
+  auto(): Promise<SyncResult> {
     const now = (this.h.now ?? Date.now)();
-    if (this.working || now - this.last < SYNC_EVERY_MS) return;
+    if (this.working || now - this.last < SYNC_EVERY_MS) return Promise.resolve('skipped');
     this.last = now;
-    void this.syncNow();
+    return this.syncNow();
   }
 
   /** The host's account changed (a Game Center sign-in): sync now, after a pass in flight. */

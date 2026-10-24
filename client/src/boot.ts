@@ -15,6 +15,7 @@ import { patchGraphicsDestroy } from './game/graphicsDestroy';
 import { levelRange, lowBattery, useMsaa } from './game/quality';
 import { QualityRuntime, gpuName } from './game/qualityRuntime';
 import type { SceneOptions } from './game/scene';
+import { enrollsNew } from './meta/experiments';
 import { SafeStore, SaveStore, type KeyValueStore } from './meta/saveStore';
 import { loadSettings, pickLocale } from './meta/settings';
 import type { Platform } from './platform/types';
@@ -34,6 +35,15 @@ function bootBar(share: number): void {
   const page = document.getElementById?.('boot');
   page?.style.setProperty('--p', share.toFixed(3));
   page?.querySelector('em')?.setAttribute('data-p', String(Math.round(share * 100)));
+}
+
+/** The longest the boot waits on the display font, and on the cloud save before an experiment's arm is rolled (ms). */
+const FONT_WAIT_MS = 4000;
+const CLOUD_WAIT_MS = 4000;
+
+/** `p`, or null once `ms` have gone by first. */
+function capped<T>(p: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([p, new Promise<null>((done) => setTimeout(() => done(null), ms))]);
 }
 
 export interface BootOptions {
@@ -90,11 +100,17 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptio
   const net = new Backend(platform, base, __HK_BUILD__, getLocale, new BoardOutbox(new SafeStore(base ? pageStorage() : null)));
   // set before the shell's first event: in the EEA nothing goes out until the player says yes
   const privacy = api ? new PrivacyChoice(net, platform, api, deviceTimeZone()) : null;
+  const store = new SaveStore(platform.storage);
+  let shell: Shell | null = null;
+  // the cloud save where the host keeps none of its own (docs/cloud-save.md "The cloud save")
+  const cloud = base && (platform.host === 'web' || platform.host === 'ios') ? new CloudSync({
+    base, game: THEME, kv: platform.storage, store, reload: () => shell?.reloadSave(), playing: () => shell?.place() === 'run',
+  }) : null;
+  // a save about to be put in an experiment's arm is merged with the cloud first, so the arm is the
+  // merged save's (docs/experiments.md): the pass runs behind the art, the shell waits on it at most CLOUD_WAIT_MS
+  const merged = cloud && enrollsNew(() => store.current(), platform.host) ? capped(cloud.auto(), CLOUD_WAIT_MS) : null;
   // the display font, before the first text is measured; system fonts if it fails or is slow
-  const font = Promise.race([
-    platform.loadFont(DISPLAY_FILE, DISPLAY_FAMILY).catch(() => null),
-    new Promise<null>((done) => setTimeout(() => done(null), 4000)),
-  ]);
+  const font = capped(platform.loadFont(DISPLAY_FILE, DISPLAY_FAMILY).catch(() => null), FONT_WAIT_MS);
   await lang;
   // a game in China opens on the health advice for games (WeChat; ui/healthAdvice.ts)
   const advice = platform.host === 'wechat' ? healthAdvice(app, () => platform.safeInsets()) : null;
@@ -108,12 +124,8 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptio
   void lateArt().then(() => warmTextures(app.renderer, art));
   const artMs = since();
   stage('shell');
-  const store = new SaveStore(platform.storage);
-  const shell = new Shell(app, platform, art, scene, store, net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
-  // the cloud save where the host keeps none of its own (docs/cloud-save.md "The cloud save")
-  const cloud = base && (platform.host === 'web' || platform.host === 'ios') ? new CloudSync({
-    base, game: THEME, kv: platform.storage, store, reload: () => shell.reloadSave(), playing: () => shell.place() === 'run',
-  }) : null;
+  await merged;
+  shell = new Shell(app, platform, art, scene, store, net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
   const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping, () => shell.place() !== 'run');
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
   const probe = memProbe(app);
@@ -146,8 +158,8 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptio
   if (typeof document !== 'undefined') document.getElementById?.('boot')?.remove();
   advice?.close();
   net.loaded({ script, art: artMs });
-  cloud?.auto();
-  platform.onHide(() => cloud?.auto());
+  void cloud?.auto();
+  platform.onHide(() => void cloud?.auto());
   if (privacy?.noticeDue()) {
     privacyToast(app, () => platform.safeInsets(), () => shell.teachingMove, () => privacy.noticeShown());
   }
