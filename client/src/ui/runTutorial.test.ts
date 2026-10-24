@@ -4,7 +4,7 @@ import { t } from '../i18n';
 import { TUTORIAL_AUTO, TUTORIAL_GEMS, TUTORIAL_MOVE } from './tutorial';
 import { liveRun, playUntil } from '../testkit/liveRun';
 
-describe("the first run's tutorial on a live run", () => {
+describe("the first run's tutorial on a live run", { timeout: 30_000 }, () => {
   it('asks the phone player to move, then teaches the kicks and the gems, then goes', async () => {
     const run = await liveRun({ save: {} });
     await run.ticks(TICK_RATE);

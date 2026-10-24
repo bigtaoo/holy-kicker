@@ -19,7 +19,9 @@ import { COLORS, fit, label, shade } from './widgets';
 // The parts of the results screen (ResultsScreen.ts), each a view centred on x 0 with its top at
 // y 0 and the height it takes: the header (the title, the waves cleared as one big number and a
 // badge for the best and the leaderboard), the strip saying what felled the hero and how near the
-// next goal was, the rewards as a row of icons, and the rarer news as short lines.
+// next goal was, the rewards as a row of icons, and the rarer news as short lines. A newcomer's
+// card (Reward.newcomer: no chapter cleared before the run) keeps to the title, the waves, the
+// stars and the rewards; the welcome gift's gear joins the drops (`shownDrops`).
 
 export type Part = [Container, number];
 
@@ -53,8 +55,16 @@ export function headerPart(r: Reward, waves: number, rank: RankNote, width: numb
   const caption = label(t('results.waves'), 48, COLORS.dim);
   caption.y = 294;
   c.addChild(title, big, caption);
-  // a won run's stars, and what the next one asks while the chapter lacks it
+  // a won run's stars, and what the next one asks while the chapter lacks it; a newcomer's card
+  // stops at the stars (no hint, time, badges or board: the essentials only)
   let top = 350;
+  if (r.stars > 0 && r.newcomer) {
+    const stars = starRow(r.stars, 90);
+    stars.y = 390;
+    c.addChild(stars);
+    return [c, 450];
+  }
+  if (r.newcomer) return [c, top];
   if (r.stars > 0) {
     const stars = starRow(r.stars, 90);
     stars.y = 390;
@@ -182,7 +192,7 @@ export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: n
   chip.position.set(-(12 + copper.width) / 2, 60);
   c.addChild(chip);
   let y = 130;
-  const tiles = gearTiles(r.drops, icons);
+  const tiles = gearTiles(shownDrops(r), icons);
   // as many rows as the width needs, the tiles shared out evenly between them (7 as 4 + 3, not 6 + 1)
   const fits = Math.max(1, Math.floor((width + 16) / 140));
   const per = Math.ceil(tiles.length / Math.max(1, Math.ceil(tiles.length / fits)));
@@ -194,6 +204,11 @@ export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: n
   });
   if (tiles.length > 0) y += Math.ceil(tiles.length / per) * 140 + 10;
   return Object.assign([c, y] as Part, { copper });
+}
+
+/** The gear the rewards row shows: a newcomer's welcome gift (told in the news otherwise) joins the run's drops. */
+export function shownDrops(r: Reward): readonly Drop[] {
+  return r.newcomer && r.gift ? [...r.drops, ...r.gift.drops] : r.drops;
 }
 
 /** A news line: its text, font size, colour and, for red on the dark card, the outline the chapter card's red wears. */
@@ -208,6 +223,9 @@ export type NewsLine = [string, number, number, { stroke: { color: number; width
 export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
   const lines: NewsLine[] = [];
   if (doubled) lines.push([t('results.doubled'), 48, COLORS.copper]);
+  // a newcomer hears of the doubling only: the gift's gear joins the drops, the chests and the
+  // next gift wait in the lobby with their dots and the hint arrow
+  if (r.newcomer) return lines;
   if (r.hardUnlocked) lines.push([t('results.hardUnlocked'), 48, COLORS.danger, CARD_STROKE]);
   for (const id of r.newCodex) lines.push([t('results.newCodex', { name: t(`evolve.${id}.name`) }), 48, COLORS.text]);
   if (r.grit > 0) lines.push([t('results.grit', { n: r.grit }), 48, COLORS.text]);

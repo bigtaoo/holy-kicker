@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_RUN, HERO, type RunConfig } from '../config';
-import { LEVELING, MAX_LEVEL, MAX_PASSIVES, OFFER_SIZE, OPENING_DEAL, PASSIVES, RELIC_LEVELS, SPELL_CAST, SPELL_LEVELS, xpToNext } from '../content';
+import { FIRST_RUN_DEALS, LEVELING, MAX_LEVEL, MAX_PASSIVES, OFFER_SIZE, OPENING_DEAL, PASSIVES, RELIC_LEVELS, SPELL_CAST, SPELL_LEVELS, xpToNext } from '../content';
 import type { SimEvent } from '../events';
 import { Engine } from '../Engine';
 import { hashState } from '../hash';
@@ -16,8 +16,8 @@ function cmd(e: Engine, extra: Partial<PlayerCommand> = {}): PlayerCommand {
 }
 
 /** A chapter with the horde far away and the hero untouchable, so only the build acts. */
-function quiet(): Engine {
-  const e = new Engine(CHAPTER);
+function quiet(firstRun = false): Engine {
+  const e = new Engine({ ...CHAPTER, firstRun });
   e.state.mobs.length = 0;
   e.state.players[0].hurtCd = 1e6;
   return e;
@@ -69,6 +69,31 @@ describe('levelling', () => {
       e.step([cmd(e, { pick: 0 })]);
     }
     expect(p.spells.length).toBe(OPENING_DEAL.deals);
+  });
+
+  it("deals a first run's steered card first, and the evolved incense once the list is taken", () => {
+    const e = quiet(true);
+    const p = e.state.players[0];
+    for (const card of FIRST_RUN_DEALS) {
+      p.xp = xpToNext(p.level);
+      e.step([cmd(e)]);
+      expect(p.offer[0]).toEqual(card);
+      expect(p.offer.filter((c) => c.kind === card.kind && c.id === card.id)).toHaveLength(1);
+      e.step([cmd(e, { pick: 0 })]);
+    }
+    expect(p.spells.find((sp) => sp.id === 'incense')?.level).toBe(MAX_LEVEL);
+    p.xp = xpToNext(p.level);
+    e.step([cmd(e)]);
+    expect(p.offer[0]).toEqual({ kind: 'evolve', id: 'incense' });
+  });
+
+  it("skips a first run's card that can no longer be taken", () => {
+    const e = quiet(true);
+    const p = e.state.players[0];
+    p.spells.push({ id: 'bomb', level: MAX_LEVEL, cd: 0, evolved: false });
+    p.xp = xpToNext(p.level);
+    e.step([cmd(e)]);
+    expect(p.offer.some((c) => c.id === 'bomb')).toBe(false);
   });
 
   it('offers the next level right after a pick when the experience covers it', () => {

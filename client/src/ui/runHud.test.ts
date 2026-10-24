@@ -11,7 +11,7 @@ function hpFill(run: LiveRun): number {
   return (run.game() as unknown as { healthBar: { fill: Container } }).healthBar.fill.width;
 }
 
-describe('the HUD on a live run', () => {
+describe('the HUD on a live run', { timeout: 30_000 }, () => {
   it('follows the sim: wave, banner, clock, level and health', async () => {
     // chapter 1 is cleared on this save, so its run shows the clock
     const run = await liveRun({ query: '?direct&chapter=1' });

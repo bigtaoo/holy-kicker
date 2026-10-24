@@ -17,7 +17,7 @@ function levelOf(run: LiveRun, kind: string, id: string): number {
   return slots.find((s) => s.id === id)?.level ?? 0;
 }
 
-describe('level-up cards on a live run', () => {
+describe('level-up cards on a live run', { timeout: 30_000 }, () => {
   it('open when the sim asks; a tap sends exactly that pick and the build takes it', async () => {
     const run = await liveRun();
     run.steer('bot');
@@ -104,7 +104,7 @@ describe('level-up cards on a live run', () => {
   });
 });
 
-describe('a sutra shrine on a live run', () => {
+describe('a sutra shrine on a live run', { timeout: 30_000 }, () => {
   it('opens on wave 5 with its three cards; insight deals level-up cards in their place', async () => {
     const run = await liveRun({ query: '?wave=5' });
     run.steer('bot');

@@ -1,0 +1,5 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Do not move, resize or redraw the head outline, the ears or the body: only repaint the eyes, the cream brow tufts and the mouth inside the face, in the same style as now (small black glossy eyes with white highlights, soft cream brow tufts). Make only this change to the face:
+- Focused and determined, calm, not angry: the eyes slightly narrowed by a flat upper lid line across the top of each eye, still glossy with a white highlight, looking straight ahead.
+- The cream brow tufts lowered a little and level, steady.
+- The mouth a short, firm, closed straight line under the nose with one corner slightly up, a confident little smirk. No teeth, no tongue.
+Everything else stays pixel-identical: the head outline and size, the ears, the white blaze on the forehead, the cream cheeks, the nose, the armour, the arms, the legs, the boots, the tail, the backpack. Pure white background, no text.

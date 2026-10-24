@@ -6,6 +6,10 @@
 // lobby, a second run, the daily challenge played until it ends, and back to the lobby. Last the
 // dist is deployed anew under the open page and a lazy chunk asked for: the page must reload
 // once and come up (staleDeploy below).
+// The page is opened with every dev URL switch (SWITCHES), which a release must not read: the first
+// run must still be the save's own (chapter 1, wave 1, its relic and monk, no sutras, not hard),
+// nothing may go to the `api` the query names, and no fake ad box may show. Beside the live test,
+// each dist's scripts must hold no read of a switch (releaseSwitches.mjs, also in `npm run check`).
 // A build fails on any page error or console error, on a request to its own origin that fails,
 // on a step that never comes, and on what the backend saw (smokeBackend.mjs): the server's own
 // router answers hk.gamestao.com in memory, and a post its checkers refuse, a run its
@@ -21,6 +25,7 @@ import { basename, dirname, extname, join, normalize, resolve } from 'node:path'
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { switchReads } from './releaseSwitches.mjs';
 import { backend } from './smokeBackend.mjs';
 import { FIGHT_MS, moving, tap, waitFor, walkLoop } from './smokeLoop.mjs';
 
@@ -30,6 +35,11 @@ const SECONDS = Number(process.env.SMOKE_SECONDS) || 30;
 const QUICK = process.env.SMOKE_QUICK === '1';
 /** The backend every release build calls (build/theme.mjs), answered by the server's own router. */
 const API = 'https://hk.gamestao.com/';
+/** Every dev switch at once (CLAUDE.md "Dev URL switches"); a release reads none of them. */
+const SWITCHES = 'direct&wave=20&chapter=5&sutras&hard&relic=staff&monk=fat&bare&waves=0&mobs=300&ads=fake&store=fake&notify=fake&ota=fake'
+  + '&api=http://evil.test&record=5&autoplay&from=30&challenge=settle&arm=first20:short&quality=low&seed=7';
+/** The host SWITCHES names as the backend: no request may go there. */
+const EVIL = 'evil.test';
 /** Where a failed build's last screenshot goes. */
 const SHOTS = tmpdir();
 
@@ -128,6 +138,33 @@ const FAKES = [
 /** The run kept in storage (any theme or portal prefix), or null. */
 const keptRun = () => Object.keys(localStorage).find((k) => k.endsWith('hk.run')) ?? null;
 
+/** What the kept run (meta/resume.ts, the engine's snapshot) was set up with, beside the save's choices. */
+const keptSetup = () => {
+  const load = (end) => JSON.parse(localStorage.getItem(Object.keys(localStorage).find((k) => k.endsWith(end))) || 'null');
+  const s = load('hk.run').snap.state;
+  const save = load('hk.save') ?? {};
+  return { chapter: s.config.chapter, waves: s.config.waves, hard: s.config.hard, sutras: s.config.sutras.length, monk: s.config.monk,
+    wave: s.wave, relic: s.players[0]?.relicId, saveRelic: save.relic, saveMonk: save.monk };
+};
+
+/** How the first run would differ had the page read its switches; empty when it is the save's own. */
+function switched(r) {
+  const off = [];
+  if (r.chapter !== 1 || r.wave !== 1) off.push(`chapter ${r.chapter} wave ${r.wave}, not 1/1`);
+  if (!(r.waves > 0)) off.push('the waveless sandbox');
+  if (r.hard) off.push('hard mode');
+  if (r.sutras) off.push(`${r.sutras} sutras`);
+  if (r.relic !== r.saveRelic) off.push(`relic ${r.relic}, the save's is ${r.saveRelic}`);
+  if (r.monk !== r.saveMonk) off.push(`monk ${r.monk}, the save's is ${r.saveMonk}`);
+  return off;
+}
+
+// The fake ad host's grey banner (?ads=fake, platform/web/banner.ts), noted the moment it shows;
+// sessionStorage keeps the note across the smoke's reloads.
+const FAKE_AD_WATCH = `addEventListener('DOMContentLoaded', () => setInterval(() => {
+  if (/^AD /.test(document.getElementById('hk-banner')?.textContent ?? '')) sessionStorage.setItem('smoke:fakeAd', '1');
+}, 250));`;
+
 // The daily challenge opens at account level 2 (balance.json challenge.unlockLevel), some twenty
 // waves of play, beyond the smoke's minutes. So once the second run is done the smoke asks for a
 // raise (sessionStorage, which a reload keeps) and reloads; this script runs before the game's
@@ -178,14 +215,16 @@ async function staleDeploy(page, server, dir, path) {
 
 async function smoke(browser, name, { root, page: path }) {
   const dir = resolve(CLIENT, root);
-  const problems = [];
   if (!existsSync(join(dir, 'index.html')) && !existsSync(join(dir, path, 'index.html'))) return { name, problems: [`${root}/ is not built`], ms: 0 };
+  const reads = switchReads(dir);
+  const problems = reads.length ? [`reads ${reads.length} dev switches: client/${reads.slice(0, 4).join(', client/')}${reads.length > 4 ? ', ...' : ''}`] : [];
   const server = await serve(dir);
   const api = await backend();
   const origin = `http://127.0.0.1:${server.address().port}`;
   // a phone in portrait, as most players see it, in a time zone where stats go out without asking
   const context = await browser.newContext({ viewport: { width: 405, height: 720 }, deviceScaleFactor: 1, locale: 'en-US', timezoneId: 'America/New_York' });
   await context.addInitScript(LEVEL_UP);
+  await context.addInitScript(FAKE_AD_WATCH);
   const page = await context.newPage();
   const outside = new Set();
   await context.route('**/*', (route) => {
@@ -195,6 +234,7 @@ async function smoke(browser, name, { root, page: path }) {
     const fake = FAKES.find(([re]) => re.test(url));
     if (fake) return route.fulfill({ status: 200, contentType: 'text/javascript', body: fake[1] });
     outside.add(new URL(url).host);
+    if (new URL(url).hostname === EVIL && !problems.some((p) => p.includes(EVIL))) problems.push(`a request went to the ?api= of the query: ${url}`);
     return route.fulfill({ status: 204, body: '' });
   });
   // from the stale deploy on, the old names' 404s and what they break are the point, not problems
@@ -215,13 +255,15 @@ async function smoke(browser, name, { root, page: path }) {
   let fought = 0;
   let moved = false;
   try {
-    await page.goto(`${origin}${path}`, { waitUntil: 'load', timeout: 30_000 });
+    await page.goto(`${origin}${path}?${SWITCHES}`, { waitUntil: 'load', timeout: 30_000 });
     const end = start + SECONDS * 1000;
     // the quick smoke watches the first run for all its time; the loop goes on once it fights
     while (Date.now() < end && (QUICK || !moved)) {
       await page.waitForTimeout(1000);
-      if (!fought) fought = (await page.evaluate(keptRun)) ? Date.now() - start : 0;
-      else if (!moved) moved = await moving(page);
+      if (!fought && (await page.evaluate(keptRun))) {
+        fought = Date.now() - start;
+        for (const off of switched(await page.evaluate(keptSetup))) problems.push(`the first run read a dev switch: ${off}`);
+      } else if (fought && !moved) moved = await moving(page);
     }
     // long enough a fight for the server to rank its give-up
     if (fought) await page.waitForTimeout(Math.max(0, start + fought + FIGHT_MS - Date.now()));
@@ -237,6 +279,7 @@ async function smoke(browser, name, { root, page: path }) {
     await page.screenshot({ path: join(SHOTS, `smoke-${name}.png`) }).then(() => problems.push(`screenshot: ${join(SHOTS, `smoke-${name}.png`)}`), () => {});
   }
   stale = false;
+  if (await page.evaluate(() => sessionStorage.getItem('smoke:fakeAd')).catch(() => null)) problems.push('the fake ad box (?ads=fake) showed');
   if (!fought) problems.push(`no fight within ${SECONDS} s: no run was kept in storage`);
   else if (!moved) problems.push('the fight never moved on the canvas');
   if (!QUICK) problems.push(...(await api.problems()));

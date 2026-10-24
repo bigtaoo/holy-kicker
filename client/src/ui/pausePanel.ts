@@ -1,7 +1,7 @@
 import { Container } from 'pixi.js';
 import { getLocale, localeName, t } from '../i18n';
 import type { Sound } from '../audio/Sound';
-import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
+import { loadSettings, updateSettings } from '../meta/settings';
 import type { KeyValueStore } from '../meta/saveStore';
 import { toggle } from './toggle';
 import { COLORS, backdrop, button, fit, keyCap, label, panel } from './widgets';
@@ -39,23 +39,22 @@ export interface PausePanelActions {
   giveUp(): void;
 }
 
-/** The switches over the stored settings: music and effects come back at the level they had. */
+/** The switches over the stored settings: music and effects come back at the level they had, in this run or a later one. */
 export function runSwitches(kv: KeyValueStore, sound: Pick<Sound, 'level' | 'musicLevel' | 'setVolume' | 'setMusicVolume'>, shake: { on: boolean }, canVibrate: boolean): PauseSwitches {
-  const kept = { music: sound.musicLevel || VOLUME_STEPS, effects: sound.level || VOLUME_STEPS };
   return {
     list: canVibrate ? ['music', 'effects', 'shake', 'haptics'] : ['music', 'effects', 'shake'],
     on: (s) => (s === 'music' ? sound.musicLevel > 0 : s === 'effects' ? sound.level > 0 : s === 'shake' ? shake.on : loadSettings(kv).haptics),
     set: (s, on) => {
       if (s === 'music') {
-        if (sound.musicLevel > 0) kept.music = sound.musicLevel;
-        const music = on ? kept.music : 0;
+        const keptMusic = sound.musicLevel || loadSettings(kv).keptMusic;
+        const music = on ? keptMusic : 0;
         sound.setMusicVolume(music);
-        updateSettings(kv, { music });
+        updateSettings(kv, { music, keptMusic });
       } else if (s === 'effects') {
-        if (sound.level > 0) kept.effects = sound.level;
-        const volume = on ? kept.effects : 0;
+        const keptVolume = sound.level || loadSettings(kv).keptVolume;
+        const volume = on ? keptVolume : 0;
         sound.setVolume(volume);
-        updateSettings(kv, { volume });
+        updateSettings(kv, { volume, keptVolume });
       } else if (s === 'shake') {
         shake.on = on;
         updateSettings(kv, { shake: on });

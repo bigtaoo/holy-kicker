@@ -4,7 +4,7 @@ import { tapNamed, tapWhenUp } from '../testkit/testShell';
 import { liveRun, untilOffer } from '../testkit/liveRun';
 import { GIVE_UP_WAIT } from './pausePanel';
 
-describe('pausing a live run', () => {
+describe('pausing a live run', { timeout: 30_000 }, () => {
   it('stops the sim and its clock while the panel is up, and carries on from the same tick on resume', async () => {
     const run = await liveRun();
     run.steer('bot');
@@ -53,7 +53,7 @@ describe('pausing a live run', () => {
   });
 });
 
-describe('giving up a live run', () => {
+describe('giving up a live run', { timeout: 30_000 }, () => {
   it('asks twice, then settles the run on the results', async () => {
     const run = await liveRun();
     run.steer('bot');

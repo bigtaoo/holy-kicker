@@ -213,11 +213,19 @@ export const SPELL_LEVELS: Readonly<Record<SpellId, readonly SpellLevel[]>> = {
 export const OPENING_DEAL = { deals: 2, spells: ['cymbal', 'bolt', 'palm', 'incense', 'talisman', 'bomb', 'knives'] as readonly SpellId[] };
 
 /**
- * A new player's first run (RunConfig.firstRun) deals these spells, in this order, first in its
- * * first level-ups, so a hero who hardly moves yet already throws, circles and homes in, and then
- * heals behind the incense.
+ * A new player's first run (RunConfig.firstRun) steers to the healing incense: its first
+ * level-ups each deal the card here first (level-up k the k-th), while it can still be taken.
+ * The bomb opens and the knives and talismans follow, so a hero who hardly moves yet already
+ * throws, circles and homes in; the incense comes level by level in between with the rice (its
+ * evolution's pair), so the evolved incense, which heals the hero standing in it, is offered
+ * around wave 8-10 to a player who follows the suggested cards (ui/runWatch.ts).
  */
-export const FIRST_RUN_SPELLS: readonly SpellId[] = ['bomb', 'knives', 'talisman', 'incense'];
+export const FIRST_RUN_DEALS: readonly Card[] = [
+  { kind: 'spell', id: 'bomb' }, { kind: 'spell', id: 'incense' }, { kind: 'spell', id: 'knives' },
+  { kind: 'spell', id: 'talisman' }, { kind: 'spell', id: 'incense' }, { kind: 'passive', id: 'rice' },
+  { kind: 'spell', id: 'incense' }, { kind: 'spell', id: 'knives' }, { kind: 'spell', id: 'incense' },
+  { kind: 'spell', id: 'bomb' }, { kind: 'spell', id: 'incense' },
+];
 
 /**
  * Spells and passives that start out of the level-up pool: each comes with a sutra

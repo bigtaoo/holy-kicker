@@ -342,6 +342,7 @@ export class RunHud implements Screen {
     for (const x of [-26, 4]) arrows.poly([x, -24, x + 30, 0, x, 24]).fill(ink);
     b.addChild(arrows);
     b.position.set(f.w - 230, 300);
+    b.label = 'fast';
     return b;
   }
 

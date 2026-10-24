@@ -36,7 +36,7 @@ mode and the act rules are new. A player who has seen everything by day 2 has no
 Open too early: all four sutras, all five relics, both monks. Spread already but invisible: the
 gear tiers. Nothing else exists to unlock: there are no cosmetics, no lobby decorations, and no
 spell or passive that is gated besides the four sutras (talisman, bomb and knives are in every
-pool, and the fixed first run deals them).
+pool, and the first run's fixed deals, `FIRST_RUN_DEALS`, rely on them).
 
 ## Proposed schedule
 
@@ -101,6 +101,8 @@ Never take away what was earned:
 - **Unlock moment on the results**: a first clear or a star total that crosses a gate shows one
   card per unlock (icon, name, one line on what it does), replacing today's plain text lines
   "New relic: …" / "New spell: …". Gear tiers get one line ("Celestial gear now drops").
+  Until a chapter is cleared the card shows one at most, the relic first (`newcomerUnlocks`,
+  docs/design.md "Flow").
 - **Tests**: the schedule (`unlocks.ts`, pure), the migration (old saves at ch 2/3/4 keep their
   relics and sutras), the results reward, the teasers' text.
 

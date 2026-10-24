@@ -180,10 +180,16 @@ motion read as alive. All of it is view-side; the engine is untouched.
   Aiming straightens the elbow (`TaoActor.aim` brings the bones between the arm and the gun to
   zero by its weight), so the aiming code is the same with or without elbows. The bulldog and
   the cat have the same elbows.
-- **Faces**: like the monk, the head swaps drawings (`corgiFace.ts`, tested): a battle cry as a
-  gun goes off, a wince on a hit (the wince wins), and otherwise the smile with a blink, sometimes
-  a double, every few seconds. The bulldog and the cat carry the same three faces; the view
-  shows only the variants a rig has.
+- **Faces**: like the monk, the head swaps drawings (`corgiFace.ts`, tested), driven only by the
+  sim events the view already gets. Strong faces are kept for moments: a wince on a hit (it wins
+  and never waits), a happy laugh on a card pick or a top-tier gem, a proud wink with the tongue
+  out when a wave begins (the last one is over), a boss falls or the chapter is cleared. Between
+  them it holds a calm face: worried with a sweat drop under 30% health (it lets go over 36%),
+  focused while the guns keep firing (it outlasts the last shot by 1.2 s, so steady fire does not
+  flicker it), else the smile, with a blink, sometimes a double, every few seconds. Every face
+  but the wince and the blink holds at least 0.3 s before the next takes over. The bulldog and
+  the cat still carry the older three faces (`head_fire`, `head_hurt`, `head_blink`); the view
+  shows only the variants a rig has, so they keep the rest face while firing and wince when worried.
 - **Calm by default**: the hero is on screen the whole run and the camera follows it, so every
   motion is small: a step of 4% of the height, a 2% bob and 3.5° roll in the trot, a 3° lean,
   a 4° kick per shot. Big swings read as shaking.
@@ -221,13 +227,17 @@ fringe shows on dark grounds (`clean_edges`). The gun is a separate drawing plac
 (`"image"` parts; the near paw's gun is its mirror). The ears sit in front of the head over a
 round skull fill, so they swing without opening a gap at the base. The thighs are cut along the
 knee pads' own outlines with the hip behind them filled dark, and the feet have rounded,
-outlined tops, so a step shows no cut edge. The head and ears come from `face_a.png`, the
-corgi's face redrawn closer to the character sheet (big glossy eyes, a smaller smile); the spec's
+outlined tops, so a step shows no cut edge. The head and ears come from `face_rest.png`:
+`face_a.png` (the corgi's face redrawn closer to the character sheet) with smaller glossy eyes,
+cream brow tufts and a closed w-smile, since the big black eyes read as panda patches at game
+scale (the takes and contact sheets are in `faces2/`, `sheet.py` builds one). The spec's
 `"sources"` scales and places that drawing onto `apose2.png`, and the torso fills the old head's
 area dark so the new chin sits on the collar (`face_c.png`, `face_d.png` are other takes). The
-expressions are `face_fire.png`, `face_hurt.png` and `face_blink.png`, `face_a.png` redrawn (by
-image edit) with another eye and mouth; the head's `"faces"` cuts each into a variant
-(`head_fire`, ...) of the same shape, taking only the `face_zone` box from it so the outline and
+expressions are `face_focus.png`, `face_happy.png`, `face_proud.png`, `face_worried.png`,
+`face_hurt.png` and `face_blink.png`, `face_rest.png` redrawn (by image edit, prompt in the
+`.txt` beside each) with other eyes and mouth, then aligned back to it (an affine fit on
+everything outside the face); the head's `"faces"` cuts each into a variant
+(`head_focus`, ...) of the same shape, taking only the `face_zone` box from it so the outline and
 the fur round the face stay identical and a swap never jumps. The elbows are cut along the bracer's
 edge: `fore_f` and `fore_n` are the forearms and paws, and the upper arms keep a round elbow cap
 under them so a bend opens no gap. The
