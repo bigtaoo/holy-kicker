@@ -1,3 +1,4 @@
+import { AD_PLAY_MS, StrayAd } from '../adTimeout';
 import type { AdPrivacy, Ads } from '../types';
 import type { AdKind, AdState, HKNative } from './bridge';
 
@@ -23,6 +24,10 @@ export class AdMob implements Ads, AdPrivacy {
   private state: AdState | null;
   private waiting: (() => void)[] = [];
   private playing: Playing | null = null;
+  /** An ad given up that may still be on screen, and its kind: nothing shows over it, and its
+   *  late events reach no later ad (adTimeout.ts). */
+  private readonly stray = new StrayAd();
+  private strayKind: AdKind | null = null;
 
   constructor(private readonly native: Partial<HKNative> | null) {
     this.state = typeof native?.adState === 'function' ? clean(native.adState.call(native)) : null;
@@ -82,24 +87,37 @@ export class AdMob implements Ads, AdPrivacy {
   }
 
   private show(kind: AdKind, started?: () => void): Promise<boolean> {
-    if (!this.canShow() || !this.state?.[kind] || this.playing) return Promise.resolve(false);
+    if (!this.canShow() || !this.state?.[kind] || this.playing || this.stray.active()) return Promise.resolve(false);
     return new Promise((resolve) => {
-      const timer = setTimeout(() => this.finish(false), START_WAIT_MS);
+      const timer = setTimeout(() => this.giveUp(), START_WAIT_MS);
       this.playing = { kind, started, resolve, timer };
       this.native?.showAd?.call(this.native, kind);
     });
   }
 
   private event(e: unknown): void {
-    const p = this.playing;
-    if (!p || !e || typeof e !== 'object') return;
+    if (!e || typeof e !== 'object') return;
     const { kind, event, ok } = e as Record<string, unknown>;
-    if (kind !== p.kind) return;
+    if (this.stray.active()) {
+      if (kind === this.strayKind && event === 'done') this.stray.clear();
+      return;
+    }
+    const p = this.playing;
+    if (!p || kind !== p.kind) return;
     if (event === 'started') {
-      // on screen: it runs as long as the player watches
+      // on screen: it runs as long as the player watches, up to AD_PLAY_MS
       clearTimeout(p.timer);
+      p.timer = setTimeout(() => this.giveUp(), AD_PLAY_MS);
       p.started?.();
     } else if (event === 'done') this.finish(ok === true);
+  }
+
+  /** The shell never answered: the game goes on unpaid, and the ad is stray until its end. */
+  private giveUp(): void {
+    if (!this.playing) return;
+    this.strayKind = this.playing.kind;
+    this.stray.mark();
+    this.finish(false);
   }
 
   private finish(ok: boolean): void {

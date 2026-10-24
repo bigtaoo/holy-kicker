@@ -5,10 +5,12 @@
  */
 import { MemoryStore } from '../meta/saveStore';
 import { fakeApp, readPublicText } from './headless';
-import { NO_AD_PRIVACY, NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type Platform, type Store } from '../platform/types';
+import { NO_AD_PRIVACY, NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type Banner, type Platform, type Portal, type Store } from '../platform/types';
 
 export interface FakeHost {
   ads?: Ads;
+  portal?: Portal;
+  banner?: Banner;
   store?: Store | null;
   languages?: string[];
   country?: string | null;
@@ -39,9 +41,9 @@ export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): 
     safeInsets: () => ({ top: 0, bottom: 0 }),
     onHide: (cb) => void hides.push(cb),
     onBattery() {},
-    portal: NO_PORTAL,
+    portal: host.portal ?? NO_PORTAL,
     ads: host.ads ?? NO_ADS,
-    banner: NO_BANNER,
+    banner: host.banner ?? NO_BANNER,
     adPrivacy: NO_AD_PRIVACY,
     store: host.store ?? null,
     audio: null,

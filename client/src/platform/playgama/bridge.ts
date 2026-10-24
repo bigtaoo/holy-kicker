@@ -1,4 +1,4 @@
-import { adWatchdog, type AdTimer } from '../adTimeout';
+import { adWatchdog, StrayAd, type AdTimer } from '../adTimeout';
 
 // The Playgama Bridge SDK (v2, https://wiki.playgama.com/playgama/bridge-sdk), wrapped like the
 // CrazyGames SDK so nothing in the game can be broken by it: the script is missing in local dev,
@@ -178,11 +178,11 @@ export class PlaygamaBridge {
     const ad = this.sdk?.advertisement;
     if (!ad || typeof ad.on !== 'function') return Promise.resolve(false);
     // one ad at a time: an earlier one still waiting for its end is given up as unpaid
-    this.listen?.('failed');
+    this.inFlight?.giveUp();
+    // and none opens over one given up that may still be playing
+    if (this.stray(event).active()) return Promise.resolve(false);
     return new Promise<boolean>((resolve) => {
       let paid = false;
-      // a state that never comes gives the ad up as failed (adTimeout.ts); later states go nowhere
-      const watch = adWatchdog(() => listen('failed'), this.timer);
       const listen = (state: unknown) => {
         if (state === 'opened') {
           watch.started();
@@ -190,14 +190,20 @@ export class PlaygamaBridge {
         } else if (state === 'rewarded') paid = true;
         else if (state === 'closed' || state === 'failed') {
           watch.done();
-          if (this.listen === listen) this.listen = null;
+          if (this.inFlight?.listen === listen) this.inFlight = null;
           resolve(paid && state === 'closed');
         }
       };
-      this.listen = listen;
+      // a state that never comes gives the ad up as failed (adTimeout.ts); its late states go nowhere
+      const giveUp = () => {
+        this.stray(event).mark();
+        listen('failed');
+      };
+      const watch = adWatchdog(giveUp, this.timer);
+      this.inFlight = { event, listen, giveUp };
       if (!this.subscribed.has(event)) {
         this.subscribed.add(event);
-        void settle(() => ad.on?.(event, (s) => this.listen?.(s)));
+        void settle(() => ad.on?.(event, (s) => this.state(event, s)));
       }
       try {
         call(ad);
@@ -207,9 +213,26 @@ export class PlaygamaBridge {
     });
   }
 
-  /** The ad in flight's state handler: each event is subscribed once and forwarded here. */
-  private listen: ((state: unknown) => void) | null = null;
+  /** Each event is subscribed once; its states go to the ad in flight of that kind, or, while a
+   *  given-up one may still be playing, nowhere until that one ends. */
+  private state(event: string, s: unknown): void {
+    const stray = this.stray(event);
+    if (stray.active()) {
+      if (s === 'closed' || s === 'failed') stray.clear();
+      return;
+    }
+    if (this.inFlight?.event === event) this.inFlight.listen(s);
+  }
+
+  private stray(event: string): StrayAd {
+    let s = this.strays.get(event);
+    if (!s) this.strays.set(event, (s = new StrayAd(this.timer)));
+    return s;
+  }
+
+  private inFlight: { event: string; listen: (state: unknown) => void; giveUp: () => void } | null = null;
   private readonly subscribed = new Set<string>();
+  private readonly strays = new Map<string, StrayAd>();
 }
 
 /**

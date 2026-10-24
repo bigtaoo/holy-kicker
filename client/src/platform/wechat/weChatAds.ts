@@ -1,4 +1,4 @@
-import { AD_START_MS, within } from '../adTimeout';
+import { AD_PLAY_MS, AD_START_MS, AdTimedOut, StrayAd, within } from '../adTimeout';
 import { NO_ADS, type Ads } from '../types';
 import UNITS from './adUnits.json';
 
@@ -30,6 +30,9 @@ class Slot<Close> {
   ready = false;
   private closed: ((res?: Close) => void) | null = null;
   private wake: (() => void)[] = [];
+  /** An ad given up that may still come on screen or close: no other show over it, and its late
+   *  close goes to no later ad (adTimeout.ts). */
+  private readonly stray = new StrayAd();
 
   constructor(readonly ad: WxAd<Close>) {
     ad.onLoad(() => {
@@ -42,6 +45,7 @@ class Slot<Close> {
     });
     ad.onClose((res) => {
       this.ready = false;
+      this.stray.clear();
       const done = this.closed;
       this.closed = null;
       done?.(res);
@@ -62,13 +66,15 @@ class Slot<Close> {
 
   /** Shows the ad; undefined when none could come on screen, else what its close said. */
   async play(started?: () => void, retry = true): Promise<{ res?: Close } | undefined> {
-    if (this.closed) return undefined;
+    if (this.closed || this.stray.active()) return undefined;
     const close = new Promise<Close | undefined>((r) => (this.closed = r));
     try {
       // a show that never answers is given up like a failed one (adTimeout.ts)
       await within(this.ad.show(), AD_START_MS);
-    } catch {
+    } catch (e) {
       this.closed = null;
+      // one that may still come on screen is never shown a second time
+      if (e instanceof AdTimedOut) return this.giveUp();
       if (!retry) {
         // for the next break
         void this.ad.load().catch(() => undefined);
@@ -82,7 +88,17 @@ class Slot<Close> {
       return this.play(started, false);
     }
     started?.();
-    return { res: await close };
+    try {
+      return { res: await within(close, AD_PLAY_MS) };
+    } catch {
+      this.closed = null;
+      return this.giveUp();
+    }
+  }
+
+  private giveUp(): undefined {
+    this.stray.mark();
+    return undefined;
   }
 }
 
