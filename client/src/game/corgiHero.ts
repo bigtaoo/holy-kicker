@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import { FP, HERO, TICK_RATE, kickTarget, targetAt, type RelicId, type SimState } from '@hk/engine';
 import { lerpX, lerpY } from './fixedStep';
-import { CorgiFace, type CorgiFaceId } from './corgiFace';
+import { CorgiFace, type CorgiFaceId, type CorgiMoment } from './corgiFace';
 import { CorgiMotion, RUN_SPEED, follow, headTurn, pawAim, runRate } from './corgiMotion';
 import { TaoActor, type TaoAsset } from './tao/TaoActor';
 
@@ -64,7 +64,7 @@ export class CorgiHero {
   private readonly face = new CorgiFace();
   /** The head variants this rig carries (the corgi's; the bulldog and the cat have none yet). */
   private readonly faces: ReadonlySet<string>;
-  private shown: CorgiFaceId | null = null;
+  private shown: string | null = null;
   private readonly flash = new Graphics().star(0, 0, 7, FLASH_SIZE, FLASH_SIZE * 0.4).fill({ color: 0xfff27a }).circle(0, 0, FLASH_SIZE * 0.35).fill({ color: 0xffffff });
   private aimX = -IDLE_AIM.x;
   private aimY = IDLE_AIM.y;
@@ -120,6 +120,11 @@ export class CorgiHero {
     return { x: p.x * this.k, y: p.y * this.k };
   }
 
+  /** A moment worth a face: a card picked or a big gem (happy), a wave or a boss beaten (proud). */
+  cheer(moment: CorgiMoment): void {
+    this.face.cheer(moment);
+  }
+
   /** A hit: the body squashes and the head tips, on top of whatever it is doing. */
   hurt(): void {
     this.actor.layer('hurt', { additive: true });
@@ -164,6 +169,7 @@ export class CorgiHero {
     });
     this.motion.lookAt(head, dt);
     this.actor.offset('head', this.motion.look);
+    this.face.health(p.maxHp > 0 ? p.hp / p.maxHp : 1);
     this.showFace(this.face.step(dt));
     this.actor.update(dt);
 
@@ -175,8 +181,10 @@ export class CorgiHero {
     this.flash.visible = this.flashT > 0;
   }
 
+  /** A face the rig lacks falls back: worried to the wince, the rest to the rest face. */
   private showFace(face: CorgiFaceId | null): void {
-    const next = face && this.faces.has(face) ? face : null;
+    const pick = face === 'head_worried' && !this.faces.has(face) ? 'head_hurt' : face;
+    const next = pick && this.faces.has(pick) ? pick : null;
     if (next === this.shown) return;
     this.shown = next;
     this.actor.setImage('head', next);

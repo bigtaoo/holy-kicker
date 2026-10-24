@@ -1,4 +1,4 @@
-import { EVOLVE, FP, TICK_RATE, type SimEvent, type SimState } from '@hk/engine';
+import { DROPS, EVOLVE, FP, TICK_RATE, type SimEvent, type SimState } from '@hk/engine';
 import type { ArsenalView } from './arsenalView';
 import type { BossStage } from './bossStage';
 import { blockFx, howlFx, nearestElite } from './eliteView';
@@ -83,6 +83,7 @@ export function reactTo(v: EventViews, events: readonly SimEvent[], s: SimState)
         v.feedback.eliteDown(e);
         break;
       case 'cleared':
+        v.hero.cheer?.('proud');
         v.feedback.rout(s);
         break;
       case 'mobDown':
@@ -110,7 +111,10 @@ export function reactTo(v: EventViews, events: readonly SimEvent[], s: SimState)
       case 'bossDown':
       case 'bossBack':
       case 'bossNext': // the rush's next boss enters as a boss coming back
-        if (e.type === 'bossDown') v.shake.blow();
+        if (e.type === 'bossDown') {
+          v.shake.blow();
+          v.hero.cheer?.('proud');
+        }
         if (s.boss) v.boss?.react(e, s.boss);
         break;
       case 'blast':
@@ -119,6 +123,7 @@ export function reactTo(v: EventViews, events: readonly SimEvent[], s: SimState)
       case 'pickup': {
         const p = s.players.find((q) => q.owner === e.owner);
         if (p && e.owner === LOCAL) v.drops.pickup(p.x / FP, p.y / FP, e.tier);
+        if (e.owner === LOCAL && e.tier >= DROPS.tiers.length) v.hero.cheer?.('happy');
         break;
       }
       case 'cast':
@@ -145,6 +150,12 @@ export function reactTo(v: EventViews, events: readonly SimEvent[], s: SimState)
         if (p) v.sutras.dodge(p.x / FP, p.y / FP);
         break;
       }
+      case 'pick':
+        if (e.owner === LOCAL) v.hero.cheer?.('happy');
+        break;
+      case 'wave':
+        v.hero.cheer?.('proud');
+        break;
       case 'bellUp':
         if (e.owner === LOCAL) v.spells.bellUp();
         break;

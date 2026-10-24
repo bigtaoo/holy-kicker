@@ -1,4 +1,6 @@
-Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Keep the closed eyes exactly as they are, but tilt each closed-eye line so it slants down toward the outside, like eyes squeezed shut in pain. Make only these other changes to the face:
-- The mouth becomes a small wavy, wobbly grimace of pain, slightly open with clenched white teeth, no tongue.
-- A small blue sweat drop beside the right eye.
-Everything else stays pixel-identical: the head outline and size, the ears, the white blaze on the forehead, the cream cheeks, the nose, the armour, the arms, the legs, the boots, the tail, the backpack. Pure white background, no text.
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Do not move, resize or redraw the head outline, the ears or the body: only repaint the eyes, the cream brow tufts and the mouth inside the face, in the same style as now (small black glossy eyes with white highlights, soft cream brow tufts). Make only this change to the face:
+- A wince of pain: both eyes squeezed tightly shut, each a thick black > and < shape slanting toward the nose.
+- The cream brow tufts pinched together and tilted.
+- The mouth a small wavy grimace, slightly open with clenched white teeth, no tongue.
+- A small blue sweat drop beside one eye.
+Everything else stays pixel-identical: the head outline and size, the ears, the white blaze on the forehead, the cream cheeks, the nose, the armour, the arms, the legs, the boots, the tail, the backpack. The whole character stays in the picture exactly as now, with the body; do not add fur tufts or hair on top of the head. Pure white background, no text.

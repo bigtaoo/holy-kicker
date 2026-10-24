@@ -3,7 +3,7 @@
  "exclusive": true,
  "overlap": 5,
  "clean_edges": true,
- "sources": {"face_a.png": {"scale": 0.8, "from": [563, 495], "to": [506, 372]}},
+ "sources": {"face_rest.png": {"scale": 0.8, "from": [563, 495], "to": [506, 372]}},
  "recolor": {
   "white": {"to": [35, 0.07, 0.4, 0.58], "parts": ["torso", "arm_f", "fore_f", "arm_n", "fore_n", "thigh_l", "thigh_r", "foot_l", "foot_r"]},
   "gunmetal": {"to": [215, 0.15, 0.4, 0.0], "parts": ["gun", "gun_n"]}
@@ -69,8 +69,8 @@
   },
   {
    "name": "head",
-   "source": "face_a.png",
-   "faces": {"head_fire": "face_fire.png", "head_hurt": "face_hurt.png", "head_blink": "face_blink.png"},
+   "source": "face_rest.png",
+   "faces": {"head_focus": "face_focus.png", "head_happy": "face_happy.png", "head_proud": "face_proud.png", "head_worried": "face_worried.png", "head_hurt": "face_hurt.png", "head_blink": "face_blink.png"},
    "face_zone": [565, 345, 190, 135],
    "poly": [[300, 140], [840, 140], [840, 300], [818, 340], [820, 365], [812, 400], [796, 432], [775, 455], [720, 478], [640, 500], [565, 507], [500, 503], [430, 486], [365, 462], [325, 430], [305, 395], [295, 360]],
    "hidden": [[[795, 300], [791, 269], [777, 239], [756, 211], [727, 187], [692, 167], [652, 152], [608, 143], [563, 140], [518, 143], [474, 152], [434, 167], [399, 187], [370, 211], [349, 239], [335, 269], [331, 300]]],
@@ -79,13 +79,13 @@
   },
   {
    "name": "ear_l",
-   "source": "face_a.png",
+   "source": "face_rest.png",
    "poly": [[270, 0], [500, 0], [500, 140], [485, 152], [425, 212], [380, 282], [355, 308], [270, 320]],
    "pivot": [420, 250]
   },
   {
    "name": "ear_r",
-   "source": "face_a.png",
+   "source": "face_rest.png",
    "poly": [[640, 0], [900, 0], [900, 320], [800, 312], [778, 300], [745, 238], [697, 192], [665, 162], [640, 150]],
    "pivot": [735, 245]
   },

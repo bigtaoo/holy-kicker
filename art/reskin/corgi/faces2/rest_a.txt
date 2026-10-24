@@ -1,0 +1,5 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Do not move, resize or redraw the head outline, the ears or the body: only repaint the eyes, brows and mouth inside the face. Make only this change to the face, so it reads as a friendly, confident hero dog:
+- Smaller eyes: upright black ovals about half the current size, each with a big round white highlight in the upper part and a small second highlight below it.
+- A hint of brows: a short, soft cream-white tuft of fur above each eye, slightly raised, friendly.
+- A friendlier muzzle: a small closed smile, a soft "w" line under the nose with the corners turned up, and a tiny pink tongue tip peeking out at one side.
+Everything else stays pixel-identical: the head outline and size, the ears, the white blaze on the forehead, the cream cheeks, the nose, the armour, the arms, the legs, the boots, the tail, the backpack. Pure white background, no text.

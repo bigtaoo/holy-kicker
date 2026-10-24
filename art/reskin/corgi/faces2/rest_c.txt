@@ -1,0 +1,5 @@
+Keep exactly the same character, same canvas, same size, same position, same art style, same colours and thick black outlines. Do not move, resize or redraw the head outline, the ears or the body: only repaint the eyes, brows and mouth inside the face. Make only this change to the face, in a clean cartoon mascot style:
+- Small bright eyes: compact black eyes, about a third smaller than now, slightly taller than wide, each with one big white highlight, and a soft cream rim around each eye.
+- A hint of brows: a short thick black brow line above each eye, tilted up at the inner end in a confident, cheerful way.
+- A friendlier muzzle: a relaxed grin, mouth slightly open in a gentle curve with a pink tongue and no teeth, plus a soft pink blush on each cheek.
+Everything else stays pixel-identical: the head outline and size, the ears, the white blaze on the forehead, the cream cheeks, the nose, the armour, the arms, the legs, the boots, the tail, the backpack. Pure white background, no text.
