@@ -5,7 +5,7 @@
  */
 import { MemoryStore } from '../meta/saveStore';
 import { fakeApp, readPublicText } from './headless';
-import { NO_AD_PRIVACY, NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type Banner, type Platform, type Portal, type Store } from '../platform/types';
+import { NO_AD_PRIVACY, NO_ADS, NO_BANNER, NO_PORTAL, type Ads, type AppUpdates, type Banner, type Notifier, type Platform, type Portal, type Store } from '../platform/types';
 
 export interface FakeHost {
   ads?: Ads;
@@ -14,6 +14,9 @@ export interface FakeHost {
   store?: Store | null;
   languages?: string[];
   country?: string | null;
+  /** The iOS app's reminders and hot updates (testkit/iosHost.ts). */
+  notify?: Notifier;
+  updates?: AppUpdates;
 }
 
 export type FakePlatform = Platform & { calls: string[]; hide(): void; press(code: string, repeat?: boolean): void };
@@ -54,5 +57,7 @@ export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): 
     device: () => 'headless',
     country: () => host.country ?? null,
     openUrl: (url) => void calls.push(`open ${url}`),
+    ...(host.notify && { notify: host.notify }),
+    ...(host.updates && { updates: host.updates }),
   };
 }

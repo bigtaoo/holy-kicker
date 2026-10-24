@@ -235,12 +235,12 @@ export async function failedOta(running = __HK_BUNDLE__, inShell = Capacitor.isN
   }
 }
 
-/** The shell's hot updates, as the lobby's prompt asks for them. */
-export function otaUpdates(): AppUpdates {
+/** The shell's hot updates, as the lobby's prompt asks for them; `find` and `updater` stand in for a test. */
+export function otaUpdates(find: () => Promise<OtaManifest | null> = () => findOta(), updater = plugin): AppUpdates {
   return {
     check: async () => {
-      const m = await findOta();
-      return m && { version: m.version, install: (progress) => installOta(m, progress) };
+      const m = await find();
+      return m && { version: m.version, install: (progress) => installOta(m, progress, updater) };
     },
   };
 }

@@ -393,7 +393,8 @@ export class LobbyScreen implements Screen {
     if (!tabLock(this.save, tab)) this.tab = tab;
   }
 
-  private relayout(): void {
+  /** Draws the lobby again where it stands: same tab, panels and toast. */
+  relayout(): void {
     // an ad can finish after the lobby is gone
     if (this.frame && !this.view.destroyed) this.layout(this.frame);
   }
