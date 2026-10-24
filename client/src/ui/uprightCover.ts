@@ -3,7 +3,7 @@ import { t } from '../i18n';
 import type { UiFrame } from './uiLayout';
 import { COLORS, label } from './widgets';
 
-// The cover over everything while a touch-only device is held sideways (viewport.ts
+// The cover over everything while a touch-only phone is held sideways (viewport.ts
 // wantsUpright): the shell's background, a phone standing up with a turning arrow, and the ask.
 // It takes taps, so nothing under it does; a run behind it waits on its pause panel.
 

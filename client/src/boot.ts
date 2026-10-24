@@ -27,9 +27,12 @@ import { THEME } from './theme';
 // Boot shared by every entry: the language, the renderer, the art, then the shell. The
 // platform is fully initialised before this runs (CrazyGames waits for its SDK first, since
 // the save lives in the SDK's data module).
-/** The page's loading screen bar (index.html), at `share` of the way; no page on WeChat. */
+/** The page's loading screen bar and its share (index.html), at `share` of the way; no page on WeChat. */
 function bootBar(share: number): void {
-  if (typeof document !== 'undefined') document.getElementById?.('boot')?.style.setProperty('--p', share.toFixed(3));
+  if (typeof document === 'undefined') return;
+  const page = document.getElementById?.('boot');
+  page?.style.setProperty('--p', share.toFixed(3));
+  page?.querySelector('em')?.setAttribute('data-p', String(Math.round(share * 100)));
 }
 
 export interface BootOptions {

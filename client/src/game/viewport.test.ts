@@ -53,9 +53,15 @@ describe('computeViewport', () => {
 });
 
 describe('wantsUpright', () => {
-  it('asks only a touch-only device held sideways', () => {
+  it('asks only a touch-only phone held sideways', () => {
     expect(wantsUpright(844, 390, true)).toBe(true);
     expect(wantsUpright(390, 844, true)).toBe(false);
     expect(wantsUpright(1920, 1080, false)).toBe(false);
+  });
+
+  it('lets a tablet play sideways', () => {
+    expect(wantsUpright(1180, 820, true)).toBe(false); // iPad Air
+    expect(wantsUpright(1133, 744, true)).toBe(false); // iPad mini
+    expect(wantsUpright(960, 600, true)).toBe(false); // small Android tablet
   });
 });

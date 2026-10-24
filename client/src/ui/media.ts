@@ -8,7 +8,7 @@ export function reducedMotion(): boolean {
   return query('(prefers-reduced-motion: reduce)');
 }
 
-/** A phone or tablet with no mouse: turned on its side it gets the "turn upright" cover (viewport.ts wantsUpright). */
+/** A phone or tablet with no mouse: a phone turned on its side gets the "turn upright" cover (viewport.ts wantsUpright). */
 export function touchOnly(): boolean {
   return query('(hover: none) and (pointer: coarse)');
 }

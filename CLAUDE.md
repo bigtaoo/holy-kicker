@@ -30,6 +30,7 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 
 - Logical resolution 1080x1920. Phones and WeChat are pure 9:16 (taller phones see more
   height); desktop web widens to at most 3:4 and zooms in 1.3x (`client/src/game/viewport.ts`).
+  A tablet held sideways plays in that 3:4 frame too; only a phone on its side is asked to turn.
 - In-world sizes (logical units): hero 120, mob 80, elite 130; UI text at least 48.
 - Art: thick-outline sticker style, flat colours, one hard cel shadow. Hero is warm
   (saffron/gold), enemies are cold (teal/purple/grey) with red eyes; no saturated warm

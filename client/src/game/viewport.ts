@@ -61,11 +61,14 @@ export function computeViewport(screenW: number, screenH: number, wide = false):
   };
 }
 
+/** The shortest side (CSS px) a sideways touch screen needs to play: a tablet's, not a phone's. */
+export const SIDEWAYS_MIN_H = 600;
+
 /**
- * A touch-only device held sideways: the game is portrait only, so it asks to be turned upright
- * rather than squeezing a pillarboxed strip into the middle (Shell's upright cover). Desktops
- * and laptops, wide as they are, play in the 3:4 frame.
+ * A touch-only phone held sideways: its 3:4 frame would be a thumb-wide strip in the middle, so
+ * it asks to be turned upright (Shell's upright cover). Tablets, like desktops and laptops, play
+ * sideways in the 3:4 frame; upright is only what they are best at.
  */
 export function wantsUpright(screenW: number, screenH: number, touchOnly: boolean): boolean {
-  return touchOnly && screenW > screenH;
+  return touchOnly && screenW > screenH && screenH < SIDEWAYS_MIN_H;
 }

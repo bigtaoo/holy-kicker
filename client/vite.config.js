@@ -3,6 +3,7 @@ import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
 import { themeAssets } from '../build/theme.mjs';
 import { preloadRenderer } from '../build/preloadRenderer.mjs';
+import { cacheHeaders } from '../build/cacheHeaders.mjs';
 
 /**
  * The web build of one art set (build/theme.mjs). Monk: `npm run build` → client/dist, served at
@@ -16,7 +17,7 @@ export function webConfig(theme) {
     // @hk/engine: the deterministic sim, a sibling package at the repo root (build/hkAlias.mjs)
     resolve: { alias: engineAlias },
     define: buildDefine(theme),
-    plugins: [themeAssets(theme), preloadRenderer()],
+    plugins: [themeAssets(theme), preloadRenderer(), cacheHeaders()],
     server: {
       port: monk ? 5174 : 5184,
       host: true,
