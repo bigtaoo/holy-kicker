@@ -11,7 +11,12 @@ import { FrameGate, FrameGovernor, frameResolution, LEVELS, refreshCap, targetFp
 // update is timed for the perf telemetry (frameWork.ts). The ticker runs on a FrameClock, so
 // the sim and the view step whole refreshes however late the frame's callback ran. Screens with
 // no run draw at the display's full density and battles at their level's resolution: the canvas
-// is resized once as the player goes in or out of a run, never mid-battle (frameResolution).
+// is resized as the player goes in or out of a run, and a level moved in a battle has its other
+// settings at once and its canvas at the next calm frame (the level-up cards, the pause): a resize
+// reallocates the drawing buffer, a frame of 150-400 ms on a CPU-throttled phone in Chrome. A step
+// down waits RESIZE_WAIT_MS of battle at most, as the device needs it (and the governor, which
+// keeps measuring, takes longer than that to step again); a step up is a try and waits for calm,
+// and is often stepped back before then, at no resize at all.
 
 /** The WebGL renderer string, '' when the browser hides it. */
 export function gpuName(renderer: Renderer): string {
@@ -21,6 +26,9 @@ export function gpuName(renderer: Renderer): string {
   return String(gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) ?? '');
 }
 
+/** Battle ms a step down's lower resolution waits for a calm frame before the canvas is resized anyway. */
+export const RESIZE_WAIT_MS = 2000;
+
 export class QualityRuntime {
   governor: FrameGovernor;
   private readonly gate: FrameGate;
@@ -28,6 +36,10 @@ export class QualityRuntime {
   private readonly maxResolution: number;
   private last = 0;
   private wasCalm = true;
+  /** Whether the last frame's screen had no run (`sharp`); undefined before the first. */
+  private sizedSharp: boolean | undefined;
+  /** Battle ms the canvas has waited on a level's new resolution. */
+  private waited = 0;
   private readonly frame: BattleFrame = { ms: 0, target: 0, vsync: 0, level: 0, work: 0, sim: 0, view: 0, draw: 0 };
   /** Each battle frame (perf telemetry; the object is reused); calm frames never come here. */
   onBattleFrame: (f: BattleFrame) => void = () => {};
@@ -63,7 +75,8 @@ export class QualityRuntime {
       // battle frame after them (its time runs from a calm frame)
       if (this.last > 0 && !calm && !this.wasCalm) {
         f.level = this.governor.level;
-        if (this.governor.sample((now - this.last) / 1000, refreshCap(this.gate.vsync))) this.apply();
+        if (this.resizeDue()) this.waited += now - this.last;
+        if (this.governor.sample((now - this.last) / 1000, refreshCap(this.gate.vsync))) this.apply(calm);
         f.ms = now - this.last;
         f.target = this.gate.frameMs;
         f.vsync = this.gate.vsync;
@@ -77,7 +90,7 @@ export class QualityRuntime {
       }
       this.last = now;
       this.wasCalm = calm;
-      this.fit();
+      this.fit(calm);
       frameWork.sim = frameWork.run = 0;
       const start = performance.now();
       // a throw in any of the frame's listeners or the render goes to the shell, which recovers (ui/faultGuard.ts)
@@ -97,22 +110,36 @@ export class QualityRuntime {
   /** A new quality mode from the settings panel. MSAA stays as the context was made with. */
   setRange(range: LevelRange): void {
     this.governor = new FrameGovernor(range);
-    this.apply();
+    this.apply(this.calm());
   }
 
   get settings(): LevelSettings {
     return LEVELS[this.governor.level];
   }
 
-  private apply(): void {
-    this.fit();
+  private apply(calm = true): void {
+    this.fit(calm);
     this.onLevel(this.settings, this.governor.level);
   }
 
-  /** Sizes the canvas for this frame's screen; a no-op unless a run came or went or the level moved. */
-  private fit(): void {
-    const res = frameResolution(this.sharp(), this.settings, this.maxResolution);
+  /** The canvas's resolution differs from what this frame's screen and level ask. */
+  private resizeDue(): boolean {
+    return this.app.renderer.resolution !== frameResolution(this.sharp(), this.settings, this.maxResolution);
+  }
+
+  /**
+   * Sizes the canvas for this frame's screen; a no-op unless a run came or went or the level
+   * moved, and for a level moved in a battle, until a calm frame (or for a step down, RESIZE_WAIT_MS).
+   */
+  private fit(calm: boolean): void {
+    const sharp = this.sharp();
+    const res = frameResolution(sharp, this.settings, this.maxResolution);
     const r = this.app.renderer;
-    if (r.resolution !== res) r.resize(this.app.screen.width, this.app.screen.height, res);
+    const came = sharp !== this.sizedSharp;
+    this.sizedSharp = sharp;
+    if (r.resolution === res) return void (this.waited = 0);
+    if (!calm && !came && (res > r.resolution || this.waited < RESIZE_WAIT_MS)) return;
+    this.waited = 0;
+    r.resize(this.app.screen.width, this.app.screen.height, res);
   }
 }

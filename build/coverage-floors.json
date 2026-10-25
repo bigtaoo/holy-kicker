@@ -1,11 +1,11 @@
 {
   "engine": 97.67,
   "server": 88.8,
-  "client": 90.24,
+  "client": 90.43,
   "client/meta": 92.17,
   "client/net": 92.43,
-  "client/platform": 87.36,
-  "client/game": 88.29,
+  "client/platform": 87.66,
+  "client/game": 88.81,
   "client/ui": 93.72,
   "client/audio": 50.28
 }
