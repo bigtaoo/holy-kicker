@@ -311,7 +311,8 @@ or a new single image is cheap; elites and bosses cost a rig each.
   packs lifted the casual bot from level 30 to 38 at the end. The elite is now the big
   jiangshi charger: within 750 of the hero it stops and marks a lane at him (violet, 0.8 s),
   dashes 1050 along it hurting for 22, rests 0.7 s and charges again after 2.5 s; the lane is
-  fixed when it aims, so a step aside dodges it. The fox is no longer the elite. The wisp is
+  fixed when it aims, so a step aside dodges it. From the aim to the dash's end it has super
+  armor (ENGINE_VERSION 51): hits hurt it but neither knock it back nor stun it. The fox is no longer the elite. The wisp is
   drawn in code (`client/src/game/wispSheet.ts`), the big jiangshi is the jiangshi sheet
   scaled and tinted steel blue. Balance (40 runs, casual): 36/40 won at level 33, against
   37/40 at level 30 before; skilled 39/40; every relic 17–20/20 out of 20.

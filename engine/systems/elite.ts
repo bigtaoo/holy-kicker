@@ -11,7 +11,9 @@ import { howl } from './snow';
 // one is within ELITE.chargeRange and its cooldown is done it stops and marks a lane at him
 // for ELITE.aim (the view draws it), then dashes ELITE.dashLength along that lane, hurting a
 // hero it passes within ELITE.laneHalf, and stands for ELITE.rest before walking again. The
-// lane is fixed when it aims, so stepping aside is the answer. A stun freezes it in any phase.
+// lane is fixed when it aims, so stepping aside is the answer. From the aim to the dash's end it
+// has super armor (superArmor): hits still hurt it, but nothing knocks it back or stuns it, so
+// the marked lane is the lane it runs. A stun landed before that freezes it in any phase.
 // Several elites (the mid-boss twins) take turns: one aims only while no other is charging.
 // Chapter 2's toad king (systems/marsh.ts) shoots instead. Chapter 3's wolf leader charges
 // faster and, every other time, howls instead (systems/snow.ts): the mobs around it run fast.
@@ -24,7 +26,8 @@ export function eliteSystem(s: SimState, events: SimEvent[], hurt: HurtFn): void
   for (const e of s.elites) stepElite(s, e, events, hurt);
 }
 
-function charging(e: Elite): boolean {
+/** A charging elite (aiming or dashing): it takes no knockback and no stun until the dash ends. */
+export function superArmor(e: Elite): boolean {
   return (e.kind === 'charger' || e.kind === 'wolfLeader') && (e.phase === 'aim' || e.phase === 'dash');
 }
 
@@ -64,7 +67,7 @@ function stepElite(s: SimState, e: Elite, events: SimEvent[], hurt: HurtFn): voi
     if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange && wolf && e.shots % 2 === 1) {
       e.shots++;
       enter(e, 'howl');
-    } else if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange && !s.elites.some(charging)) {
+    } else if (e.cd === 0 && !p.dead && d > 0 && d < ELITE.chargeRange && !s.elites.some(superArmor)) {
       e.shots++;
       enter(e, 'aim');
       e.vx = Math.trunc(((p.x - e.x) * ELITE.dashSpeed) / d);
@@ -85,7 +88,7 @@ function enter(e: Elite, phase: Elite['phase']): void {
  * path from where the elite is; -1 when it is not charging.
  */
 export function laneDistance(e: Elite, x: number, y: number): number {
-  if (!charging(e)) return -1;
+  if (!superArmor(e)) return -1;
   const left = e.phase === 'aim' ? ELITE.dashLength : Math.max(0, ELITE.dashLength - e.t * ELITE.dashSpeed);
   const rx = x - e.x;
   const ry = y - e.y;

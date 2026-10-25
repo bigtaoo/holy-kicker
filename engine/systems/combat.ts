@@ -7,6 +7,7 @@ import { foeHurt, guards } from './affixes';
 import { hurtBoss } from './boss';
 import { stat } from './build';
 import { dropGem } from './drops';
+import { superArmor } from './elite';
 import { gonged } from './demon';
 import { shielded, tear } from './ghost';
 import { inView, respawnPoint } from './horde';
@@ -99,7 +100,8 @@ export function kickTarget(s: SimState, p: Player, range: number): number {
  * Damages target i on behalf of player `by`, at `pct` percent of a base roll (the crit stat
  * raises the crit chance). Mobs lose health and at 0 go down (a gem drops, they respawn on the
  * ring with the wave's health), the elite loses health and is knocked back (the toad king
- * barely; none when `knock` is off: the staff keeps it in reach), the boss loses health.
+ * barely; none when `knock` is off: the staff keeps it in reach, nor while it charges), the boss
+ * loses health.
  * A relic hit comes `from` a point (the ball's, else the one given): a door god's shield
  * facing it takes the hit whole, as does a fallen monk's gong. Spells give none, so they always land.
  */
@@ -152,7 +154,7 @@ export function damage(
       s.elites.splice(at, 1);
       return;
     }
-    if (!knock) return;
+    if (!knock || superArmor(e)) return;
     const d = dist(t.x - by.x, t.y - by.y) || 1;
     const push = e.kind === 'toadKing' ? TOAD_KING.knockback : e.kind === 'wolfLeader' ? WOLF_LEADER.knockback : e.kind === 'doorGod' ? DOOR_GOD.knockback : ELITE.knockback;
     t.x += Math.trunc(((t.x - by.x) * push) / d);
