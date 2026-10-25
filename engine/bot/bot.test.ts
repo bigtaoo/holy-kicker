@@ -7,7 +7,8 @@ import { steerScore, suggestCard } from './bot';
 // and do so reproducibly, or the report (npm run balance) means nothing.
 
 describe('balance bots', () => {
-  it('plays a short chapter to an end, the same way every time', () => {
+  // two whole chapters: well under a second here, but past vitest's 5 s on a CI runner under coverage
+  it('plays a short chapter to an end, the same way every time', { timeout: 30_000 }, () => {
     const a = playChapter(3, 'skilled', 4);
     expect(a.outcome).not.toBe('timeout');
     expect(a.level).toBeGreaterThan(1);
