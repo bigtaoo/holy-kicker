@@ -48,7 +48,7 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - `client/` — the game's view and hosts (Vite). Entries `src/main.ts` (web dev),
   `src/main.crazygames.ts` (`npm run build:crazygames` → `client/dist-crazygames/`, the zip to
   upload), `src/main.playgama.ts` (`npm run build:playgama` → `client/dist-playgama/`, zipped with
-  `index.html` at the root for the Playgama console; saves, ads and pause through Bridge v2),
+  `index.html` at the root for the Playgama console by Python's zipfile, files only (a `Compress-Archive` zip fails its Bridge check); saves, ads and pause through Bridge v2),
   `src/main.wechat.ts` and `src/main.ios.ts` (`npm run build:ios` → `client/dist-ios/`,
   which the Capacitor shell in `client/ios/` packages), all through `src/boot.ts`;
   `src/platform/{web,crazygames,playgama,wechat,ios}` host adapters (storage, ads, portal hooks; WeChat ads and error reports: `docs/wechat-ads.md`); `src/game` the run; `src/ui` the shell, lobby,

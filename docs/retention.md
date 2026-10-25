@@ -193,6 +193,8 @@ ordered by the device's `t`), Newgrounds build 81b1aee (10-18) and Playgama buil
   throttled CPU found no 1 s freeze in either build, only 150–400 ms stalls when the quality
   governor resized the canvas mid-fight (fc98cdb now waits for a calm frame). Sandbox builds:
   bee17d6, dd79b04 from ~14:15 UTC, c5277ab (events with `run_frame_count`) from ~15:42 UTC.
+  The monk's sandbox moved from 012848d to df8474b (the same game code as c5277ab) at ~21:35 UTC
+  on 10-25, and its free starter boost (~50 plays) was claimed then, so its new plays all land on it.
 
 ## A shorter first run (not built)
 
