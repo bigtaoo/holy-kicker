@@ -3,6 +3,7 @@ import { TICK_RATE } from '@hk/engine';
 import { t } from '../i18n';
 import { TUTORIAL_AUTO, TUTORIAL_GEMS, TUTORIAL_MOVE } from './tutorial';
 import { liveRun, playUntil } from '../testkit/liveRun';
+import { NO_PORTAL } from '../platform/types';
 
 describe("the first run's tutorial on a live run", { timeout: 30_000 }, () => {
   it('asks the phone player to move, then teaches the kicks and the gems, then goes', async () => {
@@ -28,6 +29,22 @@ describe("the first run's tutorial on a live run", { timeout: 30_000 }, () => {
     expect(run.texts()).toContain(t('tutorial.keys'));
     expect(run.texts()).toContain(t('tutorial.drag'));
     expect(run.texts()).not.toContain(t('tutorial.move'));
+  });
+
+  it('holds a desktop first run on the click hint while the keys cannot reach it, and plays once they can', async () => {
+    let reach = false;
+    const told: string[] = [];
+    const portal = { ...NO_PORTAL, gameplayStart: () => told.push('start'), gameplayStop: () => told.push('stop') };
+    const run = await liveRun({ save: {}, device: 'desktop', keysReach: () => reach, portal });
+    const at = run.sim().tick;
+    await run.tick(TICK_RATE);
+    expect(run.sim().tick).toBe(at);
+    expect(run.texts()).toContain(t('tutorial.click'));
+    expect(told).not.toContain('start');
+    reach = true;
+    await run.ticks(TICK_RATE);
+    expect(told).toEqual(['start']);
+    expect(run.faults).toEqual([]);
   });
 
   it("takes the first run's opening level-ups itself and says what it gained", async () => {

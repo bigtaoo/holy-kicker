@@ -53,7 +53,7 @@ export class PlaygamaPlatform extends WebPlatform {
     const web = webAudioHost();
     this.audio = web && { ...web, onHostMute: (cb) => bridge.onMute(cb) };
     // only from the portal itself: a local preview and the QA tool stay out of the game's numbers
-    if (this.host === 'playgama') this.analytics = bridgeAnalytics(bridge, __HK_BUILD__, (cb) => this.onHide(cb), deviceFields(navigator.userAgent, navigator.maxTouchPoints || 0, bridge.deviceType()));
+    if (this.host === 'playgama') this.analytics = bridgeAnalytics(bridge, __HK_BUILD__, (cb) => this.onHide(cb), deviceFields(navigator.userAgent, navigator.maxTouchPoints || 0, bridge.deviceType()), () => this.attention());
     const rewardedOk = async () => bridge.rewardedSupported() && !(await bridge.hasAdblock());
     this.ads = {
       rewardedAvailable: rewardedOk,

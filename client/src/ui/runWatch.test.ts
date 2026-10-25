@@ -19,14 +19,14 @@ function fakeHud(): RunHud & { calls: Record<string, unknown[][]> } {
   }) as unknown as RunHud & { calls: Record<string, unknown[][]> };
 }
 
-function watch(teach: boolean, past?: RunPast, cam = { busy: false }, offer = { free: 0, ad: false }, steer = false) {
+function watch(teach: boolean, past?: RunPast, cam = { busy: false }, offer = { free: 0, ad: false }, steer = false, hold?: { reach(): boolean; start(): void }) {
   const game = { engine: new Engine({ ...DEFAULT_RUN, waves: 50, firstRun: teach }), paused: false, downCamBusy: () => cam.busy, pick: vi.fn() } as unknown as Game;
   const hud = fakeHud();
   const portal = { gameplayStart: vi.fn(), gameplayStop: vi.fn() } as unknown as Portal;
   const net = { track: vi.fn() } as unknown as Backend;
   const ads = { rewardedAvailable: () => Promise.resolve(offer.ad) } as unknown as Ads;
   const end = vi.fn();
-  const w = new RunWatch(game, hud, { chapter: 1, portal, ads, net, past, freeRevives: () => offer.free, kills: () => 9, keepRun: vi.fn(), end, steer }, teach);
+  const w = new RunWatch(game, hud, { chapter: 1, portal, ads, net, past, freeRevives: () => offer.free, kills: () => 9, keepRun: vi.fn(), end, steer, hold }, teach);
   return { game, hud, net, w, end };
 }
 
@@ -50,6 +50,32 @@ describe('RunWatch', () => {
     for (let i = 0; i < 60; i++) w.update(1 / 30);
     expect(game.paused).toBe(false);
     expect(w.tutorial?.step).toBe('move');
+  });
+
+  it('holds a desktop first run still while the keys cannot reach the game, and starts it once they can', () => {
+    let reach = false;
+    const start = vi.fn();
+    const { game, net, w } = watch(true, undefined, undefined, undefined, false, { reach: () => reach, start: () => { start(); game.paused = false; } });
+    expect(w.held).toBe(true);
+    expect(game.paused).toBe(true);
+    for (let i = 0; i < 30 * 10; i++) w.update(1 / 30);
+    expect(start).not.toHaveBeenCalled();
+    reach = true;
+    w.update(1 / 30);
+    expect([w.held, game.paused, start.mock.calls.length]).toEqual([false, false, 1]);
+    // the held seconds are not the run's
+    expect(vi.mocked(net.track).mock.calls.filter(([e]) => e === 'tutorial')).toEqual([['tutorial', { step: 'move', secs: 0 }]]);
+  });
+
+  it('lets a Resume start a held run, and holds neither a desktop whose keys reach nor a run that teaches nothing', () => {
+    const start = vi.fn();
+    const held = watch(true, undefined, undefined, undefined, false, { reach: () => false, start });
+    held.game.paused = false;
+    held.w.update(1 / 30);
+    expect([held.w.held, start.mock.calls.length]).toEqual([false, 0]);
+    expect(watch(true, undefined, undefined, undefined, false, { reach: () => true, start }).w.held).toBe(false);
+    const replay = watch(false, undefined, undefined, undefined, false, { reach: () => false, start });
+    expect([replay.w.held, replay.game.paused]).toEqual([false, false]);
   });
 
   it('moves the tutorial on once the hero has walked, and reports each step as it is reached', () => {

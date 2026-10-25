@@ -19,6 +19,8 @@ export interface FakeHost {
   updates?: AppUpdates;
   /** The phone can buzz: each buzz is recorded in `calls` as `vibrate` or `vibrate strong`. */
   vibrate?: boolean;
+  /** Whether the keys reach the game now (a portal's iframe before a click: false); always, when left out. */
+  keysReach?: () => boolean;
 }
 
 export type FakePlatform = Platform & { calls: string[]; hide(): void; press(code: string, repeat?: boolean): void };
@@ -37,6 +39,7 @@ export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): 
     createApp: async () => fakeApp(),
     bindStick() {},
     readKeys: () => ({ x: 0, y: 0 }),
+    ...(host.keysReach && { keysReach: host.keysReach }),
     readText: async (path) => readPublicText(path),
     readBinary: async (path) => {
       const b = Buffer.from(readPublicText(path), 'binary');

@@ -22,7 +22,10 @@ import { newTutorial, stepTutorial, type Tutorial, type TutorialStep } from './t
 // it, the tutorial's steps and the outcome, and tells the portal when gameplay
 // stops and starts again. The first run plays from its first frame, input or not: the kicks are
 // automatic and the opening horde starts in kick range, so the first kills come within a second
-// (a frozen screen waiting for a key lost desktop players who never pressed one).
+// (a frozen screen waiting for a key lost desktop players who never pressed one). The one wait is
+// a desktop whose keys cannot reach the game yet (a portal's iframe before a click in it, often
+// under the portal's own consent popup): that run stands still on the click hint until they do,
+// since the fight played on unsteered there and most such first runs ended on the move hint.
 
 /** Seconds of play between two `alive` beats: a run whose page dies with no `leave` still says how far it got. */
 export const ALIVE_EVERY = 60;
@@ -68,6 +71,8 @@ export interface RunWatchDeps {
   pairHint?: { due(): boolean; done(): void };
   /** Plays the new-record fanfare. */
   cheer?(): void;
+  /** A desktop first run: whether the keys reach the game now, and what starts a run held until they do. */
+  hold?: { reach(): boolean; start(): void };
 }
 
 /**
@@ -108,6 +113,8 @@ export class RunWatch {
   /** What the build strip was last drawn from (buildChanged), and the recharges filled in place every frame. */
   private readonly buildSeen: unknown[] = [];
   private readonly charges: (Charge | null)[] = [];
+  /** The first run stands still until the keys reach the game (RunWatchDeps.hold). */
+  held: boolean;
 
   constructor(
     private readonly game: Game,
@@ -118,6 +125,8 @@ export class RunWatch {
   ) {
     this.tutorial = teach ? newTutorial() : null;
     this.autoPicks = teach ? BALANCE.firstRun.autoPicks : 0;
+    this.held = teach && !!d.hold && !d.hold.reach();
+    if (this.held) game.paused = true;
     if (teach) hud.setTutorial((this.hint = 'move'));
   }
 
@@ -129,6 +138,11 @@ export class RunWatch {
   update(dt: number): void {
     const { game, hud, d } = this;
     const s = game.engine.state;
+    // a Resume on the pause panel starts it too
+    if (this.held && (!game.paused || d.hold!.reach())) {
+      this.held = false;
+      if (game.paused) d.hold!.start();
+    }
     hud.update(dt);
     hud.setTick(s.tick);
     if (s.wave !== this.shownWave) {

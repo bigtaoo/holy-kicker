@@ -315,6 +315,11 @@ export class RunHud implements Screen {
     this.view.destroy({ children: true });
   }
 
+  /** The pause panel is up. */
+  get pauseShown(): boolean {
+    return this.paused;
+  }
+
   /** The game went to the background: opens the pause panel unless a panel is already up. */
   pauseForHost(): void {
     if (!this.paused && !this.down && !this.offer) this.setPaused(true);

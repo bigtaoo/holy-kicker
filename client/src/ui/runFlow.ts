@@ -174,12 +174,14 @@ export class RunFlow {
       kills: () => this.kills,
       pairHint: { due: () => !loadSettings(h.platform.storage).pairsTold, done: () => updateSettings(h.platform.storage, { pairsTold: true }) },
       keepRun: () => this.keep(), end: () => this.end(), cheer: () => h.sound.play('cleared'),
+      // a desktop first run waits for the keys; a pause panel opened meanwhile keeps it until Resume
+      hold: h.device === 'desktop' && h.platform.keysReach ? { reach: () => h.platform.keysReach!(), start: () => void (hud.pauseShown || this.setPaused(false)) } : undefined,
     }, !!teach);
     // the fast-forward choice carries over from the last run
     hud.setFast(loadSettings(h.platform.storage).fast);
     // the clock only where time already matters: a chapter cleared before on this track (against its best), or a challenge
     hud.setTimer(timerShown(isCleared(save, chapter, this.hard), !!c) ? (c ? 0 : bestTime(save, chapter, this.hard)) : null);
-    h.portal.gameplayStart();
+    if (!this.watch.held) h.portal.gameplayStart();
     // a resumed fight waits on the pause panel until the player looks (a card choice or the death panel holds it anyway)
     const s = game.engine.state;
     if (!left) h.net.track('run_start', { chapter, hard: this.hard, waves: s.config.waves, monk: c?.loadout?.monk ?? h.scene.monk ?? save.monk, relic: c?.loadout?.relic ?? h.scene.relic ?? save.relic, ...(from && { [from]: true }), ...(c && { challenge: c.id }) });

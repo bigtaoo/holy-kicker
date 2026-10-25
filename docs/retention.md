@@ -172,6 +172,12 @@ ordered by the device's `t`), Newgrounds build 81b1aee (10-18) and Playgama buil
 - **Playgama** (ad traffic, 012848d with the fix): 326 started a run, 44% finished the tutorial,
   39% passed 60 s; Bridge's session facts are too coarse to name the step, so builds from this
   commit send `tutorial_step`. Read it before changing the hints.
+- **Playgama corgi** (bee17d6, 10-25 share traffic, ~93% desktop): 243 users at `move`, 99 at
+  `auto`, yet 137 reached 30 s of play, so ~38 played on without ever steering 1.2 s. Reproduced:
+  Playgama's consent popup covers the iframe while the run plays behind it, and once it closes the
+  keys do not reach the game until a click. **Fix**: a desktop first run whose keys cannot reach it
+  (`keysReach()` false) stands still on the click hint until they can (RunWatchDeps.hold); Playgama
+  run and tutorial events now carry `focus` / `input` too, so the next read tells the two apart.
 
 ## A shorter first run (not built)
 
