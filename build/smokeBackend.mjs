@@ -5,7 +5,9 @@
 // Every POST is kept with what the server's checkers (rules.ts) say of its body, and the runs the
 // server takes are re-simulated (resimQueue.ts): `problems()` lists each refused body, each run
 // the re-simulation refused, each run that ended ranked (its run_end event) but was never posted,
-// and each challenge run that never reached /v1/challenge/runs.
+// and each challenge run that never reached /v1/challenge/runs. A run whose own clock is under the
+// server's time for its wave is not ranked (runEnd.ts plausible): on a slow CI runner the run's
+// clock falls well behind the wall's, so a 12 s fight can end a wave-1 run under 4 s.
 import { build } from 'esbuild';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -24,6 +26,7 @@ export { MemoryVault } from './cloudVault';
 export { MemoryShelf } from './replayShelf';
 export { engineFor } from './engines';
 export { checkBatch, checkRunPost, checkChallengeRun } from './rules';
+export { LIMITS } from './protocol';
 `;
 
 let server = null;
@@ -112,8 +115,10 @@ export async function backend() {
     const ends = runEnds();
     const runs = posts.filter((p) => p.path === '/v1/runs' && p.status < 400).length;
     const challengeRuns = posts.filter((p) => p.path === '/v1/challenge/runs' && p.status < 400).length;
-    const ranked = ends.filter((p) => !p.challenge && p.waves === RANKED_WAVES).length;
-    const challenged = ends.filter((p) => p.challenge).length;
+    // the server takes a run's time only from its wave's minimum on (rules.ts checkRun); the client sends no other run
+    const timed = (p) => p.tenths >= p.wave * m.LIMITS.minSecondsPerWave * 10;
+    const ranked = ends.filter((p) => !p.challenge && p.waves === RANKED_WAVES && timed(p)).length;
+    const challenged = ends.filter((p) => p.challenge && timed(p)).length;
     if (!guest && runs < ranked) out.push(`${ranked} ranked run(s) ended but ${runs} reached /v1/runs`);
     if (!guest && challengeRuns < challenged) out.push(`${challenged} challenge run(s) ended but ${challengeRuns} reached /v1/challenge/runs`);
     return out;
