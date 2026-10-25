@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { seeded } from '../game/deco';
 import { BALANCE } from './balance';
 import { bestTier, canMerge, gearStats, itemStats, merge, mergeAll, rollDrops, worn, type Inventory } from './gear';
 import { loadout } from './loadout';
@@ -68,12 +69,14 @@ describe('gear', () => {
   });
 
   it('drops only unlocked relics, and tiers by the chapter', () => {
-    const all = rollDrops(10, 50 * 40, ['ball', 'staff'], false, Math.random);
+    // seeded: an unlucky rand once rolled no tier 7 in 500 last-chapter drops
+    const rand = seeded(7);
+    const all = rollDrops(10, 50 * 40, ['ball', 'staff'], false, rand);
     const relics = all.map((d) => d.item).filter((i) => !['pendant', 'bracers', 'robe', 'sash', 'sandals'].includes(i));
     expect(new Set(relics)).toEqual(new Set(['ball', 'staff']));
-    expect(rollDrops(1, 500, ['ball'], false, Math.random).every((d) => d.tier <= 1)).toBe(true);
+    expect(rollDrops(1, 500, ['ball'], false, rand).every((d) => d.tier <= 1)).toBe(true);
     expect(all.every((d) => d.tier >= 1 && d.tier <= 4)).toBe(true);
-    expect(rollDrops(BALANCE.chapters, 500, ['ball'], false, Math.random).some((d) => d.tier === 7)).toBe(true);
+    expect(rollDrops(BALANCE.chapters, 500, ['ball'], false, rand).some((d) => d.tier === 7)).toBe(true);
   });
 
   it('a run pays its drops into the save, and a first clear brings a copy of the new relic', () => {
