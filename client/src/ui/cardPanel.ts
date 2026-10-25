@@ -3,7 +3,7 @@ import type { CardKind } from '@hk/engine';
 import { t } from '../i18n';
 import { evolvedIcon, iconSprite, type IconSheet } from './buildBar';
 import { cardHand } from './cardHand';
-import { CARD_NUDGE, nudgeOn } from './cardNudge';
+import { CARD_NUDGE, keyWakes, moveWakes, nudgeOn } from './cardNudge';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
 import { cardKey } from './cardKeys';
 import { spot } from './spots';
@@ -263,9 +263,13 @@ export function cardPanel(
     hand.view.position.set(f.w / 2 + HAND_X, cards[nudge.suggest].y + HAND_DOWN);
     hand.view.visible = false;
     view.addChild(hand.view);
-    const touch = () => (nudge.touched = true);
-    view.on('pointerdown', touch);
-    view.on('pointermove', touch);
+    view.on('pointerdown', () => (nudge.touched = true));
+    let from: { x: number; y: number } | null = null;
+    view.on('pointermove', (e) => {
+      const at = view.toLocal(e.global);
+      if (moveWakes(from, at)) nudge.touched = true;
+      from ??= { x: at.x, y: at.y };
+    });
   }
   let settled = false;
   const update = (age: number) => {
@@ -296,7 +300,7 @@ export function cardPanel(
     showFocus();
   };
   const key = (code: string, repeat: boolean) => {
-    if (nudge) nudge.touched = true;
+    if (nudge && keyWakes(repeat)) nudge.touched = true;
     if (!keys || locked) return;
     const k = cardKey(code, repeat, keys.focus, cards.length);
     if (k && 'focus' in k) {

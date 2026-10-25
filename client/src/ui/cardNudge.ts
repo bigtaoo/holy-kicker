@@ -12,11 +12,27 @@ export const CARD_NUDGE = {
   after: BALANCE.cardNudge.after,
   /** Seconds of one tap: down, held, up and a rest. */
   beat: 1.2,
+  /** Logical units the pointer must travel before a move counts as the player doing something. */
+  slack: 40,
 };
 
 /** Whether the hand shows `age` seconds after the cards opened, `touched` if the player did anything since. */
 export function nudgeOn(age: number, touched: boolean): boolean {
   return !touched && age >= CARD_NUDGE.after;
+}
+
+/**
+ * Whether a pointer move to `at` counts as the player doing something, `from` where the pointer
+ * was first seen under the cards (null: not yet). Pixi re-sends the mouse's last position as a
+ * move every few frames while it rests, so only a real move away counts.
+ */
+export function moveWakes(from: { x: number; y: number } | null, at: { x: number; y: number }): boolean {
+  return !!from && Math.hypot(at.x - from.x, at.y - from.y) > CARD_NUDGE.slack;
+}
+
+/** Whether a key counts as the player doing something: a movement key held from the run repeats, which does not. */
+export function keyWakes(repeat: boolean): boolean {
+  return !repeat;
 }
 
 export interface TapPose {

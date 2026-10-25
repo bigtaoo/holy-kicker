@@ -91,9 +91,27 @@ describe('level-up cards on a live run', { timeout: 30_000 }, () => {
     for (let i = 0; i < run.sim().players[0].offer.length; i++) {
       if (i !== suggest) expect(Math.abs(cardOnScreen(run, i).parent!.y - hand.y)).toBeGreaterThan(100);
     }
-    hand.parent!.emit('pointermove', {} as never);
+    hand.parent!.emit('pointermove', { global: { x: 500, y: 900 } } as never);
+    hand.parent!.emit('pointermove', { global: { x: 500, y: 900 + 2 * CARD_NUDGE.slack } } as never);
     await run.tick(2);
     expect(shown(hand)).toBe(false);
+  });
+
+  it('keep the hand for a resting mouse and a held key, drop it when the mouse really moves', async () => {
+    const run = await liveRun({ device: 'desktop' });
+    run.steer('bot');
+    await untilOffer(run);
+    const [hand] = named(run.app.stage, 'cardHand');
+    const panel = hand.parent!;
+    // Pixi re-sends a resting mouse's position as a move; the run's movement key repeats
+    for (let i = 0; i < 20; i++) panel.emit('pointermove', { global: { x: 500, y: 900 } } as never);
+    run.platform.press('KeyW', true);
+    await run.tick(Math.ceil(CARD_NUDGE.after * 60) + 10);
+    expect(shown(hand)).toBe(true);
+    panel.emit('pointermove', { global: { x: 500 + 2 * CARD_NUDGE.slack, y: 900 } } as never);
+    await run.tick(2);
+    expect(shown(hand)).toBe(false);
+    expect(run.faults).toEqual([]);
   });
 
   it('tag the suggested card for a new player', async () => {
