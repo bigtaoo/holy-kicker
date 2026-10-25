@@ -72,9 +72,10 @@ Names are working names; every name ships through the string table (en / zh-CN s
   | standing still, takes the suggestion | 0 → 0 (falls on wave 20) | 0 → 2 (17) |
   | skilled, takes the suggestion | 28 → 57 | 26 (34) → 60 (8) |
 
-  This goes against "a first run should be lost in 5–10 minutes" (A harder curve, below): a new
-  player who follows the hint now usually clears chapter 1 on the first run. **To decide.** If the
-  first run should still be lost, the deals can end sooner, or the steer can stop after the rice.
+  This replaces "a first run should be lost in 5–10 minutes" (A harder curve, below): decided
+  2026-10-25, a new player who follows the hint should feel safe and usually clears chapter 1 on
+  the first run; the challenge starts from chapter 2. A player who ignores the hint still mostly
+  loses (casual, own picks: 13 of 60).
   The engine version bump split the week's challenge boards (docs/design.md "Challenge records and
   engine versions"), so ship it on a Monday.
 - About 30 level-ups plus 5 shrines per full run, against 45 picks to max everything, so
@@ -460,7 +461,8 @@ or a new single image is cheap; elites and bosses cost a rig each.
   - Chapter 3's wolf packs come every 3rd wave, and chapter 5's first elite wave brings one
     elite instead of two.
 - **A harder curve** (ENGINE_VERSION 30). Bots that moved took next to no damage in chapter 1
-  and won every try; a first run should be lost in 5–10 minutes. Mob health grows faster late
+  and won every try; a first run should be lost in 5–10 minutes (superseded for the first run by
+  "A first run steers to the healing pool", above). Mob health grows faster late
   (`HORDE.hpSquare` 30 → 140: 360 health on wave 50 instead of 96, 97 instead of 34 on wave 25),
   mob contact hurts 3 more every 10 waves (was 1), and so that does not make the last chapters a
   wall, hurt by chapter is 100/100/125/180/180 % (was 210/250 for chapters 4 and 5). Chapter 1
