@@ -148,3 +148,48 @@ function countOver(sorted: readonly number[], ms: number): number {
   const i = sorted.findIndex((x) => x >= ms);
   return i < 0 ? 0 : sorted.length - i;
 }
+
+/**
+ * The current run's battle frames as fields on its progression_completed / progression_failed:
+ * how many frames, their mean rate, the longest, and how many took 100 ms or more up to 1 s or
+ * more, so the funnel ties a run's stutters to how it ended. Gaps and the frame after the game was
+ * away are left out as in PerfSampler.
+ */
+export class RunStutter {
+  private count = 0;
+  private active = 0;
+  private max = 0;
+  private over = OVER.map(() => 0);
+  private skip = false;
+
+  /** A run starts: counts from zero. */
+  reset(): void {
+    this.count = this.active = this.max = 0;
+    this.over = OVER.map(() => 0);
+    this.skip = false;
+  }
+
+  frame(ms: number): void {
+    if (this.skip) return void (this.skip = false);
+    if (!(ms > 0) || ms >= GAP_MS) return;
+    this.count++;
+    this.active += ms;
+    this.max = Math.max(this.max, ms);
+    OVER.forEach((o, i) => ms >= o && this.over[i]++);
+  }
+
+  /** The game was away (hidden, paused by the host): its next frame may span that time. */
+  away(): void {
+    this.skip = true;
+  }
+
+  fields(): Props {
+    const props: Props = {
+      run_frame_count: this.count,
+      run_fps_avg: this.active > 0 ? round1((this.count * 1000) / this.active) : 0,
+      run_frame_max_ms: round1(this.max),
+    };
+    OVER.forEach((o, i) => o >= 100 && (props[`run_frames_over_${o}ms`] = this.over[i]));
+    return props;
+  }
+}
