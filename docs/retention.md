@@ -13,7 +13,9 @@ ad events, plus ours through `bridge.analytics.send` (`client/src/platform/playg
 `progression_started` / `_completed` / `_failed` per chapter and mode, the first run's tutorial
 funnel (`tutorial_step` as each hint comes up, `step_id` `move` / `auto` / `gems` with `step_index`
 1–3, then `tutorial_completed`, `done` and 4, each with `seconds` into the run), and a
-`performance_sample` every 30 s of battle. Each of ours also carries the player's device: `device`
+`performance_sample` every 30 s of battle. A run's end also carries that run's own stutters
+(`run_frame_count`, `run_fps_avg`, `run_frame_max_ms`, `run_frames_over_{100,250,500,1000}ms`, from
+c5277ab), so a funnel split by them shows whether stuttering runs are the ones given up. Each of ours also carries the player's device: `device`
 `ios` / `android` / `desktop` / `other`, `form` Bridge's `mobile` / `tablet` / `desktop` / `unknown`
 and `touch` (the field's top values give the split). The users per `step_id`
 (`get_game_telemetry_event_analytics`, event `tutorial_step`, field `step_id`) against
@@ -178,6 +180,10 @@ ordered by the device's `t`), Newgrounds build 81b1aee (10-18) and Playgama buil
   keys do not reach the game until a click. **Fix**: a desktop first run whose keys cannot reach it
   (`keysReach()` false) stands still on the click hint until they can (RunWatchDeps.hold); Playgama
   run and tutorial events now carry `focus` / `input` too, so the next read tells the two apart.
+  Its `performance_sample`s had 3x the monk's frames over 50 ms; a local first minute on a
+  throttled CPU found no 1 s freeze in either build, only 150–400 ms stalls when the quality
+  governor resized the canvas mid-fight (fc98cdb now waits for a calm frame). Sandbox builds:
+  bee17d6, dd79b04 from ~14:15 UTC, c5277ab (events with `run_frame_count`) from ~15:42 UTC.
 
 ## A shorter first run (not built)
 
