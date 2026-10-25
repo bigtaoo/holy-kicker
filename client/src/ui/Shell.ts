@@ -151,6 +151,7 @@ export class Shell {
     const place = this.place();
     const r = this.runs;
     if (place === 'run' && r.game) return { place, secs, ...runLeave(r.game.engine.state, r.chapter, r.kills, r.watch?.tutorial?.step ?? null, this.platform.attention?.()) };
+    if (this.screen instanceof LobbyScreen) return { place, secs, tab: this.screen.shownTab };
     return { place, secs };
   }
 

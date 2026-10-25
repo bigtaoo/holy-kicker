@@ -33,7 +33,7 @@ export type Device = (typeof DEVICES)[number];
  * are over) and `secs` (seconds on screen since the run began, the pause panel left out); builds
  * before it sent a bare `tutorial` when done.
  * `leave` has `place` (`lobby`, `run`, `results` or `other`), `secs` (seconds on screen since
- * the previous `leave`) and, in a run, `chapter`, `wave`, the hero's `level`, the run's `kills`,
+ * the previous `leave`) and, in the lobby, `tab` (the tab on screen, `play`, `gear`, …); in a run, `chapter`, `wave`, the hero's `level`, the run's `kills`,
  * `card` (a level-up choice was open) and on the first run `tutorial` (the hint step reached) and, in a browser, `focus` (the game ever had the keys since launch) and `input` (any key or click reached it). `run_end` on a lost run has `cause`, what felled the hero (`crowd`, `touch`, `charge`, `slam`,
  * `emerge`, `bullet`, `zone`, or `level` when under-levelled for the wave). `alive` has what a `leave` in a run has
  * (`chapter`, `wave`, `level`, `kills`, `card`, `tutorial`). `run_resume` has `chapter`, `hard` and

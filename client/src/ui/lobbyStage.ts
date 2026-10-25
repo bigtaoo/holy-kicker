@@ -24,6 +24,7 @@ export class LobbyFigure {
 
   /** `height` UI units tall, feet at the view's origin. */
   constructor(rig: TaoAsset, height: number) {
+    this.view.label = 'lobbyFigure';
     this.actor = new TaoActor(rig);
     const s = height / this.actor.height;
     // the rig is drawn facing left; he faces the player's right, towards PLAY's side of the card

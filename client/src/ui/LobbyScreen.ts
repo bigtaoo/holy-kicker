@@ -398,6 +398,8 @@ export class LobbyScreen implements Screen {
     this.settingsOpen = true;
   }
 
+  get shownTab(): Tab { return this.tab; }
+
   /** Opens on `tab` (the results' next step), unless it is still locked. */
   openTab(tab: Tab): void {
     if (!tabLock(this.save, tab)) this.tab = tab;
