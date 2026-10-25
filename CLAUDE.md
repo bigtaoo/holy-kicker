@@ -12,7 +12,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - **Source files stay at or under 500 lines** (`npm run check:filelength`). Split by
   responsibility instead of raising the limit.
 - **`npm run check` must pass before every commit**: typecheck, file length, tests, WeChat,
-  CrazyGames and iOS web builds and the 4 MB main-package gate.
+  CrazyGames and iOS web builds, the 4 MB main-package gate and a scan that no release bundle
+  reads a dev URL switch (`check:releaseswitches`).
 - **Coverage only ratchets up**: check runs the tests as `npm run coverage` (about 10 s more), which fails when a
   workspace's or a `client/src/<dir>`'s line coverage drops over 0.5 points below `build/coverage-floors.json`;
   after adding tests, `npm run coverage -- --update` raises the floors (never lowers them) — commit it.
