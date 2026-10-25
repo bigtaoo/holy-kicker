@@ -34,7 +34,7 @@ const FIELD_R = 128;
 const NOVA = CORGI ? CORGI_FX.cyanPale : 0xfff0b8;
 const TRACK = CORGI ? CORGI_FX.orange : 0xffd860;
 const MOTES: Record<'field' | 'heal', readonly [number, number]> = CORGI
-  ? { field: [CORGI_FX.hot, CORGI_FX.orange], heal: [CORGI_FX.cyanPale, CORGI_FX.cyan] }
+  ? { field: [CORGI_FX.plasmaPale, CORGI_FX.plasma], heal: [CORGI_FX.mendPale, CORGI_FX.mend] }
   : { field: [0xffc860, 0xfff0a8], heal: [0xffc860, 0xfff0a8] };
 
 function bake(renderer: Renderer, g: Graphics, size: number): Texture {

@@ -77,7 +77,7 @@ export const corgiFr: Table<typeof corgiEn> = {
     bowl: { name: 'Tempête de scies', desc: 'Zappe {n} {n|one:bestiole|other:bestioles} par lancer, XP immédiate' },
     palm: { name: 'Barrage orbital', desc: 'Le cratère reste et cloue les bestioles {s}s' },
     bolt: { name: 'Tempête Tesla' },
-    incense: { name: 'Mare de réparation' },
+    incense: { name: 'Champ de réparation' },
     bell: { name: 'Champ de force' },
     cymbal: { name: 'Anneau de scies', desc: '{n} lames de scie tournent sans fin autour de toi et en lancent d’autres' },
     lotus: { name: 'Mines aimant', desc: 'Une mine à chaque pas, les explosions attirent les friandises' },
@@ -85,7 +85,7 @@ export const corgiFr: Table<typeof corgiEn> = {
     roar: { name: 'Aboiement sonique', desc: 'Aboie tout autour, brise les projectiles' },
     talisman: { name: 'Tempête de missiles', desc: 'Chaque missile qui touche éclate sur les bestioles autour' },
     bomb: { name: 'Tapis de bombes', desc: 'Lance {n} grenades à la fois, sur des bestioles différentes' },
-    knives: { name: 'Tempête de lames', desc: 'Les couteaux lancés reviennent et tranchent à l’aller et au retour' },
+    knives: { name: 'Tempête d’étoiles', desc: 'Les étoiles lancées reviennent et tranchent à l’aller et au retour' },
   },
   shrine: {
     heal: { name: 'Trousse de soins' },
@@ -102,7 +102,7 @@ export const corgiFr: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Frappe orbitale', desc: 'Une frappe depuis l’orbite écrase la plus grosse foule', count: 'Frappes {a} → {b}' },
     bolt: { name: 'Bobine Tesla', desc: 'L’éclair saute entre {n} {n|one:bestiole|other:bestioles}' },
-    incense: { name: 'Flaque de plasma', desc: 'Une flaque de plasma pétille à tes pieds pendant {s}s' },
+    incense: { name: 'Champ de plasma', desc: 'Un champ de plasma crépite à tes pieds pendant {s}s' },
     bell: { name: 'Bouclier bulle', desc: 'Bloque un coup toutes les {s}s, puis éclate' },
     cymbal: { name: 'Lame de scie', desc: '{n} lames s’envolent, transpercent et ricochent', count: 'Lames {a} → {b}' },
     lotus: { name: 'Mines de proximité', desc: 'En marchant, tu poses des mines qui projettent des éclats en explosant' },
@@ -110,7 +110,7 @@ export const corgiFr: Table<typeof corgiEn> = {
     roar: { name: 'Méga-aboiement', desc: 'Un aboiement vers la bestiole la plus proche repousse l’essaim' },
     talisman: { name: 'Missiles guidés', desc: '{n} missiles traquent des bestioles différentes', count: 'Missiles {a} → {b}' },
     bomb: { name: 'Grenade à fragmentation', desc: 'Une grenade éclate en {n} petites bombes', count: 'Petites bombes {a} → {b}' },
-    knives: { name: 'Anneau de couteaux', desc: 'Jusqu’à {n} couteaux tournent autour de toi, puis partent', count: 'Couteaux {a} → {b}' },
+    knives: { name: 'Étoiles plasma', desc: 'Jusqu’à {n} étoiles plasma tournent autour de toi, puis partent', count: 'Étoiles {a} → {b}' },
   },
   passive: {
     calm: { name: 'Refroidisseur', desc: 'Recharge des gadgets −{n}%', blurb: 'Tes gadgets reviennent plus vite' },

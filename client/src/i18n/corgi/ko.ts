@@ -78,7 +78,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     bowl: { name: '톱날 폭풍', desc: '한 번 던질 때 벌레 {n}마리를 쓰러뜨리고 경험치 즉시 획득' },
     palm: { name: '궤도 일제 포격', desc: '크레이터가 남아 벌레를 {s}초 묶음' },
     bolt: { name: '테슬라 폭풍' },
-    incense: { name: '수리 웅덩이' },
+    incense: { name: '수리 필드' },
     bell: { name: '포스 필드' },
     cymbal: { name: '톱날 고리', desc: '톱날 {n}개가 계속 주위를 돌며 더 던짐' },
     lotus: { name: '자석 지뢰', desc: '걸음마다 지뢰, 폭발하며 간식을 끌어옴' },
@@ -86,7 +86,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     roar: { name: '소닉 바크', desc: '사방으로 짖어 탄환을 부숨' },
     talisman: { name: '미사일 폭풍', desc: '명중한 미사일이 터져 주변 벌레까지 휩씀' },
     bomb: { name: '융단 폭격', desc: '수류탄 {n}개를 한 번에 서로 다른 벌레에게 던짐' },
-    knives: { name: '칼날 폭풍', desc: '날린 칼이 돌아와 오가며 벰' },
+    knives: { name: '표창 폭풍', desc: '날린 표창이 돌아와 오가며 벰' },
   },
   shrine: {
     heal: { name: '구급 키트' },
@@ -103,7 +103,7 @@ export const corgiKo: Table<typeof corgiEn> = {
   spell: {
     palm: { name: '궤도 폭격', desc: '궤도에서 가장 큰 무리를 내리침', count: '폭격 {a} → {b}' },
     bolt: { name: '테슬라 코일', desc: '번개가 벌레 {n}마리를 건너뜀' },
-    incense: { name: '플라즈마 웅덩이', desc: '발밑에서 플라즈마 웅덩이가 {s}초간 부글거림' },
+    incense: { name: '플라즈마 필드', desc: '발밑에 플라즈마 필드가 {s}초간 펼쳐짐' },
     bell: { name: '버블 실드', desc: '{s}초마다 공격을 한 번 막고 터짐' },
     cymbal: { name: '톱날', desc: '톱날 {n}개를 연달아 던져 관통하고 튕김', count: '톱날 {a} → {b}개' },
     lotus: { name: '근접 지뢰', desc: '걸으면 지뢰를 떨구고, 폭발하며 파편이 튐' },
@@ -111,7 +111,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     roar: { name: '메가 멍멍', desc: '가장 가까운 벌레에게 짖어 무리를 밀어냄' },
     talisman: { name: '유도 미사일', desc: '미사일 {n}발이 각기 다른 벌레를 쫓음', count: '미사일 {a} → {b}' },
     bomb: { name: '집속 수류탄', desc: '던진 수류탄이 자탄 {n}개로 터짐', count: '자탄 {a} → {b}' },
-    knives: { name: '나이프 링', desc: '칼 최대 {n}자루가 주위를 돌다 한꺼번에 날아감', count: '칼 {a} → {b}' },
+    knives: { name: '플라즈마 표창', desc: '표창 최대 {n}개가 주위를 돌다 한꺼번에 날아감', count: '표창 {a} → {b}' },
   },
   passive: {
     calm: { name: '냉각수', desc: '가젯 재사용 대기 −{n}%', blurb: '가젯을 더 빨리 다시 써요' },

@@ -1,7 +1,7 @@
 import { Container, Graphics } from 'pixi.js';
 import type { CardKind } from '@hk/engine';
 import { t } from '../i18n';
-import { iconSprite, type IconSheet } from './buildBar';
+import { evolvedIcon, iconSprite, type IconSheet } from './buildBar';
 import { cardHand } from './cardHand';
 import { CARD_NUDGE, nudgeOn } from './cardNudge';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
@@ -66,7 +66,7 @@ function shape(kind: CardKind): Graphics {
 }
 
 function icon(text: CardText, icons: IconSheet): Container {
-  const art = text.icon && iconSprite(icons, text.icon, ICON_R * 1.5);
+  const art = text.icon && (text.kind === 'evolve' ? evolvedIcon : iconSprite)(icons, text.icon, ICON_R * 1.5);
   if (!art) return shape(text.kind);
   const c = new Container();
   c.addChild(new Graphics().circle(0, 0, ICON_R).fill(KIND_COLOR[text.kind]).stroke({ color: COLORS.outline, width: 8 }), art);

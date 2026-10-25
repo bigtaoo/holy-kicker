@@ -78,7 +78,7 @@ export const corgiVi: Table<typeof corgiEn> = {
     bowl: { name: 'Bão Cưa', desc: 'Mỗi lần ném hạ {n} con bọ, nhận EXP ngay' },
     palm: { name: 'Pháo Kích Quỹ Đạo', desc: 'Hố đạn ở lại và ghim bọ {s}s' },
     bolt: { name: 'Bão Tesla' },
-    incense: { name: 'Vũng Sửa Chữa' },
+    incense: { name: 'Trường Sửa Chữa' },
     bell: { name: 'Lá Chắn Lực' },
     cymbal: { name: 'Vòng Cưa', desc: '{n} lưỡi cưa xoay quanh bạn mãi và ném thêm' },
     lotus: { name: 'Mìn Nam Châm', desc: 'Mỗi bước một quả mìn, nổ sẽ hút đồ ăn vặt' },
@@ -86,7 +86,7 @@ export const corgiVi: Table<typeof corgiEn> = {
     roar: { name: 'Sủa Siêu Âm', desc: 'Sủa khắp bốn phía, phá tan đạn' },
     talisman: { name: 'Bão Tên Lửa', desc: 'Mỗi tên lửa trúng đích nổ tung, trúng cả bọ xung quanh' },
     bomb: { name: 'Ném Bom Rải Thảm', desc: 'Ném {n} quả lựu đạn cùng lúc vào các con bọ khác nhau' },
-    knives: { name: 'Bão Lưỡi Dao', desc: 'Dao phóng ra bay trở về, chém cả lúc đi lẫn lúc về' },
+    knives: { name: 'Bão Sao', desc: 'Sao phóng ra bay trở về, chém cả lúc đi lẫn lúc về' },
   },
   shrine: {
     heal: { name: 'Hộp cứu thương' },
@@ -103,7 +103,7 @@ export const corgiVi: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Không Kích Quỹ Đạo', desc: 'Đòn từ quỹ đạo đánh vào đám đông nhất', count: 'Đòn {a} → {b}' },
     bolt: { name: 'Cuộn Tesla', desc: 'Sét nhảy qua {n} con bọ' },
-    incense: { name: 'Vũng Plasma', desc: 'Vũng plasma sủi bọt dưới chân {s}s' },
+    incense: { name: 'Trường Plasma', desc: 'Trường plasma lách tách dưới chân {s}s' },
     bell: { name: 'Khiên Bong Bóng', desc: 'Chặn một đòn mỗi {s}s, rồi vỡ tung' },
     cymbal: { name: 'Lưỡi Cưa', desc: '{n} lưỡi cưa bay ra xuyên thấu và nảy bật', count: 'Lưỡi cưa {a} → {b}' },
     lotus: { name: 'Mìn Cảm Ứng', desc: 'Đi đến đâu thả mìn, nổ tung mảnh văng' },
@@ -111,7 +111,7 @@ export const corgiVi: Table<typeof corgiEn> = {
     roar: { name: 'Sủa Cực Đại', desc: 'Sủa vào con bọ gần nhất, đẩy lùi cả bầy' },
     talisman: { name: 'Tên Lửa Truy Đuổi', desc: '{n} tên lửa đuổi theo các con bọ khác nhau', count: 'Tên lửa {a} → {b}' },
     bomb: { name: 'Lựu Đạn Chùm', desc: 'Lựu đạn nổ thành {n} bom con', count: 'Bom con {a} → {b}' },
-    knives: { name: 'Vòng Dao', desc: 'Tối đa {n} con dao xoay quanh bạn, rồi bay ra', count: 'Dao {a} → {b}' },
+    knives: { name: 'Sao Plasma', desc: 'Tối đa {n} sao plasma xoay quanh bạn, rồi bay ra', count: 'Sao {a} → {b}' },
   },
   passive: {
     calm: { name: 'Chất Làm Mát', desc: 'Hồi chiêu gadget −{n}%', blurb: 'Gadget hồi lại nhanh hơn' },

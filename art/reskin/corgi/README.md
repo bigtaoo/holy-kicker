@@ -26,7 +26,7 @@ The grounds are drawn in code, with no generated picture:
 Each sheet is generated from the prompt next to it (`<name>.txt`, `tools/generate_image.sh`). It
 holds several objects on white in a grid, and `tools/split_sheet.py` cuts the cells out.
 
-- `icons/sheet_*`: the 50 icons in `art/icons/icons.png` (`sheet_tabs`: the daily challenge's trophy and
+- `icons/sheet_*`: the 50 icons in `art/icons/icons.png`, plus `incense_evo`, a corgi-only frame (`sheet_tabs`: the daily challenge's trophy and
   the Camp tab's kettlebell, 2026-10-21; `sheet_bar`: the top bar's die and cog, the cog replacing
   the lobby sheet's, 2026-10-21).
   - `weapons`: the relics' and spells' main pieces.
@@ -34,8 +34,13 @@ holds several objects on white in a grid, and `tools/split_sheet.py` cuts the ce
     cut with `auto`, which names the objects in reading order and skips the spares.
   - `relics`: bowl, cymbal and fish.
   - `fix`: iron, karma and sash, redrawn on their own after the first sheets missed them.
-  - `arsenal`: the homing missile, grenade and combat knife (talisman, bomb, knives), also drawn in
-    the world from their icon frames.
+  - `arsenal`: the homing missile and grenade (talisman, bomb), also drawn in the world from their
+    icon frames; its combat knife was replaced by `star`.
+  - `field` (2026-10-24): the Plasma Field's emitter pad (incense, the third cell), replacing the
+    spells sheet's puddle. `tools/corgi_icon_fx.py repair` turns its teal green and adds a cross
+    for the evolved Repair Field's own frame, `incense_evo`.
+  - `star` (2026-10-24): the Plasma Stars' shuriken (knives, the fourth object), also drawn
+    spinning in the world; `tools/corgi_icon_fx.py star` makes its cream blades glowing cyan.
 - `items/sheet_*`: the relic and spell pictures drawn in the world.
   - `tall`: staff, staff_ruyi, bell_relic, palm (a bomb drawn nose up, flipped to fall).
   - `round`: cuju, cuju_meteor, fish.

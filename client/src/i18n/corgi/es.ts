@@ -77,7 +77,7 @@ export const corgiEs: Table<typeof corgiEn> = {
     bowl: { name: 'Tormenta de sierras', desc: 'Fulmina {n} {n|one:bicho|other:bichos} por lanzamiento, EXP al instante' },
     palm: { name: 'Descarga orbital', desc: 'El cráter se queda e inmoviliza bichos {s}s' },
     bolt: { name: 'Tormenta Tesla' },
-    incense: { name: 'Charco reparador' },
+    incense: { name: 'Campo reparador' },
     bell: { name: 'Campo de fuerza' },
     cymbal: { name: 'Anillo de sierras', desc: '{n} sierras giran a tu alrededor sin fin y lanzan más' },
     lotus: { name: 'Minas imán', desc: 'Una mina a cada paso, las explosiones atraen golosinas' },
@@ -85,7 +85,7 @@ export const corgiEs: Table<typeof corgiEn> = {
     roar: { name: 'Ladrido sónico', desc: 'Ladra en todas direcciones, rompe proyectiles' },
     talisman: { name: 'Tormenta de misiles', desc: 'Cada misil que impacta estalla y salpica a los bichos cercanos' },
     bomb: { name: 'Bombardeo', desc: 'Lanza {n} granadas a la vez, a bichos distintos' },
-    knives: { name: 'Tormenta de cuchillos', desc: 'Los cuchillos vuelven a ti y cortan a la ida y a la vuelta' },
+    knives: { name: 'Tormenta de estrellas', desc: 'Las estrellas vuelven a ti y cortan a la ida y a la vuelta' },
   },
   shrine: {
     heal: { name: 'Botiquín' },
@@ -102,7 +102,7 @@ export const corgiEs: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Ataque orbital', desc: 'Un ataque desde la órbita golpea al grupo más grande', count: 'Ataques {a} → {b}' },
     bolt: { name: 'Bobina Tesla', desc: 'El rayo salta entre {n} {n|one:bicho|other:bichos}' },
-    incense: { name: 'Charco de plasma', desc: 'Un charco de plasma burbujea a tus pies durante {s}s' },
+    incense: { name: 'Campo de plasma', desc: 'Un campo de plasma chisporrotea a tus pies durante {s}s' },
     bell: { name: 'Escudo burbuja', desc: 'Bloquea un golpe cada {s}s y luego revienta' },
     cymbal: { name: 'Sierra', desc: '{n} sierras salen volando, atraviesan y rebotan', count: 'Sierras {a} → {b}' },
     lotus: { name: 'Minas de proximidad', desc: 'Al caminar sueltas minas; al explotar lanzan metralla' },
@@ -110,7 +110,7 @@ export const corgiEs: Table<typeof corgiEn> = {
     roar: { name: 'Megaladrido', desc: 'Un ladrido al bicho más cercano empuja al enjambre' },
     talisman: { name: 'Misiles guiados', desc: '{n} misiles persiguen a bichos distintos', count: 'Misiles {a} → {b}' },
     bomb: { name: 'Granada de racimo', desc: 'Una granada estalla en {n} bombitas', count: 'Bombitas {a} → {b}' },
-    knives: { name: 'Anillo de cuchillos', desc: 'Hasta {n} cuchillos giran a tu alrededor y luego salen disparados', count: 'Cuchillos {a} → {b}' },
+    knives: { name: 'Estrellas de plasma', desc: 'Hasta {n} estrellas de plasma giran a tu alrededor y luego salen disparadas', count: 'Estrellas {a} → {b}' },
   },
   passive: {
     calm: { name: 'Refrigerante', desc: 'Recarga de gadgets −{n}%', blurb: 'Tus gadgets vuelven antes' },

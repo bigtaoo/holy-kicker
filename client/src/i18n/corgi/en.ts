@@ -81,7 +81,7 @@ export const corgiEn: Table<typeof monkEn> = {
     bowl: { name: 'Saw Storm', desc: 'Zaps {n} {n|one:bug|other:bugs} a throw, XP at once' },
     palm: { name: 'Orbital Barrage', desc: 'The crater stays and pins bugs {s}s' },
     bolt: { name: 'Tesla Storm' },
-    incense: { name: 'Repair Pool' },
+    incense: { name: 'Repair Field' },
     bell: { name: 'Force Field' },
     cymbal: { name: 'Saw Ring', desc: '{n} saw blades circle you forever and fling more' },
     lotus: { name: 'Magnet Mines', desc: 'A mine at every step, blasts pull treats' },
@@ -89,7 +89,7 @@ export const corgiEn: Table<typeof monkEn> = {
     roar: { name: 'Sonic Bark', desc: 'Barks all round, shatters bullets' },
     talisman: { name: 'Missile Storm', desc: 'Every missile that hits bursts, splashing the bugs around' },
     bomb: { name: 'Carpet Bomb', desc: 'Throws {n} grenades at once, at different bugs' },
-    knives: { name: 'Blade Storm', desc: 'Thrown knives fly back to you, cutting both ways' },
+    knives: { name: 'Star Storm', desc: 'Thrown stars fly back to you, cutting both ways' },
   },
   shrine: {
     heal: { name: 'Med Kit' },
@@ -106,7 +106,7 @@ export const corgiEn: Table<typeof monkEn> = {
   spell: {
     palm: { name: 'Orbital Strike', desc: 'A strike from orbit hits the biggest crowd', count: 'Strikes {a} → {b}' },
     bolt: { name: 'Tesla Coil', desc: 'Lightning jumps through {n} {n|one:bug|other:bugs}' },
-    incense: { name: 'Plasma Puddle', desc: 'A plasma puddle fizzes at your feet for {s}s' },
+    incense: { name: 'Plasma Field', desc: 'A plasma field crackles at your feet for {s}s' },
     bell: { name: 'Bubble Shield', desc: 'Blocks a hit every {s}s, then pops' },
     cymbal: { name: 'Saw Blade', desc: '{n} saw blades fly out, pierce and ricochet', count: 'Blades {a} → {b}' },
     lotus: { name: 'Proximity Mines', desc: 'Walking drops mines that blast shrapnel under bugs' },
@@ -114,7 +114,7 @@ export const corgiEn: Table<typeof monkEn> = {
     roar: { name: 'Mega Bark', desc: 'A bark at the nearest bug pushes the swarm back' },
     talisman: { name: 'Homing Missiles', desc: '{n} missiles home in on different bugs', count: 'Missiles {a} → {b}' },
     bomb: { name: 'Cluster Grenade', desc: 'A thrown grenade bursts into {n} bomblets', count: 'Bomblets {a} → {b}' },
-    knives: { name: 'Knife Ring', desc: 'Up to {n} knives circle you, then fly out', count: 'Knives {a} → {b}' },
+    knives: { name: 'Plasma Stars', desc: 'Up to {n} plasma stars circle you, then fly out', count: 'Stars {a} → {b}' },
   },
   passive: {
     calm: { name: 'Coolant', desc: 'Gadget cooldown −{n}%', blurb: 'Your gadgets come back sooner' },

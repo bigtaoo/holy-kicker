@@ -78,7 +78,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     bowl: { name: 'ソーストーム', desc: '1投で虫を{n}匹撃ち抜き、経験値を即獲得' },
     palm: { name: '軌道砲撃', desc: 'クレーターが残り、虫を{s}秒釘付け' },
     bolt: { name: 'テスラストーム' },
-    incense: { name: 'リペアプール' },
+    incense: { name: 'リペアフィールド' },
     bell: { name: 'フォースフィールド' },
     cymbal: { name: 'ソーリング', desc: '{n}枚のノコギリ刃がずっと周りを回り、さらに投げる' },
     lotus: { name: 'マグネットマイン', desc: '一歩ごとに地雷、爆発でおやつを引き寄せる' },
@@ -86,7 +86,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     roar: { name: 'ソニックバーク', desc: '全方位に吠え、弾を砕く' },
     talisman: { name: 'ミサイルストーム', desc: '命中したミサイルが炸裂し、周りの虫も巻き込む' },
     bomb: { name: '絨毯爆撃', desc: '一度に{n}個の手榴弾を別々の虫へ投げる' },
-    knives: { name: 'ブレードストーム', desc: '放ったナイフが戻ってきて、行きも帰りも斬る' },
+    knives: { name: '手裏剣ストーム', desc: '放った手裏剣が戻ってきて、行きも帰りも斬る' },
   },
   shrine: {
     heal: { name: 'メディキット' },
@@ -103,7 +103,7 @@ export const corgiJa: Table<typeof corgiEn> = {
   spell: {
     palm: { name: '軌道爆撃', desc: '軌道上から一番大きな群れを撃つ', count: '爆撃 {a} → {b}' },
     bolt: { name: 'テスラコイル', desc: '電撃が{n}匹の虫を跳び移る' },
-    incense: { name: 'プラズマだまり', desc: '足元でプラズマだまりが{s}秒泡立つ' },
+    incense: { name: 'プラズマフィールド', desc: '足元にプラズマフィールドが{s}秒展開する' },
     bell: { name: 'バブルシールド', desc: '{s}秒ごとに攻撃を1回防ぎ、その後弾ける' },
     cymbal: { name: 'ノコギリ刃', desc: '{n}枚の刃を次々に投げ、貫いて跳ね返る', count: '刃 {a} → {b}枚' },
     lotus: { name: '近接地雷', desc: '歩くと地雷を落とし、爆発で破片が飛ぶ' },
@@ -111,7 +111,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     roar: { name: 'メガバーク', desc: '最も近い虫へ吠え、群れを押し返す' },
     talisman: { name: '追尾ミサイル', desc: '{n}発のミサイルがそれぞれ別の虫を追う', count: 'ミサイル {a} → {b}' },
     bomb: { name: 'クラスター弾', desc: '投げた手榴弾が{n}個の子爆弾に弾ける', count: '子爆弾 {a} → {b}' },
-    knives: { name: 'ナイフリング', desc: '最大{n}本のナイフが周りを回り、揃うと一斉に飛ぶ', count: 'ナイフ {a} → {b}' },
+    knives: { name: 'プラズマ手裏剣', desc: '最大{n}枚の手裏剣が周りを回り、揃うと一斉に飛ぶ', count: '手裏剣 {a} → {b}' },
   },
   passive: {
     calm: { name: 'クーラント', desc: 'ガジェットのクールダウン −{n}%', blurb: 'ガジェットがより早く使える' },

@@ -85,7 +85,7 @@ export const corgiDe: Table<typeof corgiEn> = {
     roar: { name: 'Schallbellen', desc: 'Bellt rundum, zerschmettert Geschosse' },
     talisman: { name: 'Raketensturm', desc: 'Jede Rakete zerplatzt beim Treffer und trifft Käfer ringsum' },
     bomb: { name: 'Bombenteppich', desc: 'Wirft {n} Granaten auf einmal, auf verschiedene Käfer' },
-    knives: { name: 'Klingensturm', desc: 'Geworfene Messer kehren zurück und schneiden auf beiden Wegen' },
+    knives: { name: 'Sternensturm', desc: 'Geworfene Sterne kehren zurück und schneiden auf beiden Wegen' },
   },
   shrine: {
     heal: { name: 'Medikit' },
@@ -102,7 +102,7 @@ export const corgiDe: Table<typeof corgiEn> = {
   spell: {
     palm: { name: 'Orbitalschlag', desc: 'Ein Schlag aus dem Orbit trifft die größte Menge', count: 'Schläge {a} → {b}' },
     bolt: { name: 'Tesla-Spule', desc: 'Blitz springt durch {n} Käfer' },
-    incense: { name: 'Plasmapfütze', desc: 'Eine Plasmapfütze brodelt {s}s lang zu deinen Füßen' },
+    incense: { name: 'Plasmafeld', desc: 'Ein Plasmafeld knistert {s}s lang zu deinen Füßen' },
     bell: { name: 'Blasenschild', desc: 'Blockt alle {s}s einen Treffer, dann platzt es' },
     cymbal: { name: 'Sägeblatt', desc: '{n} Sägeblätter fliegen los, durchbohren und prallen ab', count: 'Sägeblätter {a} → {b}' },
     lotus: { name: 'Annäherungsminen', desc: 'Beim Gehen legst du Minen, die unter Käfern Splitter versprühen' },
@@ -110,7 +110,7 @@ export const corgiDe: Table<typeof corgiEn> = {
     roar: { name: 'Mega-Bellen', desc: 'Ein Bellen zum nächsten Käfer drängt den Schwarm zurück' },
     talisman: { name: 'Lenkraketen', desc: '{n} Raketen jagen verschiedene Käfer', count: 'Raketen {a} → {b}' },
     bomb: { name: 'Splittergranate', desc: 'Eine Granate zerplatzt in {n} Minibomben', count: 'Minibomben {a} → {b}' },
-    knives: { name: 'Messerring', desc: 'Bis zu {n} Messer kreisen um dich, dann fliegen sie los', count: 'Messer {a} → {b}' },
+    knives: { name: 'Plasmasterne', desc: 'Bis zu {n} Plasmasterne kreisen um dich, dann fliegen sie los', count: 'Sterne {a} → {b}' },
   },
   passive: {
     calm: { name: 'Kühlmittel', desc: 'Gadget-Abklingzeit −{n}%', blurb: 'Deine Gadgets sind schneller wieder bereit' },
