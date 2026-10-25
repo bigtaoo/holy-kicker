@@ -33,8 +33,7 @@ const RIGHT: readonly GearSlot[] = ['pendant', 'robe', 'sandals'];
 
 /** The doll's height: three slots a side, the lowest with a two-line name. */
 export const DOLL_H = SLOT_R + 2 * SLOT_STEP + SLOT_R + LIP + 12 + 2 * NAME_LINE + 2 + TIER_SIZE + 8;
-/** The hero's height and where his feet stand, between the lowest slots' badges. */
-export const HERO_H = 560;
+/** Where the hero's feet stand, between the lowest slots' badges (the lobby draws him, gearTab.ts). */
 export const HERO_FEET = SLOT_R + 2 * SLOT_STEP + 20;
 
 export interface DollSlot {
@@ -43,13 +42,9 @@ export interface DollSlot {
   tier: Tier | -1;
 }
 
-/** The six slots around x = 0 from y = 0 down; `hero` (feet at its origin) stands between them. */
-export function gearDoll(save: SaveData, icons: IconSheet, slots: DollSlot[], hero: Container | null, open: (slot: GearSlot) => void): Container {
+/** The six slots around x = 0 from y = 0 down, room for the hero between them. */
+export function gearDoll(save: SaveData, icons: IconSheet, slots: DollSlot[], open: (slot: GearSlot) => void): Container {
   const c = new Container();
-  if (hero) {
-    hero.position.set(0, HERO_FEET);
-    c.addChild(hero);
-  }
   const place = (side: readonly GearSlot[], x: number) => side.forEach((slot, i) => {
     const s = slots.find((w) => w.slot === slot)!;
     const ready = mergeReady(save, s.item);

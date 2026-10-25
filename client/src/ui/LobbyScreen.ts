@@ -69,8 +69,14 @@ const MENU_TOP = 40;
 const PLAY_W = 820;
 const PLAY_H = 210;
 const RAIL_X = 130;
+/** The monk's height on the Play tab when the chapter card leaves room for it. */
+const FIGURE_H = 440;
 /** A Train tap this soon after a node was bought is the same thumb's second tap. */
 const TRAIN_GAP_MS = 400;
+
+/** PLAY's centre on a frame `h` tall, over the tab bar; the monk's feet over the relic row above it (on Gear too). */
+const playY = (h: number) => h - TAB_H - 50 - PLAY_H / 2;
+const figureFeet = (h: number) => playY(h) - PLAY_H / 2 - 20 - RELIC_ROW_H - 5;
 
 function lockText(lock: Lock): string {
   if (lock.kind === 'firstRun') return t('tab.unlockFirstRun');
@@ -107,6 +113,8 @@ export class LobbyScreen implements Screen {
   private play: PlayButton | null = null;
   private drift: LobbyDrift | null = null;
   private figureRig: unknown = null;
+  /** How tall the Play tab last drew the monk; Gear draws him the same so he holds still between them. */
+  private figureH = FIGURE_H;
   private clock = 0;
 
   constructor(
@@ -354,7 +362,9 @@ export class LobbyScreen implements Screen {
     // the chosen monk stands among his gear: the Play tab's figure, updated and swapped like it
     const look = this.patrolLook();
     this.figureRig = look.rig;
-    const tab = gearTab(this.save, this.icons, this.gearActions(), h - TAB_H - top, (size) => (this.figure = new LobbyFigure(look.rig, size)).view);
+    this.figure = new LobbyFigure(look.rig, this.figureH);
+    const stand = { hero: this.figure.view, feet: figureFeet(h) - top, button: playY(h) - top };
+    const tab = gearTab(this.save, this.icons, this.gearActions(), h - TAB_H - top, stand);
     tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
@@ -422,19 +432,18 @@ export class LobbyScreen implements Screen {
     this.view.addChild(card);
 
     // PLAY, the one loud button, stands over the tab bar; the relic row and the monk above it
-    const playY = h - TAB_H - 50 - PLAY_H / 2;
-    const relicTop = playY - PLAY_H / 2 - 20 - RELIC_ROW_H;
-    const feet = relicTop - 5;
+    const feet = figureFeet(h);
     const look = this.patrolLook();
     this.figureRig = look.rig;
-    this.figure = new LobbyFigure(look.rig, Math.max(160, Math.min(440, feet - cardBottom - 60)));
+    this.figureH = Math.max(160, Math.min(FIGURE_H, feet - cardBottom - 60));
+    this.figure = new LobbyFigure(look.rig, this.figureH);
     this.figure.view.position.set(w / 2, feet);
     const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id));
-    relics.position.set(w / 2, relicTop);
+    relics.position.set(w / 2, feet + 5);
     this.view.addChild(this.figure.view, relics);
     if (open) {
       this.play = playButton(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n));
-      this.play.view.position.set(w / 2, playY);
+      this.play.view.position.set(w / 2, playY(h));
       this.play.view.label = 'play'; // tests tell it from the Play tab, which reads the same in Chinese
       this.view.addChild(spot('play', this.play.view));
     }

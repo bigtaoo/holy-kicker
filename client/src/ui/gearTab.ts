@@ -7,7 +7,7 @@ import { lockedLook, type IconSheet } from './buildBar';
 import { gearIcon } from './gearIcons';
 import { itemName, mergeReady, TIER_COLORS, tierName } from './gearText';
 import { statLines } from './statText';
-import { DOLL_H, gearDoll, HERO_FEET, HERO_H } from './gearDoll';
+import { DOLL_H, gearDoll, HERO_FEET } from './gearDoll';
 import { CARD_STROKE } from './playCard';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
@@ -83,31 +83,45 @@ function badge(icons: IconSheet, item: ItemId, tier: Tier | -1, r: number): Cont
   return c;
 }
 
+/** Where the lobby's figure stands, from the tab's top: `hero` (feet at its origin) at `feet`, the tab's button centred at `button`. */
+export interface GearStand {
+  hero: Container;
+  feet: number;
+  button: number;
+}
+
 /**
  * The tab centred on x = 0 from y = 0 down to `room`: the panel of what gear adds up to on top,
- * and at the bottom, standing on the courtyard's floor like the Play tab's figure, the doll with
- * the hero `hero` makes (the lobby's figure, as tall as asked, feet at its origin), "Merge all" at
- * his feet when anything can merge (a quiet line saying how merging works when nothing can).
+ * the doll under it with the hero where `stand` puts him (the Play tab's figure, same place and
+ * size, so he holds still between the tabs), and "Merge all" where PLAY stands when anything can
+ * merge (a quiet line saying how merging works when nothing can). Without `stand` the doll rests
+ * on the tab's floor.
  */
-export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, room: number, hero?: (height: number) => Container): Container {
+export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, room: number, stand?: GearStand): Container {
   const c = new Container();
   const [card, h] = statsCard(t('gear.total'), statLines(gearStats(save)));
   card.y = h / 2;
-  const doll = new Container();
-  doll.addChild(gearDoll(save, icons, worn(save), hero?.(HERO_H) ?? null, (slot) => actions.open(slot)));
-  const feet = HERO_FEET + 30 + MERGE_H / 2;
+  const feet = stand?.feet ?? room - DOLL_FLOOR - DOLL_H + HERO_FEET;
+  const doll = gearDoll(save, icons, worn(save), (slot) => actions.open(slot));
+  // the lowest badges level with his feet, unless a long stats panel pushes them lower
+  doll.y = Math.max(h + DOLL_GAP, feet - HERO_FEET);
+  c.addChild(doll);
+  if (stand) {
+    stand.hero.y = feet;
+    c.addChild(stand.hero);
+  }
+  const at = stand?.button ?? Math.min(room - MERGE_H / 2, feet + 30 + MERGE_H / 2);
   if (anyMerge(save)) {
     const all = button(t('gear.mergeAll'), MERGE_W, MERGE_H, () => actions.mergeAll(), { size: 52, textFill: COLORS.outline });
-    all.y = feet;
-    doll.addChild(all);
+    all.y = at;
+    c.addChild(all);
   } else {
     const how = label(t('gear.howMerge').replace(/(\d) /g, '$1 '), 48, COLORS.text, { ...CARD_STROKE, wordWrap: true, wordWrapWidth: MERGE_W, breakWords: true, lineHeight: 54 });
     how.alpha = 0.8;
-    how.y = feet;
-    doll.addChild(how);
+    how.y = at;
+    c.addChild(how);
   }
-  doll.y = Math.max(h + DOLL_GAP, room - DOLL_FLOOR - DOLL_H);
-  c.addChild(doll, card);
+  c.addChild(card);
   return c;
 }
 
