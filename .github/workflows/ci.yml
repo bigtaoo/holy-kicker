@@ -82,6 +82,13 @@ jobs:
           for p in $pids; do wait "$p" || { cat /tmp/*.log; exit 1; }; done
       # the runner's own Google Chrome (playwright-core downloads none)
       - run: npm run smoke
+      # what a failed build's page last showed (build/smoke.mjs writes smoke-<build>.png there)
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-shots
+          path: /tmp/smoke-*.png
+          if-no-files-found: ignore
 
   deploy-server:
     needs: [check, smoke]

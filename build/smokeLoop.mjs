@@ -60,25 +60,27 @@ export async function moving(page, ms = 1000) {
 
 /** Gives the run up: Escape opens the pause panel, give up asks once more, then the results. */
 async function giveUp(page) {
-  for (let i = 0; ; i++) {
-    // a level-up's cards hold the run (and the key): the first card is tapped until they go
-    if (i > 40) throw new Error('the run never paused');
+  // one loop from what shows each time, never from what an Escape was meant to do: on a CI runner a
+  // frame can take seconds, so an Escape sent again closes the panel the last one opened while the
+  // written buttons still show it, and a give-up that only taps from then on waits on nothing
+  const end = Date.now() + 60_000;
+  while (Date.now() < end) {
     const l = await look(page);
-    if (l.spots.card) {
+    if (l.screen === 'results') return;
+    if (l.spots.giveUp) {
+      // the first tap asks to confirm, the next one gives up
+      await page.mouse.click(l.spots.giveUp[0], l.spots.giveUp[1]);
+      await page.waitForTimeout(1000);
+    } else if (l.spots.card) {
+      // a level-up's cards hold the run (and the key): the first card is tapped until they go
       await page.mouse.click(l.spots.card[0], l.spots.card[1]);
       await page.waitForTimeout(500);
-      continue;
-    }
-    await page.keyboard.press('Escape');
-    try {
-      await waitFor(page, (s) => s.spots.giveUp || s.spots.card, 2000, 'the pause panel');
-      if ((await look(page)).spots.giveUp) break;
-    } catch {
-      // a frame dropped the key: once more
+    } else {
+      await page.keyboard.press('Escape');
+      await waitFor(page, (s) => s.spots.giveUp || s.spots.card || s.screen === 'results', 2000, 'the pause panel').catch(() => {});
     }
   }
-  // the first tap asks to confirm, the next one gives up (taps go on while a slow frame drops one)
-  await tapUntil(page, 'giveUp', (l) => l.screen === 'results', 20_000, 'the results');
+  await waitFor(page, (l) => l.screen === 'results', 1, 'the results');
 }
 
 /** From the results to the lobby. */
