@@ -5,6 +5,7 @@ dist-crazygames/
 dist-new/
 dist-crazygames-new/
 dist-playgama/
+dist-playgama-new/
 dist-ios/
 dist-ota/
 *.tsbuildinfo

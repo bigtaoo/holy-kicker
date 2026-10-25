@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { engineAlias } from '../build/hkAlias.mjs';
 import { buildDefine } from '../build/buildId.mjs';
+import { themeAssets } from '../build/theme.mjs';
 import { preloadRenderer } from '../build/preloadRenderer.mjs';
 
 // The Playgama build: `npm run build:playgama` writes client/dist-playgama/, the folder to zip and
@@ -12,6 +13,8 @@ import { preloadRenderer } from '../build/preloadRenderer.mjs';
 //  4. playgama-bridge-config.json sits next to index.html, where Bridge reads it from.
 // The build fails if the HTML was never rewritten, rather than ship a game without the SDK
 // (Playgama refuses such a build).
+// The corgi reskin builds the same way into client/dist-playgama-new/ (vite.playgama.new.config.js),
+// with its own art and title (build/theme.mjs), a game of its own in the console.
 
 const SDK_TAG = '<script src="https://bridge.playgama.com/v2/stable/playgama-bridge.js"></script>';
 const DEFAULT_ENTRY = '/src/main.ts';
@@ -56,11 +59,16 @@ const playgama = () => {
   };
 };
 
-export default defineConfig({
-  base: './',
-  resolve: { alias: engineAlias },
-  define: buildDefine(),
-  plugins: [playgama(), preloadRenderer()],
-  server: { port: 5176, host: true },
-  build: { target: 'es2020', outDir: 'dist-playgama', emptyOutDir: true },
-});
+export function playgamaConfig(theme) {
+  const monk = theme === 'monk';
+  return defineConfig({
+    base: './',
+    resolve: { alias: engineAlias },
+    define: buildDefine(theme),
+    plugins: [playgama(), themeAssets(theme), preloadRenderer()],
+    server: { port: monk ? 5176 : 5186, host: true },
+    build: { target: 'es2020', outDir: monk ? 'dist-playgama' : 'dist-playgama-new', emptyOutDir: true },
+  });
+}
+
+export default playgamaConfig('monk');

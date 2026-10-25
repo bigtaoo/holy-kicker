@@ -20,6 +20,8 @@
     "build:playgama": "tsc --noEmit && vite build --config vite.playgama.config.js",
     "dev:playgama": "vite --config vite.playgama.config.js",
     "preview:playgama": "vite preview --config vite.playgama.config.js --port 4176 --strictPort",
+    "build:playgama:new": "tsc --noEmit && vite build --config vite.playgama.new.config.js",
+    "dev:playgama:new": "vite --config vite.playgama.new.config.js",
     "build:new": "tsc --noEmit && vite build --config vite.new.config.js",
     "dev:new": "vite --config vite.new.config.js",
     "preview:new": "vite preview --config vite.new.config.js --port 4184 --strictPort",

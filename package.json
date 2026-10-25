@@ -36,7 +36,8 @@
     "smoke": "node build/smoke.mjs",
     "build:new": "npm run build:new -w client",
     "dev:new": "npm run dev:new -w client",
-    "build:crazygames:new": "npm run build:crazygames:new -w client"
+    "build:crazygames:new": "npm run build:crazygames:new -w client",
+    "build:playgama:new": "npm run build:playgama:new -w client"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.11",
