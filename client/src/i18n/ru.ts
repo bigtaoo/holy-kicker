@@ -217,7 +217,7 @@ export const ru: Table<typeof en> = {
     tierMore: 'Дальше снаряжение сильнее',
     blessing: 'Звёздное благословение!',
     blessingStat: '{stats} в каждом забеге',
-    collect: 'Забрать в лобби ({n})',
+    collect: 'Забрать в лобби наград: {n}',
     lobby: 'В лобби',
     mergeStep: 'Снаряжение для слияния ×{n}',
     goMerge: 'Слить',

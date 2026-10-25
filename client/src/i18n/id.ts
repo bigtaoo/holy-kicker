@@ -218,7 +218,7 @@ export const id: Table<typeof en> = {
     tierMore: 'Perlengkapan lebih kuat mulai sekarang',
     blessing: 'Berkah bintang!',
     blessingStat: '{stats} tiap permainan',
-    collect: 'Ambil di lobi ({n})',
+    collect: 'Ambil {n} hadiah di lobi',
     lobby: 'Kembali ke lobi',
     mergeStep: 'Perlengkapan siap digabung ×{n}',
     goMerge: 'Gabung',

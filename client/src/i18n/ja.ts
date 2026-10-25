@@ -216,7 +216,7 @@ export const ja: Table<typeof en> = {
     tierMore: 'ここから装備が強くなる',
     blessing: '星の加護！',
     blessingStat: '毎回{stats}',
-    collect: 'ロビーで受け取る（{n}）',
+    collect: 'ロビーで報酬を{n}個受け取る',
     lobby: 'ロビーへ',
     mergeStep: '合成できる装備 ×{n}',
     goMerge: '合成へ',

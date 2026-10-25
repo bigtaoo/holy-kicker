@@ -218,7 +218,7 @@ export const pl: Table<typeof en> = {
     tierMore: 'Od teraz mocniejszy ekwipunek',
     blessing: 'Błogosławieństwo gwiazd!',
     blessingStat: '{stats} w każdej rozgrywce',
-    collect: 'Odbierz w lobby ({n})',
+    collect: 'Odbierz {n} {n|one:nagrodę|few:nagrody|many:nagród|other:nagrody} w lobby',
     lobby: 'Wróć do lobby',
     mergeStep: 'Ekwipunek do połączenia ×{n}',
     goMerge: 'Połącz',

@@ -218,7 +218,7 @@ export const de: Table<typeof en> = {
     tierMore: 'Ab jetzt stärkere Ausrüstung',
     blessing: 'Sternensegen!',
     blessingStat: '{stats} in jedem Lauf',
-    collect: 'In der Lobby abholen ({n})',
+    collect: '{n} {n|one:Belohnung|other:Belohnungen} in der Lobby',
     lobby: 'Zur Lobby',
     mergeStep: 'Ausrüstung zum Verschmelzen ×{n}',
     goMerge: 'Verschmelzen',

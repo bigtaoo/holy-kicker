@@ -218,7 +218,7 @@ export const it: Table<typeof en> = {
     tierMore: 'Equipaggiamento più forte da qui in poi',
     blessing: 'Benedizione stellare!',
     blessingStat: '{stats} in ogni partita',
-    collect: 'Riscuoti nella lobby ({n})',
+    collect: 'Riscuoti {n} {n|one:premio|other:premi} nella lobby',
     lobby: 'Torna alla lobby',
     mergeStep: 'Equipaggiamento da fondere ×{n}',
     goMerge: 'Fondi',

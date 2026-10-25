@@ -217,7 +217,7 @@ export const th: Table<typeof en> = {
     tierMore: 'อุปกรณ์แข็งแกร่งขึ้นนับจากนี้',
     blessing: 'พรแห่งดวงดาว!',
     blessingStat: '{stats} ทุกรอบ',
-    collect: 'ไปรับที่ล็อบบี้ ({n})',
+    collect: 'ไปรับรางวัล {n} รายการที่ล็อบบี้',
     lobby: 'กลับล็อบบี้',
     mergeStep: 'อุปกรณ์ที่รวมได้ ×{n}',
     goMerge: 'ไปรวม',

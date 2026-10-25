@@ -216,7 +216,7 @@ export const zh: Table<typeof en> = {
     tierMore: '往后的装备更强了',
     blessing: '星辰赐福！',
     blessingStat: '每局{stats}',
-    collect: '回大厅领取（{n}）',
+    collect: '回大厅领取 {n} 项奖励',
     lobby: '回大厅',
     mergeStep: '可合成装备 ×{n}',
     goMerge: '去合成',

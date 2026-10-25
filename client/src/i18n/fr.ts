@@ -219,7 +219,7 @@ export const fr: Table<typeof en> = {
     tierMore: 'Un meilleur équipement dès maintenant',
     blessing: 'Bénédiction des étoiles !',
     blessingStat: '{stats} à chaque partie',
-    collect: 'Récupérer dans le lobby ({n})',
+    collect: '{n} {n|one:récompense|other:récompenses} au lobby',
     lobby: 'Retour au lobby',
     mergeStep: 'Équipement à fusionner ×{n}',
     goMerge: 'Fusionner',

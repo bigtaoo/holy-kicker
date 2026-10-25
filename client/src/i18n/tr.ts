@@ -218,7 +218,7 @@ export const tr: Table<typeof en> = {
     tierMore: 'Bundan sonra daha güçlü ekipman',
     blessing: 'Yıldız lütfu!',
     blessingStat: 'Her turda {stats}',
-    collect: 'Lobide topla ({n})',
+    collect: 'Lobide {n} ödül topla',
     lobby: 'Lobiye dön',
     mergeStep: 'Birleştirilebilir ekipman ×{n}',
     goMerge: 'Birleştir',

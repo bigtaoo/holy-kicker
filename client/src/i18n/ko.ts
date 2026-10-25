@@ -216,7 +216,7 @@ export const ko: Table<typeof en> = {
     tierMore: '이제부터 더 강한 장비',
     blessing: '별의 축복!',
     blessingStat: '매 판 {stats}',
-    collect: '로비에서 받기 ({n})',
+    collect: '로비에서 보상 {n}개 받기',
     lobby: '로비로',
     mergeStep: '합성 가능한 장비 ×{n}',
     goMerge: '합성하기',

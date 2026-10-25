@@ -218,7 +218,7 @@ export const vi: Table<typeof en> = {
     tierMore: 'Trang bị mạnh hơn từ đây',
     blessing: 'Phúc lành của sao!',
     blessingStat: '{stats} mỗi trận',
-    collect: 'Nhận ở sảnh ({n})',
+    collect: 'Nhận {n} phần thưởng ở sảnh',
     lobby: 'Về sảnh',
     mergeStep: 'Trang bị có thể ghép ×{n}',
     goMerge: 'Đi ghép',
