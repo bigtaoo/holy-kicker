@@ -4,10 +4,15 @@ import { DESIGN_H, DESIGN_W } from '../game/viewport';
 
 // Maps the play area onto UI logical units. Phones get the full 1080 width and extra
 // height; wider desktop play areas keep the whole 1920 height and gain width instead.
-// Pure, so it is tested without Pixi.
+// A landscape frame is at least 2560 x 1440: a 16:9 window shows the UI a third larger than
+// 1920 tall would, so its text stays readable in a short window (a portal's 574 px canvas), and a
+// 4:3 tablet on its side, 2560 x 1920, keeps the 3:4 frame's size. Pure, so it is tested without Pixi.
 
 /** The squarest a landscape frame's UI gets (its rows need the width), while its play area stops at 16:10. */
 const UI_WIDE_MIN = 4 / 3;
+/** A landscape UI's least size: every landscape screen is laid out to fit it. */
+export const UI_WIDE_W = 2560;
+export const UI_WIDE_H = 1440;
 
 export interface UiFrame {
   /** Screen pixels per UI unit. */
@@ -15,7 +20,7 @@ export interface UiFrame {
   /** Screen position of the UI's top-left corner. */
   x: number;
   y: number;
-  /** UI size in logical units: at least 1080 x 1920 on any shape the viewport allows. */
+  /** UI size in logical units: at least 1080 x 1920 on any portrait shape the viewport allows, 2560 x 1440 on a landscape one. */
   w: number;
   h: number;
 }
@@ -29,7 +34,9 @@ export function uiFrame(vp: Viewport, insets: { top: number; bottom: number } = 
   // below: the UI spreads over them, down to a 4:3 shape, so its text stays the size the 3:4 frame gave it
   const playY = vp.playW > vp.playH ? Math.max(0, vp.playY - Math.max(0, vp.playW / UI_WIDE_MIN - vp.playH) / 2) : vp.playY;
   const playH = vp.playH + 2 * (vp.playY - playY);
-  const scale = Math.min(vp.playW / DESIGN_W, playH / DESIGN_H);
+  const scale = vp.playW > vp.playH
+    ? Math.min(vp.playW / UI_WIDE_W, playH / UI_WIDE_H)
+    : Math.min(vp.playW / DESIGN_W, playH / DESIGN_H);
   // the UI area is centred, so each bar left over is playY tall
   const top = Math.max(0, insets.top - playY);
   const bottom = Math.max(0, insets.bottom - playY);

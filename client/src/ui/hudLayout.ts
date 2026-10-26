@@ -35,6 +35,16 @@ export function cardsInRow(f: Pick<UiFrame, 'w' | 'h'>, count: number, cardW: nu
 }
 
 /**
+ * How wide the choice's `count` cards are on frame `f`, `columnH` being what their column needs:
+ * `cardW` where the row fits or, on a frame too narrow for it, the column (a 4:3 tablet's 1920
+ * tall); on a 16:9 landscape frame, 1440 tall, narrow enough for the row to fit its width.
+ */
+export function cardWidth(f: Pick<UiFrame, 'w' | 'h'>, count: number, cardW: number, gap: number, columnH: number): number {
+  const rowW = count * (cardW + gap) + gap;
+  return !isWideFrame(f) || rowW <= f.w || columnH <= f.h ? cardW : Math.floor((f.w - gap) / count - gap);
+}
+
+/**
  * The middle of each of `count` cards `cardW` x `cardH` with `gap` between them, the stack's top
  * edge at `top`: down the middle on a portrait frame, in a row on a landscape one that fits it.
  */

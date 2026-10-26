@@ -57,6 +57,8 @@ export function blockTop(frameH: number, cardH: number, below: number): number {
 const CARD_W = 920;
 const INNER_W = 840;
 const GAP = 30;
+/** In landscape, the card's and the buttons' centres either side of the middle. */
+const SIDE_DX = 520;
 
 export class ResultsScreen implements Screen {
   readonly view = new Container();
@@ -145,13 +147,17 @@ export class ResultsScreen implements Screen {
 
     const cardH = zones.reduce((n, [, h]) => n + h + GAP, 0) + 60;
     const card = new Container();
-    // a long card shrinks so the buttons under it stay on screen
-    const below = (this.actions.again ? 185 : 0) + 270;
+    // a landscape frame (1440 tall) sets the buttons beside the card, a portrait one under it
+    const wide = f.w > f.h;
+    const rows = this.actions.again ? 185 : 0;
+    // a long card shrinks so the buttons stay on screen
+    const below = wide ? 0 : rows + 270;
     const k = Math.min(1, (f.h - 80 - below) / cardH);
     card.scale.set(k);
     // the card and its buttons as one block, centred a little above the middle (a short card
     // otherwise floats in the top two thirds over an empty floor)
-    card.position.set(f.w / 2, blockTop(f.h, k * cardH, below - 70) + (k * cardH) / 2);
+    const top = blockTop(f.h, k * cardH, wide ? 0 : below - 70);
+    card.position.set(wide ? f.w / 2 - SIDE_DX : f.w / 2, top + (k * cardH) / 2);
     card.addChild(panel(CARD_W, cardH));
     let y = -cardH / 2 + 40;
     this.parts = [];
@@ -165,7 +171,8 @@ export class ResultsScreen implements Screen {
     this.copper = { text: rewards.copper, part: zones.indexOf(rewards) };
 
     const buttons = new Container();
-    this.buttons(buttons, f.w / 2, card.y + (k * cardH) / 2 + 130);
+    if (wide) this.buttons(buttons, f.w / 2 + SIDE_DX, card.y - rows / 2);
+    else this.buttons(buttons, f.w / 2, card.y + (k * cardH) / 2 + 130);
     this.view.addChild(buttons);
     this.parts.push([buttons, 0]);
     this.update(0, total);

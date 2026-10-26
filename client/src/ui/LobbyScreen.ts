@@ -179,7 +179,7 @@ export class LobbyScreen implements Screen {
     if (this.tab === 'play') this.playTab(f.w, f.h);
     else if (this.tab === 'codex') this.codexTab(f.w, f.h, top);
     else if (this.tab === 'gear') this.gearTab(f.w, f.h, top);
-    else if (this.tab === 'train') this.trainTab(f.w, top);
+    else if (this.tab === 'train') this.trainTab(f, top);
     else this.shopTab(f.w, f.h, top);
     // a new player's next step before chapter 1 is cleared: an arrow bobbing over its tab (lobbyHint.ts)
     const hint = hintTab(this.save, Date.now(), this.tab);
@@ -367,7 +367,7 @@ export class LobbyScreen implements Screen {
     this.view.addChild(tab);
   }
 
-  private trainTab(w: number, top: number): void {
+  private trainTab(f: UiFrame, top: number): void {
     const tab = trainTab(this.save, this.icons, this.trainPick, {
       train: () => {
         const now = Date.now();
@@ -386,8 +386,8 @@ export class LobbyScreen implements Screen {
         this.relayout();
       },
       toast: (text) => this.showToast(text),
-    });
-    tab.position.set(w / 2, top);
+    }, isWide(f.w, f.h));
+    tab.position.set(f.w / 2, top);
     this.view.addChild(tab);
   }
 

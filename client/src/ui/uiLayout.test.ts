@@ -30,10 +30,15 @@ describe('uiFrame', () => {
     expect(uiFrame(boxed, { top: 40, bottom: 0 }).y).toBeCloseTo(boxed.playY);
   });
 
-  it("spreads a landscape UI over a squarer screen's bars, down to 4:3, so its text keeps the 3:4 frame's size", () => {
-    // 16:9 fills the play area; a 4:3 tablet on its side plays in a 16:10 strip but its UI takes the whole screen
+  it('lays a 16:9 landscape UI out in 2560 x 1440, so its text stands a third larger than in a 1920-tall frame', () => {
     const wide = uiFrame(computeViewport(1920, 1080, true));
-    expect(wide.h).toBeCloseTo(1920);
+    expect([wide.w, wide.h]).toEqual([2560, 1440].map((n) => expect.closeTo(n)));
+    // a short browser window (CrazyGames' 1100 x 574 canvas): 48 units stay above 20 px
+    expect(48 * uiFrame(computeViewport(1100, 574, true)).scale).toBeGreaterThan(19);
+  });
+
+  it("spreads a landscape UI over a squarer screen's bars, down to 4:3, so its text keeps the 3:4 frame's size", () => {
+    // a 4:3 tablet on its side plays in a 16:10 strip but its UI takes the whole screen
     const tablet = computeViewport(1024, 768, true);
     expect(tablet.playY).toBeGreaterThan(0);
     const f = uiFrame(tablet);

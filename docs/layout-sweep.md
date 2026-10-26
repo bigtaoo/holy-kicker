@@ -91,13 +91,17 @@ The 48-unit floor is a design rule. On a small viewport it comes out smaller in 
 |---|---|
 | 390 wide | 17 |
 | 360x640 | 16 |
-| 1100x574 | 14 |
-| 722x406 | 10 |
+| 1100x574 | 19 (14 before the landscape UI's 2560x1440 floor) |
+| 722x406 | 13 (10 before it) |
 
 12 px is the size at which a short word is still readable at arm's length on a phone, or
 on a laptop at desk distance. Funny's floor of 7 px only catches text that is outright
 unreadable. A higher floor makes the sweep show where the viewport itself is too small for
-the 3:4 column, which is what the landscape layouts are meant to fix.
+the 3:4 column, which is what the landscape layouts are meant to fix. It is why a landscape UI
+is laid out in 2560x1440 (`UI_WIDE_W`/`UI_WIDE_H` in `ui/uiLayout.ts`) rather than 1920 tall:
+the screens fit that shorter frame (cards shrink their row, settings pair the volume sliders,
+results set the buttons beside the card, Train puts its card beside the board) and every
+label comes out a third larger.
 
 ## The baseline
 

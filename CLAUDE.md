@@ -37,7 +37,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - Logical resolution 1080x1920. Phones and WeChat are pure 9:16 (taller phones see more
   height). Web hosts on a screen at least 1.2x wider than tall (desktops, a tablet on its side) play in
   landscape: a run's `RunConfig.wide`, a 16:10 to 16:9 play area showing 1200 world units high, the UI
-  still 1920 units high over at least a 4:3 frame (`client/src/game/viewport.ts`, `ui/uiLayout.ts`,
+  laid out in at least 2560x1440 units (so a short 16:9 window's text stays readable), spread over the
+  bars down to a 4:3 frame (2560x1920 on a tablet on its side) (`client/src/game/viewport.ts`, `ui/uiLayout.ts`,
   `ui/hudLayout.ts`, `ui/lobbyLayout.ts`); squarer desktop windows keep the 3:4 portrait frame zoomed
   1.3x. iOS and WeChat stay portrait; only a phone on its side is asked to turn. Every screen needs both layouts.
 - In-world sizes (logical units): hero 120, mob 80, elite 130; UI text at least 48.

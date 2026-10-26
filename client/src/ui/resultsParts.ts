@@ -53,7 +53,7 @@ export function headerPart(r: Reward, waves: number, rank: RankNote, width: numb
   const big = label(String(waves), 180, r.newBest ? COLORS.gold : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
   big.y = 180;
   const caption = label(t('results.waves'), 48, COLORS.dim);
-  caption.y = 294;
+  caption.y = 310;
   c.addChild(title, big, caption);
   // a won run's stars, and what the next one asks while the chapter lacks it; a newcomer's card
   // stops at the stars (no hint, time, badges or board: the essentials only)

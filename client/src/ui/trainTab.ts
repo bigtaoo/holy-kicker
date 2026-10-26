@@ -79,18 +79,22 @@ export function trainHeight(save: SaveData): number {
   return boardH() + GAP + CARD_H + stats;
 }
 
-/** The tab centred on x = 0 from y = 0 down; `picked` is the node shown in the card. */
-export function trainTab(save: SaveData, icons: IconSheet, picked: number | null, actions: TrainActions): Container {
+/**
+ * The tab centred on x = 0 from y = 0 down; `picked` is the node shown in the card. A `wide`
+ * (landscape) lobby, too short for the column, puts the card and the totals right of the board.
+ */
+export function trainTab(save: SaveData, icons: IconSheet, picked: number | null, actions: TrainActions, wide = false): Container {
   const c = new Container();
   const bh = boardH();
   const shown = picked ?? nextNode(save)?.n ?? null;
   const page = shown === null ? pageCount(BALANCE.training.nodes, PAGE) - 1 : boardPage(shown, PAGE);
   const board = boardView(save, icons, shown, page, actions);
-  board.y = bh / 2;
+  const side = wide ? (W + GAP) / 2 : 0;
+  board.position.set(-side, bh / 2);
   c.addChild(board);
-  let y = bh + GAP;
+  let y = wide ? 0 : bh + GAP;
   const card = nodeCard(save, icons, shown, actions);
-  card.y = y + CARD_H / 2;
+  card.position.set(side, y + CARD_H / 2);
   c.addChild(card);
   y += CARD_H;
   // nothing trained yet: no card of dashes
@@ -98,7 +102,7 @@ export function trainTab(save: SaveData, icons: IconSheet, picked: number | null
     const lines = statLines(trainingStats(save));
     const h = statsH(lines.length);
     const stats = statsPanel(t('train.total'), lines, h, W);
-    stats.y = y + GAP + h / 2;
+    stats.position.set(side, y + GAP + h / 2);
     c.addChild(stats);
   }
   return c;

@@ -116,6 +116,9 @@ function versionLine(a: SettingsActions): Container {
 
 const W = 860;
 const ROW = 600;
+/** A landscape panel's width, for the two volume rows side by side, and the gap between them. */
+const PAIR_GAP = 100;
+const W_WIDE = 2 * (ROW + 160) + PAIR_GAP + 100;
 const HINT: Record<QualityMode, Key> = { auto: 'settings.autoHint', high: 'settings.highHint', saver: 'settings.saverHint' };
 
 /** A row of equal choice buttons, the current one saffron. */
@@ -251,6 +254,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   if (a.accountOpen) return accountPanel(w, h, a, () => a.openAccount?.(false));
   const view = new Container();
   view.addChild(backdrop(w, h));
+  const wide = w > h;
   const box = new Container();
   box.position.set(w / 2, h / 2);
   let y = 0;
@@ -268,11 +272,30 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   add(top.row, 150);
 
   const volume = a.volume();
-  heading(volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }));
-  add(volumeRow(volume, (v) => a.setVolume(v)), 150);
   const music = a.music();
-  heading(music === 0 ? t('settings.musicOff') : t('settings.musicLevel', { n: Math.round((100 * music) / VOLUME_STEPS) }));
-  add(volumeRow(music, (v) => a.setMusic(v)), 150);
+  const sliders: [string, Container][] = [
+    [volume === 0 ? t('settings.off') : t('settings.level', { n: Math.round((100 * volume) / VOLUME_STEPS) }), volumeRow(volume, (v) => a.setVolume(v))],
+    [music === 0 ? t('settings.musicOff') : t('settings.musicLevel', { n: Math.round((100 * music) / VOLUME_STEPS) }), volumeRow(music, (v) => a.setMusic(v))],
+  ];
+  if (wide) {
+    // a landscape frame (1440 tall) has the width to set the two side by side, and not the height to stack them
+    const heads = new Container();
+    const row = new Container();
+    sliders.forEach(([text, slider], i) => {
+      const x = (i - 0.5) * (ROW + 160 + PAIR_GAP);
+      const head = fit(label(text, 48, COLORS.dim), ROW + 160);
+      head.x = slider.x = x;
+      heads.addChild(head);
+      row.addChild(slider);
+    });
+    add(heads, 90);
+    add(row, 150);
+  } else {
+    for (const [text, slider] of sliders) {
+      heading(text);
+      add(slider, 150);
+    }
+  }
 
   const mode = a.quality();
   heading(t('settings.quality'));
@@ -288,7 +311,7 @@ export function settingsPanel(w: number, h: number, a: SettingsActions): Contain
   // the box is as tall as its rows, centred, and shrinks on a frame too short for it
   const boxH = y + 50;
   box.children.forEach((c) => (c.y -= boxH / 2));
-  box.addChildAt(panel(W, boxH), 0);
+  box.addChildAt(panel(wide ? W_WIDE : W, boxH), 0);
   box.scale.set(Math.min(1, (h - 40) / boxH));
   view.addChild(box);
   return view;

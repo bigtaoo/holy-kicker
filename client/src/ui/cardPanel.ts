@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, type Text } from 'pixi.js';
 import type { CardKind } from '@hk/engine';
 import { t } from '../i18n';
 import { evolvedIcon, iconSprite, type IconSheet } from './buildBar';
@@ -6,7 +6,7 @@ import { cardHand } from './cardHand';
 import { CARD_NUDGE, keyWakes, moveWakes, nudgeOn } from './cardNudge';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
 import { cardKey } from './cardKeys';
-import { cardSpots, cardsInRow } from './hudLayout';
+import { cardSpots, cardsInRow, cardWidth } from './hudLayout';
 import { spot } from './spots';
 import type { CardText } from './cardText';
 import type { UiFrame } from './uiLayout';
@@ -93,9 +93,9 @@ function icon(text: CardText, icons: IconSheet): Container {
   return c;
 }
 
-/** Where the name and the effect lines start, right of the icon disc. */
-const TEXT_X = -CARD_W / 2 + 80 + ICON_R * 2;
-const TEXT_W = CARD_W / 2 - TEXT_X - 36;
+/** Where the name and the effect lines start on a card `w` wide, right of the icon disc, and how wide they run. */
+const textX = (w: number) => -w / 2 + 80 + ICON_R * 2;
+const textW = (w: number) => w / 2 - textX(w) - 36;
 /** The effect lines' top, under the name, and the room kept below them. */
 const LINES_TOP = 122;
 const LINES_BOTTOM = 40;
@@ -108,11 +108,11 @@ const CARDS_TOP = 600;
  * item's one-sentence description runs to two rows in some languages. A stack too tall for any
  * card height the screen allows still shrinks, never below 40.
  */
-function effectLines(text: CardText): { block: Container; h: number } {
+function effectLines(text: CardText, wrapW: number): { block: Container; h: number } {
   const block = new Container();
   let y = 0;
   for (const line of text.lines.slice(0, 3)) {
-    const l = label(line, 48, COLORS.text, { align: 'left', wordWrap: true, wordWrapWidth: TEXT_W, breakWords: true, lineHeight: 58 });
+    const l = label(line, 48, COLORS.text, { align: 'left', wordWrap: true, wordWrapWidth: wrapW, breakWords: true, lineHeight: 58 });
     l.anchor.set(0, 0);
     l.y = y;
     block.addChild(l);
@@ -121,24 +121,43 @@ function effectLines(text: CardText): { block: Container; h: number } {
   return { block, h: Math.max(0, y - LINE_GAP) };
 }
 
-function card(text: CardText, lines: Container, h: number, icons: IconSheet, onTap: () => void, locked: () => boolean): Container {
+/** The tag's own row, when it goes under the name. */
+const TAG_ROW = 64;
+
+/**
+ * A card's name and tag ("New!", "Lv.2 → 3") on a card `w` wide, and where its effect lines start.
+ * The tag keeps its size and the name takes the rest of the row; on a card too narrow for the name
+ * at 48 beside the tag (a landscape row), the tag drops to its own row under the name.
+ */
+function cardHead(text: CardText, w: number): { name: Text; tag: Text; below: boolean; linesTop: number } {
+  const room = textW(w);
+  const tag = fit(label(text.tag, 48, text.fresh ? COLORS.saffron : COLORS.dim), room * 0.45);
+  const name = label(text.name, 60);
+  const below = name.width * 48 / 60 > room - tag.width - 28;
+  fit(name, below ? room : room - tag.width - 28);
+  return { name, tag, below, linesTop: LINES_TOP + (below ? TAG_ROW : 0) };
+}
+
+function card(text: CardText, head: ReturnType<typeof cardHead>, lines: Container, w: number, h: number, icons: IconSheet, onTap: () => void, locked: () => boolean): Container {
   const c = new Container();
-  const left = -CARD_W / 2;
+  const left = -w / 2;
   const gold = text.kind === 'evolve';
-  const back = panel(CARD_W, h, gold ? GOLD_PANEL : COLORS.panel);
-  if (gold) back.roundRect(-CARD_W / 2 + 14, -h / 2 + 14, CARD_W - 28, h - 28, 20).stroke({ color: GOLD_RIM, width: 6 });
+  const back = panel(w, h, gold ? GOLD_PANEL : COLORS.panel);
+  if (gold) back.roundRect(-w / 2 + 14, -h / 2 + 14, w - 28, h - 28, 20).stroke({ color: GOLD_RIM, width: 6 });
   c.addChild(back, icon(text, icons));
   c.children[1].position.set(left + 40 + ICON_R, 0);
-  const x = TEXT_X;
-  const room = TEXT_W;
-  // the tag ("New!", "Lv.2 → 3") keeps its size; the name takes the rest of the row
-  const tag = fit(label(text.tag, 48, text.fresh ? COLORS.saffron : COLORS.dim), room * 0.45);
-  const name = fit(label(text.name, 60), room - tag.width - 28);
+  const x = textX(w);
+  const { name, tag } = head;
   name.anchor.set(0, 0.5);
   name.position.set(x, -h / 2 + 70);
-  tag.anchor.set(1, 0.5);
-  tag.position.set(CARD_W / 2 - 36, -h / 2 + 70);
-  lines.position.set(x, -h / 2 + LINES_TOP);
+  if (head.below) {
+    tag.anchor.set(0, 0.5);
+    tag.position.set(x, -h / 2 + 70 + TAG_ROW);
+  } else {
+    tag.anchor.set(1, 0.5);
+    tag.position.set(w / 2 - 36, -h / 2 + 70);
+  }
+  lines.position.set(x, -h / 2 + head.linesTop);
   c.addChild(name, tag, lines);
   c.eventMode = 'static';
   c.cursor = 'pointer';
@@ -171,9 +190,9 @@ export interface CardPanel {
   key(code: string, repeat: boolean): void;
 }
 
-/** Where the hand's fingertip taps, from the card's middle: low on the icon, so the hand hangs over
- *  the icons below rather than the level line or the next card's name. */
-const HAND_X = -CARD_W / 2 + 40 + ICON_R * 0.6;
+/** Where the hand's fingertip taps, from the middle of a card `w` wide: low on the icon, so the hand
+ *  hangs over the icons below rather than the level line or the next card's name. */
+const handX = (w: number) => -w / 2 + 40 + ICON_R * 0.6;
 const HAND_DOWN = 0;
 
 /** The ring round the highlighted card. */
@@ -190,12 +209,12 @@ export interface CardNudgeState {
 }
 
 /** The suggested card's tag, a pill on its top edge over the start of the name. */
-function suggestTag(cardH: number): Container {
+function suggestTag(cardW: number, cardH: number): Container {
   const c = new Container();
   const text = label(t('card.suggested'), 48, COLORS.outline);
   const w = Math.ceil(text.width) + 48;
   c.addChild(new Graphics().roundRect(-w / 2, -34, w, 68, 34).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 }), text);
-  c.position.set(TEXT_X + w / 2, -cardH / 2);
+  c.position.set(textX(cardW) + w / 2, -cardH / 2);
   return c;
 }
 
@@ -210,14 +229,19 @@ export function cardPanel(
 ): CardPanel {
   const view = new Container();
   view.addChild(backdrop(f.w, f.h, 0.7));
+  // a landscape frame too short for the column and too narrow for the row narrows the cards to fit
+  // the row, their lines wrapping into the height the row leaves free
+  const columnH = CARDS_TOP + texts.length * (CARD_H + GAP) - GAP + 60;
+  const cardW = cardWidth(f, texts.length, CARD_W, GAP, columnH);
   // one height for all the cards: the tallest effect lines, within what the screen leaves
-  const blocks = texts.map(effectLines);
-  const row = cardsInRow(f, texts.length, CARD_W, GAP);
+  const blocks = texts.map((text) => effectLines(text, textW(cardW)));
+  const row = cardsInRow(f, texts.length, cardW, GAP);
   const roomH = row ? f.h - CARDS_TOP - 60 : Math.floor((f.h - CARDS_TOP - 60 - (texts.length - 1) * GAP) / Math.max(1, texts.length));
-  const want = Math.max(CARD_H, ...blocks.map((b) => LINES_TOP + b.h + LINES_BOTTOM));
+  const heads = texts.map((text) => cardHead(text, cardW));
+  const want = Math.max(CARD_H, ...blocks.map((b, i) => heads[i].linesTop + b.h + LINES_BOTTOM));
   const cardH = Math.max(CARD_H, Math.min(want, roomH));
-  for (const b of blocks) {
-    const fitsIn = cardH - LINES_TOP - LINES_BOTTOM;
+  for (const [i, b] of blocks.entries()) {
+    const fitsIn = cardH - heads[i].linesTop - LINES_BOTTOM;
     if (b.h > fitsIn) b.block.scale.set(Math.max(40 / 48, fitsIn / b.h));
   }
   const total = row ? cardH : texts.length * cardH + (texts.length - 1) * GAP;
@@ -231,12 +255,12 @@ export function cardPanel(
   view.addChild(heading, hint);
   let locked = true;
   if (keys && keys.focus >= texts.length) keys.focus = 0;
-  const spots = cardSpots(f, texts.length, CARD_W, cardH, GAP, top);
+  const spots = cardSpots(f, texts.length, cardW, cardH, GAP, top);
   const cards = texts.map((text, i) => {
-    const body = card(text, blocks[i].block, cardH, icons, () => onPick(i), () => locked);
+    const body = card(text, heads[i], blocks[i].block, cardW, cardH, icons, () => onPick(i), () => locked);
     const rim = new Graphics();
     const ring = new Graphics()
-      .roundRect(-CARD_W / 2 - FOCUS_PAD, -cardH / 2 - FOCUS_PAD, CARD_W + 2 * FOCUS_PAD, cardH + 2 * FOCUS_PAD, CARD_RADIUS + FOCUS_PAD)
+      .roundRect(-cardW / 2 - FOCUS_PAD, -cardH / 2 - FOCUS_PAD, cardW + 2 * FOCUS_PAD, cardH + 2 * FOCUS_PAD, CARD_RADIUS + FOCUS_PAD)
       .stroke({ color: GOLD_RIM, width: 10 });
     ring.visible = false;
     const c = new Container();
@@ -247,7 +271,7 @@ export function cardPanel(
       const chip = new Container();
       const n = label(String(i + 1), 48, COLORS.outline);
       chip.addChild(new Graphics().roundRect(-34, -34, 68, 68, 16).fill(GOLD_RIM).stroke({ color: COLORS.outline, width: 6 }), n);
-      chip.position.set(-CARD_W / 2 + 8, -cardH / 2 + 8);
+      chip.position.set(-cardW / 2 + 8, -cardH / 2 + 8);
       body.addChild(chip);
       // the mouse moves the highlight too, so keys and mouse never disagree
       body.on('pointerover', () => {
@@ -255,7 +279,7 @@ export function cardPanel(
         showFocus();
       });
     }
-    if (nudge?.tagged && nudge.suggest === i) body.addChild(suggestTag(cardH));
+    if (nudge?.tagged && nudge.suggest === i) body.addChild(suggestTag(cardW, cardH));
     view.addChild(c);
     return { c, body, rim, ring, ...spots[i] };
   });
@@ -263,7 +287,7 @@ export function cardPanel(
   const hand = nudge && cards[nudge.suggest] ? cardHand() : null;
   if (hand && nudge) {
     // the fingertip rests on the card's lower left, by the icon, clear of the name and the level step
-    hand.view.position.set(cards[nudge.suggest].x + HAND_X, cards[nudge.suggest].y + HAND_DOWN);
+    hand.view.position.set(cards[nudge.suggest].x + handX(cardW), cards[nudge.suggest].y + HAND_DOWN);
     hand.view.visible = false;
     view.addChild(hand.view);
     view.on('pointerdown', () => (nudge.touched = true));
@@ -296,7 +320,7 @@ export function cardPanel(
       body.tint = pose.locked ? LOCKED_TINT : 0xffffff;
       rim.clear();
       if (pose.rimAlpha > 0 && pose.rim > 0) {
-        rim.poly(rimPoints(CARD_W, cardH, CARD_RADIUS, pose.rim), false)
+        rim.poly(rimPoints(cardW, cardH, CARD_RADIUS, pose.rim), false)
           .stroke({ color: GOLD_RIM, width: 10, alpha: pose.rimAlpha, cap: 'round', join: 'round' });
       }
     });
