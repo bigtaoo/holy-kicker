@@ -765,14 +765,18 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
 - A lobby toast (a locked tab's reason, a copied id) is a dark pill over the tab bar, so it reads
   as a passing message and not as a loose line of the tab under it.
 - The Train tab's board (`ui/trainTab.ts`, `ui/trainBoard.ts`) is a dark panel of its own, its
-  title on it, so the backdrop never shows between nodes. The nodes come in pages of 50
-  (`valueStep`), picked by tabs on the title band; the page shown is the next node's. Each page
+  title on it, so the backdrop never shows between nodes. A screen tall enough (a phone from about
+  390x844, banner ad included, or a 4:3 frame beside the card) shows all 100 nodes on one board of
+  ten rows, squeezed as far as 90 units apart; the room it keeps for the totals is a fully trained
+  line's, so the board does not change as the player trains. A shorter one shows pages of 50
+  (`valueStep`), picked by tabs on the title band; the page shown is the next node's. The board
   snakes in rows of ten along one road, lit as far as the training has come. The second page's tab
-  and each of its nodes' cards wear a gold ×2, so the doubled values read before anything is bought. Three states, told apart at a glance: trained is
+  (on one board, its first node) and each of its nodes' cards wear a gold ×2, so the doubled values read before anything is bought. Three states, told apart at a glance: trained is
   the stat's icon in full colour on a lit badge ringed in its stat's colour; the next one is a
   bigger lit badge in a saffron ring that slowly breathes; the rest are grey silhouettes
   (`lockedLook`) on dark discs. A picked node wears a white ring, and its card with the Train
-  button sits under the board. "Stats from training" only appears once something is trained.
+  button sits just above the tab bar (beside the board in landscape), "Stats from training" between
+  them; the totals only appear once something is trained.
 
 The backdrop is a daylight courtyard (the corgi: a sunset desert base), drawn without a dark
 veil so the lobby reads bright and warm. On the Play tab the chosen monk stands centre stage

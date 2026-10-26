@@ -7,7 +7,7 @@ import { iconSprite, lockedLook, type IconSheet } from './buildBar';
 import { statsPanel } from './gearTab';
 import { BADGE } from './playCard';
 import { statLines, statText } from './statText';
-import { boardPage, boardPos, boardRows, BOARD_ROW, pageCount, pageRange, ringPulse } from './trainBoard';
+import { boardPage, boardPos, boardRows, BOARD_ROW, pageCount, pageRange, ringPulse, rowFit } from './trainBoard';
 import { COLORS, button, fit, label, panel, shade } from './widgets';
 
 // The lobby's Train tab (docs/design.md "Training", "Lobby layout"): the whole line on its own
@@ -17,6 +17,7 @@ import { COLORS, button, fit, label, panel, shade } from './widgets';
 // (only once there is something). Tapping a node shows what it gives and the level that opens it.
 // The line comes in pages of valueStep nodes, with tabs on the board's title band; the pages after
 // the first wear a gold ×2 (×3, ...) on their tab and their nodes' card: each node there adds that much more.
+// A screen tall enough shows the whole line on one board, the ×2 on the first node of its stretch.
 
 export interface TrainActions {
   train(): void;
@@ -54,9 +55,11 @@ function statIcon(icons: IconSheet, stat: TrainStat, size: number) {
 }
 
 const PAGE = BALANCE.training.valueStep;
+const NODES = BALANCE.training.nodes;
 
-function boardH(): number {
-  return HEAD + boardRows(Math.min(PAGE, BALANCE.training.nodes)) * BOARD_ROW + BOARD_PAD;
+/** A board of `size` nodes a page, its rows `row` apart. */
+function boardH(size: number, row = BOARD_ROW): number {
+  return HEAD + boardRows(Math.min(size, NODES)) * row + BOARD_PAD;
 }
 
 /** A gold chip saying page `page`'s values are that many times the first page's (×2 on the second). */
@@ -70,36 +73,53 @@ function timesChip(page: number, size: number): Container {
   return c;
 }
 
-function statsH(lines: number): number {
-  return 110 + Math.max(1, Math.ceil(lines / 2)) * LINE_H + 40;
+function statsH(lines: number, lineH = LINE_H): number {
+  return 110 + Math.max(1, Math.ceil(lines / 2)) * lineH + 40;
 }
 
-export function trainHeight(save: SaveData): number {
-  const stats = save.trained > 0 ? GAP + statsH(statLines(trainingStats(save)).length) : 0;
-  return boardH() + GAP + CARD_H + stats;
-}
+/** The totals' rows at their closest, under a whole line's board (48-unit text). */
+const TIGHT_LINE_H = 54;
 
 /** A landscape tab's least margin left and right of the board and the card. */
 const WIDE_MARGIN = 80;
 
+/** Where the tab goes: `room` down to the tab bar, `frameW` across, `wide` in a landscape lobby. */
+export interface TrainRoom {
+  room: number;
+  frameW: number;
+  wide: boolean;
+}
+
 /**
- * The tab centred on x = 0 from y = 0 down; `picked` is the node shown in the card. A landscape
- * lobby (`wide`: the tab's `room` down to the tab bar, `frameW` across), too short for the column,
- * puts the card and the totals right of the board instead: the board grows to fill the height
- * (as far as the width allows), the card and the totals stretch to its height, the pair centred.
+ * The tab centred on x = 0 from y = 0 down; `picked` is the node shown in the card. The board
+ * shows the whole line on one page where it fits, else a page of valueStep nodes with tabs.
+ * In a column the card sits just above the tab bar, the totals between it and the board; a
+ * phone tall enough draws the whole line, its rows squeezed as far as MIN_ROW to leave room for
+ * what a fully trained line adds up to (so the board does not change with training). A
+ * landscape lobby too short for the column, or one whose whole board fits beside the card (a
+ * 4:3 frame), puts the card and the totals right of the board instead: the board grows to fill
+ * the height (as far as the width allows), the card and the totals stretch to its height.
  */
-export function trainTab(save: SaveData, icons: IconSheet, picked: number | null, actions: TrainActions, wide?: { room: number; frameW: number }): Container {
+export function trainTab(save: SaveData, icons: IconSheet, picked: number | null, actions: TrainActions, at: TrainRoom): Container {
   const c = new Container();
-  const bh = boardH();
-  const shown = picked ?? nextNode(save)?.n ?? null;
-  const page = shown === null ? pageCount(BALANCE.training.nodes, PAGE) - 1 : boardPage(shown, PAGE);
-  const board = boardView(save, icons, shown, page, actions);
   const lines = save.trained > 0 ? statLines(trainingStats(save)) : null;
-  // a 4:3 tablet's landscape frame is tall enough for the column
-  if (wide && trainHeight(save) > wide.room) {
-    const k = Math.max(1, Math.min((wide.room - GAP) / bh, (wide.frameW - 2 * WIDE_MARGIN - GAP - W) / W));
+  const most = statLines(trainingStats({ ...save, trained: NODES })).length;
+  const tight = (n: number) => GAP + statsH(n, TIGHT_LINE_H);
+  const wideK = (bh: number) => Math.min((at.room - GAP) / bh, (at.frameW - 2 * WIDE_MARGIN - GAP - W) / W);
+  // what a column leaves the board's rows under the card and the totals
+  const rowsRoom = (stats: number) => at.room - HEAD - BOARD_PAD - GAP - CARD_H - stats;
+  const rows = boardRows(NODES);
+  const whole = at.wide ? wideK(boardH(NODES)) >= 1 : rowFit(rowsRoom(tight(most)), rows) !== null;
+  const size = whole ? NODES : PAGE;
+  const row = whole && !at.wide ? rowFit(rowsRoom(lines ? tight(lines.length) : 0), rows)! : BOARD_ROW;
+  const bh = boardH(size, row);
+  const shown = picked ?? nextNode(save)?.n ?? null;
+  const page = shown === null ? pageCount(NODES, size) - 1 : boardPage(shown, size);
+  const board = boardView(save, icons, shown, page, size, row, actions);
+  if (at.wide && (whole || bh + GAP + CARD_H + (lines ? GAP + statsH(lines.length) : 0) > at.room)) {
+    const k = Math.max(1, wideK(bh));
     const tall = Math.max(bh * k, CARD_H + (lines ? GAP + statsH(lines.length) : 0));
-    const top = Math.max(0, (wide.room - tall) / 2);
+    const top = Math.max(0, (at.room - tall) / 2);
     const left = -(W * k + GAP + W) / 2;
     board.scale.set(k);
     board.position.set(left + (W * k) / 2, top + tall / 2);
@@ -112,8 +132,8 @@ export function trainTab(save: SaveData, icons: IconSheet, picked: number | null
     if (lines) {
       const h = tall - CARD_H - GAP;
       // the rows spread down the stretched panel, up to twice as far apart
-      const rows = Math.max(1, Math.ceil(lines.length / 2));
-      const stats = statsPanel(t('train.total'), lines, h, W, Math.min(2 * LINE_H, (h - 150) / rows));
+      const n = Math.max(1, Math.ceil(lines.length / 2));
+      const stats = statsPanel(t('train.total'), lines, h, W, Math.min(2 * LINE_H, (h - 150) / n));
       stats.position.set(x, top + CARD_H + GAP + h / 2);
       c.addChild(stats);
     }
@@ -121,28 +141,35 @@ export function trainTab(save: SaveData, icons: IconSheet, picked: number | null
   }
   board.position.set(0, bh / 2);
   c.addChild(board);
+  // the card just above the tab bar (right under the board when the room is short of the column)
+  const bottom = Math.max(at.room, bh + GAP + CARD_H + (lines ? tight(lines.length) : 0));
   const card = nodeCard(save, icons, shown, actions);
-  card.position.set(0, bh + GAP + CARD_H / 2);
+  card.position.set(0, bottom - CARD_H / 2);
   c.addChild(card);
-  // nothing trained yet: no card of dashes
+  // nothing trained yet: no card of dashes; else the totals centred between the board and the card
   if (lines) {
-    const h = statsH(lines.length);
-    const stats = statsPanel(t('train.total'), lines, h, W);
-    stats.position.set(0, bh + GAP + CARD_H + GAP + h / 2);
+    const free = bottom - CARD_H - bh - 2 * GAP;
+    const n = Math.max(1, Math.ceil(lines.length / 2));
+    const lineH = Math.max(TIGHT_LINE_H, Math.min(2 * LINE_H, (free - 150) / n));
+    const stats = statsPanel(t('train.total'), lines, Math.min(free, statsH(lines.length, lineH)), W, lineH);
+    stats.position.set(0, bh + GAP + free / 2);
     c.addChild(stats);
   }
   return c;
 }
 
-/** The board centred on (0, 0): its title (with the page tabs), then page `page`'s path of nodes. */
-function boardView(save: SaveData, icons: IconSheet, shown: number | null, page: number, actions: TrainActions): Container {
-  const total = BALANCE.training.nodes;
-  const pages = pageCount(total, PAGE);
-  const { first, last } = pageRange(page, PAGE, total);
-  const h = boardH();
+/**
+ * The board centred on (0, 0): its title (with the page tabs when the line takes more than one
+ * page of `size` nodes), then page `page`'s path of nodes, rows `row` apart. A whole line wears
+ * each later stretch's ×2 (×3, ...) on that stretch's first node.
+ */
+function boardView(save: SaveData, icons: IconSheet, shown: number | null, page: number, size: number, row: number, actions: TrainActions): Container {
+  const pages = pageCount(NODES, size);
+  const { first, last } = pageRange(page, size, NODES);
+  const h = boardH(size, row);
   const c = new Container();
   c.addChild(panel(W, h));
-  const head = label(t('train.progress', { n: save.trained, total }), 56, COLORS.saffron);
+  const head = label(t('train.progress', { n: save.trained, total: NODES }), 56, COLORS.saffron);
   head.y = -h / 2 + 62;
   c.addChild(head);
   if (pages > 1) {
@@ -156,7 +183,7 @@ function boardView(save: SaveData, icons: IconSheet, shown: number | null, page:
   }
   const top = -h / 2 + HEAD;
   const at = (n: number) => {
-    const p = boardPos(n - first + 1);
+    const p = boardPos(n - first + 1, row);
     return { x: p.x, y: top + p.y };
   };
   // the road under the nodes: lit as far as the training has come, dark beyond
@@ -172,6 +199,7 @@ function boardView(save: SaveData, icons: IconSheet, shown: number | null, page:
   }
   c.addChild(road);
   const next = nextNode(save)?.n ?? null;
+  const chips: Container[] = [];
   for (let n = first; n <= last; n++) {
     const node = nodeView(icons, trainNode(n).stat, n <= save.trained ? 'trained' : n === next ? 'next' : 'future', n === shown && n !== next);
     node.position.copyFrom(at(n));
@@ -179,7 +207,14 @@ function boardView(save: SaveData, icons: IconSheet, shown: number | null, page:
     node.cursor = 'pointer';
     node.on('pointertap', () => actions.pick(n));
     c.addChild(node);
+    if (pages === 1 && n > PAGE && (n - 1) % PAGE === 0) {
+      const chip = timesChip(boardPage(n, PAGE), 30);
+      chip.position.set(node.x + NODE_R * 0.6, node.y - NODE_R);
+      chips.push(chip);
+    }
   }
+  // over the nodes, so the next one's ring does not hide them
+  if (chips.length) c.addChild(...chips);
   return c;
 }
 

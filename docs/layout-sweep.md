@@ -19,7 +19,8 @@ it judges only what does not hang on a font: panels and labels off the canvas (`
 `offscreen`), labels out of their panel or under a fill, and placeholders, on every lobby tab
 and panel, the run's HUD, pause and results. It also keeps the tab bar's names at least 12 units
 above the window's edge, the monk on Gear less than 15% covered, and Train's empty band above
-the tab bar under 15% of the room on 16:9 (30% on 4:3).
+the tab bar under 15% of the room on 16:9 and the phone (30% on 4:3). Its save has Train's
+totals to show, which the sweep's has not.
 
 `build/layoutSweep.mjs` starts its own Vite dev server for this checkout on a free port
 from 5194 up, unless `--url` names one. It then drives the system Chrome through

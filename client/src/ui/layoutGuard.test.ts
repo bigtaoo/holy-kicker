@@ -13,10 +13,10 @@ import { TAB_H, TOP_H } from './lobbyLayout';
 // judged: panels off the frame, labels off the canvas or out of their panel, the tab bar's names
 // clear of the window's edge, the monk in the clear on Gear, and Train filling the tab.
 
-/** A mid-game player, as the sweep's SAVE_PATCH: chapters 1-5 cleared, coin to spend, nothing new to show. */
+/** A mid-game player, as the sweep's SAVE_PATCH (chapters 1-5 cleared, coin to spend, nothing new to show), with Train's totals to show. */
 const SAVE: Partial<SaveData> = {
   firstRunDone: true, level: 18, xp: 0, copper: 12000, jade: 450, chapter: 6, cleared: 5,
-  stars: [3, 3, 3, 2, 2], runs: 46, seen: 31, kills: 25000,
+  stars: [3, 3, 3, 2, 2], runs: 46, seen: 31, kills: 25000, trained: 63,
 };
 
 const VIEWPORTS: [number, number][] = [[1280, 575], [1920, 1080], [1024, 768], [390, 844]];
@@ -159,8 +159,7 @@ describe.each(VIEWPORTS)('the layout at %ix%i', (w, h) => {
     expect(worst, 'the monk covered by a panel').toBeLessThan(0.15);
   });
 
-  // landscape only: a phone's Train is the portrait column, with its card under the board
-  it.runIf(w > h)('fills the Train tab down to the tab bar', { timeout: 30_000 }, async () => {
+  it('fills the Train tab down to the tab bar', { timeout: 30_000 }, async () => {
     const rig = await rigAt(w, h);
     await rig.shell.start();
     await rig.until(() => rig.shell.place() === 'lobby');
@@ -171,8 +170,9 @@ describe.each(VIEWPORTS)('the layout at %ix%i', (w, h) => {
     const boxes = tabContent(s).map((c) => c.getBounds());
     const low = Math.max(...boxes.map((b) => b.y + b.height));
     // what the tab leaves empty above the tab bar, as a share of the room it has: about 6% on a
-    // 16:9 window; a 4:3 frame's board is held by its width and leaves about a quarter
-    const most = w / h < 1.5 ? 0.3 : 0.15;
+    // 16:9 window and none on a phone, whose card sits on the tab bar; a 4:3 frame's board is held
+    // by its width and leaves more
+    const most = w > h && w / h < 1.5 ? 0.3 : 0.15;
     expect((floor - low) / (floor - top), 'the empty band above the tab bar').toBeLessThan(most);
   });
 

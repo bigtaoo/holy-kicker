@@ -1,7 +1,8 @@
 // The Train tab's board as a path (docs/design.md "Lobby layout"): the line's nodes in rows of
 // ten that snake left to right, then right to left, so each node touches the one before it and
 // the line reads as one road. The line comes in pages of `size` nodes (the training's valueStep,
-// so a page starts where the values grow); a node's place is counted from its page's first.
+// so a page starts where the values grow), or on one page where the screen is tall enough; a
+// node's place is counted from its page's first.
 // Pure maths, no Pixi.
 
 export const BOARD_COLS = 10;
@@ -9,12 +10,24 @@ export const BOARD_COLS = 10;
 export const BOARD_STEP = 98;
 export const BOARD_ROW = 112;
 
-/** Node n's centre (1-based), x centred on 0 and y from the board's first row top. */
-export function boardPos(n: number): { x: number; y: number } {
-  const row = Math.floor((n - 1) / BOARD_COLS);
+/**
+ * The least spacing down a board is drawn at (a whole line squeezed into a phone's column, under
+ * its banner ad): the next node's ring (48) and a neighbour (40) still clear of each other.
+ */
+export const MIN_ROW = 90;
+
+/** The spacing down for `rows` rows in `room`, up to BOARD_ROW; null when they do not fit at MIN_ROW. */
+export function rowFit(room: number, rows: number): number | null {
+  const row = Math.min(BOARD_ROW, room / rows);
+  return row >= MIN_ROW ? row : null;
+}
+
+/** Node n's centre (1-based), x centred on 0 and y from the board's first row top, rows `row` apart. */
+export function boardPos(n: number, row = BOARD_ROW): { x: number; y: number } {
+  const r = Math.floor((n - 1) / BOARD_COLS);
   const i = (n - 1) % BOARD_COLS;
-  const col = row % 2 === 0 ? i : BOARD_COLS - 1 - i;
-  return { x: (col - (BOARD_COLS - 1) / 2) * BOARD_STEP, y: row * BOARD_ROW + BOARD_ROW / 2 };
+  const col = r % 2 === 0 ? i : BOARD_COLS - 1 - i;
+  return { x: (col - (BOARD_COLS - 1) / 2) * BOARD_STEP, y: r * row + row / 2 };
 }
 
 /** The page (0-based) node n (1-based) is on, with `size` nodes a page. */

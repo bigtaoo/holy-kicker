@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { BOARD_ROW, BOARD_STEP, boardPage, boardPos, boardRows, pageCount, pageRange, ringPulse } from './trainBoard';
+import { BOARD_ROW, BOARD_STEP, boardPage, boardPos, boardRows, MIN_ROW, pageCount, pageRange, ringPulse, rowFit } from './trainBoard';
 
 describe('train board', () => {
   it('snakes: each node is one step from the one before it', () => {
@@ -17,6 +17,15 @@ describe('train board', () => {
     expect(boardPos(11).x).toBe(boardPos(10).x);
     expect(boardPos(20).x).toBe(boardPos(1).x);
     expect(boardRows(50)).toBe(5);
+  });
+
+  it("squeezes a whole line's rows no closer than its nodes and the next one's ring clear", () => {
+    expect(rowFit(10 * BOARD_ROW + 50, 10)).toBe(BOARD_ROW);
+    expect(rowFit(10 * 105, 10)).toBe(105);
+    expect(MIN_ROW).toBeGreaterThan(40 + 48);
+    expect(rowFit(10 * MIN_ROW, 10)).toBe(MIN_ROW);
+    expect(rowFit(10 * MIN_ROW - 1, 10)).toBeNull();
+    expect(boardPos(11, 105).y - boardPos(1, 105).y).toBe(105);
   });
 
   it('pages the line where the values grow', () => {

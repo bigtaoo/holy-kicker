@@ -386,7 +386,7 @@ export class LobbyScreen implements Screen {
         this.relayout();
       },
       toast: (text) => this.showToast(text),
-    }, isWide(f.w, f.h) ? { room: f.h - TAB_H - top, frameW: f.w } : undefined);
+    }, { room: f.h - TAB_H - top, frameW: f.w, wide: isWide(f.w, f.h) });
     tab.position.set(f.w / 2, top);
     this.view.addChild(tab);
   }
