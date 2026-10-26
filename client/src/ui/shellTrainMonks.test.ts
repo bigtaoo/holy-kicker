@@ -1,6 +1,7 @@
 import { type Container } from 'pixi.js';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { formatAmount, t } from '../i18n';
+import type { Art } from '../game/artTypes';
 import { monkPrice } from '../meta/monks';
 import { nextNode, trainNode } from '../meta/training';
 import { monkChapter } from '../meta/unlocks';
@@ -93,6 +94,8 @@ describe('monks, tapped through', { timeout: 30_000 }, () => {
     const rig = await lobbyRig({ jade, cleared: monkChapter('novice'), chapter: monkChapter('novice') + 1 });
     await openMonks(rig);
     expect(words(rig)).toContain(t('tab.unlockChapter', { n: monkChapter('fat') }));
+    const art = (rig.shell as unknown as { art: Art }).art;
+    expect(art.monks.novice).toBeUndefined();
     await doubleTap(rig, buttonNear(rig, price('novice'), name('novice')));
     const save = rig.store.load();
     expect(save.jade).toBe(20);
@@ -100,6 +103,8 @@ describe('monks, tapped through', { timeout: 30_000 }, () => {
     expect(words(rig)).toContain(t('monk.joined', { name: name('novice') }));
     expect(words(rig)).not.toContain(price('novice'));
     expect(wallet(rig).jade).toBe('20');
+    // the lobby's figure is drawn with his rig, loaded on the purchase and not on the next lobby
+    await rig.until(() => !!art.monks.novice);
     const again = await reload(rig);
     expect(again.store.load().monk).toBe('novice');
     expect(again.store.load().jade).toBe(20);

@@ -247,6 +247,8 @@ export class Shell {
     // the mark is one way, and an open lobby still holds the save from before it was set
     if (this.save.tester && !save.tester) save = { ...save, tester: true };
     if (save.tester !== this.save.tester) this.net.tag(experimentTag(save), save.tester);
+    // a monk bought or chosen in the lobby: his rig loads, and the lobby's figure steps in once it is there
+    if (save.monk !== this.save.monk) loadMonkArt(this.platform, this.art, save.monk).catch(() => undefined);
     this.save = save;
     this.store.save(save);
     // a rolled name reaches the boards from here

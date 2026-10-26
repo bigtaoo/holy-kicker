@@ -93,6 +93,8 @@ export class LobbyScreen implements Screen {
   private frame: UiFrame | null = null;
   private toast: Container | null = null;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
+  /** The toast's line and when it goes, so a relayout puts it back for the time it has left. */
+  private toastLine: { text: string; until: number } | null = null;
   private readonly econ: EconomyUi;
   private readonly boards: BoardUi;
   private readonly challenge: ChallengeUi;
@@ -254,6 +256,8 @@ export class LobbyScreen implements Screen {
     }
     if (this.monksOpen) this.view.addChild(this.monkPanel(f));
     if (this.merging) this.view.addChild(this.merging.view);
+    const line = this.toastLine;
+    if (line && line.until > Date.now()) this.showToast(line.text, line.until - Date.now());
     this.idle = !nextStep(this.save, Date.now()) && !privacy?.asking() && !reminders?.offering() && !(this.tab === 'gear' && this.gearOpen)
       && !overlay && !daily && !board && !this.settingsOpen && !this.monksOpen && !this.merging;
   }
@@ -465,8 +469,9 @@ export class LobbyScreen implements Screen {
     this.view.addChild(tab);
   }
 
-  private showToast(text: string): void {
+  private showToast(text: string, ms = 1800): void {
     if (!this.frame) return;
+    this.toastLine = { text, until: Date.now() + ms };
     this.toast?.destroy();
     const f = this.frame;
     // a dark pill, so the line reads as a passing message and not as part of the tab under it
@@ -480,6 +485,6 @@ export class LobbyScreen implements Screen {
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => {
       if (!toast.destroyed) toast.destroy({ children: true });
-    }, 1800);
+    }, ms);
   }
 }
