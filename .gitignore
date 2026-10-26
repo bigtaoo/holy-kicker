@@ -48,3 +48,5 @@ release/
 
 # Coverage reports (npm run coverage); the floors are build/coverage-floors.json
 coverage/
+# the layout sweep's screenshots and report (npm run sweep:layout)
+layout-report/

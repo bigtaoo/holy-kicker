@@ -90,7 +90,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   builds share hk.gamestao.com, tagged `game: 'corgi'` with boards of their own (`server/src/game.ts`),
   and keep their browser saves under `corgi:`.
 - `art/` — source art and style exploration; `tools/` — art scripts.
-- `build/` — check scripts.
+- `build/` — check scripts. `npm run sweep:layout` (not in check) judges every screen's labels at phone,
+  tablet and desktop sizes against `build/layout-baseline.json`; layout work may only shrink it (`docs/layout-sweep.md`).
 - `.github/workflows/ci.yml` — `npm run check` on every push and PR; a green push to `main` ships
   the backend to hk.gamestao.com (`SERVER_DEPLOY_ENABLED`), then publishes the web build to
   h.gamestao.com (Cloudflare, `wrangler/web.jsonc`, `WEB_DEPLOY_ENABLED`) and the corgi build to
