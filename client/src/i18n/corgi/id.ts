@@ -220,6 +220,8 @@ export const corgiId: Table<typeof corgiEn> = {
     adInfo: '{jade} permata dan {n} perlengkapan',
     jadeInfo: '{n} perlengkapan dari planet {chapter}',
     price: '{jade} permata',
+    copper: 'Peti baut',
+    copperPrice: '{copper} baut',
     noJade: 'Permata kurang',
   },
   patrol: {

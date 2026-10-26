@@ -13,7 +13,7 @@ import { OfferLog } from '../net/offers';
 import type { Store } from '../platform/types';
 import { claimGift, giftReady, nextGift } from '../meta/welcome';
 import { giftPanel } from './giftPanel';
-import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, openChest, type ChestKind } from '../meta/shop';
+import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, copperChestPrice, openChest, type ChestKind } from '../meta/shop';
 import type { TasksView } from './achievePanel';
 import { adFreeCard } from './adFreeCard';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
@@ -38,7 +38,7 @@ export interface EconomyHost {
   toast(text: string): void;
   /** Plays the rewarded ad offered at `at`; resolves whether it finished. */
   rewarded(at: OfferPlace): Promise<boolean>;
-  /** The icon sheet, with the chests as chest_free, chest_ad and chest_jade. */
+  /** The icon sheet, with the chests as chest_free, chest_ad, chest_jade and (the copper one) chest. */
   icons: IconSheet;
   /** What the patrol panel's scene is drawn with. */
   patrolLook(): PatrolLook;
@@ -59,12 +59,17 @@ const AD_FREE_TOASTS: Record<'buy' | 'restore', Record<string, Key>> = {
 };
 
 const CARD_W = 1000;
-/** A card's height when the tab is full (iOS's four cards); fewer cards grow towards CARD_TALL. */
+/**
+ * A card's height with room to spare; fewer cards grow towards CARD_TALL, and iOS's five on a
+ * short phone close the gaps and shrink to CARD_MIN, the least the ad-free card's two buttons need.
+ */
 const CARD_H = 290;
+const CARD_MIN = 260;
 const CARD_TALL = 420;
 /** The width of a card's lines, from the chest to its button. */
 const TEXT_W = 420;
 const CARD_GAP = 40;
+const CARD_GAP_MIN = 20;
 /** The refill countdown's line under the cards. */
 const FOOT_H = 110;
 
@@ -187,12 +192,16 @@ export class EconomyUi {
     if ((chestsLeft(this.host.save(), this.now(), 'ad') ?? 0) > 0) this.offers.place('lobby_chest');
     const store = this.host.store;
     const n = kinds.length + (store ? 1 : 0);
-    const h = Math.round(Math.max(CARD_H, Math.min(CARD_TALL, (room - FOOT_H) / n - CARD_GAP)));
+    // where even the closed-up cards leave no line for it, the refill countdown goes (each card counts its own)
+    const footed = (room - FOOT_H) / n >= CARD_MIN + CARD_GAP_MIN;
+    const each = (footed ? room - FOOT_H : room) / n;
+    const gap = each >= CARD_H + CARD_GAP ? CARD_GAP : Math.max(CARD_GAP_MIN, Math.round(each - CARD_H));
+    const h = Math.round(Math.max(CARD_MIN, Math.min(CARD_TALL, each - gap)));
     // a short list (no ads, no store) sits in the middle of the room rather than leaving it empty below
-    c.y = Math.max(0, Math.round((room - n * (h + CARD_GAP) - FOOT_H) / 3));
+    c.y = Math.max(0, Math.round((room - n * (h + gap) - (footed ? FOOT_H : 0)) / 3));
     kinds.forEach((kind, i) => {
       const card = this.chestCard(kind, h);
-      card.y = i * (h + CARD_GAP) + h / 2;
+      card.y = i * (h + gap) + h / 2;
       c.addChild(card);
     });
     if (store) {
@@ -201,11 +210,12 @@ export class EconomyUi {
         restore: () => void this.adFree('restore', () => store.restore()),
         toast: (text) => this.host.toast(text),
       });
-      card.y = kinds.length * (h + CARD_GAP) + h / 2;
+      card.y = kinds.length * (h + gap) + h / 2;
       c.addChild(card);
     }
+    if (!footed) return c;
     const foot = label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
-    foot.y = n * (h + CARD_GAP) + 30;
+    foot.y = n * (h + gap) + 30;
     const refresh = () => {
       foot.text = t('shop.refill', { time: hoursText(untilNextDay(this.now()) / 3_600_000) });
       fit(foot, CARD_W);
@@ -327,7 +337,7 @@ export class EconomyUi {
 
   private async open(kind: ChestKind): Promise<void> {
     const block = chestBlock(this.host.save(), this.now(), kind);
-    if (block) return this.host.toast(block === 'jade' ? t('shop.noJade') : t('shop.tomorrow'));
+    if (block) return this.host.toast(block === 'jade' ? t('shop.noJade') : block === 'copper' ? t('gear.noCopper') : t('shop.tomorrow'));
     if (kind === 'ad' && !(await this.watch('lobby_chest'))) return;
     this.pay(openChest(this.host.save(), this.now(), kind), 'buy', { item: 'chest', kind });
   }
@@ -338,7 +348,7 @@ export class EconomyUi {
     const card = new Container();
     card.addChild(panel(CARD_W, h));
     // a taller card shows a bigger chest and spreads its lines; the text keeps its size
-    const icon = iconSprite(this.host.icons, `chest_${kind}`, Math.min(230, 200 + (h - CARD_H) / 2));
+    const icon = iconSprite(this.host.icons, kind === 'copper' ? 'chest' : `chest_${kind}`, Math.min(230, 200 + (h - CARD_H) / 2));
     if (icon) {
       icon.x = -385;
       card.addChild(icon);
@@ -347,7 +357,7 @@ export class EconomyUi {
     const left = chestsLeft(save, now, kind);
     const info = kind === 'free' ? t('shop.freeInfo', { copper: formatAmount(c.copper), n: c.drops })
       : kind === 'ad' ? t('shop.adInfo', { jade: c.jade, n: c.drops })
-      : t('shop.jadeInfo', { n: c.drops, chapter: c.chapter });
+      : t('shop.jadeInfo', { n: c.drops, chapter: c.chapter });  // the copper chest's gear too
     // a wrapped line keeps a number with its word ("1 gear", "chapter 20")
     const keep = (text: string) => text.replace(/(\d) /g, '$1 ').replace(/ (\d)/g, ' $1');
     const status = left === null ? '' : left > 0 ? t('shop.left', { n: left }) : t('shop.tomorrow');
@@ -373,11 +383,12 @@ export class EconomyUi {
     }
     const block = chestBlock(save, now, kind);
     const playing = kind === 'ad' && this.playing;
-    const text = playing ? '…' : kind === 'jade' ? t('shop.price', { jade: BALANCE.shop.jadeChest.jade }) : t('shop.open');
+    const text = playing ? '…' : kind === 'jade' ? t('shop.price', { jade: BALANCE.shop.jadeChest.jade })
+      : kind === 'copper' ? t('shop.copperPrice', { copper: formatAmount(copperChestPrice(save)) }) : t('shop.open');
     const ok = !block && !this.playing;
-    const fill = !ok ? COLORS.panelLocked : kind === 'jade' ? COLORS.jade : COLORS.saffron;
+    const fill = !ok ? COLORS.panelLocked : kind === 'jade' ? COLORS.jade : kind === 'copper' ? COLORS.copper : COLORS.saffron;
     const b = button(text, 300, 130, () => void this.open(kind), {
-      fill, textFill: !ok ? COLORS.dim : kind === 'jade' ? COLORS.outline : COLORS.text, video: kind === 'ad' && !playing, size: 48,
+      fill, textFill: !ok ? COLORS.dim : kind === 'jade' || kind === 'copper' ? COLORS.outline : COLORS.text, video: kind === 'ad' && !playing, size: 48,
     });
     b.x = 320;
     if (this.playing) b.eventMode = 'none';

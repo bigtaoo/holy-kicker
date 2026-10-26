@@ -219,6 +219,8 @@ export const monkZh: Table<typeof monkEn> = {
     adInfo: '{jade} 玉、{n} 件装备',
     jadeInfo: '{n} 件第 {chapter} 章装备',
     price: '{jade} 玉',
+    copper: '铜钱匣',
+    copperPrice: '{copper} 铜钱',
     noJade: '玉不足',
   },
   patrol: {

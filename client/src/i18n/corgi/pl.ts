@@ -220,6 +220,8 @@ export const corgiPl: Table<typeof corgiEn> = {
     adInfo: 'Klejnoty: {jade}, ekwipunek: {n}',
     jadeInfo: 'Ekwipunek: {n}, z planety {chapter}',
     price: '{jade} {jade|one:klejnot|few:klejnoty|many:klejnotów|other:klejnotu}',
+    copper: 'Skrzynia śrubek',
+    copperPrice: 'Śrubki: {copper}',
     noJade: 'Za mało klejnotów',
   },
   patrol: {

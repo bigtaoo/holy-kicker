@@ -223,6 +223,8 @@ export const corgiEn: Table<typeof monkEn> = {
     adInfo: '{jade} gems and {n} gear',
     jadeInfo: '{n} gear from planet {chapter}',
     price: '{jade} gems',
+    copper: 'Bolt crate',
+    copperPrice: '{copper} bolts',
     noJade: 'Not enough gems',
   },
   // English keeps the patrol as it was; Holy Kicker's Chinese sends the monk round the mountain

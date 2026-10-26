@@ -218,6 +218,8 @@ export const monkEn = {
     adInfo: '{jade} jade and {n} gear',
     jadeInfo: '{n} gear from chapter {chapter}',
     price: '{jade} jade',
+    copper: 'Copper chest',
+    copperPrice: '{copper} copper',
     noJade: 'Not enough jade',
   },
   patrol: {

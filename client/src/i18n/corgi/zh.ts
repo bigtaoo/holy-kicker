@@ -220,6 +220,8 @@ export const corgiZh: Table<typeof corgiEn> = {
     adInfo: '{jade} 宝石、{n} 件装备',
     jadeInfo: '{n} 件星球 {chapter} 装备',
     price: '{jade} 宝石',
+    copper: '螺丝箱',
+    copperPrice: '{copper} 螺丝',
     noJade: '宝石不足',
   },
   patrol: {

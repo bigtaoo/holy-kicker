@@ -29,6 +29,7 @@ export interface Daily {
   /** Shop chests opened today. */
   free: number;
   adChests: number;
+  copperChests: number;
   /** Quick patrols today, paid with an ad or with jade. */
   quickAds: number;
   quickJade: number;
@@ -54,7 +55,7 @@ export function untilNextDay(now: number): number {
 }
 
 export function newDaily(day = 0): Daily {
-  return { day, free: 0, adChests: 0, quickAds: 0, quickJade: 0, progress: DAILY.tasks.map(() => 0), claimed: 0, bonus: false };
+  return { day, free: 0, adChests: 0, copperChests: 0, quickAds: 0, quickJade: 0, progress: DAILY.tasks.map(() => 0), claimed: 0, bonus: false };
 }
 
 function int(v: unknown, max: number): number {
@@ -71,6 +72,7 @@ export function parseDaily(v: unknown): Daily {
     day: int(raw.day, 99999999),
     free: int(raw.free, big),
     adChests: int(raw.adChests, big),
+    copperChests: int(raw.copperChests, big),
     quickAds: int(raw.quickAds, big),
     quickJade: int(raw.quickJade, big),
     progress: DAILY.tasks.map((_, i) => int(progress[i], big)),

@@ -219,6 +219,8 @@ export const monkKo: Table<typeof monkEn> = {
     adInfo: '옥 {jade}개, 장비 {n}개',
     jadeInfo: '{chapter}장 장비 {n}개',
     price: '옥 {jade}',
+    copper: '동전 상자',
+    copperPrice: '동전 {copper}',
     noJade: '옥이 부족해요',
   },
   patrol: {

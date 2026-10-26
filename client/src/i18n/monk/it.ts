@@ -219,6 +219,8 @@ export const monkIt: Table<typeof monkEn> = {
     adInfo: '{jade} giada e {n} equip',
     jadeInfo: '{n} equip dal capitolo {chapter}',
     price: '{jade} giada',
+    copper: 'Forziere di rame',
+    copperPrice: '{copper} rame',
     noJade: 'Giada insufficiente',
   },
   patrol: {

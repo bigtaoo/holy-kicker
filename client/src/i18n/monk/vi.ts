@@ -219,6 +219,8 @@ export const monkVi: Table<typeof monkEn> = {
     adInfo: '{jade} ngọc và {n} trang bị',
     jadeInfo: '{n} trang bị từ chương {chapter}',
     price: '{jade} ngọc',
+    copper: 'Rương đồng',
+    copperPrice: '{copper} đồng',
     noJade: 'Không đủ ngọc',
   },
   patrol: {

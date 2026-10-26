@@ -220,6 +220,8 @@ export const corgiTh: Table<typeof corgiEn> = {
     adInfo: 'อัญมณี {jade} และอุปกรณ์ {n} ชิ้น',
     jadeInfo: 'อุปกรณ์ {n} ชิ้น จากดาวที่ {chapter}',
     price: 'อัญมณี {jade}',
+    copper: 'ลังน็อต',
+    copperPrice: 'น็อต {copper}',
     noJade: 'อัญมณีไม่พอ',
   },
   patrol: {

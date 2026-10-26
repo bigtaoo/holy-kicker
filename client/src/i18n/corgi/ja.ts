@@ -220,6 +220,8 @@ export const corgiJa: Table<typeof corgiEn> = {
     adInfo: 'ジェム{jade}と装備{n}個',
     jadeInfo: '惑星{chapter}の装備{n}個',
     price: 'ジェム{jade}',
+    copper: 'ボルト箱',
+    copperPrice: 'ボルト{copper}',
     noJade: 'ジェムが足りません',
   },
   patrol: {

@@ -75,10 +75,14 @@ function mulberry(seed: number): () => number {
   };
 }
 
-/** Spends what the lobby lets spend: merges first, then training, then jade on the jade chest. */
+/**
+ * Spends what the lobby lets spend: merges first, then training, then the copper left over on
+ * the copper chests, then jade on the jade chest.
+ */
 function spend(s: SaveData, now: number, plan: JourneyPlan, rand: () => number): SaveData {
   s = mergeAll(s).save;
   for (let next = train(s); next !== s; next = train(s)) s = next;
+  while (plan.lobby && patrolOpen(s) && !chestBlock(s, now, 'copper')) s = openChest(s, now, 'copper', rand)!.save;
   while (plan.lobby && patrolOpen(s) && !chestBlock(s, now, 'jade')) s = openChest(s, now, 'jade', rand)!.save;
   return mergeAll(s).save;
 }

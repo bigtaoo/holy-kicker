@@ -3,7 +3,7 @@ import { BALANCE } from './balance';
 import { bump, claimBonus, claimTask, claimable, dayKey, rollDay, taskState, today, untilNextDay } from './daily';
 import { canCollect, canDouble, collectPatrol, copperPerHour, fixPatrolClock, patrolHours, quickLeft, quickPatrol, startPatrol } from './patrol';
 import { newSave, parseSave, type SaveData } from './save';
-import { chestBlock, chestsLeft, openChest } from './shop';
+import { chestBlock, chestContents, chestsLeft, copperChestPrice, openChest } from './shop';
 
 const HOUR = 3600 * 1000;
 // local noon, so adding a few hours stays on the same date
@@ -139,5 +139,31 @@ describe('shop', () => {
     const gear = Object.values(s.gear).flat().reduce((a, b) => a + b, 0);
     expect(gear).toBe(1 + 2 * BALANCE.shop.jadeChest.drops);
     expect(chestsLeft(s, NOON, 'jade')).toBeNull();
+  });
+
+  it('sells a few copper chests a day, dearer as the chapters go up, gear from the best one', () => {
+    const { copper, perDay, drops } = BALANCE.shop.copperChest;
+    expect(copperChestPrice(cleared(1))).toBe(copper);
+    expect(copperChestPrice(cleared(7))).toBeGreaterThan(copperChestPrice(cleared(3)));
+    expect(chestContents(cleared(6), 'copper')).toMatchObject({ copper: 0, jade: 0, drops, chapter: 6 });
+    const price = copperChestPrice(cleared(4));
+    expect(chestBlock(cleared(4, { copper: price - 1 }), NOON, 'copper')).toBe('copper');
+    let s = cleared(4, { copper: price * (perDay + 1) });
+    for (let i = 0; i < perDay; i++) {
+      const opened = openChest(s, NOON, 'copper', rand)!;
+      expect(opened.haul.drops.length).toBe(drops);
+      s = opened.save;
+    }
+    expect(s.copper).toBe(price);
+    expect(s.daily.copperChests).toBe(perDay);
+    expect(chestBlock(s, NOON, 'copper')).toBe('used');
+    expect(openChest(s, NOON, 'copper', rand)).toBeNull();
+    expect(chestsLeft(s, TOMORROW, 'copper')).toBe(perDay);
+  });
+
+  it('reads a save from before the copper chest with none bought today', () => {
+    const s = cleared();
+    const { copperChests: _, ...old } = s.daily;
+    expect(parseSave(JSON.stringify({ ...s, daily: old })).daily.copperChests).toBe(0);
   });
 });

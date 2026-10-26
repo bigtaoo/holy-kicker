@@ -40,7 +40,8 @@ describe.each(VERSIONS)('a version %i save', (v) => {
     const later = { trained: 0, patrol: 0, seen: 0xff, grit: 0, hard: false, monk: 'kicker', kills: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '' };
     for (const [k, none] of Object.entries(later)) expect(s[k as keyof SaveData], k).toBe(raw[k] ?? none);
     expect(s.codex).toEqual(raw.codex);
-    expect(s.daily).toEqual(raw.daily ?? s.daily);
+    // copper chests came within version 7: a stored day bought none
+    expect(s.daily).toEqual(raw.daily ? { copperChests: 0, ...raw.daily as object } : s.daily);
     expect(s.weeks).toEqual(raw.weeks ?? []);
   });
 
@@ -123,7 +124,8 @@ describe.each(VERSIONS)('a version %i save', (v) => {
 });
 
 describe('the version 7 save', () => {
-  it('reads exactly as stored', () => {
-    expect(parseSave(JSON.stringify(SAVES[SAVE_VERSION]))).toEqual(SAVES[SAVE_VERSION]);
+  it('reads exactly as stored, a field added since at its default', () => {
+    const raw = SAVES[SAVE_VERSION];
+    expect(parseSave(JSON.stringify(raw))).toEqual({ ...raw, daily: { ...raw.daily as object, copperChests: 0 } });
   });
 });

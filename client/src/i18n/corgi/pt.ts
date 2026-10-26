@@ -220,6 +220,8 @@ export const corgiPt: Table<typeof corgiEn> = {
     adInfo: '{jade} gemas e {n} {n|one:equipamento|other:equipamentos}',
     jadeInfo: '{n} {n|one:equipamento|other:equipamentos} do planeta {chapter}',
     price: '{jade} gemas',
+    copper: 'Caixa de parafusos',
+    copperPrice: '{copper} parafusos',
     noJade: 'Gemas insuficientes',
   },
   patrol: {
