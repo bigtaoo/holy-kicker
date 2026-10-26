@@ -11,6 +11,7 @@ import { webAudioHost } from '../web/webAudio';
 import { BridgeStore, PlaygamaBridge } from './bridge';
 import { bridgeAnalytics } from './bridgeAnalytics';
 import { deviceFields } from './telemetry';
+import { portalDevice } from '../portalDevice';
 
 // The Playgama host: the browser host plus the Bridge SDK for saves, ads, the platform's pause and
 // sound switches and the lifecycle messages (game_ready once the lobby is up, gameplay brackets).
@@ -82,8 +83,7 @@ export class PlaygamaPlatform extends WebPlatform {
 
   override async probe(): Promise<DeviceInfo> {
     const info = await super.probe();
-    const type = this.bridge.deviceType();
-    return type ? { ...info, mobile: type === 'mobile' || type === 'tablet', tablet: type === 'tablet' } : info;
+    return portalDevice(info, this.bridge.deviceType());
   }
 
   /** Which platform Bridge found and its version, for the `session` event. */

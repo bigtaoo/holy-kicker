@@ -7,6 +7,7 @@ import { BannerHost } from '../web/banner';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { webAudioHost } from '../web/webAudio';
 import { CrazyGamesSdk, type CgEnvironment } from './sdk';
+import { portalDevice } from '../portalDevice';
 
 // The CrazyGames host: the browser host plus the SDK for saves, ads (the lobby banner too), the
 // gameplay brackets and the signed-in username (docs/design.md "Platforms, saves and server").
@@ -95,8 +96,7 @@ export class CrazyGamesPlatform extends WebPlatform {
   /** The portal's device type when it has one: it knows tablets the user agent hides. */
   override async probe(): Promise<DeviceInfo> {
     const info = await super.probe();
-    const type = this.sdk.deviceType();
-    return type ? { ...info, mobile: type !== 'desktop', tablet: type === 'tablet' } : info;
+    return portalDevice(info, this.sdk.deviceType());
   }
 
   static async create(sdk = new CrazyGamesSdk()): Promise<CrazyGamesPlatform> {
