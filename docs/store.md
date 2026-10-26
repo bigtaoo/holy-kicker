@@ -10,7 +10,7 @@ the Chinese column is for the WeChat listing and the CrazyGames zh page.
 | Title | Holy Kicker (zh: 蹴鞠僧) |
 | Category | Action (secondary: Casual) |
 | Tags | survival, roguelite, bullet heaven, monster, one hand, upgrade, mobile, idle |
-| Orientation | Portrait; desktop and tablets held sideways play in a 3:4 window (only a phone on its side is asked to turn) |
+| Orientation | Portrait on phones; desktop and tablets held sideways play in landscape, 16:10 to 16:9 (only a phone on its side is asked to turn) |
 | Devices | Desktop and mobile |
 | Multiplayer | No |
 | Languages | English, Simplified Chinese |
@@ -147,7 +147,7 @@ gameplay, ads, quality and SDK game-module pages). It was served from a sub-path
 | Basic Launch (the first submission) allows no ads | `prefetchAd` throws `adsDisabledBasicLaunch` there, so the lobby banner and break ads are left out and rewarded offers pay at once with no ad (the iOS ad-free card's wrapper, tracked as `free`), so Basic Launch players get the game as designed; the same bundle plays the ads once the game moves to Full Launch |
 | Portal `muteAudio` takes priority | Holds every sound while set (`?muteAudio=true` checked) |
 | English, SDK locale first | en and zh; the SDK locale is read before the browser's |
-| Legible from 800×450 to 1920×1080; desktop landscape | Portrait 3:4 play area with side bars; HUD and lobby text are readable at 800×450 |
+| Legible from 800×450 to 1920×1080; desktop landscape | Landscape play area, HUD in the corners, lobby spread across the width; the layout sweep checks 722×406 to 1920×1080 |
 | No custom fullscreen button, no Escape, AZERTY-safe keys | None; movement reads physical key codes, so ZQSD works on AZERTY |
 | No page scroll or selection, safe areas | Arrow keys are cancelled; `user-select` and `touch-action` are set in `index.html`; safe-area insets are respected |
 | External links only in a new tab; a privacy notice for data beyond the SDK | The only link is the privacy policy (settings and the consent card), opened in a new tab; see "Privacy" below |

@@ -35,8 +35,11 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 ## Fixed decisions
 
 - Logical resolution 1080x1920. Phones and WeChat are pure 9:16 (taller phones see more
-  height); desktop web widens to at most 3:4 and zooms in 1.3x (`client/src/game/viewport.ts`).
-  A tablet held sideways plays in that 3:4 frame too; only a phone on its side is asked to turn.
+  height). Web hosts on a screen at least 1.2x wider than tall (desktops, a tablet on its side) play in
+  landscape: a run's `RunConfig.wide`, a 16:10 to 16:9 play area showing 1200 world units high, the UI
+  still 1920 units high over at least a 4:3 frame (`client/src/game/viewport.ts`, `ui/uiLayout.ts`,
+  `ui/hudLayout.ts`, `ui/lobbyLayout.ts`); squarer desktop windows keep the 3:4 portrait frame zoomed
+  1.3x. iOS and WeChat stay portrait; only a phone on its side is asked to turn. Every screen needs both layouts.
 - In-world sizes (logical units): hero 120, mob 80, elite 130; UI text at least 48.
 - Art: thick-outline sticker style, flat colours, one hard cel shadow. Hero is warm
   (saffron/gold), enemies are cold (teal/purple/grey) with red eyes; no saturated warm

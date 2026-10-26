@@ -52,7 +52,7 @@ are not layout.
 |---|---|
 | `360x640`, `390x844`, `430x932` | phones (touch, DPR 2-3) |
 | `768x1024` | tablet |
-| `1024x768` | tablet on its side (plays in the 3:4 frame) |
+| `1024x768` | tablet on its side (landscape, its UI over a 4:3 frame) |
 | `1100x574` | CrazyGames' reviewer canvas |
 | `722x406` | CrazyGames' preview tile |
 | `1280x720`, `1366x768`, `1920x1080` | desktop windows (DPR 1, no touch) |
@@ -119,6 +119,6 @@ Repeats of a key are counted. The sweep then reports:
 After a fix, or after a change that is accepted on purpose, run `--update` and commit the
 baseline. An `--only` run updates only its own viewports.
 
-The baseline was recorded on 2026-10-26, when desktop renders the 3:4 portrait column.
-Landscape work should only remove entries, especially the `small` ones on the desktop
-viewports. Any entry it adds needs a reason in the commit.
+The baseline was recorded on 2026-10-26 with the 3:4 portrait column on desktop, and
+re-recorded the same day for the landscape layouts on the wide viewports (581 → 571 findings).
+Any entry a change adds needs a reason in the commit.
