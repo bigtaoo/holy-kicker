@@ -29,12 +29,17 @@ export function hudRows(f: Pick<UiFrame, 'w' | 'h'>): HudRows {
   return { wide, ...(wide ? WIDE : TALL) };
 }
 
+/** Whether `count` cards `cardW` wide sit in a row: on a landscape frame wide enough for them (a 4:3 tablet's is not). */
+export function cardsInRow(f: Pick<UiFrame, 'w' | 'h'>, count: number, cardW: number, gap: number): boolean {
+  return isWideFrame(f) && count * (cardW + gap) + gap <= f.w;
+}
+
 /**
  * The middle of each of `count` cards `cardW` x `cardH` with `gap` between them, the stack's top
- * edge at `top`: down the middle on a portrait frame, three in a row on a landscape one.
+ * edge at `top`: down the middle on a portrait frame, in a row on a landscape one that fits it.
  */
 export function cardSpots(f: Pick<UiFrame, 'w' | 'h'>, count: number, cardW: number, cardH: number, gap: number, top: number): { x: number; y: number }[] {
-  const row = isWideFrame(f);
+  const row = cardsInRow(f, count, cardW, gap);
   return Array.from({ length: count }, (_, i) => row
     ? { x: f.w / 2 + (i - (count - 1) / 2) * (cardW + gap), y: top + cardH / 2 }
     : { x: f.w / 2, y: top + cardH / 2 + i * (cardH + gap) });

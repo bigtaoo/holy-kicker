@@ -22,9 +22,12 @@ const FIGURE_H = 440;
 const FIGURE_H_WIDE = 720;
 /** A landscape tab's width; portrait tabs share the frame's width. */
 const TAB_W_WIDE = 270;
-/** In landscape: the chapter card's centre left of the middle, the two rail columns right of it. */
+/** In landscape: the chapter card's centre left of the middle, the two rail columns right of it; on a frame too
+ * narrow for that (a 4:3 tablet's) the card keeps CARD_EDGE clear of the left edge and the rails RAIL_X of the right. */
 const CARD_DX = 1000;
 const RAIL_DX = [760, 1100];
+/** The chapter card's half width (chapterCard.ts) and margin. */
+const CARD_EDGE = 450 + 30;
 /** The track switch's height over the chapter card. */
 const SWITCH_H = 110;
 
@@ -76,13 +79,15 @@ export function playSpots(w: number, h: number, cardH: number, switched: boolean
   const cardTop = TOP_H + Math.max(30, (room - stack) / 2) + (switched ? SWITCH_H : 0);
   const railTop = TOP_H + (room - RAIL_STEP) / 2 - 40;
   const column = (x: number) => [0, 1].map((i) => ({ x, y: railTop + i * RAIL_STEP }));
+  const cardX = Math.max(CARD_EDGE, w / 2 - CARD_DX);
+  const railX = Math.min(w / 2 + RAIL_DX[1], w - RAIL_X);
   return {
-    trackSwitch: { x: w / 2 - CARD_DX, y: cardTop - SWITCH_H + 45 },
-    card: { x: w / 2 - CARD_DX, y: cardTop },
+    trackSwitch: { x: cardX, y: cardTop - SWITCH_H + 45 },
+    card: { x: cardX, y: cardTop },
     feet: { x: w / 2, y: feetY },
     play,
     figureH: Math.max(160, Math.min(FIGURE_H_WIDE, feetY - TOP_H - 60)),
-    rails: [column(w / 2 + RAIL_DX[0]), column(w / 2 + RAIL_DX[1])],
+    rails: [column(railX - (RAIL_DX[1] - RAIL_DX[0])), column(railX)],
   };
 }
 

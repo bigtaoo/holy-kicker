@@ -6,7 +6,7 @@ import { cardHand } from './cardHand';
 import { CARD_NUDGE, keyWakes, moveWakes, nudgeOn } from './cardNudge';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
 import { cardKey } from './cardKeys';
-import { cardSpots, isWideFrame } from './hudLayout';
+import { cardSpots, cardsInRow } from './hudLayout';
 import { spot } from './spots';
 import type { CardText } from './cardText';
 import type { UiFrame } from './uiLayout';
@@ -212,7 +212,7 @@ export function cardPanel(
   view.addChild(backdrop(f.w, f.h, 0.7));
   // one height for all the cards: the tallest effect lines, within what the screen leaves
   const blocks = texts.map(effectLines);
-  const row = isWideFrame(f);
+  const row = cardsInRow(f, texts.length, CARD_W, GAP);
   const roomH = row ? f.h - CARDS_TOP - 60 : Math.floor((f.h - CARDS_TOP - 60 - (texts.length - 1) * GAP) / Math.max(1, texts.length));
   const want = Math.max(CARD_H, ...blocks.map((b) => LINES_TOP + b.h + LINES_BOTTOM));
   const cardH = Math.max(CARD_H, Math.min(want, roomH));

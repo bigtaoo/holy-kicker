@@ -23,7 +23,7 @@ describe('lobby layout', () => {
   });
 
   it('spreads a landscape Play tab out without overlaps', () => {
-    for (const [w, h] of [[1600, 900], [1440, 900], [1100, 574]]) {
+    for (const [w, h] of [[1600, 900], [1440, 900], [1100, 574], [1024, 768]]) {
       const f = uiFrame(computeViewport(w, h, true));
       expect(isWide(f.w, f.h)).toBe(true);
       for (const switched of [false, true]) {
