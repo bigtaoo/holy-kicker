@@ -6,6 +6,26 @@ apply unchanged. One rewarded video and one interstitial unit serve the whole ga
 live in `client/src/platform/wechat/adUnits.json`. While an id is empty that kind is off, and
 with both empty the build has no ads at all (`NO_ADS`, the state it ships in today).
 
+## The AppID
+
+`client/wechat/project.config.json` holds `wx25a3b18a3e83ffce`, a mini-game account registered
+for another game and borrowed for testing. It can preview on a phone but must not release Holy
+Kicker: the account's name, category and filings belong to that game. The release needs a
+mini-game account of its own (individual subject, free, no virtual payment, so no 版号), which
+waits on a mainland phone number for the account, the 小程序备案 and the 软著 portal. Every
+console step below happens on that new account.
+
+A phone preview (DevTools logged in, 设置 → 安全设置 → 服务端口 on), after `npm run build:wechat`:
+
+```
+cli.bat open --project D:/standing/client/wechat
+cli.bat preview --project D:/standing/client/wechat --qr-format image --qr-output qr.png
+cli.bat close --project D:/standing/client/wechat
+```
+
+`cli.bat` sits beside the DevTools exe. Opening the project lets DevTools rewrite
+`project.config.json` (it adds `minifyWXML`); revert that before committing.
+
 ## Console steps (mp.weixin.qq.com, the mini-game's account)
 
 1. **Open 流量主.** 推广 → 流量主 → 开通. WeChat requires the mini-game to be released and to
