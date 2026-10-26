@@ -1,4 +1,5 @@
 import { Container, type Text } from 'pixi.js';
+import { getLocale, t, type Key } from '../i18n';
 import { COLORS, fit, label, meter } from '../ui/widgets';
 
 // A boss's health bar across the top of the play area, under the build strip, the wave
@@ -21,22 +22,29 @@ export class BossBar {
   readonly view = new Container();
   private readonly gauge = meter(BAR_W, 1, VIOLET, BAR_H);
   private readonly label: Text;
+  private key: Key;
+  /** The language the name was read in: a switch in the pause menu reads it again. */
+  private locale = getLocale();
 
-  constructor(name: string) {
-    const title = (this.label = label(name, 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }));
+  constructor(key: Key) {
+    this.key = key;
+    const title = (this.label = label(t(key), 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } }));
     title.anchor.set(0.5, 1);
     title.y = -BAR_H / 2 - 10;
     fit(title, NAME_W);
     this.view.addChild(this.gauge.view, title);
   }
 
-  rename(name: string): void {
-    if (this.label.text === name) return;
-    this.label.text = name;
+  rename(key: Key): void {
+    if (key === this.key && this.locale === getLocale()) return;
+    this.key = key;
+    this.locale = getLocale();
+    this.label.text = t(key);
     fit(this.label, NAME_W);
   }
 
   set(hp: number, maxHp: number): void {
+    this.rename(this.key);
     this.gauge.set(Math.max(0, hp) / Math.max(1, maxHp));
   }
 

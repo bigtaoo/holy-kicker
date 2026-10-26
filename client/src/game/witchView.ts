@@ -1,6 +1,6 @@
 import { ColorMatrixFilter, Container, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { FP, JUDGE, WITCH, type Boss as BossState } from '@hk/engine';
-import { t, type Key } from '../i18n';
+import type { Key } from '../i18n';
 import { BossBar } from './bossBar';
 import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
@@ -69,7 +69,7 @@ export class StaffBossView {
     private readonly renderer: Renderer, private readonly sheet: MobSheet, world: Container, shadowTex: Texture, readonly height: number,
     private readonly fx: FxPool, private readonly style: StaffBossStyle,
   ) {
-    this.bar = new BossBar(t(style.name));
+    this.bar = new BossBar(style.name);
     this.hud = this.bar.view;
     const m = sheet.meta;
     this.sprite = new Sprite(sheet.textures[0]);
@@ -104,7 +104,7 @@ export class StaffBossView {
     this.aura?.update(dt);
     placeFallen(this.view, this.shadow, pose, x, y);
     if (k > 0) this.gather(x, y, k, dt);
-    this.bar.rename(t(b.empowered ? this.style.empoweredName : this.style.name));
+    this.bar.rename(b.empowered ? this.style.empoweredName : this.style.name);
     this.bar.set(b.hp, b.maxHp);
   }
 

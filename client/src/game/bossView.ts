@@ -1,6 +1,5 @@
 import { Container, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { BOSS, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
-import { t } from '../i18n';
 import { BossBar } from './bossBar';
 import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
@@ -25,7 +24,7 @@ const EMPOWERED_TINT = 0xb8a0e8;
 
 export class Boss {
   readonly view = new Container();
-  private readonly bar = new BossBar(t('boss.abbot'));
+  private readonly bar = new BossBar('boss.abbot');
   /** Screen-space bar, placed by the game in play-area units. */
   readonly hud = this.bar.view;
   private readonly actor: TaoActor;
@@ -82,7 +81,7 @@ export class Boss {
     if (this.tint > 0) this.tint = Math.max(0, this.tint - dt);
     this.actor.view.tint = flash(this.tint / HURT_TINT_TIME, b.empowered ? EMPOWERED_TINT : 0xffffff);
     this.drawZone(b, alpha);
-    this.bar.rename(t(b.empowered ? 'boss.empowered' : 'boss.abbot'));
+    this.bar.rename(b.empowered ? 'boss.empowered' : 'boss.abbot');
     this.bar.set(b.hp, b.maxHp);
   }
 

@@ -1,6 +1,5 @@
 import type { Container, Renderer, Texture } from 'pixi.js';
 import { chapterBoss, mapOf, rushOf, type BossKind, type EliteKind, type MobKind } from '@hk/engine';
-import { t } from '../i18n';
 import { BossBar } from './bossBar';
 import { Boss } from './bossView';
 import { BossStage, type BossViews } from './bossStage';
@@ -102,7 +101,7 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
   const tint = (k: number, kind: EliteKind) => (kind === 'charger' ? ELITE_TINTS[k % ELITE_TINTS.length] : 0xffffff);
   return new EliteCrowd(
     (k, kind) => new EliteView(kind, world, rim(kind), ring(), tint(k, kind), scene.eliteRing, topZ),
-    chapter ? new BossBar(t('boss.twins')) : null,
+    chapter ? new BossBar('boss.twins') : null,
   );
 }
 

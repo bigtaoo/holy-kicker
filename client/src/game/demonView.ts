@@ -1,6 +1,5 @@
 import { Container, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { DEMON, FP, type Boss as BossState } from '@hk/engine';
-import { t } from '../i18n';
 import { BossBar } from './bossBar';
 import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
@@ -24,7 +23,7 @@ const RAGE_TINT = 0xa0b0ff;
 
 export class DemonView {
   readonly view = new Container();
-  private readonly bar = new BossBar(t('boss.demon'));
+  private readonly bar = new BossBar('boss.demon');
   readonly hud = this.bar.view;
   private readonly actor: TaoActor;
   private readonly body = new Container();

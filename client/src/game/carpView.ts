@@ -1,6 +1,5 @@
 import { Container, Graphics, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { CARP, FP, TICK_RATE, type Boss as BossState } from '@hk/engine';
-import { t } from '../i18n';
 import { BossBar } from './bossBar';
 import { BossFall, placeFallen } from './bossFall';
 import { DarkAura } from './darkAura';
@@ -29,7 +28,7 @@ const EMPOWERED_TINT = 0xb8a0e8;
 
 export class CarpView {
   readonly view = new Container();
-  private readonly bar = new BossBar(t('boss.carp'));
+  private readonly bar = new BossBar('boss.carp');
   readonly hud = this.bar.view;
   private readonly sprite: Sprite;
   private readonly shadow: Sprite;
@@ -85,7 +84,7 @@ export class CarpView {
     placeFallen(this.view, this.shadow, pose, x, y);
     this.drawWake(under ? x : NaN, y);
     this.drawZone(b, alpha);
-    this.bar.rename(t(b.empowered ? 'boss.carpEmpowered' : 'boss.carp'));
+    this.bar.rename(b.empowered ? 'boss.carpEmpowered' : 'boss.carp');
     this.bar.set(b.hp, b.maxHp);
   }
 
