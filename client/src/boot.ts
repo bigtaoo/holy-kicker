@@ -126,7 +126,7 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptio
   stage('shell');
   await merged;
   shell = new Shell(app, platform, art, scene, store, net, device.tablet ? 'tablet' : device.mobile ? 'mobile' : 'desktop', privacy, sessionDevice(device));
-  const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping, () => shell.place() !== 'run');
+  const quality = new QualityRuntime(app, levelRange(mode, device), (s) => shell.applyQuality(s), () => !shell.run?.stepping, () => shell.place() !== 'run', platform.density?.bind(platform));
   // frame rates and things gone wrong on the device (the `perf` and `anomaly` events)
   const probe = memProbe(app);
   const perf = (shell.perf = new PerfReport(net, probe));

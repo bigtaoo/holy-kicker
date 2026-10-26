@@ -141,14 +141,22 @@ export class WebPlatform implements Platform {
   /** The most pixels per logical pixel this host's canvas gets. */
   protected readonly maxResolution: number = MAX_RESOLUTION;
 
+  /** Dev ?record draws a fixed canvas at density 1 (dev/recorder.ts). */
+  private recording = false;
+
+  density(): number {
+    return this.recording ? 1 : Math.min(window.devicePixelRatio || 1, this.maxResolution);
+  }
+
   async createApp(msaa: boolean): Promise<Application> {
     installTextCanvasFix();
     const app = new Application();
     // dev ?record: a fixed canvas at the video's size, scaled to the window by CSS (dev/recorder.ts)
     const record = recordSize(location.search);
+    this.recording = !!record;
     await app.init({
       background: '#141816',
-      ...(record ? { ...record, resolution: 1 } : { resizeTo: window, resolution: Math.min(window.devicePixelRatio || 1, this.maxResolution) }),
+      ...(record ? { ...record, resolution: 1 } : { resizeTo: window, resolution: this.density() }),
       antialias: msaa,
       autoDensity: !record,
       // WeChat has no WebGPU; use WebGL everywhere so both hosts behave the same.

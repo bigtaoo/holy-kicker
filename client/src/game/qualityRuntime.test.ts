@@ -17,8 +17,8 @@ function rig(start = MID, density = 3) {
   const resizes: number[] = [];
   const renderer = { resolution: density, resize: (_w: number, _h: number, res: number) => void resizes.push((renderer.resolution = res)) };
   const app = { renderer, screen: { width: 1080, height: 1920 }, ticker: { autoStart: true, stop() {}, update() {} } } as unknown as Application;
-  const state = { calm: true, sharp: true, to: -1 };
-  const rt = new QualityRuntime(app, { min: 0, max: MID, start }, () => {}, () => state.calm, () => state.sharp);
+  const state = { calm: true, sharp: true, to: -1, density };
+  const rt = new QualityRuntime(app, { min: 0, max: MID, start }, () => {}, () => state.calm, () => state.sharp, () => state.density);
   const governor = {
     level: start,
     sample() {
@@ -53,6 +53,18 @@ describe('QualityRuntime', () => {
     state.sharp = state.calm = true;
     frames(2);
     expect(renderer.resolution).toBe(3);
+  });
+
+  it('follows the display density as the browser zooms or the window changes screens', () => {
+    const { renderer, state, frames } = rig(MID, 1);
+    frames(2);
+    expect(renderer.resolution).toBe(1);
+    state.density = 1.5;
+    frames(1);
+    expect(renderer.resolution).toBe(1.5);
+    state.sharp = state.calm = false;
+    frames(2);
+    expect(renderer.resolution).toBe(1.5);
   });
 
   it('holds a step down to its old canvas until a calm frame', () => {

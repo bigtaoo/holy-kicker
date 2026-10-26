@@ -11,7 +11,8 @@ import { FrameGate, FrameGovernor, frameResolution, LEVELS, refreshCap, targetFp
 // update is timed for the perf telemetry (frameWork.ts). The ticker runs on a FrameClock, so
 // the sim and the view step whole refreshes however late the frame's callback ran. Screens with
 // no run draw at the display's full density and battles at their level's resolution: the canvas
-// is resized as the player goes in or out of a run, and a level moved in a battle has its other
+// is resized as the player goes in or out of a run or the display's density changes (browser zoom, a
+// window moved to another screen: a canvas kept at the old density is stretched and blurs), and a level moved in a battle has its other
 // settings at once and its canvas at the next calm frame (the level-up cards, the pause): a resize
 // reallocates the drawing buffer, a frame of 150-400 ms on a CPU-throttled phone in Chrome. A step
 // down waits RESIZE_WAIT_MS of battle at most, as the device needs it (and the governor, which
@@ -33,7 +34,8 @@ export class QualityRuntime {
   governor: FrameGovernor;
   private readonly gate: FrameGate;
   private readonly clock = new FrameClock();
-  private readonly maxResolution: number;
+  /** The display's full density now (the density the app was made at where the host has no `density`). */
+  private readonly device: () => number;
   private last = 0;
   private wasCalm = true;
   /** Whether the last frame's screen had no run (`sharp`); undefined before the first. */
@@ -57,9 +59,11 @@ export class QualityRuntime {
     private readonly calm: () => boolean = () => false,
     /** True while no run is on screen (lobby, menus, results): drawn at full density. */
     private readonly sharp: () => boolean = () => false,
+    density?: () => number,
   ) {
     this.governor = new FrameGovernor(range);
-    this.maxResolution = app.renderer.resolution;
+    const made = app.renderer.resolution;
+    this.device = density ?? (() => made);
     this.gate = new FrameGate(targetFps(true));
     // a later ticker.add() would otherwise start the ticker's own loop again
     app.ticker.autoStart = false;
@@ -124,7 +128,7 @@ export class QualityRuntime {
 
   /** The canvas's resolution differs from what this frame's screen and level ask. */
   private resizeDue(): boolean {
-    return this.app.renderer.resolution !== frameResolution(this.sharp(), this.settings, this.maxResolution);
+    return this.app.renderer.resolution !== frameResolution(this.sharp(), this.settings, this.device());
   }
 
   /**
@@ -133,7 +137,7 @@ export class QualityRuntime {
    */
   private fit(calm: boolean): void {
     const sharp = this.sharp();
-    const res = frameResolution(sharp, this.settings, this.maxResolution);
+    const res = frameResolution(sharp, this.settings, this.device());
     const r = this.app.renderer;
     const came = sharp !== this.sizedSharp;
     this.sizedSharp = sharp;

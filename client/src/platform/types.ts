@@ -14,6 +14,8 @@ export interface Platform {
   probe(): Promise<DeviceInfo>;
   /** MSAA is fixed for the context's lifetime, so it is chosen here. */
   createApp(msaa: boolean): Promise<Application>;
+  /** The canvas's full density now, where it can change after launch (browser zoom, the window moved to another screen): the web hosts; unset where createApp's density holds. */
+  density?(): number;
   /** Route touches (and on web, mouse drags) into the stick. Called once. */
   bindStick(app: Application, stick: DragStick): void;
   /** Extra movement source such as the keyboard; a zero vector when idle. */

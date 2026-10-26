@@ -1,4 +1,4 @@
-import { BlurFilter, ColorMatrixFilter, Container, FillGradient, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
+import { BlurFilter, Color, ColorMatrixFilter, Container, FillGradient, Graphics, Rectangle, Sprite, type Renderer, type Texture } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { seeTab, TABS, tabLock, tabNew, type Lock, type Tab } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -116,21 +116,30 @@ export function menuCover(f: UiFrame, portrait: Texture | null): Container {
 /** How wide the daylight courtyard stands in a landscape lobby, and the veil over its mirrored wings. */
 const STAGE_W = 1500;
 const WING_VEIL = 0.55;
-/** How far into the stage the veil thins out, so its edges are not a seam of their own. */
-const WING_FADE = 240;
+/** How far into the stage the veil reaches before it is gone. */
+const WING_REACH = 300;
+/** The share of the veil's run, from the frame's edge, that stays at full strength. */
+const WING_HOLD = 0.3;
+const WING_STOPS = 8;
 
-/** The veil's fade at the stage's left (-1) and right (1) edge; made once and kept. */
+/**
+ * The veil from the frame's left (-1) or right (1) edge into the stage; made once and kept. It eases
+ * out (smoothstep) over the mirror line instead of ending in a straight ramp: the eye picks out any
+ * kink in a gradient's slope as a line of its own, and the mirror line under it as a second one.
+ */
 const fades = new Map<number, FillGradient>();
 function wingFade(dir: number): FillGradient {
   let g = fades.get(dir);
   if (!g) {
-    const veil = (offset: number) => ({ offset, color: COLORS.bg });
-    const clear = (offset: number) => ({ offset, color: 'rgba(0,0,0,0)' });
-    g = new FillGradient({
-      type: 'linear', start: { x: 0, y: 0 }, end: { x: 1, y: 0 },
-      colorStops: dir < 0 ? [veil(0), clear(1)] : [clear(0), veil(1)],
-      textureSpace: 'local',
+    const stops = Array.from({ length: WING_STOPS + 1 }, (_, i) => {
+      const k = i / WING_STOPS;
+      const ease = k * k * (3 - 2 * k);
+      const at = WING_HOLD + (1 - WING_HOLD) * k;
+      return { offset: dir < 0 ? at : 1 - at, color: new Color(COLORS.bg).setAlpha(WING_VEIL * (1 - ease)).toRgbaString() };
     });
+    stops.push({ offset: dir < 0 ? 0 : 1, color: stops[0].color });
+    stops.sort((a, b) => a.offset - b.offset);
+    g = new FillGradient({ type: 'linear', start: { x: 0, y: 0 }, end: { x: 1, y: 0 }, colorStops: stops, textureSpace: 'local' });
     fades.set(dir, g);
   }
   return g;
@@ -162,12 +171,9 @@ export function scenery(f: UiFrame, tex: Texture | null, baked = false): Contain
     inner.addChild(pic);
   }
   if (stage) {
-    const half = tex.width * scale / 2;
-    inner.addChild(new Graphics().rect(0, TOP_H, f.w / 2 - half, room).rect(f.w / 2 + half, TOP_H, f.w / 2 - half, room)
-      .fill({ color: COLORS.bg, alpha: WING_VEIL }));
+    const run = f.w / 2 - tex.width * scale / 2 + WING_REACH;
     for (const dir of [-1, 1]) {
-      const x = dir < 0 ? f.w / 2 - half : f.w / 2 + half - WING_FADE;
-      inner.addChild(new Graphics().rect(x, TOP_H, WING_FADE, room).fill({ fill: wingFade(dir), alpha: WING_VEIL }));
+      inner.addChild(new Graphics().rect(dir < 0 ? 0 : f.w - run, TOP_H, run, room).fill(wingFade(dir)));
     }
   }
   const mask = new Graphics().rect(0, TOP_H, f.w, room).fill(0xffffff);
