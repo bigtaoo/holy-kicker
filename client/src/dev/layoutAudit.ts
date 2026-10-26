@@ -19,15 +19,16 @@ export interface AuditFinding {
    * times any shrink applied above it, is below the UI's minimum in design units (CLAUDE.md: 48).
    * `small`: a label rendered below the CSS-px floor, whatever its design size: the viewport
    * itself is too small for the UI's scale. `placeholder`: a label showing undefined, NaN or an
-   * unfilled `{name}`.
+   * unfilled `{name}`. `cutoff`: a solid panel or button holding a label that runs off the canvas
+   * (a modal too tall for a short landscape window), named by the first label it holds.
    */
-  kind: 'overlap' | 'offscreen' | 'overflow' | 'covered' | 'tiny' | 'small' | 'placeholder';
+  kind: 'overlap' | 'offscreen' | 'overflow' | 'covered' | 'tiny' | 'small' | 'placeholder' | 'cutoff';
   a: string;
   /** The other label for `overlap`; for `tiny` and `small` the diagnosis, `font=<units> scale=<shrink>`. */
   b: string;
   rectA: AuditRect;
   rectB: AuditRect;
-  /** `overlap`, `covered`: the share of the smaller ink box hit; `overflow`: escape / width; `tiny`: design units; `small`: CSS px. */
+  /** `overlap`, `covered`: the share of the smaller ink box hit; `overflow`: escape / width; `tiny`: design units; `small`: CSS px; `cutoff`: the share of the frame off the canvas. */
   frac: number;
 }
 
@@ -200,6 +201,8 @@ export function auditLayout(stage: AuditNode, screenW: number, screenH: number, 
         break;
       }
       if (!f.solid || cx < f.rect.x || cx > f.rect.x + f.rect.w || cy < f.rect.y || cy > f.rect.y + f.rect.h) continue;
+      // a panel scrolled under a bar is not what the bar's labels sit on; a bar bleeding far past the canvas is big enough to count as a backdrop
+      if (covers.some((c) => c.order > f.order && c.order < l.order && contains(c.rect, box))) continue;
       const inside = intersect(box, f.rect);
       if (inside.w * inside.h <= held) continue;
       held = inside.w * inside.h;
@@ -209,6 +212,17 @@ export function auditLayout(stage: AuditNode, screenW: number, screenH: number, 
       const escape = Math.max(frame.x - box.x, box.x + box.w - (frame.x + frame.w), frame.y - box.y, box.y + box.h - (frame.y + frame.h));
       if (escape > Math.max(3, box.h * 0.15)) findings.push({ kind: 'overflow', a: l.text, b: 'frame', rectA: l.rect, rectB: frame, frac: round2(escape / Math.max(1, box.w)) });
     }
+  }
+
+  // a panel or button cut by the canvas edge, judged once, by the first label drawn on it
+  const canvas: AuditRect = { x: 0, y: 0, w: screenW, h: screenH };
+  for (const f of seenFrames) {
+    if (!f.solid) continue;
+    const on = intersect(f.rect, canvas);
+    const cut = 1 - (on.w * on.h) / (f.rect.w * f.rect.h);
+    if (Math.max(f.rect.w - on.w, f.rect.h - on.h) <= 3 || cut < 0.02) continue;
+    const holds = visible.find((l) => l.order > f.order && contains(f.rect, ink(l.rect)));
+    if (holds) findings.push({ kind: 'cutoff', a: holds.text, b: 'frame', rectA: holds.rect, rectB: f.rect, frac: round2(cut) });
   }
 
   for (let i = 0; i < visible.length; i++) {

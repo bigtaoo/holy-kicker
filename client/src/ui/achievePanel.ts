@@ -25,6 +25,32 @@ export const TASKS_BOX_H = 1640;
 export const ROWS_TOP = 350;
 export const ROW_H = 170;
 const PER_PAGE = 6;
+/** A row's width: the box's on a portrait frame, one of two columns on a landscape one. */
+export const COLUMN_W = 960;
+
+/** The tasks box: a column of six rows, or on a landscape frame (too short for it) two columns of three. */
+export interface TasksBox {
+  w: number;
+  h: number;
+  /** Rows down a column. */
+  rows: number;
+}
+
+export function tasksBox(wide: boolean): TasksBox {
+  return wide ? { w: 2 * COLUMN_W, h: 1180, rows: PER_PAGE / 2 } : { w: COLUMN_W, h: TASKS_BOX_H, rows: PER_PAGE };
+}
+
+/** Row `k`'s middle, the box top at `top`: down the first column, then the second. */
+export function rowSpot(b: TasksBox, k: number, top: number): { x: number; y: number } {
+  const cols = b.w / COLUMN_W;
+  const col = Math.floor(k / b.rows);
+  return { x: cols > 1 ? (col - (cols - 1) / 2) * COLUMN_W : 0, y: top + ROWS_TOP + (k % b.rows) * ROW_H };
+}
+
+/** Just under the rows when `count` of them are shown. */
+export function rowsEnd(b: TasksBox, count: number, top: number): number {
+  return top + ROWS_TOP + Math.min(b.rows, count) * ROW_H;
+}
 
 /** The Daily / Achievements switch, centred on x = 0, each with a dot when something waits. */
 export function tasksSwitch(save: SaveData, now: number, view: TasksView, pick: (v: TasksView) => void): Container {
@@ -56,7 +82,7 @@ function goalText(g: AchievementGoal): string {
 }
 
 /** The rows of page `page` (ready ones first), the claim-all offer and the pager, from the box top `top`. */
-export function achieveRows(save: SaveData, page: number, top: number, a: AchievePanelActions): Container {
+export function achieveRows(save: SaveData, page: number, box: TasksBox, top: number, a: AchievePanelActions): Container {
   const c = new Container();
   const goals = BALANCE.achievements;
   const pages = achievePages();
@@ -77,19 +103,21 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
     const g = goals[i];
     const state = achievementState(save, i);
     const row = new Container();
-    row.y = top + ROWS_TOP + k * ROW_H;
+    const spot = rowSpot(box, k, top);
+    row.position.set(spot.x, spot.y);
     const name = fit(label(goalText(g), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
     const have = Math.min(g.n, achievementProgress(save, g.kind));
-    const bar = meter(380, have / g.n, state === 'open' ? COLORS.copper : COLORS.jade);
-    bar.view.position.set(-240, 40);
+    const bar = meter(320, have / g.n, state === 'open' ? COLORS.copper : COLORS.jade);
+    bar.view.position.set(-270, 40);
     row.addChild(name, bar.view);
     // a tier is a rank, not a count
     if (g.kind !== 'tier') {
       const count = label(g.kind === 'kills' ? `${formatAmount(have)}/${formatAmount(g.n)}` : `${have}/${g.n}`, 48, COLORS.dim);
       count.anchor.set(0, 0.5);
-      count.position.set(-20, 40);
+      // "10K/10K" stays clear of the claim button
+      count.position.set(-90, 40);
       row.addChild(count);
     }
     if (state === 'open') {
@@ -107,7 +135,7 @@ export function achieveRows(save: SaveData, page: number, top: number, a: Achiev
     c.addChild(row);
   });
 
-  const y = top + ROWS_TOP + PER_PAGE * ROW_H - 30;
+  const y = rowsEnd(box, PER_PAGE, top) - 30;
   const at = label(t('achieve.page', { page: p + 1, pages }), 48, COLORS.dim);
   at.y = y;
   c.addChild(at);

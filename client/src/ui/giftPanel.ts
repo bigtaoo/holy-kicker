@@ -6,6 +6,7 @@ import type { SaveData } from '../meta/save';
 import { giftHaul, giftReady } from '../meta/welcome';
 import { iconSprite, type IconSheet } from './buildBar';
 import { gearTiles } from './gearTiles';
+import { isWideFrame } from './hudLayout';
 import { COLORS, backdrop, button, dot, fit, label, panel } from './widgets';
 
 // The welcome calendar (meta/welcome.ts): a week of gifts in seven cells, the last one (a monk)
@@ -24,40 +25,46 @@ const CELL_H = 330;
 const GAP = 14;
 const PER_ROW = 4;
 const BOX_H = 1380;
+/** A landscape frame is too short for two rows of cells: the week in one row, the monk still twice as wide. */
+const WIDE = { boxW: 1920, perRow: 8, boxH: 1040 };
 
 export function giftPanel(save: SaveData, now: number, w: number, h: number, icons: IconSheet, a: GiftPanelActions): Container {
   const root = new Container();
   root.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const top = -BOX_H / 2;
-  box.addChild(panel(BOX_W, BOX_H));
-  const title = fit(label(t('gift.title'), 64, COLORS.saffron), BOX_W - 80);
+  const wide = isWideFrame({ w, h });
+  const boxW = wide ? WIDE.boxW : BOX_W;
+  const boxH = wide ? WIDE.boxH : BOX_H;
+  const perRow = wide ? WIDE.perRow : PER_ROW;
+  const top = -boxH / 2;
+  box.addChild(panel(boxW, boxH));
+  const title = fit(label(t('gift.title'), 64, COLORS.saffron), boxW - 80);
   title.y = top + 80;
   box.addChild(title);
   const ready = giftReady(save, now);
   const gifts = BALANCE.welcome;
-  const rowW = PER_ROW * CELL_W + (PER_ROW - 1) * GAP;
+  const rowW = perRow * CELL_W + (perRow - 1) * GAP;
   gifts.forEach((gift, i) => {
-    const last = i === gifts.length - 1 && i % PER_ROW !== PER_ROW - 1;
+    const last = i === gifts.length - 1 && i % perRow !== perRow - 1;
     // the last one fills what is left of its row
-    const span = last ? PER_ROW - (i % PER_ROW) : 1;
+    const span = last ? perRow - (i % perRow) : 1;
     const cw = span * CELL_W + (span - 1) * GAP;
     const state = i < save.gifts ? 'claimed' : i === save.gifts && ready ? 'ready' : 'later';
     const c = cell(i + 1, giftHaul(save, gift), state, cw, icons);
-    c.position.set(-rowW / 2 + (i % PER_ROW) * (CELL_W + GAP) + cw / 2, top + 170 + Math.floor(i / PER_ROW) * (CELL_H + GAP) + CELL_H / 2);
+    c.position.set(-rowW / 2 + (i % perRow) * (CELL_W + GAP) + cw / 2, top + 170 + Math.floor(i / perRow) * (CELL_H + GAP) + CELL_H / 2);
     box.addChild(c);
   });
-  const rows = Math.ceil(gifts.length / PER_ROW);
-  const note = label(t('gift.note'), 48, COLORS.dim, { wordWrap: true, wordWrapWidth: BOX_W - 100, breakWords: true });
+  const rows = Math.ceil(gifts.length / perRow);
+  const note = label(t('gift.note'), 48, COLORS.dim, { wordWrap: true, wordWrapWidth: Math.min(boxW, BOX_W) - 100, breakWords: true });
   note.y = top + 170 + rows * (CELL_H + GAP) + 20 + note.height / 2;
   box.addChild(note);
   const claim = button(ready ? t('gift.claimNow') : t('gift.later'), 520, 130, () => ready && a.claim(), {
     fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim, size: 52,
   });
-  claim.y = top + BOX_H - 280;
+  claim.y = top + boxH - 280;
   const back = button(t('common.back'), 400, 110, a.close, { fill: COLORS.panelLocked });
-  back.y = top + BOX_H - 110;
+  back.y = top + boxH - 110;
   box.addChild(claim, back);
   root.addChild(box);
   return root;

@@ -5,6 +5,7 @@ import { monkPrice, ownsMonk } from '../meta/monks';
 import type { SaveData } from '../meta/save';
 import { monkChapter, monkOpen } from '../meta/unlocks';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
+import { isWideFrame } from './hudLayout';
 import { breakAtPause } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
@@ -98,21 +99,27 @@ export function monkPanel(w: number, h: number, save: SaveData, icons: IconSheet
   const view = new Container();
   view.addChild(backdrop(w, h));
   const rows = MONK_IDS.map((id) => row(save, id, icons, a));
-  const boxH = 140 + rows.reduce((sum, r) => sum + r.h + ROW_GAP, 0) + 150;
+  // a landscape frame is too short for the column: the rows in two, the first column filled first
+  const cols = isWideFrame({ w, h }) ? 2 : 1;
+  const perCol = Math.ceil(rows.length / cols);
+  const columns = Array.from({ length: cols }, (_, k) => rows.slice(k * perCol, (k + 1) * perCol));
+  const boxH = 140 + Math.max(...columns.map((col) => col.reduce((sum, r) => sum + r.h + ROW_GAP, 0))) + 150;
   const box = new Container();
   box.position.set(w / 2, h / 2);
   // tall rows in a long language still leave the panel on screen
   box.scale.set(Math.min(1, (h - 80) / boxH));
-  box.addChild(panel(W, boxH));
+  box.addChild(panel(cols * W, boxH));
   const title = label(t('monk.title'), 64);
   title.y = -boxH / 2 + 75;
   box.addChild(title);
-  let y = -boxH / 2 + 140 + ROW_GAP / 2;
-  for (const r of rows) {
-    r.c.y = y;
-    box.addChild(r.c);
-    y += r.h + ROW_GAP;
-  }
+  columns.forEach((col, k) => {
+    let y = -boxH / 2 + 140 + ROW_GAP / 2;
+    for (const r of col) {
+      r.c.position.set((k - (cols - 1) / 2) * W, y);
+      box.addChild(r.c);
+      y += r.h + ROW_GAP;
+    }
+  });
   const back = button(t('common.back'), 400, 110, () => a.close(), { fill: COLORS.panelLocked });
   back.y = boxH / 2 - 85;
   box.addChild(back);

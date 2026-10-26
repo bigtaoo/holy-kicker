@@ -5,7 +5,8 @@ import { bonusReady, taskGoal, taskState, today } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLeft } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
-import { ROWS_TOP, ROW_H, TASKS_BOX_H, achieveRows, tasksSwitch, type AchievePanelActions, type TasksView } from './achievePanel';
+import { achieveRows, rowSpot, rowsEnd, tasksBox, tasksSwitch, type AchievePanelActions, type TasksBox, type TasksView } from './achievePanel';
+import { isWideFrame } from './hudLayout';
 import { GEAR_TILE, gearTiles, placeTiles } from './gearTiles';
 import type { TaoAsset } from '../game/tao/TaoActor';
 import { iconSprite, type IconSheet } from './buildBar';
@@ -33,6 +34,8 @@ const SCENE_W = 840;
 const SCENE_H = 300;
 
 const BAR_W = 760;
+/** A landscape patrol panel's two halves, this far either side of its middle. */
+const WIDE_COL = 460;
 
 /** Hours as "3h 12m". */
 export function hoursText(hours: number): string {
@@ -57,23 +60,29 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   root.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const boxH = 1290 + SCENE_H + 40;
+  // a landscape frame is too short for the column: the road and what it pays on the left, collecting and quick patrols on the right
+  const wide = isWideFrame({ w, h });
+  const L = wide ? -WIDE_COL : 0;
+  const R = wide ? WIDE_COL : 0;
+  const boxH = wide ? 960 : 1290 + SCENE_H + 40;
   const top = -boxH / 2;
-  box.addChild(panel(920, boxH));
+  const shift = SCENE_H + 40;
+  // where the right-hand half starts: under the road, or level with what is stored
+  const rTop = wide ? top - 520 - shift + 200 : top;
+  box.addChild(panel(wide ? 2 * WIDE_COL + 900 : 920, boxH));
   const title = label(t('patrol.title'), 72);
   title.y = top + 80;
   const stored = label('', 48);
-  stored.y = top + 180;
+  stored.position.set(L, top + 180);
   const scene = new PatrolScene(SCENE_W, SCENE_H, look.rig, look.art, look.icons);
-  scene.view.y = top + 240;
+  scene.view.position.set(L, top + 240);
   ticks.push((dt) => scene.update(dt));
-  const shift = SCENE_H + 40;
   const gauge = meter(BAR_W, 0, COLORS.saffron);
-  gauge.view.y = top + 260 + shift;
+  gauge.view.position.set(L, top + 260 + shift);
   const pays = label('', 48, COLORS.copper);
-  pays.y = top + 340 + shift;
+  pays.position.set(L, top + 340 + shift);
   const rate = fit(label(t('patrol.rate', { h: P.dropHours, cap: P.capHours }), 48, COLORS.dim), 840, 70);
-  rate.y = top + 410 + shift;
+  rate.position.set(L, top + 410 + shift);
   box.addChild(title, stored, scene.view, gauge.view, pays, rate);
   const refresh = () => {
     const hours = patrolHours(save, now());
@@ -88,28 +97,28 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
   live.push(refresh);
 
   // collecting: the ×2 offer matches Collect in size, font and colour (CrazyGames' rewarded-ad rules)
-  let y = top + 520 + shift;
+  let y = rTop + 520 + shift;
   const ready = canCollect(save, now());
   if (adOk && canDouble(save, now())) {
     const twice = button(playing ? '…' : t('patrol.double'), 640, 140, () => a.collect(true), {
       fill: playing ? COLORS.panelLocked : COLORS.saffron, video: !playing,
     });
-    twice.y = y;
+    twice.position.set(R, y);
     box.addChild(twice);
     y += 160;
   }
   const collect = button(t('patrol.collect'), 640, 140, () => (ready ? a.collect(false) : a.toast(t('patrol.tooSoon'))), {
     fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim,
   });
-  collect.y = y;
+  collect.position.set(R, y);
   box.addChild(collect);
 
-  y = top + 960 + shift;
+  y = rTop + 960 + shift;
   const quick = label(t('patrol.quick'), 56);
-  quick.y = y - 100;
+  quick.position.set(R, y - 100);
   const info = fit(label(t('patrol.quickInfo', { copper: formatAmount(Math.floor(copperPerHour(save) * P.quickHours)), n: P.quickDrops }), 48, COLORS.dim), 840, 70);
-  info.y = y - 35;
-  box.addChild(new Graphics().rect(-400, y - 160, 800, 4).fill(COLORS.panelLocked), quick, info);
+  info.position.set(R, y - 35);
+  box.addChild(new Graphics().rect(R - 400, y - 160, 800, 4).fill(COLORS.panelLocked), quick, info);
   const adsLeft = quickLeft(save, now(), 'ad');
   const jadeLeft = quickLeft(save, now(), 'jade');
   const buttons: Container[] = [];
@@ -126,7 +135,7 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
     else a.quick('jade');
   }, { fill: jadeOk ? COLORS.jade : COLORS.panelLocked, textFill: jadeOk ? COLORS.outline : COLORS.dim, size: 48 }));
   buttons.forEach((b, i) => {
-    b.position.set((i - (buttons.length - 1) / 2) * 430, y + 70);
+    b.position.set(R + (i - (buttons.length - 1) / 2) * 430, y + 70);
     box.addChild(b);
   });
   const back = button(t('common.back'), 400, 110, a.close, { fill: COLORS.panelLocked });
@@ -151,20 +160,21 @@ export function tasksPanel(save: SaveData, now: number, w: number, h: number, vi
   root.addChild(backdrop(w, h));
   const box = new Container();
   box.position.set(w / 2, h / 2);
-  const top = -TASKS_BOX_H / 2;
-  box.addChild(panel(960, TASKS_BOX_H));
+  const b = tasksBox(isWideFrame({ w, h }));
+  const top = -b.h / 2;
+  box.addChild(panel(b.w, b.h));
   const pick = tasksSwitch(save, now, view, a.view);
   pick.y = top + 85;
-  box.addChild(pick, view === 'daily' ? dailyRows(save, now, top, a) : achieveRows(save, page, top, a));
+  box.addChild(pick, view === 'daily' ? dailyRows(save, now, b, top, a) : achieveRows(save, page, b, top, a));
   const back = button(t('common.back'), 400, 110, a.close, { fill: COLORS.panelLocked });
-  back.y = top + TASKS_BOX_H - 90;
+  back.y = top + b.h - 90;
   box.addChild(back);
   root.addChild(box);
   return root;
 }
 
 /** Today's tasks with their progress and Claim, the bonus for claiming them all, from the box top `top`. */
-function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelActions): Container {
+function dailyRows(save: SaveData, now: number, box: TasksBox, top: number, a: TasksPanelActions): Container {
   const D = BALANCE.daily;
   const d = today(save, now);
   const c = new Container();
@@ -173,7 +183,8 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
   c.addChild(reward);
   D.tasks.forEach((goal, i) => {
     const row = new Container();
-    row.y = top + ROWS_TOP + i * ROW_H;
+    const spot = rowSpot(box, i, top);
+    row.position.set(spot.x, spot.y);
     const state = taskState(save, d, i);
     const n = taskGoal(save, d, i);
     const name = fit(label(t(`tasks.${goal.kind}`, { n }), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560, 70);
@@ -200,7 +211,7 @@ function dailyRows(save: SaveData, now: number, top: number, a: TasksPanelAction
   const bonus = button(t('tasks.bonus', { jade: D.bonusJade }), 760, 130, () => ready && a.bonus(), {
     fill: ready ? COLORS.jade : COLORS.panelLocked, textFill: ready ? COLORS.outline : COLORS.dim, size: 48,
   });
-  bonus.y = top + ROWS_TOP + D.tasks.length * ROW_H + 10;
+  bonus.y = rowsEnd(box, D.tasks.length, top) + 10;
   const resets = fit(label(t('tasks.resets'), 48, COLORS.dim), 880, 130);
   resets.y = bonus.y + 110;
   c.addChild(bonus, resets);

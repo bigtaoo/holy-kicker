@@ -35,10 +35,28 @@ const VIEWPORTS = [
   { name: '1280x720', kind: 'desktop', w: 1280, h: 720, dpr: 1, touch: false },
   { name: '1366x768', kind: 'desktop', w: 1366, h: 768, dpr: 1, touch: false },
   { name: '1920x1080', kind: 'desktop', w: 1920, h: 1080, dpr: 1, touch: false },
+  // short windows: a browser's toolbars and bookmarks bar over a 1080p screen, and a small laptop's
+  { name: '1920x945', kind: 'short desktop', w: 1920, h: 945, dpr: 1, touch: false },
+  { name: '1280x575', kind: 'short desktop', w: 1280, h: 575, dpr: 1, touch: false },
 ];
 
 /** The lobby tabs, the play tab last so settings open over it. */
 const TABS = ['shop', 'gear', 'train', 'codex', 'play'];
+/**
+ * The lobby's panels, each opened alone over the play tab (or the gear tab) by the screen's own
+ * fields, as its buttons would: the tallest ones run off a short landscape window first.
+ */
+const PANELS = {
+  tasks: `s.openTab('play'); s.econ.tasksView = 'daily'; s.econ.modal = 'tasks'`,
+  achievements: `s.openTab('play'); s.econ.tasksView = 'achieve'; s.econ.modal = 'tasks'`,
+  patrol: `s.openTab('play'); s.econ.modal = 'patrol'`,
+  gift: `s.openTab('play'); s.econ.modal = 'gift'`,
+  monks: `s.openTab('play'); s.monksOpen = true`,
+  account: `s.openTab('play'); s.settingsOpen = true; s.accountOpen = true`,
+  'challenge.daily': `s.openTab('play'); s.challenge.open = true; s.challenge.tab = 'daily'`,
+  'challenge.weekly': `s.openTab('play'); s.challenge.open = true; s.challenge.tab = 'weekly'`,
+  'gear.detail': `s.openTab('gear'); s.gearOpen = 'robe'`,
+};
 /** The runs judged: chapter 6's wave 6, played by the bot on a fixed seed so its level-ups offer the same cards each sweep. */
 const RUN_QUERY = 'direct&autoplay&wave=11&seed=7&ads=fake';
 /** How long a screen gets to settle (slides, fades, counters) before it is judged. */
@@ -156,7 +174,8 @@ function stops(url) {
     screen: `lobby.${tab}`,
     go: async (page) => {
       if (tab === TABS[0]) {
-        await page.goto(`${url}?ads=fake`);
+        // `challenge`: the challenge panel's daily and weekly runs, made up on the device offline
+        await page.goto(`${url}?ads=fake&challenge`);
         await until(page, () => globalThis.__shell?.place() === 'lobby', undefined, 60_000);
       }
       // openTab and openSettings set what the next layout draws; relayout draws it now
@@ -164,9 +183,22 @@ function stops(url) {
       await until(page, (t) => __shell.screen.shownTab === t, tab);
     },
   }));
+  const panels = Object.entries(PANELS).map(([name, code]) => ({
+    screen: `lobby.${name}`,
+    go: (page) => page.evaluate((code) => {
+      const s = __shell.screen;
+      s.settingsOpen = s.accountOpen = s.monksOpen = false;
+      s.gearOpen = null;
+      s.econ.modal = null;
+      s.challenge.open = false;
+      new Function('s', code)(s);
+      s.relayout();
+    }, code),
+  }));
   return [
     ...lobby,
     { screen: 'settings', go: (page) => page.evaluate(() => { __shell.screen.openSettings(); __shell.screen.relayout(); }) },
+    ...panels,
     {
       screen: 'run.hud',
       go: async (page) => {

@@ -26,6 +26,9 @@ export interface GearActions {
 
 const LINE_H = 62;
 const STATS_W = 1000;
+/** A landscape frame's stats card: one column beside the doll's left slots, whose wide labels end 552 from the middle. */
+const SIDE_STATS_W = 640;
+const SIDE_STATS_X = -(552 + 36 + SIDE_STATS_W / 2);
 /** The stats card's rows: a little tighter than the dark panel's, the card sits under the doll. */
 const ROW_H = 58;
 const MERGE_W = 440;
@@ -95,16 +98,19 @@ export interface GearStand {
  * the doll under it with the hero where `stand` puts him (the Play tab's figure, same place and
  * size, so he holds still between the tabs), and "Merge all" where PLAY stands when anything can
  * merge (a quiet line saying how merging works when nothing can). Without `stand` the doll rests
- * on the tab's floor.
+ * on the tab's floor. A landscape frame (`side`) is too short for the panel over the doll: it
+ * stands in one column to the doll's left, the doll from the tab's top.
  */
-export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, room: number, stand?: GearStand): Container {
+export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, room: number, stand?: GearStand, side = false): Container {
   const c = new Container();
-  const [card, h] = statsCard(t('gear.total'), statLines(gearStats(save)));
-  card.y = h / 2;
+  const [card, h] = statsCard(t('gear.total'), statLines(gearStats(save)), side ? SIDE_STATS_W : STATS_W);
+  card.position.set(side ? SIDE_STATS_X : 0, h / 2);
   const feet = stand?.feet ?? room - DOLL_FLOOR - DOLL_H + HERO_FEET;
-  const doll = gearDoll(save, icons, worn(save), (slot) => actions.open(slot));
-  // the lowest badges level with his feet, unless a long stats panel pushes them lower
-  doll.y = Math.max(h + DOLL_GAP, feet - HERO_FEET);
+  const doll = gearDoll(save, icons, worn(save), (slot) => actions.open(slot), side);
+  // the lowest badges level with his feet, unless a long stats panel pushes them lower (or the tab is too short for
+  // that); beside the card, names on one line leave the doll shorter than DOLL_H, so it is measured
+  const dollH = side ? doll.getLocalBounds().maxY : DOLL_H;
+  doll.y = side ? Math.max(0, Math.min(feet - HERO_FEET, room - dollH)) : Math.max(h + DOLL_GAP, feet - HERO_FEET);
   c.addChild(doll);
   if (stand) {
     stand.hero.y = feet;
@@ -125,27 +131,27 @@ export function gearTab(save: SaveData, icons: IconSheet, actions: GearActions, 
   return c;
 }
 
-/** What the worn gear adds up to: a dark panel like the other tabs', its lines in two columns. */
-function statsCard(title: string, lines: string[]): [Container, number] {
+/** What the worn gear adds up to: a dark panel like the other tabs', its lines in two columns (one on a narrow card). */
+function statsCard(title: string, lines: string[], w: number): [Container, number] {
   const c = new Container();
   const body = new Container();
   const head = label(title, 52, COLORS.saffron);
   head.y = 56;
   if (lines.length === 0) lines = ['—'];
-  const colW = (STATS_W - 80) / 2;
+  const one = lines.length === 1 || w < STATS_W;
+  const colW = one ? w - 80 : (w - 80) / 2;
   const fill = COLORS.text;
-  const one = lines.length === 1;
   const left = lines.filter((_, i) => one || i % 2 === 0);
   const right = one ? [] : lines.filter((_, i) => i % 2 === 1);
   const h = 100 + statGrid(body, [[one ? 0 : -colW / 2, left, fill], [colW / 2, right, fill]], colW, ROW_H, 100) + 36;
   body.addChild(head);
   body.y = -h / 2;
-  c.addChild(panel(STATS_W, h), body);
+  c.addChild(panel(w, h), body);
   return [c, h];
 }
 
-/** A titled panel with stat lines in two columns. */
-export function statsPanel(title: string, lines: string[], h: number, w = STATS_W): Container {
+/** A titled panel with stat lines in two columns, `lineH` apart (a panel stretched taller spreads them). */
+export function statsPanel(title: string, lines: string[], h: number, w = STATS_W, lineH = LINE_H): Container {
   const c = new Container();
   c.addChild(panel(w, h));
   const head = label(title, 52, COLORS.saffron);
@@ -156,7 +162,7 @@ export function statsPanel(title: string, lines: string[], h: number, w = STATS_
   lines.forEach((text, i) => {
     const l = fit(label(text, 48), colW - 20);
     const one = lines.length === 1;
-    l.position.set(one ? 0 : (i % 2 - 0.5) * colW, -h / 2 + 110 + Math.floor(i / 2) * LINE_H + LINE_H / 2);
+    l.position.set(one ? 0 : (i % 2 - 0.5) * colW, -h / 2 + 110 + Math.floor(i / 2) * lineH + lineH / 2);
     c.addChild(l);
   });
   return c;

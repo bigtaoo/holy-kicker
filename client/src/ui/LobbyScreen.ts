@@ -362,7 +362,7 @@ export class LobbyScreen implements Screen {
     // a landscape Play tab's monk stands taller than the gear around him leaves room for
     this.figure = new LobbyFigure(look.rig, Math.min(this.figureH, FIGURE_H));
     const stand = { hero: this.figure.view, feet: figureFeet(h) - top, button: playY(h) - top };
-    const tab = gearTab(this.save, this.icons, this.gearActions(), h - TAB_H - top, stand);
+    const tab = gearTab(this.save, this.icons, this.gearActions(), h - TAB_H - top, stand, isWide(w, h));
     tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
@@ -386,7 +386,7 @@ export class LobbyScreen implements Screen {
         this.relayout();
       },
       toast: (text) => this.showToast(text),
-    }, isWide(f.w, f.h));
+    }, isWide(f.w, f.h) ? { room: f.h - TAB_H - top, frameW: f.w } : undefined);
     tab.position.set(f.w / 2, top);
     this.view.addChild(tab);
   }

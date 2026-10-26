@@ -79,30 +79,56 @@ export function trainHeight(save: SaveData): number {
   return boardH() + GAP + CARD_H + stats;
 }
 
+/** A landscape tab's least margin left and right of the board and the card. */
+const WIDE_MARGIN = 80;
+
 /**
- * The tab centred on x = 0 from y = 0 down; `picked` is the node shown in the card. A `wide`
- * (landscape) lobby, too short for the column, puts the card and the totals right of the board.
+ * The tab centred on x = 0 from y = 0 down; `picked` is the node shown in the card. A landscape
+ * lobby (`wide`: the tab's `room` down to the tab bar, `frameW` across), too short for the column,
+ * puts the card and the totals right of the board instead: the board grows to fill the height
+ * (as far as the width allows), the card and the totals stretch to its height, the pair centred.
  */
-export function trainTab(save: SaveData, icons: IconSheet, picked: number | null, actions: TrainActions, wide = false): Container {
+export function trainTab(save: SaveData, icons: IconSheet, picked: number | null, actions: TrainActions, wide?: { room: number; frameW: number }): Container {
   const c = new Container();
   const bh = boardH();
   const shown = picked ?? nextNode(save)?.n ?? null;
   const page = shown === null ? pageCount(BALANCE.training.nodes, PAGE) - 1 : boardPage(shown, PAGE);
   const board = boardView(save, icons, shown, page, actions);
-  const side = wide ? (W + GAP) / 2 : 0;
-  board.position.set(-side, bh / 2);
+  const lines = save.trained > 0 ? statLines(trainingStats(save)) : null;
+  // a 4:3 tablet's landscape frame is tall enough for the column
+  if (wide && trainHeight(save) > wide.room) {
+    const k = Math.max(1, Math.min((wide.room - GAP) / bh, (wide.frameW - 2 * WIDE_MARGIN - GAP - W) / W));
+    const tall = Math.max(bh * k, CARD_H + (lines ? GAP + statsH(lines.length) : 0));
+    const top = Math.max(0, (wide.room - tall) / 2);
+    const left = -(W * k + GAP + W) / 2;
+    board.scale.set(k);
+    board.position.set(left + (W * k) / 2, top + tall / 2);
+    c.addChild(board);
+    const x = left + W * k + GAP + W / 2;
+    // nothing trained yet: the card alone, beside the board's middle; no card of dashes
+    const card = nodeCard(save, icons, shown, actions);
+    card.position.set(x, lines ? top + CARD_H / 2 : top + tall / 2);
+    c.addChild(card);
+    if (lines) {
+      const h = tall - CARD_H - GAP;
+      // the rows spread down the stretched panel, up to twice as far apart
+      const rows = Math.max(1, Math.ceil(lines.length / 2));
+      const stats = statsPanel(t('train.total'), lines, h, W, Math.min(2 * LINE_H, (h - 150) / rows));
+      stats.position.set(x, top + CARD_H + GAP + h / 2);
+      c.addChild(stats);
+    }
+    return c;
+  }
+  board.position.set(0, bh / 2);
   c.addChild(board);
-  let y = wide ? 0 : bh + GAP;
   const card = nodeCard(save, icons, shown, actions);
-  card.position.set(side, y + CARD_H / 2);
+  card.position.set(0, bh + GAP + CARD_H / 2);
   c.addChild(card);
-  y += CARD_H;
   // nothing trained yet: no card of dashes
-  if (save.trained > 0) {
-    const lines = statLines(trainingStats(save));
+  if (lines) {
     const h = statsH(lines.length);
     const stats = statsPanel(t('train.total'), lines, h, W);
-    stats.position.set(side, y + GAP + h / 2);
+    stats.position.set(0, bh + GAP + CARD_H + GAP + h / 2);
     c.addChild(stats);
   }
   return c;

@@ -9,6 +9,7 @@ import { THEME } from '../theme';
 import { rowName, type BoardUi, type FetchBoard } from './boardPanel';
 import { iconSprite, type IconSheet } from './buildBar';
 import type { DailyView, WeeklyView } from './challengeFlow';
+import { isWideFrame } from './hudLayout';
 import { railButton } from './lobbyRail';
 import { claimCard, mutatorLine, ruleLines, weeklyPage, weeklyRules, type Rules } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
@@ -45,6 +46,15 @@ const BOX_W = 960;
 /** Each page's box before its rules' grow: Back 40 under the page's own buttons (daily's at 1240, weekly's at 1235). */
 const DAILY_H = 1500;
 const WEEKLY_H = 1490;
+/**
+ * A landscape frame is too short for a page's column: from its second half's title (the daily's
+ * milestones, the weekly's rewards) down, the page stands in a right-hand column level with the
+ * first line, the rules and the rest on the left. How far down that title is, before the rules' grow.
+ */
+const DAILY_SPLIT = 470;
+const WEEKLY_SPLIT = 665;
+/** The first line under the tabs, where the right-hand column starts. */
+const FIRST_LINE = 165;
 
 export class ChallengeUi {
   private open = false;
@@ -108,15 +118,20 @@ export class ChallengeUi {
     // buttons; the box's top stays put when the tab changes, where the taller page's would be
     const daily = lobby.daily ? dailyRules() : null;
     const weekly = lobby.weekly ? weeklyRules(lobby.weekly, BOX_W) : null;
-    const dailyH = daily ? DAILY_H + daily.grow : 0;
-    const weeklyH = weekly ? WEEKLY_H + weekly.grow : 0;
+    const wide = isWideFrame({ w, h });
+    // on a landscape frame the right-hand column rises by `lift`, and so does the box's foot
+    const split = (base: number, r: Rules) => ({ at: base + r.grow, lift: wide ? base + r.grow - FIRST_LINE : 0 });
+    const dailySplit = daily && split(DAILY_SPLIT, daily);
+    const weeklySplit = weekly && split(WEEKLY_SPLIT, weekly);
+    const dailyH = daily ? DAILY_H + daily.grow - dailySplit!.lift : 0;
+    const weeklyH = weekly ? WEEKLY_H + weekly.grow - weeklySplit!.lift : 0;
     const boxH = tab === 'weekly' ? weeklyH : dailyH;
     const tallest = Math.max(dailyH, weeklyH);
     const scale = Math.min(1, (h - 40) / tallest);
     box.scale.set(scale);
     box.position.set(w / 2, h / 2 + ((boxH - tallest) / 2) * scale);
     const top = -boxH / 2;
-    box.addChild(panel(BOX_W, boxH));
+    box.addChild(panel(wide ? 2 * BOX_W : BOX_W, boxH));
     const add = (text: string, size: number, fill: number, y: number) => {
       const l = fit(label(text, size, fill), BOX_W - 100);
       l.y = top + y;
@@ -133,8 +148,17 @@ export class ChallengeUi {
         box.addChild(b);
       });
     } else add(t(tab === 'daily' ? 'challenge.title' : 'weekly.title'), 68, COLORS.saffron, 80);
+    const from = box.children.length;
     if (tab === 'weekly' && lobby.weekly && weekly) this.weekly(box, top, lobby, lobby.weekly, weekly);
     else if (lobby.daily && daily) this.daily(box, top, add, lobby, lobby.daily, daily);
+    const cut = tab === 'weekly' ? weeklySplit : dailySplit;
+    if (wide && cut) {
+      for (const c of box.children.slice(from)) {
+        const right = c.y >= top + cut.at - 1;
+        c.x += right ? BOX_W / 2 : -BOX_W / 2;
+        if (right) c.y -= cut.lift;
+      }
+    }
     for (const r of [daily, weekly]) if (r && !r.view.parent) r.view.destroy({ children: true });
     const back = button(t('common.back'), 400, 110, () => this.show(false), { fill: COLORS.panelLocked });
     back.y = top + boxH - 95;

@@ -47,9 +47,22 @@ describe('auditLayout', () => {
     expect(kinds(group([rect([50, 40, 100, 80]), text('A long caption', [60, 55, 160, 30])]))).toEqual(['overflow']);
   });
 
+  it('takes a bar bleeding far past the canvas edge as the face its labels sit on', () => {
+    // a list panel scrolled under the tab bar, which runs 800 units on below the canvas
+    const panel = rect([100, 620, 200, 140]);
+    const tabs = rect([0, 700, W, 900]);
+    expect(kinds(group([panel, tabs, text('Gear', [150, 740, 60, 30])]))).toEqual([]);
+  });
+
   it('reports a label painted over by a solid fill drawn after it, not by a faint one', () => {
     expect(kinds(group([text('Hidden', [60, 60, 100, 30]), rect([50, 50, 150, 60])]))).toEqual(['covered']);
     expect(kinds(group([text('Hidden', [60, 60, 100, 30]), rect([50, 50, 150, 60], 0.3)]))).toEqual([]);
+  });
+
+  it('reports a panel running off the canvas once, by the label it holds, not an empty one', () => {
+    const f = auditLayout(group([rect([50, 600, 300, 300]), text('Back', [150, 650, 100, 30]), text('Claim', [150, 700, 100, 30])]), W, H, OPTS).findings;
+    expect(f.map((x) => [x.kind, x.a, x.frac])).toEqual([['cutoff', 'Back', 0.33]]);
+    expect(kinds(group([rect([50, 600, 300, 300])]))).toEqual([]);
   });
 
   it('reports placeholder text', () => {

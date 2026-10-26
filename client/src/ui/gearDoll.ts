@@ -19,6 +19,8 @@ const SLOT_STEP = 318;
 /** A side's centre from the middle; its labels' width, clear of the hero and the screen's edge. */
 const SIDE_X = 382;
 const TEXT_W = 284;
+/** A landscape tab's labels: wider, so an English name keeps to one line and the doll fits a short window. */
+const WIDE_TEXT_W = 340;
 const NAME_SIZE = 48;
 const NAME_LINE = 52;
 const TIER_SIZE = 40;
@@ -42,13 +44,14 @@ export interface DollSlot {
   tier: Tier | -1;
 }
 
-/** The six slots around x = 0 from y = 0 down, room for the hero between them. */
-export function gearDoll(save: SaveData, icons: IconSheet, slots: DollSlot[], open: (slot: GearSlot) => void): Container {
+/** The six slots around x = 0 from y = 0 down, room for the hero between them; `wide` widens their labels. */
+export function gearDoll(save: SaveData, icons: IconSheet, slots: DollSlot[], open: (slot: GearSlot) => void, wide = false): Container {
+  const textW = wide ? WIDE_TEXT_W : TEXT_W;
   const c = new Container();
   const place = (side: readonly GearSlot[], x: number) => side.forEach((slot, i) => {
     const s = slots.find((w) => w.slot === slot)!;
     const ready = mergeReady(save, s.item);
-    const b = slotBadge(icons, s.item, s.tier, ready, () => open(slot));
+    const b = slotBadge(icons, s.item, s.tier, ready, textW, () => open(slot));
     b.position.set(x, SLOT_R + i * SLOT_STEP);
     c.addChild(b);
   });
@@ -57,7 +60,7 @@ export function gearDoll(save: SaveData, icons: IconSheet, slots: DollSlot[], op
   return c;
 }
 
-function slotBadge(icons: IconSheet, item: ItemId, tier: Tier | -1, ready: boolean, onTap: () => void): Container {
+function slotBadge(icons: IconSheet, item: ItemId, tier: Tier | -1, ready: boolean, textW: number, onTap: () => void): Container {
   const view = new Container();
   const found = tier >= 0;
   const fill = found ? BADGE.fill : BADGE.off;
@@ -81,22 +84,22 @@ function slotBadge(icons: IconSheet, item: ItemId, tier: Tier | -1, ready: boole
   }
   const name = label(itemName(item), NAME_SIZE, found ? COLORS.text : COLORS.dim, {
     // Chinese and Japanese names have no spaces: they may break between any two characters
-    ...STROKE, wordWrap: true, wordWrapWidth: TEXT_W, lineHeight: NAME_LINE, breakWords: CJK.test(itemName(item)),
+    ...STROKE, wordWrap: true, wordWrapWidth: textW, lineHeight: NAME_LINE, breakWords: CJK.test(itemName(item)),
   });
   name.anchor.set(0.5, 0);
   // it wraps between words; only a single word wider than the column, or a third line (which would
   // run into the slot below), makes it smaller
-  const k = Math.min(1, TEXT_W / name.width, (2 * NAME_LINE + 8) / name.height);
+  const k = Math.min(1, textW / name.width, (2 * NAME_LINE + 8) / name.height);
   name.scale.set(k);
   name.y = SLOT_R + LIP + 12;
   const sub = label(found ? tierName(tier as Tier) : t('gear.none'), TIER_SIZE, found ? TIER_COLORS[tier] : COLORS.dim, STROKE);
   sub.anchor.set(0.5, 0);
-  if (sub.width > TEXT_W) sub.scale.set(TEXT_W / sub.width);
+  if (sub.width > textW) sub.scale.set(textW / sub.width);
   sub.y = name.y + name.height + 2;
   view.addChild(base, top, name, sub);
   view.eventMode = 'static';
   view.cursor = 'pointer';
-  view.hitArea = { contains: (x: number, y: number) => x * x + y * y <= (SLOT_R + 16) ** 2 || (Math.abs(x) <= TEXT_W / 2 && y > 0 && y <= sub.y + sub.height) };
+  view.hitArea = { contains: (x: number, y: number) => x * x + y * y <= (SLOT_R + 16) ** 2 || (Math.abs(x) <= textW / 2 && y > 0 && y <= sub.y + sub.height) };
   let down = false;
   const press = (on: boolean) => (top.y = on ? LIP * 0.7 : 0);
   view.on('pointerdown', () => {

@@ -291,14 +291,15 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
     }
     const pic = iconSprite(icons, TAB_ICONS[tab], active ? 100 : 86);
     if (pic) {
-      pic.y = active ? -30 : -22;
+      pic.y = active ? -38 : -30;
       if (lock) lockedLook(pic, true);
       cell.addChild(pic);
     }
     const name = fit(label(t(`tab.${tab}` as never), 48, active ? COLORS.outline : lock ? COLORS.dim : COLORS.text, {
       stroke: active ? undefined : { color: COLORS.outline, width: 6 },
     }), tw - 24);
-    name.y = active ? 46 : 54;
+    // clear of the window's bottom edge: a browser's rounding or zoom must not clip the names
+    name.y = active ? 38 : 44;
     cell.addChild(name);
     if (lock) {
       const l = lockIcon(icons, 52);

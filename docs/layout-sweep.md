@@ -34,8 +34,9 @@ The stops on each viewport:
 
 | Screen | How the sweep gets there |
 |---|---|
-| `lobby.shop`, `lobby.gear`, `lobby.train`, `lobby.codex`, `lobby.play` | `?ads=fake`, then `openTab` and `relayout` on the lobby |
+| `lobby.shop`, `lobby.gear`, `lobby.train`, `lobby.codex`, `lobby.play` | `?ads=fake&challenge`, then `openTab` and `relayout` on the lobby |
 | `settings` | `openSettings` and `relayout` |
+| `lobby.tasks`, `lobby.achievements`, `lobby.patrol`, `lobby.gift`, `lobby.monks`, `lobby.account`, `lobby.challenge.daily`, `lobby.challenge.weekly`, `lobby.gear.detail` | each panel opened alone by the lobby's own fields (`PANELS`), then `relayout` |
 | `run.hud` | `?direct&autoplay&wave=11&seed=7&ads=fake`, so the lost run has cleared 10 waves and its gear drop is not a coin flip; the bot fights, but level-ups wait for the sweep |
 | `run.cards` | the next level-up offer |
 | `run.pause` | the HUD's `pauseForHost` |
@@ -56,6 +57,7 @@ are not layout.
 | `1100x574` | CrazyGames' reviewer canvas |
 | `722x406` | CrazyGames' preview tile |
 | `1280x720`, `1366x768`, `1920x1080` | desktop windows (DPR 1, no touch) |
+| `1920x945`, `1280x575` | short desktop windows: a browser's toolbars over a 1080p screen, a small laptop |
 
 ## Findings
 
@@ -72,6 +74,10 @@ tree in the page and reports these findings:
   above it. Shrink-to-fit text counts. The line shows `font=` and `scale=`.
 - **small**: a label rendered under **12 CSS px**, whatever its design size.
 - **placeholder**: a label showing `undefined`, `null`, `NaN` or an unfilled `{name}`.
+- **cutoff**: a solid panel or button that runs off the canvas while it holds a label, named
+  by the first label on it. A short landscape window leaves a panel about 1315-1370 units of
+  the 1440 it is laid out in; a panel taller than that is cut off even when each of its labels
+  still shows. Such a panel goes wide instead: rows in two columns, its two halves side by side.
 
 The walk also handles masks and backdrops:
 
@@ -100,7 +106,8 @@ unreadable. A higher floor makes the sweep show where the viewport itself is too
 the 3:4 column, which is what the landscape layouts are meant to fix. It is why a landscape UI
 is laid out in 2560x1440 (`UI_WIDE_W`/`UI_WIDE_H` in `ui/uiLayout.ts`) rather than 1920 tall:
 the screens fit that shorter frame (cards shrink their row, settings pair the volume sliders,
-results set the buttons beside the card, Train puts its card beside the board) and every
+results set the buttons beside the card, Train puts its card beside a board grown to the tab's
+height, Gear sets its totals beside the doll) and every
 label comes out a third larger.
 
 ## The baseline
@@ -124,5 +131,7 @@ After a fix, or after a change that is accepted on purpose, run `--update` and c
 baseline. An `--only` run updates only its own viewports.
 
 The baseline was recorded on 2026-10-26 with the 3:4 portrait column on desktop, and
-re-recorded the same day for the landscape layouts on the wide viewports (581 → 571 findings).
+re-recorded the same day for the landscape layouts on the wide viewports (581 → 571 findings),
+and again when the short desktop windows and the lobby's panels joined the stops (739 findings
+over the 252 screens, most of them tiny or small text on the new stops).
 Any entry a change adds needs a reason in the commit.

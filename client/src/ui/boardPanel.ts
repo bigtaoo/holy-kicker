@@ -5,6 +5,7 @@ import { chapterName } from '../i18n/chapterName';
 import { THEME } from '../theme';
 import type { IconSheet } from './buildBar';
 import { clockTenths } from './clearTime';
+import { isWideFrame } from './hudLayout';
 import { chosenTimeline, markMedal, topRows, watchButton, type WatchTop, type WeeklyBoardState } from './weeklyBoard';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 
@@ -38,6 +39,12 @@ const ROWS = 20;
 const WEEKLY_ROWS = 10;
 const ROW_H = 58;
 const WEEKLY_ROW_H = 74;
+/**
+ * A landscape frame is too short for the column: two columns of ten rows (a weekly board's ten in
+ * the left one, the chosen run's timeline in the right), in a box this tall.
+ */
+const WIDE_H = 1120;
+const WIDE_WEEKLY_H = 1280;
 
 /** A dice name (protocol.ts packDice) in the player's language: "{adj} {noun} {n}" from the string table; '' for none. */
 export function diceName(dice: number): string {
@@ -115,24 +122,30 @@ export class BoardUi {
     root.addChild(backdrop(w, h));
     const box = new Container();
     box.position.set(w / 2, h / 2);
-    const top = -BOX_H / 2;
-    box.addChild(panel(BOX_W, BOX_H));
+    const wide = isWideFrame({ w, h });
+    const r = this.reply;
+    const boxH = !wide ? BOX_H : typeof r === 'object' && 'top' in r && r.top && this.watch ? WIDE_WEEKLY_H : WIDE_H;
+    // still on screen in a frame shorter than the box
+    box.scale.set(Math.min(1, (h - 30) / boxH));
+    const top = -boxH / 2;
+    box.addChild(panel(wide ? 2 * BOX_W : BOX_W, boxH));
     const title = fit(label(open.title, 60, open.color), BOX_W - 80);
     title.y = top + 80;
     const mode = fit(label(open.sub, 48, COLORS.dim), BOX_W - 80);
     mode.y = top + 150;
-    box.addChild(title, mode, this.body(top + 230));
+    box.addChild(title, mode, this.body(top + 230, wide));
     const back = button(t('common.back'), 400, 110, () => {
       this.open = null;
       this.relayout();
     }, { fill: COLORS.panelLocked });
-    back.y = top + BOX_H - 90;
+    back.y = top + boxH - 90;
     box.addChild(back);
     root.addChild(box);
     return root;
   }
 
-  private body(y0: number): Container {
+  /** The rows from `y0` down; on a `wide` box in two columns, the player's row and the footer under them in the middle. */
+  private body(y0: number, wide: boolean): Container {
     const c = new Container();
     const r = this.reply;
     if (r === 'loading' || r === 'failed' || r.rows.length === 0) {
@@ -153,24 +166,32 @@ export class BoardUi {
     const tops = weekly ? topRows(weekly, n) : [];
     // on a weekly board every row leaves the Watch buttons' room, so the results stay in one column
     const look = { narrow: !!weekly, h: rh };
+    // a column's rows; a weekly board's all go in the left one, its timeline in the right
+    const perCol = wide && !weekly ? n / 2 : n;
+    const colX = (col: number) => (wide ? (col === 0 ? -BOX_W / 2 : BOX_W / 2) : 0);
     r.rows.slice(0, n).forEach((row, i) => {
       const top = tops.findIndex((x) => x.row === row);
-      const v = rowView(row, row.tag === mineTag, y0 + i * rh, look);
+      const v = rowView(row, row.tag === mineTag, y0 + (i % perCol) * rh, look);
+      v.x = colX(Math.floor(i / perCol));
       if (top >= 0) this.topRow(v, top, tops[top].row, tops[top].top, rh);
       c.addChild(v);
     });
     // the player's own row under the list when it is not on it
     const shown = r.rows.slice(0, n).some((row) => row.tag === mineTag);
-    const footY = y0 + n * rh + 40;
+    const footY = y0 + perCol * rh + 40;
     if (weekly) {
       const tl = chosenTimeline(weekly, this.weekly, n, this.icons, BOX_W - 100, 360, rowName, (row, top, from) => this.watchTop(row, top, from));
       if (tl) {
-        tl.y = footY + 140;
+        tl.position.set(colX(1), wide ? y0 : footY + 140);
         c.addChild(tl);
       }
     }
     // the player's row on a band of its own, wide: no Watch button there, and "(you)" needs the room
-    if (r.mine && !shown) c.addChild(rowView(r.mine, true, footY, { narrow: false, h: rh }));
+    if (r.mine && !shown) {
+      const own = rowView(r.mine, true, footY, { narrow: false, h: rh });
+      own.x = weekly ? colX(0) : 0;
+      c.addChild(own);
+    }
     // under it, the board's size; on a challenge board the player's share ("top N %"), or that
     // their run still waits for its re-simulation (ChallengeBoardReply.pending)
     const challenge = 'pending' in r;
