@@ -6,6 +6,16 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('..', import.meta.url));
 
+/**
+ * The time a test may take, for the engine, server and client configs alike. The tests are
+ * deterministic and talk to no network, so vitest's 5 s guards no hang; it only measured the
+ * machine: whole runs played or re-simulated under coverage take 3 to 4 s on a GitHub runner, and
+ * one now and then went past 5 s (the bot's chapter, the server's forged-run re-simulations),
+ * failing CI on a commit that changed nothing there. Tests that once had their own longer
+ * timeout keep it.
+ */
+export const TEST_TIMEOUT = 60_000;
+
 /** @param {string} name the workspace (engine, server, client) @param {string[]} include */
 export function coverage(name, include) {
   return {
