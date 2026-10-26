@@ -13,6 +13,14 @@ npm run sweep:layout -- --url http://localhost:5174/  a dev server already runni
 npm run sweep:layout -- --headless                    no window
 ```
 
+Its gate in check is `client/src/ui/layoutGuard.test.ts`: the same auditor over the headless
+shell at 1280x575, 1920x1080, 1024x768 and 390x844. Its text is measured by a fixed advance, so
+it judges only what does not hang on a font: panels and labels off the canvas (`cutoff`,
+`offscreen`), labels out of their panel or under a fill, and placeholders, on every lobby tab
+and panel, the run's HUD, pause and results. It also keeps the tab bar's names at least 12 units
+above the window's edge, the monk on Gear less than 15% covered, and Train's empty band above
+the tab bar under 15% of the room on 16:9 (30% on 4:3).
+
 `build/layoutSweep.mjs` starts its own Vite dev server for this checkout on a free port
 from 5194 up, unless `--url` names one. It then drives the system Chrome through
 playwright-core, the same way `tools/record_video.mjs` does. Chrome opens in a window of
