@@ -1,6 +1,6 @@
 import { freeLobbyArt, loadLobbyArt } from '../art';
 import type { Art } from '../game/Game';
-import { TexturePool, type Renderer } from 'pixi.js';
+import { TexturePool, type Renderer, type Texture } from 'pixi.js';
 import type { Platform } from '../platform/types';
 import { menuBackdrop } from './lobbyBars';
 
@@ -28,8 +28,14 @@ export class LobbyArtLoad {
     return this.load;
   }
 
+  /** Bakes the menu courtyard (and its landscape twin where runs can play sideways) and gives the portrait one. */
+  bakeMenu(): Texture | null {
+    if (this.platform.sideways) menuBackdrop(this.renderer, this.art.lobby, true);
+    return menuBackdrop(this.renderer, this.art.lobby);
+  }
+
   free(): void {
-    menuBackdrop(this.renderer, this.art.lobby);
+    this.bakeMenu();
     freeLobbyArt(this.art);
     // and its filters' screen-sized scratch textures, which Pixi's pool would keep for good (~30 MB at 2x)
     TexturePool.clear();

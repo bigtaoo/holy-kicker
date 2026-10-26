@@ -28,7 +28,6 @@ import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
 import { loadRunArt, lateArt, loadChapterArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
-import { menuBackdrop } from './lobbyBars';
 import { LobbyScreen } from './LobbyScreen';
 import { LobbyArtLoad } from './lobbyArtLoad';
 import { ChallengeFlow } from './challengeFlow';
@@ -313,7 +312,7 @@ export class Shell {
     const giveUp = () => this.runs.giveUp(left);
     // won (kept in the moment before its results), or fallen with no revive left, there is nothing to go on with
     if (outcome === 'won' || (outcome === 'lost' && players[0].revives === 0)) return giveUp();
-    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => menuBackdrop(this.app.renderer, this.art.lobby)), this.device === 'desktop'));
+    this.setScreen(new ResumeScreen({ chapter: c.chapter, hard: c.hard, wave: left.state.wave, waves: c.waves }, { resume: () => { this.net.track('run_resume', { chapter: c.chapter, hard: c.hard, wave: Math.max(1, left.state.wave) }); void this.play(c.chapter, left); }, giveUp }, this.lobbyArt.ready().then(() => this.lobbyArt.bakeMenu()), this.device === 'desktop'));
   }
 
   /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
@@ -421,9 +420,11 @@ export class Shell {
       this.screenKey = key;
       const insets = this.platform.safeInsets();
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
-      // a landscape run's HUD (and a landscape recording's) lays out in its wide frame, and so does the lobby on a screen that would play one
-      const wide = this.scene.record > 0 || this.runs.game?.engine.state.config.wide === true
-        || (this.screen instanceof LobbyScreen && wideScreen(width, height, this.platform.sideways === true));
+      // a run's HUD (and a replay's) lays out in the frame the run plays in, a landscape recording's in its wide one, and the
+      // screens between runs (lobby, results) in the one the next run would play in
+      const run = this.runs.game?.engine.state.config;
+      const wide = this.scene.record > 0 || (run ? run.wide === true : this.screen instanceof ReplayScreen ? this.screen.wide
+        : wideScreen(width, height, this.platform.sideways === true));
       this.screen.layout(uiFrame(computeViewport(width, height, wide), insets));
     }
     this.updates?.update(this.screen instanceof LobbyScreen && this.screen.idle, key, () => uiFrame(computeViewport(width, height), this.platform.safeInsets()));

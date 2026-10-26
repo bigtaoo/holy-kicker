@@ -49,6 +49,11 @@ export class ReplayScreen implements Screen {
     if (w.from) this.seekTo({ tick: w.from });
   }
 
+  /** The replayed run plays in landscape. */
+  get wide(): boolean {
+    return this.game.engine.state.config.wide === true;
+  }
+
   private get end(): number {
     return this.w.replay.tick;
   }

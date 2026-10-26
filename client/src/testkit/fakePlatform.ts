@@ -21,6 +21,8 @@ export interface FakeHost {
   vibrate?: boolean;
   /** Whether the keys reach the game now (a portal's iframe before a click: false); always, when left out. */
   keysReach?: () => boolean;
+  /** A web host, where a sideways screen plays in landscape (Platform.sideways). */
+  sideways?: boolean;
 }
 
 export type FakePlatform = Platform & { calls: string[]; hide(): void; press(code: string, repeat?: boolean): void };
@@ -40,6 +42,7 @@ export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): 
     bindStick() {},
     readKeys: () => ({ x: 0, y: 0 }),
     ...(host.keysReach && { keysReach: host.keysReach }),
+    ...(host.sideways && { sideways: true }),
     readText: async (path) => readPublicText(path),
     readBinary: async (path) => {
       const b = Buffer.from(readPublicText(path), 'binary');

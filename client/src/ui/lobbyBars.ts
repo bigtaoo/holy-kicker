@@ -86,14 +86,22 @@ export function menuBackdrop(renderer: Renderer, tex: Texture | null, wide = fal
   return out;
 }
 
+/** A portrait bake's landscape twin, when one was baked from the same painting. */
+function wideTwin(tex: Texture): Texture | null {
+  const [tall, wide] = baked;
+  return tall?.out === tex && wide?.from === tall.from ? wide.out : null;
+}
+
 /**
  * The baked menu courtyard (menuBackdrop) over the whole frame and the bands past it, for the
- * screens between runs (results, resume); the flat background where there is no painting. It
- * takes taps, so nothing under it does.
+ * screens between runs (results, resume); the flat background where there is no painting. A
+ * landscape frame takes the bake's landscape twin when there is one. It takes taps, so nothing
+ * under it does.
  */
-export function menuCover(f: UiFrame, tex: Texture | null): Container {
+export function menuCover(f: UiFrame, portrait: Texture | null): Container {
   const c = new Container();
   c.addChild(new Graphics().rect(-BLEED, -BLEED, f.w + 2 * BLEED, f.h + 2 * BLEED).fill(COLORS.bg));
+  const tex = portrait && isWide(f.w, f.h) ? wideTwin(portrait) ?? portrait : portrait;
   if (tex) {
     const pic = new Sprite(tex);
     pic.anchor.set(0.5);
