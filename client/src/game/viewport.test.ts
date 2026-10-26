@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { computeViewport, DESIGN_H, DESIGN_W, wantsUpright, ZOOM_AT_WIDEST } from './viewport';
+import { computeViewport, DESIGN_H, DESIGN_W, wantsUpright, WIDE_MAX_ASPECT, WIDE_MIN_ASPECT, WIDE_VIEW_H, wideScreen, ZOOM_AT_WIDEST } from './viewport';
 
 describe('computeViewport', () => {
   it('shows exactly the design size on a 9:16 phone', () => {
@@ -27,14 +27,24 @@ describe('computeViewport', () => {
     expect(120 * v.scale).toBeGreaterThan(35);
   });
 
-  it('fills a 16:9 recording when wide, with the 3:4 world area', () => {
+  it('fills a 16:9 screen on a landscape run, about 2130x1200 of world', () => {
     const v = computeViewport(1920, 1080, true);
-    const narrow = computeViewport(810, 1080);
     expect([v.playX, v.playY, v.playW, v.playH]).toEqual([0, 0, 1920, 1080]);
-    expect(v.viewW / v.viewH).toBeCloseTo(16 / 9);
-    expect(v.viewW * v.viewH).toBeCloseTo(narrow.viewW * narrow.viewH);
-    // continuous where the cap used to be
-    expect(Math.abs(computeViewport(1081, 1440, true).viewH - narrow.viewH)).toBeLessThan(2);
+    expect(v.viewH).toBe(WIDE_VIEW_H);
+    expect(v.viewW).toBeCloseTo(WIDE_VIEW_H * (16 / 9));
+    // a 120-unit hero on a 900 px tall screen
+    expect(120 * computeViewport(1600, 900, true).scale).toBe(90);
+  });
+
+  it('keeps a landscape run between 16:10 and 16:9, boxing the rest', () => {
+    const square = computeViewport(1000, 1000, true);
+    expect(square.playW).toBe(1000);
+    expect(square.playH).toBeCloseTo(1000 / WIDE_MIN_ASPECT);
+    expect(square.playY).toBeGreaterThan(0);
+    const ultra = computeViewport(3440, 1440, true);
+    expect(ultra.playW).toBeCloseTo(1440 * WIDE_MAX_ASPECT);
+    expect(ultra.viewW).toBeCloseTo(WIDE_VIEW_H * WIDE_MAX_ASPECT);
+    expect(ultra.playX).toBeGreaterThan(0);
   });
 
   it('is continuous at the phone aspect', () => {
@@ -63,5 +73,14 @@ describe('wantsUpright', () => {
     expect(wantsUpright(1180, 820, true)).toBe(false); // iPad Air
     expect(wantsUpright(1133, 744, true)).toBe(false); // iPad mini
     expect(wantsUpright(960, 600, true)).toBe(false); // small Android tablet
+  });
+});
+
+describe('wideScreen', () => {
+  it('sets runs up in landscape on a sideways screen of a host that plays sideways', () => {
+    expect(wideScreen(1100, 574, true)).toBe(true); // CrazyGames' canvas
+    expect(wideScreen(1180, 820, true)).toBe(true); // iPad Air on its side
+    expect(wideScreen(1100, 1000, true)).toBe(false);
+    expect(wideScreen(1920, 1080, false)).toBe(false); // WeChat, the iOS app
   });
 });

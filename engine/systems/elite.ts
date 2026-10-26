@@ -73,7 +73,7 @@ function stepElite(s: SimState, e: Elite, events: SimEvent[], hurt: HurtFn): voi
       e.vx = Math.trunc(((p.x - e.x) * ELITE.dashSpeed) / d);
       e.vy = Math.trunc(((p.y - e.y) * ELITE.dashSpeed) / d);
     } else {
-      stepHorde([e], s.players, { speed: walkSpeed(s.players, e, wolf ? WOLF_LEADER.speed : ELITE.speed), stopDist: ELITE.stopDist, sep: 0, queue: false });
+      stepHorde([e], s.players, { speed: walkSpeed(s, e, wolf ? WOLF_LEADER.speed : ELITE.speed), stopDist: ELITE.stopDist, sep: 0, queue: false });
     }
   }
 }

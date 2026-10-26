@@ -85,7 +85,7 @@ export function stepDoorGod(s: SimState, e: Elite): void {
       const y = e.y + Math.trunc((e.vy * k.reach) / TRIG_ONE);
       s.zones.push({ x, y, radius: k.radius, age: 0, hurt: HURT.smash });
     } else {
-      stepHorde([e], s.players, { speed: walkSpeed(s.players, e, k.speed), stopDist: k.stopDist, sep: 0, queue: false });
+      stepHorde([e], s.players, { speed: walkSpeed(s, e, k.speed), stopDist: k.stopDist, sep: 0, queue: false });
     }
   }
 }

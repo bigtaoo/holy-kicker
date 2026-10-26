@@ -50,6 +50,11 @@ export interface RunConfig {
   firstRun?: boolean;
   /** The challenge's mutator (mutators.ts), null or missing for none. */
   mutator?: MutatorId | null;
+  /**
+   * A landscape screen's run (desktop web): heroes see VIEW_WIDE, and mobs come in from past
+   * WIDE_RING instead of the phone's ring. Missing on portrait runs.
+   */
+  wide?: boolean;
 }
 
 export const DEFAULT_RUN: RunConfig = {
@@ -277,6 +282,29 @@ export const CHAPTER_BOSSES: readonly BossKind[] = ['abbot', 'carp', 'witch', 'j
 export const VIEW = {
   halfW: toFp(480),
   halfH: toFp(680),
+};
+
+/**
+ * VIEW on a landscape screen (RunConfig.wide): the client shows 1200 units of height and
+ * 16:10 to 16:9 of width (1920 to 2133), less the same kind of margin.
+ */
+export const VIEW_WIDE = {
+  halfW: toFp(900),
+  halfH: toFp(540),
+};
+
+/**
+ * Where mobs come in on a landscape screen (systems/horde.ts ringPoint, respawnPoint): past
+ * this box around the hero (the widest view, 2133x1200, plus a mob's size) by up to
+ * `depth`, so the horde walks in from off screen on every side. `backW`/`backH` are the
+ * opening's nearer box (WAVES.openingBack).
+ */
+export const WIDE_RING = {
+  halfW: toFp(1110),
+  halfH: toFp(640),
+  depth: toFp(300),
+  backW: toFp(1090),
+  backH: toFp(620),
 };
 
 export const ELITE = {

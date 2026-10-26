@@ -7,7 +7,7 @@ import { underground, type Player, type SimState } from '../state';
 import { bowlLevel, pickCard, relicCooldown, relicLevel, relicPct, stat } from './build';
 import { bowlInAir, throwBowl } from './bowl';
 import { bigTarget, bossIndex, kickTarget, launchBall, markOf, nearestTarget, targetAt } from './combat';
-import { ringPoint } from './horde';
+import { spawnPoint } from './horde';
 import { bellyBounce, dodged } from './monks';
 import { breakBell } from './spells';
 import { fishStart, tap } from './fish';
@@ -39,7 +39,7 @@ function revive(s: SimState, events: SimEvent[], p: Player): void {
   p.hp = p.maxHp;
   p.hurtCd = HERO.reviveGuard;
   const r2 = HERO.reviveClear * HERO.reviveClear;
-  for (const m of s.mobs) if (dist2(m.x - p.x, m.y - p.y) < r2) ringPoint(s.ai, p.x, p.y, m);
+  for (const m of s.mobs) if (dist2(m.x - p.x, m.y - p.y) < r2) spawnPoint(s, p.x, p.y, m);
   if (s.outcome === 'lost') s.outcome = 'playing';
   events.push({ type: 'revive', owner: p.owner });
 }

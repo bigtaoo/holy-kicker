@@ -52,6 +52,9 @@ describe('a chapter run\'s replay', () => {
     expect(chapterConfig(c, run)).not.toBeNull();
     expect(chapterConfig({ ...c, revives: 3 }, run)).not.toBeNull();
     expect(chapterConfig({ ...c, firstRun: true }, run)?.firstRun).toBe(true);
+    expect(chapterConfig({ ...c, wide: true }, run)?.wide).toBe(true);
+    expect(chapterConfig(c, run)).not.toHaveProperty('wide');
+    expect(chapterConfig({ ...c, wide: 1 }, run)).toBeNull();
     expect(chapterConfig({ ...c, revives: 4 }, run)).toBeNull();
     expect(chapterConfig({ ...c, waves: 20 }, run)).toBeNull();
     expect(chapterConfig({ ...c, chapter: 2 }, run)).toBeNull();

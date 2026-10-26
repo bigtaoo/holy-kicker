@@ -26,7 +26,7 @@ type Common = Omit<RunConfig, 'revives' | 'hard' | 'firstRun' | 'mutator'>;
 /**
  * The parts every ranked run shares, or null: one hero, the chapter's waves at most, no
  * stress-test switches, and the player's own relic, monk, sutras and stats from gear and training
- * (whole numbers on known stats; the client is trusted on their size).
+ * (whole numbers on known stats; the client is trusted on their size), and a landscape screen's view.
  */
 function commonConfig(c: Record<string, unknown>, E: EngineModule): Common | null {
   const d = E.DEFAULT_RUN;
@@ -41,10 +41,13 @@ function commonConfig(c: Record<string, unknown>, E: EngineModule): Common | nul
   const bonus = c.bonus;
   if (typeof bonus !== 'object' || bonus === null || Array.isArray(bonus)) return null;
   for (const [k, v] of Object.entries(bonus)) if (!oneOf(k, STATS) || !isInt(v, -1000, 10_000)) return null;
+  if (c.wide !== undefined && typeof c.wide !== 'boolean') return null;
   return {
     seed: c.seed, players: 1, mobs: d.mobs, sep: d.sep, queue: d.queue, heroEase: c.heroEase, elite: true, boss: true, threats: false,
     spells: [], spellRate: d.spellRate, drops: 0, waves: c.waves, relic: c.relic, monk: c.monk, sutras, chapter: c.chapter,
     bonus: bonus as RunConfig['bonus'],
+    // a landscape screen's run; kept off a portrait one, as the client leaves it
+    ...(c.wide === true ? { wide: true } : {}),
   };
 }
 

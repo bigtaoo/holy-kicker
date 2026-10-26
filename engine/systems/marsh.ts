@@ -85,7 +85,7 @@ export function stepToadKing(s: SimState, e: Elite): void {
     e.phase = 'aim';
     e.t = 0;
   } else {
-    stepHorde([e], s.players, { speed: walkSpeed(s.players, e, k.speed), stopDist: k.stopDist, sep: 0, queue: false });
+    stepHorde([e], s.players, { speed: walkSpeed(s, e, k.speed), stopDist: k.stopDist, sep: 0, queue: false });
   }
 }
 

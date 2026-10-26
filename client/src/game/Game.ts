@@ -31,7 +31,7 @@ import { makeDeco } from './decoView';
 import { Mist } from './mistView';
 import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
-import { computeViewport, type Viewport } from './viewport';
+import { computeViewport, type Viewport, wideScreen } from './viewport';
 import { uiFrame } from '../ui/uiLayout';
 import { Autoplay, RUSH_SPEED } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
@@ -150,7 +150,9 @@ export class Game {
   ) {
     const from = restored instanceof Engine ? restored.state : restored;
     const seed = from?.config.seed ?? runSeed(scene, setup);
-    this.engine = restored instanceof Engine ? restored : new Engine(from?.config ?? runConfig(scene, seed, setup), undefined, from);
+    // a new run takes the screen's shape for good: its view and where the horde comes in
+    const wide = setup.wide ?? wideScreen(app.screen.width, app.screen.height, platform.sideways === true);
+    this.engine = restored instanceof Engine ? restored : new Engine(from?.config ?? runConfig(scene, seed, { ...setup, wide }), undefined, from);
     this.resumed = !!restored;
     this.autoplay = scene.autoplay ? new Autoplay(LOCAL, seed, scene.from) : null;
     const chapter = setup.waves > 0;
@@ -249,7 +251,7 @@ export class Game {
     const key = `${width}x${height}`;
     if (key === this.screenKey) return;
     this.screenKey = key;
-    const vp = (this.vp = computeViewport(width, height, this.scene.record > 0));
+    const vp = (this.vp = computeViewport(width, height, this.engine.state.config.wide === true));
     this.root.position.set(vp.playX, vp.playY);
     this.playMask.clear().rect(vp.playX, vp.playY, vp.playW, vp.playH).fill(0xffffff);
     this.lowHp.layout(vp);

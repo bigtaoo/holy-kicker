@@ -8,7 +8,7 @@ import { body, newElite, newMob, underground, type SimState } from '../state';
 import { arm } from './affixes';
 import { newBoss } from './boss';
 import { openShrine, payBet } from './build';
-import { respawnPoint, ringPoint } from './horde';
+import { respawnPoint, ringPoint, spawnPoint, wideRun } from './horde';
 import { resetMob } from './marsh';
 
 // The chapter's waves (docs/design.md "Chapters"): each lasts WAVES.ticks; the horde grows
@@ -182,7 +182,7 @@ export function rushOf(chapter: number): BossKind[] {
 function rushBoss(s: SimState, kind: BossKind, lead: boolean): void {
   const p = s.players[0];
   const at = body(0, 0);
-  ringPoint(s.ai, p.x, p.y, at);
+  spawnPoint(s, p.x, p.y, at);
   const hp = foeHp(bossOf(kind, false).hp, s.config.chapter, s.config.hard);
   s.boss = newBoss(at.x, at.y, Math.trunc((hp * (lead ? ACTS.rushLeadPercent : 100)) / 100), false, kind);
   arm(s, s.boss, true);
@@ -239,7 +239,7 @@ export function beginWave(s: SimState, wave: number): void {
     if (m.hp === 0 && !tempKind(m.kind)) {
       m.hp = mobHp(wave, m.kind, s.config.chapter, s.config.hard);
       resetMob(s, m);
-      respawnPoint(s.ai, p, m);
+      respawnPoint(s.ai, p, m, false, wideRun(s));
     }
   }
   for (let n = s.mobs.length - extra; n < hordeSize(wave, s.config.chapter); n++) {
@@ -248,13 +248,13 @@ export function beginWave(s: SimState, wave: number): void {
     resetMob(s, m);
     // the first wave's start in view (WAVES.openingRing), the rest from just outside it
     if (wave === 1) ringPoint(s.ai, p.x, p.y, m, WAVES.openingRingMin, WAVES.openingRingMax);
-    else respawnPoint(s.ai, p, m);
+    else respawnPoint(s.ai, p, m, false, wideRun(s));
     s.mobs.push(m);
   }
   // a pack comes bunched from one side
   const pack = isPackWave(s.config.chapter, wave, last) ? Math.max(0, Math.min(k.size, k.max - packed)) : 0;
   const at = body(0, 0);
-  if (pack > 0) respawnPoint(s.ai, p, at);
+  if (pack > 0) respawnPoint(s.ai, p, at, false, wideRun(s));
   for (let j = 0; j < pack; j++) {
     const r = k.spread;
     s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, k.kind, s.config.chapter, s.config.hard), k.kind));
@@ -262,14 +262,14 @@ export function beginWave(s: SimState, wave: number): void {
   if (isEliteWave(wave, last) && s.elites.length === 0) {
     for (const kind of eliteKinds(s.config.chapter, wave, last, s.config.hard, s.config.mutator ?? null)) {
       const e = newEliteOf(s, kind);
-      ringPoint(s.ai, p.x, p.y, e);
+      spawnPoint(s, p.x, p.y, e);
       arm(s, e, false);
       s.elites.push(e);
     }
   }
   if (isMidBoss(wave, last) && s.config.chapter >= 2) {
     // the previous chapter's boss, empowered (the demon, on the temple map from chapter 6, as it is)
-    ringPoint(s.ai, p.x, p.y, at);
+    spawnPoint(s, p.x, p.y, at);
     const kind = chapterBoss(s.config.chapter - 1);
     s.boss = newBoss(at.x, at.y, waveFoeHp(bossOf(kind, true).hp, s.config.chapter, wave, s.config.hard), true, kind);
     arm(s, s.boss, true);
@@ -277,7 +277,7 @@ export function beginWave(s: SimState, wave: number): void {
     // the twins come from opposite sides of the hero
     const hp = twinHp(s.config.chapter, wave, s.config.hard);
     const a = newElite(0, 0, s.nextId++, hp);
-    ringPoint(s.ai, p.x, p.y, a);
+    spawnPoint(s, p.x, p.y, a);
     const b = newElite(2 * p.x - a.x, 2 * p.y - a.y, s.nextId++, hp, ELITE.cooldown + WAVES.twinDelay);
     s.elites.push(a, b);
   } else if (isBossWave(wave, last) && !s.boss) {

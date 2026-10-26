@@ -39,6 +39,7 @@ export function browserStorage(): KeyValueStore | null {
 // ad-free card, ?notify=fake for its reminders and ?ota=fake (or fail) for its hot updates during development.
 export class WebPlatform implements Platform {
   readonly host: Host = 'web';
+  readonly sideways: boolean = true;
   private held = new Set<string>();
   private keyListeners: ((code: string, repeat: boolean) => void)[] = [];
   private seen: Attention = { focus: false, input: false };

@@ -10,7 +10,7 @@ import { dropGem } from './drops';
 import { superArmor } from './elite';
 import { gonged } from './demon';
 import { shielded, tear } from './ghost';
-import { inView, respawnPoint } from './horde';
+import { inView, respawnPoint, wideRun } from './horde';
 import { resetMob } from './marsh';
 import { split } from './snow';
 import { bossThins, fewKind, mobHp, openingShare } from './waves';
@@ -63,13 +63,13 @@ export function nearestTarget(s: SimState, x: number, y: number, maxDist: number
 /** The boss, else the nearest elite, within `range` of p and on p's screen (inView); -1 if none. */
 export function bigTarget(s: SimState, p: Player, range: number): number {
   const boss = targetAt(s, bossIndex(s));
-  if (boss && dist2(boss.x - p.x, boss.y - p.y) <= range * range && inView(p, boss.x, boss.y)) return bossIndex(s);
+  if (boss && dist2(boss.x - p.x, boss.y - p.y) <= range * range && inView(s, p, boss.x, boss.y)) return bossIndex(s);
   let best = -1;
   let bestD = range * range;
   for (let i = eliteIndex(s); i < bossIndex(s); i++) {
     const t = targetAt(s, i)!;
     const d = dist2(t.x - p.x, t.y - p.y);
-    if (d <= bestD && inView(p, t.x, t.y)) {
+    if (d <= bestD && inView(s, p, t.x, t.y)) {
       bestD = d;
       best = i;
     }
@@ -195,7 +195,7 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
   m.hp = mobHp(s.wave, m.kind, s.config.chapter, s.config.hard);
   resetMob(s, m);
   // the opening's frail crowd comes back close, so the screen stays full
-  respawnPoint(s.ai, by, m, pct < 100 && !fewKind(m.kind));
+  respawnPoint(s.ai, by, m, pct < 100 && !fewKind(m.kind), wideRun(s));
 }
 
 function aim(b: Ball, tx: number, ty: number): void {

@@ -21,6 +21,8 @@ import { StoreKit } from './storeKit';
 // adFree.ts); in Safari, without the shell, there are neither.
 export class IosPlatform extends WebPlatform {
   override readonly host: Host = 'ios';
+  // the app stays portrait, an iPad on its side in the 3:4 frame (docs/ios.md)
+  override readonly sideways: boolean = false;
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
   override readonly ads: Ads;

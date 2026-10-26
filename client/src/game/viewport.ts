@@ -4,8 +4,9 @@
 // - Wider screens (desktop web) may widen the play area up to 3:4, and the camera zooms in
 //   up to ZOOM_AT_WIDEST so characters stay readable in a small 16:9 portal iframe.
 // - Beyond 3:4 the play area is pillarboxed; beyond MIN_ASPECT it is letterboxed.
-// - `wide` (only the dev recorder's landscape store video) lifts the 3:4 cap: a wider screen
-//   then shows the same world area as 3:4 does, spread across the screen's shape.
+// - `wide`, a landscape run (the engine's RunConfig.wide, chosen by wideScreen on hosts that
+//   play sideways): the play area is WIDE_MIN_ASPECT to WIDE_MAX_ASPECT and shows WIDE_VIEW_H
+//   of world height, about 2130x1200 at 16:9; a narrower screen letterboxes it.
 
 export const DESIGN_W = 1080;
 export const DESIGN_H = 1920;
@@ -13,6 +14,12 @@ export const PHONE_ASPECT = DESIGN_W / DESIGN_H; // 9:16
 export const MAX_ASPECT = 3 / 4;
 export const MIN_ASPECT = 9 / 22;
 export const ZOOM_AT_WIDEST = 1.3;
+/** A landscape run's play area shape, and the world height it shows (the engine's VIEW_WIDE less a margin). */
+export const WIDE_MIN_ASPECT = 16 / 10;
+export const WIDE_MAX_ASPECT = 16 / 9;
+export const WIDE_VIEW_H = 1200;
+/** The screen shape from which a host that plays sideways sets a run up in landscape. */
+export const WIDE_FROM = 1.2;
 
 export interface Viewport {
   /** Screen pixels per world unit. */
@@ -29,20 +36,20 @@ export interface Viewport {
 
 export function computeViewport(screenW: number, screenH: number, wide = false): Viewport {
   const aspect = screenW / screenH;
-  const playAspect = Math.min(wide ? Infinity : MAX_ASPECT, Math.max(MIN_ASPECT, aspect));
+  const playAspect = wide
+    ? Math.min(WIDE_MAX_ASPECT, Math.max(WIDE_MIN_ASPECT, aspect))
+    : Math.min(MAX_ASPECT, Math.max(MIN_ASPECT, aspect));
   const playW = aspect > playAspect ? screenH * playAspect : screenW;
   const playH = aspect < playAspect ? screenW / playAspect : screenH;
 
   let viewW: number;
   let viewH: number;
-  if (playAspect <= PHONE_ASPECT) {
+  if (wide) {
+    viewH = WIDE_VIEW_H;
+    viewW = viewH * playAspect;
+  } else if (playAspect <= PHONE_ASPECT) {
     viewW = DESIGN_W;
     viewH = DESIGN_W / playAspect;
-  } else if (playAspect > MAX_ASPECT) {
-    // the widest play area's world area, at this shape
-    const area = (DESIGN_H / ZOOM_AT_WIDEST) ** 2 * MAX_ASPECT;
-    viewH = Math.sqrt(area / playAspect);
-    viewW = viewH * playAspect;
   } else {
     const t = (playAspect - PHONE_ASPECT) / (MAX_ASPECT - PHONE_ASPECT);
     const zoom = 1 + (ZOOM_AT_WIDEST - 1) * t;
@@ -59,6 +66,11 @@ export function computeViewport(screenW: number, screenH: number, wide = false):
     playW,
     playH,
   };
+}
+
+/** Whether a run set up on this screen plays in landscape, on a host that plays sideways at all. */
+export function wideScreen(screenW: number, screenH: number, sideways: boolean): boolean {
+  return sideways && screenW >= screenH * WIDE_FROM;
 }
 
 /** The shortest side (CSS px) a sideways touch screen needs to play: a tablet's, not a phone's. */

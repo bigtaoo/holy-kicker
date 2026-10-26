@@ -24,6 +24,8 @@ export interface Platform {
   keysReach?(): boolean;
   /** Since launch: whether the game ever had the keys (`focus`) and whether any key or pointer went down in it (`input`); unset where the keys always reach it. */
   attention?(): Attention;
+  /** Whether a run on a sideways screen plays in landscape (viewport.ts wideScreen): the web hosts; unset where the game stays portrait (WeChat, the iOS app). */
+  readonly sideways?: boolean;
   /** A short buzz, `strong` for a hit; unset where the device has none (desktops, iOS's web view). */
   vibrate?(strong: boolean): void;
   /** Reads a text file shipped with the game (relative path, as for textures). */

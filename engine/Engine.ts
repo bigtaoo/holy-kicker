@@ -14,7 +14,7 @@ import { beadSystem } from './systems/beads';
 import { bowlSystem } from './systems/bowl';
 import { dropGem, dropSystem } from './systems/drops';
 import { eliteSystem } from './systems/elite';
-import { hordeSystem, ringPoint } from './systems/horde';
+import { hordeSystem, spawnPoint } from './systems/horde';
 import { applyInput, contactSystem, hurtPlayer, kickSystem, movePlayers } from './systems/players';
 import { spellSystem } from './systems/spells';
 import { bulletSystem, threatSystem, zoneSystem } from './systems/threats';
@@ -118,7 +118,7 @@ function setup(s: SimState): void {
   const p = s.players[0];
   for (let i = 0; i < c.mobs; i++) {
     const m = newMob(0, 0);
-    ringPoint(s.ai, p.x, p.y, m);
+    spawnPoint(s, p.x, p.y, m);
     s.mobs.push(m);
   }
   if (c.elite) s.elites.push(newElite(toFp(300), toFp(-900), s.nextId++));

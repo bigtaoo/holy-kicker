@@ -1,4 +1,4 @@
-import { CASTER, ELITE, HORDE, PACE, SHOOTER, VIEW, WAVES } from '../config';
+import { CASTER, ELITE, HORDE, PACE, SHOOTER, VIEW, VIEW_WIDE, WAVES, WIDE_RING } from '../config';
 import { SpatialGrid } from '../grid';
 import { dist, dist2, isqrt } from '../math/fixed';
 import { cosB, sinB, TRIG_ONE } from '../math/trig';
@@ -37,14 +37,18 @@ export interface MoveParams {
   queue: boolean;
 }
 
-/** Whether (x, y) is on p's screen (VIEW). */
-export function inView(p: Player, x: number, y: number): boolean {
-  return Math.abs(x - p.x) <= VIEW.halfW && Math.abs(y - p.y) <= VIEW.halfH;
+/** Whether the run is played on a landscape screen (RunConfig.wide). */
+export const wideRun = (s: SimState): boolean => s.config.wide === true;
+
+/** Whether (x, y) is on p's screen (VIEW, or VIEW_WIDE on a landscape run). */
+export function inView(s: SimState, p: Player, x: number, y: number): boolean {
+  const v = wideRun(s) ? VIEW_WIDE : VIEW;
+  return Math.abs(x - p.x) <= v.halfW && Math.abs(y - p.y) <= v.halfH;
 }
 
 /** A big one's walking speed: `speed` once a living hero sees it, else ELITE.enterSpeed to come into sight. */
-export function walkSpeed(players: readonly Player[], b: Body, speed: number): number {
-  return players.some((p) => !p.dead && inView(p, b.x, b.y)) ? speed : ELITE.enterSpeed;
+export function walkSpeed(s: SimState, b: Body, speed: number): number {
+  return s.players.some((p) => !p.dead && inView(s, p, b.x, b.y)) ? speed : ELITE.enterSpeed;
 }
 
 /** The player nearest to (x, y); the first one on a tie. */
@@ -117,7 +121,7 @@ function blocked(mobs: Body[], i: number, dx: number, dy: number, d: number, r: 
   return false;
 }
 
-/** Puts `b` on a random point of the respawn ring around (cx, cy), just outside the phone view. */
+/** Puts `b` on a random point of the ring between `min` and `max` around (cx, cy). */
 export function ringPoint(rand: Prng, cx: number, cy: number, b: Body, min = HORDE.ringMin, max = HORDE.ringMax): void {
   const a = rand.int(65536);
   const r = rand.range(min, max);
@@ -125,23 +129,49 @@ export function ringPoint(rand: Prng, cx: number, cy: number, b: Body, min = HOR
 }
 
 /**
+ * Puts `b` at a random point just off the screen around (cx, cy): the respawn ring outside the
+ * phone view (ringPoint), or on a landscape run past WIDE_RING's box.
+ */
+export function spawnPoint(s: SimState, cx: number, cy: number, b: Body): void {
+  if (!wideRun(s)) return ringPoint(s.ai, cx, cy, b);
+  const a = s.ai.int(65536);
+  const c = cosB(a);
+  const sn = sinB(a);
+  const r = wideEdge(c, sn) + s.ai.range(0, WIDE_RING.depth);
+  teleport(b, cx + Math.trunc((c * r) / TRIG_ONE), cy + Math.trunc((sn * r) / TRIG_ONE));
+}
+
+/**
  * Puts mob `m` on the respawn ring around player `p` (ringPoint); while he runs, on the half
  * of it ahead of him (HORDE.aheadArc either side of his heading), so the horde he leaves
  * behind comes back in his way and running off is no escape. `close`: just off a phone's screen
- * that way instead (WAVES.openingBack).
+ * that way instead (WAVES.openingBack). `wide`: a landscape run's boxes (WIDE_RING) instead.
  */
-export function respawnPoint(rand: Prng, p: Player, m: Body, close = false): void {
+export function respawnPoint(rand: Prng, p: Player, m: Body, close = false, wide = false): void {
   const a = p.moving ? (p.moveBrad + rand.range(-HORDE.aheadArc, HORDE.aheadArc)) & 65535 : rand.int(65536);
   const c = cosB(a);
   const sn = sinB(a);
-  const r = close ? screenEdge(c, sn) + rand.range(0, WAVES.openingBackDepth) : rand.range(HORDE.ringMin, HORDE.ringMax);
+  let r: number;
+  if (wide && close) r = boxEdge(c, sn, WIDE_RING.backW, WIDE_RING.backH) + rand.range(0, WAVES.openingBackDepth);
+  else if (wide) r = wideEdge(c, sn) + rand.range(0, WIDE_RING.depth);
+  else if (close) r = boxEdge(c, sn, WAVES.openingBackW, WAVES.openingBackH) + rand.range(0, WAVES.openingBackDepth);
+  else r = rand.range(HORDE.ringMin, HORDE.ringMax);
   teleport(m, p.x + Math.trunc((c * r) / TRIG_ONE), p.y + Math.trunc((sn * r) / TRIG_ONE));
 }
 
-/** How far from the hero the edge of the WAVES.openingBack box lies along (c, sn) / TRIG_ONE. */
-function screenEdge(c: number, sn: number): number {
-  const side = c === 0 ? WAVES.openingBackH : Math.trunc((WAVES.openingBackW * TRIG_ONE) / Math.abs(c));
-  const end = sn === 0 ? WAVES.openingBackW : Math.trunc((WAVES.openingBackH * TRIG_ONE) / Math.abs(sn));
+/**
+ * Where a landscape run's horde comes in along (c, sn) / TRIG_ONE: past WIDE_RING's box, and no
+ * nearer than a portrait run's ring (HORDE.ringMin), so above and below the hero, where a
+ * landscape screen ends sooner, mobs come from as far off as on a phone.
+ */
+function wideEdge(c: number, sn: number): number {
+  return Math.max(HORDE.ringMin, boxEdge(c, sn, WIDE_RING.halfW, WIDE_RING.halfH));
+}
+
+/** How far from the hero the edge of a box of half size (w, h) around him lies along (c, sn) / TRIG_ONE. */
+function boxEdge(c: number, sn: number, w: number, h: number): number {
+  const side = c === 0 ? h : Math.trunc((w * TRIG_ONE) / Math.abs(c));
+  const end = sn === 0 ? w : Math.trunc((h * TRIG_ONE) / Math.abs(sn));
   return Math.min(side, end);
 }
 
@@ -190,7 +220,7 @@ export function hordeSystem(s: SimState, grid: SpatialGrid): void {
     if (underground(m)) continue;
     const t = nearestPlayer(s.players, m.x, m.y);
     if (dist2(m.x - t.x, m.y - t.y) > far) {
-      respawnPoint(s.ai, t, m);
+      respawnPoint(s.ai, t, m, false, wideRun(s));
       m.lag = 0;
     } else if (lagging && outrun(s, m, t, back)) back = false;
   }
@@ -209,7 +239,7 @@ function stopDist(m: Mob): number {
  * phone's screen).
  */
 function outrun(s: SimState, m: Mob, t: Player, back: boolean): boolean {
-  const gap = s.players.some((p) => !p.dead && inView(p, m.x, m.y)) ? 0 : dist(m.x - t.x, m.y - t.y);
+  const gap = s.players.some((p) => !p.dead && inView(s, p, m.x, m.y)) ? 0 : dist(m.x - t.x, m.y - t.y);
   if (gap <= stopDist(m) + PACE.lagGain) {
     m.lag = 0;
     return false;
@@ -221,7 +251,7 @@ function outrun(s: SimState, m: Mob, t: Player, back: boolean): boolean {
     return false;
   }
   if (!back) return false;
-  respawnPoint(s.ai, t, m);
+  respawnPoint(s.ai, t, m, false, wideRun(s));
   m.lag = 0;
   return true;
 }
