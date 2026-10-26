@@ -174,7 +174,7 @@ export class RunFlow {
       kills: () => this.kills,
       pairHint: { due: () => !loadSettings(h.platform.storage).pairsTold, done: () => updateSettings(h.platform.storage, { pairsTold: true }) },
       keepRun: () => this.keep(), end: () => this.end(), cheer: () => h.sound.play('cleared'),
-      // a desktop first run waits for the keys; a pause panel opened meanwhile keeps it until Resume
+      // a desktop first run, or one back from a revive's ad, waits for the keys; a pause panel opened meanwhile keeps it until Resume
       hold: h.device === 'desktop' && h.platform.keysReach ? { reach: () => h.platform.keysReach!(), start: () => void (hud.pauseShown || this.setPaused(false)) } : undefined,
     }, !!teach);
     // the fast-forward choice carries over from the last run

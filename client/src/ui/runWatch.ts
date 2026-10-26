@@ -25,7 +25,8 @@ import { newTutorial, stepTutorial, type Tutorial, type TutorialStep } from './t
 // (a frozen screen waiting for a key lost desktop players who never pressed one). The one wait is
 // a desktop whose keys cannot reach the game yet (a portal's iframe before a click in it, often
 // under the portal's own consent popup): that run stands still on the click hint until they do,
-// since the fight played on unsteered there and most such first runs ended on the move hint.
+// since the fight played on unsteered there and most such first runs ended on the move hint. A
+// revive's ad leaves the keys with the portal page too, so any run back from one waits the same way.
 
 /** Seconds of play between two `alive` beats: a run whose page dies with no `leave` still says how far it got. */
 export const ALIVE_EVERY = 60;
@@ -71,7 +72,7 @@ export interface RunWatchDeps {
   pairHint?: { due(): boolean; done(): void };
   /** Plays the new-record fanfare. */
   cheer?(): void;
-  /** A desktop first run: whether the keys reach the game now, and what starts a run held until they do. */
+  /** A desktop: whether the keys reach the game now, and what starts a run held until they do (a first run, or one back from a revive's ad). */
   hold?: { reach(): boolean; start(): void };
 }
 
@@ -113,7 +114,7 @@ export class RunWatch {
   /** What the build strip was last drawn from (buildChanged), and the recharges filled in place every frame. */
   private readonly buildSeen: unknown[] = [];
   private readonly charges: (Charge | null)[] = [];
-  /** The first run stands still until the keys reach the game (RunWatchDeps.hold). */
+  /** The run stands still until the keys reach the game (RunWatchDeps.hold). */
   held: boolean;
 
   constructor(
@@ -183,7 +184,8 @@ export class RunWatch {
     }
     const teaching = this.tutorial !== null && this.tutorial.step !== 'done';
     const nudge = !teaching && !game.paused && p.offer.length === 0 && s.outcome === 'playing' && this.gather.step(dt, p.moving, p.moving ? 1 : lyingShare(s, p));
-    const hint = teaching ? this.tutorial!.step : nudge ? 'gather' : 'done';
+    // a held run shows the keys and asks for the click
+    const hint = this.held ? 'move' : teaching ? this.tutorial!.step : nudge ? 'gather' : 'done';
     if (hint !== this.hint) hud.setTutorial((this.hint = hint), hint === 'gather' ? gatherDir(s.gems.filter((g) => !g.flying), p.x, p.y, GATHER.reach * FP) : 2);
     // each step as it is reached, so a funnel shows which one first runs end on, and how long in
     if (this.tutorial && this.tutorial.step !== this.toldStep) {
@@ -222,7 +224,10 @@ export class RunWatch {
     }
     if (s.outcome === 'playing' && this.downShown) {
       this.downShown = false;
-      d.portal.gameplayStart();
+      if (d.hold && !d.hold.reach()) {
+        this.held = true;
+        game.paused = true;
+      } else d.portal.gameplayStart();
     }
     if (s.outcome === 'won') {
       // the run stands still on the monk's line after the boss, then the results

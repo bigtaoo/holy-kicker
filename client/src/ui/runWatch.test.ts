@@ -201,6 +201,25 @@ describe('RunWatch', () => {
     expect(b.end).toHaveBeenCalledTimes(1);
   });
 
+  it('holds a run back from the revive on the click hint while the keys stayed with the portal page', () => {
+    let reach = false;
+    const start = vi.fn();
+    const { game, hud, w } = watch(false, undefined, undefined, { free: 0, ad: true }, false, { reach: () => reach, start: () => { start(); game.paused = false; } });
+    expect(w.held).toBe(false);
+    fell(game, 3, 1, 1);
+    w.update(1 / 30);
+    // the ad paid: the engine stands the hero up
+    game.engine.state.outcome = 'playing';
+    w.update(1 / 30);
+    w.update(1 / 30);
+    expect([w.held, game.paused]).toEqual([true, true]);
+    expect(hud.calls.setTutorial?.at(-1)).toEqual(['move', 2]);
+    reach = true;
+    w.update(1 / 30);
+    expect([w.held, game.paused, start.mock.calls.length]).toEqual([false, false, 1]);
+    expect(hud.calls.setTutorial?.at(-1)?.[0]).toBe('done');
+  });
+
   it('blames the horde when no blow was seen, and too few levels whatever the blow', () => {
     const a = watch(false);
     fell(a.game, 1);
