@@ -5,6 +5,7 @@ import type { Container } from 'pixi.js';
 import { t } from '../i18n';
 import { clockSecs, shownSecond } from './clearTime';
 import { liveRun, playUntil, untilOffer, type LiveRun } from '../testkit/liveRun';
+import { findTap } from '../testkit/testShell';
 
 /** The width of the hero's health bar's fill (healthBar.ts: 110 at full health). */
 function hpFill(run: LiveRun): number {
@@ -23,12 +24,16 @@ describe('the HUD on a live run', { timeout: 30_000 }, () => {
     expect(run.texts()).toContain(t('run.waveStart', { wave: 1 }));
     expect(run.texts()).toContain(t('run.level', { level: 1 }));
 
-    // a level-up: the HUD's level follows the pick
+    // a level-up: the HUD's level follows the pick; the cards come and go over the HUD, not rebuilding it
+    const kept = findTap(run.app.stage, 'fast');
     await untilOffer(run);
+    await run.tick(1);
+    expect(findTap(run.app.stage, 'fast')).toBeNull();
     run.game().pick(suggestCard(run.sim().players[0]));
     await run.untilSim((s) => s.players[0].offer.length === 0);
     await run.tick(2);
     expect(run.texts()).toContain(t('run.level', { level: run.sim().players[0].level }));
+    expect(findTap(run.app.stage, 'fast')).toBe(kept);
     expect(run.sim().players[0].level).toBe(2);
 
     // the clock reads the sim's ticks, not the frames
@@ -45,11 +50,16 @@ describe('the HUD on a live run', { timeout: 30_000 }, () => {
     await run.tick(1);
     expect(hpFill(run)).toBeCloseTo((110 * p.hp) / p.maxHp, 0);
 
-    // the next wave's number, then its banner
+    // the next wave's number, then its banner, swapped in without rebuilding the rest of the HUD
+    // (every text drawing and uploading again in one frame was a hitch at each wave start)
     const next = run.sim().wave + 1;
+    const fast = findTap(run.app.stage, 'fast');
+    expect(fast).not.toBeNull();
     await playUntil(run, (s) => s.wave === next);
     await run.tick(2);
     expect(run.texts()).toContain(t('run.wave', { wave: next, total: waves }));
+    expect(run.texts()).toContain(t('run.waveStart', { wave: next }));
+    expect(findTap(run.app.stage, 'fast')).toBe(fast);
     expect(run.faults).toEqual([]);
   });
 

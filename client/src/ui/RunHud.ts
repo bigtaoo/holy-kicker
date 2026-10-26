@@ -58,6 +58,10 @@ const BUILD_Y = 150;
 
 export class RunHud implements Screen {
   readonly view = new Container();
+  /** What is always up, built by layout; relayout rebuilds `overlay` alone (all of it was a hitch on slow phones). */
+  private readonly base = new Container();
+  private readonly overlay = new Container();
+  private buttons: { pause: Container; fast: Container } | null = null;
   private frame: UiFrame | null = null;
   /** The wave counter and the dim lines under it. */
   private readonly column: HudColumn;
@@ -79,7 +83,7 @@ export class RunHud implements Screen {
   /** The wave banner; `record` makes its cheer line the new-record burst, `age` its seconds up. */
   private banner: { lines: [string, number][]; story: StoryLine | null; t: number; record: boolean; age: number } | null = null;
   private burst: RecordBurstView | null = null;
-  /** Rebuilt with every layout, like the rest of the HUD. */
+  /** Rebuilt with every layout, like the rest of the base. */
   private xpView: Container | null = null;
   private xpGauge: ReturnType<typeof meter> | null = null;
   private levelText: Text | null = null;
@@ -117,26 +121,33 @@ export class RunHud implements Screen {
     private readonly keysReach: () => boolean = () => true,
   ) {
     this.column = new HudColumn(total, hard);
+    this.view.addChild(this.base, this.overlay);
   }
 
   layout(f: UiFrame): void {
     this.frame = f;
-    this.view.removeChildren().forEach((c) => c.destroy({ children: true }));
+    this.base.removeChildren().forEach((c) => c.destroy({ children: true }));
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
     // below the boss health bar, which spans the top
-    this.column.layout(this.view);
+    this.column.layout(this.base);
     this.xpBar(f);
     const build = (this.build = new BuildBar(this.icons));
     build.view.position.set(f.w / 2, BUILD_Y);
     build.draw(this.slots);
-    this.view.addChild(build.view);
+    this.base.addChild(build.view);
     this.setWave(this.wave);
-    if (!this.down && !this.offer) {
-      const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52, plain: true });
-      pause.position.set(f.w - 90, 300);
-      this.view.addChild(pause, this.fastButton(f));
-    }
+    const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52, plain: true });
+    pause.position.set(f.w - 90, 300);
+    this.buttons = { pause, fast: this.fastButton(f) };
+    this.base.addChild(pause, this.buttons.fast);
+    this.drawOverlay(f);
+  }
+
+  /** The hint, banner and panels over the HUD; the pause and fast buttons hide under a panel. */
+  private drawOverlay(f: UiFrame): void {
+    this.overlay.removeChildren().forEach((c) => c.destroy({ children: true }));
+    if (this.buttons) this.buttons.pause.visible = this.buttons.fast.visible = !this.down && !this.offer;
     this.hint = null;
     if (this.tutorial !== 'done' && !this.paused && !this.down && !this.offer) this.drawTutorial(f);
     this.bannerView = null;
@@ -147,14 +158,14 @@ export class RunHud implements Screen {
     if (this.offer) {
       this.cards = cardPanel(f, this.offerTitle, this.offer, this.icons, (i) => this.pickCard(i), this.keys ? this.cardFocus : null, this.cardNudge);
       this.cards.update(this.offerAge);
-      this.view.addChild(this.cards.view);
+      this.overlay.addChild(this.cards.view);
     }
     if (this.paused) this.pausePanel(f);
     this.downSpinner = null;
     if (this.down) {
       const panel = downPanel(f, this.down, this.downInfo, this.wave, { revive: () => void this.playRevive(), giveUp: () => this.actions.giveUp() }, this.icons, this.keys);
       this.downSpinner = panel.spinner;
-      this.view.addChild(panel.view);
+      this.overlay.addChild(panel.view);
     }
   }
 
@@ -204,7 +215,11 @@ export class RunHud implements Screen {
   setFast(fast: boolean): void {
     this.fast = fast;
     this.actions.setFast(fast);
-    this.relayout();
+    if (!this.frame || !this.buttons || this.view.destroyed) return;
+    const old = this.buttons.fast;
+    const fresh = (this.buttons.fast = Object.assign(this.fastButton(this.frame), { visible: old.visible }));
+    this.base.addChildAt(fresh, this.base.getChildIndex(old));
+    old.destroy({ children: true });
   }
 
   /** The level and how far the experience is toward the next one, 0..1. */
@@ -246,20 +261,27 @@ export class RunHud implements Screen {
     if (chest) lines.push([t('run.chestEarned'), 64]);
     if (warning) lines.push([warning, 64]);
     const time = Math.max(story ? STORY_TIME : BANNER_TIME, record ? RECORD_BURST.length : 0);
-    this.banner = { lines, story, t: time, record: record && !!cheer, age: 0 };
-    this.relayout();
+    this.showBanner({ lines, story, t: time, record: record && !!cheer, age: 0 });
   }
 
   /** One short line across the middle: a card the first run took for a player still standing. */
   gained(name: string): void {
-    this.banner = { lines: [[t('card.gained', { name }), 72]], story: null, t: BANNER_TIME, record: false, age: 0 };
-    this.relayout();
+    this.showBanner({ lines: [[t('card.gained', { name }), 72]], story: null, t: BANNER_TIME, record: false, age: 0 });
   }
 
   /** A story line alone across the middle (the monk's, once the chapter boss fell). */
   speak(story: StoryLine): void {
-    this.banner = { lines: [], story, t: STORY_TIME, record: false, age: 0 };
-    this.relayout();
+    this.showBanner({ lines: [], story, t: STORY_TIME, record: false, age: 0 });
+  }
+
+  /** Swaps the banner alone, keeping the hint or panels under it. */
+  private showBanner(banner: NonNullable<RunHud['banner']>): void {
+    this.banner = banner;
+    if (!this.frame || this.view.destroyed) return;
+    this.bannerView?.destroy({ children: true });
+    this.bannerView = null;
+    this.burst = null;
+    if (!this.paused && !this.down && !this.offer) this.drawBanner(this.frame);
   }
 
   /** The hero went down: offers a free revive, the rewarded ad (`checking` while the host says whether one can play)
@@ -326,7 +348,7 @@ export class RunHud implements Screen {
   }
 
   private relayout(): void {
-    if (this.frame && !this.view.destroyed) this.layout(this.frame);
+    if (this.frame && !this.view.destroyed) this.drawOverlay(this.frame);
   }
 
   private setPaused(paused: boolean): void {
@@ -363,7 +385,7 @@ export class RunHud implements Screen {
     this.levelText = level;
     this.levelShown = 0;
     bar.addChild(gauge.view, level);
-    this.view.addChild(bar);
+    this.base.addChild(bar);
     this.setXp(this.xp.level, this.xp.share);
   }
 
@@ -400,7 +422,7 @@ export class RunHud implements Screen {
     const hint = (this.hint = tutorialHint(this.tutorial, f.w, this.keys ? this.keysReach : null, this.gatherDir));
     hint.view.position.set(f.w / 2, f.h * (this.tutorial === 'move' || this.tutorial === 'gather' ? 0.78 : 0.88));
     hint.update(this.clock);
-    this.view.addChild(hint.view);
+    this.overlay.addChild(hint.view);
   }
 
   private drawBanner(f: UiFrame): void {
@@ -409,7 +431,7 @@ export class RunHud implements Screen {
     box.position.set(f.w / 2, f.h * 0.36);
     this.burst = burst;
     this.bannerView = box;
-    this.view.addChild(box);
+    this.overlay.addChild(box);
   }
 
   private pausePanel(f: UiFrame): void {
@@ -419,7 +441,7 @@ export class RunHud implements Screen {
       busy: r === 'busy',
       note: r === 'sent' || r === 'failed' ? { text: t(r === 'sent' ? 'report.sent' : 'report.failed'), ok: r === 'sent' } : null,
     } : null;
-    this.view.addChild(pausePanel(f.w, f.h, { keys: this.keys, report, confirming: this.giveUpArmed !== null }, this.actions.switches, {
+    this.overlay.addChild(pausePanel(f.w, f.h, { keys: this.keys, report, confirming: this.giveUpArmed !== null }, this.actions.switches, {
       resume: () => this.setPaused(false),
       languages: () => {
         this.languages = true;
@@ -429,9 +451,9 @@ export class RunHud implements Screen {
       giveUp: () => this.tapGiveUp(),
     }, () => this.relayout()));
     if (this.languages) {
-      this.view.addChild(languagePanel(f.w, f.h, (l) => {
+      this.overlay.addChild(languagePanel(f.w, f.h, (l) => {
         this.languages = false;
-        void this.actions.setLanguage(l).then(() => !this.view.destroyed && this.relayout());
+        void this.actions.setLanguage(l).then(() => this.frame && !this.view.destroyed && this.layout(this.frame));
         this.relayout();
       }, () => {
         this.languages = false;
