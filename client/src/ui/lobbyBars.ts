@@ -161,14 +161,18 @@ export function scenery(f: UiFrame, tex: Texture | null, baked = false): Contain
   const inner = new Container();
   // a stage set, not a second subject: the painting a step greyer and flatter than the figures on it
   const tone = baked ? [] : [toned(STAGE_TONE)];
+  // one filter over the painting and its mirrors: a filter per sprite renders each into its own
+  // pixel-rounded texture, whose soft rims show the background as a line where they meet
+  const pics = new Container();
+  pics.filters = tone;
+  inner.addChild(pics);
   for (const side of stage ? [-1, 0, 1] : [0]) {
     const pic = new Sprite(tex);
     pic.anchor.set(0.5, 1);
     pic.scale.set(side ? -scale : scale, scale);
     // the courtyard's floor meets the tab bar; a taller picture loses sky first
     pic.position.set(f.w / 2 + side * tex.width * scale, f.h - TAB_H);
-    pic.filters = tone;
-    inner.addChild(pic);
+    pics.addChild(pic);
   }
   if (stage) {
     const run = f.w / 2 - tex.width * scale / 2 + WING_REACH;
