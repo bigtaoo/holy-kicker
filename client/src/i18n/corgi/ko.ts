@@ -220,6 +220,8 @@ export const corgiKo: Table<typeof corgiEn> = {
     adInfo: '보석 {jade}개, 장비 {n}개',
     jadeInfo: '행성 {chapter} 장비 {n}개',
     price: '보석 {jade}',
+    copper: '볼트 상자',
+    copperPrice: '볼트 {copper}',
     noJade: '보석이 부족해요',
   },
   patrol: {

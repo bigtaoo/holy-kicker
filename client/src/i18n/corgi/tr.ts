@@ -220,6 +220,8 @@ export const corgiTr: Table<typeof corgiEn> = {
     adInfo: '{jade} elmas ve {n} eşya',
     jadeInfo: '{chapter}. gezegenden {n} eşya',
     price: '{jade} elmas',
+    copper: 'Cıvata sandığı',
+    copperPrice: '{copper} cıvata',
     noJade: 'Elmas yetersiz',
   },
   patrol: {

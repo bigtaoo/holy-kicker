@@ -90,7 +90,8 @@
   "shop": {
     "freeChest": { "copper": 100, "drops": 1 },
     "adChest": { "perDay": 3, "jade": 10, "drops": 1 },
-    "jadeChest": { "jade": 80, "drops": 3 }
+    "jadeChest": { "jade": 80, "drops": 3 },
+    "copperChest": { "perDay": 3, "copper": 500, "drops": 1 }
   },
   "patrol": {
     "capHours": 12,

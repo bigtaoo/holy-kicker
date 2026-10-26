@@ -219,6 +219,8 @@ export const monkId: Table<typeof monkEn> = {
     adInfo: '{jade} giok dan {n} perlengkapan',
     jadeInfo: '{n} perlengkapan dari bab {chapter}',
     price: '{jade} giok',
+    copper: 'Peti tembaga',
+    copperPrice: '{copper} tembaga',
     noJade: 'Giok kurang',
   },
   patrol: {

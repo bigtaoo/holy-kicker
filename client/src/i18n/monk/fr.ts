@@ -219,6 +219,8 @@ export const monkFr: Table<typeof monkEn> = {
     adInfo: '{jade} jade et {n} {n|one:équipement|other:équipements}',
     jadeInfo: '{n} {n|one:équipement|other:équipements} du chapitre {chapter}',
     price: '{jade} jade',
+    copper: 'Coffre de cuivre',
+    copperPrice: '{copper} cuivre',
     noJade: 'Pas assez de jade',
   },
   patrol: {

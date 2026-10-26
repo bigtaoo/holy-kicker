@@ -220,6 +220,8 @@ export const corgiRu: Table<typeof corgiEn> = {
     adInfo: 'Самоцветы: {jade}, вещей: {n}',
     jadeInfo: 'Вещей с планеты {chapter}: {n}',
     price: 'Самоцветы: {jade}',
+    copper: 'Ящик болтов',
+    copperPrice: 'Болты: {copper}',
     noJade: 'Не хватает самоцветов',
   },
   patrol: {

@@ -1,15 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { chestContents } from '../meta/shop';
+import { chestContents, copperChestPrice } from '../meta/shop';
 import { buttonNear, doubleTap, fakeAds, lobbyRig, openTab, reload, tapAt, wallet, words } from '../testkit/lobbyRig';
 import type { ShellRig } from '../testkit/testShell';
 
 const JADE = BALANCE.shop.jadeChest.jade;
 
 /** The Open button of the chest card named `t('shop.<kind>')`. */
-function chest(rig: ShellRig, kind: 'free' | 'ad' | 'jade') {
-  const text = kind === 'jade' ? t('shop.price', { jade: JADE }) : t('shop.open');
+function chest(rig: ShellRig, kind: 'free' | 'ad' | 'jade' | 'copper') {
+  const text = kind === 'jade' ? t('shop.price', { jade: JADE })
+    : kind === 'copper' ? t('shop.copperPrice', { copper: formatAmount(copperChestPrice(rig.store.load())) }) : t('shop.open');
   return buttonNear(rig, text, t(`shop.${kind}`));
 }
 
@@ -72,6 +73,40 @@ describe('the shop, tapped through', { timeout: 30_000 }, () => {
     expect(again.store.load().jade).toBe(30);
     expect(wallet(again).jade).toBe('30');
     expect([...rig.faults, ...again.faults]).toEqual([]);
+  });
+
+  it('sells copper chests for copper up to the day\'s limit, a toast when the copper is short', async () => {
+    const per = BALANCE.shop.copperChest.perDay;
+    const rig = await lobbyRig({ copper: 0 });
+    const price = copperChestPrice(rig.store.load());
+    rig.store.save({ ...rig.store.load(), copper: price * per + price - 1 });
+    const fresh = await reload(rig);
+    await openTab(fresh, 'shop');
+    expect(words(fresh)).toContain(t('shop.left', { n: per }));
+    const before = pieces(fresh);
+    for (let i = 0; i < per - 1; i++) {
+      await doubleTap(fresh, chest(fresh, 'copper'));
+      await takeHaul(fresh);
+    }
+    expect(fresh.store.load().copper).toBe(price * 2 - 1);
+    expect(words(fresh)).toContain(t('shop.left', { n: 1 }));
+    // one more than the copper buys: the last chest of the day waits, the copper stays put
+    rig.store.save({ ...fresh.store.load(), copper: price - 1 });
+    const short = await reload(fresh);
+    await openTab(short, 'shop');
+    tapAt(short.app.stage, chest(short, 'copper'));
+    await short.tick(2);
+    expect(words(short)).toContain(t('gear.noCopper'));
+    expect(short.store.load().copper).toBe(price - 1);
+    short.store.save({ ...short.store.load(), copper: price });
+    const last = await reload(short);
+    await openTab(last, 'shop');
+    tapAt(last.app.stage, chest(last, 'copper'));
+    await takeHaul(last);
+    expect(last.store.load()).toMatchObject({ copper: 0, daily: { copperChests: per } });
+    expect(pieces(last)).toBe(before + per * BALANCE.shop.copperChest.drops);
+    expect(words(last)).toContain(t('shop.tomorrow'));
+    expect([...rig.faults, ...fresh.faults, ...short.faults, ...last.faults]).toEqual([]);
   });
 
   it('pays the ad chest only for an ad watched to the end, one ad per double tap', async () => {

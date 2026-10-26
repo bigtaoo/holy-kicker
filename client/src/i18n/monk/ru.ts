@@ -219,6 +219,8 @@ export const monkRu: Table<typeof monkEn> = {
     adInfo: 'Нефрит: {jade}, вещей: {n}',
     jadeInfo: 'Вещей из главы {chapter}: {n}',
     price: 'Нефрит: {jade}',
+    copper: 'Медный сундук',
+    copperPrice: 'Медь: {copper}',
     noJade: 'Не хватает нефрита',
   },
   patrol: {

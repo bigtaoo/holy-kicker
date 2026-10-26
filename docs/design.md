@@ -364,7 +364,7 @@ Two currencies only:
 
 | Currency | Sources | Sinks |
 |---|---|---|
-| **Copper** | Run results (main), progress chests, daily tasks, patrol (small) | Gear merges, training |
+| **Copper** | Run results (main), progress chests, daily tasks, patrol (small) | Gear merges, training, copper chests |
 | **Jade** (premium) | Achievements, progress chests, daily tasks, ads | Chests, patrol speed-up |
 
 **Copper is deliberately scarce, so players replay cleared chapters.**
@@ -379,13 +379,21 @@ Two currencies only:
 - Patrol gives mostly gear and only a little copper (*tune*: 5 % of a full clear of the highest
   cleared chapter per hour, one item per 6 h, 12 h cap).
 - Rewarded ad on results doubles copper; this is the main ad placement.
+- **Copper chests** (shop, `balance.json` `shop.copperChest`): 3 a day, each one piece of gear
+  from the highest cleared chapter for 500 × the chapter multiplier, what a full clear of that
+  chapter pays. Training is gated by level (node n needs level n), not by copper, so in the
+  first ~10 days copper piled up with nothing to buy (5–14k idle at the end of each journey
+  day); the chests turn it into merge stock. Later, merges want all the copper and the chests
+  compete with them, the player's call. Measured (2026-10-26, casual journey, seed 1): chapter 20
+  falls on day 65 (66 without the chests) and the copper on hand at the end drops from ~11.6k
+  to ~3.4k; single chapters move a few days either way, within the bot's noise.
 
 ## Retention
 
 - **Patrol:** idle income, 12 h cap, scaled by the highest cleared chapter. Ad doubles it or
   grants 2 h instantly.
 - 3–5 daily tasks (e.g. "kill 1000 mobs").
-- One free chest per day.
+- One free chest per day, and three copper chests (see "Economy").
 - Achievements (also the sutra source). Implemented as a second page of the tasks panel
   (`client/src/meta/achievements.ts`, goals in `balance.json` `achievements`): 27 long-term
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
@@ -750,7 +758,8 @@ running to deep orange, its word outlined, a glint sweeping across it every few 
   courtyard: the monk stands on it among his gear, a stage like Play, with no dark panels.
 - The Shop tab's cards share the room down to the tab bar: how many there are depends on the
   host (no ad chest without an ad, the ad-free card only on iOS), so with fewer cards each one
-  grows (290 up to 400 tall, a bigger chest) instead of leaving a bare floor. Under them a line
+  grows (290 up to 420 tall, a bigger chest) instead of leaving a bare floor; iOS's five on a
+  short 9:16 phone close the gaps and shrink to 260, dropping the refill line below. Under them a line
   counts down to the local midnight when the daily chests refill (`untilNextDay`), the thing a
   player who has used them up wants to know.
 - A lobby toast (a locked tab's reason, a copied id) is a dark pill over the tab bar, so it reads
@@ -855,7 +864,8 @@ first elite or the mid-boss or else won, so luck set the pace. The levers now:
   chapter adds +3 % attack and +4 % health there, up to 20 times; clearing it starts over. It
   turns a long run of bad luck into a few more tries and is the main pacing lever for the last
   chapters (at +4/+6 the ads player cleared chapter 5 on days 5–7).
-- The lobby's gear: one patrol item per 6 h, 1 item per ad chest, the jade chest 80 jade for 3.
+- The lobby's gear: one patrol item per 6 h, 1 item per ad chest, 1 per copper chest (3 a day),
+  the jade chest 80 jade for 3.
 
 **Hard mode measured** (2026-10-05, ENGINE_VERSION 30, the same journeys run on through hard
 mode, 60 days; 6 seeds). Day the hard chapter is cleared, median (range):
