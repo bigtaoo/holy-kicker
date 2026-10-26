@@ -75,6 +75,18 @@ few kinds, so it reads at thumbnail size. Only the landscape cover, shown big on
 carries the logo: on the small grid thumbnails it would be unreadable and cover the horde, and the
 portal prints the title beside them.
 
+The corgi's first Playgama covers (`art/reskin/corgi/store/playgama_*.png`) were mascot posters,
+a big corgi face and no gameplay. Since 2026-10-26 ~07:57 UTC its Playgama app carries
+`draft_{landscape,portrait,square}.png` instead: a high top-down view with the corgi in the middle
+(about 40 % of the short side) and a ring of red-eyed bugs closing in, bolts fanning out to the
+front rank, bursts, gems and damage numbers. They are a sprite collage again
+(`tools/cover_corgi_horde.py`), but brighter and with fewer kinds of bugs than the monk's grey
+one; only the landscape was repainted by `tools/edit_image.sh`, because repainting the others
+thinned the ring and lost the gems. `tools/cover_corgi_bust.py` makes the unused variant B, the
+mobile-ad layout with a small battle and a big corgi bust in a corner. `draft_compare.png` puts all
+three sets side by side at full and grid-tile size. The sandbox has no cover A/B test, so the
+only comparison is the traffic before and after the swap.
+
 ## Video
 
 CrazyGames' rules ([game covers](https://docs.crazygames.com/requirements/game-covers/), checked
