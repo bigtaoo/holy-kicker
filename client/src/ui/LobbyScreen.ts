@@ -16,12 +16,12 @@ import { EconomyUi, type LobbyTrack } from './lobbyEconomy';
 import type { PatrolLook } from './economyPanels';
 import { gearDetail, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
-import { hintArrow, menuBackdrop, scenery, TAB_H, TOP_H, tabBar, topBar } from './lobbyBars';
+import { hintArrow, menuBackdrop, scenery, tabBar, topBar } from './lobbyBars';
 import { hintTab, nextStep } from './lobbyHint';
-import { RAIL_R, RAIL_STEP } from './lobbyRail';
+import { figureFeet, isWide, PLAY_H, PLAY_W, playSpots, playY, TAB_H, TOP_H } from './lobbyLayout';
 import { LobbyDrift, LobbyFigure } from './lobbyStage';
 import { playButton, type PlayButton } from './lobbyPlay';
-import { RELIC_ROW_H, relicRow } from './playCard';
+import { relicRow } from './playCard';
 import { monkPanel } from './monkPanel';
 import type { PlayerName } from './playerName';
 import { settingsPanel, type SettingsActions } from './settingsPanel';
@@ -63,20 +63,12 @@ export interface LobbyActions {
   track: LobbyTrack;
 }
 
-/** PLAY's size, and the rail buttons' distance from the screen's sides. */
 /** The gap between the top bar and a menu tab's title. */
 const MENU_TOP = 40;
-const PLAY_W = 820;
-const PLAY_H = 210;
-const RAIL_X = 130;
-/** The monk's height on the Play tab when the chapter card leaves room for it. */
+/** The monk's height on the Gear tab before the Play tab has drawn him. */
 const FIGURE_H = 440;
 /** A Train tap this soon after a node was bought is the same thumb's second tap. */
 const TRAIN_GAP_MS = 400;
-
-/** PLAY's centre on a frame `h` tall, over the tab bar; the monk's feet over the relic row above it (on Gear too). */
-const playY = (h: number) => h - TAB_H - 50 - PLAY_H / 2;
-const figureFeet = (h: number) => playY(h) - PLAY_H / 2 - 20 - RELIC_ROW_H - 5;
 
 function lockText(lock: Lock): string {
   if (lock.kind === 'firstRun') return t('tab.unlockFirstRun');
@@ -353,16 +345,18 @@ export class LobbyScreen implements Screen {
    * focus and dark behind the panels of Shop, Train and Codex (baked on first use).
    */
   private scenery(f: UiFrame): Container {
-    if (this.tab === 'play' || this.tab === 'gear' || !this.backdrop) return scenery(f, this.backdrop);
-    this.menuBack ??= menuBackdrop(this.renderer, this.backdrop);
-    return scenery(f, this.menuBack, true);
+    if (!this.backdrop) return scenery(f, null);
+    const day = this.tab === 'play' || this.tab === 'gear';
+    if (!day) this.menuBack = menuBackdrop(this.renderer, this.backdrop, isWide(f.w, f.h));
+    return day ? scenery(f, this.backdrop) : scenery(f, this.menuBack, true);
   }
 
   private gearTab(w: number, h: number, top: number): void {
     // the chosen monk stands among his gear: the Play tab's figure, updated and swapped like it
     const look = this.patrolLook();
     this.figureRig = look.rig;
-    this.figure = new LobbyFigure(look.rig, this.figureH);
+    // a landscape Play tab's monk stands taller than the gear around him leaves room for
+    this.figure = new LobbyFigure(look.rig, Math.min(this.figureH, FIGURE_H));
     const stand = { hero: this.figure.view, feet: figureFeet(h) - top, button: playY(h) - top };
     const tab = gearTab(this.save, this.icons, this.gearActions(), h - TAB_H - top, stand);
     tab.position.set(w / 2, top);
@@ -422,46 +416,38 @@ export class LobbyScreen implements Screen {
       toast: (text) => this.showToast(text),
     };
     const switched = hasTrackSwitch(this.save);
+    const card = chapterCard(deps, n, open);
+    const at = playSpots(w, h, card.height, switched);
     if (switched) {
       const sw = trackSwitch(deps);
-      sw.position.set(w / 2, TOP_H + 75);
+      sw.position.set(at.trackSwitch.x, at.trackSwitch.y);
       this.view.addChild(sw);
     }
-    const card = chapterCard(deps, n, open);
-    const cardTop = TOP_H + 30 + (switched ? 110 : 0);
-    const cardBottom = cardTop + card.height;
-    card.position.set(w / 2, cardTop);
+    card.position.set(at.card.x, at.card.y);
     this.view.addChild(card);
 
     // PLAY, the one loud button, stands over the tab bar; the relic row and the monk above it
-    const feet = figureFeet(h);
     const look = this.patrolLook();
     this.figureRig = look.rig;
-    this.figureH = Math.max(160, Math.min(FIGURE_H, feet - cardBottom - 60));
+    this.figureH = at.figureH;
     this.figure = new LobbyFigure(look.rig, this.figureH);
-    this.figure.view.position.set(w / 2, feet);
+    this.figure.view.position.set(at.feet.x, at.feet.y);
     const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id));
-    relics.position.set(w / 2, feet + 5);
+    relics.position.set(at.feet.x, at.feet.y + 5);
     this.view.addChild(this.figure.view, relics);
     if (open) {
       this.play = playButton(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n));
-      this.play.view.position.set(w / 2, playY(h));
+      this.play.view.position.set(at.play.x, at.play.y);
       this.play.view.label = 'play'; // tests tell it from the Play tab, which reads the same in Chinese
       this.view.addChild(spot('play', this.play.view));
     }
 
-    // the side things on two rails beside the monk: Patrol and Tasks left, the challenge and the gift right
-    const railY = cardBottom + 50 + RAIL_R;
-    const rails: [number, (Container | null)[]][] = [
-      [RAIL_X, [this.econ.patrolRail(), this.econ.tasksRail()]],
-      [w - RAIL_X, [open ? this.challenge.rail() : null, this.econ.giftRail()]],
-    ];
-    for (const [x, items] of rails) {
-      items.filter((c): c is Container => c !== null).forEach((c, i) => {
-        c.position.set(x, railY + i * RAIL_STEP);
-        this.view.addChild(c);
-      });
-    }
+    // the side things on two rails: Patrol and Tasks, then the challenge and the gift
+    const rails = [[this.econ.patrolRail(), this.econ.tasksRail()], [open ? this.challenge.rail() : null, this.econ.giftRail()]];
+    rails.forEach((items, r) => items.filter((c): c is Container => c !== null).forEach((c, i) => {
+      c.position.set(at.rails[r][i].x, at.rails[r][i].y);
+      this.view.addChild(c);
+    }));
   }
 
   private codexTab(w: number, h: number, top: number): void {

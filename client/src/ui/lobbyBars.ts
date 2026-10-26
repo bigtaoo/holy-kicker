@@ -7,14 +7,14 @@ import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
 import { anyChestWaiting } from '../meta/progressChests';
 import { canTrain } from '../meta/waiting';
 import { shopWaiting } from './lobbyEconomy';
+import { isWide, TAB_H, tabCells, TOP_H } from './lobbyLayout';
 import type { UiFrame } from './uiLayout';
 import { COLORS, button, dot, fit, label, shade } from './widgets';
 
 // The lobby's frame around its tabs: the painted courtyard behind everything, the top bar (the
 // monk's portrait, name and level, the currencies, settings) and the bottom tab bar.
 
-export const TOP_H = 150;
-export const TAB_H = 190;
+export { TAB_H, TOP_H };
 /** How far the bars reach past the frame, over the safe-area bands (more than any inset). */
 const BLEED = 800;
 
@@ -41,35 +41,48 @@ function toned(k: typeof STAGE_TONE): ColorMatrixFilter {
   return tone;
 }
 
-/** The last baked menu courtyard and the painting it came from: it outlives the painting, which a run frees. */
-let baked: { from: Texture; out: Texture } | null = null;
+/** The last baked menu courtyards, portrait and landscape, and the painting each came from: they outlive the painting, which a run frees. */
+const baked: [{ from: Texture; out: Texture } | null, { from: Texture; out: Texture } | null] = [null, null];
 
 /**
  * The courtyard for the menu tabs, baked once: a blur every frame would cost a low-end phone its
  * frame rate. Kept (at half resolution, which a blur loses nothing to) after the painting is
  * freed for a run, so the screens around the run sit on it too; `tex` null gives that last bake.
+ * `wide` bakes it for a landscape frame: the painting with its mirror image on either side, so the
+ * blur runs on across the width and the dark rim lands on the frame's edges, not the painting's.
  */
-export function menuBackdrop(renderer: Renderer, tex: Texture): Texture;
-export function menuBackdrop(renderer: Renderer, tex: Texture | null): Texture | null;
-export function menuBackdrop(renderer: Renderer, tex: Texture | null): Texture | null {
-  if (!tex || tex === baked?.from) return baked?.out ?? null;
+export function menuBackdrop(renderer: Renderer, tex: Texture, wide?: boolean): Texture;
+export function menuBackdrop(renderer: Renderer, tex: Texture | null, wide?: boolean): Texture | null;
+export function menuBackdrop(renderer: Renderer, tex: Texture | null, wide = false): Texture | null {
+  const slot = wide ? 1 : 0;
+  const last = baked[slot];
+  if (!tex || tex === last?.from) return last?.out ?? null;
+  const panels = wide ? [-1, 0, 1] : [0];
+  const w = tex.width * panels.length;
   const scene = new Container();
-  const pic = new Sprite(tex);
+  const pics = new Container();
+  for (const side of panels) {
+    const pic = new Sprite(tex);
+    pic.anchor.set(0.5, 0);
+    pic.scale.x = side ? -1 : 1;
+    pic.x = w / 2 + side * tex.width;
+    pics.addChild(pic);
+  }
   const blur = new BlurFilter({ strength: MENU_TONE.blur, quality: 3 });
   blur.repeatEdgePixels = true;
-  pic.filters = [blur, toned(MENU_TONE)];
+  pics.filters = [blur, toned(MENU_TONE)];
   const rim = new FillGradient({
     type: 'radial', center: { x: 0.5, y: 0.45 }, innerRadius: 0, outerCenter: { x: 0.5, y: 0.45 }, outerRadius: 0.75,
     colorStops: [{ offset: 0, color: 'rgba(0,0,0,0)' }, { offset: 0.55, color: 'rgba(0,0,0,0)' }, { offset: 1, color: `rgba(0,0,0,${MENU_RIM})` }],
     textureSpace: 'local',
   });
-  scene.addChild(pic, new Graphics().rect(0, 0, tex.width, tex.height).fill({ color: COLORS.bg, alpha: MENU_VEIL })
-    .rect(0, 0, tex.width, tex.height).fill(rim));
-  const out = renderer.generateTexture({ target: scene, frame: new Rectangle(0, 0, tex.width, tex.height), resolution: 0.5 });
+  scene.addChild(pics, new Graphics().rect(0, 0, w, tex.height).fill({ color: COLORS.bg, alpha: MENU_VEIL })
+    .rect(0, 0, w, tex.height).fill(rim));
+  const out = renderer.generateTexture({ target: scene, frame: new Rectangle(0, 0, w, tex.height), resolution: 0.5 });
   scene.destroy({ children: true });
   rim.destroy();
-  baked?.out.destroy(true);
-  baked = { from: tex, out };
+  last?.out.destroy(true);
+  baked[slot] = { from: tex, out };
   return out;
 }
 
@@ -92,24 +105,66 @@ export function menuCover(f: UiFrame, tex: Texture | null): Container {
   return c;
 }
 
+/** How wide the daylight courtyard stands in a landscape lobby, and the veil over its mirrored wings. */
+const STAGE_W = 1500;
+const WING_VEIL = 0.55;
+/** How far into the stage the veil thins out, so its edges are not a seam of their own. */
+const WING_FADE = 240;
+
+/** The veil's fade at the stage's left (-1) and right (1) edge; made once and kept. */
+const fades = new Map<number, FillGradient>();
+function wingFade(dir: number): FillGradient {
+  let g = fades.get(dir);
+  if (!g) {
+    const veil = (offset: number) => ({ offset, color: COLORS.bg });
+    const clear = (offset: number) => ({ offset, color: 'rgba(0,0,0,0)' });
+    g = new FillGradient({
+      type: 'linear', start: { x: 0, y: 0 }, end: { x: 1, y: 0 },
+      colorStops: dir < 0 ? [veil(0), clear(1)] : [clear(0), veil(1)],
+      textureSpace: 'local',
+    });
+    fades.set(dir, g);
+  }
+  return g;
+}
+
 /**
  * The painted courtyard in daylight, covering the frame between the bars; `baked` for the menu
- * tabs' picture (menuBackdrop), which is toned already.
+ * tabs' picture (menuBackdrop), which is toned already. The painting is portrait: a landscape
+ * frame shows it as a stage in the middle, with the painting mirrored past both its edges, under a
+ * veil of the background, so the courtyard runs on without a seam but the stage stays the subject.
  */
 export function scenery(f: UiFrame, tex: Texture | null, baked = false): Container {
   const c = new Container();
   if (!tex) return c;
   const room = f.h - TOP_H - TAB_H;
-  const pic = new Sprite(tex);
-  pic.anchor.set(0.5, 1);
-  pic.scale.set(Math.max(f.w / tex.width, room / tex.height));
-  // the courtyard's floor meets the tab bar; a taller picture loses sky first
-  pic.position.set(f.w / 2, f.h - TAB_H);
+  const stage = isWide(f.w, f.h) && !baked;
+  const w = stage ? STAGE_W : f.w;
+  const scale = Math.max(w / tex.width, room / tex.height);
+  const inner = new Container();
   // a stage set, not a second subject: the painting a step greyer and flatter than the figures on it
-  if (!baked) pic.filters = [toned(STAGE_TONE)];
+  const tone = baked ? [] : [toned(STAGE_TONE)];
+  for (const side of stage ? [-1, 0, 1] : [0]) {
+    const pic = new Sprite(tex);
+    pic.anchor.set(0.5, 1);
+    pic.scale.set(side ? -scale : scale, scale);
+    // the courtyard's floor meets the tab bar; a taller picture loses sky first
+    pic.position.set(f.w / 2 + side * tex.width * scale, f.h - TAB_H);
+    pic.filters = tone;
+    inner.addChild(pic);
+  }
+  if (stage) {
+    const half = tex.width * scale / 2;
+    inner.addChild(new Graphics().rect(0, TOP_H, f.w / 2 - half, room).rect(f.w / 2 + half, TOP_H, f.w / 2 - half, room)
+      .fill({ color: COLORS.bg, alpha: WING_VEIL }));
+    for (const dir of [-1, 1]) {
+      const x = dir < 0 ? f.w / 2 - half : f.w / 2 + half - WING_FADE;
+      inner.addChild(new Graphics().rect(x, TOP_H, WING_FADE, room).fill({ fill: wingFade(dir), alpha: WING_VEIL }));
+    }
+  }
   const mask = new Graphics().rect(0, TOP_H, f.w, room).fill(0xffffff);
-  pic.mask = mask;
-  c.addChild(pic, mask);
+  inner.mask = mask;
+  c.addChild(inner, mask);
   return c;
 }
 
@@ -204,13 +259,13 @@ export interface TabBarActions {
  */
 export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons: IconSheet, a: TabBarActions, hint: Tab | null = null): Container {
   const c = new Container();
-  const tw = w / TABS.length;
+  const { x0, tw } = tabCells(w, h, TABS.length);
   c.addChild(bar(w, h - TAB_H, TAB_H + BLEED, h - TAB_H + 3, true));
   TABS.forEach((tab, i) => {
     const lock = tabLock(save, tab);
     const active = tab === current;
     const cell = new Container();
-    cell.position.set(tw * (i + 0.5), h - TAB_H / 2 + 4);
+    cell.position.set(x0 + tw * i, h - TAB_H / 2 + 4);
     if (active) {
       cell.addChild(new Graphics()
         .roundRect(-tw / 2 + 8, -TAB_H / 2 + 6, tw - 16, TAB_H - 20, 26).fill(shade(COLORS.saffron, -0.35)).stroke({ color: COLORS.outline, width: 6 })
@@ -249,7 +304,8 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
 /** A saffron arrow over `tab`'s cell, pointing down at it; the lobby bobs it by its pivot. */
 export function hintArrow(w: number, h: number, tab: Tab): Container {
   const c = new Container();
-  c.position.set((w / TABS.length) * (TABS.indexOf(tab) + 0.5), h - TAB_H + 15);
+  const { x0, tw } = tabCells(w, h, TABS.length);
+  c.position.set(x0 + tw * TABS.indexOf(tab), h - TAB_H + 15);
   c.addChild(new Graphics()
     .poly([-24, -95, 24, -95, 24, -50, 52, -50, 0, 5, -52, -50, -24, -50]).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 7 }));
   c.eventMode = 'none';

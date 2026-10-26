@@ -4,7 +4,7 @@ import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
 import type { SceneOptions } from '../game/scene';
-import { computeViewport, wantsUpright } from '../game/viewport';
+import { computeViewport, wantsUpright, wideScreen } from '../game/viewport';
 import { setupOf } from '../game/runSetup';
 import { BALANCE } from '../meta/balance';
 import { EXPERIMENTS, enroll, experimentTag, forcedArms } from '../meta/experiments';
@@ -421,8 +421,9 @@ export class Shell {
       this.screenKey = key;
       const insets = this.platform.safeInsets();
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
-      // a landscape run's HUD (and a landscape recording's) lays out in its wide frame
-      const wide = this.scene.record > 0 || this.runs.game?.engine.state.config.wide === true;
+      // a landscape run's HUD (and a landscape recording's) lays out in its wide frame, and so does the lobby on a screen that would play one
+      const wide = this.scene.record > 0 || this.runs.game?.engine.state.config.wide === true
+        || (this.screen instanceof LobbyScreen && wideScreen(width, height, this.platform.sideways === true));
       this.screen.layout(uiFrame(computeViewport(width, height, wide), insets));
     }
     this.updates?.update(this.screen instanceof LobbyScreen && this.screen.idle, key, () => uiFrame(computeViewport(width, height), this.platform.safeInsets()));

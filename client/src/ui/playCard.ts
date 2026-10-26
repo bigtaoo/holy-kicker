@@ -25,9 +25,6 @@ export const CARD = THEME === 'corgi'
 export const BADGE = THEME === 'corgi' ? { fill: 0xe6edf1, off: 0xb4bec6 } : { fill: CARD.fill, off: 0xc4b496 };
 /** The outline that keeps a light word readable on the light card. */
 export const CARD_STROKE = { stroke: { color: COLORS.outline, width: 10 } };
-/** The relic row's height: its name over the badges. */
-export const RELIC_ROW_H = 250;
-
 /**
  * The relic for the next run, top at 0: its name, then one badge per relic the player has.
  */
