@@ -9,6 +9,7 @@ import { downPanel, type Down } from './downPanel';
 import { spin } from './spinner';
 import { languagePanel } from './languagePanel';
 import { HudColumn } from './hudColumn';
+import { hudRows } from './hudLayout';
 import { GIVE_UP_WAIT, pausePanel, type PauseSwitches } from './pausePanel';
 import type { CardText } from './cardText';
 import type { StoryLine } from './story';
@@ -125,7 +126,8 @@ export class RunHud implements Screen {
     this.view.position.set(f.x, f.y);
     this.view.scale.set(f.scale);
     // below the boss health bar, which spans the top
-    this.column.layout(this.view);
+    const rows = hudRows(f);
+    this.column.layout(this.view, rows.waveY);
     this.xpBar(f);
     const build = (this.build = new BuildBar(this.icons));
     build.view.position.set(f.w / 2, BUILD_Y);
@@ -134,8 +136,8 @@ export class RunHud implements Screen {
     this.setWave(this.wave);
     if (!this.down && !this.offer) {
       const pause = button('II', 120, 120, () => this.setPaused(true), { fill: COLORS.panel, size: 52, plain: true });
-      pause.position.set(f.w - 90, 300);
-      this.view.addChild(pause, this.fastButton(f));
+      pause.position.set(f.w - 90, rows.buttonsY);
+      this.view.addChild(pause, this.fastButton(f, rows.buttonsY));
     }
     this.hint = null;
     if (this.tutorial !== 'done' && !this.paused && !this.down && !this.offer) this.drawTutorial(f);
@@ -340,13 +342,13 @@ export class RunHud implements Screen {
   }
 
   /** The fast-forward toggle left of the pause button: two arrows, lit while the run plays fast. */
-  private fastButton(f: UiFrame): Container {
+  private fastButton(f: UiFrame, y: number): Container {
     const b = button('', 120, 120, () => this.setFast(!this.fast), { fill: this.fast ? COLORS.saffron : COLORS.panel });
     const ink = this.fast ? COLORS.outline : COLORS.text;
     const arrows = new Graphics();
     for (const x of [-26, 4]) arrows.poly([x, -24, x + 30, 0, x, 24]).fill(ink);
     b.addChild(arrows);
-    b.position.set(f.w - 230, 300);
+    b.position.set(f.w - 230, y);
     b.label = 'fast';
     return b;
   }

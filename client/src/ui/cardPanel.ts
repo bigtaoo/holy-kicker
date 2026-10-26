@@ -6,13 +6,14 @@ import { cardHand } from './cardHand';
 import { CARD_NUDGE, keyWakes, moveWakes, nudgeOn } from './cardNudge';
 import { cardPose, cardsSettled, rimPoints } from './cardGate';
 import { cardKey } from './cardKeys';
+import { cardSpots, isWideFrame } from './hudLayout';
 import { spot } from './spots';
 import type { CardText } from './cardText';
 import type { UiFrame } from './uiLayout';
 import { COLORS, backdrop, fit, label, panel } from './widgets';
 
 // The level-up or shrine choice: three large cards stacked down the middle of the portrait screen, one
-// thumb tap each. Each card shows the item's icon on a disc in its kind's colour (with what it
+// thumb tap each, or side by side across a landscape run's frame (hudLayout.ts). Each card shows the item's icon on a disc in its kind's colour (with what it
 // evolves with small on the corner), the name, "New!" or the level step, and its effect lines.
 // Shrine blessings have no item and keep a drawn shape. The cards rise in grey and only take taps
 // once a gold line has run round their rims (cardGate.ts). On a desktop the keys pick too
@@ -211,14 +212,15 @@ export function cardPanel(
   view.addChild(backdrop(f.w, f.h, 0.7));
   // one height for all the cards: the tallest effect lines, within what the screen leaves
   const blocks = texts.map(effectLines);
-  const roomH = Math.floor((f.h - CARDS_TOP - 60 - (texts.length - 1) * GAP) / Math.max(1, texts.length));
+  const row = isWideFrame(f);
+  const roomH = row ? f.h - CARDS_TOP - 60 : Math.floor((f.h - CARDS_TOP - 60 - (texts.length - 1) * GAP) / Math.max(1, texts.length));
   const want = Math.max(CARD_H, ...blocks.map((b) => LINES_TOP + b.h + LINES_BOTTOM));
   const cardH = Math.max(CARD_H, Math.min(want, roomH));
   for (const b of blocks) {
     const fitsIn = cardH - LINES_TOP - LINES_BOTTOM;
     if (b.h > fitsIn) b.block.scale.set(Math.max(40 / 48, fitsIn / b.h));
   }
-  const total = texts.length * cardH + (texts.length - 1) * GAP;
+  const total = row ? cardH : texts.length * cardH + (texts.length - 1) * GAP;
   // the heading stays below the wave counter (RunHud, y 300) however tall the cards grow
   const top = Math.max(CARDS_TOP, f.h / 2 - total / 2 + 60);
   const heading = label(title, 96, COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } });
@@ -229,6 +231,7 @@ export function cardPanel(
   view.addChild(heading, hint);
   let locked = true;
   if (keys && keys.focus >= texts.length) keys.focus = 0;
+  const spots = cardSpots(f, texts.length, CARD_W, cardH, GAP, top);
   const cards = texts.map((text, i) => {
     const body = card(text, blocks[i].block, cardH, icons, () => onPick(i), () => locked);
     const rim = new Graphics();
@@ -254,13 +257,13 @@ export function cardPanel(
     }
     if (nudge?.tagged && nudge.suggest === i) body.addChild(suggestTag(cardH));
     view.addChild(c);
-    return { c, body, rim, ring, y: top + cardH / 2 + i * (cardH + GAP) };
+    return { c, body, rim, ring, ...spots[i] };
   });
   const showFocus = () => cards.forEach(({ ring }, i) => (ring.visible = !!keys && !locked && keys.focus === i));
   const hand = nudge && cards[nudge.suggest] ? cardHand() : null;
   if (hand && nudge) {
     // the fingertip rests on the card's lower left, by the icon, clear of the name and the level step
-    hand.view.position.set(f.w / 2 + HAND_X, cards[nudge.suggest].y + HAND_DOWN);
+    hand.view.position.set(cards[nudge.suggest].x + HAND_X, cards[nudge.suggest].y + HAND_DOWN);
     hand.view.visible = false;
     view.addChild(hand.view);
     view.on('pointerdown', () => (nudge.touched = true));
@@ -284,10 +287,10 @@ export function cardPanel(
     }
     if (settled) return;
     settled = cardsSettled(age);
-    cards.forEach(({ c, body, rim, y }, i) => {
+    cards.forEach(({ c, body, rim, x, y }, i) => {
       const pose = cardPose(age, i);
       locked = pose.locked;
-      c.position.set(f.w / 2, y + pose.y);
+      c.position.set(x, y + pose.y);
       c.alpha = pose.alpha;
       c.scale.set(pose.scale);
       body.tint = pose.locked ? LOCKED_TINT : 0xffffff;

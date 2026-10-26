@@ -9,6 +9,13 @@ describe('card keys', () => {
     expect(cardKey('KeyW', false, 1, 3)).toEqual({ focus: 0 });
   });
 
+  it('moves it left and right along a landscape row', () => {
+    expect(cardKey('ArrowRight', false, 0, 3)).toEqual({ focus: 1 });
+    expect(cardKey('KeyD', false, 2, 3)).toEqual({ focus: 0 });
+    expect(cardKey('ArrowLeft', false, 0, 3)).toEqual({ focus: 2 });
+    expect(cardKey('KeyA', false, 1, 3)).toEqual({ focus: 0 });
+  });
+
   it('takes the highlighted card on Enter or Space, and a card by its number', () => {
     expect(cardKey('Enter', false, 1, 3)).toEqual({ pick: 1 });
     expect(cardKey('Space', false, 2, 3)).toEqual({ pick: 2 });
@@ -20,6 +27,6 @@ describe('card keys', () => {
   it('ignores key repeats and other keys', () => {
     expect(cardKey('ArrowDown', true, 0, 3)).toBeNull();
     expect(cardKey('Enter', true, 0, 3)).toBeNull();
-    expect(cardKey('KeyA', false, 0, 3)).toBeNull();
+    expect(cardKey('KeyQ', false, 0, 3)).toBeNull();
   });
 });

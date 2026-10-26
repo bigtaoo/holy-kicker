@@ -421,7 +421,9 @@ export class Shell {
       this.screenKey = key;
       const insets = this.platform.safeInsets();
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
-      this.screen.layout(uiFrame(computeViewport(width, height, this.scene.record > 0), insets));
+      // a landscape run's HUD (and a landscape recording's) lays out in its wide frame
+      const wide = this.scene.record > 0 || this.runs.game?.engine.state.config.wide === true;
+      this.screen.layout(uiFrame(computeViewport(width, height, wide), insets));
     }
     this.updates?.update(this.screen instanceof LobbyScreen && this.screen.idle, key, () => uiFrame(computeViewport(width, height), this.platform.safeInsets()));
     this.coverSideways(width, height, key);

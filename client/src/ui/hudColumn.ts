@@ -4,9 +4,8 @@ import { clockSecs, shownSecond } from './clearTime';
 import { COLORS, label } from './widgets';
 
 const STROKE = { stroke: { color: COLORS.outline, width: 8 } };
-/** The wave counter's height, and the step between the dim lines stacked under it. */
-const WAVE_Y = 300;
-const FIRST_Y = 370;
+/** The first dim line under the wave counter, and the step between the lines stacked under it. */
+const FIRST_DOWN = 70;
 const STEP = 60;
 
 /**
@@ -28,6 +27,8 @@ export class HudColumn {
   /** The wave of the next chest this run can earn (0 for none). */
   private nextChest = 0;
   private goalText: Text | null = null;
+  /** The wave counter's row (hudLayout.ts). */
+  private top = 0;
 
   constructor(
     private readonly total: number,
@@ -35,10 +36,11 @@ export class HudColumn {
     private readonly hard: boolean,
   ) {}
 
-  /** New labels into a freshly cleared HUD view. */
-  layout(view: Container): void {
+  /** New labels into a freshly cleared HUD view, the wave counter on row `top`. */
+  layout(view: Container, top: number): void {
+    this.top = top;
     const wave = (this.waveText = label('', 52, COLORS.text, STROKE));
-    wave.position.set(40, WAVE_Y);
+    wave.position.set(40, top);
     const timer = (this.timerText = label('', 48, COLORS.dim, STROKE));
     const fell = (this.lastFallText = label('', 48, COLORS.dim, STROKE));
     const goal = (this.goalText = label('', 48, COLORS.gold, STROKE));
@@ -94,7 +96,7 @@ export class HudColumn {
     lastFallText.text = t('run.lastFall', { wave: this.lastFall });
     goalText.visible = on && this.nextChest > 0;
     goalText.text = t('run.nextChest', { wave: this.nextChest });
-    let y = FIRST_Y;
+    let y = this.top + FIRST_DOWN;
     for (const l of [timerText, lastFallText, goalText]) {
       l.y = y;
       if (l.visible) y += STEP;

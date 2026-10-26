@@ -21,6 +21,7 @@ import { HitFeedback } from './hitFeedback';
 import { AuraStack } from './aura';
 import { ZenRing } from './zenView';
 import type { BossStage } from './bossStage';
+import { BOSS_BAR_TOP } from './bossBar';
 import { hordeLooks, makeBosses, makeElites } from './cast';
 import { SpellView } from './spellView';
 import { ArsenalView } from './arsenalView';
@@ -33,6 +34,7 @@ import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
 import { computeViewport, type Viewport, wideScreen } from './viewport';
 import { uiFrame } from '../ui/uiLayout';
+import { hudRows } from '../ui/hudLayout';
 import { Autoplay, RUSH_SPEED } from './autoplay';
 import { LOCKED_CAMERA, SMOOTH_CAMERA, ease, snapToPixel } from './camera';
 import { Shake } from './shake';
@@ -260,7 +262,8 @@ export class Game {
     // dev only, below the HUD strip, the wave counter and the boss bar
     this.label.position.set(24 * vp.scale, 460 * vp.scale);
     const f = uiFrame(vp, this.platform.safeInsets());
-    this.bars.y = f.y - vp.playY;
+    // a landscape frame lifts the bars to just under the build strip (hudLayout.ts)
+    this.bars.y = f.y - vp.playY + (hudRows(f).bossTop - BOSS_BAR_TOP) * f.scale;
     this.boss?.layout(vp.playW, f.scale);
     this.elites?.bar?.layout(vp.playW, f.scale);
   }
