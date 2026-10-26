@@ -26,9 +26,18 @@ export class WeChatPlatform implements Platform {
   readonly store: Store | null = null;
   // wx.createWebAudioContext implements the Web Audio API; it is missing on old base
   // libraries, so it is feature-detected. No autoplay gate here, but a touch still resumes
-  // a context the system suspended.
+  // a context the system suspended. The game's sound mixes with the player's own music rather
+  // than stopping it, and obeys the mute switch (docs/audio.md); WeChat cannot tell the game that
+  // other music plays, so nothing ducks here.
   readonly audio: AudioHost | null = typeof wx.createWebAudioContext === 'function' ? {
-    context: () => wx.createWebAudioContext?.() ?? null,
+    context() {
+      try {
+        wx.setInnerAudioOption?.({ mixWithOther: true, obeyMuteSwitch: true });
+      } catch {
+        /* an old base library: its own default, which also mixes */
+      }
+      return wx.createWebAudioContext?.() ?? null;
+    },
     onGesture: (cb) => wx.onTouchEnd(cb),
     onFocus(cb) {
       wx.onHide?.(() => cb(false));

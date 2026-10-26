@@ -1,13 +1,15 @@
 import type { Host } from '@hk/protocol';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
-import { NO_PORTAL, type AdPrivacy, type Ads, type AppUpdates, type Notifier, type Portal, type Store, type TextAsk } from '../types';
+import { NO_PORTAL, type AdPrivacy, type Ads, type AppUpdates, type AudioHost, type Notifier, type Portal, type Store, type TextAsk } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
+import { webAudioHost } from '../web/webAudio';
 import { adFree } from './adFree';
 import { AdMob } from './admob';
 import { hkNative, type HKNative } from './bridge';
 import { GameCenterAccount } from './gameCenter';
 import { MirrorStore } from './mirrorStore';
 import { nativeNotifier } from './notify';
+import { otherAudioFrom } from './otherAudio';
 import { otaUpdates } from './ota';
 import { StoreKit } from './storeKit';
 
@@ -29,6 +31,7 @@ export class IosPlatform extends WebPlatform {
   override readonly adPrivacy: AdPrivacy;
   override readonly store: Store | null;
   override readonly notify?: Notifier;
+  override readonly audio: AudioHost | null;
   /** 2x, not a 3x iPhone's full density: corgi 1.0.3.2, the first bundle at 3x with MSAA on,
    *  never booted on an iPhone 15, and this rules the canvas's memory out (main.ios.ts reports
    *  how far each launch got). */
@@ -65,10 +68,9 @@ export class IosPlatform extends WebPlatform {
     this.adPrivacy = this.admob;
     const notifier = nativeNotifier(native);
     if (notifier) this.notify = notifier;
-    // game sound obeys the silent switch and mixes with the player's music (iOS 17+; the shell
-    // sets the same AVAudioSession category for older systems)
-    const session = (navigator as Navigator & { audioSession?: { type: string } }).audioSession;
-    if (session) session.type = 'ambient';
+    // the browser's audio (mixing with the player's music, webAudio.ts), and the shell's word
+    // on whether that music is playing, so the game's own makes way for it
+    this.audio = otherAudioFrom(webAudioHost(), native);
   }
 
   override openUrl(url: string): void {

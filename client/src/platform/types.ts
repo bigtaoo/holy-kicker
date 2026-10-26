@@ -136,6 +136,9 @@ export interface AudioHost {
   onFocus(cb: (focused: boolean) => void): void;
   /** The portal muted or unmuted the game from its own controls. */
   onHostMute(cb: (muted: boolean) => void): void;
+  /** Another app's music started (true) or stopped (false), where the host can tell (iOS's
+   *  secondary-audio hint); the game's music makes way for it. */
+  onOtherAudio?(cb: (playing: boolean) => void): void;
   /** Two streaming players for the music (audio/music.ts), or null where the host cannot
    *  stream; `ctx` is the effects' context, which the web decks play through. */
   musicDecks(ctx: AudioContext): [MusicDeck, MusicDeck] | null;

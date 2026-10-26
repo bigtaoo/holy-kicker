@@ -1,4 +1,5 @@
 import UIKit
+import AVFoundation
 import Capacitor
 import WebKit
 
@@ -10,7 +11,7 @@ import WebKit
 //
 // Calls from JS are messages `{ op, ... }`. Answers are pushed back into the page rather than
 // settled by id: Game Center's, AdMob's and the store's states go to `HKNative._gameCenter`,
-// `_adState`, `_store` and `_notify` whenever they change and when the page asks (a reloaded page asks again);
+// `_adState`, `_store`, `_notify` and `_otherAudio` whenever they change and when the page asks (a reloaded page asks again);
 // an ad's progress goes to `_adEvent`, how a buy or a restore went to `_storeResult`. Every member
 // the page reads is feature-detected there, so a newer web bundle on an older shell falls back to
 // the browser's behaviour.
@@ -18,7 +19,7 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
 
     static let handlerName = "hk"
     /// Raised whenever the contract gains calls (HKNative.v in bridge.ts).
-    static let bridgeVersion = 6
+    static let bridgeVersion = 7
 
     private let keyStore = KeyStore()
     private let gameCenter = GameCenter()
@@ -45,6 +46,16 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
         store.start()
         notifications.onChange = { [weak self] status in self?.push("_notify", ["status": status.rawValue]) }
         notifications.start()
+        // the player's own music (docs/audio.md): whether another app plays audio that does not mix,
+        // pushed when that changes and whenever the app comes to the front, because the hint's
+        // notification only reaches an app in the foreground
+        let center = NotificationCenter.default
+        center.addObserver(forName: AVAudioSession.silenceSecondaryAudioHintNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.pushOtherAudio()
+        }
+        center.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            self?.pushOtherAudio()
+        }
         #if DEBUG
         // Safari's Web Inspector, for the day a Mac is at hand (release builds stay closed)
         if #available(iOS 16.4, *) { webView.isInspectable = true }
@@ -107,12 +118,18 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             guard let id = body["id"] as? String, let at = body["at"] as? Double,
                   let title = body["title"] as? String, let text = body["body"] as? String else { return }
             notifications.schedule(id: id, at: at, title: title, body: text)
+        case "otherAudio":
+            pushOtherAudio()
         case "notifyCancel":
             guard let id = body["id"] as? String else { return }
             notifications.cancel(id: id)
         default:
             return
         }
+    }
+
+    private func pushOtherAudio() {
+        push("_otherAudio", ["playing": AVAudioSession.sharedInstance().secondaryAudioShouldBeSilencedHint])
     }
 
     /// Hands a state or an event to the page: `HKNative[receiver](value)` in the injected script.
@@ -146,7 +163,7 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
               push: function(v){ last = v; for (var i = 0; i < cbs.length; i++) { try { cbs[i](v); } catch (e) {} } }
             };
           }
-          var gc = feed(), gcId = feed(), ad = feed(), adEvent = feed(), store = feed(), storeResult = feed(), notify = feed();
+          var gc = feed(), gcId = feed(), ad = feed(), adEvent = feed(), store = feed(), storeResult = feed(), notify = feed(), other = feed();
           window.HKNative = {
             v: c.v, saved: c.saved || {}, languages: c.languages || [], device: c.device || '',
             save: function(k, v){ post({ op: 'save', key: String(k), value: String(v) }); },
@@ -171,18 +188,22 @@ final class HKBridgeViewController: CAPBridgeViewController, WKScriptMessageHand
             notifyAsk: function(){ post({ op: 'notifyAsk' }); },
             notifySchedule: function(id, at, title, body){ post({ op: 'notifySchedule', id: String(id), at: Number(at), title: String(title), body: String(body) }); },
             notifyCancel: function(id){ post({ op: 'notifyCancel', id: String(id) }); },
+            otherAudio: other.get,
+            onOtherAudio: other.on,
             _gameCenter: gc.push,
             _gameCenterIdentity: gcId.push,
             _adState: ad.push,
             _adEvent: adEvent.push,
             _store: store.push,
             _storeResult: storeResult.push,
-            _notify: notify.push
+            _notify: notify.push,
+            _otherAudio: other.push
           };
           post({ op: 'gameCenter' });
           post({ op: 'adState' });
           post({ op: 'store' });
           post({ op: 'notifyState' });
+          post({ op: 'otherAudio' });
         })();
         """
     }

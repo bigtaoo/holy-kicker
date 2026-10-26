@@ -70,6 +70,7 @@ export function fakeWxRuntime(o: { audio?: boolean; modal?: boolean } = {}) {
   const files = new Map<string, string>();
   const written = new Map<string, string>();
   const vibrations: string[] = [];
+  const audioOptions: Record<string, unknown>[] = [];
   const ctx2d = new (class Ctx2D {})();
   const wx = {
     getStorageSync(key: string): unknown {
@@ -117,6 +118,7 @@ export function fakeWxRuntime(o: { audio?: boolean; modal?: boolean } = {}) {
     }),
     ...(o.modal === false ? {} : { showModal: (opts: (typeof modals)[number]) => void modals.push(opts) }),
     ...(o.audio === false ? {} : {
+      setInnerAudioOption: (opts: Record<string, unknown>) => void audioOptions.push(opts),
       createWebAudioContext: () => ({ kind: 'wx-web-audio' }),
       createInnerAudioContext: () => {
         const d = new FakeInnerAudio();
@@ -135,6 +137,7 @@ export function fakeWxRuntime(o: { audio?: boolean; modal?: boolean } = {}) {
     files,
     written,
     vibrations,
+    audioOptions,
     ctx2d,
     /** From now on storage calls throw as named (null: they work again). */
     failStorage: (how: WxStorageFailure) => void (failing = how),

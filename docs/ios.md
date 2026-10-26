@@ -94,7 +94,8 @@ client/
 
 Every member is feature-detected so a newer JS bundle on an older shell degrades instead of
 throwing; `v` is raised when the shell gains calls (2 with Game Center, 3 with AdMob, 4 with the
-store, 5 with Game Center's signed identity for the cloud save, 6 with the reminders). Answers are pushed, not settled by id: the shell calls `_gameCenter(state)`,
+store, 5 with Game Center's signed identity for the cloud save, 6 with the reminders, 7 with the
+player's own music). Answers are pushed, not settled by id: the shell calls `_gameCenter(state)`,
 `_adState(state)` and `_store(state)` whenever a state changes and when the page posts
 `gameCenter` / `adState` / `store` as it loads (a reloaded page asks again), `_adEvent(e)` as an ad
 the page asked for comes and goes, and `_storeResult(r)` when a buy or a restore is over.
@@ -132,6 +133,10 @@ interface HKNative {
   notifyAsk(): void; // the system's permission sheet, only from a tap; answers through onNotify
   notifySchedule(id: string, at: number, title: string, body: string): void; // ms; replaces `id`
   notifyCancel(id: string): void;
+  // the player's own music (v7, docs/audio.md): AVAudioSession.secondaryAudioShouldBeSilencedHint,
+  // pushed to _otherAudio when it changes and whenever the app becomes active
+  otherAudio(): { playing: boolean } | null; // null until the shell has answered
+  onOtherAudio(cb: (s: { playing: boolean }) => void): void;
   // shell (step 1, built)
   v: number;
   openUrl(url: string): void; // UIApplication.open, Safari; http(s) only
@@ -158,6 +163,8 @@ interface HKNative {
   them read 0).
 - **Audio**: `AVAudioSession` category `.ambient` (respects the silent switch, mixes with the
   player's music), and `navigator.audioSession.type = 'ambient'` where WebKit has it (iOS 17).
+  The music plays through Web Audio, never an `<audio>` element, which would switch WebKit's session
+  to playback and stop the player's music; while that music plays the game's fades out (docs/audio.md).
   Check on a phone that the music decks resume after a call and after an ad.
 - **External links**: `window.open` from a Pixi tap is dropped silently in WKWebView
   (funny §10.3). `IosPlatform.openUrl` goes through the bridge to Safari. Never add our domains

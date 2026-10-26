@@ -261,6 +261,9 @@ interface Wx {
    *  optional here for the same reason `createWebAudioContext` is: a caller that assumes an
    *  audio API exists turns a quiet game into a boot failure. */
   createInnerAudioContext?: () => WxInnerAudioContext;
+  /** Every audio player of the game at once: `mixWithOther` keeps the player's own music (other
+   *  apps, WeChat's own player) going under the game's sound. Optional as above. */
+  setInnerAudioOption?: (opts: { mixWithOther?: boolean; obeyMuteSwitch?: boolean; speakerOn?: boolean }) => void;
   /** System-level audio interruption — an incoming call, another app taking the session
    *  (design/11 "Focus/blur & interruption"). The web counterpart is `visibilitychange`; there
    *  is no DOM here, so this is the only signal. Optional for the same reason as above. */

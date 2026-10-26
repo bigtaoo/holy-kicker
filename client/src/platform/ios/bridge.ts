@@ -56,6 +56,16 @@ export interface HKNative {
   notifySchedule(id: string, at: number, title: string, body: string): void;
   /** Drops a booked notification (v6). */
   notifyCancel(id: string): void;
+  /** Whether another app's music is playing (AVAudioSession's secondaryAudioShouldBeSilencedHint),
+   *  null until the shell has said (v7). */
+  otherAudio(): OtherAudio | null;
+  /** Called whenever that changes and whenever the app comes back to the front (v7). */
+  onOtherAudio(cb: (state: OtherAudio) => void): void;
+}
+
+/** Another app's audio as the shell sees it (HKBridgeViewController.swift). */
+export interface OtherAudio {
+  playing: boolean;
 }
 
 /** Local notifications as the shell sees them (Notifications.swift): 'unknown' while never asked. */

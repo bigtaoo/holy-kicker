@@ -11,7 +11,8 @@ import { VoiceBudget } from './voiceBudget';
 // and the voice cap; each plays its recorded sample (samples.ts) or, without one, its synth
 // voice. Effects go through one master gain and music through its own decks; both are silent
 // while anything holds the sound: a hidden tab or backgrounded mini-game, an ad, the portal's
-// own mute (and each its own settings volume). Render-side only: it reads events and never
+// own mute (and each its own settings volume). While the player's own music plays, where the host
+// can tell (iOS), the game's music makes way and the effects play under it. Render-side only: it reads events and never
 // touches the sim.
 
 /** Voices at once. A horde game asks for many; the gate merges most, the cap takes the rest. */
@@ -22,6 +23,8 @@ const FADE = 0.04;
 const MASTER = 0.8;
 /** The music level at full settings volume; music sits under the effects. */
 const MUSIC = 0.45;
+/** The effects' share of their level while the player's own music plays: under it, not over it. */
+const UNDER_OTHER_AUDIO = 0.6;
 /** Settings volume steps (meta/settings.ts VOLUME_STEPS); the level grows as a square, as ears hear. */
 const STEPS = 5;
 /** Samples play a little higher or lower each time, so a repeated cue does not drone. */
@@ -46,6 +49,8 @@ export class Sound {
   private failed = false;
   private volume: number;
   private musicVolume: number;
+  /** Another app's music is playing (AudioHost.onOtherAudio). */
+  private otherAudio = false;
 
   constructor(private readonly files: SoundHost, volume: number, music: number) {
     this.host = files.audio;
@@ -59,6 +64,10 @@ export class Sound {
     this.host?.onGesture(() => this.resume());
     this.host?.onFocus((focused) => this.hold('hidden', !focused));
     this.host?.onHostMute((muted) => this.hold('host', muted));
+    this.host?.onOtherAudio?.((playing) => {
+      this.otherAudio = playing;
+      this.ramp();
+    });
   }
 
   /** The settings effects volume, 0 (off) to 5. */
@@ -83,7 +92,7 @@ export class Sound {
 
   /** The master gain while nothing holds the sound. */
   private get open(): number {
-    return MASTER * (this.volume / STEPS) ** 2;
+    return MASTER * (this.volume / STEPS) ** 2 * (this.otherAudio ? UNDER_OTHER_AUDIO : 1);
   }
 
   /** Asks for a cue; it plays at the next flush if the gate lets it. */
@@ -94,8 +103,8 @@ export class Sound {
   /** Plays this frame's cues and moves the music toward `track`, at `duck` of its level (the kill cam lowers it). Call once a frame. */
   flush(track: Track | null, dtMs: number, duck = 1): void {
     if (this.music) {
-      // the effects' own setting does not silence the music
-      const held = this.holds.has('hidden') || this.holds.has('ad') || this.holds.has('host');
+      // the effects' own setting does not silence the music; the player's own music does
+      const held = this.otherAudio || this.holds.has('hidden') || this.holds.has('ad') || this.holds.has('host');
       const level = held ? 0 : duck * MUSIC * (this.musicVolume / STEPS) ** 2;
       this.music.setVolume(level);
       this.music.update(level > 0 ? track : null, dtMs);
@@ -137,14 +146,21 @@ export class Sound {
     this.music?.setPaused(this.holds.has('hidden'));
     const ctx = this.ctx;
     if (!ctx || !this.master) return;
+    this.ramp();
+    // a backgrounded game stops the audio thread too, for the battery
+    if (this.holds.has('hidden')) ctx.suspend().catch(() => {});
+    else this.resume();
+  }
+
+  /** Moves the effects' master gain to where the holds and the player's music put it. */
+  private ramp(): void {
+    const ctx = this.ctx;
+    if (!ctx || !this.master) return;
     const level = this.holds.size === 0 ? this.open : 0;
     const t = ctx.currentTime;
     this.master.gain.cancelScheduledValues(t);
     this.master.gain.setValueAtTime(this.master.gain.value, t);
     this.master.gain.linearRampToValueAtTime(level, t + FADE);
-    // a backgrounded game stops the audio thread too, for the battery
-    if (this.holds.has('hidden')) ctx.suspend().catch(() => {});
-    else this.resume();
   }
 
   /** Creates the context on the first gesture (autoplay rules) and wakes it after a pause. */

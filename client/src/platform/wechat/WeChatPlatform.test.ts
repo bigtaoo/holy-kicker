@@ -86,6 +86,8 @@ describe('WeChatPlatform sound', () => {
     rt.fire('interruptEnd');
     expect(focus.mock.calls).toEqual([[false], [true], [false], [true]]);
     expect(p.audio!.context()).toEqual({ kind: 'wx-web-audio' });
+    // mixes with the player's own music instead of stopping it
+    expect(rt.audioOptions).toEqual([{ mixWithOther: true, obeyMuteSwitch: true }]);
     const gesture = vi.fn();
     p.audio!.onGesture(gesture);
     rt.touch('touchend', { identifier: 0, clientX: 1, clientY: 1 });
