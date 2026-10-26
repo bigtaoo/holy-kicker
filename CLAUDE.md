@@ -17,6 +17,8 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
 - **Coverage only ratchets up**: check runs the tests as `npm run coverage` (about 10 s more), which fails when a
   workspace's or a `client/src/<dir>`'s line coverage drops over 0.5 points below `build/coverage-floors.json`;
   after adding tests, `npm run coverage -- --update` raises the floors (never lowers them) — commit it.
+  Client tests run on a pinned day and seeded `Math.random` (`client/src/testkit/seedRandom.ts`), so a run
+  covers the same lines on every machine and in every challenge week; tests may take 60 s (`build/coverage.mjs`).
 - **No literal player-facing text in code**: every string goes through `t()` and the tables
   in `client/src/i18n/` (en is the source, zh must match key for key; a word that names the
   game's world goes into both themes' tables, `i18n/monk/` and `i18n/corgi/`, not the shared
