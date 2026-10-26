@@ -34,6 +34,7 @@
     "dev:playgama": "npm run dev:playgama -w client",
     "check:theme": "node build/checkTheme.mjs",
     "smoke": "node build/smoke.mjs",
+    "sweep:layout": "node build/layoutSweep.mjs",
     "build:new": "npm run build:new -w client",
     "dev:new": "npm run dev:new -w client",
     "build:crazygames:new": "npm run build:crazygames:new -w client",
