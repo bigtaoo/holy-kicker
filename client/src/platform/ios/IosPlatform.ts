@@ -25,6 +25,8 @@ export class IosPlatform extends WebPlatform {
   override readonly host: Host = 'ios';
   // the app stays portrait, an iPad on its side in the 3:4 frame (docs/ios.md)
   override readonly sideways: boolean = false;
+  /** A phone or tablet app: steered by touch only, never by a hovering pointer. */
+  override readonly hover = undefined;
   override readonly storage: KeyValueStore;
   override readonly portal: Portal;
   override readonly ads: Ads;

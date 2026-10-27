@@ -51,7 +51,7 @@ the Chinese column is for the WeChat listing and the CrazyGames zh page.
 | | en | zh |
 |---|---|---|
 | Mobile | Drag anywhere on the screen to move. Attacks are automatic. | 按住屏幕任意处拖动来移动，攻击自动释放。 |
-| Desktop | WASD or the arrow keys (or drag with the mouse) to move. Attacks are automatic. | WASD 或方向键移动（也可以按住鼠标拖动），攻击自动释放。 |
+| Desktop | WASD or the arrow keys to move, or just move the mouse and the hero follows it. Attacks are automatic. | WASD 或方向键移动，也可以直接移动鼠标让主角跟着走，攻击自动释放。 |
 
 ## Images
 

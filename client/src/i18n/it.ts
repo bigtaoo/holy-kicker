@@ -148,7 +148,7 @@ export const it: Table<typeof en> = {
   tutorial: {
     move: 'Trascina ovunque per muoverti',
     keys: 'Muoviti con WASD o le frecce',
-    drag: 'o trascina con il mouse',
+    mouse: 'o muovi semplicemente il mouse',
     click: 'Clicca prima sul gioco per usare i tasti',
   },
   card: {

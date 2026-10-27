@@ -121,4 +121,24 @@ describe('WebPlatform host calls', () => {
     expect(p.attention().input).toBe(true);
     expect(p.readKeys()).toEqual({ x: 0, y: 0 });
   });
+
+  it('feeds the hover from a mouse with no button held, in screen units, never from touch', () => {
+    const p = platform();
+    const canvas = Object.assign(b.document.createElement('canvas'), { getBoundingClientRect: () => ({ left: 100, top: 0, width: 500, height: 1000 }) });
+    p.bindStick({ canvas, screen: { width: 1000, height: 2000 } } as unknown as Application, new DragStick());
+    const hover = p.hover!;
+    canvas.dispatch('pointermove', { pointerId: 1, pointerType: 'touch', buttons: 0, clientX: 200, clientY: 100 } as never);
+    expect(hover.read()).toBeNull();
+    canvas.dispatch('pointermove', { pointerId: 1, pointerType: 'mouse', buttons: 1, clientX: 200, clientY: 100 } as never);
+    expect(hover.read()).toBeNull();
+    canvas.dispatch('pointermove', { pointerId: 1, pointerType: 'mouse', buttons: 0, clientX: 200, clientY: 100 } as never);
+    expect(hover.read()).toEqual({ x: 200, y: 200 });
+    // a click hands the steering to the drag
+    canvas.dispatch('pointerdown', { pointerId: 1, pointerType: 'mouse', clientX: 200, clientY: 100 } as never);
+    expect(hover.read()).toBeNull();
+    canvas.dispatch('pointermove', { pointerId: 1, pointerType: 'mouse', buttons: 0, clientX: 300, clientY: 100 } as never);
+    expect(hover.read()).toEqual({ x: 400, y: 200 });
+    canvas.dispatch('pointerleave', { pointerId: 1, pointerType: 'mouse' } as never);
+    expect(hover.read()).toBeNull();
+  });
 });

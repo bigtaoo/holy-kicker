@@ -146,7 +146,7 @@ export const ja: Table<typeof en> = {
   tutorial: {
     move: '画面のどこでもドラッグで移動',
     keys: 'WASD か矢印キーで移動',
-    drag: 'マウスのドラッグでもOK',
+    mouse: 'マウスを動かすだけでもOK',
     click: 'まずゲーム画面をクリックしてください',
   },
   card: {

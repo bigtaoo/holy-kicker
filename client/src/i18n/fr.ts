@@ -149,7 +149,7 @@ export const fr: Table<typeof en> = {
   tutorial: {
     move: 'Fais glisser n’importe où pour bouger',
     keys: 'Déplace-toi avec ZQSD/WASD ou les flèches',
-    drag: 'ou fais glisser avec la souris',
+    mouse: 'ou bouge simplement la souris',
     click: "Clique d’abord dans le jeu pour utiliser les touches",
   },
   card: {

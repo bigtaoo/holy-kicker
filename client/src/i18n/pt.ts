@@ -148,7 +148,7 @@ export const pt: Table<typeof en> = {
   tutorial: {
     move: 'Arraste em qualquer lugar para se mover',
     keys: 'Mova-se com WASD ou as setas',
-    drag: 'ou arraste com o mouse',
+    mouse: 'ou apenas mova o mouse',
     click: 'Clique no jogo primeiro para usar as teclas',
   },
   card: {

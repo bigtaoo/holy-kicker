@@ -27,7 +27,7 @@ describe("the first run's tutorial on a live run", { timeout: 30_000 }, () => {
     const run = await liveRun({ save: {}, device: 'desktop' });
     await run.ticks(TICK_RATE);
     expect(run.texts()).toContain(t('tutorial.keys'));
-    expect(run.texts()).toContain(t('tutorial.drag'));
+    expect(run.texts()).toContain(t('tutorial.mouse'));
     expect(run.texts()).not.toContain(t('tutorial.move'));
   });
 

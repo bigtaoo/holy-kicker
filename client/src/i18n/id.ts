@@ -148,7 +148,7 @@ export const id: Table<typeof en> = {
   tutorial: {
     move: 'Geser di mana saja untuk bergerak',
     keys: 'Bergerak dengan WASD atau tombol panah',
-    drag: 'atau seret dengan mouse',
+    mouse: 'atau cukup gerakkan mouse',
     click: 'Klik game dulu, lalu pakai tombolnya',
   },
   card: {

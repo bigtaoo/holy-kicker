@@ -146,7 +146,7 @@ export const ko: Table<typeof en> = {
   tutorial: {
     move: '아무 곳이나 드래그해서 이동',
     keys: 'WASD 또는 방향키로 이동',
-    drag: '마우스로 드래그해도 돼요',
+    mouse: '마우스를 움직이기만 해도 돼요',
     click: '먼저 게임 화면을 클릭하세요',
   },
   card: {

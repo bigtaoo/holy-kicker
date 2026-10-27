@@ -2,6 +2,7 @@ import { Application, BlurFilter, Container, Graphics, Sprite, Text } from 'pixi
 import { beadsRings, Engine, inZen, isMidBoss, mapOf, twinHp, quantizeMove, startAt, type MonkId, type SimEvent, type SimState } from '@hk/engine';
 import type { Platform } from '../platform/types';
 import type { DragStick } from './dragStick';
+import { hoverMove, steer } from './hoverSteer';
 import { Balls } from './ballView';
 import { StaffSwing } from './staffView';
 import { FishTaps } from './fishView';
@@ -320,15 +321,15 @@ export class Game {
     return this.autoplay?.rushing(this.engine.state) ?? false;
   }
 
-  /** The local stick (and keys) for the next tick, quantized at the input edge. */
+  /** The local stick, keys or hovering mouse for the next tick, quantized at the input edge. */
   private command() {
-    const s = this.stick.read();
-    const k = this.platform.readKeys();
+    const hover = (at: { x: number; y: number }) => hoverMove(this.world.toLocal(at), this.hero.view.position);
+    const m = steer(this.stick.origin() !== null, this.stick.read(), this.platform.readKeys(), this.platform.hover, hover);
     const revive = this.reviving;
     const pick = this.picking;
     this.reviving = false;
     this.picking = undefined;
-    const move = this.autoplay ? this.autoplay.move(this.engine.state) : quantizeMove(s.x + k.x, s.y + k.y);
+    const move = this.autoplay ? this.autoplay.move(this.engine.state) : quantizeMove(m.x, m.y);
     return { owner: LOCAL, tick: this.engine.nextTick, ...move, revive, pick };
   }
 

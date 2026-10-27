@@ -6,8 +6,8 @@ import { COLORS, fit, label } from './widgets';
 
 // The first run's hint, drawn low on the screen under the fight (tutorial.ts says which step).
 // The move step shows how to move on this device: on a touch screen a finger swaying along a
-// track ("drag anywhere"); on a desktop the arrow keys pressed in turn, with the mouse drag as
-// the small second line, since few desktop players think of dragging with the mouse. In a portal's
+// track ("drag anywhere"); on a desktop the arrow keys pressed in turn, with the mouse as the
+// small second line: the hero follows a hovering mouse (game/hoverSteer.ts), no click or drag. In a portal's
 // iframe the keys only reach the game after a click in it, so until then a pulsing line over the
 // keys asks for that click and the keys stand dimmed. The gather step is no tutorial step but a
 // nudge for a hero standing still among gems (gatherNudge.ts), on the same line, showing the
@@ -54,7 +54,7 @@ export function tutorialHint(step: HintStep, width: number, keys: (() => boolean
   const view = new Container();
   view.eventMode = 'none';
   const move = step === 'move';
-  const lines = !move ? [t(step === 'auto' ? 'tutorial.auto' : step === 'gather' ? 'tutorial.gather' : 'tutorial.gems')] : keys ? [t('tutorial.keys'), t('tutorial.drag')] : [t('tutorial.move')];
+  const lines = !move ? [t(step === 'auto' ? 'tutorial.auto' : step === 'gather' ? 'tutorial.gather' : 'tutorial.gems')] : keys ? [t('tutorial.keys'), t('tutorial.mouse')] : [t('tutorial.move')];
   lines.forEach((text, i) => {
     const l = fit(label(text, i === 0 ? 60 : 48, i === 0 ? COLORS.text : COLORS.saffron, { stroke: { color: COLORS.outline, width: 10 } }), width - 80);
     l.y = i * 80;

@@ -148,7 +148,7 @@ export const vi: Table<typeof en> = {
   tutorial: {
     move: 'Kéo ở bất kỳ đâu để di chuyển',
     keys: 'Di chuyển bằng WASD hoặc phím mũi tên',
-    drag: 'hoặc kéo bằng chuột',
+    mouse: 'hoặc chỉ cần di chuột',
     click: 'Bấm vào game trước rồi dùng phím',
   },
   card: {

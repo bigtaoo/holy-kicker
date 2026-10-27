@@ -2,6 +2,7 @@ import type { Application } from 'pixi.js';
 import type { EventName, Host, PropValue } from '@hk/protocol';
 import type { MusicDeck } from '../audio/music';
 import type { DragStick, Vec2 } from '../game/dragStick';
+import type { HoverPointer } from '../game/hoverSteer';
 import type { Battery, DeviceInfo } from '../game/quality';
 import type { KeyValueStore } from '../meta/saveStore';
 
@@ -18,6 +19,8 @@ export interface Platform {
   density?(): number;
   /** Route touches (and on web, mouse drags) into the stick. Called once. */
   bindStick(app: Application, stick: DragStick): void;
+  /** A desktop mouse hovering over the canvas, which steers the hero when nothing else does (bindStick feeds it); unset on touch-only hosts. */
+  readonly hover?: HoverPointer;
   /** Extra movement source such as the keyboard; a zero vector when idle. */
   readKeys(): Vec2;
   /** Every key that goes down, `code` as KeyboardEvent.code names it; unset where there is no keyboard. */

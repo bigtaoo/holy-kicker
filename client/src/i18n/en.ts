@@ -146,7 +146,7 @@ export const en = {
   tutorial: {
     move: 'Drag anywhere to move',
     keys: 'Move with WASD or the arrow keys',
-    drag: 'or drag with the mouse',
+    mouse: 'or just move the mouse',
     click: 'Click the game first, then use the keys',
   },
   card: {

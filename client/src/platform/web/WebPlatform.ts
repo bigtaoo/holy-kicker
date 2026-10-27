@@ -2,6 +2,7 @@ import type { Host } from '@hk/protocol';
 import { Application } from 'pixi.js';
 import { recordSize } from '../../dev/recorder';
 import type { DragStick, Vec2 } from '../../game/dragStick';
+import { HoverPointer } from '../../game/hoverSteer';
 import { MAX_RESOLUTION, type Battery, type DeviceInfo } from '../../game/quality';
 import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { themedStore } from '../../theme';
@@ -34,13 +35,16 @@ export function browserStorage(): KeyValueStore | null {
   }
 }
 
-// Browser host: a window-sized canvas, pointer drags for the stick, WASD/arrows as well.
+// Browser host: a window-sized canvas, pointer drags for the stick, WASD/arrows as well, and a
+// hovering mouse steering the hero (game/hoverSteer.ts).
 // No portal, no ads and no store; ?ads=fake stands in for an ad host and ?store=fake for the iOS
 // ad-free card, ?notify=fake for its reminders and ?ota=fake (or fail) for its hot updates during development.
 export class WebPlatform implements Platform {
   readonly host: Host = 'web';
   readonly sideways: boolean = true;
   private held = new Set<string>();
+  /** Fed by mouse pointers only, so a touch screen never steers by it. */
+  readonly hover?: HoverPointer = new HoverPointer();
   private keyListeners: ((code: string, repeat: boolean) => void)[] = [];
   private seen: Attention = { focus: false, input: false };
   readonly storage: KeyValueStore = new SafeStore(browserStorage());
@@ -180,7 +184,10 @@ export class WebPlatform implements Platform {
       e.preventDefault();
     });
     window.addEventListener('keyup', (e) => this.held.delete(e.code));
-    window.addEventListener('blur', () => this.held.clear());
+    window.addEventListener('blur', () => {
+      this.held.clear();
+      this.hover?.leave();
+    });
     return app;
   }
 
@@ -190,11 +197,19 @@ export class WebPlatform implements Platform {
       this.seen.input = true;
       // in a portal's iframe the keys go to the portal page until the game has the focus
       window.focus();
+      this.hover?.quiet();
       stick.down(e.pointerId, e.clientX, e.clientY);
       // Keep receiving moves when the finger or mouse leaves the canvas mid-drag.
       canvas.setPointerCapture(e.pointerId);
     });
-    canvas.addEventListener('pointermove', (e) => stick.move(e.pointerId, e.clientX, e.clientY));
+    canvas.addEventListener('pointermove', (e) => {
+      stick.move(e.pointerId, e.clientX, e.clientY);
+      if (!this.hover || e.pointerType !== 'mouse' || e.buttons !== 0) return;
+      // in app.screen units, also where the canvas is scaled by CSS (dev ?record)
+      const r = canvas.getBoundingClientRect();
+      if (r.width > 0 && r.height > 0) this.hover.move(((e.clientX - r.left) * app.screen.width) / r.width, ((e.clientY - r.top) * app.screen.height) / r.height);
+    });
+    canvas.addEventListener('pointerleave', (e) => e.pointerType === 'mouse' && this.hover?.leave());
     const end = (e: PointerEvent) => stick.up(e.pointerId);
     canvas.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);

@@ -148,7 +148,7 @@ export const tr: Table<typeof en> = {
   tutorial: {
     move: 'Hareket için herhangi bir yeri sürükle',
     keys: 'WASD ya da ok tuşlarıyla yürü',
-    drag: 'ya da fareyle sürükle',
+    mouse: 'ya da sadece fareyi oynat',
     click: 'Önce oyuna tıkla, sonra tuşları kullan',
   },
   card: {
