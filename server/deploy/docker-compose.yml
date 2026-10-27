@@ -34,7 +34,7 @@ services:
   # A remotely managed tunnel: its route (hk.gamestao.com -> http://api:8080) is set on
   # Cloudflare's side; the token in .env is all it needs here.
   tunnel:
-    image: cloudflare/cloudflared:2026.9.3
+    image: cloudflare/cloudflared:2026.10.3
     container_name: hk-tunnel
     restart: unless-stopped
     command: tunnel --no-autoupdate run
