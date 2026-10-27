@@ -187,9 +187,9 @@ export class Shell {
     return this.runs.game;
   }
 
-  /** The first run's opening hint (drag to move) is on screen; the privacy toast waits for it. */
-  get teachingMove(): boolean {
-    return this.runs.watch?.tutorial?.step === 'move';
+  /** The privacy toast waits: the first run's opening hint (drag to move) is on screen, or the run is paused (its panel or cards). */
+  get toastWaits(): boolean {
+    return this.runs.watch?.tutorial?.step === 'move' || (this.runs.game !== null && !this.runs.playing);
   }
 
   /** Records a share from the host's menu, with the screen it was made from. */
@@ -422,11 +422,11 @@ export class Shell {
       this.screenKey = key;
       const insets = this.platform.safeInsets();
       if (this.bannerUp) insets.bottom += this.platform.banner.height;
-      // a run's HUD (and a replay's) lays out in the frame the run plays in, a landscape recording's in its wide one, and the
+      // a run's HUD (and a replay's) lays out in the frame the run plays in (a recording's too), and the
       // screens between runs (lobby, results) in the one the next run would play in
       const run = this.runs.game?.engine.state.config;
-      const wide = this.scene.record > 0 || (run ? run.wide === true : this.screen instanceof ReplayScreen ? this.screen.wide
-        : wideScreen(width, height, this.platform.sideways === true));
+      const wide = run ? run.wide === true : this.screen instanceof ReplayScreen ? this.screen.wide
+        : wideScreen(width, height, this.platform.sideways === true);
       this.screen.layout(uiFrame(computeViewport(width, height, wide), insets));
     }
     this.updates?.update(this.screen instanceof LobbyScreen && this.screen.idle, key, () => uiFrame(computeViewport(width, height), this.platform.safeInsets()));

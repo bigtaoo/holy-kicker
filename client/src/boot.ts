@@ -161,7 +161,7 @@ async function bootGame(platform: Platform, scene: SceneOptions, opts: BootOptio
   void cloud?.auto();
   platform.onHide(() => void cloud?.auto());
   if (privacy?.noticeDue()) {
-    privacyToast(app, () => platform.safeInsets(), () => shell.teachingMove, () => privacy.noticeShown());
+    privacyToast(app, () => platform.safeInsets(), () => shell.toastWaits, () => privacy.noticeShown());
   }
   return { app, shell, quality, device, cloud };
 }

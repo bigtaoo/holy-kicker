@@ -110,13 +110,26 @@ They are recorded from the game's own canvas, so there is no pointer, browser fr
    writes `art/store/video/en_landscape.mp4`: 1 s of the cover drawn at the video's size by
    `cover_final.py`, a hard cut to the fight, H.264 CRF 23, 60 fps, no audio track, faststart.
 
-The landscape video widens the view past the game's 3:4 cap (the recorder's `wide` viewport): it
-shows the same world area as the widest real play area, spread to 16:9, rather than side bars.
-The boss bar keeps its portrait height there and lands across the hero, so the landscape video
-avoids boss waves (20, 35, 50); the portrait one can show the mid-boss. The bot can fall during
+A landscape take plays a real landscape run (`RunConfig.wide`, about 2130×1200 world units, the
+HUD in the corners), so the boss bar no longer crosses the hero and either video can show a boss
+wave. The monk's `en_landscape.mp4` was recorded before that, with the recorder widening the old
+3:4 view to 16:9; re-record it the same way before it is uploaded again. The bot can fall during
 the rush (the runs are not repeatable frame for frame); the script then fails the take, and
 another `--seed` usually gets through. Don't edit client code while a take records: Vite reloads
 the page.
+### Corgi Commando
+
+`node tools/record_video.mjs <shape> --theme corgi …` records from the corgi's dev server
+(`npm run dev:new`, port 5184) into `art/reskin/corgi/store/video/raw/`, and
+`python tools/store_video.py <shape> <raw.mp4> <start s> en corgi` cuts
+`art/reskin/corgi/store/video/en_{landscape,portrait}.mp4` with the corgi's draft cover
+(`draft_{shape}.png`, no logo: the corgi has none) as the opening second. The 2026-10-27 takes:
+landscape chapter 1 from wave 24 (seed 7, an elite at wave 25), portrait from wave 18 (seed 7,
+cut from 18 s, the Twin Ram Beetles mid-boss arriving near the end). `python
+tools/cover_corgi_final.py` cuts the same drafts to CrazyGames' three cover sizes in
+`art/reskin/corgi/store/final/en_*.png`. The drafts carry damage numbers; if CrazyGames reads
+them as text on a cover, redraw them without (`cover_corgi_horde.py`).
+
 The covers and videos are uploaded by hand on the developer portal (funny found a scripted file
 drop rejected with `UploadType is not properly set`).
 

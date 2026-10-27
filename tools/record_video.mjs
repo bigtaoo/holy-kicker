@@ -1,7 +1,8 @@
 // Records a store gameplay video with the dev server's ?autoplay&record switches (client/src/dev/recorder.ts).
 // usage: node tools/record_video.mjs <landscape|portrait|phone> [--from 25] [--seconds 30] [--seed 7]
-//        [--chapter 1] [--extra "&relic=staff"] [--out art/store/video/raw]
-// Needs `npm run dev` on port 5174. It opens the system Chrome in a window of its own (a hidden
+//        [--chapter 1] [--extra "&relic=staff"] [--theme monk|corgi] [--out art/store/video/raw]
+// Needs the theme's dev server: `npm run dev` (port 5174) for monk, `npm run dev:new` (5184) for corgi.
+// A landscape take plays a real landscape run (RunConfig.wide), as a desktop player sees it. It opens the system Chrome in a window of its own (a hidden
 // or throttled page stops drawing, so not the in-app browser and not a background tab), lets
 // the bot rush to the --from wave, records --seconds of play at the shape's exact size and saves
 // the file. tools/store_video.py cuts the store's files from the recordings.
@@ -12,7 +13,7 @@ import { chromium } from 'playwright-core';
 const args = process.argv.slice(2);
 const shape = args[0];
 if (!['landscape', 'portrait', 'phone'].includes(shape)) {
-  console.error('usage: node tools/record_video.mjs <landscape|portrait|phone> [--from N] [--seconds S] [--seed N] [--chapter N] [--extra "&k=v"] [--out dir]');
+  console.error('usage: node tools/record_video.mjs <landscape|portrait|phone> [--from N] [--seconds S] [--seed N] [--chapter N] [--extra "&k=v"] [--theme monk|corgi] [--out dir]');
   process.exit(1);
 }
 const opt = (name, fallback) => {
@@ -23,9 +24,11 @@ const from = Number(opt('from', '25'));
 const seconds = Number(opt('seconds', '30'));
 const seed = opt('seed', '7');
 const chapter = opt('chapter', '1');
-const out = opt('out', 'art/store/video/raw');
+const theme = opt('theme', 'monk');
+const out = opt('out', theme === 'monk' ? 'art/store/video/raw' : `art/reskin/${theme}/store/video/raw`);
+const origin = theme === 'monk' ? 'http://localhost:5174' : 'http://localhost:5184';
 const url =
-  `http://localhost:5174/?direct&autoplay&record=${seconds}&shape=${shape}&from=${from}` +
+  `${origin}/?direct&autoplay&record=${seconds}&shape=${shape}&from=${from}` +
   `&chapter=${chapter}&seed=${seed}&quality=high${opt('extra', '')}`;
 
 const browser = await chromium.launch({

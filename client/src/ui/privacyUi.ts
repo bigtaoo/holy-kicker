@@ -19,7 +19,7 @@ const TOAST_Y = 480;
 
 /**
  * Shows the one-time data toast over whatever is on screen; it cannot be tapped and goes by itself.
- * Its clock stands still while `hold` says so (the first run's move hint, which it would cover);
+ * Its clock stands still while `hold` says so (the first run's move hint, or a pause panel, which it would cover);
  * `shown` runs once, when it starts to fade in.
  */
 export function privacyToast(app: Application, insets: () => Insets, hold: () => boolean, shown: () => void): void {
