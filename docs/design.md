@@ -108,8 +108,11 @@ Every round of the five maps is an act (engine `acts.ts`, `ACTS`); each act from
 keeps the earlier acts' rules and adds one, so the same art plays differently. Hard mode plays
 the same rules.
 
-- **Act 2 (chapters 6–10), night**: the view darkens and cools the ground (client only); the
-  next map's newcomers join the horde `ACTS.mixDelay` waves after their own start, and the
+- **Act 2 (chapters 6–10), night**: the view darkens and cools the ground (client only,
+  `game/actLook.ts`), a little more each act. On a map whose ground is darker than map 1's the
+  night is weakened so that ground comes out as light as map 1's in the same act (each theme's
+  ground light: `python tools/ground_light.py`). Without that the street under the act 4 night
+  was near black. The next map's newcomers join the horde `ACTS.mixDelay` waves after their own start, and the
   map's elite comes as a pair, each at full health (the ladder carries the cost).
 - **Act 3 (11–15), affixes** (`AFFIX`, `systems/affixes.ts`): elites carry one, bosses and
   mid-bosses two, drawn as they arrive: **shield** (blocks whole hits, 3, one back every 2 s),
