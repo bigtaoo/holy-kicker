@@ -53,6 +53,7 @@ export const tr: Table<typeof en> = {
     giveUpConfirm: 'Pes etmek için tekrar dokun',
     nextChest: 'Sonraki sandık: {wave}. dalga',
     chestEarned: 'Sandık kazandın!',
+    chestLater: 'Oyun bitince lobide aç',
     switch: { music: 'Müzik', effects: 'Efektler', shake: 'Ekran sarsıntısı', haptics: 'Titreşim' },
     waveStart: 'Dalga {wave}',
     elite: 'Seçkin bir düşman geliyor!',

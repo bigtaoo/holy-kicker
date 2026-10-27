@@ -53,6 +53,7 @@ export const th: Table<typeof en> = {
     giveUpConfirm: 'แตะอีกครั้งเพื่อยอมแพ้',
     nextChest: 'หีบถัดไป: เวฟ {wave}',
     chestEarned: 'ได้หีบแล้ว!',
+    chestLater: 'จบรอบแล้วไปเปิดที่ล็อบบี้',
     switch: { music: 'ดนตรี', effects: 'เสียงเอฟเฟกต์', shake: 'จอสั่น', haptics: 'การสั่น' },
     waveStart: 'เวฟ {wave}',
     elite: 'อีลีทกำลังมา!',

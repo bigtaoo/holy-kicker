@@ -53,6 +53,7 @@ export const pl: Table<typeof en> = {
     giveUpConfirm: 'Dotknij ponownie, by się poddać',
     nextChest: 'Następna skrzynia: fala {wave}',
     chestEarned: 'Skrzynia zdobyta!',
+    chestLater: 'Otwórz ją w lobby po rozgrywce',
     switch: { music: 'Muzyka', effects: 'Efekty', shake: 'Wstrząsy', haptics: 'Wibracje' },
     waveStart: 'Fala {wave}',
     elite: 'Nadchodzi elitarny wróg!',

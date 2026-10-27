@@ -53,6 +53,7 @@ export const ja: Table<typeof en> = {
     giveUpConfirm: 'もう一度タップであきらめる',
     nextChest: '次の宝箱：ウェーブ {wave}',
     chestEarned: '宝箱ゲット！',
+    chestLater: 'プレイ後にロビーで開けよう',
     switch: { music: '音楽', effects: '効果音', shake: '画面揺れ', haptics: '振動' },
     waveStart: 'ウェーブ {wave}',
     elite: 'エリート襲来！',

@@ -53,6 +53,7 @@ export const it: Table<typeof en> = {
     giveUpConfirm: 'Tocca di nuovo per arrenderti',
     nextChest: 'Prossimo forziere: ondata {wave}',
     chestEarned: 'Forziere ottenuto!',
+    chestLater: 'Aprilo nella lobby a fine partita',
     switch: { music: 'Musica', effects: 'Effetti', shake: 'Scossoni', haptics: 'Vibrazione' },
     waveStart: 'Ondata {wave}',
     elite: 'Arriva un’élite!',

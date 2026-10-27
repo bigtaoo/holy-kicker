@@ -53,6 +53,7 @@ export const es: Table<typeof en> = {
     giveUpConfirm: 'Toca otra vez para rendirte',
     nextChest: 'Próximo cofre: oleada {wave}',
     chestEarned: '¡Cofre ganado!',
+    chestLater: 'Ábrelo en el lobby al terminar la partida',
     switch: { music: 'Música', effects: 'Efectos', shake: 'Temblor', haptics: 'Vibración' },
     waveStart: 'Oleada {wave}',
     elite: '¡Se acerca un élite!',

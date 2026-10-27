@@ -53,6 +53,7 @@ export const pt: Table<typeof en> = {
     giveUpConfirm: 'Toque de novo para desistir',
     nextChest: 'Próximo baú: onda {wave}',
     chestEarned: 'Baú conquistado!',
+    chestLater: 'Abra no lobby depois da partida',
     switch: { music: 'Música', effects: 'Efeitos', shake: 'Tremor', haptics: 'Vibração' },
     waveStart: 'Onda {wave}',
     elite: 'Um elite está chegando!',

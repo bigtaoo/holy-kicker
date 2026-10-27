@@ -53,6 +53,7 @@ export const fr: Table<typeof en> = {
     giveUpConfirm: 'Touche encore pour abandonner',
     nextChest: 'Prochain coffre : vague {wave}',
     chestEarned: 'Coffre gagné !',
+    chestLater: 'Ouvre-le dans le lobby après la partie',
     switch: { music: 'Musique', effects: 'Effets', shake: 'Secousses', haptics: 'Vibration' },
     waveStart: 'Vague {wave}',
     elite: 'Une élite arrive !',

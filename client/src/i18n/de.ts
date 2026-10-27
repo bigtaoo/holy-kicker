@@ -53,6 +53,7 @@ export const de: Table<typeof en> = {
     giveUpConfirm: 'Nochmal tippen zum Aufgeben',
     nextChest: 'Nächste Truhe: Welle {wave}',
     chestEarned: 'Truhe verdient!',
+    chestLater: 'Nach dem Lauf in der Lobby öffnen',
     switch: { music: 'Musik', effects: 'Effekte', shake: 'Wackeln', haptics: 'Vibration' },
     waveStart: 'Welle {wave}',
     elite: 'Eine Elite naht!',

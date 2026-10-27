@@ -53,6 +53,7 @@ export const id: Table<typeof en> = {
     giveUpConfirm: 'Ketuk lagi untuk menyerah',
     nextChest: 'Peti berikutnya: gelombang {wave}',
     chestEarned: 'Peti didapat!',
+    chestLater: 'Buka di lobi setelah permainan',
     switch: { music: 'Musik', effects: 'Efek', shake: 'Getar layar', haptics: 'Getaran' },
     waveStart: 'Gelombang {wave}',
     elite: 'Elit datang!',

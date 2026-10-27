@@ -53,6 +53,7 @@ export const ko: Table<typeof en> = {
     giveUpConfirm: '한 번 더 누르면 포기',
     nextChest: '다음 상자: {wave} 웨이브',
     chestEarned: '상자 획득!',
+    chestLater: '플레이가 끝나면 로비에서 열기',
     switch: { music: '음악', effects: '효과음', shake: '화면 흔들림', haptics: '진동' },
     waveStart: '웨이브 {wave}',
     elite: '정예 등장!',

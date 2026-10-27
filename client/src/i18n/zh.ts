@@ -53,6 +53,7 @@ export const zh: Table<typeof en> = {
     giveUpConfirm: '再点一次放弃',
     nextChest: '下个宝箱：第 {wave} 波',
     chestEarned: '获得宝箱！',
+    chestLater: '本局结束后回大厅领取',
     switch: { music: '音乐', effects: '音效', shake: '震屏', haptics: '振动' },
     waveStart: '第 {wave} 波',
     elite: '精英来袭！',

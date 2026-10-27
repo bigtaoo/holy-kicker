@@ -51,6 +51,7 @@ export const en = {
     giveUpConfirm: 'Tap again to give up',
     nextChest: 'Next chest: wave {wave}',
     chestEarned: 'Chest earned!',
+    chestLater: 'Open it in the lobby after the run',
     switch: { music: 'Music', effects: 'Sound effects', shake: 'Screen shake', haptics: 'Vibration' },
     waveStart: 'Wave {wave}',
     elite: 'An elite is coming!',

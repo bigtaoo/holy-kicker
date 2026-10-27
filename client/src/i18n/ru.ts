@@ -53,6 +53,7 @@ export const ru: Table<typeof en> = {
     giveUpConfirm: 'Нажми ещё раз, чтобы сдаться',
     nextChest: 'Следующий сундук: волна {wave}',
     chestEarned: 'Сундук получен!',
+    chestLater: 'Открой его в лобби после забега',
     switch: { music: 'Музыка', effects: 'Звуки', shake: 'Тряска', haptics: 'Вибрация' },
     waveStart: 'Волна {wave}',
     elite: 'Идёт элитный враг!',

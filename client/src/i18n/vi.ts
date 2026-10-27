@@ -53,6 +53,7 @@ export const vi: Table<typeof en> = {
     giveUpConfirm: 'Chạm lần nữa để bỏ cuộc',
     nextChest: 'Rương tiếp theo: đợt {wave}',
     chestEarned: 'Nhận được rương!',
+    chestLater: 'Mở ở sảnh sau khi chơi xong',
     switch: { music: 'Nhạc', effects: 'Âm thanh', shake: 'Rung màn hình', haptics: 'Rung' },
     waveStart: 'Đợt {wave}',
     elite: 'Tinh anh xuất hiện!',

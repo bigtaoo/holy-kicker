@@ -253,12 +253,12 @@ export class RunHud implements Screen {
   /**
    * A banner across the middle: the wave number, for elite and boss waves a warning, and around
    * a boss its line of the story; `cheer` (passing the last run's fall) under the number, and
-   * `chest` says the wave just cleared earned a chest.
+   * `chest` says the wave just cleared earned a chest, to open in the lobby.
    */
   announce(wave: number, warning: string | null, story: StoryLine | null = null, cheer: string | null = null, record = false, chest = false): void {
     const lines: [string, number][] = [[t('run.waveStart', { wave }), 96]];
     if (cheer) lines.push([cheer, record ? 88 : 72]);
-    if (chest) lines.push([t('run.chestEarned'), 64]);
+    if (chest) lines.push([t('run.chestEarned'), 64], [t('run.chestLater'), 48]);
     if (warning) lines.push([warning, 64]);
     const time = Math.max(story ? STORY_TIME : BANNER_TIME, record ? RECORD_BURST.length : 0);
     this.showBanner({ lines, story, t: time, record: record && !!cheer, age: 0 });
