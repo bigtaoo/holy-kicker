@@ -38,6 +38,16 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
   lower level on a tie), and on a desktop the focus moves there; any tap, pointer move or key
   hides it for that offer. It never picks for them and has no text (`client/src/ui/cardNudge.ts`,
   `engine/bot/bot.ts` `suggestCard`).
+- **Moving needs no discovery on a desktop.** Touch screens drag anywhere (a floating stick).
+  On a desktop the hero also follows a hovering mouse, no button held: he walks toward the
+  pointer, slowly near him and at full speed about two hero heights out, and stops when it rests
+  on him (a 50-unit dead zone), leaves the canvas or the window loses the focus. WASD/arrows and
+  the mouse drag win; after them hover waits for the mouse to move again, so a keyboard player
+  who lets go stands still. Mouse pointers only, off in the iOS app; it only feeds the move
+  command, the engine never knows (`client/src/game/hoverSteer.ts`). Desktop players who never
+  moved the hero were most of the first-minute leavers (Playgama 10-25: 345 reached the move
+  step, 150 got past it). The desktop move hint shows the arrow keys with "or just move the
+  mouse" under them.
 - **Lobby features unlock gradually:**
 
 | Unlocks at | Feature |
