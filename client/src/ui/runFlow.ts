@@ -168,7 +168,9 @@ export class RunFlow {
     this.watch = new RunWatch(game, hud, {
       chapter, novice: save.runs < BALANCE.novice.runs, steer: save.cleared === 0, portal: h.portal, net: h.net,
       // the death panel asks the host only when it would offer the ad's revive, and waits on its answer only briefly
-      ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', within(h.ads.rewardedAvailable(), DOWN_AD_WAIT_MS).catch(() => false)) }, past: runPast(save, chapter, this.hard),
+      ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', within(h.ads.rewardedAvailable(), DOWN_AD_WAIT_MS).catch(() => false)) },
+      // a challenge earns none of the chapter's chests and leaves its best and its last fall alone
+      past: c ? undefined : runPast(save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
       kills: () => this.kills,
       pairHint: { due: () => !loadSettings(h.platform.storage).pairsTold, done: () => updateSettings(h.platform.storage, { pairsTold: true }) },

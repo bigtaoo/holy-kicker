@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { t } from '../i18n';
+import { BALANCE } from '../meta/balance';
 import { clearedChapterOne, deviceWith, endRun, rigShell, tapWhenUp, type ShellRig } from '../testkit/testShell';
 
 
@@ -20,6 +21,22 @@ async function playTo(rig: ShellRig, wave: number): Promise<void> {
   await rig.until(() => rig.shell.place() === 'results');
   await rig.tick(30);
 }
+
+describe('challenge run', () => {
+  it('promises no chapter chest: none ahead on the HUD, none earned past its wave', async () => {
+    const rig = await lobby();
+    await tapWhenUp(rig, 'challenge.tile');
+    await tapWhenUp(rig, 'lobby.play');
+    await rig.until(() => rig.shell.place() === 'run');
+    const chestLines = () => rig.texts().filter((s) => s === t('run.chestEarned') || BALANCE.chests.some((c) => s === t('run.nextChest', { wave: c.wave })));
+    await rig.tick(5);
+    expect(chestLines()).toEqual([]);
+    rig.shell.run!.engine.state.wave = BALANCE.chests[0].wave + 1;
+    await rig.tick(5);
+    expect(chestLines()).toEqual([]);
+    expect(rig.faults).toEqual([]);
+  });
+});
 
 describe('challenge results', () => {
   it('the daily: its own results, the wave rewards paid, the streak started, back to the lobby', async () => {
