@@ -51,7 +51,7 @@ export function giftPanel(save: SaveData, now: number, w: number, h: number, ico
     const span = last ? perRow - (i % perRow) : 1;
     const cw = span * CELL_W + (span - 1) * GAP;
     const state = i < save.gifts ? 'claimed' : i === save.gifts && ready ? 'ready' : 'later';
-    const c = cell(i + 1, giftHaul(save, gift), state, cw, icons);
+    const c = cell(i + 1, giftHaul(save, gift), gift.monk, state, cw, icons);
     c.position.set(-rowW / 2 + (i % perRow) * (CELL_W + GAP) + cw / 2, top + 170 + Math.floor(i / perRow) * (CELL_H + GAP) + CELL_H / 2);
     box.addChild(c);
   });
@@ -70,8 +70,12 @@ export function giftPanel(save: SaveData, now: number, w: number, h: number, ico
   return root;
 }
 
-/** One day: its number, what it pays (a monk's portrait, else the gear tile, and the coins), and its state. */
-function cell(day: number, haul: Haul, state: 'claimed' | 'ready' | 'later', cw: number, icons: IconSheet): Container {
+/**
+ * One day: its number, what it pays (a monk's portrait, else the gear tile, and the coins), and its state.
+ * A monk already owned (bought, or unlocked by a chapter) pays his price in jade: his portrait stays,
+ * smaller and tagged Owned, so the jade under it reads as him and the last day is not a blank cell.
+ */
+function cell(day: number, haul: Haul, monk: string | undefined, state: 'claimed' | 'ready' | 'later', cw: number, icons: IconSheet): Container {
   const c = new Container();
   const lit = state === 'ready';
   c.addChild(panel(cw, CELL_H, lit ? 0x6a4a14 : state === 'claimed' ? COLORS.panelLocked : COLORS.panel, 22));
@@ -83,11 +87,18 @@ function cell(day: number, haul: Haul, state: 'claimed' | 'ready' | 'later', cw:
     ...(haul.jade > 0 ? [['jade', haul.jade, COLORS.jade] as const] : []),
     ...(haul.copper > 0 ? [['copper', haul.copper, COLORS.copper] as const] : []),
   ];
+  const owned = monk !== undefined && !haul.monk;
   const art = haul.monk ? iconSprite(icons, `monk_${haul.monk}`, 170)
+    : owned ? iconSprite(icons, `monk_${monk}`, 130)
     : haul.drops[0] ? gearTiles(haul.drops, icons)[0]! : null;
   if (art) {
-    art.y = coins.length > 0 ? -10 : 20;
+    art.y = owned ? -40 : coins.length > 0 ? -10 : 20;
     c.addChild(art);
+  }
+  if (owned) {
+    const l = fit(label(t('shop.owned'), 48, COLORS.dim), cw - 30);
+    l.y = 58;
+    c.addChild(l);
   }
   if (haul.monk) {
     const l = fit(label(t(`monk.${haul.monk}.name`), 48, COLORS.gold), cw - 30);

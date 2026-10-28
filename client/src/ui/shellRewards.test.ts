@@ -5,7 +5,7 @@ import { achievementsReady, readyJade } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { dayKey, newDaily } from '../meta/daily';
 import { EVOLVE_IDS } from '../meta/codex';
-import { ownsMonk } from '../meta/monks';
+import { monkPrice, ownsMonk } from '../meta/monks';
 import { patrolHaul } from '../meta/patrol';
 import { chestPay, TABS } from '../meta/progress';
 import { newSave } from '../meta/save';
@@ -264,6 +264,18 @@ describe('the welcome gift, tapped through', { timeout: 30_000 }, () => {
     expect(ownsMonk(again.store.load(), 'novice')).toBe(true);
     expect(words(again)).not.toContain(t('gift.button'));
     expect([...rig.faults, ...again.faults]).toEqual([]);
+  });
+
+  it('shows the novice owned on the last day when he is already yours, and pays his price in jade', async () => {
+    const last = BALANCE.welcome.length - 1;
+    const rig = await lobbyRig({ gifts: last, giftDay: 0, monks: 0b111, jade: 0 });
+    await openRail(rig, t('gift.button'));
+    expect(words(rig)).toContain(t('shop.owned'));
+    expect(words(rig)).toContain(`+${monkPrice('novice')}`);
+    await doubleTap(rig, buttonNear(rig, t('gift.claimNow'), t('gift.title')));
+    await takeHaul(rig);
+    expect(rig.store.load().jade).toBe(monkPrice('novice'));
+    expect(rig.faults).toEqual([]);
   });
 });
 
