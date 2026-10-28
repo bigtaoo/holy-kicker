@@ -50,6 +50,7 @@ import { drawStick, heroBacking, hurtTint, makeRing, nightTint, sideGround, stag
 import { sortSteadily } from './steadySort';
 import { lateHold } from '../lateArt';
 import { LOCAL, reactTo, type EventViews } from './simEvents';
+import { ALARM_TIME, alarmLevel, type Alarm } from './threat';
 
 // Prototype scene: the hero walks around a field while a horde (jiangshi, foxes and wisps), the
 // charging big jiangshi elite and the boss chase him; he auto-kicks the cuju at the nearest enemy.
@@ -70,6 +71,8 @@ export const STICK_RADIUS = 70;
 export const FAST_SPEED = 1.5;
 /** Seconds the hero's red hurt flash takes to fade. */
 const HURT_FLASH = 0.35;
+/** The middle of the hero's figure above his feet, where the fade after a blow centres. */
+const HERO_MIDDLE = 50;
 /** Above every mob, below the effects (1e7) and numbers (1e7 + 1). */
 const HERO_TOP_Z = 5e6;
 const HERO_OVER_FX_Z = 1e7 + 0.5;
@@ -120,6 +123,9 @@ export class Game {
   private readonly stickBase: Sprite;
   private readonly stickKnob: Sprite;
   private hurtFlash = 0;
+  /** Seconds the effects round the hero stay faded after a blow, and where he is (threat.ts). */
+  private alarmT = 0;
+  private readonly alarm: Alarm = { x: 0, y: 0, level: 0 };
   /** The slow-motion look at the killing blow, and the low-health heartbeat. */
   private readonly downCam: KillCamView;
   private readonly lowHp: LowHealthView;
@@ -218,7 +224,7 @@ export class Game {
     this.downCam = new KillCamView(this.world, { hero: this.hero.view, horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
     this.lowHp = new LowHealthView(app.renderer, () => this.onHeartbeat());
     const { hero, downCam, lowHp, spells, arsenal, sutras, threats, drops } = this;
-    this.views = { hero, feedback: this.feedback, staff, fish, downCam, lowHp, fx, horde, boss, shake, threats, drops, spells, arsenal, sutras, hurt: () => (this.hurtFlash = HURT_FLASH) };
+    this.views = { hero, feedback: this.feedback, staff, fish, downCam, lowHp, fx, horde, boss, shake, threats, drops, spells, arsenal, sutras, hurt: () => { this.hurtFlash = HURT_FLASH; this.alarmT = ALARM_TIME; } };
 
     this.root.addChild(this.world, this.label);
     if (this.boss) this.bars.addChild(...this.boss.huds);
@@ -373,9 +379,12 @@ export class Game {
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
     this.zen.update(dt, inZen(p) && !p.dead, hx, hy);
     this.aura.update(dt, hx, hy, this.fx.pool);
-    this.fx.update(dt, this.aura.parts);
-    this.groundFx.update(dt);
-    this.damage.update(dt, hx, hy);
+    // just after a blow the effects round the hero fade, so the mobs biting him show through
+    this.alarmT = Math.max(0, this.alarmT - dt);
+    Object.assign(this.alarm, { x: hx, y: hy - HERO_MIDDLE, level: alarmLevel(this.alarmT) });
+    this.fx.update(dt, this.aura.parts, this.alarm);
+    this.groundFx.update(dt, [], this.alarm);
+    this.damage.update(dt, hx, hy, this.alarm);
     this.drops.draw(s.gems, alpha);
     this.threats?.draw(s.bullets, s.zones, alpha);
     this.boss?.draw(s.boss, alpha, dt, hx);

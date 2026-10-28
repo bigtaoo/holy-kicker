@@ -2,6 +2,7 @@ import { Graphics, Particle, ParticleContainer, Rectangle, Texture, type Rendere
 import { bakeTexture, keepForSession } from './bake';
 import { FxPool, fxAlpha, fxSize, type FxParticle, type FxShape } from './fx';
 import { SHADOW_Z } from './shadow';
+import { alarmFade, type Alarm } from './threat';
 
 // Draws the FxPool through one ParticleContainer: every effect is a tinted particle on a
 // small atlas drawn with Graphics at start-up, so effects need no art files and the whole
@@ -87,8 +88,8 @@ export class FxLayer {
     }
   }
 
-  /** `extra` are long-lived particles owned elsewhere (auras), drawn after the pool's. */
-  update(dt: number, extra: readonly FxParticle[] = []): void {
+  /** `extra` are long-lived particles owned elsewhere (auras), drawn after the pool's; `alarm` fades those round the hurt hero. */
+  update(dt: number, extra: readonly FxParticle[] = [], alarm?: Alarm): void {
     this.pool.step(dt);
     const live = this.pool.live;
     const count = live.length + extra.length;
@@ -108,7 +109,7 @@ export class FxLayer {
       p.scaleX = fxSize(f) / CELL;
       p.scaleY = p.scaleX * f.aspect;
       if (this.tints[i] !== f.color) p.tint = this.tints[i] = f.color;
-      p.alpha = fxAlpha(f);
+      p.alpha = alarm && alarm.level > 0 ? fxAlpha(f) * alarmFade(alarm.level, f.x - alarm.x, f.y - alarm.y) : fxAlpha(f);
     }
   }
 }

@@ -1,10 +1,12 @@
-import { Graphics, type Container } from 'pixi.js';
+import { Graphics, Sprite, type Container, type Texture } from 'pixi.js';
 import { CASTER, EMERGE, FP, HORDE, SHOOTER, TICK_RATE, rising, underground, type Mob, type MobKind } from '@hk/engine';
 import type { FxPool } from './fx';
 import { lerpX, lerpY } from './fixedStep';
 import { depthShade } from './mobAnim';
 import { MobView, type MobLook } from './mobView';
+import { rimOffsets } from './outline';
 import { SHADOW_Z, ShadowBatch } from './shadow';
+import { THREAT_REACH } from './threat';
 import type { Viewport } from './viewport';
 
 // Draws the horde: one MobView per sim mob, made when the mob joins (a mob keeps its kind for
@@ -15,6 +17,8 @@ import type { Viewport } from './viewport';
 // layer's), a mob a howl drives runs its cycle fast and kicks up snow, and a fallen skeleton
 // or shard lies hidden under the ground until the witch calls it up again. Chapter 4: a paper
 // effigy tears into flying scraps of paper as it falls (its scraps are small effigies).
+// A mob that just hurt the hero, or rose beside him, wears a red rim (threat.ts): its white
+// silhouette stamped round it, tinted, just under it, from a pool, as only a few ever wear one.
 //
 // A mob outside the view (by more than a mob's size) is still stepped, so it comes back in at
 // its true place and pose, but not drawn. The view is the world's transform as the last frame
@@ -30,6 +34,11 @@ const FOX_TINT = 0xc8a8ff;
 const VIOLET = 0xb04cff;
 const OUTLINE = 0x140c18;
 const SPLASH = 0x9fe0e6;
+/** The rising ghost's ring: a red violet, hotter than the spells' gold and the enemies' violet. */
+const MARK_RING = 0xff3c8c;
+/** The threats' rim: red like their eyes, the danger colour; this wide in world units, stamped this many times round. */
+const RIM = 0xff2a2a;
+const RIM_OFFSETS = rimOffsets(6, 10);
 /** How much a toad swells at the end of its wind-up. */
 const SWELL = 0.22;
 /** An ice wraith's swell at the end of its wind-up. */
@@ -58,6 +67,12 @@ export class HordeView {
   private readonly shadows: ShadowBatch;
   /** The world's transform has been set by a frame's camera, so it can be culled against. */
   private placed = false;
+  /** The red rims' stamps; the first `rimsUsed` are shown this frame. */
+  private readonly rims: Sprite[] = [];
+  private rimsUsed = 0;
+  /** Where the hero was last drawn, to find the mobs touching him. */
+  private hx = NaN;
+  private hy = NaN;
   /** The run was won: the horde fell with the last boss and is drawn no more. */
   routed = false;
 
@@ -67,8 +82,8 @@ export class HordeView {
     private readonly opts: HordeOptions,
     private readonly fx: FxPool,
   ) {
-    // on the ground with the shadows, so the horde stands on it
-    this.marks.zIndex = SHADOW_Z + 0.5;
+    // on the ground, so the horde stands on it, but over the spells' fields and rings, so it shows through them
+    this.marks.zIndex = SHADOW_Z + 1.25;
     // over the other shadows (the hero's, the bosses'), as when each mob's shadow joined the world after them
     // (the horde's looks share one shadow texture)
     this.shadows = new ShadowBatch(Object.values(looks)[0][0].shadowTex);
@@ -81,8 +96,19 @@ export class HordeView {
     return this.mobs[i];
   }
 
-  /** A water ghost rose at (x, y), world units. */
-  emerge(x: number, y: number): void {
+  /** The hero was hurt by the horde: every shown mob touching him becomes a threat. */
+  threaten(): void {
+    const reach = THREAT_REACH * THREAT_REACH;
+    for (const v of this.mobs) {
+      if (!v.sprite.visible) continue;
+      const { x, y } = v.sprite.position;
+      if ((x - this.hx) ** 2 + (y - this.hy) ** 2 <= reach) v.threaten();
+    }
+  }
+
+  /** Water ghost `index` rose at (x, y), world units: a threat whether it caught the hero or not. */
+  emerge(x: number, y: number, index = -1): void {
+    this.mobs[index]?.threaten();
     const r = EMERGE.grab / FP;
     this.fx.emit({ shape: 'ring', x, y, vx: 0, vy: 0, life: 0.3, size0: r * 0.6, size1: r * 2, rotation: 0, spin: 0, drag: 1, color: SPLASH, alpha: 0.9, aspect: 0.45 });
     for (let k = 0; k < 6; k++) {
@@ -110,10 +136,14 @@ export class HordeView {
     const g = this.marks;
     if (this.marked) g.clear();
     this.marked = false;
+    this.hx = hx;
+    this.hy = hy;
     this.shadows.begin();
+    this.rimsUsed = 0;
     if (this.routed) {
       for (const v of this.mobs) v.setVisible(false);
       this.shadows.end();
+      this.hideRims();
       return;
     }
     const w = this.world, k = w.scale.x, cull = this.placed && vp;
@@ -141,8 +171,34 @@ export class HordeView {
       const walk = this.opts.settle && m.kind === 'chaser' ? MOB_WALK : 0;
       v.update(dt, x, y, hx - x, m.stun > 0 ? 0 : m.haste > 0 ? HASTE_CYCLE : 1, walk, this.opts.sway);
       if (this.opts.calm) v.shade(depthShade(Math.sqrt((x - hx) * (x - hx) + (y - hy) * (y - hy))));
+      if (v.sprite.visible && v.rim > 0) this.rimOf(v.sprite, v.frameTexture(true), v.rim);
     }
     this.shadows.end();
+    this.hideRims();
+  }
+
+  /** Stamps the red rim round a threat's sprite, drawing `white`, its frame's flash copy. */
+  private rimOf(s: Sprite, white: Texture, alpha: number): void {
+    for (const [dx, dy] of RIM_OFFSETS) {
+      let r = this.rims[this.rimsUsed++];
+      if (!r) {
+        r = new Sprite({ tint: RIM });
+        this.rims.push(r);
+        this.world.addChild(r);
+      }
+      r.visible = true;
+      r.texture = white;
+      r.anchor.copyFrom(s.anchor);
+      r.scale.copyFrom(s.scale);
+      r.position.set(s.x + dx, s.y + dy);
+      r.alpha = alpha;
+      r.zIndex = s.zIndex - 0.01;
+    }
+  }
+
+  /** Hides the stamps not used this frame. */
+  private hideRims(): void {
+    for (let i = this.rimsUsed; i < this.rims.length && this.rims[i].visible; i++) this.rims[i].visible = false;
   }
 
   /** A paper effigy tore at (x, y), world units: scraps of paper flutter off. */
@@ -174,7 +230,7 @@ export class HordeView {
     const flat = 0.45;
     g.ellipse(x, y, r, r * flat).fill({ color: VIOLET, alpha: 0.12 + 0.18 * k });
     g.ellipse(x, y, r * k, r * k * flat).fill({ color: VIOLET, alpha: 0.28 });
-    g.ellipse(x, y, r, r * flat).stroke({ color: OUTLINE, width: 7, alpha: 0.5 }).ellipse(x, y, r, r * flat).stroke({ color: VIOLET, width: 4 });
+    g.ellipse(x, y, r, r * flat).stroke({ color: OUTLINE, width: 12, alpha: 0.7 }).ellipse(x, y, r, r * flat).stroke({ color: MARK_RING, width: 7 });
     // ripples running in to the middle
     for (let j = 0; j < 2; j++) {
       const q = 1 - ((k * 2 + j * 0.5) % 1);

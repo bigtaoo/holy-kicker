@@ -2,6 +2,7 @@ import { Container, Particle, ParticleContainer, Rectangle, Text, Texture, type 
 import { digitFont } from '../ui/fonts';
 import { bakeTexture, keepForSession } from './bake';
 import { DamagePool, damageAlpha, damageScale, heroClear, type CritLook } from './damage';
+import { alarmFade, type Alarm } from './threat';
 
 // Draws the DamagePool through one ParticleContainer, one particle per digit. The ten digit
 // glyphs are rendered once at start-up with the canvas font into a small atlas (white fill,
@@ -76,7 +77,8 @@ export class DamageLayer {
     }
   }
 
-  update(dt: number, hx: number, hy: number): void {
+  /** `alarm` fades the numbers round the hero just after a blow (threat.ts). */
+  update(dt: number, hx: number, hy: number, alarm?: Alarm): void {
     this.pool.step(dt);
     const live = this.pool.live;
     let count = 0;
@@ -98,7 +100,7 @@ export class DamageLayer {
       for (let j = 0; j < n; j++) width += advances[d.digits[j]];
       let x = d.x - (width * s) / 2;
       const tint = d.crit ? this.crit : NORMAL;
-      const alpha = damageAlpha(d) * (this.clearHero ? heroClear(d.x, d.y, hx, hy) : 1);
+      const alpha = damageAlpha(d) * (this.clearHero ? heroClear(d.x, d.y, hx, hy) : 1) * (alarm ? alarmFade(alarm.level, d.x - alarm.x, d.y - alarm.y) : 1);
       for (let j = 0; j < n; j++) {
         const p = this.particles[k++];
         const a = advances[d.digits[j]] * s;

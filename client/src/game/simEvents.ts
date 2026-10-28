@@ -68,6 +68,7 @@ export function reactTo(v: EventViews, events: readonly SimEvent[], s: SimState)
           v.hero.hurt();
           v.hurt();
           v.downCam.struck(e.src, e.x, e.y);
+          if (e.src === 'mob' || e.src === 'crowd') v.horde.threaten();
         }
         break;
       case 'heroDown':
@@ -96,7 +97,7 @@ export function reactTo(v: EventViews, events: readonly SimEvent[], s: SimState)
         break;
       }
       case 'emerge':
-        v.horde.emerge(e.x / FP, e.y / FP);
+        v.horde.emerge(e.x / FP, e.y / FP, e.index);
         break;
       case 'howl':
         howlFx(v.fx.pool, e.x / FP, e.y / FP, e.radius / FP);

@@ -1,6 +1,7 @@
 import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { faceSide } from './camera';
 import { makeShadow, sizeShadow, type ShadowBatch } from './shadow';
+import { THREAT_TIME, threatAlpha } from './threat';
 import { SETTLE, corpseAlpha, frameAt, greyTint, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
 
 // Draws mobs from their baked sheets: a looping animated sprite over a ground shadow that
@@ -69,6 +70,8 @@ export class MobView {
   private squash = 0;
   private squashLen = SQUASH_TIME;
   private flash = 0;
+  /** Seconds left as a threat (threat.ts): no white flash, and the horde rims it red. */
+  private threat = 0;
   private hold = 0;
   /** 1 while looking right, -1 left. */
   private side = 1;
@@ -141,6 +144,16 @@ export class MobView {
     this.hold = Math.max(this.hold, hold);
   }
 
+  /** The mob just hurt the hero, or rose beside him: it stands out for a while. */
+  threaten(): void {
+    this.threat = THREAT_TIME;
+  }
+
+  /** The red rim's alpha, 0 for none. */
+  get rim(): number {
+    return threatAlpha(this.threat);
+  }
+
   /** True while the drawing holds still after a flinch, so things drawn with it can hold too. */
   get held(): boolean {
     return this.hold > 0;
@@ -170,7 +183,9 @@ export class MobView {
     if (!held && !(walk > 0 && holdsStill(meta, this.frame, this.pace))) this.time += dt * speed;
     const f = (this.frame = frameAt(meta, this.time, this.phase));
     this.flash = Math.max(0, this.flash - dt);
-    this.sprite.texture = textures[f + (this.flash > 0 ? meta.flash : 0)];
+    this.threat = Math.max(0, this.threat - dt);
+    // a threat keeps its colours under the spells' hits, so it does not melt into the white crowd
+    this.sprite.texture = textures[f + (this.flash > 0 && this.threat <= 0 ? meta.flash : 0)];
     if (!held) this.side = faceSide(this.side, faceX, FACE_DEAD);
     const flip = (this.side < 0) === this.look.facesLeft ? 1 : -1;
     let sx = this.scale * (1 + this.swell);
