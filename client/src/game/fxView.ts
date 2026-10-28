@@ -8,6 +8,12 @@ import { SHADOW_Z } from './shadow';
 // layer is one draw call.
 
 const CELL = 64;
+/**
+ * Clear columns between two cells: a particle scaled up samples half a texel past its frame, so
+ * without a gutter a big glow drew the band's solid edge next door as a thin line down its side.
+ */
+const GUTTER = 4;
+const STRIDE = CELL + GUTTER;
 const SHAPES: FxShape[] = ['spark', 'puff', 'ring', 'glow', 'band'];
 const MAX_PARTICLES = 3000;
 /** Particles allocated at start-up: a nova killing ~190 mobs peaks around 1600. */
@@ -24,6 +30,7 @@ export const GROUND_PREWARM = 800;
 function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
   const g = new Graphics();
   const h = CELL / 2;
+  const x0 = (i: number) => i * STRIDE;
   // spark: a four-point star
   const star: number[] = [];
   for (let i = 0; i < 8; i++) {
@@ -33,19 +40,21 @@ function drawAtlas(renderer: Renderer): Map<FxShape, Texture> {
   }
   g.poly(star).fill(0xffffff);
   // puff: a soft disc, built from stacked translucent circles
-  for (let i = 6; i >= 1; i--) g.circle(CELL + h, h, (h * 0.95 * i) / 6).fill({ color: 0xffffff, alpha: 0.22 });
+  for (let i = 6; i >= 1; i--) g.circle(x0(1) + h, h, (h * 0.95 * i) / 6).fill({ color: 0xffffff, alpha: 0.22 });
   // ring
-  g.circle(CELL * 2 + h, h, h * 0.8).stroke({ color: 0xffffff, width: h * 0.22 });
+  g.circle(x0(2) + h, h, h * 0.8).stroke({ color: 0xffffff, width: h * 0.22 });
   // glow: a disc with a solid core and a stepped falloff
-  for (let i = 4; i >= 1; i--) g.circle(CELL * 3 + h, h, (h * 0.97 * i) / 4).fill({ color: 0xffffff, alpha: i === 1 ? 1 : 0.3 });
+  for (let i = 4; i >= 1; i--) g.circle(x0(3) + h, h, (h * 0.97 * i) / 4).fill({ color: 0xffffff, alpha: i === 1 ? 1 : 0.3 });
   // band: a bar across the whole cell, solid in the middle, so segments join into rings and bolts
   // with 2 px clear above and below: without MSAA a quad's edge only looks smooth when the
-  // texture fades to transparent before it
-  g.rect(CELL * 4, 2, CELL, CELL - 4).fill({ color: 0xffffff, alpha: 0.35 });
-  g.rect(CELL * 4, CELL * 0.22, CELL, CELL * 0.56).fill({ color: 0xffffff, alpha: 1 });
-  const atlas = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, CELL * SHAPES.length, CELL), resolution: 1, antialias: true });
+  // texture fades to transparent before it. It runs one column on into the gutter before it, so
+  // the texel past either end is still the bar and segments meet without a seam (the atlas ends after it).
+  const bx = x0(4) - 1;
+  g.rect(bx, 2, CELL + 1, CELL - 4).fill({ color: 0xffffff, alpha: 0.35 });
+  g.rect(bx, CELL * 0.22, CELL + 1, CELL * 0.56).fill({ color: 0xffffff, alpha: 1 });
+  const atlas = bakeTexture(renderer, { target: g, frame: new Rectangle(0, 0, x0(SHAPES.length - 1) + CELL, CELL), resolution: 1, antialias: true });
   const out = new Map<FxShape, Texture>();
-  SHAPES.forEach((s, i) => out.set(s, new Texture({ source: atlas.source, frame: new Rectangle(i * CELL, 0, CELL, CELL) })));
+  SHAPES.forEach((s, i) => out.set(s, new Texture({ source: atlas.source, frame: new Rectangle(x0(i), 0, CELL, CELL) })));
   return out;
 }
 
