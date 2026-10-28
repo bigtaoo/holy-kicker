@@ -148,7 +148,8 @@ steps through four colour bands by share of the max health, green from 75 %, yel
 ### Clear time
 
 Chapter boards rank clears by simulated time to a tenth (pauses, ads and level-up cards do not
-count; fast-forward does not change it), and from chapter 3 a wave waits for its kills, so the
+count; fast-forward does not change it: the HUD's toggle plays the run at 1.5x and every run,
+resumed ones too, starts at normal speed), and from chapter 3 a wave waits for its kills, so the
 time measures the build. A won run's results show it as m:ss.t against the chapter's best in
 that mode: a gold "new best, X s faster" or the best that stands (`ui/clearTime.ts`). The save
 keeps the best per chapter and mode (`times`, `hardTimes`, `meta/clearTimes.ts`; a merge keeps
@@ -419,7 +420,8 @@ Two currencies only:
   (robe t1, pendant t2 + 30 jade, bracers t2 + 300 copper); days 4–7 carry the player past the
   point where about 29 % leave at a results screen: sash t2 + 300 copper, sandals t2 + 30 jade,
   the chosen relic at t2 + 300 copper, and on day 7 the novice monk (worth 300 jade, about four
-  days of tasks; a player who owns him already gets the 300 jade). The bigger gifts sit late so
+  days of tasks; a player who owns him already gets the 300 jade, and the day's cell shows his portrait tagged
+  Owned over it). The bigger gifts sit late so
   coming back is what pays, not the first session.
 - **Daily-challenge streak** (`challenge.streak`): consecutive UTC days with a counted daily run.
   Each counted run pays 2 jade per streak day, at most 14 (day 7 and on), on top of the
