@@ -96,6 +96,8 @@ is recorded.
 - **Progress chests** at waves 10/20/30/40/50 of each chapter, claimable once each, so a
   failed push still pays. A run only unlocks them; the player opens them on the lobby's chapter
   card (a lit chest with a dot), which keeps the results short and gives the lobby a first tap.
+  A daily or weekly challenge run is not the chapter: it shows no chest goal or chest banner,
+  no last-fall mark and no record cheer (`runFlow.ts` gives its `RunWatch` no `past`).
 - Clearing a chapter unlocks the next. Three stars on a chapter open its hard mode ("Stars").
 - **Twenty chapters over the five maps** (engine `chapters.ts`): chapter c plays map
   ((c−1) % 5) + 1, five chapters to an act, so a new act costs no new art. The climb from one
@@ -266,8 +268,13 @@ blows land, the bigger each one is drawn. None of this touches the engine.
 - **Tiers** (`fx.ts` `FX_TIER`): must (hurt, elite, boss, warnings) ignores the fill budget;
   the hero's own blow may use all of it, hit and kill garnish 75 %, ambient dust 35 %, so on a
   full screen the dust goes first and the hero's blow last.
+- **Threats** (`threat.ts`): a mob touching the hero when he is hurt, or a water ghost rising
+  beside him, skips the white hit flash and wears a red rim for 1.2 s, and the ghost's mark is
+  drawn above the spell fields. For 0.5 s after each blow the effects and damage numbers within
+  about 200 units of the hero fade by half, so the biters show through the densest spot on screen.
 - Colours keep the art rule: hero effects warm (gold, saffron), enemy effects cold (teal, grey).
-  Every new colour has a corgi variant (`CORGI_FX`).
+  Every new colour has a corgi variant (`CORGI_FX`). The particle atlas keeps a gutter between
+  its cells, so a scaled-up glow never samples its neighbour's edge as a thin line.
 
 ## Meta progression
 
