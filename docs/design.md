@@ -361,7 +361,8 @@ chapter is meant to carry the next one; chapters 3–5 are to be tuned against t
 
 - **Sutras:** achievements grant sutras; each adds a spell or passive to the in-run pick pool.
   New players see a small, readable pool; veterans get more combinations.
-- **Codex** records discovered evolutions.
+- **Codex** records discovered evolutions. Portrait shows a 3-column grid with the picked entry's
+  detail under it; a landscape lobby shows a 4-column grid with the detail beside it, so every row fits.
 - **Monks (characters)**: the kicker, the fat monk (tanky, slow, bounces the crowd off when hit)
   and the novice (fast, fragile, dodges on the run), the last two bought with jade
   (docs/content.md "Monks").

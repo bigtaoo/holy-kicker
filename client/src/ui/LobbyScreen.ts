@@ -458,7 +458,7 @@ export class LobbyScreen implements Screen {
     const tab = codexTab(this.save.codex, earnedSutras(this.save), this.icons, this.codexPick, (id) => {
       this.codexPick = id;
       this.relayout();
-    }, h - TAB_H - top - 20);
+    }, h - TAB_H - top - 20, isWide(w, h));
     tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
