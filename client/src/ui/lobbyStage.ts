@@ -1,4 +1,4 @@
-import { Container, Graphics } from 'pixi.js';
+import { Container, Graphics, Rectangle } from 'pixi.js';
 import { TaoActor, type TaoAsset } from '../game/tao/TaoActor';
 import { THEME } from '../theme';
 import { actDrift, breath, hop, speckAt, type DriftStyle } from './lobbyAmbient';
@@ -34,9 +34,10 @@ export class LobbyFigure {
     this.view.addChild(spotlight(height));
     const shadow = new Graphics().ellipse(0, 0, height * 0.32, height * 0.07).fill({ color: COLORS.outline, alpha: 0.3 });
     this.view.addChild(shadow, this.body);
-    // the tap area: his whole figure, a little wider than the drawing
-    const hit = new Graphics().rect(-height * 0.35, -height, height * 0.7, height).fill({ color: 0xffffff, alpha: 0.001 });
-    this.view.addChild(hit);
+    // the tap area: his whole figure, a little wider than the drawing; never the spotlight or the
+    // shadow, which reach over the chapter card's › arrow on a tablet on its side
+    this.view.hitArea = new Rectangle(-height * 0.35, -height, height * 0.7, height);
+    this.view.interactiveChildren = false;
     this.view.eventMode = 'static';
     this.view.cursor = 'pointer';
     this.view.on('pointertap', () => this.tap());
