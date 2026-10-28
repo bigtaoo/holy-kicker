@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { t } from '../i18n';
 import { loadSettings, updateSettings, VOLUME_STEPS } from '../meta/settings';
 import { MemoryStore } from '../meta/saveStore';
+import { FAST_SPEED } from '../game/Game';
 import { clearedChapterOne, deviceWith, tap, tapNamed, tapWhenUp, textsIn } from '../testkit/testShell';
 import { liveRun, untilOffer, type LiveOptions, type LiveRun } from '../testkit/liveRun';
 import type { Switch } from './pausePanel';
@@ -159,30 +160,28 @@ describe('the pause panel switches', { timeout: 30_000 }, () => {
 });
 
 describe('the fast-forward toggle', { timeout: 30_000 }, () => {
-  it('doubles the run, is kept on the device, and the next run and a fresh shell start fast', async () => {
+  it('plays the run at 1.5x, and every new run starts at normal speed', async () => {
     const run = await liveRun();
     const kv = run.platform.storage as MemoryStore;
     expect(run.game().speed).toBe(1);
     await tapNamed(run, 'fast');
     await run.tick(1);
-    expect(run.game().speed).toBe(2);
-    expect(loadSettings(kv).fast).toBe(true);
-    // two sim ticks for each tick-long frame
+    expect(run.game().speed).toBe(FAST_SPEED);
+    expect(FAST_SPEED).toBe(1.5);
+    // three sim ticks for each two tick-long frames: 30 ticks in about 20 frames (30 at 1x, 15 at 2x)
     const at = run.sim().tick;
-    await run.ticks(20);
-    expect(run.sim().tick - at).toBeLessThan(30);
+    let frames = 0;
+    await run.untilSim((s) => (frames++, s.tick >= at + 30));
+    expect(frames).toBeGreaterThan(17);
+    expect(frames).toBeLessThan(24);
 
     await tapNamed(run, 'II');
     await leave(run);
     await tapWhenUp(run, 'results.again');
     await run.until(() => run.shell.place() === 'run');
-    expect(run.game().speed).toBe(2);
+    expect(run.game().speed).toBe(1);
 
     const next = await liveRun({ storage: kv });
-    expect(next.game().speed).toBe(2);
-    await tapNamed(next, 'fast');
-    await next.tick(1);
     expect(next.game().speed).toBe(1);
-    expect(loadSettings(kv).fast).toBe(false);
   });
 });

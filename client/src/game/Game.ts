@@ -66,6 +66,8 @@ const HERO_HEIGHT = 120;
 /** Each monk's height, percent of HERO_HEIGHT: the novice is a small boy. */
 const MONK_HEIGHT: Record<MonkId, number> = { kicker: 100, fat: 100, novice: 88 };
 export const STICK_RADIUS = 70;
+/** The HUD's fast-forward: sim time per real time while it is on. */
+export const FAST_SPEED = 1.5;
 /** Seconds the hero's red hurt flash takes to fade. */
 const HURT_FLASH = 0.35;
 /** Above every mob, below the effects (1e7) and numbers (1e7 + 1). */
@@ -135,7 +137,7 @@ export class Game {
   watchEnd = 0;
   /** Whether the last frame stepped the sim: false while paused, on an open offer or once over. */
   stepping = false;
-  speed = 1; // sim time per real time: 2 fast-forwards the run (ticks and animations), 1 is normal
+  speed = 1; // sim time per real time: FAST_SPEED fast-forwards the run (ticks and animations), 1 is normal
   private readonly onTick = (t: { deltaMS: number }, start = performance.now()) => (this.frame(t.deltaMS), (frameWork.run += performance.now() - start));
   /** Dev: the bot playing instead of the stick (?autoplay). */
   private readonly autoplay: Autoplay | null;

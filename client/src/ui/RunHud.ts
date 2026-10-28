@@ -28,7 +28,7 @@ import { waveBanner } from './waveBanner';
 export interface RunActions {
   pause(): void;
   resume(): void;
-  /** Runs the sim at double speed, or back at normal. */
+  /** Runs the sim fast (FAST_SPEED), or back at normal. */
   setFast(fast: boolean): void;
   giveUp(): void;
   /** Revives, free or after the rewarded ad; resolves whether it did. */
@@ -69,7 +69,7 @@ export class RunHud implements Screen {
   private bannerView: Container | null = null;
   private wave = 0;
   private paused = false;
-  /** The run plays at double speed. */
+  /** The run plays fast; every run starts at normal speed. */
   private fast = false;
   /** The language picker over the pause panel. */
   private languages = false;
@@ -211,7 +211,7 @@ export class RunHud implements Screen {
     this.build?.setCharges(charges);
   }
 
-  /** Starts the run fast or not (the last run's choice); the toggle then keeps it. */
+  /** Plays the run fast or at normal speed (the toggle). */
   setFast(fast: boolean): void {
     this.fast = fast;
     this.actions.setFast(fast);

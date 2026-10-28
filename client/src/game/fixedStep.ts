@@ -16,8 +16,10 @@ export class FixedStep {
   advance(frameMs: number, speed = 1): number {
     this.acc += Math.max(0, frameMs) * speed;
     let steps = Math.floor(this.acc / TICK_MS);
-    if (steps > MAX_STEPS * speed) {
-      steps = MAX_STEPS * speed;
+    // a fractional speed (fast-forward's 1.5) still steps whole ticks
+    const most = Math.floor(MAX_STEPS * speed);
+    if (steps > most) {
+      steps = most;
       this.acc = 0;
     } else {
       this.acc -= steps * TICK_MS;

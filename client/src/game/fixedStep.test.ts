@@ -34,4 +34,12 @@ describe('FixedStep', () => {
     }
     expect(new FixedStep().advance(2000, 2)).toBe(MAX_STEPS * 2);
   });
+
+  it('runs 45 whole steps a second at 1.5x, its backlog cap a whole number too', () => {
+    const f = new FixedStep();
+    let steps = 0;
+    for (let i = 0; i < 600; i++) steps += f.advance(1000 / 60, 1.5);
+    expect(Math.abs(steps - 450)).toBeLessThanOrEqual(1);
+    expect(new FixedStep().advance(2000, 1.5)).toBe(Math.floor(MAX_STEPS * 1.5));
+  });
 });

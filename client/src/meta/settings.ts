@@ -4,8 +4,8 @@ import type { SharingChoice } from './privacy';
 import type { KeyValueStore } from './saveStore';
 
 // Device-only settings (docs/design.md: quality, volume and language stay local and are not
-// part of the save): the language, the sound effects' volume, the render quality and whether runs
-// play fast, whether the screen shakes and the phone buzzes, the player's answer about play data (meta/privacy.ts) and
+// part of the save): the language, the sound effects' volume, the render quality,
+// whether the screen shakes and the phone buzzes, the player's answer about play data (meta/privacy.ts) and
 // about reminders (meta/reminders.ts).
 
 export const SETTINGS_KEY = 'hk.settings';
@@ -25,8 +25,6 @@ export interface Settings {
   keptMusic: number;
   /** Render quality; a ?quality= dev switch wins over it. */
   quality: QualityMode;
-  /** Runs play at double speed (the HUD's fast-forward toggle). */
-  fast: boolean;
   /** The screen shakes on a big burst of kills (game/shake.ts). */
   shake: boolean;
   /** The phone buzzes on a level-up and when the hero is hurt, where it can (Platform.vibrate). */
@@ -45,7 +43,7 @@ export interface Settings {
   pairsTold: boolean;
 }
 
-export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, keptVolume: VOLUME_STEPS, keptMusic: VOLUME_STEPS, quality: 'auto', fast: false, shake: true, haptics: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, pairsTold: false };
+export const DEFAULT_SETTINGS: Settings = { locale: null, volume: VOLUME_STEPS, music: VOLUME_STEPS, keptVolume: VOLUME_STEPS, keptMusic: VOLUME_STEPS, quality: 'auto', shake: true, haptics: true, dataSharing: 'ask', boards: true, noticeSeen: false, reminders: true, remindAsked: false, pairsTold: false };
 
 function isStep(v: unknown): v is number {
   return typeof v === 'number' && Number.isInteger(v) && v >= 0 && v <= VOLUME_STEPS;
@@ -54,7 +52,7 @@ function isStep(v: unknown): v is number {
 export function loadSettings(kv: KeyValueStore): Settings {
   try {
     const raw: unknown = JSON.parse(kv.getItem(SETTINGS_KEY) ?? '{}');
-    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; keptVolume?: unknown; keptMusic?: unknown; quality?: unknown; fast?: unknown; shake?: unknown; haptics?: unknown; dataSharing?: unknown; boards?: unknown; noticeSeen?: unknown; reminders?: unknown; remindAsked?: unknown; pairsTold?: unknown } | null;
+    const r = raw as { locale?: unknown; sound?: unknown; volume?: unknown; music?: unknown; keptVolume?: unknown; keptMusic?: unknown; quality?: unknown; shake?: unknown; haptics?: unknown; dataSharing?: unknown; boards?: unknown; noticeSeen?: unknown; reminders?: unknown; remindAsked?: unknown; pairsTold?: unknown } | null;
     // files from before the volume steps only had sound on or off
     const v = r?.volume;
     const m = r?.music;
@@ -70,7 +68,6 @@ export function loadSettings(kv: KeyValueStore): Settings {
       keptVolume: kept(r?.keptVolume),
       keptMusic: kept(r?.keptMusic),
       quality: QUALITY_MODES.includes(q as QualityMode) ? (q as QualityMode) : 'auto',
-      fast: r?.fast === true,
       shake: r?.shake !== false,
       haptics: r?.haptics !== false,
       dataSharing: r?.dataSharing === 'yes' || r?.dataSharing === 'no' ? r.dataSharing : 'ask',

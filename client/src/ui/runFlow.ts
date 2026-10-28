@@ -1,6 +1,6 @@
 import type { Application } from 'pixi.js';
 import { SUTRA_IDS, type SimState } from '@hk/engine';
-import { Game, type Art } from '../game/Game';
+import { FAST_SPEED, Game, type Art } from '../game/Game';
 import type { DragStick } from '../game/dragStick';
 import type { LevelSettings } from '../game/quality';
 import { rankedRun, type SceneOptions } from '../game/scene';
@@ -151,8 +151,7 @@ export class RunFlow {
       pause: () => this.setPaused(true),
       resume: () => this.setPaused(false),
       setFast: (fast) => {
-        if (this.game) this.game.speed = fast ? 2 : 1;
-        updateSettings(h.platform.storage, { fast });
+        if (this.game) this.game.speed = fast ? FAST_SPEED : 1;
       },
       giveUp: () => this.end(),
       revive: () => this.revive(),
@@ -177,8 +176,6 @@ export class RunFlow {
       // a desktop first run, or one back from a revive's ad, waits for the keys; a pause panel opened meanwhile keeps it until Resume
       hold: h.device === 'desktop' && h.platform.keysReach ? { reach: () => h.platform.keysReach!(), start: () => void (hud.pauseShown || this.setPaused(false)) } : undefined,
     }, !!teach);
-    // the fast-forward choice carries over from the last run
-    hud.setFast(loadSettings(h.platform.storage).fast);
     // the clock only where time already matters: a chapter cleared before on this track (against its best), or a challenge
     hud.setTimer(timerShown(isCleared(save, chapter, this.hard), !!c) ? (c ? 0 : bestTime(save, chapter, this.hard)) : null);
     if (!this.watch.held) h.portal.gameplayStart();
