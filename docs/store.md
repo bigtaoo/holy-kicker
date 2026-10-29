@@ -25,26 +25,40 @@ the Chinese column is for the WeChat listing and the CrazyGames zh page.
 **en**
 
 > Holy Kicker is a one-thumb horde survivor. A cheerful monk kicks a magic cuju ball through
-> a land overrun by ghosts, and his attacks are all automatic: you only steer.
+> a land overrun by ghosts. There is no attack button: every attack is automatic, and you only
+> steer, with one finger, the keys or just the mouse.
 >
 > Every level up you pick one of three upgrades: Buddha Palm, Vajra Bolt, Flying Cymbals and
 > more. Max a spell and pair it with the right passive to evolve it into something much
 > bigger. Survive 50 waves, elite monsters and two bosses to clear a chapter.
 >
-> Between runs, merge the gear you find, train your monk and unlock new relics: a staff, a
-> wooden fish, prayer beads and an alms bowl, each of which changes how you play. Five
-> chapters lead from a ruined temple to Demon Peak, where the last enemy is yourself.
+> **Features**
+> - 20 chapters across five lands, from the Ruined Temple to Demon Peak, where the last enemy is yourself
+> - 11 spells, 5 relics and 8 passives, and 16 evolutions
+> - 3 monks who each play their own way
+> - A dozen kinds of ghosts, 4 elites and 6 bosses; an elite every five waves
+> - Three stars and a hard mode in every chapter
+> - Daily and weekly challenges with leaderboards, daily tasks, achievements and a codex
+> - Between runs: merge gear, train your monk, send him on patrol
+> - 15 languages; plays offline
 
 **zh**
 
 > 《蹴鞠僧》是一款单手操作的割草肉鸽游戏。一个乐呵呵的小和尚踢着蹴鞠，闯进妖魔横行的
-> 山野。攻击全是自动的，你只管走位。
+> 山野。没有攻击键，攻击全是自动的，你只管走位：一根手指、方向键，或者直接移动鼠标。
 >
 > 每次升级三选一：如来掌、金刚雷、飞钹……把法术升满，再配上对应的心法，就能进化成更强的形态。
 > 撑过 50 波怪、精英和两个 Boss，才算打通一章。
 >
-> 局外合成装备、修炼武僧、解锁新法器：禅杖、木鱼、念珠、钵盂，每件都会改变打法。五个章节从荒寺
-> 一路打到魔窟，最后的敌人是你自己。
+> **特色**
+> - 20 章，五片地界，从荒寺一路打到魔窟，最后的敌人是你自己
+> - 11 种法术、5 件法器、8 种心法，16 种进化
+> - 3 位武僧，各有各的打法
+> - 十几种妖怪、4 种精英、6 个 Boss，每 5 波一只精英
+> - 每章三星评级，另有困难模式
+> - 每日、每周挑战和排行榜，每日任务、成就、图鉴
+> - 局外合成装备、修炼武僧、派他去巡山
+> - 15 种语言，支持离线游玩
 
 ### Controls
 
@@ -232,7 +246,9 @@ Action and Casual, free, every storefront but mainland China.
 > • Survive 50 waves, elite monsters and two bosses to clear a chapter.
 > • Between runs, merge the gear you find, train your monk and unlock relics: a staff, a wooden
 >   fish, prayer beads and an alms bowl, each of which changes how you play.
-> • Five chapters lead from a ruined temple to Demon Peak, where the last enemy is yourself.
+> • 20 chapters across five lands lead from a ruined temple to Demon Peak, where the last enemy
+>   is yourself. Three stars and a hard mode in every chapter.
+> • Daily and weekly challenges, daily tasks, achievements and a codex to fill.
 > • Plays offline, with no account and no sign-up. Climb each chapter's leaderboard under your
 >   Game Center nickname.
 >
@@ -248,7 +264,8 @@ Action and Casual, free, every storefront but mainland China.
 > • 把法术升满，再配上对应的心法，就能进化成更强的形态。
 > • 撑过 50 波怪、精英和两个 Boss，才算打通一章。
 > • 局外合成装备、修炼武僧、解锁新法器：禅杖、木鱼、念珠、钵盂，每件都会改变打法。
-> • 五个章节从荒寺一路打到魔窟，最后的敌人是你自己。
+> • 20 章、五片地界，从荒寺一路打到魔窟，最后的敌人是你自己。每章三星评级，另有困难模式。
+> • 每日、每周挑战，每日任务、成就，还有图鉴等你收集。
 > • 支持离线游玩，无需账号和注册。用 Game Center 昵称冲击每一章的排行榜。
 >
 > 广告都是可选的奖励视频，另有两局之间的短广告。一次性购买的去广告卡让所有广告奖励直接到账、
@@ -315,8 +332,9 @@ Casual, free, every storefront but mainland China, as for Holy Kicker.
 > • Between runs, merge the gear you find, train at Boot Camp and unlock new weapons: a plasma
 >   saber, a pulse emitter, orbit drones and a disc launcher, each of which changes how you play.
 > • Recruit the squad: Brick the bouncy bulldog and Ginger the nimble cat fight their own way.
-> • Five planets lead from the Frost Moon to the Hive Core, where the last enemy is a robot copy
->   of yourself.
+> • 20 planets' worth of missions across five worlds lead from the Frost Moon to the Hive Core,
+>   where the last enemy is a robot copy of yourself. Three stars and a hard mode on every one.
+> • Daily and weekly challenges, daily tasks, achievements and a codex to fill.
 > • Plays offline, with no account and no sign-up. Climb each planet's leaderboard under your
 >   Game Center nickname.
 >
@@ -334,7 +352,8 @@ Casual, free, every storefront but mainland China, as for Holy Kicker.
 > • 局外合成装备、去训练营练兵、解锁新武器：等离子光剑、脉冲发射器、环绕无人机、飞盘发射器，
 >   每件都会改变打法。
 > • 招募小队：会弹人的斗牛犬砖头、身手轻盈的猫咪姜糖，各有各的打法。
-> • 五颗星球从冰霜月一路打到虫巢核心，最后的敌人是机器版的你自己。
+> • 五颗星球、20 场任务，从冰霜月一路打到虫巢核心，最后的敌人是机器版的你自己。每关三星评级，另有困难模式。
+> • 每日、每周挑战，每日任务、成就，还有图鉴等你收集。
 > • 支持离线游玩，无需账号和注册。用 Game Center 昵称冲击每颗星球的排行榜。
 >
 > 广告都是可选的奖励视频，另有两局之间的短广告。一次性购买的去广告卡让所有广告奖励直接到账、

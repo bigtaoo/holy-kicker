@@ -512,6 +512,35 @@ or a new single image is cheap; elites and bosses cost a rig each.
   (`client/src/game/guardPulse.ts`), not a hard strobe. Bots, 12 seeds, before → after: chapter 1
   skilled 5 → 6, casual 3 → 2, still 0 → 0; chapter 3 all 0 → 0, same median waves.
 
+### Proposal: three late-chapter kinds (not built)
+
+Recorded 10-29 after comparing the CrazyGames horde-survival field (Ninja Tide and the like):
+from chapter 6 on our chapters replay the five maps with the same mobs, only tougher, and the
+one strategy that clears everything is still circling the horde (memory: the kiting player).
+Three new mechanics would make the later acts read as new places and punish a long circle
+without punishing standing your ground. One joins per act from chapter 11 (11, 13, 16),
+mixed into the replayed map's horde as every 8th–10th newcomer:
+
+| Kind | Behaviour | Answers |
+|---|---|---|
+| Trail serpent (血迹蛇) | A fast slithering mob that leaves a hurting trail behind it for 3 s | Circling: the loop the hero runs fills with trail |
+| Fuse ghost (引火鬼) | Walks at the hero; within 260 it stops, marks a circle (radius 200, 1.2 s) and bursts, hurting the hero and every mob inside | Standing in a crowd; a kill tool for the player who baits it |
+| Mask dancer (傩面鬼) | Keeps 600 off; every 5 s marks a spot 200 ahead of the hero's heading (0.8 s), then blinks there | Running one way; the mark gives a step aside |
+
+- **Engine.** New `MobKind`s and per-chapter `CHAPTER_MOBS` entries, an ENGINE_VERSION bump
+  (52 when written), shipped on a Monday: weekly boards are keyed by the engine version and a
+  bump mid-week splits them. The fuse ghost's burst hurting mobs is the first friendly-fire
+  zone; zones today only test the hero.
+- **Art.** Baked frame loops (`tools/bake_mob.py`) for both themes: the corgi set needs its own
+  three (`client/themes/corgi.json`), cold palette, red eyes. Trail and fuse circle use the
+  attack violet, never warm colours.
+- **Proof.** `npm run balance` on chapters 11–20 with every bot style: the moving bots' win rate
+  must not fall more than a few runs (10-21's flanking test cost the moving bot 20–30 % of its
+  kills and was dropped, memory: kiting and play time); the `straight` and circling bots should
+  lose more. Journeys (`npm run journey`) keep the day-60 clear.
+- **Open.** Whether the codex gets three entries (yes, likely: it is a reason to reach act
+  three) and whether hard mode brings them earlier.
+
 ## Chapters (5)
 
 Cold palette everywhere (teal, purple, grey; red eyes); grounds must not swallow the cyan
