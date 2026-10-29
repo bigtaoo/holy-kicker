@@ -705,7 +705,8 @@ build failing if it shows up): no boards, cloud save, problem reports or privacy
 is the iframe's localStorage. The SDK's pause brackets every ad (sound off, a run paused as on a
 hidden tab); a rewarded ad pays only after `SDK_REWARDED_WATCH_COMPLETE`, and an offer shows only
 when `preloadAd('rewarded')` finds one. Interstitials keep the shared placement and pacing. The
-game id of each theme's GD draft is `GD_GAME_IDS` in `sdk.ts`; without one the SDK is not loaded.
+game id of each theme's GD draft is `GD_GAME_IDS` in `sdk.ts`; without one the SDK is not loaded
+(the corgi has one, the monk none yet). Listing and upload: docs/store.md "GameDistribution".
 
 A small server on the existing VPS comes with WeChat: `code2session` login (the app secret
 must not ship), cloud save, server time, remote config, analytics. Leaderboards later can

@@ -211,6 +211,23 @@ Still to check on the portal itself: upload the zip to the developer portal's QA
 watch a real ad fill, a signed-in save carry over between devices, and the leaderboard button
 hidden for a guest (read from the SDK's `user.isUserAccountAvailable`).
 
+## GameDistribution: Corgi Commando
+
+Game 79693 on developer.gamedistribution.com, submitted for review 2026-10-29 as version 1.0
+(review takes up to two weeks; once active a game can only be hidden, not withdrawn). The listing
+reuses the corgi's CrazyGames texts in English, cut to GD's limits (description at most 500
+characters, at most 5 tags) and without boards or cloud saves; genre Shooter, 1280x720, both
+desktop and mobile, portrait preferred, No Blood and HTTPS Ready ticked. The five JPG thumbnails
+(512x384, 512x512, 200x120, 1280x720, 1280x550) are cut from the corgi's draft covers by
+`python tools/cover_corgi_gd.py` into `art/reskin/corgi/store/gamedistribution/`.
+
+Upload: `npm run build:gamedistribution:new`, then zip `client/dist-gamedistribution-new` with
+Python's zipfile, `index.html` at the root. GD counts the SDK as done only after an ad is watched
+to its end in the upload page's test iframe: run `gdsdk.openConsole()` once on the revision URL
+(it stores the debug flags for that origin), reopen the iframe, scroll it to the debug bar and
+press Interstitial, then Rewarded (which ticks "Rewarded Ads"). Should review ask for an ad on
+Play, the GD build gets a pre-roll of its own; until then it keeps the shared pacing.
+
 ## Newgrounds (dropped)
 
 Published 2026-10-18 as portal/view/1057321 and un-published by staff a day later with no message
