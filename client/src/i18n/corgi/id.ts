@@ -237,8 +237,16 @@ export const corgiId: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Ambil hasil patroli',
     kills: 'Hancurkan {n} serangga',
+    elites: 'Hancurkan {n} serangga elite',
+    boss: 'Kalahkan {n} bos',
+    evolve: 'Evolusikan {n} gawai',
     reward: 'Tiap tugas: {copper} baut, {jade} permata',
     bonus: 'Semua diambil: +{jade} permata',
+  },
+  merit: {
+    title: 'Jalur Medali',
+    points: '{n} medali',
+    earn: 'Tugas +{task} · target mingguan +{goal}',
   },
   achieve: {
     kills: 'Hancurkan total {n} serangga',

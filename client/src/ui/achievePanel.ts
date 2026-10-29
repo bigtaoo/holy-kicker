@@ -3,15 +3,17 @@ import { formatAmount, t, type Key } from '../i18n';
 import { achievementOrder, achievementProgress, achievementState, achievementsClaimed, achievementsReady, readyJade, type AchievementGoal } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { claimable } from '../meta/daily';
+import { goalsClaimable } from '../meta/goals';
+import { meritClaimable } from '../meta/merit';
 import type { Tier } from '../meta/gear';
 import type { SaveData } from '../meta/save';
 import { tierName } from './gearText';
 import { COLORS, button, dot, fit, label, meter } from './widgets';
 
-// The achievements page of the tasks panel (meta/achievements.ts), and the Daily /
-// Achievements switch both pages share at the top. Builders only, like economyPanels.ts.
+// The achievements page of the tasks panel (meta/achievements.ts), and the Daily / Weekly /
+// Merit / Achievements switch the pages share at the top. Builders only, like economyPanels.ts.
 
-export type TasksView = 'daily' | 'achieve';
+export type TasksView = 'daily' | 'week' | 'merit' | 'achieve';
 
 export interface AchievePanelActions {
   claim(i: number): void;
@@ -19,11 +21,11 @@ export interface AchievePanelActions {
   page(n: number): void;
 }
 
-/** Both pages are this tall, so switching does not move the box. */
-export const TASKS_BOX_H = 1640;
-/** Where the first row sits below the box top, and the row pitch. */
+/** Every page is this tall, so switching does not move the box. */
+export const TASKS_BOX_H = 1720;
+/** Where the first row sits below the box top (plus the box's `head`), and the row pitch. */
 export const ROWS_TOP = 350;
-export const ROW_H = 170;
+export const ROW_H = 160;
 const PER_PAGE = 6;
 /** A row's width: the box's on a portrait frame, one of two columns on a landscape one. */
 export const COLUMN_W = 960;
@@ -34,38 +36,50 @@ export interface TasksBox {
   h: number;
   /** Rows down a column. */
   rows: number;
+  /** How much further down everything under the switch sits: a portrait switch takes two lines. */
+  head: number;
 }
 
 export function tasksBox(wide: boolean): TasksBox {
-  return wide ? { w: 2 * COLUMN_W, h: 1180, rows: PER_PAGE / 2 } : { w: COLUMN_W, h: TASKS_BOX_H, rows: PER_PAGE };
+  return wide ? { w: 2 * COLUMN_W, h: 1180, rows: PER_PAGE / 2, head: 0 } : { w: COLUMN_W, h: TASKS_BOX_H, rows: PER_PAGE, head: 80 };
 }
 
 /** Row `k`'s middle, the box top at `top`: down the first column, then the second. */
 export function rowSpot(b: TasksBox, k: number, top: number): { x: number; y: number } {
   const cols = b.w / COLUMN_W;
   const col = Math.floor(k / b.rows);
-  return { x: cols > 1 ? (col - (cols - 1) / 2) * COLUMN_W : 0, y: top + ROWS_TOP + (k % b.rows) * ROW_H };
+  return { x: cols > 1 ? (col - (cols - 1) / 2) * COLUMN_W : 0, y: top + b.head + ROWS_TOP + (k % b.rows) * ROW_H };
 }
 
 /** Just under the rows when `count` of them are shown. */
 export function rowsEnd(b: TasksBox, count: number, top: number): number {
-  return top + ROWS_TOP + Math.min(b.rows, count) * ROW_H;
+  return top + b.head + ROWS_TOP + Math.min(b.rows, count) * ROW_H;
 }
 
-/** The Daily / Achievements switch, centred on x = 0, each with a dot when something waits. */
-export function tasksSwitch(save: SaveData, now: number, view: TasksView, pick: (v: TasksView) => void): Container {
+/**
+ * The Daily / Weekly / Merit / Achievements switch across the box, centred on x = 0, each with a dot
+ * when something waits: one line on a wide box, two lines of two on a portrait one.
+ */
+export function tasksSwitch(save: SaveData, now: number, view: TasksView, box: TasksBox, pick: (v: TasksView) => void): Container {
   const c = new Container();
   const tabs: [TasksView, Key, boolean][] = [
-    ['daily', 'tasks.title', claimable(save, now) > 0],
+    ['daily', 'tasks.tabDay', claimable(save, now) > 0],
+    ['week', 'tasks.tabWeek', goalsClaimable(save, now) > 0],
+    ['merit', 'merit.title', meritClaimable(save, now) > 0],
     ['achieve', 'achieve.title', achievementsReady(save).length > 0],
   ];
+  const perLine = box.head > 0 ? 2 : tabs.length;
+  const pitch = Math.min(440, (box.w - 40) / perLine);
+  const tabW = pitch - 20;
+  const tabH = box.head > 0 ? 100 : 120;
   tabs.forEach(([v, key, waiting], i) => {
     const on = v === view;
-    const b = button(t(key), 420, 120, () => !on && pick(v), {
+    const b = button(t(key), tabW, tabH, () => !on && pick(v), {
       fill: on ? COLORS.saffron : COLORS.panelLocked, textFill: on ? COLORS.text : COLORS.dim, size: 48,
     });
-    b.x = (i - 0.5) * 440;
-    if (waiting && !on) b.addChild(dot(190, -45));
+    const line = Math.floor(i / perLine);
+    b.position.set((i % perLine - (perLine - 1) / 2) * pitch, box.head > 0 ? line * 110 - 10 : 0);
+    if (waiting && !on) b.addChild(dot(tabW / 2 - 20, 15 - tabH / 2));
     c.addChild(b);
   });
   return c;
@@ -91,11 +105,11 @@ export function achieveRows(save: SaveData, page: number, box: TasksBox, top: nu
   const ready = achievementsReady(save).length;
   if (ready > 0) {
     const all = button(t('achieve.claimAll', { jade: readyJade(save) }), 760, 100, a.claimAll, { fill: COLORS.jade, textFill: COLORS.outline, size: 48 });
-    all.y = top + 215;
+    all.y = top + box.head + 215;
     c.addChild(all);
   } else {
     const done = label(t('achieve.claimed', { n: achievementsClaimed(save), total: goals.length }), 48, COLORS.dim);
-    done.y = top + 215;
+    done.y = top + box.head + 215;
     c.addChild(done);
   }
 

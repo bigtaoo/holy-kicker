@@ -236,8 +236,16 @@ export const corgiDe: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Hol die Patrouille ab',
     kills: 'Erledige {n} Käfer',
+    elites: 'Erledige {n} Elite-Käfer',
+    boss: 'Besiege {n} {n|one:Boss|other:Bosse}',
+    evolve: 'Entwickle {n} {n|one:Gadget|other:Gadgets}',
     reward: 'Je: {copper} Schrauben, {jade} Edelsteine',
     bonus: 'Alle abgeholt: +{jade} Edelsteine',
+  },
+  merit: {
+    title: 'Medaillenpfad',
+    points: '{n} {n|one:Medaille|other:Medaillen}',
+    earn: 'Aufgabe +{task} · Wochenziel +{goal}',
   },
   achieve: {
     kills: 'Erledige insgesamt {n} Käfer',

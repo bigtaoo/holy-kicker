@@ -236,8 +236,16 @@ export const monkPl: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Odbierz z patrolu',
     kills: 'Pokonaj {n} {n|one:wroga|few:wrogów|many:wrogów|other:wroga}',
+    elites: 'Pokonaj elity: {n}',
+    boss: 'Pokonaj bossów: {n}',
+    evolve: 'Rozwiń zaklęcia: {n}',
     reward: 'Za każde: {copper} miedzi, {jade} jadeitu',
     bonus: 'Wszystko odebrane: +{jade} jadeitu',
+  },
+  merit: {
+    title: 'Księga zasług',
+    points: 'Zasługi: {n}',
+    earn: 'Zadanie +{task} · cel tygodnia +{goal}',
   },
   achieve: {
     kills: 'Pokonaj łącznie {n} {n|one:wroga|few:wrogów|many:wrogów|other:wroga}',

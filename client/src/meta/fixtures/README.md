@@ -12,7 +12,8 @@ several tiers, hard mode, a day of tasks, whatever that version had); none is a 
 | `v4.ts` | 4 | 6a16373 | aa47fd5 |
 | `v5.ts` | 5 | cc62d39 | c96f01f |
 | `v6.ts` | 6 | 3030b19 | 7dd87db |
-| `v7.ts` | 7 | f1295ab | (current) |
+| `v7.ts` | 7 | f1295ab | the rotating daily tasks |
+| `v8.ts` | 8 | claude/retention-quests-d7d1d5 | (current) |
 
 ## How they were made
 

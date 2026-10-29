@@ -3,7 +3,9 @@ import { Container } from 'pixi.js';
 import { formatAmount, t, type Key } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
-import { claimBonus, claimTask, tasksOpen, untilNextDay } from '../meta/daily';
+import { claimBonus, claimTask, tasksOpen, today, untilNextDay } from '../meta/daily';
+import { claimGoal, claimWeekBonus, thisWeek } from '../meta/goals';
+import { claimMerit } from '../meta/merit';
 import type { Haul } from '../meta/haul';
 import { canDouble, collectPatrol, patrolHours, patrolOpen, quickLeft, quickPatrol, type QuickPay } from '../meta/patrol';
 import { openProgressChest } from '../meta/progressChests';
@@ -147,9 +149,11 @@ export class EconomyUi {
     if (!tasksOpen(save)) return null;
     const w = lobbyWaiting(save, this.now());
     const daily = w.tasks > 0;
+    const week = w.goals > 0;
+    const merit = w.merit > 0;
     const achieve = w.achievements > 0;
-    return railButton({ icon: iconSprite(this.host.icons, 'tasks', 100), name: t('tasks.button'), dot: daily || achieve }, () => {
-      this.tasksView = achieve && !daily ? 'achieve' : 'daily';
+    return railButton({ icon: iconSprite(this.host.icons, 'tasks', 100), name: t('tasks.button'), dot: daily || week || merit || achieve }, () => {
+      this.tasksView = daily ? 'daily' : week ? 'week' : merit ? 'merit' : achieve ? 'achieve' : 'daily';
       this.achievePage = 0;
       this.show('tasks');
     }).view;
@@ -241,9 +245,12 @@ export class EconomyUi {
         toast: (text) => this.host.toast(text),
       }, this.host.patrolLook(), this.live, this.ticks));
     } else if (this.modal === 'tasks') {
-      c.addChild(tasksPanel(save, this.now(), w, h, this.tasksView, this.achievePage, {
-        claimTask: (i) => this.claim(claimTask(this.host.save(), this.now(), i), [{ what: 'task', task: i }]),
+      c.addChild(tasksPanel(save, this.now(), w, h, this.tasksView, this.achievePage, this.host.icons, {
+        claimTask: (i) => this.claim(claimTask(this.host.save(), this.now(), i), [{ what: 'task', task: i, kind: today(this.host.save(), this.now()).tasks[i]?.kind ?? '' }]),
         bonus: () => this.claim(claimBonus(this.host.save(), this.now()), [{ what: 'bonus' }]),
+        claimGoal: (i) => this.claim(claimGoal(this.host.save(), this.now(), i), [{ what: 'goal', goal: i, kind: thisWeek(this.host.save(), this.now()).tasks[i]?.kind ?? '' }]),
+        weekBonus: () => this.pay(claimWeekBonus(this.host.save(), this.now()), 'claim', { what: 'weekBonus' }),
+        claimMerit: () => this.pay(claimMerit(this.host.save(), this.now()), 'claim', { what: 'merit' }),
         claim: (i) => this.claim(claimAchievement(this.host.save(), i), [{ what: 'achievement', goal: i }]),
         claimAll: () => {
           const goals = achievementsReady(this.host.save()).map((i) => ({ what: 'achievement', goal: i, all: true }));

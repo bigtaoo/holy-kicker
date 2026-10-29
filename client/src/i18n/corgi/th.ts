@@ -237,8 +237,16 @@ export const corgiTh: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'รับของจากลาดตระเวน',
     kills: 'กำจัดแมลง {n} ตัว',
+    elites: 'กำจัดแมลงหัวหน้า {n} ตัว',
+    boss: 'กำจัดบอส {n} ตัว',
+    evolve: 'วิวัฒน์แกดเจ็ต {n} อย่าง',
     reward: 'แต่ละอย่าง: น็อต {copper}, อัญมณี {jade}',
     bonus: 'รับครบ: อัญมณี +{jade}',
+  },
+  merit: {
+    title: 'เส้นทางเหรียญตรา',
+    points: 'เหรียญตรา {n}',
+    earn: 'ภารกิจ +{task} · เป้าหมายสัปดาห์ +{goal}',
   },
   achieve: {
     kills: 'กำจัดแมลงรวม {n} ตัว',

@@ -235,8 +235,16 @@ export const monkEn = {
   tasks: {
     patrol: 'Collect from patrol',
     kills: 'Defeat {n} {n|one:enemy|other:enemies}',
+    elites: 'Defeat {n} {n|one:elite|other:elites}',
+    boss: 'Defeat {n} {n|one:boss|other:bosses}',
+    evolve: 'Evolve {n} {n|one:spell|other:spells}',
     reward: 'Each: {copper} copper, {jade} jade',
     bonus: 'All claimed: +{jade} jade',
+  },
+  merit: {
+    title: 'Merit Book',
+    points: '{n} merit',
+    earn: 'Tasks +{task} · weekly goals +{goal}',
   },
   achieve: {
     kills: 'Defeat {n} {n|one:enemy|other:enemies} in all',

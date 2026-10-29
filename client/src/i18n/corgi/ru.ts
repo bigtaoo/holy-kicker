@@ -237,8 +237,16 @@ export const corgiRu: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Забери награду из дозора',
     kills: 'Победи жуков: {n}',
+    elites: 'Победи элитных жуков: {n}',
+    boss: 'Победи боссов: {n}',
+    evolve: 'Доведи до эволюции гаджетов: {n}',
     reward: 'За каждое: болты {copper}, самоцветы {jade}',
     bonus: 'Всё забрано: самоцветы +{jade}',
+  },
+  merit: {
+    title: 'Путь медалей',
+    points: 'Медали: {n}',
+    earn: 'Задание +{task} · цель недели +{goal}',
   },
   achieve: {
     kills: 'Победи жуков всего: {n}',

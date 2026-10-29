@@ -1,4 +1,4 @@
-// A save of the current version 7 as written at f1295ab: the version 6 player with stored sutras, clear times, a daily streak and an experiment arm.
+// A save of version 7 as written at f1295ab: the version 6 player with stored sutras, clear times, a daily streak and an experiment arm.
 // Made by fixtures/generator.txt at f1295ab: that build's newSave with a mid-journey
 // player's values over it, read back through that build's parseSave. No player's data.
 export const V7 = {

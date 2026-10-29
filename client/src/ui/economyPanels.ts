@@ -1,19 +1,23 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { bonusReady, taskGoal, taskState, today } from '../meta/daily';
+import { today } from '../meta/daily';
+import { thisWeek } from '../meta/goals';
 import type { Haul } from '../meta/haul';
 import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLeft } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
-import { achieveRows, rowSpot, rowsEnd, tasksBox, tasksSwitch, type AchievePanelActions, type TasksBox, type TasksView } from './achievePanel';
+import { achieveRows, tasksBox, tasksSwitch, type AchievePanelActions, type TasksBox, type TasksView } from './achievePanel';
 import { isWideFrame } from './hudLayout';
 import { GEAR_TILE, gearTiles, placeTiles } from './gearTiles';
 import type { TaoAsset } from '../game/tao/TaoActor';
 import { iconSprite, type IconSheet } from './buildBar';
 import { PatrolScene, type PatrolArt } from './patrolScene';
+import { meritRows } from './meritPanel';
+import { boardRows } from './taskRows';
 import { COLORS, backdrop, button, fit, label, meter, panel } from './widgets';
 
-// The lobby's modal panels for the patrol, the daily tasks (achievements: achievePanel.ts) and
+// The lobby's modal panels for the patrol, the daily tasks (achievements: achievePanel.ts, the
+// merit path: meritPanel.ts) and
 // what a chest or a patrol paid.
 // Builders only: the state and the paying live in lobbyEconomy.ts. Panels that show the
 // patrol's running time hand back refreshers, called every second while they are up.
@@ -150,12 +154,15 @@ export function patrolPanel(save: SaveData, now: () => number, w: number, h: num
 export interface TasksPanelActions extends AchievePanelActions {
   claimTask(i: number): void;
   bonus(): void;
+  claimGoal(i: number): void;
+  weekBonus(): void;
+  claimMerit(): void;
   view(v: TasksView): void;
   close(): void;
 }
 
-/** The tasks panel: the Daily / Achievements switch over today's tasks or the achievements. */
-export function tasksPanel(save: SaveData, now: number, w: number, h: number, view: TasksView, page: number, a: TasksPanelActions): Container {
+/** The tasks panel: the Daily / Weekly / Merit / Achievements switch over the page it picks. */
+export function tasksPanel(save: SaveData, now: number, w: number, h: number, view: TasksView, page: number, icons: IconSheet, a: TasksPanelActions): Container {
   const root = new Container();
   root.addChild(backdrop(w, h));
   const box = new Container();
@@ -163,9 +170,13 @@ export function tasksPanel(save: SaveData, now: number, w: number, h: number, vi
   const b = tasksBox(isWideFrame({ w, h }));
   const top = -b.h / 2;
   box.addChild(panel(b.w, b.h));
-  const pick = tasksSwitch(save, now, view, a.view);
+  const pick = tasksSwitch(save, now, view, b, a.view);
   pick.y = top + 85;
-  box.addChild(pick, view === 'daily' ? dailyRows(save, now, b, top, a) : achieveRows(save, page, b, top, a));
+  const rows = view === 'daily' ? dailyRows(save, now, b, top, a)
+    : view === 'week' ? weekRows(save, now, b, top, a)
+    : view === 'merit' ? meritRows(save, now, b, top, icons, a.claimMerit)
+    : achieveRows(save, page, b, top, a);
+  box.addChild(pick, rows);
   const back = button(t('common.back'), 400, 110, a.close, { fill: COLORS.panelLocked });
   back.y = top + b.h - 90;
   box.addChild(back);
@@ -176,46 +187,15 @@ export function tasksPanel(save: SaveData, now: number, w: number, h: number, vi
 /** Today's tasks with their progress and Claim, the bonus for claiming them all, from the box top `top`. */
 function dailyRows(save: SaveData, now: number, box: TasksBox, top: number, a: TasksPanelActions): Container {
   const D = BALANCE.daily;
-  const d = today(save, now);
-  const c = new Container();
-  const reward = fit(label(t('tasks.reward', { copper: D.copper, jade: D.jade }), 48, COLORS.dim), 880, 130);
-  reward.y = top + 215;
-  c.addChild(reward);
-  D.tasks.forEach((goal, i) => {
-    const row = new Container();
-    const spot = rowSpot(box, i, top);
-    row.position.set(spot.x, spot.y);
-    const state = taskState(save, d, i);
-    const n = taskGoal(save, d, i);
-    const name = fit(label(t(`tasks.${goal.kind}`, { n }), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560, 70);
-    name.anchor.set(0, 0.5);
-    name.position.set(-430, -30);
-    const done = Math.min(n, d.progress[i]);
-    const gauge = meter(380, done / n, state === 'open' ? COLORS.copper : COLORS.jade);
-    gauge.view.position.set(-240, 40);
-    const count = label(`${done}/${n}`, 48, COLORS.dim);
-    count.anchor.set(0, 0.5);
-    count.position.set(-20, 40);
-    row.addChild(name, gauge.view, count);
-    if (state !== 'open') {
-      const ready = state === 'ready';
-      const b = button(ready ? t('tasks.claim') : t('tasks.done'), 230, 110, () => ready && a.claimTask(i), {
-        fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim, size: 48,
-      });
-      b.x = 320;
-      row.addChild(b);
-    }
-    c.addChild(row);
-  });
-  const ready = bonusReady(save, d);
-  const bonus = button(t('tasks.bonus', { jade: D.bonusJade }), 760, 130, () => ready && a.bonus(), {
-    fill: ready ? COLORS.jade : COLORS.panelLocked, textFill: ready ? COLORS.outline : COLORS.dim, size: 48,
-  });
-  bonus.y = rowsEnd(box, D.tasks.length, top) + 10;
-  const resets = fit(label(t('tasks.resets'), 48, COLORS.dim), 880, 130);
-  resets.y = bonus.y + 110;
-  c.addChild(bonus, resets);
-  return c;
+  const text = { reward: t('tasks.reward', { copper: D.copper, jade: D.jade }), bonus: t('tasks.bonus', { jade: D.bonusJade }), resets: t('tasks.resets') };
+  return boardRows(today(save, now), text, box, top, { claim: a.claimTask, bonus: a.bonus });
+}
+
+/** This week's goals, their pay and the chest for claiming them all, from the box top `top`. */
+function weekRows(save: SaveData, now: number, box: TasksBox, top: number, a: TasksPanelActions): Container {
+  const G = BALANCE.goals;
+  const text = { reward: t('tasks.reward', { copper: G.copper, jade: G.jade }), bonus: t('tasks.weekBonus', { chest: t('shop.jade') }), resets: t('tasks.weekResets') };
+  return boardRows(thisWeek(save, now), text, box, top, { claim: a.claimGoal, bonus: a.weekBonus });
 }
 
 /** What a chest or a patrol just paid, over everything, until OK: the coins in lines, the gear in framed tiles. */

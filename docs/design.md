@@ -386,8 +386,8 @@ Two currencies only:
 
 | Currency | Sources | Sinks |
 |---|---|---|
-| **Copper** | Run results (main), progress chests, daily tasks, patrol (small) | Gear merges, training, copper chests |
-| **Jade** (premium) | Achievements, progress chests, daily tasks, ads | Chests, patrol speed-up |
+| **Copper** | Run results (main), progress chests, daily tasks, weekly goals, the merit path, patrol (small) | Gear merges, training, copper chests |
+| **Jade** (premium) | Achievements, progress chests, daily tasks, weekly goals, the merit path, ads | Chests, patrol speed-up |
 
 **Copper is deliberately scarce, so players replay cleared chapters.**
 
@@ -414,10 +414,33 @@ Two currencies only:
 
 - **Patrol:** idle income, 12 h cap, scaled by the highest cleared chapter. Ad doubles it or
   grants 2 h instantly.
-- 3–5 daily tasks (e.g. "kill 1000 mobs").
+- **Daily tasks** (`meta/daily.ts`, `meta/taskPool.ts`, `balance.json` `daily`): five a day,
+  drawn from a pool by the device's local date, so a reload or a second device shows the same
+  five. "Finish 3 runs" is on every day; the rest are a seeded pick of waves, kills, chests, the
+  patrol, elites and a boss defeated (counted from the engine's `eliteDown`/`bossDown`), a spell
+  evolved, a star earned, a wave reached in one run, a run with a named relic, as a named monk or
+  in hard mode. Only what the save has opened is offered: a relic or monk task names one the
+  player owns other than the one in use, hard mode waits for its first three-star chapter, and
+  elites and up wait for the first clear. A new player's first day keeps the easy fixed five; a
+  day stored by a version 7 save keeps its old fixed five. Each pays 100 copper and 10 jade, all
+  five 20 jade more.
+- **Weekly goals** (`meta/goals.ts`, `balance.json` `goals`): the tasks panel's Weekly page, six
+  bigger goals drawn from their own pool per local week (Monday 00:00 on the device), the same
+  draw as the daily tasks (`taskPool.ts`). "Finish N runs" and "claim the daily bonus on N days"
+  are on every week; the rest are the daily pool's kinds at about a week's worth. Each pays 400
+  copper and 20 jade; claiming all six opens a chest of 3 items rolled one chapter past the
+  highest cleared, as the shop's jade chest. Runs count on both boards at once.
+- **Merit path** (`meta/merit.ts`, `ui/meritPanel.ts`, `balance.json` `merit`): the monk's Merit
+  Book, the corgi's Medal Path, the tasks panel's third page. A free season track, no paid tier:
+  claiming a daily task earns 10 points, the daily bonus 20, a weekly goal 40 and the week's chest
+  100, about 800 a week for a player who claims everything. Twenty steps from 50 to 2600 points
+  pay 3800 copper (times the highest cleared chapter's copper multiplier, like the patrol), 190
+  jade and 16 gear items, all reached steps in one Claim. A season is 28 UTC days from the epoch
+  (2026-10-26), the same on every device; points and unclaimed steps do not carry over. Merging
+  two saves keeps the more points of one season and every claim, so nothing pays twice.
 - One free chest per day, and three copper chests (see "Economy").
-- Achievements (also the sutra source). Implemented as a second page of the tasks panel
-  (`client/src/meta/achievements.ts`, goals in `balance.json` `achievements`): 27 long-term
+- Achievements (also the sutra source). Implemented as the last page of the tasks panel
+  (`client/src/meta/achievements.ts`, goals in `balance.json` `achievements`): 33 long-term
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
   gear tier, monks, daily-challenge streaks), each paying jade once, about 1200 in all. Progress is read from the save,
   so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.
@@ -627,8 +650,8 @@ boards absorb.
 - No reroll ad on the in-run pick: it breaks the pace.
 - Ads only on the web and WeChat. iOS sells one thing, the **ad-free card** (US$3.99, once):
   rewarded offers pay out without an ad and interstitials stop, but every daily cap stays, so
-  balance never prices in a paying player (`docs/ios.md`). Jade packs and a battle pass need a
-  server account and cloud save first; IAP on WeChat needs a licence check first.
+  balance never prices in a paying player (`docs/ios.md`). Jade packs and a paid battle pass need a
+  server account and cloud save first (the free merit path is built: "Retention"); IAP on WeChat needs a licence check first.
 - CrazyGames' Basic Launch serves no ads: there the rewarded offers pay out without one, like
   the ad-free card, until Full Launch turns the ads on (`docs/store.md`).
 
@@ -684,7 +707,7 @@ CrazyGames; the `SaveStore` and ad interfaces must not assume CrazyGames.
 
 **Save contents** (well under 50 KB): player level and XP, copper, jade, gear counts per item
 and tier (the best is worn), training nodes bought, per-chapter best wave, claimed chests and last fall (the wave of the latest lost run, cleared by a win), unlocked relics / sutras / codex
-entries, daily tasks and ad counts, patrol start time, lifetime kills and claimed achievements, save version.
+entries, daily tasks and ad counts, the week's goals, the merit path's season, patrol start time, lifetime kills and claimed achievements, save version.
 
 ## Localization
 

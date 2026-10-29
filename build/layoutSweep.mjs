@@ -48,6 +48,8 @@ const TABS = ['shop', 'gear', 'train', 'codex', 'play'];
  */
 const PANELS = {
   tasks: `s.openTab('play'); s.econ.tasksView = 'daily'; s.econ.modal = 'tasks'`,
+  goals: `s.openTab('play'); s.econ.tasksView = 'week'; s.econ.modal = 'tasks'`,
+  merit: `s.openTab('play'); s.econ.tasksView = 'merit'; s.econ.modal = 'tasks'`,
   achievements: `s.openTab('play'); s.econ.tasksView = 'achieve'; s.econ.modal = 'tasks'`,
   patrol: `s.openTab('play'); s.econ.modal = 'patrol'`,
   gift: `s.openTab('play'); s.econ.modal = 'gift'`,
@@ -107,7 +109,10 @@ async function seedStorage(browser, url) {
       const { newSave } = await import('/src/meta/save.ts');
       const { browserStorage } = await import('/src/platform/web/WebPlatform.ts');
       const { BALANCE } = await import('/src/meta/balance.ts');
+      const { seasonOf } = await import('/src/meta/merit.ts');
       const save = { ...newSave(), ...patch };
+      // the merit path part way along: two steps paid, more reached
+      save.merit = { season: seasonOf(Date.now()), points: 700, claimed: 0b11 };
       save.best = save.best.map((b, i) => (i < patch.cleared ? BALANCE.waves : b));
       localStorage.clear();
       new SaveStore(browserStorage()).save(save);

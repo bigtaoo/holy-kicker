@@ -30,6 +30,8 @@ const TAB_NAME_CLEAR = 12;
 /** The lobby panels the sweep opens alone (its PANELS), by the lobby's own fields. */
 const PANELS: Record<string, (s: Lobby) => void> = {
   tasks: (s) => { s.openTab('play'); s.econ.tasksView = 'daily'; s.econ.modal = 'tasks'; },
+  goals: (s) => { s.openTab('play'); s.econ.tasksView = 'week'; s.econ.modal = 'tasks'; },
+  merit: (s) => { s.openTab('play'); s.econ.tasksView = 'merit'; s.econ.modal = 'tasks'; },
   achievements: (s) => { s.openTab('play'); s.econ.tasksView = 'achieve'; s.econ.modal = 'tasks'; },
   patrol: (s) => { s.openTab('play'); s.econ.modal = 'patrol'; },
   gift: (s) => { s.openTab('play'); s.econ.modal = 'gift'; },

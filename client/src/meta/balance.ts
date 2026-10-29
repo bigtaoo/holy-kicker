@@ -4,6 +4,8 @@ import type { Stat } from '@hk/engine';
 import data from './balance.json';
 import type { ChallengeBalance } from './challenge';
 import type { DailyBalance } from './daily';
+import type { GoalsBalance } from './goals';
+import type { MeritBalance } from './merit';
 import type { LowHealthBalance } from '../game/lowHealth';
 import type { GearBalance } from './gear';
 import type { PatrolBalance } from './patrol';
@@ -63,6 +65,9 @@ export interface Balance {
   /** The iOS app's local reminders (reminders.ts): when they are offered and when they ring. */
   reminders: ReminderBalance;
   daily: DailyBalance;
+  goals: GoalsBalance;
+  /** The merit path's seasons, points and track (merit.ts). */
+  merit: MeritBalance;
   /** A new player's welcome gifts (welcome.ts), one a day from the first run's day. */
   welcome: WelcomeGift[];
   /** The long-term goals and the jade each pays once (achievements.ts), one bit of `achieved` each; new ones go last. */

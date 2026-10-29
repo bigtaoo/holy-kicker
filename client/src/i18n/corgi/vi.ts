@@ -237,8 +237,16 @@ export const corgiVi: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Nhận thưởng tuần tra',
     kills: 'Hạ {n} con bọ',
+    elites: 'Hạ {n} con bọ tinh anh',
+    boss: 'Hạ {n} trùm',
+    evolve: 'Tiến hóa {n} thiết bị',
     reward: 'Mỗi cái: {copper} ốc vít, {jade} ngọc',
     bonus: 'Nhận hết: +{jade} ngọc',
+  },
+  merit: {
+    title: 'Đường Huân Chương',
+    points: '{n} huân chương',
+    earn: 'Nhiệm vụ +{task} · mục tiêu tuần +{goal}',
   },
   achieve: {
     kills: 'Hạ tổng cộng {n} con bọ',

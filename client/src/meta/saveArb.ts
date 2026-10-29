@@ -2,6 +2,8 @@ import { MONK_IDS, RELIC_IDS } from '@hk/engine';
 import { BALANCE } from './balance';
 import { EVOLVE_IDS } from './codex';
 import { newDaily } from './daily';
+import { newWeekly } from './goals';
+import type { Task } from './taskPool';
 import { canMerge, ITEM_IDS, merge, TIERS, type Tier } from './gear';
 import { ACHIEVED_BITS, readSave, SAVE_VERSION, type SaveData } from './save';
 import { unlockedRelics } from './unlocks';
@@ -48,6 +50,8 @@ export function randomSave(r: Rand): SaveData {
   for (const id of ITEM_IDS) gear[id] = Array.from({ length: TIERS }, (_, t) => (r.chance(0.4 / (t + 1)) ? 1 + r.int(4) : 0));
   const day = 20261001 + r.int(28);
   const streakDay = 20360 + r.int(30);
+  const weekTasks: Task[] = BALANCE.goals.pool.filter(() => r.chance(0.5)).map((e) => ({ kind: e.kind, n: 1 + r.int(e.n), id: '' }));
+  const dayTasks: Task[] = BALANCE.daily.pool.filter(() => r.chance(0.4)).map((e) => ({ kind: e.kind, n: 1 + r.int(e.n), id: '' }));
   return readSave({
     version: SAVE_VERSION, firstRunDone: cleared > 0 || r.chance(0.7), level: 1 + r.int(40), xp: r.int(600),
     copper: r.int(100000), jade: r.int(3000), chapter: 1 + r.int(cleared + 1), cleared, stars,
@@ -55,7 +59,8 @@ export function randomSave(r: Rand): SaveData {
     chests, opened: chests.map((c) => c & r.int(FULL + 1)), runs: cleared * 3 + r.int(60), relic: r.pick(RELIC_IDS),
     codex: EVOLVE_IDS.filter(() => r.chance(0.3)), gear, sutras: r.int(16), trained: r.int(BALANCE.training.nodes + 1),
     patrol: r.chance(0.5) ? 1792000000000 + r.int(1e9) : 0,
-    daily: { ...newDaily(day), free: r.int(3), progress: newDaily().progress.map(() => r.int(4)), claimed: r.int(8) },
+    daily: { ...newDaily(day, dayTasks), free: r.int(3), progress: dayTasks.map(() => r.int(4)), claimed: r.int(8) },
+    weekly: { ...newWeekly(r.pick([20260928, 20261005, 20261012, 20261019]), weekTasks), progress: weekTasks.map(() => r.int(20)), claimed: r.int(16), bonus: r.chance(0.2) },
     seen: r.int(256), grit: r.int(BALANCE.grit.max + 1), hard: r.chance(0.5), hardBest, hardChests,
     hardStars: hardBest.map(() => 1 + r.int(3)), hardOpened: hardChests.map((c) => c & r.int(FULL + 1)),
     fell: per(() => (r.chance(0.2) ? r.int(BALANCE.waves) : 0)), hardFell: per(() => (r.chance(0.1) ? r.int(BALANCE.waves) : 0)),
@@ -128,8 +133,10 @@ export function play(r: Rand, save: SaveData, steps = 1 + r.int(6)): SaveData {
         s.chapter = 1 + r.int(Math.min(BALANCE.chapters, s.cleared + 1));
         s.hard = r.chance(0.3);
         break;
-      case 7: // today's tasks
-        s.daily = { ...s.daily, progress: s.daily.progress.map((p) => p + r.int(2)), claimed: s.daily.claimed | (1 << r.int(s.daily.progress.length)) };
+      case 7: // today's tasks, the week's goals and the season's merit
+        s.daily = { ...s.daily, progress: s.daily.progress.map((p) => p + r.int(2)), claimed: s.daily.claimed | (s.daily.tasks.length ? 1 << r.int(s.daily.tasks.length) : 0) };
+        s.weekly = { ...s.weekly, progress: s.weekly.progress.map((p) => p + r.int(5)), claimed: s.weekly.claimed | (s.weekly.tasks.length ? 1 << r.int(s.weekly.tasks.length) : 0) };
+        s.merit = { ...s.merit, points: s.merit.points + r.int(200), claimed: s.merit.claimed | (1 << r.int(BALANCE.merit.steps.length)) };
         break;
       case 8: // a daily challenge and a welcome gift
         s.streak++;

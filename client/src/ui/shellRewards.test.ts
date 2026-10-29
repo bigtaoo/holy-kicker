@@ -153,28 +153,28 @@ describe('patrol, tapped through', { timeout: 30_000 }, () => {
 
 /** Today's counters with every task done and the ones in `claimed` (bits) already claimed. */
 function doneDay(claimed: number) {
-  return { ...newDaily(dayKey(NOW)), progress: D.tasks.map((g) => g.n), claimed };
+  return { ...newDaily(dayKey(NOW), D.legacy.map((g) => ({ ...g, id: '' }))), progress: D.legacy.map((g) => g.n), claimed };
 }
 
 describe('daily tasks and achievements, tapped through', { timeout: 30_000 }, () => {
   it('pays a task once per double tap and the bonus once, kept after a reload', async () => {
-    const all = (1 << D.tasks.length) - 1;
+    const all = (1 << D.legacy.length) - 1;
     const rig = await lobbyRig({ copper: 0, jade: 0, firstDay: 0, daily: doneDay(all & ~1) });
     await openRail(rig, t('tasks.button'));
-    expect(words(rig)).toContain(t('tasks.title'));
-    const name = t('tasks.runs', { n: D.tasks[0].n });
+    expect(words(rig)).toContain(t('tasks.tabDay'));
+    const name = t('tasks.runs', { n: D.legacy[0].n });
     await doubleTap(rig, buttonNear(rig, t('tasks.claim'), name));
     let save = rig.store.load();
     expect(save.copper).toBe(D.copper);
     expect(save.jade).toBe(D.jade);
     expect(save.daily.claimed).toBe(all);
     expect(words(rig)).not.toContain(t('tasks.claim'));
-    await doubleTap(rig, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.title')));
+    await doubleTap(rig, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.tabDay')));
     save = rig.store.load();
     expect(save.jade).toBe(D.jade + D.bonusJade);
     expect(save.daily.bonus).toBe(true);
     // a third tap on the spent bonus pays nothing
-    tapAt(rig.app.stage, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.title')));
+    tapAt(rig.app.stage, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.tabDay')));
     await rig.tick(2);
     expect(rig.store.load().jade).toBe(D.jade + D.bonusJade);
     const again = await reload(rig);

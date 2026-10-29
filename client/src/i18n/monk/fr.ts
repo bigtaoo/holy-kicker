@@ -236,8 +236,16 @@ export const monkFr: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Récupère ta patrouille',
     kills: 'Vaincs {n} {n|one:ennemi|other:ennemis}',
+    elites: 'Vaincs {n} {n|one:élite|other:élites}',
+    boss: 'Vaincs {n} {n|one:boss|other:boss}',
+    evolve: 'Fais évoluer {n} {n|one:sort|other:sorts}',
     reward: 'Chacune : {copper} cuivre, {jade} jade',
     bonus: 'Tout récupéré : +{jade} jade',
+  },
+  merit: {
+    title: 'Livre des mérites',
+    points: '{n} de mérite',
+    earn: 'Tâche +{task} · objectif +{goal}',
   },
   achieve: {
     kills: 'Vaincs {n} {n|one:ennemi|other:ennemis} au total',

@@ -18,6 +18,7 @@ import { doubleCopper, earnedSutras, isCleared, settleRun, type Reward, type Tab
 import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
+import { runTally, type RunTally } from '../meta/taskPool';
 import { afterRun } from '../meta/welcome';
 import { loadSettings, updateSettings } from '../meta/settings';
 import type { Platform, Portal } from '../platform/types';
@@ -97,6 +98,7 @@ export class RunFlow {
   /** Free revives (training) left in this run; they come before the rewarded-ad one. */
   private freeRevives = 0;
   kills = 0; // enemies defeated in this run, for the daily tasks
+  private downs = { elites: 0, bosses: 0 }; // elites and bosses defeated, for the same
   /** When the phone last buzzed (performance.now()). */
   private buzzed = 0;
 
@@ -132,6 +134,7 @@ export class RunFlow {
     }, left?.state));
     h.replays.begin(game, rankedRun(h.scene) && !h.scene.record);
     this.kills = left?.kills ?? 0;
+    this.downs = { elites: left?.elites ?? 0, bosses: left?.bosses ?? 0 };
     h.perf()?.start(rankedRun(h.scene) && !h.scene.record, chapter);
     const quality = h.quality();
     if (quality) game.applyQuality(quality);
@@ -141,6 +144,8 @@ export class RunFlow {
       this.watch?.see(events);
       for (const e of events) {
         if (e.type === 'mobDown') this.kills++;
+        else if (e.type === 'eliteDown') this.downs.elites++;
+        else if (e.type === 'bossDown') this.downs.bosses++;
         const cue = eventCue(e, 0);
         if (cue) h.sound.play(cue);
         if (cue === 'levelUp' || cue === 'hurt') this.buzz(cue === 'hurt');
@@ -192,7 +197,7 @@ export class RunFlow {
     const s = this.game?.engine.state;
     const { scene, platform, challenge } = this.host;
     if (!s || !keepable(s, scene, !!challenge.run)) return;
-    keepRun(platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills });
+    keepRun(platform.storage, { state: s, freeRevives: this.freeRevives, kills: this.kills, ...this.downs });
   }
 
   /** A short buzz where the phone can and the player lets it, at most one per BUZZ_GAP seconds. */
@@ -277,7 +282,7 @@ export class RunFlow {
   /** The last run, left unfinished, given up from the resume screen: settled like a give-up in the run. */
   giveUp(left: SavedRun): void {
     const c = left.state.config;
-    [this.chapter, this.hard, this.kills] = [c.chapter, c.hard, left.kills];
+    [this.chapter, this.hard, this.kills, this.downs] = [c.chapter, c.hard, left.kills, { elites: left.elites, bosses: left.bosses }];
     this.settle(left.state);
   }
 
@@ -302,7 +307,7 @@ export class RunFlow {
     const time = won ? { tenths: run.tenths, best: bestTime(h.save(), this.chapter, this.hard) } : null;
     const timed = won && counted ? noteTime(h.save(), this.chapter, this.hard, run.tenths) : h.save();
     const { reward, save: played } = settleRun(noteFall(timed, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
-    const { save, gift } = afterRun(played, Date.now(), waves, this.kills);
+    const { save, gift } = afterRun(played, Date.now(), this.tally(s, waves, reward.stars));
     // paid before the results show, so closing the tab now keeps the reward
     h.commit(save);
     if (gift) h.net.track('claim', { what: 'gift', n: 0, copper: gift.copper, jade: gift.jade, drops: gift.drops.length });
@@ -314,7 +319,7 @@ export class RunFlow {
   private settleChallenge(s: SimState, run: RunResult, waves: number, ranked: boolean): void {
     const h = this.host;
     const done = h.challenge.settle(h.save(), s, run, waves, this.kills, ranked);
-    h.commit(afterRun(done.save, Date.now(), waves, this.kills).save);
+    h.commit(afterRun(done.save, Date.now(), this.tally(s, waves, 0)).save);
     if (done.reward.streak) h.net.track('claim', { what: 'streak', n: done.reward.streak, jade: done.reward.streakJade });
     h.setScreen(new ChallengeResultsScreen({ ...done, time: run.won ? run.tenths : null }, {
       double: async () => {
@@ -324,6 +329,12 @@ export class RunFlow {
       },
       next: () => void h.ads.midgame(this.inter('challenge_next')).then(() => h.showLobby()),
     }, offered(this.track, 'challenge_double', h.ads.rewardedAvailable(), done.reward.copper > 0), h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
+  }
+
+  /** What the run that ended in `s` adds to the task boards (meta/taskPool.ts). */
+  private tally(s: SimState, waves: number, stars: number): RunTally {
+    const { relic, monk, hard } = s.config;
+    return runTally({ waves, kills: this.kills, ...this.downs, evolved: evolvedIn(s.players[0]).length, stars, relic, monk, hard });
   }
 
   /** Reports an offer to analytics. */

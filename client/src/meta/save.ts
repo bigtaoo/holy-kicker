@@ -3,6 +3,8 @@ import { CHALLENGE_ID, EXP_NAME, isDice } from '@hk/protocol';
 import { BALANCE } from './balance';
 import { mergeCodex, type EvolveId } from './codex';
 import { newDaily, parseDaily, type Daily } from './daily';
+import { newWeekly, parseWeekly, type Weekly } from './goals';
+import { newMerit, parseMerit, type Merit } from './merit';
 import { parseWeeks, type WeekEntry } from './weekly';
 import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './gear';
 import { keepUnlocks } from './unlocks';
@@ -11,7 +13,7 @@ import { keepUnlocks } from './unlocks';
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 /** Bits per word of `achieved`: 30 keeps every word a small positive integer. */
 export const ACHIEVED_BITS = 30;
 /** Chapters a save before version 6 had; clearing them all opened hard mode on every one. */
@@ -53,6 +55,10 @@ export interface SaveData {
   patrol: number;
   /** Today's tasks, chests and quick patrols (daily.ts). */
   daily: Daily;
+  /** This week's goals (goals.ts). */
+  weekly: Weekly;
+  /** This season's merit path (merit.ts). */
+  merit: Merit;
   /** Lobby tabs opened at least once, bit i for TABS[i] (progress.ts): an open tab not yet seen gets a dot. */
   seen: number;
   /** Lost tries on the first uncleared chapter, each worth BALANCE.grit.bonus there (loadout.ts). */
@@ -105,7 +111,7 @@ export function newSave(): SaveData {
   return {
     version: SAVE_VERSION, firstRunDone: false, level: 1, xp: 0, copper: 0, jade: 0,
     chapter: 1, cleared: 0, best: zeros(), stars: zeros(), chests: zeros(), opened: zeros(), runs: 0, relic: 'ball', codex: [],
-    gear: grantRelics(emptyInventory(), ['ball']), sutras: 0, trained: 0, patrol: 0, daily: newDaily(), seen: 0, grit: 0,
+    gear: grantRelics(emptyInventory(), ['ball']), sutras: 0, trained: 0, patrol: 0, daily: newDaily(), weekly: newWeekly(), merit: newMerit(), seen: 0, grit: 0,
     hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), times: zeros(), hardTimes: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: [], dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 },
     arms: {}, tester: false,
@@ -186,6 +192,8 @@ function owned(monks: number, id: unknown): boolean {
  * its clears read as one star, its hard clears as a count from chapter 1, and a player who had
  * hard mode keeps it with three stars on those five chapters.
  * Version 6 kept the claimed achievements in one number: it becomes the first word, no streak yet.
+ * Version 7 had the same five daily tasks every day: a day it stored keeps them (daily.ts parseDaily),
+ * and no weekly goals or merit path: the week and the season start afresh.
  * A save without the last falls reads as none fallen yet, one without clear times as none timed.
  * A save without stored sutras is from before the re-paced unlocks (docs/unlocks.md): it keeps
  * the relics and sutras the old gates gave (unlocks.ts keepUnlocks).
@@ -264,7 +272,9 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
     sutras: bits(raw.sutras, SUTRA_IDS.length, 0),
     trained: int(raw.trained, 0, BALANCE.training.nodes, 0),
     patrol: int(raw.patrol, 0, max, 0),
-    daily: parseDaily(raw.daily),
+    daily: parseDaily(raw.daily, int(raw.firstDay, 0, 99999999, 0)),
+    weekly: parseWeekly(raw.weekly),
+    merit: parseMerit(raw.merit),
     // a save from before the dots has seen every tab it could open
     seen: bits(raw.seen, 8, 0xff),
     grit: int(raw.grit, 0, BALANCE.grit.max, 0),

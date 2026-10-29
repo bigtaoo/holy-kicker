@@ -236,8 +236,16 @@ export const monkRu: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Забери награду из дозора',
     kills: 'Победи врагов: {n}',
+    elites: 'Победи элитных врагов: {n}',
+    boss: 'Победи боссов: {n}',
+    evolve: 'Доведи до эволюции заклинаний: {n}',
     reward: 'За каждое: медь {copper}, нефрит {jade}',
     bonus: 'Всё забрано: нефрит +{jade}',
+  },
+  merit: {
+    title: 'Книга заслуг',
+    points: 'Заслуги: {n}',
+    earn: 'Задание +{task} · цель недели +{goal}',
   },
   achieve: {
     kills: 'Победи врагов всего: {n}',

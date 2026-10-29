@@ -236,8 +236,16 @@ export const monkIt: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Raccogli dalla pattuglia',
     kills: 'Sconfiggi {n} {n|one:nemico|other:nemici}',
+    elites: 'Sconfiggi {n} {n|one:élite|other:élite}',
+    boss: 'Sconfiggi {n} {n|one:boss|other:boss}',
+    evolve: 'Evolvi {n} {n|one:incantesimo|other:incantesimi}',
     reward: 'Ognuna: {copper} rame, {jade} giada',
     bonus: 'Tutte riscosse: +{jade} giada',
+  },
+  merit: {
+    title: 'Libro dei meriti',
+    points: '{n} di merito',
+    earn: 'Compito +{task} · obiettivo +{goal}',
   },
   achieve: {
     kills: 'Sconfiggi {n} {n|one:nemico|other:nemici} in totale',

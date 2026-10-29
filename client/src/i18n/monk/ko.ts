@@ -236,8 +236,16 @@ export const monkKo: Table<typeof monkEn> = {
   tasks: {
     patrol: '순찰 보상 받기',
     kills: '적 {n}마리 처치',
+    elites: '정예 {n}마리 처치',
+    boss: '보스 {n}마리 처치',
+    evolve: '주문 {n}개 진화',
     reward: '각각: 동전 {copper}개, 옥 {jade}개',
     bonus: '모두 받음: 옥 +{jade}',
+  },
+  merit: {
+    title: '공덕록',
+    points: '공덕 {n}',
+    earn: '임무 +{task} · 주간 목표 +{goal}',
   },
   achieve: {
     kills: '누적 적 {n}마리 처치',
