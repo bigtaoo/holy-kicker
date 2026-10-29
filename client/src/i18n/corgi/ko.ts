@@ -243,6 +243,11 @@ export const corgiKo: Table<typeof corgiEn> = {
     reward: '각각: 볼트 {copper}개, 보석 {jade}개',
     bonus: '모두 받음: 보석 +{jade}',
   },
+  merit: {
+    title: '훈장의 길',
+    points: '훈장 {n}',
+    earn: '임무 +{task} · 주간 목표 +{goal}',
+  },
   achieve: {
     kills: '누적 벌레 {n}마리 처치',
     clear: '행성 {n} 클리어',

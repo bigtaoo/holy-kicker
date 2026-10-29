@@ -243,6 +243,11 @@ export const corgiZh: Table<typeof corgiEn> = {
     reward: '每项奖励：{copper} 螺丝、{jade} 宝石',
     bonus: '全部领取：+{jade} 宝石',
   },
+  merit: {
+    title: '奖牌之路',
+    points: '奖牌 {n}',
+    earn: '任务 +{task} · 周目标 +{goal}',
+  },
   achieve: {
     kills: '累计消灭 {n} 只虫子',
     clear: '通关星球 {n}',

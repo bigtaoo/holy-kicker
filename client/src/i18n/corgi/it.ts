@@ -242,6 +242,11 @@ export const corgiIt: Table<typeof corgiEn> = {
     reward: 'Ognuna: {copper} bulloni, {jade} gemme',
     bonus: 'Tutte riscosse: +{jade} gemme',
   },
+  merit: {
+    title: 'Percorso medaglie',
+    points: '{n} {n|one:medaglia|other:medaglie}',
+    earn: 'Compito +{task} · obiettivo +{goal}',
+  },
   achieve: {
     kills: 'Sconfiggi {n} {n|one:insetto|other:insetti} in totale',
     clear: 'Completa il pianeta {n}',

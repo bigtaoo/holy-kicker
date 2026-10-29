@@ -329,6 +329,12 @@ export const ja: Table<typeof en> = {
     weekBonus: 'すべて受け取り：{chest}',
     weekResets: '毎週月曜に新しい目標',
   },
+  merit: {
+    ends: 'シーズン終了まで{d}日{h}時間',
+    claim: '報酬を{n}個受け取る',
+    done: '報酬はすべて受け取り済み',
+    next: '次の報酬：{n}',
+  },
   achieve: {
     streak: 'デイリーチャレンジに{n}日連続で参加',
     title: '実績',

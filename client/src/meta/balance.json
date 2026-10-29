@@ -162,6 +162,33 @@
     "jade": 20,
     "bonusDrops": 3
   },
+  "merit": {
+    "epoch": 20261026,
+    "days": 28,
+    "points": { "task": 10, "dailyBonus": 20, "goal": 40, "weekBonus": 100 },
+    "steps": [
+      { "at": 50, "copper": 200 },
+      { "at": 120, "jade": 10 },
+      { "at": 200, "copper": 300 },
+      { "at": 300, "drops": 1 },
+      { "at": 400, "jade": 15 },
+      { "at": 520, "copper": 400 },
+      { "at": 650, "drops": 2 },
+      { "at": 800, "jade": 20 },
+      { "at": 950, "copper": 500 },
+      { "at": 1100, "drops": 3 },
+      { "at": 1250, "jade": 25 },
+      { "at": 1400, "copper": 600 },
+      { "at": 1550, "drops": 2 },
+      { "at": 1700, "jade": 30 },
+      { "at": 1850, "copper": 800 },
+      { "at": 2000, "drops": 3 },
+      { "at": 2150, "jade": 40 },
+      { "at": 2300, "copper": 1000 },
+      { "at": 2450, "jade": 50 },
+      { "at": 2600, "drops": 5 }
+    ]
+  },
   "welcome": [
     { "item": "robe", "tier": 1, "copper": 0, "jade": 0 },
     { "item": "pendant", "tier": 2, "copper": 0, "jade": 30 },

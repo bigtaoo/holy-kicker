@@ -247,6 +247,11 @@ export const corgiEn: Table<typeof monkEn> = {
     reward: 'Each: {copper} bolts, {jade} gems',
     bonus: 'All claimed: +{jade} gems',
   },
+  merit: {
+    title: 'Medal Path',
+    points: '{n} {n|one:medal|other:medals}',
+    earn: 'Tasks +{task} · weekly goals +{goal}',
+  },
   achieve: {
     kills: 'Pop {n} {n|one:bug|other:bugs} in all',
     clear: 'Clear planet {n}',

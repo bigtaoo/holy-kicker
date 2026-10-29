@@ -243,6 +243,11 @@ export const corgiPl: Table<typeof corgiEn> = {
     reward: 'Za każde: {copper} {copper|one:śrubka|few:śrubki|many:śrubek|other:śrubki}, {jade} {jade|one:klejnot|few:klejnoty|many:klejnotów|other:klejnotu}',
     bonus: 'Wszystko odebrane: +{jade} {jade|one:klejnot|few:klejnoty|many:klejnotów|other:klejnotu}',
   },
+  merit: {
+    title: 'Szlak medali',
+    points: 'Medale: {n}',
+    earn: 'Zadanie +{task} · cel tygodnia +{goal}',
+  },
   achieve: {
     kills: 'Pokonaj łącznie {n} {n|one:robala|few:robale|many:robali|other:robala}',
     clear: 'Ukończ planetę {n}',

@@ -242,6 +242,11 @@ export const corgiDe: Table<typeof corgiEn> = {
     reward: 'Je: {copper} Schrauben, {jade} Edelsteine',
     bonus: 'Alle abgeholt: +{jade} Edelsteine',
   },
+  merit: {
+    title: 'Medaillenpfad',
+    points: '{n} {n|one:Medaille|other:Medaillen}',
+    earn: 'Aufgabe +{task} · Wochenziel +{goal}',
+  },
   achieve: {
     kills: 'Erledige insgesamt {n} Käfer',
     clear: 'Schaffe Planet {n}',

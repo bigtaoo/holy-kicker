@@ -1,5 +1,6 @@
 import { BALANCE } from './balance';
 import { thisWeek } from './goals';
+import { earnMerit } from './merit';
 import type { SaveData } from './save';
 import {
   boardBonusReady, boardClaimable, boardState, bumpBoard, drawTasks, mergeBoards, parseBoard, parseTasks, runBoard,
@@ -7,8 +8,8 @@ import {
 } from './taskPool';
 
 // The day's counters (docs/design.md "Retention"): daily tasks (drawn per day, taskPool.ts; this week's
-// goals in goals.ts count along), the shop's free and ad chests, quick patrols. All of them reset when
-// the device's local date changes; a clock moved back a day simply starts another day. Pure: functions take a save and `now` (ms) and return a new save.
+// goals in goals.ts count along, and each claim earns merit, merit.ts), the shop's free and ad
+// chests, quick patrols. All of them reset when the device's local date changes; a clock moved back a day simply starts another day. Pure: functions take a save and `now` (ms) and return a new save.
 
 export type { TaskKind, TaskState } from './taskPool';
 
@@ -154,19 +155,19 @@ export function bonusReady(d: Daily): boolean {
 export function claimTask(save: SaveData, now: number, i: number): SaveData {
   const d = today(save, now);
   if (i < 0 || i >= d.tasks.length || boardState(d, i) !== 'ready') return save;
-  return {
+  return earnMerit({
     ...save,
     copper: save.copper + DAILY.copper,
     jade: save.jade + DAILY.jade,
     daily: { ...d, claimed: d.claimed | (1 << i) },
-  };
+  }, now, 'task');
 }
 
 /** Pays the bonus for claiming every task. */
 export function claimBonus(save: SaveData, now: number): SaveData {
   const d = today(save, now);
   if (!boardBonusReady(d)) return save;
-  return bump({ ...save, jade: save.jade + DAILY.bonusJade, daily: { ...d, bonus: true } }, now, 'daily', 1);
+  return bump(earnMerit({ ...save, jade: save.jade + DAILY.bonusJade, daily: { ...d, bonus: true } }, now, 'dailyBonus'), now, 'daily', 1);
 }
 
 /** Daily tasks open after the first run. */

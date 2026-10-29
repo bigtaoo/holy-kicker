@@ -12,10 +12,12 @@ import { GEAR_TILE, gearTiles, placeTiles } from './gearTiles';
 import type { TaoAsset } from '../game/tao/TaoActor';
 import { iconSprite, type IconSheet } from './buildBar';
 import { PatrolScene, type PatrolArt } from './patrolScene';
+import { meritRows } from './meritPanel';
 import { boardRows } from './taskRows';
 import { COLORS, backdrop, button, fit, label, meter, panel } from './widgets';
 
-// The lobby's modal panels for the patrol, the daily tasks (achievements: achievePanel.ts) and
+// The lobby's modal panels for the patrol, the daily tasks (achievements: achievePanel.ts, the
+// merit path: meritPanel.ts) and
 // what a chest or a patrol paid.
 // Builders only: the state and the paying live in lobbyEconomy.ts. Panels that show the
 // patrol's running time hand back refreshers, called every second while they are up.
@@ -154,12 +156,13 @@ export interface TasksPanelActions extends AchievePanelActions {
   bonus(): void;
   claimGoal(i: number): void;
   weekBonus(): void;
+  claimMerit(): void;
   view(v: TasksView): void;
   close(): void;
 }
 
-/** The tasks panel: the Daily / Achievements switch over today's tasks or the achievements. */
-export function tasksPanel(save: SaveData, now: number, w: number, h: number, view: TasksView, page: number, a: TasksPanelActions): Container {
+/** The tasks panel: the Daily / Weekly / Merit / Achievements switch over the page it picks. */
+export function tasksPanel(save: SaveData, now: number, w: number, h: number, view: TasksView, page: number, icons: IconSheet, a: TasksPanelActions): Container {
   const root = new Container();
   root.addChild(backdrop(w, h));
   const box = new Container();
@@ -167,9 +170,12 @@ export function tasksPanel(save: SaveData, now: number, w: number, h: number, vi
   const b = tasksBox(isWideFrame({ w, h }));
   const top = -b.h / 2;
   box.addChild(panel(b.w, b.h));
-  const pick = tasksSwitch(save, now, view, b.w, a.view);
+  const pick = tasksSwitch(save, now, view, b, a.view);
   pick.y = top + 85;
-  const rows = view === 'daily' ? dailyRows(save, now, b, top, a) : view === 'week' ? weekRows(save, now, b, top, a) : achieveRows(save, page, b, top, a);
+  const rows = view === 'daily' ? dailyRows(save, now, b, top, a)
+    : view === 'week' ? weekRows(save, now, b, top, a)
+    : view === 'merit' ? meritRows(save, now, b, top, icons, a.claimMerit)
+    : achieveRows(save, page, b, top, a);
   box.addChild(pick, rows);
   const back = button(t('common.back'), 400, 110, a.close, { fill: COLORS.panelLocked });
   back.y = top + b.h - 90;

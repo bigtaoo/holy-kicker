@@ -330,6 +330,12 @@ export const th: Table<typeof en> = {
     weekBonus: 'รับครบแล้ว: {chest}',
     weekResets: 'เป้าหมายใหม่ทุกวันจันทร์',
   },
+  merit: {
+    ends: 'ซีซันจบใน {d} วัน {h} ชม.',
+    claim: 'รับรางวัล {n} ชิ้น',
+    done: 'รับรางวัลครบแล้ว',
+    next: 'รางวัลถัดไปที่ {n}',
+  },
   achieve: {
     streak: 'เล่นชาเลนจ์รายวัน {n} วันติดต่อกัน',
     title: 'ความสำเร็จ',

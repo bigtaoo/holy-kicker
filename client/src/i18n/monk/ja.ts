@@ -242,6 +242,11 @@ export const monkJa: Table<typeof monkEn> = {
     reward: '各報酬：銅銭{copper}、玉{jade}',
     bonus: '全部受け取り：玉 +{jade}',
   },
+  merit: {
+    title: '功徳帳',
+    points: '功徳 {n}',
+    earn: 'タスク +{task}・週の目標 +{goal}',
+  },
   achieve: {
     kills: '累計で敵を{n}体倒す',
     clear: '第{n}章をクリア',

@@ -331,6 +331,12 @@ export const it: Table<typeof en> = {
     weekBonus: 'Tutto riscosso: {chest}',
     weekResets: 'Nuovi obiettivi ogni lunedì',
   },
+  merit: {
+    ends: 'La stagione finisce tra {d} g {h} h',
+    claim: 'Riscuoti {n} {n|one:premio|other:premi}',
+    done: 'Tutti i premi riscossi',
+    next: 'Prossimo premio a {n}',
+  },
   achieve: {
     streak: 'Gioca la sfida del giorno per {n} {n|one:giorno|other:giorni} di fila',
     title: 'Obiettivi',

@@ -2,6 +2,7 @@ import { achievementsReady } from './achievements';
 import { claimable, tasksOpen } from './daily';
 import { mergeAll } from './gear';
 import { goalsClaimable } from './goals';
+import { meritClaimable } from './merit';
 import { tabLock } from './progress';
 import { chestsWaitingCount } from './progressChests';
 import type { SaveData } from './save';
@@ -18,6 +19,8 @@ export interface Waiting {
   tasks: number;
   /** Weekly goals (and the week's chest) ready to claim. */
   goals: number;
+  /** Merit path steps reached and not yet paid. */
+  merit: number;
   /** Achievements reached and not yet claimed. */
   achievements: number;
   /** The next training node can be bought now. */
@@ -30,6 +33,7 @@ export function lobbyWaiting(save: SaveData, now: number): Waiting {
     chests: chestsWaitingCount(save),
     tasks: tasks ? claimable(save, now) : 0,
     goals: tasks ? goalsClaimable(save, now) : 0,
+    merit: tasks ? meritClaimable(save, now) : 0,
     achievements: tasks ? achievementsReady(save).length : 0,
     train: canTrain(save),
   };
@@ -37,7 +41,7 @@ export function lobbyWaiting(save: SaveData, now: number): Waiting {
 
 /** The things waiting, each training node buyable counting once (the Train tab has one dot). */
 export function waitingCount(w: Waiting): number {
-  return w.chests + w.tasks + w.goals + w.achievements + (w.train ? 1 : 0);
+  return w.chests + w.tasks + w.goals + w.merit + w.achievements + (w.train ? 1 : 0);
 }
 
 /** The Train tab is open and its next node affordable. */

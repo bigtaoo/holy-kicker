@@ -242,6 +242,11 @@ export const monkDe: Table<typeof monkEn> = {
     reward: 'Je: {copper} Kupfer, {jade} Jade',
     bonus: 'Alle abgeholt: +{jade} Jade',
   },
+  merit: {
+    title: 'Verdienstbuch',
+    points: '{n} Verdienst',
+    earn: 'Aufgabe +{task} · Wochenziel +{goal}',
+  },
   achieve: {
     kills: 'Besiege insgesamt {n} {n|one:Feind|other:Feinde}',
     clear: 'Schaffe Kapitel {n}',

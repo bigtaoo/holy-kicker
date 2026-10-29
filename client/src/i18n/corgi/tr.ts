@@ -243,6 +243,11 @@ export const corgiTr: Table<typeof corgiEn> = {
     reward: 'Her biri: {copper} cıvata, {jade} elmas',
     bonus: 'Hepsi alındı: +{jade} elmas',
   },
+  merit: {
+    title: 'Madalya Yolu',
+    points: '{n} madalya',
+    earn: 'Görev +{task} · haftalık hedef +{goal}',
+  },
   achieve: {
     kills: 'Toplam {n} böcek patlat',
     clear: '{n}. gezegeni geç',

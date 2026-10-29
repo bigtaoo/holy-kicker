@@ -323,11 +323,17 @@ export const en = {
     claim: 'Claim',
     done: 'Done',
     resets: 'New tasks every day at midnight',
-    daily: 'Claim the daily bonus on {n} {n|one:day|other:days}',
+    daily: 'Daily bonus on {n} {n|one:day|other:days}',
     tabDay: 'Daily',
     tabWeek: 'Weekly',
     weekBonus: 'All claimed: {chest}',
     weekResets: 'New goals every Monday',
+  },
+  merit: {
+    ends: 'Season ends in {d}d {h}h',
+    claim: 'Claim {n} {n|one:reward|other:rewards}',
+    done: 'Every reward claimed',
+    next: 'Next reward at {n}',
   },
   achieve: {
     streak: 'Play the daily challenge {n} {n|one:day|other:days} in a row',

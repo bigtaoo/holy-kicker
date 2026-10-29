@@ -331,6 +331,12 @@ export const vi: Table<typeof en> = {
     weekBonus: 'Đã nhận hết: {chest}',
     weekResets: 'Mục tiêu mới mỗi thứ Hai',
   },
+  merit: {
+    ends: 'Mùa kết thúc sau {d} ngày {h} giờ',
+    claim: 'Nhận {n} phần thưởng',
+    done: 'Đã nhận hết phần thưởng',
+    next: 'Phần thưởng tiếp theo ở mốc {n}',
+  },
   achieve: {
     streak: 'Chơi thử thách hằng ngày {n} ngày liên tiếp',
     title: 'Thành tựu',

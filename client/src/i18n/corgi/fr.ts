@@ -242,6 +242,11 @@ export const corgiFr: Table<typeof corgiEn> = {
     reward: 'Chacune : {copper} boulons, {jade} gemmes',
     bonus: 'Tout récupéré : +{jade} gemmes',
   },
+  merit: {
+    title: 'Chemin des médailles',
+    points: '{n} {n|one:médaille|other:médailles}',
+    earn: 'Tâche +{task} · objectif +{goal}',
+  },
   achieve: {
     kills: 'Élimine {n} {n|one:bestiole|other:bestioles} au total',
     clear: 'Termine la planète {n}',

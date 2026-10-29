@@ -1,6 +1,7 @@
 import { BALANCE } from './balance';
 import { rollItems } from './gear';
 import { payHaul, type Haul } from './haul';
+import { earnMerit } from './merit';
 import { bestChapter, unlockedRelics } from './progress';
 import type { SaveData } from './save';
 import {
@@ -9,8 +10,9 @@ import {
 
 // The weekly goals (docs/design.md "Weekly goals"): bigger tasks drawn per local week from their own
 // pool, the board resetting on Monday. Each goal pays copper and jade; claiming all of them opens a
-// jade chest. Daily.ts feeds the board alongside the day's (bump, noteRun); this module never imports
-// it. Pure: functions take a save and `now` (ms) and return a new save.
+// jade chest; each claim earns merit (merit.ts). Daily.ts feeds the board alongside the day's
+// (bump, noteRun); this module never imports it. Pure: functions take a save and `now` (ms) and
+// return a new save.
 
 export interface GoalsBalance {
   /** Goals drawn per week from `pool` (taskPool.ts). */
@@ -90,7 +92,7 @@ export function goalsClaimable(save: SaveData, now: number): number {
 export function claimGoal(save: SaveData, now: number, i: number): SaveData {
   const w = thisWeek(save, now);
   if (i < 0 || i >= w.tasks.length || boardState(w, i) !== 'ready') return save;
-  return { ...save, copper: save.copper + GOALS.copper, jade: save.jade + GOALS.jade, weekly: { ...w, claimed: w.claimed | (1 << i) } };
+  return earnMerit({ ...save, copper: save.copper + GOALS.copper, jade: save.jade + GOALS.jade, weekly: { ...w, claimed: w.claimed | (1 << i) } }, now, 'goal');
 }
 
 /** Opens the week's chest once every goal is claimed; null before. */
@@ -99,5 +101,5 @@ export function claimWeekBonus(save: SaveData, now: number, rand: () => number =
   if (!boardBonusReady(w)) return null;
   const chapter = Math.min(BALANCE.chapters, bestChapter(save) + 1);
   const haul: Haul = { copper: 0, jade: 0, drops: rollItems(chapter, GOALS.bonusDrops, unlockedRelics(save), rand) };
-  return { save: payHaul({ ...save, weekly: { ...w, bonus: true } }, haul), haul };
+  return { save: earnMerit(payHaul({ ...save, weekly: { ...w, bonus: true } }, haul), now, 'weekBonus'), haul };
 }

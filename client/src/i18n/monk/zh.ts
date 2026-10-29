@@ -242,6 +242,11 @@ export const monkZh: Table<typeof monkEn> = {
     reward: '每项奖励：{copper} 铜钱、{jade} 玉',
     bonus: '全部领取：+{jade} 玉',
   },
+  merit: {
+    title: '功德簿',
+    points: '功德 {n}',
+    earn: '任务 +{task} · 周目标 +{goal}',
+  },
   achieve: {
     kills: '累计击败 {n} 个敌人',
     clear: '通关第 {n} 章',

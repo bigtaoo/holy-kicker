@@ -242,6 +242,11 @@ export const monkIt: Table<typeof monkEn> = {
     reward: 'Ognuna: {copper} rame, {jade} giada',
     bonus: 'Tutte riscosse: +{jade} giada',
   },
+  merit: {
+    title: 'Libro dei meriti',
+    points: '{n} di merito',
+    earn: 'Compito +{task} · obiettivo +{goal}',
+  },
   achieve: {
     kills: 'Sconfiggi {n} {n|one:nemico|other:nemici} in totale',
     clear: 'Completa il capitolo {n}',

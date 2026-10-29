@@ -242,6 +242,11 @@ export const monkVi: Table<typeof monkEn> = {
     reward: 'Mỗi cái: {copper} đồng, {jade} ngọc',
     bonus: 'Nhận hết: +{jade} ngọc',
   },
+  merit: {
+    title: 'Sổ Công Đức',
+    points: '{n} công đức',
+    earn: 'Nhiệm vụ +{task} · mục tiêu tuần +{goal}',
+  },
   achieve: {
     kills: 'Hạ tổng cộng {n} kẻ địch',
     clear: 'Qua chương {n}',

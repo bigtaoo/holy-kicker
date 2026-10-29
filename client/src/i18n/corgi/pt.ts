@@ -243,6 +243,11 @@ export const corgiPt: Table<typeof corgiEn> = {
     reward: 'Cada uma: {copper} parafusos, {jade} gemas',
     bonus: 'Tudo resgatado: +{jade} gemas',
   },
+  merit: {
+    title: 'Trilha de medalhas',
+    points: '{n} {n|one:medalha|other:medalhas}',
+    earn: 'Tarefa +{task} · meta semanal +{goal}',
+  },
   achieve: {
     kills: 'Estoure {n} {n|one:inseto|other:insetos} no total',
     clear: 'Conclua o planeta {n}',

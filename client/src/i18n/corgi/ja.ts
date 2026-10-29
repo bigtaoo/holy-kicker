@@ -243,6 +243,11 @@ export const corgiJa: Table<typeof corgiEn> = {
     reward: '各報酬：ボルト{copper}、ジェム{jade}',
     bonus: '全部受け取り：ジェム +{jade}',
   },
+  merit: {
+    title: 'メダルロード',
+    points: 'メダル {n}',
+    earn: 'タスク +{task}・週の目標 +{goal}',
+  },
   achieve: {
     kills: '累計で虫を{n}匹倒す',
     clear: '惑星{n}をクリア',

@@ -242,6 +242,11 @@ export const monkTr: Table<typeof monkEn> = {
     reward: 'Her biri: {copper} bakır, {jade} yeşim',
     bonus: 'Hepsi alındı: +{jade} yeşim',
   },
+  merit: {
+    title: 'Sevap Defteri',
+    points: '{n} sevap',
+    earn: 'Görev +{task} · haftalık hedef +{goal}',
+  },
   achieve: {
     kills: 'Toplam {n} düşman yen',
     clear: '{n}. bölümü geç',

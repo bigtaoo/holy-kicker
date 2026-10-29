@@ -243,6 +243,11 @@ export const corgiTh: Table<typeof corgiEn> = {
     reward: 'แต่ละอย่าง: น็อต {copper}, อัญมณี {jade}',
     bonus: 'รับครบ: อัญมณี +{jade}',
   },
+  merit: {
+    title: 'เส้นทางเหรียญตรา',
+    points: 'เหรียญตรา {n}',
+    earn: 'ภารกิจ +{task} · เป้าหมายสัปดาห์ +{goal}',
+  },
   achieve: {
     kills: 'กำจัดแมลงรวม {n} ตัว',
     clear: 'ผ่านดาวที่ {n}',

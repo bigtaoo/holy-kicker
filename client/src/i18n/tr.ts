@@ -331,6 +331,12 @@ export const tr: Table<typeof en> = {
     weekBonus: 'Hepsi alındı: {chest}',
     weekResets: 'Her pazartesi yeni hedefler',
   },
+  merit: {
+    ends: 'Sezon {d} g {h} sa sonra bitiyor',
+    claim: '{n} ödül al',
+    done: 'Tüm ödüller alındı',
+    next: 'Sonraki ödül: {n}',
+  },
   achieve: {
     streak: 'Günlük meydan okumayı {n} gün üst üste oyna',
     title: 'Başarımlar',

@@ -329,6 +329,12 @@ export const zh: Table<typeof en> = {
     weekBonus: '全部领取：{chest}',
     weekResets: '每周一刷新',
   },
+  merit: {
+    ends: '本季剩余 {d} 天 {h} 小时',
+    claim: '领取 {n} 份奖励',
+    done: '奖励已全部领取',
+    next: '下一份奖励：{n}',
+  },
   achieve: {
     streak: '连续 {n} 天参加每日挑战',
     title: '成就',

@@ -330,6 +330,12 @@ export const ru: Table<typeof en> = {
     weekBonus: 'Всё получено: {chest}',
     weekResets: 'Новые цели каждый понедельник',
   },
+  merit: {
+    ends: 'Сезон закончится через {d} д {h} ч',
+    claim: 'Забрать награды ({n})',
+    done: 'Все награды получены',
+    next: 'Следующая награда: {n}',
+  },
   achieve: {
     streak: 'Сыграй в испытание дня {n} {n|one:день|few:дня|many:дней|other:дня} подряд',
     title: 'Достижения',

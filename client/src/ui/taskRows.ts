@@ -29,7 +29,7 @@ export interface BoardActions {
 export function boardRows(b: Board, text: BoardText, box: TasksBox, top: number, a: BoardActions): Container {
   const c = new Container();
   const reward = fit(label(text.reward, 48, COLORS.dim), 880, 130);
-  reward.y = top + 215;
+  reward.y = top + box.head + 215;
   c.addChild(reward);
   b.tasks.forEach((task, i) => {
     const row = new Container();
@@ -37,7 +37,7 @@ export function boardRows(b: Board, text: BoardText, box: TasksBox, top: number,
     row.position.set(spot.x, spot.y);
     const state = boardState(b, i);
     const n = task.n;
-    const name = fit(label(taskText(task), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560, 70);
+    const name = fit(label(taskText(task), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 620, 70);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
     const done = Math.min(n, b.progress[i]);

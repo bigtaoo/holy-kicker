@@ -242,6 +242,11 @@ export const monkId: Table<typeof monkEn> = {
     reward: 'Tiap tugas: {copper} tembaga, {jade} giok',
     bonus: 'Semua diambil: +{jade} giok',
   },
+  merit: {
+    title: 'Buku Pahala',
+    points: '{n} pahala',
+    earn: 'Tugas +{task} · target mingguan +{goal}',
+  },
   achieve: {
     kills: 'Kalahkan total {n} musuh',
     clear: 'Tamatkan bab {n}',

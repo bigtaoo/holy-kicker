@@ -242,6 +242,11 @@ export const monkTh: Table<typeof monkEn> = {
     reward: 'แต่ละอย่าง: ทองแดง {copper}, หยก {jade}',
     bonus: 'รับครบ: หยก +{jade}',
   },
+  merit: {
+    title: 'สมุดบุญ',
+    points: 'บุญ {n}',
+    earn: 'ภารกิจ +{task} · เป้าหมายสัปดาห์ +{goal}',
+  },
   achieve: {
     kills: 'กำจัดศัตรูรวม {n} ตัว',
     clear: 'ผ่านบทที่ {n}',

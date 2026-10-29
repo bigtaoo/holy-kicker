@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { newWeekly, weekKey } from './goals';
+import { BALANCE } from './balance';
+import { seasonOf } from './merit';
 import { newSave } from './save';
 import { trainNode } from './training';
 import { affordableTraining, lobbyWaiting, lossStep, mergesReady, waitingCount } from './waiting';
@@ -16,6 +18,14 @@ describe('lobby waiting', () => {
     const weekly = { ...newWeekly(weekKey(now), [{ kind: 'runs' as const, n: 1, id: '' }, { kind: 'kills' as const, n: 9, id: '' }]), progress: [1, 9] };
     expect(lobbyWaiting({ ...played, weekly }, now).goals).toBe(2);
     expect(lobbyWaiting({ ...newSave(), weekly }, now).goals).toBe(0);
+  });
+
+  it('counts the merit path steps reached and not paid', () => {
+    const now = Date.UTC(2026, 10, 2);
+    const merit = { season: seasonOf(now), points: BALANCE.merit.steps[2].at, claimed: 1 };
+    expect(lobbyWaiting({ ...played, merit }, now).merit).toBe(2);
+    expect(waitingCount(lobbyWaiting({ ...played, merit }, now))).toBe(2);
+    expect(lobbyWaiting({ ...newSave(), merit }, now).merit).toBe(0);
   });
 
   it('counts every chest waiting, both tracks', () => {

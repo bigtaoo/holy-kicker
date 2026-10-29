@@ -241,6 +241,11 @@ export const monkEn = {
     reward: 'Each: {copper} copper, {jade} jade',
     bonus: 'All claimed: +{jade} jade',
   },
+  merit: {
+    title: 'Merit Book',
+    points: '{n} merit',
+    earn: 'Tasks +{task} · weekly goals +{goal}',
+  },
   achieve: {
     kills: 'Defeat {n} {n|one:enemy|other:enemies} in all',
     clear: 'Clear chapter {n}',

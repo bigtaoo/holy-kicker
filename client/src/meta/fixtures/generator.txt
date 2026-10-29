@@ -62,6 +62,10 @@ it('writes the fixture', async () => {
     const tasks = [['runs', 15, ''], ['daily', 5, ''], ['kills', 8000, ''], ['boss', 4, ''], ['monk', 3, 'kicker']].map(([kind, n, id]) => ({ kind, n, id }));
     over.weekly = { week: 20261012, tasks, progress: [15, 5, 4200, 1, 0], claimed: 3, bonus: false };
   }
+  if (has('merit')) {
+    // the season's merit path: past four steps, the first and third paid
+    over.merit = { season: 0, points: 420, claimed: 0b101 };
+  }
   const monks = (engine as unknown as { MONK_IDS?: string[] }).MONK_IDS;
   if (monks && !monks.includes('fat')) over.monk = monks[1];
   const stored = save.parseSave(JSON.stringify({ ...fresh, ...over })) as unknown as Record<string, unknown>;

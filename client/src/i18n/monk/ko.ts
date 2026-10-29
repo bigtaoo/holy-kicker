@@ -242,6 +242,11 @@ export const monkKo: Table<typeof monkEn> = {
     reward: '각각: 동전 {copper}개, 옥 {jade}개',
     bonus: '모두 받음: 옥 +{jade}',
   },
+  merit: {
+    title: '공덕록',
+    points: '공덕 {n}',
+    earn: '임무 +{task} · 주간 목표 +{goal}',
+  },
   achieve: {
     kills: '누적 적 {n}마리 처치',
     clear: '{n}장 클리어',

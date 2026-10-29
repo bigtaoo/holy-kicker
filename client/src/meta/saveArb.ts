@@ -133,9 +133,10 @@ export function play(r: Rand, save: SaveData, steps = 1 + r.int(6)): SaveData {
         s.chapter = 1 + r.int(Math.min(BALANCE.chapters, s.cleared + 1));
         s.hard = r.chance(0.3);
         break;
-      case 7: // today's tasks and the week's goals
+      case 7: // today's tasks, the week's goals and the season's merit
         s.daily = { ...s.daily, progress: s.daily.progress.map((p) => p + r.int(2)), claimed: s.daily.claimed | (s.daily.tasks.length ? 1 << r.int(s.daily.tasks.length) : 0) };
         s.weekly = { ...s.weekly, progress: s.weekly.progress.map((p) => p + r.int(5)), claimed: s.weekly.claimed | (s.weekly.tasks.length ? 1 << r.int(s.weekly.tasks.length) : 0) };
+        s.merit = { ...s.merit, points: s.merit.points + r.int(200), claimed: s.merit.claimed | (1 << r.int(BALANCE.merit.steps.length)) };
         break;
       case 8: // a daily challenge and a welcome gift
         s.streak++;

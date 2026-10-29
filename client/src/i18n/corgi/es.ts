@@ -242,6 +242,11 @@ export const corgiEs: Table<typeof corgiEn> = {
     reward: 'Cada una: {copper} tornillos, {jade} gemas',
     bonus: 'Todo reclamado: +{jade} gemas',
   },
+  merit: {
+    title: 'Ruta de medallas',
+    points: '{n} {n|one:medalla|other:medallas}',
+    earn: 'Tarea +{task} · objetivo semanal +{goal}',
+  },
   achieve: {
     kills: 'Elimina {n} {n|one:bicho|other:bichos} en total',
     clear: 'Supera el planeta {n}',

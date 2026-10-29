@@ -329,6 +329,12 @@ export const ko: Table<typeof en> = {
     weekBonus: '모두 받기: {chest}',
     weekResets: '매주 월요일 새 목표',
   },
+  merit: {
+    ends: '시즌 종료까지 {d}일 {h}시간',
+    claim: '보상 {n}개 받기',
+    done: '모든 보상을 받았어요',
+    next: '다음 보상: {n}',
+  },
   achieve: {
     streak: '일일 도전을 {n}일 연속 플레이',
     title: '업적',

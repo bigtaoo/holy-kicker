@@ -331,6 +331,12 @@ export const id: Table<typeof en> = {
     weekBonus: 'Semua diambil: {chest}',
     weekResets: 'Target baru setiap Senin',
   },
+  merit: {
+    ends: 'Musim berakhir dalam {d} h {h} j',
+    claim: 'Ambil {n} hadiah',
+    done: 'Semua hadiah sudah diambil',
+    next: 'Hadiah berikutnya di {n}',
+  },
   achieve: {
     streak: 'Mainkan tantangan harian {n} hari berturut-turut',
     title: 'Pencapaian',
