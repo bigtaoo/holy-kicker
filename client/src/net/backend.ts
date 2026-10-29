@@ -35,14 +35,15 @@ export const DEFAULT_API = __HK_API__;
  * Where the backend is, or null for none. In development `?api=` picks it (a URL such as
  * http://localhost:8080 for a local server; `off` or none stays offline); a release reads no
  * `?api=`, so no link can send a player's install id and telemetry elsewhere. WeChat stays offline:
- * its request whitelist needs an ICP-filed domain the backend does not have yet.
+ * its request whitelist needs an ICP-filed domain the backend does not have yet. GameDistribution
+ * forbids any network but its own.
  */
 export function apiBase(host: Host, dev: boolean, query: URLSearchParams, configured: string | undefined): string | null {
   if (dev) {
     const q = query.get('api');
     return q && q !== 'off' ? q.replace(/\/+$/, '') : null;
   }
-  if (host === 'wechat') return null;
+  if (host === 'wechat' || host === 'gamedistribution') return null;
   return (configured || DEFAULT_API).replace(/\/+$/, '');
 }
 

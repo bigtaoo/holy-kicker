@@ -27,7 +27,7 @@
     "journey": "node build/journey.mjs",
     "check:wechatpackage": "node build/checkWeChatPackage.mjs",
     "check:webp": "node build/checkWebp.mjs",
-    "check": "npm run typecheck && npm run check:filelength && npm run check:webp && npm run check:theme && npm run coverage && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run build:playgama && npm run build:ios && npm run check:wechatpackage && npm run check:releaseswitches",
+    "check": "npm run typecheck && npm run check:filelength && npm run check:webp && npm run check:theme && npm run coverage && npm run build -w server && npm run build:wechat && npm run build:crazygames && npm run build:playgama && npm run build:gamedistribution && npm run build:ios && npm run check:wechatpackage && npm run check:releaseswitches",
     "check:releaseswitches": "node build/releaseSwitches.mjs",
     "deploy:server": "npm run deploy -w server",
     "build:playgama": "npm run build:playgama -w client",
@@ -38,7 +38,9 @@
     "build:new": "npm run build:new -w client",
     "dev:new": "npm run dev:new -w client",
     "build:crazygames:new": "npm run build:crazygames:new -w client",
-    "build:playgama:new": "npm run build:playgama:new -w client"
+    "build:playgama:new": "npm run build:playgama:new -w client",
+    "build:gamedistribution": "npm run build:gamedistribution -w client",
+    "build:gamedistribution:new": "npm run build:gamedistribution:new -w client"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.1.11",

@@ -73,6 +73,22 @@
         "server"
       ],
       "port": 8080
+    },
+    {
+      "name": "gd-new-preview",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "vite",
+        "preview",
+        "--config",
+        "client/vite.gamedistribution.new.config.js",
+        "--outDir",
+        "client/dist-gamedistribution-new",
+        "--port",
+        "4187",
+        "--strictPort"
+      ],
+      "port": 4187
     }
   ]
 }

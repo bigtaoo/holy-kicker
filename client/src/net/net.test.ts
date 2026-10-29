@@ -10,6 +10,7 @@ describe('backend', () => {
     expect(apiBase('web', false, q(), 'https://x.test/')).toBe('https://x.test');
     expect(apiBase('web', true, q(), undefined)).toBeNull();
     expect(apiBase('wechat', false, q(), undefined)).toBeNull();
+    expect(apiBase('gamedistribution', false, q(), 'https://x.test/')).toBeNull();
     expect(apiBase('web', true, q('api=http://localhost:8080'), undefined)).toBe('http://localhost:8080');
     expect(apiBase('web', true, q('api=off'), undefined)).toBeNull();
   });

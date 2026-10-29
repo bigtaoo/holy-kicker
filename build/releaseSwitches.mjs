@@ -45,7 +45,7 @@ export function switchReads(dist, names = switchNames()) {
   return [...new Set(found)];
 }
 
-const CHECKED = ['dist-crazygames', 'dist-playgama', 'dist-ios', 'wechat/js'];
+const CHECKED = ['dist-crazygames', 'dist-playgama', 'dist-gamedistribution', 'dist-ios', 'wechat/js'];
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1]) {
   const names = switchNames();

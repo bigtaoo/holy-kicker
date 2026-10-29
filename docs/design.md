@@ -698,6 +698,15 @@ is stopped at death and the player opts in, so it should be fine; confirm during
 `client/wechat/share/<lang>.jpg`, and a one-line pitch) and to Moments (the pitch over the icon).
 No share rewards: WeChat bans incentivised sharing.
 
+**GameDistribution** (`platform/gamedistribution/`, the corgi first): GD's own HTML5 SDK, not
+Bridge. GD forbids every ad, analytics or request but its own and any outgoing link, so this host
+is offline like WeChat (`apiBase` null, the backend's address left out of the bundle and the
+build failing if it shows up): no boards, cloud save, problem reports or privacy page; the save
+is the iframe's localStorage. The SDK's pause brackets every ad (sound off, a run paused as on a
+hidden tab); a rewarded ad pays only after `SDK_REWARDED_WATCH_COMPLETE`, and an offer shows only
+when `preloadAd('rewarded')` finds one. Interstitials keep the shared placement and pacing. The
+game id of each theme's GD draft is `GD_GAME_IDS` in `sdk.ts`; without one the SDK is not loaded.
+
 A small server on the existing VPS comes with WeChat: `code2session` login (the app secret
 must not ship), cloud save, server time, remote config, analytics. Leaderboards later can
 re-simulate submitted runs with the deterministic engine to verify them.
