@@ -236,6 +236,9 @@ export const monkId: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Ambil hasil patroli',
     kills: 'Kalahkan {n} musuh',
+    elites: 'Kalahkan {n} elite',
+    boss: 'Kalahkan {n} bos',
+    evolve: 'Evolusikan {n} mantra',
     reward: 'Tiap tugas: {copper} tembaga, {jade} giok',
     bonus: 'Semua diambil: +{jade} giok',
   },

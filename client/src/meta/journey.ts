@@ -1,7 +1,8 @@
 import { playChapter, type RunStats } from '@hk/engine/bot/balance';
 import type { BotStyle } from '@hk/engine/bot/bot';
 import { BALANCE } from './balance';
-import { bump, claimBonus, claimTask, rollDay } from './daily';
+import { claimBonus, claimTask, noteRun, rollDay } from './daily';
+import { runTally } from './taskPool';
 import { mergeAll } from './gear';
 import { loadout } from './loadout';
 import { collectPatrol, patrolOpen, quickLeft, quickPatrol, startPatrol } from './patrol';
@@ -101,7 +102,7 @@ function lobby(s: SaveData, now: number, plan: JourneyPlan, rand: () => number):
 }
 
 function claimAll(s: SaveData, now: number): SaveData {
-  BALANCE.daily.tasks.forEach((_, i) => (s = claimTask(s, now, i)));
+  for (let i = 0; i < s.daily.tasks.length; i++) s = claimTask(s, now, i);
   return claimBonus(s, now);
 }
 
@@ -150,7 +151,9 @@ export function journey(plan: JourneyPlan, log: (line: string) => void = () => {
         if (!replay) tries.push(waves);
         const settled = settleRun(s, { chapter, hard, waves, lowest: st.lowest, revived: false }, rand);
         s = plan.ads ? doubleCopper(settled.save, settled.reward) : settled.save;
-        s = bump(bump(bump(s, now, 'runs', 1), now, 'waves', waves), now, 'kills', st.kills);
+        // the bot's stats have no elite or boss count: an elite every fifth wave, the boss at the end
+        const won = st.outcome === 'won';
+        s = noteRun(s, now, runTally({ waves, kills: st.kills, elites: Math.floor(waves / 5), bosses: won ? 1 : 0, stars: settled.reward.stars, relic: s.relic, monk: s.monk }));
         s = spend(plan.lobby ? claimAll(s, now) : s, now, plan, rand);
         const { stars } = settled.reward;
         if (settled.reward.firstClear) {

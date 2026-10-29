@@ -237,6 +237,9 @@ export const corgiKo: Table<typeof corgiEn> = {
   tasks: {
     patrol: '순찰 보상 받기',
     kills: '벌레 {n}마리 처치',
+    elites: '정예 벌레 {n}마리 처치',
+    boss: '보스 {n}마리 처치',
+    evolve: '장치 {n}개 진화',
     reward: '각각: 볼트 {copper}개, 보석 {jade}개',
     bonus: '모두 받음: 보석 +{jade}',
   },

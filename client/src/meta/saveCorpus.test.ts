@@ -40,8 +40,10 @@ describe.each(VERSIONS)('a version %i save', (v) => {
     const later = { trained: 0, patrol: 0, seen: 0xff, grit: 0, hard: false, monk: 'kicker', kills: 0, dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '' };
     for (const [k, none] of Object.entries(later)) expect(s[k as keyof SaveData], k).toBe(raw[k] ?? none);
     expect(s.codex).toEqual(raw.codex);
-    // copper chests came within version 7: a stored day bought none
-    expect(s.daily).toEqual(raw.daily ? { copperChests: 0, ...raw.daily as object } : s.daily);
+    // copper chests came within version 7: a stored day bought none; a day stored before version 8 keeps the fixed five
+    const day = raw.daily as { day?: number; tasks?: unknown } | undefined;
+    const fixed = (day?.day === raw.firstDay ? BALANCE.daily.firstDay : BALANCE.daily.legacy).map((g) => ({ ...g, id: '' }));
+    expect(s.daily).toEqual(day ? { copperChests: 0, ...day, tasks: day.tasks ?? fixed } : s.daily);
     expect(s.weeks).toEqual(raw.weeks ?? []);
   });
 
@@ -123,9 +125,9 @@ describe.each(VERSIONS)('a version %i save', (v) => {
   });
 });
 
-describe('the version 7 save', () => {
-  it('reads exactly as stored, a field added since at its default', () => {
+describe('the version 8 save', () => {
+  it('reads exactly as stored', () => {
     const raw = SAVES[SAVE_VERSION];
-    expect(parseSave(JSON.stringify(raw))).toEqual({ ...raw, daily: { ...raw.daily as object, copperChests: 0 } });
+    expect(parseSave(JSON.stringify(raw))).toEqual(raw);
   });
 });

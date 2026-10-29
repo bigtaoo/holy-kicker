@@ -236,6 +236,9 @@ export const corgiIt: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Raccogli dalla pattuglia',
     kills: 'Sconfiggi {n} {n|one:insetto|other:insetti}',
+    elites: 'Sconfiggi {n} {n|one:insetto élite|other:insetti élite}',
+    boss: 'Sconfiggi {n} {n|one:boss|other:boss}',
+    evolve: 'Evolvi {n} {n|one:gadget|other:gadget}',
     reward: 'Ognuna: {copper} bulloni, {jade} gemme',
     bonus: 'Tutte riscosse: +{jade} gemme',
   },

@@ -126,9 +126,12 @@ is never lost to "the last write wins":
 - **The daily streak follows the save that played a daily last**: `streak` with its `streakDay`
   (the later day; the same day keeps the longer streak). `dailyBest` is the later daily's best
   (its id sorts by date; the same daily keeps the more waves).
+- **Today's `daily` is the later day's**; the same day keeps the most of each counter (shop
+  chests, quick patrols) and, when both drew the same tasks (they do: the draw is seeded by the
+  date), each task's most progress and every claim, so nothing of the day pays twice.
 - **Everything else comes from the leading save**, the one with more runs (then more chapters
   cleared, then the higher level and xp; a tie keeps the device's): the wallet (`copper`, `jade`),
-  `gear`, the selected `relic`, `chapter`, `monk` and `hard`, the patrol clock, today's `daily`,
+  `gear`, the selected `relic`, `chapter`, `monk` and `hard`, the patrol clock,
   `grit`, the falls, `dice`, `challenge` and the unpaid `weeks`. A wallet cannot be merged
   without paying twice for one thing, so it follows the save that has played the most. The
   leader's gear gets a first copy of each relic only the other save had unlocked (one unlocked

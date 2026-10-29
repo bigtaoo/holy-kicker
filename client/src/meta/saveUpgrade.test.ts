@@ -29,7 +29,7 @@ describe('a save from the live build before lobby chests', () => {
     const pad = (a: number[], n = BALANCE.chapters) => [...a, ...Array(n - a.length).fill(0)];
     const { hardCleared: _, ...kept } = LIVE;
     expect(rest).toEqual({
-      ...kept, version: SAVE_VERSION, daily: { ...LIVE.daily, copperChests: 0 }, challenge: '', weeks: [], achieved: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 }, arms: {}, tester: false,
+      ...kept, version: SAVE_VERSION, daily: { ...LIVE.daily, copperChests: 0, tasks: BALANCE.daily.legacy.map((g) => ({ ...g, id: '' })) }, challenge: '', weeks: [], achieved: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 }, arms: {}, tester: false,
       sutras: 1, // Lotus Steps (wave 25) stored by the unlock re-pacing
       best: pad(LIVE.best), chests: pad(LIVE.chests), stars: pad([1]), hardBest: pad([]), hardStars: pad([]), hardChests: pad([]),
       fell: pad([]), hardFell: pad([]), times: pad([]), hardTimes: pad([]),

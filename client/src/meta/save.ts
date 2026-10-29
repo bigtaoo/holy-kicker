@@ -11,7 +11,7 @@ import { keepUnlocks } from './unlocks';
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
 // Settings such as the language are not part of it: they stay on the device (settings.ts).
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 /** Bits per word of `achieved`: 30 keeps every word a small positive integer. */
 export const ACHIEVED_BITS = 30;
 /** Chapters a save before version 6 had; clearing them all opened hard mode on every one. */
@@ -186,6 +186,7 @@ function owned(monks: number, id: unknown): boolean {
  * its clears read as one star, its hard clears as a count from chapter 1, and a player who had
  * hard mode keeps it with three stars on those five chapters.
  * Version 6 kept the claimed achievements in one number: it becomes the first word, no streak yet.
+ * Version 7 had the same five daily tasks every day: a day it stored keeps them (daily.ts parseDaily).
  * A save without the last falls reads as none fallen yet, one without clear times as none timed.
  * A save without stored sutras is from before the re-paced unlocks (docs/unlocks.md): it keeps
  * the relics and sutras the old gates gave (unlocks.ts keepUnlocks).
@@ -264,7 +265,7 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
     sutras: bits(raw.sutras, SUTRA_IDS.length, 0),
     trained: int(raw.trained, 0, BALANCE.training.nodes, 0),
     patrol: int(raw.patrol, 0, max, 0),
-    daily: parseDaily(raw.daily),
+    daily: parseDaily(raw.daily, int(raw.firstDay, 0, 99999999, 0)),
     // a save from before the dots has seen every tab it could open
     seen: bits(raw.seen, 8, 0xff),
     grit: int(raw.grit, 0, BALANCE.grit.max, 0),

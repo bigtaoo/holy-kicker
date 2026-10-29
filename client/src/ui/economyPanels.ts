@@ -1,16 +1,17 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
-import { bonusReady, taskGoal, taskState, today } from '../meta/daily';
+import { today } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLeft } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
-import { achieveRows, rowSpot, rowsEnd, tasksBox, tasksSwitch, type AchievePanelActions, type TasksBox, type TasksView } from './achievePanel';
+import { achieveRows, tasksBox, tasksSwitch, type AchievePanelActions, type TasksBox, type TasksView } from './achievePanel';
 import { isWideFrame } from './hudLayout';
 import { GEAR_TILE, gearTiles, placeTiles } from './gearTiles';
 import type { TaoAsset } from '../game/tao/TaoActor';
 import { iconSprite, type IconSheet } from './buildBar';
 import { PatrolScene, type PatrolArt } from './patrolScene';
+import { boardRows } from './taskRows';
 import { COLORS, backdrop, button, fit, label, meter, panel } from './widgets';
 
 // The lobby's modal panels for the patrol, the daily tasks (achievements: achievePanel.ts) and
@@ -176,46 +177,8 @@ export function tasksPanel(save: SaveData, now: number, w: number, h: number, vi
 /** Today's tasks with their progress and Claim, the bonus for claiming them all, from the box top `top`. */
 function dailyRows(save: SaveData, now: number, box: TasksBox, top: number, a: TasksPanelActions): Container {
   const D = BALANCE.daily;
-  const d = today(save, now);
-  const c = new Container();
-  const reward = fit(label(t('tasks.reward', { copper: D.copper, jade: D.jade }), 48, COLORS.dim), 880, 130);
-  reward.y = top + 215;
-  c.addChild(reward);
-  D.tasks.forEach((goal, i) => {
-    const row = new Container();
-    const spot = rowSpot(box, i, top);
-    row.position.set(spot.x, spot.y);
-    const state = taskState(save, d, i);
-    const n = taskGoal(save, d, i);
-    const name = fit(label(t(`tasks.${goal.kind}`, { n }), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 560, 70);
-    name.anchor.set(0, 0.5);
-    name.position.set(-430, -30);
-    const done = Math.min(n, d.progress[i]);
-    const gauge = meter(380, done / n, state === 'open' ? COLORS.copper : COLORS.jade);
-    gauge.view.position.set(-240, 40);
-    const count = label(`${done}/${n}`, 48, COLORS.dim);
-    count.anchor.set(0, 0.5);
-    count.position.set(-20, 40);
-    row.addChild(name, gauge.view, count);
-    if (state !== 'open') {
-      const ready = state === 'ready';
-      const b = button(ready ? t('tasks.claim') : t('tasks.done'), 230, 110, () => ready && a.claimTask(i), {
-        fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim, size: 48,
-      });
-      b.x = 320;
-      row.addChild(b);
-    }
-    c.addChild(row);
-  });
-  const ready = bonusReady(save, d);
-  const bonus = button(t('tasks.bonus', { jade: D.bonusJade }), 760, 130, () => ready && a.bonus(), {
-    fill: ready ? COLORS.jade : COLORS.panelLocked, textFill: ready ? COLORS.outline : COLORS.dim, size: 48,
-  });
-  bonus.y = rowsEnd(box, D.tasks.length, top) + 10;
-  const resets = fit(label(t('tasks.resets'), 48, COLORS.dim), 880, 130);
-  resets.y = bonus.y + 110;
-  c.addChild(bonus, resets);
-  return c;
+  const text = { reward: t('tasks.reward', { copper: D.copper, jade: D.jade }), bonus: t('tasks.bonus', { jade: D.bonusJade }), resets: t('tasks.resets') };
+  return boardRows(today(save, now), text, box, top, { claim: a.claimTask, bonus: a.bonus });
 }
 
 /** What a chest or a patrol just paid, over everything, until OK: the coins in lines, the gear in framed tiles. */

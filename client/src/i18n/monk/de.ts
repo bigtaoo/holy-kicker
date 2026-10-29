@@ -236,6 +236,9 @@ export const monkDe: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Hol die Patrouille ab',
     kills: 'Besiege {n} {n|one:Feind|other:Feinde}',
+    elites: 'Besiege {n} {n|one:Elite|other:Eliten}',
+    boss: 'Besiege {n} {n|one:Boss|other:Bosse}',
+    evolve: 'Entwickle {n} {n|one:Zauber|other:Zauber}',
     reward: 'Je: {copper} Kupfer, {jade} Jade',
     bonus: 'Alle abgeholt: +{jade} Jade',
   },

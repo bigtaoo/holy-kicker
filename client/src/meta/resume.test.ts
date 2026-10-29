@@ -14,10 +14,10 @@ describe('resume', () => {
     const kv = new MemoryStore();
     expect(loadRun(kv)).toBeNull();
     const e = chapterRun(900);
-    keepRun(kv, { state: e.state, freeRevives: 1, kills: 42 });
+    keepRun(kv, { state: e.state, freeRevives: 1, kills: 42, elites: 3, bosses: 1 });
     const back = loadRun(kv)!;
     expect(hashState(back.state)).toBe(hashState(e.state));
-    expect(back).toMatchObject({ freeRevives: 1, kills: 42 });
+    expect(back).toMatchObject({ freeRevives: 1, kills: 42, elites: 3, bosses: 1 });
     dropRun(kv);
     expect(loadRun(kv)).toBeNull();
   });
@@ -26,12 +26,12 @@ describe('resume', () => {
     const kv = new MemoryStore();
     kv.setItem(RUN_KEY, '{"snap":');
     expect(loadRun(kv)).toBeNull();
-    keepRun(kv, { state: chapterRun(30).state, freeRevives: -3, kills: 1.5 });
+    keepRun(kv, { state: chapterRun(30).state, freeRevives: -3, kills: 1.5, elites: -1, bosses: 0 });
     const stored = JSON.parse(kv.getItem(RUN_KEY)!);
-    expect(loadRun(kv)).toMatchObject({ freeRevives: 0, kills: 0 });
+    expect(loadRun(kv)).toMatchObject({ freeRevives: 0, kills: 0, elites: 0, bosses: 0 });
     kv.setItem(RUN_KEY, JSON.stringify({ ...stored, snap: { ...stored.snap, engine: 1 } }));
     expect(loadRun(kv)).toBeNull();
-    keepRun(kv, { state: new Engine(DEFAULT_RUN).state, freeRevives: 0, kills: 0 });
+    keepRun(kv, { state: new Engine(DEFAULT_RUN).state, freeRevives: 0, kills: 0, elites: 0, bosses: 0 });
     expect(loadRun(kv)).toBeNull();
   });
 });

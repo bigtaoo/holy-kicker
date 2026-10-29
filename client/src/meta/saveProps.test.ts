@@ -69,8 +69,8 @@ function keepsProgress(m: SaveData, x: SaveData): void {
   if (x.dice) expect(m.dice).toBeGreaterThan(0);
 }
 
-/** The fields the leader decides (docs/cloud-save.md): the wallet, the gear, the selections, today's tasks. */
-const LED = ['copper', 'jade', 'relic', 'chapter', 'monk', 'hard', 'daily', 'patrol', 'grit', 'challenge', 'weeks'] as const;
+/** The fields the leader decides (docs/cloud-save.md): the wallet, the gear, the selections. */
+const LED = ['copper', 'jade', 'relic', 'chapter', 'monk', 'hard', 'patrol', 'grit', 'challenge', 'weeks'] as const;
 
 describe('mergeSaves, over random pairs', () => {
   it('never loses progress, an unlock or a purchase from either side', () => {
@@ -96,6 +96,21 @@ describe('mergeSaves, over random pairs', () => {
       expect(m.relic).toBe(lead.relic);
       // every copy the leader owns is still there (a relic the trail unlocked may add its first copy)
       for (const [item, counts] of Object.entries(lead.gear)) expect(atLeast(m.gear[item as never], counts), item).toBe(true);
+    });
+  });
+
+  it("keeps the later day's counters, and of the same day the most of each and every claim", () => {
+    forSeeds((r) => {
+      const { a, b } = pair(r);
+      const m = mergeSaves(a, b).daily;
+      if (a.daily.day !== b.daily.day) {
+        expect(m).toEqual(a.daily.day > b.daily.day ? a.daily : b.daily);
+        return;
+      }
+      for (const k of ['free', 'adChests', 'copperChests', 'quickAds', 'quickJade'] as const) expect(m[k], k).toBe(Math.max(a.daily[k], b.daily[k]));
+      if (JSON.stringify(a.daily.tasks) !== JSON.stringify(b.daily.tasks)) return;
+      expect(m.claimed).toBe(a.daily.claimed | b.daily.claimed);
+      m.progress.forEach((p, i) => expect(p).toBe(Math.max(a.daily.progress[i], b.daily.progress[i])));
     });
   });
 

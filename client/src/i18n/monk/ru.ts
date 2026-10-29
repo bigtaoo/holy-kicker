@@ -236,6 +236,9 @@ export const monkRu: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Забери награду из дозора',
     kills: 'Победи врагов: {n}',
+    elites: 'Победи элитных врагов: {n}',
+    boss: 'Победи боссов: {n}',
+    evolve: 'Доведи до эволюции заклинаний: {n}',
     reward: 'За каждое: медь {copper}, нефрит {jade}',
     bonus: 'Всё забрано: нефрит +{jade}',
   },

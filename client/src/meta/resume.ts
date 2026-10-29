@@ -13,18 +13,22 @@ export interface SavedRun {
   state: SimState;
   /** Free revives (training) the run had left. */
   freeRevives: number;
-  /** Enemies defeated so far, for the daily tasks. */
+  /** Enemies, elites and bosses defeated so far, for the daily tasks. */
   kills: number;
+  elites: number;
+  bosses: number;
 }
 
 interface Stored {
   snap: Snapshot;
   freeRevives: number;
   kills: number;
+  elites?: number;
+  bosses?: number;
 }
 
 export function keepRun(kv: KeyValueStore, run: SavedRun): void {
-  const stored: Stored = { snap: takeSnapshot(run.state), freeRevives: run.freeRevives, kills: run.kills };
+  const stored: Stored = { snap: takeSnapshot(run.state), freeRevives: run.freeRevives, kills: run.kills, elites: run.elites, bosses: run.bosses };
   kv.setItem(RUN_KEY, JSON.stringify(stored));
 }
 
@@ -38,7 +42,7 @@ export function loadRun(kv: KeyValueStore): SavedRun | null {
     const state = restoreState(raw.snap);
     // only a chapter run with its one hero is kept
     if (!state || !(state.config?.waves > 0) || state.players?.length !== 1 || !(state.wave >= 1)) return null;
-    return { state, freeRevives: count(raw.freeRevives), kills: count(raw.kills) };
+    return { state, freeRevives: count(raw.freeRevives), kills: count(raw.kills), elites: count(raw.elites), bosses: count(raw.bosses) };
   } catch {
     return null;
   }

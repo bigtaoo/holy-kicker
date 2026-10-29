@@ -237,6 +237,9 @@ export const corgiRu: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Забери награду из дозора',
     kills: 'Победи жуков: {n}',
+    elites: 'Победи элитных жуков: {n}',
+    boss: 'Победи боссов: {n}',
+    evolve: 'Доведи до эволюции гаджетов: {n}',
     reward: 'За каждое: болты {copper}, самоцветы {jade}',
     bonus: 'Всё забрано: самоцветы +{jade}',
   },

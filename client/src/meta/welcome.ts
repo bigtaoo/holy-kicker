@@ -1,10 +1,11 @@
 import type { MonkId, Stat } from '@hk/engine';
 import { BALANCE } from './balance';
-import { bump, dayKey } from './daily';
+import { dayKey, noteRun } from './daily';
 import { bestTier, isRelic, itemStats, type Drop, type ItemId, type Tier } from './gear';
 import { payHaul, type Haul } from './haul';
 import { monkPrice, ownsMonk } from './monks';
 import type { SaveData } from './save';
+import type { RunTally } from './taskPool';
 
 // Welcome gifts (docs/retention.md): a new player gets one when the first run ends, won or
 // lost, and one more on each of the next days they come back, until BALANCE.welcome runs out
@@ -87,9 +88,9 @@ export function giftGain(save: SaveData, drop: Drop): Partial<Record<Stat, numbe
  * The save once a run is paid (progress.ts settleRun): today's task counters, and after the
  * very first run its day and the first gift, which the results show with what it adds.
  */
-export function afterRun(save: SaveData, now: number, waves: number, kills: number): { save: SaveData; gift: FirstGift | null } {
+export function afterRun(save: SaveData, now: number, run: RunTally): { save: SaveData; gift: FirstGift | null } {
   let s = save.runs === 1 && save.firstDay === 0 ? { ...save, firstDay: dayKey(now) } : save;
-  s = bump(bump(bump(s, now, 'runs', 1), now, 'waves', waves), now, 'kills', kills);
+  s = noteRun(s, now, run);
   const first = save.gifts === 0 && save.runs === 1 ? claimGift(s, now) : null;
   if (!first) return { save: s, gift: null };
   const drop = first.haul.drops[0];

@@ -52,7 +52,10 @@ it('writes the fixture', async () => {
   }
   if (has('daily')) {
     const d = fresh.daily as Record<string, unknown>;
-    over.daily = { ...d, day: 20261017, free: 1, progress: (d.progress as number[]).map((_, i) => [2, 0, 1][i] ?? 0), claimed: 1 };
+    // version 8 draws the day's tasks: a fixed draw with a relic task
+    const tasks = 'tasks' in d ? [['runs', 3, ''], ['elites', 3, ''], ['reach', 25, ''], ['relic', 1, 'staff'], ['patrol', 1, '']].map(([kind, n, id]) => ({ kind, n, id })) : null;
+    const slots = tasks ? tasks.length : (d.progress as number[]).length;
+    over.daily = { ...d, day: 20261017, free: 1, progress: Array.from({ length: slots }, (_, i) => [2, 0, 1][i] ?? 0), claimed: 1, ...(tasks ? { tasks } : {}) };
   }
   const monks = (engine as unknown as { MONK_IDS?: string[] }).MONK_IDS;
   if (monks && !monks.includes('fat')) over.monk = monks[1];

@@ -237,6 +237,9 @@ export const corgiPt: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Colete da patrulha',
     kills: 'Estoure {n} {n|one:inseto|other:insetos}',
+    elites: 'Estoure {n} {n|one:inseto de elite|other:insetos de elite}',
+    boss: 'Derrote {n} {n|one:chefe|other:chefes}',
+    evolve: 'Evolua {n} {n|one:engenhoca|other:engenhocas}',
     reward: 'Cada uma: {copper} parafusos, {jade} gemas',
     bonus: 'Tudo resgatado: +{jade} gemas',
   },

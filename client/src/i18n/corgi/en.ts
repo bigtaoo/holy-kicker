@@ -241,6 +241,9 @@ export const corgiEn: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Collect from patrol',
     kills: 'Pop {n} {n|one:bug|other:bugs}',
+    elites: 'Pop {n} elite {n|one:bug|other:bugs}',
+    boss: 'Beat {n} {n|one:boss|other:bosses}',
+    evolve: 'Evolve {n} {n|one:gadget|other:gadgets}',
     reward: 'Each: {copper} bolts, {jade} gems',
     bonus: 'All claimed: +{jade} gems',
   },

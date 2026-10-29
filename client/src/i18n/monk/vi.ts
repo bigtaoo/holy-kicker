@@ -236,6 +236,9 @@ export const monkVi: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Nhận thưởng tuần tra',
     kills: 'Hạ {n} kẻ địch',
+    elites: 'Hạ {n} tinh anh',
+    boss: 'Hạ {n} trùm',
+    evolve: 'Tiến hóa {n} phép',
     reward: 'Mỗi cái: {copper} đồng, {jade} ngọc',
     bonus: 'Nhận hết: +{jade} ngọc',
   },

@@ -236,6 +236,9 @@ export const monkJa: Table<typeof monkEn> = {
   tasks: {
     patrol: '巡回の報酬を受け取る',
     kills: '敵を{n}体倒す',
+    elites: 'エリートを{n}体倒す',
+    boss: 'ボスを{n}体倒す',
+    evolve: '術を{n}個進化させる',
     reward: '各報酬：銅銭{copper}、玉{jade}',
     bonus: '全部受け取り：玉 +{jade}',
   },

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { BALANCE } from './balance';
-import { bump, claimBonus, claimTask, claimable, dayKey, rollDay, taskState, today, untilNextDay } from './daily';
+import { bump, claimBonus, claimTask, claimable, dayKey, mergeDaily, newDaily, noteRun, parseDaily, rollDay, taskGoal, taskState, today, untilNextDay } from './daily';
+import { runTally } from './taskPool';
 import { canCollect, canDouble, collectPatrol, copperPerHour, fixPatrolClock, patrolHours, quickLeft, quickPatrol, startPatrol } from './patrol';
 import { newSave, parseSave, type SaveData } from './save';
 import { chestBlock, chestContents, chestsLeft, copperChestPrice, openChest } from './shop';
@@ -15,10 +16,15 @@ function cleared(n = 1, extra: Partial<SaveData> = {}): SaveData {
   return { ...newSave(), firstRunDone: true, cleared: n, ...extra };
 }
 
+/** A save whose day `now` holds the five tasks of version 7, in their order (runs, waves, kills, chests, patrol). */
+function fixedDay(now: number, n = 1): SaveData {
+  return cleared(n, { daily: newDaily(dayKey(now), BALANCE.daily.legacy.map((g) => ({ ...g, id: '' }))) });
+}
+
 describe('daily', () => {
   it('keys the local date and starts a new day when it changes', () => {
     expect(dayKey(NOON)).toBe(20261004);
-    let s = bump(cleared(), NOON, 'runs', 2);
+    let s = bump(fixedDay(NOON), NOON, 'runs', 2);
     expect(today(s, NOON).progress[0]).toBe(2);
     expect(today(s, TOMORROW).progress[0]).toBe(0);
     s = rollDay(s, TOMORROW);
@@ -33,13 +39,14 @@ describe('daily', () => {
 
   it('pays a done task once, and the bonus after all of them', () => {
     let s = cleared();
-    const tasks = BALANCE.daily.tasks;
+    const tasks = today(s, NOON).tasks;
+    expect(tasks.length).toBe(BALANCE.daily.count);
     expect(claimTask(s, NOON, 0)).toBe(s);
     tasks.forEach((g) => (s = bump(s, NOON, g.kind, g.n)));
     expect(claimable(s, NOON)).toBe(tasks.length);
     const before = s.jade;
     s = claimTask(s, NOON, 0);
-    expect(taskState(s, s.daily, 0)).toBe('claimed');
+    expect(taskState(s.daily, 0)).toBe('claimed');
     expect(s.jade).toBe(before + BALANCE.daily.jade);
     expect(claimTask(s, NOON, 0)).toBe(s);
     expect(claimBonus(s, NOON)).toBe(s);
@@ -49,22 +56,43 @@ describe('daily', () => {
     expect(claimBonus(all, NOON)).toBe(all);
   });
 
-  it('asks less on the first day, and the full goals from the next', () => {
-    const tasks = BALANCE.daily.tasks;
+  it('asks less on the first day, and draws from the pool from the next', () => {
     let s = cleared(0, { firstDay: dayKey(NOON) });
-    BALANCE.daily.firstDay.forEach((n, i) => {
-      expect(n).toBeLessThanOrEqual(tasks[i].n);
-      s = bump(s, NOON, tasks[i].kind, n);
-    });
-    expect(claimable(s, NOON)).toBe(tasks.length);
-    const next = bump(s, TOMORROW, 'runs', BALANCE.daily.firstDay[0]);
-    expect(taskState(next, today(next, TOMORROW), 0)).toBe(tasks[0].n > BALANCE.daily.firstDay[0] ? 'open' : 'ready');
+    const first = today(s, NOON).tasks;
+    expect(first.map((g) => [g.kind, g.n])).toEqual(BALANCE.daily.firstDay.map((g) => [g.kind, g.n]));
+    first.forEach((g) => (s = bump(s, NOON, g.kind, g.n)));
+    expect(claimable(s, NOON)).toBe(first.length);
+    expect(today(s, TOMORROW).tasks).not.toEqual(first);
+  });
+
+  it('counts a finished run on the day it ends', () => {
+    const s = noteRun(fixedDay(NOON), NOON, runTally({ waves: 12, kills: 300 }));
+    expect(s.daily.progress).toEqual([1, 12, 300, 0, 0]);
+    expect(taskGoal(s.daily, 1)).toBe(BALANCE.daily.legacy[1].n);
+  });
+
+  it('keeps the fixed five of a day stored before version 8, and the easy ones of a first day', () => {
+    const kinds = (d: { tasks: { kind: string; n: number }[] }) => d.tasks.map((g) => [g.kind, g.n]);
+    expect(kinds(parseDaily({ day: 20261017, progress: [1] }))).toEqual(BALANCE.daily.legacy.map((g) => [g.kind, g.n]));
+    expect(kinds(parseDaily({ day: 20261017 }, 20261017))).toEqual(BALANCE.daily.firstDay.map((g) => [g.kind, g.n]));
+    expect(parseDaily({ day: 20261017, tasks: 'x' }).tasks).toEqual([]);
+    // a day with no tasks draws them when shown
+    expect(today(cleared(1, { daily: newDaily(dayKey(NOON)) }), NOON).tasks).toHaveLength(BALANCE.daily.count);
+  });
+
+  it('merges two devices of one day by the most of each counter, and another day by the later', () => {
+    const a = { ...fixedDay(NOON).daily, free: 2, progress: [3, 0, 0, 0, 0], claimed: 1 };
+    const b = { ...a, free: 1, adChests: 1, progress: [1, 20, 0, 0, 0], claimed: 2 };
+    expect(mergeDaily(a, b)).toEqual({ ...a, adChests: 1, progress: [3, 20, 0, 0, 0], claimed: 3 });
+    const later = newDaily(a.day + 1);
+    expect(mergeDaily(a, later)).toBe(later);
+    expect(mergeDaily(later, a)).toBe(later);
   });
 
   it('survives a round trip and repairs a broken daily', () => {
     const s = bump(cleared(), NOON, 'kills', 40);
     expect(parseSave(JSON.stringify(s)).daily).toEqual(s.daily);
-    expect(parseSave(JSON.stringify({ ...s, daily: 'x' })).daily.progress).toEqual(BALANCE.daily.tasks.map(() => 0));
+    expect(parseSave(JSON.stringify({ ...s, daily: 'x' })).daily.progress).toEqual([]);
   });
 });
 
@@ -78,7 +106,7 @@ describe('patrol', () => {
   });
 
   it('pays copper and gear by the hour, doubled after an ad, and starts over', () => {
-    const s = startPatrol(cleared(), NOON);
+    const s = startPatrol(fixedDay(NOON), NOON);
     expect(canCollect(s, NOON + 60 * 1000)).toBe(false);
     expect(collectPatrol(s, NOON + 60 * 1000, false)).toBeNull();
     const at = NOON + 6 * HOUR;
@@ -86,7 +114,7 @@ describe('patrol', () => {
     expect(one.haul.copper).toBe(Math.floor(copperPerHour(s) * 6));
     expect(one.haul.drops.length).toBe(6 / BALANCE.patrol.dropHours);
     expect(one.save.patrol).toBe(at);
-    expect(today(one.save, at).progress[BALANCE.daily.tasks.findIndex((g) => g.kind === 'patrol')]).toBe(1);
+    expect(today(one.save, at).progress[BALANCE.daily.legacy.findIndex((g) => g.kind === 'patrol')]).toBe(1);
     const two = collectPatrol(s, at, true, rand)!;
     expect(two.haul.copper).toBe(one.haul.copper * 2);
     expect(two.haul.drops.length).toBe(one.haul.drops.length * 2);

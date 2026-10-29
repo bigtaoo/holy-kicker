@@ -5,6 +5,7 @@ import { settleRun } from './progress';
 import { newSave } from './save';
 import { addDrops, itemStats, type ItemId } from './gear';
 import { ownsMonk } from './monks';
+import { runTally } from './taskPool';
 import { afterRun, claimGift, giftGain, giftHaul, giftReady, nextGift } from './welcome';
 
 const NOON = new Date(2026, 9, 4, 12).getTime();
@@ -15,7 +16,7 @@ const rand = () => 0.5;
 describe('welcome gifts', () => {
   it('pays the first gift when the first run ends, won or lost, and names the next', () => {
     const run = settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save;
-    const { save, gift } = afterRun(run, NOON, 3, 40);
+    const { save, gift } = afterRun(run, NOON, runTally({ waves: 3, kills: 40 }));
     const first = BALANCE.welcome[0];
     const item = first.item as ItemId;
     expect(gift!.drops).toEqual([{ item, tier: first.tier }]);
@@ -29,13 +30,13 @@ describe('welcome gifts', () => {
     expect(giftReady(save, EVENING)).toBe(false);
     expect(claimGift(save, EVENING)).toBeNull();
     // a second run the same day pays nothing more
-    const again = afterRun(settleRun(save, { chapter: 1, waves: 3 }, rand).save, EVENING, 3, 40);
+    const again = afterRun(settleRun(save, { chapter: 1, waves: 3 }, rand).save, EVENING, runTally({ waves: 3, kills: 40 }));
     expect(again.gift).toBeNull();
     expect(again.save.firstDay).toBe(dayKey(NOON));
   });
 
   it('pays one a day until they run out', () => {
-    let s = afterRun(settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save, NOON, 3, 40).save;
+    let s = afterRun(settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save, NOON, runTally({ waves: 3, kills: 40 })).save;
     for (let day = 1; day < BALANCE.welcome.length; day++) {
       const at = NOON + day * 24 * 3600 * 1000;
       expect(giftReady(s, at)).toBe(true);
@@ -55,7 +56,7 @@ describe('welcome gifts', () => {
     const old = { ...newSave(), firstRunDone: true, runs: 12 };
     expect(giftReady(old, TOMORROW)).toBe(true);
     // a later run does not claim it for them, nor make it their first day
-    const after = afterRun(settleRun(old, { chapter: 1, waves: 3 }, rand).save, TOMORROW, 3, 40);
+    const after = afterRun(settleRun(old, { chapter: 1, waves: 3 }, rand).save, TOMORROW, runTally({ waves: 3, kills: 40 }));
     expect(after.gift).toBeNull();
     expect(after.save.firstDay).toBe(0);
     expect(claimGift(after.save, TOMORROW)!.n).toBe(0);
@@ -78,14 +79,14 @@ describe('welcome gifts', () => {
 
   it('hands the first gift to the results with what it adds', () => {
     const run = settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save;
-    const { gift } = afterRun(run, NOON, 3, 40);
+    const { gift } = afterRun(run, NOON, runTally({ waves: 3, kills: 40 }));
     const first = BALANCE.welcome[0];
     expect(gift!.gain).toEqual(giftGain(run, { item: first.item as ItemId, tier: first.tier }));
   });
 
   it('runs a week and ends in a monk; a missed day only delays the next gift', () => {
     expect(BALANCE.welcome).toHaveLength(7);
-    let s = afterRun(settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save, NOON, 3, 40).save;
+    let s = afterRun(settleRun(newSave(), { chapter: 1, waves: 3 }, rand).save, NOON, runTally({ waves: 3, kills: 40 })).save;
     // ten days away, then every other day: each visit pays the next one in order
     for (let n = 1; n < 7; n++) {
       const got = claimGift(s, NOON + (8 + 2 * n) * 24 * 3600 * 1000)!;

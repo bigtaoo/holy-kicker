@@ -1,4 +1,5 @@
 import { mergeCodex } from './codex';
+import { mergeDaily } from './daily';
 import { grantRelics } from './gear';
 import { readSave, type SaveData } from './save';
 import { unlockedRelics } from './unlocks';
@@ -6,7 +7,8 @@ import { unlockedRelics } from './unlocks';
 // Two saves of the same player into one (docs/cloud-save.md "Merging two saves"): the cloud
 // save's copy and this device's. Progress takes the furthest of the two field by field, so a
 // sync never loses a clear, a star or a run; what cannot be added up (the wallet, the gear, the
-// selections, today's tasks, fields this build does not know) follows the save that played more.
+// selections, fields this build does not know) follows the save that played more; today's
+// counters keep the most of both, so nothing of the day is paid twice.
 
 /** Whether `a` has played further than `b`: more runs, then more clears, then level and xp. */
 function ahead(a: SaveData, b: SaveData): boolean {
@@ -73,6 +75,7 @@ export function mergeSaves(mine: SaveData, other: SaveData): SaveData {
     streak: streaked.streak,
     streakDay: streaked.streakDay,
     bestStreak: Math.max(lead.bestStreak, trail.bestStreak),
+    daily: mergeDaily(lead.daily, trail.daily),
     dailyBest: dailyOf(lead.dailyBest, trail.dailyBest),
     // an experiment the save that played more was offered keeps its arm; one only the other was offered comes along
     arms: { ...trail.arms, ...lead.arms },

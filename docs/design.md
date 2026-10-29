@@ -414,10 +414,19 @@ Two currencies only:
 
 - **Patrol:** idle income, 12 h cap, scaled by the highest cleared chapter. Ad doubles it or
   grants 2 h instantly.
-- 3–5 daily tasks (e.g. "kill 1000 mobs").
+- **Daily tasks** (`meta/daily.ts`, `meta/taskPool.ts`, `balance.json` `daily`): five a day,
+  drawn from a pool by the device's local date, so a reload or a second device shows the same
+  five. "Finish 3 runs" is on every day; the rest are a seeded pick of waves, kills, chests, the
+  patrol, elites and a boss defeated (counted from the engine's `eliteDown`/`bossDown`), a spell
+  evolved, a star earned, a wave reached in one run, a run with a named relic, as a named monk or
+  in hard mode. Only what the save has opened is offered: a relic or monk task names one the
+  player owns other than the one in use, hard mode waits for its first three-star chapter, and
+  elites and up wait for the first clear. A new player's first day keeps the easy fixed five; a
+  day stored by a version 7 save keeps its old fixed five. Each pays 100 copper and 10 jade, all
+  five 20 jade more.
 - One free chest per day, and three copper chests (see "Economy").
 - Achievements (also the sutra source). Implemented as a second page of the tasks panel
-  (`client/src/meta/achievements.ts`, goals in `balance.json` `achievements`): 27 long-term
+  (`client/src/meta/achievements.ts`, goals in `balance.json` `achievements`): 33 long-term
   goals (runs, lifetime kills, chapter and hard-mode clears, Codex entries, level, training,
   gear tier, monks, daily-challenge streaks), each paying jade once, about 1200 in all. Progress is read from the save,
   so goals reached earlier wait to be claimed; ready ones list first, with a Claim all.

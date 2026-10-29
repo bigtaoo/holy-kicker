@@ -237,6 +237,9 @@ export const corgiZh: Table<typeof corgiEn> = {
   tasks: {
     patrol: '领取一次巡逻收益',
     kills: '消灭 {n} 只虫子',
+    elites: '消灭 {n} 只精英虫',
+    boss: '击败 {n} 个首领',
+    evolve: '进化 {n} 个装置',
     reward: '每项奖励：{copper} 螺丝、{jade} 宝石',
     bonus: '全部领取：+{jade} 宝石',
   },

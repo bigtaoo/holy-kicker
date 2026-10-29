@@ -236,6 +236,9 @@ export const corgiEs: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Recoge el botín de la patrulla',
     kills: 'Elimina {n} {n|one:bicho|other:bichos}',
+    elites: 'Elimina {n} {n|one:bicho élite|other:bichos élite}',
+    boss: 'Derrota a {n} {n|one:jefe|other:jefes}',
+    evolve: 'Evoluciona {n} {n|one:artilugio|other:artilugios}',
     reward: 'Cada una: {copper} tornillos, {jade} gemas',
     bonus: 'Todo reclamado: +{jade} gemas',
   },

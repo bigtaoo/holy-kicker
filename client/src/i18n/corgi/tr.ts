@@ -237,6 +237,9 @@ export const corgiTr: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Devriyeden topla',
     kills: '{n} böcek patlat',
+    elites: '{n} seçkin böcek patlat',
+    boss: '{n} boss yen',
+    evolve: '{n} alet evrimleştir',
     reward: 'Her biri: {copper} cıvata, {jade} elmas',
     bonus: 'Hepsi alındı: +{jade} elmas',
   },

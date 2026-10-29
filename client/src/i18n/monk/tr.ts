@@ -236,6 +236,9 @@ export const monkTr: Table<typeof monkEn> = {
   tasks: {
     patrol: 'Devriyeden topla',
     kills: '{n} düşman yen',
+    elites: '{n} seçkin düşman yen',
+    boss: '{n} boss yen',
+    evolve: '{n} büyü evrimleştir',
     reward: 'Her biri: {copper} bakır, {jade} yeşim',
     bonus: 'Hepsi alındı: +{jade} yeşim',
   },

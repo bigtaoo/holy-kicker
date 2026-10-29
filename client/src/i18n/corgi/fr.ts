@@ -236,6 +236,9 @@ export const corgiFr: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Récupère ta patrouille',
     kills: 'Élimine {n} {n|one:bestiole|other:bestioles}',
+    elites: 'Élimine {n} {n|one:bestiole d’élite|other:bestioles d’élite}',
+    boss: 'Vaincs {n} {n|one:boss|other:boss}',
+    evolve: 'Fais évoluer {n} {n|one:gadget|other:gadgets}',
     reward: 'Chacune : {copper} boulons, {jade} gemmes',
     bonus: 'Tout récupéré : +{jade} gemmes',
   },

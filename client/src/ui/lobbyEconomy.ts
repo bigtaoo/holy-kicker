@@ -3,7 +3,7 @@ import { Container } from 'pixi.js';
 import { formatAmount, t, type Key } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
-import { claimBonus, claimTask, tasksOpen, untilNextDay } from '../meta/daily';
+import { claimBonus, claimTask, tasksOpen, today, untilNextDay } from '../meta/daily';
 import type { Haul } from '../meta/haul';
 import { canDouble, collectPatrol, patrolHours, patrolOpen, quickLeft, quickPatrol, type QuickPay } from '../meta/patrol';
 import { openProgressChest } from '../meta/progressChests';
@@ -242,7 +242,7 @@ export class EconomyUi {
       }, this.host.patrolLook(), this.live, this.ticks));
     } else if (this.modal === 'tasks') {
       c.addChild(tasksPanel(save, this.now(), w, h, this.tasksView, this.achievePage, {
-        claimTask: (i) => this.claim(claimTask(this.host.save(), this.now(), i), [{ what: 'task', task: i }]),
+        claimTask: (i) => this.claim(claimTask(this.host.save(), this.now(), i), [{ what: 'task', task: i, kind: today(this.host.save(), this.now()).tasks[i]?.kind ?? '' }]),
         bonus: () => this.claim(claimBonus(this.host.save(), this.now()), [{ what: 'bonus' }]),
         claim: (i) => this.claim(claimAchievement(this.host.save(), i), [{ what: 'achievement', goal: i }]),
         claimAll: () => {

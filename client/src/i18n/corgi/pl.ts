@@ -237,6 +237,9 @@ export const corgiPl: Table<typeof corgiEn> = {
   tasks: {
     patrol: 'Odbierz z patrolu',
     kills: 'Pokonaj {n} {n|one:robala|few:robale|many:robali|other:robala}',
+    elites: 'Pokonaj elitarne robale: {n}',
+    boss: 'Pokonaj bossów: {n}',
+    evolve: 'Rozwiń gadżety: {n}',
     reward: 'Za każde: {copper} {copper|one:śrubka|few:śrubki|many:śrubek|other:śrubki}, {jade} {jade|one:klejnot|few:klejnoty|many:klejnotów|other:klejnotu}',
     bonus: 'Wszystko odebrane: +{jade} {jade|one:klejnot|few:klejnoty|many:klejnotów|other:klejnotu}',
   },
