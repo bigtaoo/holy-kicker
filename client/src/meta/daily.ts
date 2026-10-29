@@ -1,13 +1,14 @@
 import { BALANCE } from './balance';
+import { thisWeek } from './goals';
 import type { SaveData } from './save';
 import {
   boardBonusReady, boardClaimable, boardState, bumpBoard, drawTasks, mergeBoards, parseBoard, parseTasks, runBoard,
   type Board, type PoolEntry, type RunTally, type Task, type TaskKind, type TaskState,
 } from './taskPool';
 
-// The day's counters (docs/design.md "Retention"): daily tasks (drawn per day, taskPool.ts), the
-// shop's free and ad chests, quick patrols. All of them reset when the device's local date changes; a clock moved back a
-// day simply starts another day. Pure: functions take a save and `now` (ms) and return a new save.
+// The day's counters (docs/design.md "Retention"): daily tasks (drawn per day, taskPool.ts; this week's
+// goals in goals.ts count along), the shop's free and ad chests, quick patrols. All of them reset when
+// the device's local date changes; a clock moved back a day simply starts another day. Pure: functions take a save and `now` (ms) and return a new save.
 
 export type { TaskKind, TaskState } from './taskPool';
 
@@ -119,15 +120,15 @@ export function rollDay(save: SaveData, now: number): SaveData {
   return daily === save.daily ? save : { ...save, daily };
 }
 
-/** Adds `n` to every task of `kind`. */
+/** Adds `n` to every task of `kind`, today's and this week's (goals.ts). */
 export function bump(save: SaveData, now: number, kind: TaskKind, n: number): SaveData {
   if (n <= 0) return save;
-  return { ...save, daily: bumpBoard(today(save, now), kind, n) };
+  return { ...save, daily: bumpBoard(today(save, now), kind, n), weekly: bumpBoard(thisWeek(save, now), kind, n) };
 }
 
 /** Counts a finished run on the boards. */
 export function noteRun(save: SaveData, now: number, run: RunTally): SaveData {
-  return { ...save, daily: runBoard(today(save, now), run) };
+  return { ...save, daily: runBoard(today(save, now), run), weekly: runBoard(thisWeek(save, now), run) };
 }
 
 /** What task `i` of the day `d` asks for. */
@@ -165,7 +166,7 @@ export function claimTask(save: SaveData, now: number, i: number): SaveData {
 export function claimBonus(save: SaveData, now: number): SaveData {
   const d = today(save, now);
   if (!boardBonusReady(d)) return save;
-  return { ...save, jade: save.jade + DAILY.bonusJade, daily: { ...d, bonus: true } };
+  return bump({ ...save, jade: save.jade + DAILY.bonusJade, daily: { ...d, bonus: true } }, now, 'daily', 1);
 }
 
 /** Daily tasks open after the first run. */

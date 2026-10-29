@@ -313,7 +313,6 @@ export const vi: Table<typeof en> = {
     noneLeft: 'Hết lượt hôm nay',
   },
   tasks: {
-    title: 'Nhiệm vụ ngày',
     button: 'Nhiệm vụ',
     runs: 'Hoàn thành {n} trận',
     waves: 'Qua {n} đợt',
@@ -326,6 +325,11 @@ export const vi: Table<typeof en> = {
     claim: 'Nhận',
     done: 'Xong',
     resets: 'Nhiệm vụ mới mỗi ngày lúc 0 giờ',
+    daily: 'Nhận thưởng ngày {n} ngày',
+    tabDay: 'Hằng ngày',
+    tabWeek: 'Hằng tuần',
+    weekBonus: 'Đã nhận hết: {chest}',
+    weekResets: 'Mục tiêu mới mỗi thứ Hai',
   },
   achieve: {
     streak: 'Chơi thử thách hằng ngày {n} ngày liên tiếp',

@@ -312,7 +312,6 @@ export const th: Table<typeof en> = {
     noneLeft: 'วันนี้หมดแล้ว',
   },
   tasks: {
-    title: 'ภารกิจรายวัน',
     button: 'ภารกิจ',
     runs: 'เล่นจบ {n} รอบ',
     waves: 'ผ่าน {n} เวฟ',
@@ -325,6 +324,11 @@ export const th: Table<typeof en> = {
     claim: 'รับ',
     done: 'เสร็จแล้ว',
     resets: 'ภารกิจใหม่ทุกวันตอนเที่ยงคืน',
+    daily: 'รับโบนัสรายวัน {n} วัน',
+    tabDay: 'รายวัน',
+    tabWeek: 'รายสัปดาห์',
+    weekBonus: 'รับครบแล้ว: {chest}',
+    weekResets: 'เป้าหมายใหม่ทุกวันจันทร์',
   },
   achieve: {
     streak: 'เล่นชาเลนจ์รายวัน {n} วันติดต่อกัน',

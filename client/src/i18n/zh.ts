@@ -311,7 +311,6 @@ export const zh: Table<typeof en> = {
     noneLeft: '今日次数已用完',
   },
   tasks: {
-    title: '每日任务',
     button: '任务',
     runs: '完成 {n} 局',
     waves: '累计通过 {n} 波',
@@ -324,6 +323,11 @@ export const zh: Table<typeof en> = {
     claim: '领取',
     done: '已领',
     resets: '每天零点刷新',
+    daily: '领取 {n} 天的每日全勤奖励',
+    tabDay: '每日',
+    tabWeek: '每周',
+    weekBonus: '全部领取：{chest}',
+    weekResets: '每周一刷新',
   },
   achieve: {
     streak: '连续 {n} 天参加每日挑战',

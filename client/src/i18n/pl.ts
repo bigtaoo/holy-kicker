@@ -313,7 +313,6 @@ export const pl: Table<typeof en> = {
     noneLeft: 'Na dziś koniec',
   },
   tasks: {
-    title: 'Zadania dzienne',
     button: 'Zadania',
     runs: 'Ukończ {n} {n|one:rozgrywkę|few:rozgrywki|many:rozgrywek|other:rozgrywki}',
     waves: 'Pokonaj {n} {n|one:falę|few:fale|many:fal|other:fali}',
@@ -326,6 +325,11 @@ export const pl: Table<typeof en> = {
     claim: 'Odbierz',
     done: 'Gotowe',
     resets: 'Nowe zadania codziennie o północy',
+    daily: 'Odbierz dzienny bonus (dni: {n})',
+    tabDay: 'Dzienne',
+    tabWeek: 'Tygodniowe',
+    weekBonus: 'Wszystko odebrane: {chest}',
+    weekResets: 'Nowe cele w każdy poniedziałek',
   },
   achieve: {
     streak: 'Zagraj w wyzwanie dnia {n} {n|one:dzień|few:dni|many:dni|other:dni} z rzędu',

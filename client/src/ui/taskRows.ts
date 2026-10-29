@@ -1,6 +1,6 @@
 import { Container } from 'pixi.js';
 import { t } from '../i18n';
-import { boardBonusReady, boardState, type Board, type Task, type TaskKind } from '../meta/taskPool';
+import { boardBonusReady, boardState, type Board, type Task } from '../meta/taskPool';
 import { rowSpot, rowsEnd, type TasksBox } from './achievePanel';
 import { COLORS, button, fit, label, meter } from './widgets';
 
@@ -10,7 +10,7 @@ import { COLORS, button, fit, label, meter } from './widgets';
 /** What a task asks for, in words. */
 export function taskText(task: Task): string {
   const name = task.kind === 'relic' ? t(`relic.${task.id as 'staff'}.name`) : task.kind === 'monk' ? t(`monk.${task.id as 'novice'}.name`) : '';
-  return t(`tasks.${task.kind as Exclude<TaskKind, 'daily'>}`, { n: task.n, name });
+  return t(`tasks.${task.kind}`, { n: task.n, name });
 }
 
 /** What a board shows besides its tasks: the pay line, the bonus button's text and the reset line. */

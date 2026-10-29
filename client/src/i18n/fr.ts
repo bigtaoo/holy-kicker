@@ -314,7 +314,6 @@ export const fr: Table<typeof en> = {
     noneLeft: 'Plus rien aujourd’hui',
   },
   tasks: {
-    title: 'Tâches du jour',
     button: 'Tâches',
     runs: 'Termine {n} {n|one:partie|other:parties}',
     waves: 'Termine {n} {n|one:vague|other:vagues}',
@@ -327,6 +326,11 @@ export const fr: Table<typeof en> = {
     claim: 'Récupérer',
     done: 'Fait',
     resets: 'Nouvelles tâches chaque jour à minuit',
+    daily: 'Récupère le bonus du jour {n} {n|one:jour|other:jours}',
+    tabDay: 'Jour',
+    tabWeek: 'Semaine',
+    weekBonus: 'Tout récupéré : {chest}',
+    weekResets: 'Nouveaux objectifs chaque lundi',
   },
   achieve: {
     streak: "Joue le défi du jour {n} {n|one:jour|other:jours} d’affilée",

@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { newWeekly, weekKey } from './goals';
 import { newSave } from './save';
 import { trainNode } from './training';
 import { affordableTraining, lobbyWaiting, lossStep, mergesReady, waitingCount } from './waiting';
@@ -8,6 +9,13 @@ const played = { ...newSave(), firstRunDone: true, level: 5 };
 describe('lobby waiting', () => {
   it('counts nothing on a fresh save', () => {
     expect(waitingCount(lobbyWaiting(newSave(), 0))).toBe(0);
+  });
+
+  it('counts the weekly goals ready to claim once the tasks are open', () => {
+    const now = new Date(2026, 9, 28, 12).getTime();
+    const weekly = { ...newWeekly(weekKey(now), [{ kind: 'runs' as const, n: 1, id: '' }, { kind: 'kills' as const, n: 9, id: '' }]), progress: [1, 9] };
+    expect(lobbyWaiting({ ...played, weekly }, now).goals).toBe(2);
+    expect(lobbyWaiting({ ...newSave(), weekly }, now).goals).toBe(0);
   });
 
   it('counts every chest waiting, both tracks', () => {

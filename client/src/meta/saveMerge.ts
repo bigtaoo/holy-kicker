@@ -1,6 +1,7 @@
 import { mergeCodex } from './codex';
 import { mergeDaily } from './daily';
 import { grantRelics } from './gear';
+import { mergeWeekly } from './goals';
 import { readSave, type SaveData } from './save';
 import { unlockedRelics } from './unlocks';
 
@@ -8,7 +9,7 @@ import { unlockedRelics } from './unlocks';
 // save's copy and this device's. Progress takes the furthest of the two field by field, so a
 // sync never loses a clear, a star or a run; what cannot be added up (the wallet, the gear, the
 // selections, fields this build does not know) follows the save that played more; today's
-// counters keep the most of both, so nothing of the day is paid twice.
+// and this week's counters keep the most of both, so nothing of the day or week is paid twice.
 
 /** Whether `a` has played further than `b`: more runs, then more clears, then level and xp. */
 function ahead(a: SaveData, b: SaveData): boolean {
@@ -76,6 +77,7 @@ export function mergeSaves(mine: SaveData, other: SaveData): SaveData {
     streakDay: streaked.streakDay,
     bestStreak: Math.max(lead.bestStreak, trail.bestStreak),
     daily: mergeDaily(lead.daily, trail.daily),
+    weekly: mergeWeekly(lead.weekly, trail.weekly),
     dailyBest: dailyOf(lead.dailyBest, trail.dailyBest),
     // an experiment the save that played more was offered keeps its arm; one only the other was offered comes along
     arms: { ...trail.arms, ...lead.arms },

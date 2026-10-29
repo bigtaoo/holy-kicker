@@ -311,7 +311,6 @@ export const ko: Table<typeof en> = {
     noneLeft: '오늘은 끝',
   },
   tasks: {
-    title: '일일 임무',
     button: '임무',
     runs: '{n}판 완주',
     waves: '웨이브 {n}개 클리어',
@@ -324,6 +323,11 @@ export const ko: Table<typeof en> = {
     claim: '받기',
     done: '완료',
     resets: '매일 자정에 새 임무',
+    daily: '일일 보너스 {n}일 받기',
+    tabDay: '일일',
+    tabWeek: '주간',
+    weekBonus: '모두 받기: {chest}',
+    weekResets: '매주 월요일 새 목표',
   },
   achieve: {
     streak: '일일 도전을 {n}일 연속 플레이',

@@ -140,6 +140,28 @@
     "jade": 10,
     "bonusJade": 20
   },
+  "goals": {
+    "count": 6,
+    "pool": [
+      { "kind": "runs", "n": 15, "always": true },
+      { "kind": "daily", "n": 5, "always": true },
+      { "kind": "waves", "n": 300 },
+      { "kind": "kills", "n": 8000 },
+      { "kind": "chests", "n": 8 },
+      { "kind": "patrol", "n": 6 },
+      { "kind": "elites", "n": 15, "cleared": 1 },
+      { "kind": "boss", "n": 4, "cleared": 1 },
+      { "kind": "evolve", "n": 4, "cleared": 1 },
+      { "kind": "stars", "n": 6, "cleared": 1 },
+      { "kind": "reach", "n": 40, "cleared": 2 },
+      { "kind": "relic", "n": 3 },
+      { "kind": "monk", "n": 3 },
+      { "kind": "hard", "n": 2 }
+    ],
+    "copper": 400,
+    "jade": 20,
+    "bonusDrops": 3
+  },
   "welcome": [
     { "item": "robe", "tier": 1, "copper": 0, "jade": 0 },
     { "item": "pendant", "tier": 2, "copper": 0, "jade": 30 },

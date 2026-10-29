@@ -26,7 +26,7 @@ export type Device = (typeof DEVICES)[number];
  * `session` has `runs`, `level`, `device` (DEVICES), `langs` (the host's language list), `navLangs` (the browser's), `mem`, `cores` and `gpu` (SessionDeviceProps) and on CrazyGames `sdk` (the SDK's environment and how init ended: `crazygames/ok`, `disabled/timeout`, `disabled/noscript`), `sdkMs` (init's milliseconds), `basic` (ads held for Basic Launch) and `app` (the SDK's applicationType: `web`, `google_play_store` and `apple_store` for CrazyGames' own apps, `pwa`). `buy` has `item` (`chest` with `kind`, `patrol` with `pay`, `monk` with `monk`, `train` with
  * `node`) and `spent` (copper for training, jade otherwise). `ad` has `at` (`lobby`, `revive` or
  * `double`) and `free` when the ad-free card paid the reward with no ad. `claim` has `what` (`task`
- * with `task` and its `kind`, `bonus`, `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`
+ * with `task` and its `kind`, `bonus`, `goal` (a weekly goal) with `goal` and its `kind`, `weekBonus` (the week's chest), `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`
  * and `double`). Chests and patrols also carry their haul: `copper`, `jade` and `drops`. `share`
  * has `to` (`chat` or `moments`) and `from` (`lobby`, `run` or `results`, where the player was).
  * `tutorial` has `step` (`move` as the run starts, then `auto`, `gems` and `done` once the hints

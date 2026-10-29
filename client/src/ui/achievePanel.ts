@@ -3,15 +3,16 @@ import { formatAmount, t, type Key } from '../i18n';
 import { achievementOrder, achievementProgress, achievementState, achievementsClaimed, achievementsReady, readyJade, type AchievementGoal } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { claimable } from '../meta/daily';
+import { goalsClaimable } from '../meta/goals';
 import type { Tier } from '../meta/gear';
 import type { SaveData } from '../meta/save';
 import { tierName } from './gearText';
 import { COLORS, button, dot, fit, label, meter } from './widgets';
 
-// The achievements page of the tasks panel (meta/achievements.ts), and the Daily /
-// Achievements switch both pages share at the top. Builders only, like economyPanels.ts.
+// The achievements page of the tasks panel (meta/achievements.ts), and the Daily / Weekly /
+// Achievements switch the pages share at the top. Builders only, like economyPanels.ts.
 
-export type TasksView = 'daily' | 'achieve';
+export type TasksView = 'daily' | 'week' | 'achieve';
 
 export interface AchievePanelActions {
   claim(i: number): void;
@@ -52,20 +53,23 @@ export function rowsEnd(b: TasksBox, count: number, top: number): number {
   return top + ROWS_TOP + Math.min(b.rows, count) * ROW_H;
 }
 
-/** The Daily / Achievements switch, centred on x = 0, each with a dot when something waits. */
-export function tasksSwitch(save: SaveData, now: number, view: TasksView, pick: (v: TasksView) => void): Container {
+/** The Daily / Weekly / Achievements switch across a box `w` wide, centred on x = 0, each with a dot when something waits. */
+export function tasksSwitch(save: SaveData, now: number, view: TasksView, w: number, pick: (v: TasksView) => void): Container {
   const c = new Container();
   const tabs: [TasksView, Key, boolean][] = [
-    ['daily', 'tasks.title', claimable(save, now) > 0],
+    ['daily', 'tasks.tabDay', claimable(save, now) > 0],
+    ['week', 'tasks.tabWeek', goalsClaimable(save, now) > 0],
     ['achieve', 'achieve.title', achievementsReady(save).length > 0],
   ];
+  const pitch = Math.min(440, (w - 40) / tabs.length);
+  const tabW = pitch - 20;
   tabs.forEach(([v, key, waiting], i) => {
     const on = v === view;
-    const b = button(t(key), 420, 120, () => !on && pick(v), {
+    const b = button(t(key), tabW, 120, () => !on && pick(v), {
       fill: on ? COLORS.saffron : COLORS.panelLocked, textFill: on ? COLORS.text : COLORS.dim, size: 48,
     });
-    b.x = (i - 0.5) * 440;
-    if (waiting && !on) b.addChild(dot(190, -45));
+    b.x = (i - (tabs.length - 1) / 2) * pitch;
+    if (waiting && !on) b.addChild(dot(tabW / 2 - 20, -45));
     c.addChild(b);
   });
   return c;

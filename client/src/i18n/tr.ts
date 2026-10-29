@@ -313,7 +313,6 @@ export const tr: Table<typeof en> = {
     noneLeft: 'Bugünlük bitti',
   },
   tasks: {
-    title: 'Günlük görevler',
     button: 'Görevler',
     runs: '{n} tur bitir',
     waves: '{n} dalga geç',
@@ -326,6 +325,11 @@ export const tr: Table<typeof en> = {
     claim: 'Al',
     done: 'Tamam',
     resets: 'Her gece yarısı yeni görevler',
+    daily: '{n} gün günlük bonusu al',
+    tabDay: 'Günlük',
+    tabWeek: 'Haftalık',
+    weekBonus: 'Hepsi alındı: {chest}',
+    weekResets: 'Her pazartesi yeni hedefler',
   },
   achieve: {
     streak: 'Günlük meydan okumayı {n} gün üst üste oyna',

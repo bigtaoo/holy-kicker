@@ -48,6 +48,7 @@ const TABS = ['shop', 'gear', 'train', 'codex', 'play'];
  */
 const PANELS = {
   tasks: `s.openTab('play'); s.econ.tasksView = 'daily'; s.econ.modal = 'tasks'`,
+  goals: `s.openTab('play'); s.econ.tasksView = 'week'; s.econ.modal = 'tasks'`,
   achievements: `s.openTab('play'); s.econ.tasksView = 'achieve'; s.econ.modal = 'tasks'`,
   patrol: `s.openTab('play'); s.econ.modal = 'patrol'`,
   gift: `s.openTab('play'); s.econ.modal = 'gift'`,

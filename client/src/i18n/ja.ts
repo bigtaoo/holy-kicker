@@ -311,7 +311,6 @@ export const ja: Table<typeof en> = {
     noneLeft: '今日はもうおしまい',
   },
   tasks: {
-    title: 'デイリー任務',
     button: '任務',
     runs: 'プレイを{n}回完了',
     waves: 'ウェーブを{n}回クリア',
@@ -324,6 +323,11 @@ export const ja: Table<typeof en> = {
     claim: '受け取る',
     done: '完了',
     resets: '毎日0時に新しい任務',
+    daily: 'デイリーボーナスを{n}日受け取る',
+    tabDay: 'デイリー',
+    tabWeek: 'ウィークリー',
+    weekBonus: 'すべて受け取り：{chest}',
+    weekResets: '毎週月曜に新しい目標',
   },
   achieve: {
     streak: 'デイリーチャレンジに{n}日連続で参加',

@@ -161,7 +161,7 @@ describe('daily tasks and achievements, tapped through', { timeout: 30_000 }, ()
     const all = (1 << D.legacy.length) - 1;
     const rig = await lobbyRig({ copper: 0, jade: 0, firstDay: 0, daily: doneDay(all & ~1) });
     await openRail(rig, t('tasks.button'));
-    expect(words(rig)).toContain(t('tasks.title'));
+    expect(words(rig)).toContain(t('tasks.tabDay'));
     const name = t('tasks.runs', { n: D.legacy[0].n });
     await doubleTap(rig, buttonNear(rig, t('tasks.claim'), name));
     let save = rig.store.load();
@@ -169,12 +169,12 @@ describe('daily tasks and achievements, tapped through', { timeout: 30_000 }, ()
     expect(save.jade).toBe(D.jade);
     expect(save.daily.claimed).toBe(all);
     expect(words(rig)).not.toContain(t('tasks.claim'));
-    await doubleTap(rig, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.title')));
+    await doubleTap(rig, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.tabDay')));
     save = rig.store.load();
     expect(save.jade).toBe(D.jade + D.bonusJade);
     expect(save.daily.bonus).toBe(true);
     // a third tap on the spent bonus pays nothing
-    tapAt(rig.app.stage, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.title')));
+    tapAt(rig.app.stage, buttonNear(rig, t('tasks.bonus', { jade: D.bonusJade }), t('tasks.tabDay')));
     await rig.tick(2);
     expect(rig.store.load().jade).toBe(D.jade + D.bonusJade);
     const again = await reload(rig);

@@ -313,7 +313,6 @@ export const id: Table<typeof en> = {
     noneLeft: 'Habis untuk hari ini',
   },
   tasks: {
-    title: 'Tugas harian',
     button: 'Tugas',
     runs: 'Selesaikan {n} permainan',
     waves: 'Lewati {n} gelombang',
@@ -326,6 +325,11 @@ export const id: Table<typeof en> = {
     claim: 'Ambil',
     done: 'Selesai',
     resets: 'Tugas baru tiap tengah malam',
+    daily: 'Ambil bonus harian selama {n} hari',
+    tabDay: 'Harian',
+    tabWeek: 'Mingguan',
+    weekBonus: 'Semua diambil: {chest}',
+    weekResets: 'Target baru setiap Senin',
   },
   achieve: {
     streak: 'Mainkan tantangan harian {n} hari berturut-turut',

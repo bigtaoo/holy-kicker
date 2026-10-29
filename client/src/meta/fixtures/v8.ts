@@ -1,4 +1,4 @@
-// A save of the current version 8 as written at claude/retention-quests-d7d1d5: the version 7 player on a day of drawn tasks.
+// A save of the current version 8 as written at claude/retention-quests-d7d1d5: the version 7 player on a day of drawn tasks and a week of goals
 // Made by fixtures/generator.txt at claude/retention-quests-d7d1d5: that build's newSave with a mid-journey
 // player's values over it, read back through that build's parseSave. No player's data.
 export const V8 = {
@@ -22,6 +22,7 @@ export const V8 = {
   trained: 7,
   patrol: 1792241537820,
   daily: {day: 20261017, free: 1, adChests: 0, copperChests: 0, quickAds: 0, quickJade: 0, tasks: [{kind: 'runs', n: 3, id: ''}, {kind: 'elites', n: 3, id: ''}, {kind: 'reach', n: 25, id: ''}, {kind: 'relic', n: 1, id: 'staff'}, {kind: 'patrol', n: 1, id: ''}], progress: [2, 0, 1, 0, 0], claimed: 1, bonus: false},
+  weekly: {week: 20261012, tasks: [{kind: 'runs', n: 15, id: ''}, {kind: 'daily', n: 5, id: ''}, {kind: 'kills', n: 8000, id: ''}, {kind: 'boss', n: 4, id: ''}, {kind: 'monk', n: 3, id: 'kicker'}], progress: [15, 5, 4200, 1, 0], claimed: 3, bonus: false},
   seen: 11,
   grit: 2,
   hard: true,

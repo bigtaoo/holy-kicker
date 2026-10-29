@@ -313,7 +313,6 @@ export const de: Table<typeof en> = {
     noneLeft: 'Heute nicht mehr',
   },
   tasks: {
-    title: 'Tagesaufgaben',
     button: 'Aufgaben',
     runs: 'Beende {n} {n|one:Lauf|other:Läufe}',
     waves: 'Schaffe {n} {n|one:Welle|other:Wellen}',
@@ -326,6 +325,11 @@ export const de: Table<typeof en> = {
     claim: 'Abholen',
     done: 'Erledigt',
     resets: 'Jeden Tag um Mitternacht neue Aufgaben',
+    daily: 'Hol dir an {n} {n|one:Tag|other:Tagen} den Tagesbonus',
+    tabDay: 'Täglich',
+    tabWeek: 'Wöchentlich',
+    weekBonus: 'Alles abgeholt: {chest}',
+    weekResets: 'Jeden Montag neue Ziele',
   },
   achieve: {
     streak: 'Spiele die Tagesherausforderung {n} {n|one:Tag|other:Tage} in Folge',

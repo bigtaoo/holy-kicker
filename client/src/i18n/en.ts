@@ -311,7 +311,6 @@ export const en = {
     noneLeft: 'No more today',
   },
   tasks: {
-    title: 'Daily tasks',
     button: 'Tasks',
     runs: 'Finish {n} {n|one:run|other:runs}',
     waves: 'Clear {n} {n|one:wave|other:waves}',
@@ -324,6 +323,11 @@ export const en = {
     claim: 'Claim',
     done: 'Done',
     resets: 'New tasks every day at midnight',
+    daily: 'Claim the daily bonus on {n} {n|one:day|other:days}',
+    tabDay: 'Daily',
+    tabWeek: 'Weekly',
+    weekBonus: 'All claimed: {chest}',
+    weekResets: 'New goals every Monday',
   },
   achieve: {
     streak: 'Play the daily challenge {n} {n|one:day|other:days} in a row',

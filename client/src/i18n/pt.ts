@@ -313,7 +313,6 @@ export const pt: Table<typeof en> = {
     noneLeft: 'Acabou por hoje',
   },
   tasks: {
-    title: 'Tarefas diárias',
     button: 'Tarefas',
     runs: 'Termine {n} {n|one:partida|other:partidas}',
     waves: 'Vença {n} {n|one:onda|other:ondas}',
@@ -326,6 +325,11 @@ export const pt: Table<typeof en> = {
     claim: 'Resgatar',
     done: 'Feito',
     resets: 'Novas tarefas todo dia à meia-noite',
+    daily: 'Resgate o bônus diário em {n} {n|one:dia|other:dias}',
+    tabDay: 'Diárias',
+    tabWeek: 'Semanais',
+    weekBonus: 'Tudo resgatado: {chest}',
+    weekResets: 'Novas metas toda segunda',
   },
   achieve: {
     streak: 'Jogue o desafio diário {n} {n|one:dia|other:dias} seguidos',

@@ -312,7 +312,6 @@ export const ru: Table<typeof en> = {
     noneLeft: 'На сегодня всё',
   },
   tasks: {
-    title: 'Задания дня',
     button: 'Задания',
     runs: 'Заверши забегов: {n}',
     waves: 'Пройди волн: {n}',
@@ -325,6 +324,11 @@ export const ru: Table<typeof en> = {
     claim: 'Забрать',
     done: 'Готово',
     resets: 'Новые задания каждый день в полночь',
+    daily: 'Забери ежедневный бонус (дней: {n})',
+    tabDay: 'День',
+    tabWeek: 'Неделя',
+    weekBonus: 'Всё получено: {chest}',
+    weekResets: 'Новые цели каждый понедельник',
   },
   achieve: {
     streak: 'Сыграй в испытание дня {n} {n|one:день|few:дня|many:дней|other:дня} подряд',

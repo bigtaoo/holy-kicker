@@ -313,7 +313,6 @@ export const es: Table<typeof en> = {
     noneLeft: 'No quedan más hoy',
   },
   tasks: {
-    title: 'Tareas diarias',
     button: 'Tareas',
     runs: 'Termina {n} {n|one:partida|other:partidas}',
     waves: 'Supera {n} {n|one:oleada|other:oleadas}',
@@ -326,6 +325,11 @@ export const es: Table<typeof en> = {
     claim: 'Reclamar',
     done: 'Hecho',
     resets: 'Nuevas tareas cada día a medianoche',
+    daily: 'Cobra el bono diario {n} {n|one:día|other:días}',
+    tabDay: 'Diarias',
+    tabWeek: 'Semanales',
+    weekBonus: 'Todo cobrado: {chest}',
+    weekResets: 'Nuevos objetivos cada lunes',
   },
   achieve: {
     streak: 'Juega el desafío diario {n} {n|one:día|other:días} seguidos',

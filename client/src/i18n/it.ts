@@ -313,7 +313,6 @@ export const it: Table<typeof en> = {
     noneLeft: 'Niente più per oggi',
   },
   tasks: {
-    title: 'Missioni giornaliere',
     button: 'Missioni',
     runs: 'Completa {n} {n|one:partita|other:partite}',
     waves: 'Supera {n} {n|one:ondata|other:ondate}',
@@ -326,6 +325,11 @@ export const it: Table<typeof en> = {
     claim: 'Riscuoti',
     done: 'Fatto',
     resets: 'Nuove missioni ogni giorno a mezzanotte',
+    daily: 'Riscuoti il bonus giornaliero per {n} {n|one:giorno|other:giorni}',
+    tabDay: 'Giornaliere',
+    tabWeek: 'Settimanali',
+    weekBonus: 'Tutto riscosso: {chest}',
+    weekResets: 'Nuovi obiettivi ogni lunedì',
   },
   achieve: {
     streak: 'Gioca la sfida del giorno per {n} {n|one:giorno|other:giorni} di fila',
