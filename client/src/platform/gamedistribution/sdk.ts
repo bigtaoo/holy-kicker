@@ -12,7 +12,7 @@ import { adWatchdog, StrayAd, within, type AdTimer } from '../adTimeout';
 //    SDK_REWARDED_WATCH_COMPLETE; preloadAd('rewarded') rejecting means none is there to offer.
 
 /** The game ids GameDistribution gave each theme (the console's draft); '' until it has one. */
-export const GD_GAME_IDS: Record<string, string> = { monk: '', corgi: '' };
+export const GD_GAME_IDS: Record<string, string> = { monk: '', corgi: 'ffb9a1da3af64d20bc3bbd9003a50c5f' };
 
 export const SDK_SRC = 'https://html5.api.gamedistribution.com/main.min.js';
 const SCRIPT_ID = 'gamedistribution-jssdk';
