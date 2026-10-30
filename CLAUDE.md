@@ -76,7 +76,7 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `?challenge=settle` treats the weeks in the save as closed, so their reward card shows now.
   `?arm=first20:short` puts the save in that experiment arm whatever the table says (`docs/experiments.md`).
   `?autoplay` lets the balance bot play (`&from=N` rushes it to wave N first); `?record=SECONDS` records the run to a
-  video (`&shape=landscape|portrait|phone`, `src/dev/recorder.ts`); store videos: `tools/record_video.mjs` → `tools/store_video.py` (`docs/store.md`).
+  video (`&shape=landscape|portrait|phone|iphone`, `src/dev/recorder.ts`); store videos: `tools/record_video.mjs` → `tools/store_video.py` (`docs/store.md`).
 - `server/` — the backend (`@hk/server`, server/README.md): analytics, leaderboards and problem reports (with a replay), and every run's replay while `COLLECT` in `src/replayShelf.ts` asks (`npm run replays -- --collected`) at
   hk.gamestao.com on daydayup's box; `src/protocol.ts` is the wire format, imported by the client
   as `@hk/protocol`. CI deploys it on every green push to `main` (`npm run deploy:server` by hand). Dev: `?api=http://localhost:8080` with

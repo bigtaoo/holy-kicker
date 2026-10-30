@@ -299,24 +299,40 @@ Action and Casual, free, every storefront but mainland China.
 > rewarded-ad bonus at once and stops all ads; it unlocks nothing else.
 >
 > Ads: Google AdMob, rewarded videos for optional bonuses (double copper after a run, a revive)
-> and an interstitial between runs from the second run on. Non-personalised ads only; the app does
-> not track, so there is no App Tracking Transparency prompt. Google's consent form appears in the
-> EEA, the UK and Switzerland.
+> and an interstitial between runs from the second run on. App Tracking Transparency: Apple's
+> tracking prompt appears on first launch once the game is on screen, right after Google's consent
+> form where that applies (EEA, UK, Switzerland), and before any ad is requested. Ads are
+> personalised only if the player allows tracking; otherwise every request is non-personalised.
 >
 > Game Center is optional: when signed in, the nickname shows in the lobby and on the chapter
 > leaderboards; otherwise the game rolls a random name.
 
 ### Screenshots
 
-Five per language in `art/store/ios/` (`en_*`, `zh_*`): a chapter 1 horde at wave 30, the level-up
-cards, the wave 20 twin jiangshi, chapter 3's snow at wave 12, and the lobby of a save two
-chapters in. These were taken from the dev build with Playwright at 430×932 and 3×, then scaled to App Store
-Connect's 6.1"/6.3" iPhone size (1179×2556, the same aspect). `node tools/store_shots.mjs
-<monk|corgi> <en|zh>` now takes such a set straight at 1179×2556 (393×852 at 3×): the balance bot
+Five per language in `art/store/ios/` (`en_*`, `zh_*`, retaken 2026-10-30 for the 20-chapter game
+and resubmission): a chapter 1 horde at wave 30, the level-up cards, the wave 20 twin jiangshi,
+chapter 3's snow at wave 12, and the lobby of a save two chapters in, at App Store Connect's
+6.1"/6.3" iPhone size (1179×2556). `node tools/store_shots.mjs <monk|corgi> <en|zh>` takes such a
+set straight at that size (393×852 at 3×): the balance bot
 plays each scene (`?direct&autoplay&from=N&chapter=C&seed=S`) until its moment, the dev fps
 readout is hidden and the page is captured; the lobby seeds a save two chapters in. A bot that
-falls on the way fails the take, so it is run again with another `--seed`. `--only iap` takes
+falls on the way (or while the scene settles) fails the take, so it is run again with another
+`--seed` (`--only boss --seed 11` on 2026-10-30). `--only iap` takes
 App Review's screenshot of the ad-free card (the Shop tab with `?store=fake`).
+
+### App Preview
+
+One 28 s video per language for the 6.1"/6.3" iPhone (886×1920, 30 fps, H.264 with an AAC
+track), added 2026-10-30. Recorded with `node tools/record_video.mjs iphone --from 25 --seconds 32
+--chapter 1 --seed 7 [--lang zh]` (the bot's chapter 1 from wave 25: an elite, level-up cards, a
+full horde), then cut with the battle music laid under it, since the recorder keeps no sound:
+
+```
+ffmpeg -ss 2 -t 28 -i art/store/video/raw/iphone-ch1-w25-s7.mp4 -i client/public/audio/music/battle.mp3   -map 0:v -map 1:a -t 28 -vf "fps=30,scale=886:1920,format=yuv420p" -c:v libx264 -profile:v high   -level 4.0 -crf 18 -af "afade=t=in:d=0.5,afade=t=out:st=26:d=2,aresample=48000" -ac 2 -c:a aac   -b:a 256k -movflags +faststart art/store/video/ios_preview_en_886x1920.mp4
+```
+
+The upload went through a two-pass 2.5 Mbit/s copy under 10 MB (the browser tool's limit);
+App Store Connect re-encodes it anyway. The cuts are not committed (`.gitignore`); remake them.
 
 ## App Store: Corgi Commando
 
@@ -387,9 +403,10 @@ Casual, free, every storefront but mainland China, as for Holy Kicker.
 > rewarded-ad bonus at once and stops all ads; it unlocks nothing else.
 >
 > Ads: Google AdMob, rewarded videos for optional bonuses (double bolts after a run, a revive)
-> and an interstitial between runs from the second run on. Non-personalised ads only; the app does
-> not track, so there is no App Tracking Transparency prompt. Google's consent form appears in the
-> EEA, the UK and Switzerland.
+> and an interstitial between runs from the second run on. App Tracking Transparency: Apple's
+> tracking prompt appears on first launch once the game is on screen, right after Google's consent
+> form where that applies (EEA, UK, Switzerland), and before any ad is requested. Ads are
+> personalised only if the player allows tracking; otherwise every request is non-personalised.
 >
 > Game Center is optional: when signed in, the nickname shows in the lobby and on the planet
 > leaderboards; otherwise the game rolls a random name.

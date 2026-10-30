@@ -98,6 +98,10 @@ try {
       });
     }
     await page.waitForTimeout(scene.settle);
+    // a bot that falls while the scene settles starts a fresh run, which is no shot either
+    if (scene.ready && !(await page.evaluate((src) => new Function('s', `return (${src})(s)`)(__shell.run.engine.state), scene.ready.toString()))) {
+      throw new Error(`${name}: the bot fell while the scene settled; try another --seed`);
+    }
     // a battle scene never catches level-up cards that came up while it settled
     if (scene.ready && !scene.hold) {
       await page.waitForFunction(() => __shell.run.engine.state.players[0].offer.length === 0, null, { polling: 100, timeout: 30000 });

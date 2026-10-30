@@ -1,13 +1,15 @@
 // Dev: records the game canvas to a video file for the store listing (?record=SECONDS).
 // With ?record the web host draws a fixed canvas at the video's size (scaled to fit the window
 // by CSS), so the file is exactly that size whatever the window: ?shape=phone (1080x1920, the
-// default), portrait (1080x1620, CrazyGames' 2:3) or landscape (1920x1080, a landscape run
+// default), iphone (886x1920, the App Store's 6.1"/6.3" App Preview), portrait (1080x1620,
+// CrazyGames' 2:3) or landscape (1920x1080, a landscape run
 // with RunConfig.wide, as on a desktop). The recording starts with the first run and stops after the given
 // seconds, or on the R key, then the browser saves it. MP4 (H.264) where the browser can, WebM
 // otherwise. tools/store_video.py turns the recordings into the store's files.
 
 const SHAPES = {
   phone: { width: 1080, height: 1920 },
+  iphone: { width: 886, height: 1920 },
   portrait: { width: 1080, height: 1620 },
   landscape: { width: 1920, height: 1080 },
 };

@@ -44,6 +44,7 @@ art/audio/corgi/audition.html
 
 # Raw store video recordings (tools/record_video.mjs); only the cut videos are kept
 art/store/video/raw/
+art/store/video/ios_preview_*
 art/reskin/corgi/store/video/raw/
 
 # Release zips built for portal uploads (D:\standing\release)

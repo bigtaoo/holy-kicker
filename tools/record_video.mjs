@@ -1,6 +1,6 @@
 // Records a store gameplay video with the dev server's ?autoplay&record switches (client/src/dev/recorder.ts).
-// usage: node tools/record_video.mjs <landscape|portrait|phone> [--from 25] [--seconds 30] [--seed 7]
-//        [--chapter 1] [--extra "&relic=staff"] [--theme monk|corgi] [--out art/store/video/raw]
+// usage: node tools/record_video.mjs <landscape|portrait|phone|iphone> [--from 25] [--seconds 30] [--seed 7]
+//        [--chapter 1] [--extra "&relic=staff"] [--theme monk|corgi] [--lang en|zh] [--out art/store/video/raw]
 // Needs the theme's dev server: `npm run dev` (port 5174) for monk, `npm run dev:new` (5184) for corgi.
 // A landscape take plays a real landscape run (RunConfig.wide), as a desktop player sees it. It opens the system Chrome in a window of its own (a hidden
 // or throttled page stops drawing, so not the in-app browser and not a background tab), lets
@@ -12,8 +12,8 @@ import { chromium } from 'playwright-core';
 
 const args = process.argv.slice(2);
 const shape = args[0];
-if (!['landscape', 'portrait', 'phone'].includes(shape)) {
-  console.error('usage: node tools/record_video.mjs <landscape|portrait|phone> [--from N] [--seconds S] [--seed N] [--chapter N] [--extra "&k=v"] [--theme monk|corgi] [--out dir]');
+if (!['landscape', 'portrait', 'phone', 'iphone'].includes(shape)) {
+  console.error('usage: node tools/record_video.mjs <landscape|portrait|phone|iphone> [--from N] [--seconds S] [--seed N] [--chapter N] [--extra "&k=v"] [--theme monk|corgi] [--lang en|zh] [--out dir]');
   process.exit(1);
 }
 const opt = (name, fallback) => {
@@ -25,6 +25,8 @@ const seconds = Number(opt('seconds', '30'));
 const seed = opt('seed', '7');
 const chapter = opt('chapter', '1');
 const theme = opt('theme', 'monk');
+// the browser's language picks the game's (a fresh save follows navigator.languages)
+const lang = opt('lang', 'en');
 const out = opt('out', theme === 'monk' ? 'art/store/video/raw' : `art/reskin/${theme}/store/video/raw`);
 const origin = theme === 'monk' ? 'http://localhost:5174' : 'http://localhost:5184';
 const url =
@@ -43,7 +45,7 @@ const browser = await chromium.launch({
   ],
 });
 try {
-  const page = await browser.newPage({ viewport: { width: 960, height: 700 }, acceptDownloads: true });
+  const page = await browser.newPage({ viewport: { width: 960, height: 700 }, acceptDownloads: true, locale: lang === 'zh' ? 'zh-CN' : 'en-US' });
   page.on('console', (m) => {
     if (m.text().startsWith('record:')) console.log(m.text());
   });
@@ -61,7 +63,7 @@ try {
       }),
   ]);
   mkdirSync(out, { recursive: true });
-  const file = join(out, `${shape}-ch${chapter}-w${from}-s${seed}.${download.suggestedFilename().split('.').pop()}`);
+  const file = join(out, `${shape}${lang === 'en' ? '' : `-${lang}`}-ch${chapter}-w${from}-s${seed}.${download.suggestedFilename().split('.').pop()}`);
   await download.saveAs(file);
   console.log(`saved ${file}`);
 } finally {
