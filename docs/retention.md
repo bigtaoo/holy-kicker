@@ -31,7 +31,12 @@ targets open the review, and Playgama does not say what makes a session eligible
 sets nearly matched (172 plays at 4:01 against 172/100 at 4:00), while the corgi's targets still
 read 0/0 hours after Game Performance passed 190 plays at 4:59, so read the targets the day after.
 A free boost delivers in one wave within about an hour of starting, whatever end date it shows,
-and then stops; telemetry runs about 2 hours behind.
+and then stops; telemetry runs about 2 hours behind. Once the targets open the review, a human
+passes the QA Tool's certification and submits in the console (the corgi on 2026-10-30, build
+2f3e5ef). Its questionnaire asks which Bridge features the game uses; ours: interstitials yes (on
+leaving the results, never on Play again or after the first run, at most one per
+`ads.interstitialMinutes`), rewarded yes, authorization no (no `player.*` calls; saves go through
+Bridge storage).
 
 ## What is measured
 
