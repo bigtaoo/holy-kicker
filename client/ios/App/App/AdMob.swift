@@ -1,10 +1,12 @@
+import AppTrackingTransparency
 import GoogleMobileAds
 import UIKit
 import UserMessagingPlatform
 
 // AdMob for the bridge (docs/ios.md "Ads: AdMob"): Google's consent form (UMP) once the game is on
-// screen, then a rewarded ad and an interstitial kept loaded. Every request is non-personalised
-// (npa=1) and the app never asks to track (no ATT prompt), as D:\funny decided. The page sees the
+// screen, then Apple's tracking prompt (ATT), then a rewarded ad and an interstitial kept loaded.
+// Requests are personalised only once the player allowed tracking; otherwise non-personalised
+// (npa=1). App Review rejected 1.0 (22) for showing Google's form without ATT. The page sees the
 // state (whether ads may be requested at all, which ad is loaded, whether the privacy options are
 // due) and asks for one ad at a time; how it went comes back as events.
 final class AdMob: NSObject, FullScreenContentDelegate {
@@ -69,7 +71,7 @@ final class AdMob: NSObject, FullScreenContentDelegate {
             }
         }
         // an answer from an earlier launch allows ads now, before the update comes back
-        if consent.canRequestAds { startAds() }
+        if consent.canRequestAds { askToTrack { [weak self] in self?.startAds() } }
     }
 
     /// Google's privacy options form, from the settings button.
@@ -121,13 +123,30 @@ final class AdMob: NSObject, FullScreenContentDelegate {
 
     private func consentSettled() {
         if ConsentInformation.shared.canRequestAds {
-            startAds()
+            askToTrack { [weak self] in self?.startAds() }
         } else {
             // consent withdrawn from the privacy options: nothing loaded is shown any more
             rewardedAd = nil
             interstitialAd = nil
         }
         refresh()
+    }
+
+    /// Apple's tracking prompt, once: after Google's form, before the first ad request. The prompt
+    /// only shows while the app is active, so a launch still settling waits until it is.
+    private func askToTrack(then done: @escaping () -> Void) {
+        guard ATTrackingManager.trackingAuthorizationStatus == .notDetermined else { return done() }
+        guard UIApplication.shared.applicationState == .active else {
+            var token: NSObjectProtocol?
+            token = NotificationCenter.default.addObserver(
+                forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main
+            ) { [weak self] _ in
+                if let token { NotificationCenter.default.removeObserver(token) }
+                self?.askToTrack(then: done)
+            }
+            return
+        }
+        ATTrackingManager.requestTrackingAuthorization { _ in DispatchQueue.main.async(execute: done) }
     }
 
     private func startAds() {
@@ -209,9 +228,11 @@ final class AdMob: NSObject, FullScreenContentDelegate {
         onChange?(next)
     }
 
-    /// Non-personalised (npa=1): the privacy label says "no tracking", so no request asks for it.
+    /// Personalised only when the player allowed tracking (and, in the EEA/UK, Google's form agreed);
+    /// otherwise non-personalised (npa=1).
     private static func request() -> Request {
         let request = Request()
+        if ATTrackingManager.trackingAuthorizationStatus == .authorized { return request }
         let extras = Extras()
         extras.additionalParameters = ["npa": "1"]
         request.register(extras)

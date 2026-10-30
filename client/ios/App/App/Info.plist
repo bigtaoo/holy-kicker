@@ -75,9 +75,13 @@
 	<true/>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<!-- AdMob (AdMob.swift): HolyKicker's app id on the account's publisher (funny's too). No NSUserTrackingUsageDescription on purpose: every request is non-personalised
-	     (npa=1) and the app never asks to track, as in funny. SKAdNetwork is not tracking in Apple's
-	     terms (aggregate install attribution); the list is Google's, copied from funny. -->
+	<!-- AdMob (AdMob.swift): HolyKicker's app id on the account's publisher (funny's too). The app
+	     asks to track (ATT) after Google's consent form; requests stay non-personalised (npa=1) unless
+	     the player allows it. The prompt's text names no app, so both apps share it (zh-Hans in
+	     InfoPlist.strings). SKAdNetwork is not tracking in Apple's terms (aggregate install
+	     attribution); the list is Google's, copied from funny. -->
+	<key>NSUserTrackingUsageDescription</key>
+	<string>Allowing this lets the ads that pay for the game fit your interests. You see the same number of ads either way.</string>
 	<key>GADApplicationIdentifier</key>
 	<string>ca-app-pub-5437693117291100~7644915595</string>
 	<key>SKAdNetworkItems</key>

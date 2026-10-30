@@ -14,6 +14,7 @@ import privacy from '../../../ios/App/App/PrivacyInfo.xcprivacy?raw';
 import sceneDelegate from '../../../ios/App/App/SceneDelegate.swift?raw';
 import storeSwift from '../../../ios/App/App/Store.swift?raw';
 import storyboard from '../../../ios/App/App/Base.lproj/Main.storyboard?raw';
+import zhStrings from '../../../ios/App/App/zh-Hans.lproj/InfoPlist.strings?raw';
 import { AD_FREE_ID } from './storeKit';
 import APPS from './apps.json';
 
@@ -126,7 +127,7 @@ describe('iOS shell', () => {
     expect(gameCenter.split('func signIn()')[1]).toContain('.present(');
   });
 
-  it("serves AdMob non-personalised, without asking to track, after Google's consent", () => {
+  it("asks to track after Google's consent, and serves AdMob non-personalised unless allowed", () => {
     expect(podfile).toMatch(/pod 'Google-Mobile-Ads-SDK', '~> \d+\.\d+'/);
     expect(podfile).toMatch(/pod 'GoogleUserMessagingPlatform', '~> \d+\.\d+'/);
     expect(plist).toMatch(/<key>GADApplicationIdentifier<\/key>\s*<string>ca-app-pub-\d+~\d+<\/string>/);
@@ -135,9 +136,15 @@ describe('iOS shell', () => {
     expect(adMob.match(/live \? "ca-app-pub-(\d+)\//g)).toEqual([`live ? "ca-app-pub-${publisher}/`, `live ? "ca-app-pub-${publisher}/`]);
     expect(adMob).toContain('private static let live = true');
     expect(plist.match(/<key>SKAdNetworkIdentifier<\/key>/g)?.length).toBeGreaterThan(40);
-    expect(plist).not.toContain('<key>NSUserTrackingUsageDescription</key>');
-    expect(adMob).not.toContain('ATTrackingManager');
-    expect(adMob).toContain('extras.additionalParameters = ["npa": "1"]');
+    // App Review rejected 1.0 (22) under 5.1.2(i) for Google's form without Apple's prompt
+    expect(plist).toMatch(/<key>NSUserTrackingUsageDescription<\/key>\s*<string>[^<]{20,}<\/string>/);
+    expect(zhStrings).toMatch(/"NSUserTrackingUsageDescription" = "[^"]{10,}";/);
+    expect(adMob).toContain('ATTrackingManager.requestTrackingAuthorization');
+    expect(adMob.split('private func consentSettled()')[1].split('} else {')[0]).toContain('askToTrack { [weak self] in self?.startAds() }');
+    // personalised only once the player allowed tracking
+    const request = adMob.split('private static func request()')[1];
+    expect(request).toContain('if ATTrackingManager.trackingAuthorizationStatus == .authorized { return request }');
+    expect(request).toContain('extras.additionalParameters = ["npa": "1"]');
     // no ad is requested before Google's consent allows it
     expect(adMob.split('private func load(')[1].split('Task')[0]).toContain('ConsentInformation.shared.canRequestAds');
     expect(bridge.split('override func viewDidAppear')[1]).toContain('adMob.start()');

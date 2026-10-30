@@ -15,7 +15,7 @@ says what we take from funny, what we build new, and in which order.
 |---|---|
 | The whole game, iPhone, portrait | iPad layout (runs in iPhone compatibility mode) |
 | Game Center sign-in, silent where possible: the player's nickname on the boards; the cloud save keyed to the player (`docs/cloud-save.md`) | Game Center leaderboards / achievements |
-| AdMob: rewarded + interstitial, Google's consent form (UMP) in the EEA/UK | Banner, ATT / personalised ads |
+| AdMob: rewarded + interstitial, Google's consent form (UMP) in the EEA/UK, then ATT | Banner |
 | One purchase: the **ad-free card** (non-consumable), with Restore | Jade packs, starter pack, battle pass |
 | Every storefront except mainland China | China (needs a game licence for IAP) |
 | Builds and uploads from GitHub Actions (no Mac needed), hot updates of the web layer | |
@@ -231,8 +231,14 @@ Built (step 3) in `App/AdMob.swift` and `platform/ios/admob.ts`.
   third button, "Ad privacy", beside sharing and the policy (`Platform.adPrivacy`, `NO_AD_PRIVACY`
   elsewhere). Our own analytics consent card (`net/privacyChoice.ts`) stays: it is about our play
   data, UMP about Google's ads. Withdrawing consent there drops the loaded ads.
-- **No ATT**, every request non-personalised (`npa=1`), as funny decided: no tracking prompt,
-  "Data used to track you: none" on the privacy label. Revisit once there is fill data.
+- **ATT** after the consent form, once, before the first ad request (`askToTrack`, waiting for
+  the app to be active, since the prompt shows only then). Requests are personalised only when
+  the player allowed tracking; otherwise `npa=1`. Until 2026-10-30 there was no ATT and every
+  request was `npa=1`, as funny decided, but App Review rejected 1.0 (22) under 5.1.2(i): Google's
+  EEA form tells the player the app tracks, so Apple wants ATT before it. The prompt's text
+  (`NSUserTrackingUsageDescription`, zh-Hans in `InfoPlist.strings`) names no app, so both apps
+  share it. Review Notes: "Apple's tracking prompt appears on first launch once the game is on
+  screen, right after Google's consent form where that applies (EEA/UK)."
 - **Mapping onto `Ads`.** The shell keeps one rewarded and one interstitial loaded, loading the
   next as one closes and retrying a failed load with a backoff (15 s doubling to 5 min).
   `rewardedAvailable` is true once a rewarded ad is loaded: it waits up to 20 s for the first
@@ -387,19 +393,22 @@ cloud (`capacitor.config.ts`: `autoUpdate: false`, `statsUrl: ''`).
 
 ## Privacy and store listing
 
-- `PrivacyInfo.xcprivacy`: `UserDefaults` (`CA92.1`); no tracking; the collected data types the
+- `PrivacyInfo.xcprivacy`: `UserDefaults` (`CA92.1`); no tracking by our own code (AdMob's
+  manifest declares its own); the collected data types the
   app's own code sends (below, from 2026-10-22); the AdMob SDK and Capacitor ship their own
   manifests. Both apps use the same file: `build/setIosApp.mjs` patches only `IOS_FILES`, so the
   corgi's build keeps it as committed (`shell.test.ts` pins it).
-- Privacy policy (served at `hk.gamestao.com/privacy`): AdMob (non-personalised ads, UMP),
+- Privacy policy (served at `hk.gamestao.com/privacy`): AdMob (UMP, then ATT; non-personalised
+  unless the player allows tracking, since 2026-10-30),
   Game Center (the nickname shown on the boards) and Apple's purchases, added 2026-10-09.
-- App privacy label (App Store Connect → App Privacy, by hand, for **both** apps). Nothing is
-  used for tracking (the app never shows the ATT prompt and asks AdMob for non-personalised ads).
-  Answer "Data Not Used to Track You" for every type, and declare:
+- App privacy label (App Store Connect → App Privacy, by hand, for **both** apps). Since
+  2026-10-30 the app asks to track (ATT, "Ads: AdMob"), so the types AdMob uses for
+  Third-Party Advertising (Device ID, Advertising Data, Product Interaction, Coarse Location) are
+  also "Used to Track You"; our own data is not. Declare:
 
   | Type | From | Linked to the user | Purposes |
   |---|---|---|---|
-  | Identifiers → Device ID | our install id; AdMob's per-developer id (IDFV) | no | Analytics, App Functionality; AdMob: Third-Party Advertising |
+  | Identifiers → Device ID | our install id; AdMob's per-developer id (IDFV) and, once allowed, the IDFA | no | Analytics, App Functionality; AdMob: Third-Party Advertising |
   | Identifiers → User ID | Game Center nickname on the boards; the Game Center hash that finds a cloud save | yes | App Functionality |
   | Usage Data → Product Interaction | our gameplay events; AdMob's ad taps and views | no | Analytics; AdMob: Third-Party Advertising |
   | Usage Data → Advertising Data | AdMob: the ads shown | no | Third-Party Advertising |
@@ -575,5 +584,5 @@ Owner setup, the same steps as Holy Kicker's above:
 - **Cloud save** keyed to Game Center: built (bridge v5, `docs/cloud-save.md`), still to verify
   on a device: the signature the server checks, and which of `teamPlayerID` / `gamePlayerID`
   it matched. This is what jade packs would need first.
-- Banner in the lobby (native `GADBannerView` in the band `Banner.height` keeps clear), ATT and
-  personalised ads, mediation, Game Center achievements for chapter clears, iPad layout.
+- Banner in the lobby (native `GADBannerView` in the band `Banner.height` keeps clear),
+  mediation, Game Center achievements for chapter clears, iPad layout.

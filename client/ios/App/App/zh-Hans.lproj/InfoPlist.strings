@@ -1,2 +1,4 @@
 /* The home-screen name in Chinese: homeNameZh in client/src/platform/ios/apps.json, which build/iosApp.mjs writes here for each app. */
 "CFBundleDisplayName" = "Holy Kicker";
+/* Apple's tracking prompt (AdMob.swift); the English text is in Info.plist. */
+"NSUserTrackingUsageDescription" = "允许后，为游戏提供支持的广告会更贴合你的兴趣。无论是否允许，广告数量都一样。";
