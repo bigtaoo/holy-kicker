@@ -46,6 +46,7 @@ art/audio/corgi/audition.html
 art/store/video/raw/
 art/store/video/ios_preview_*
 art/reskin/corgi/store/video/raw/
+art/reskin/corgi/store/video/ios_preview_*
 
 # Release zips built for portal uploads (D:\standing\release)
 release/

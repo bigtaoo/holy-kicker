@@ -414,7 +414,17 @@ Casual, free, every storefront but mainland China, as for Holy Kicker.
 ### Screenshots
 
 Five per language in `art/reskin/corgi/ios/store/` (`en_*`, `zh_*`), 1179×2556, taken with
-`node tools/store_shots.mjs corgi <en|zh>` from `npm run dev:new` (seed 7, but the Dune World
-takes with `--only ch3 --seed 3`, as seed 7 falls on the way, and the English horde with `--seed 5`): a Frost Moon horde at wave 30, the level-up
-cards, the wave 20 Twin Ram Beetles, Dune World at wave 12, and the lobby of a save two planets
-in. App Review's purchase screenshot is `iap_adfree_review_en.png` (`--only iap`).
+`node tools/store_shots.mjs corgi <en|zh>` from `npm run dev:new`: a Frost Moon horde at wave 30,
+the level-up cards, the wave 20 Twin Ram Beetles, Dune World at wave 12, and the lobby of a save
+two planets in. Retaken 2026-10-30 with seed 7, but the beetles with `--only boss --seed 11` in both
+languages (seed 7 leaves them mostly off screen); if a take's bot falls, try another seed. App
+Review's purchase screenshot is `iap_adfree_review_en.png` (`--only iap`).
+
+### App Preview
+
+One 28 s video per language, added 2026-10-30 like Holy Kicker's ("App Preview" above):
+`node tools/record_video.mjs iphone --theme corgi --from 25 --seconds 32 [--lang zh]` into
+`art/reskin/corgi/store/video/raw/`, then the same ffmpeg cut with the corgi's battle music
+(`art/reskin/corgi/game/audio/music/battle.mp3`) into
+`art/reskin/corgi/store/video/ios_preview_{en,zh}_upload.mp4` (two-pass 2.5 Mbit/s, under 10 MB;
+not committed).
