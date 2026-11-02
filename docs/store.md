@@ -144,8 +144,10 @@ tools/cover_corgi_final.py` cuts the same drafts to CrazyGames' three cover size
 `art/reskin/corgi/store/final/en_*.png`. The drafts carry damage numbers; if CrazyGames reads
 them as text on a cover, redraw them without (`cover_corgi_horde.py`).
 
-The covers and videos are uploaded by hand on the developer portal (funny found a scripted file
-drop rejected with `UploadType is not properly set`).
+The covers and videos are uploaded through the portal's own file pickers (funny found a scripted
+file drop rejected with `UploadType is not properly set`); the Chrome extension's `file_upload`
+into those pickers works, one file of at most 10 MB per call, so the corgi's 20 MB videos went up
+re-encoded at 3.6 Mbit/s with no audio track (`ffmpeg -b:v 3600k -maxrate 4000k -an -movflags +faststart`).
 
 ## Title and logo
 
@@ -179,6 +181,19 @@ gameplay, ads, quality and SDK game-module pages). It was served from a sub-path
 | No page scroll or selection, safe areas | Arrow keys are cancelled; `user-select` and `touch-action` are set in `index.html`; safe-area insets are respected |
 | External links only in a new tab; a privacy notice for data beyond the SDK | The only link is the privacy policy (settings and the consent card), opened in a new tab; see "Privacy" below |
 | Username shown, no login screen | The lobby header shows the SDK username; a guest on a page with accounts sees "Guest" and no leaderboard |
+
+### Corgi Commando submission (2026-11-02)
+
+CrazyGames turned the corgi down on 2026-10-27 as too close to a game already on the portal (the
+monk); once the monk was removed it went in again as a new game, Basic, Action, tags Horde
+Survival, Top-Down, Dog, Alien, Survival, with the App Store text above (Game Center and ads
+lines dropped). The portal takes a folder, not a zip: `client/dist-crazygames-new/` (180 files,
+9.4 MB). The QA step's "first gameplay start" turns Yes only after clicking into the preview,
+since a desktop first run waits for a click. Its load time (12.7 s that day) is one preview in
+the developer's browser, not what players see: the monk's CrazyGames players reached the first
+screen in under 2–3 s (median beacon bucket, 10-14..10-17), and the corgi's first screen needs
+1.27 MB (1.5 s unthrottled, 3.7 s at 5 Mbit/s). On the Details page, re-check description and
+controls before saving: a layout shift after picking options clears them.
 
 ## Privacy
 
