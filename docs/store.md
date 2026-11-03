@@ -338,7 +338,10 @@ plays each scene (`?direct&autoplay&from=N&chapter=C&seed=S`) until its moment, 
 readout is hidden and the page is captured; the lobby seeds a save two chapters in. A bot that
 falls on the way (or while the scene settles) fails the take, so it is run again with another
 `--seed` (`--only boss --seed 11` on 2026-10-30). `--only iap` takes
-App Review's screenshot of the ad-free card (the Shop tab with `?store=fake`).
+App Review's screenshot of the ad-free card (the Shop tab with `?store=fake`). `--landscape` takes
+the scenes on a 1920×1080 desktop page instead, for web portals: Poki's submission form got
+`corgi en --landscape --only horde,cards,boss --out art/reskin/corgi/poki` on 2026-11-03 (the horde
+again with `--seed 3`: the first take caught the death banner).
 
 ### App Preview
 
