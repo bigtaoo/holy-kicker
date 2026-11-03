@@ -21,7 +21,17 @@ const DEFAULT_ENTRY = '/src/main.ts';
 const PORTAL_ENTRY = '/src/main.playgama.ts';
 
 /** Interstitials no closer than a minute apart (Bridge's own default, made explicit). */
-const BRIDGE_CONFIG = { advertisement: { minimumDelayBetweenInterstitial: 60 } };
+const ADS = { advertisement: { minimumDelayBetweenInterstitial: 60 } };
+/** The catalog has no boards of its own, so a game's boards (made in the console) run on Bridge SaaS,
+ *  whose public token is the game's application id; Bridge then reports them as `in_game`. */
+const SAAS_APP = { corgi: 'cmvnoj6ie1pbhh90h931z84la' };
+
+/** Theme `theme`'s playgama-bridge-config.json: the ads, and its weekly board where it has an app for one. */
+export function bridgeConfig(theme) {
+  const app = SAAS_APP[theme];
+  if (!app) return ADS;
+  return { ...ADS, saas: { publicToken: app, leaderboards: { platforms: ['playgama', 'qa_tool'] } }, leaderboards: [{ id: 'weekly', isMain: true }] };
+}
 
 export function rewritePlaygamaHtml(html) {
   let out = html;
@@ -30,7 +40,8 @@ export function rewritePlaygamaHtml(html) {
   return out;
 }
 
-const playgama = () => {
+const playgama = (theme) => {
+  const config = bridgeConfig(theme);
   let applied = false;
   const apply = (html) => {
     const out = rewritePlaygamaHtml(html);
@@ -47,11 +58,11 @@ const playgama = () => {
     configureServer(server) {
       server.middlewares.use('/playgama-bridge-config.json', (_req, res) => {
         res.setHeader('content-type', 'application/json');
-        res.end(JSON.stringify(BRIDGE_CONFIG));
+        res.end(JSON.stringify(config));
       });
     },
     generateBundle() {
-      this.emitFile({ type: 'asset', fileName: 'playgama-bridge-config.json', source: JSON.stringify(BRIDGE_CONFIG, null, 2) });
+      this.emitFile({ type: 'asset', fileName: 'playgama-bridge-config.json', source: JSON.stringify(config, null, 2) });
     },
     closeBundle() {
       if (!applied) throw new Error('vite.playgama.config.js: index.html was never rewritten for Playgama');
@@ -65,7 +76,7 @@ export function playgamaConfig(theme) {
     base: './',
     resolve: { alias: engineAlias },
     define: buildDefine(theme),
-    plugins: [playgama(), themeAssets(theme), preloadRenderer()],
+    plugins: [playgama(theme), themeAssets(theme), preloadRenderer()],
     server: { port: monk ? 5176 : 5186, host: true },
     build: { target: 'es2020', outDir: monk ? 'dist-playgama' : 'dist-playgama-new', emptyOutDir: true },
   });

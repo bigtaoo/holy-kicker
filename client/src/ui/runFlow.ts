@@ -321,6 +321,8 @@ export class RunFlow {
   private settleChallenge(s: SimState, run: RunResult, waves: number, ranked: boolean): void {
     const h = this.host;
     const done = h.challenge.settle(h.save(), s, run, waves, this.kills, ranked);
+    // a weekly run goes on the host's own weekly board too (Playgama's)
+    if (done.weekly && ranked && h.net.boardsOn) h.platform.boards?.weekly(done.weekly.id, run);
     h.commit(afterRun(done.save, Date.now(), this.tally(s, waves, 0)).save);
     if (done.reward.streak) h.net.track('claim', { what: 'streak', n: done.reward.streak, jade: done.reward.streakJade });
     h.setScreen(new ChallengeResultsScreen({ ...done, time: run.won ? run.tenths : null }, {

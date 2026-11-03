@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import type { EventName, Host, PropValue } from '@hk/protocol';
+import type { EventName, Host, PropValue, RunEntry } from '@hk/protocol';
 import type { MusicDeck } from '../audio/music';
 import type { DragStick, Vec2 } from '../game/dragStick';
 import type { HoverPointer } from '../game/hoverSteer';
@@ -94,10 +94,18 @@ export interface Platform {
   /** The host's page lets no request reach the game's backend (Playgama's sandbox, by its CSP): the
    *  game then plays offline there, the privacy answer still governing the host's own analytics. */
   readonly backendBlocked?: boolean;
+  /** The host's own leaderboards, beside the backend's (Playgama's, through Bridge); unset where it has none. */
+  readonly boards?: HostBoards;
   /** Local notifications (the iOS app's reminders, meta/reminders.ts); unset where the host has none. */
   readonly notify?: Notifier;
   /** A newer web layer the player can be asked to take (the iOS app's hot updates); unset elsewhere. */
   readonly updates?: AppUpdates;
+}
+
+/** A host's own leaderboards, fed beside the backend's. */
+export interface HostBoards {
+  /** Puts a ranked run of weekly challenge `id` ('w2026-45') on the host's weekly board; never throws. */
+  weekly(id: string, run: Pick<RunEntry, 'won' | 'wave' | 'tenths'>): void;
 }
 
 /** A host's analytics (Playgama's telemetry, through Bridge). */

@@ -5,11 +5,12 @@ import { BACKUP_KEY, BROKEN_KEY, SAVE_KEY, SafeStore, type KeyValueStore } from 
 import { SETTINGS_KEY } from '../../meta/settings';
 import { INSTALL_KEY } from '../../net/backend';
 import { SENT_KEY } from '../../ui/playerName';
-import { NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type HostAnalytics, type Portal } from '../types';
+import { NO_BANNER, NO_PORTAL, type Ads, type AudioHost, type Banner, type HostBoards, type HostAnalytics, type Portal } from '../types';
 import { WebPlatform, browserStorage } from '../web/WebPlatform';
 import { webAudioHost } from '../web/webAudio';
 import { BridgeStore, PlaygamaBridge } from './bridge';
 import { bridgeAnalytics } from './bridgeAnalytics';
+import { bridgeBoards } from './bridgeBoards';
 import { deviceFields } from './telemetry';
 import { portalDevice } from '../portalDevice';
 import { THEME, type Theme } from '../../theme';
@@ -42,6 +43,7 @@ export class PlaygamaPlatform extends WebPlatform {
   override readonly banner: Banner = NO_BANNER;
   override readonly audio: AudioHost | null;
   readonly analytics?: HostAnalytics;
+  readonly boards?: HostBoards;
   readonly backendBlocked: boolean;
 
   private constructor(private readonly bridge: PlaygamaBridge, private readonly saves: BridgeStore | null) {
@@ -51,6 +53,7 @@ export class PlaygamaPlatform extends WebPlatform {
     this.host = id && !TEST_PLATFORMS.has(id) ? 'playgama' : 'web';
     // the sandbox's CSP admits Playgama's own hosts only; the catalog may differ, so it stays online
     this.backendBlocked = id === SANDBOX;
+    this.boards = bridge.isReady() ? bridgeBoards(bridge) : undefined;
     this.storage = new SafeStore(saves ?? browserStorage());
     this.portal = !bridge.isReady() ? NO_PORTAL : {
       ...NO_PORTAL,

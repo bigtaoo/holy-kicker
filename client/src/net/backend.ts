@@ -122,6 +122,11 @@ export class Backend {
     if (s === 'send') void this.flush();
   }
 
+  /** Whether the player lets runs onto the boards (the host's own too). */
+  get boardsOn(): boolean {
+    return this.boards;
+  }
+
   /** Whether runs and names go to the boards; off, the runs waiting are dropped. */
   setBoards(on: boolean): void {
     this.boards = on;

@@ -44,6 +44,11 @@ export interface BridgeShape {
     checkAdBlock?: () => unknown;
   };
   device?: { type?: string };
+  /** `type` 'in_game' where the game draws the boards itself (Playgama's own, set up in its console). */
+  leaderboards?: {
+    type?: string;
+    setScore?: (id: string, score: number) => unknown;
+  };
   analytics?: { send?: (event: string, data?: Record<string, string | number | boolean>) => unknown };
 }
 
@@ -135,6 +140,15 @@ export class PlaygamaBridge {
       await c.write?.(text);
       return true;
     })) === true;
+  }
+
+  /** Whether the game draws Bridge's leaderboards itself (`in_game`: Playgama's own boards). */
+  boardsInGame(): boolean {
+    return this.sdk?.leaderboards?.type === 'in_game';
+  }
+
+  setScore(board: string, score: number): void {
+    void settle(() => this.sdk?.leaderboards?.setScore?.(board, score));
   }
 
   /** game_ready, gameplay_started, player_got_achievement, … */
