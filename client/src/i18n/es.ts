@@ -144,6 +144,8 @@ export const es: Table<typeof en> = {
     replayOf: 'Partida de {name}', loading: 'Cargando…', failed: 'Reintentar', seeking: 'Avanzando…', ended: 'Fin de la repetición', play: 'Reproducir',
     pause: 'Pausa', again: 'Otra vez', prevWave: '‹ Oleada', nextWave: 'Oleada ›', speed: '{n}x', claimTitle: 'Desafío semanal',
     claimRank: 'Semana pasada: puesto {rank} de {total}', claimNoRank: 'Gracias por participar la semana pasada', claim: 'Reclamar',
+    inviteBeat: 'Un amigo llegó a la oleada {wave}. ¿Puedes superarlo?', inviteVs: 'Amigo: oleada {wave} · Tú: oleada {best}', inviteBeaten: '¡Superaste a tu amigo: oleada {best} contra {wave}!',
+    inviteButton: 'Reta a un amigo', linkCopied: '¡Enlace copiado!', linkFailed: 'No se pudo copiar el enlace', shareText: 'Llegué a la oleada {wave} en el reto semanal. ¿Puedes superarme? {url}',
   },
   tutorial: {
     move: 'Arrastra en cualquier parte para moverte',

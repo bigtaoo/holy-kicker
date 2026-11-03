@@ -142,6 +142,8 @@ export const en = {
     loading: 'Loading…', failed: 'Try again', seeking: 'Skipping…', ended: 'Replay over', play: 'Play', pause: 'Pause', again: 'Again',
     prevWave: '‹ Wave', nextWave: 'Wave ›', speed: '{n}x', claimTitle: 'Weekly Challenge', claimRank: 'Last week: rank {rank} of {total}',
     claimNoRank: 'Thanks for taking part last week', claim: 'Claim',
+    inviteBeat: 'A friend reached wave {wave}. Can you beat it?', inviteVs: 'Friend: wave {wave} · You: wave {best}', inviteBeaten: 'You beat your friend: wave {best} to {wave}!',
+    inviteButton: 'Challenge a friend', linkCopied: 'Link copied!', linkFailed: "Couldn't copy the link", shareText: "I reached wave {wave} in this week's challenge. Can you beat me? {url}",
   },
   tutorial: {
     move: 'Drag anywhere to move',

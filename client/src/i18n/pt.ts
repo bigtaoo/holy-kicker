@@ -144,6 +144,8 @@ export const pt: Table<typeof en> = {
     replayOf: 'Partida de {name}', loading: 'Carregando…', failed: 'Tentar de novo', seeking: 'Avançando…', ended: 'Fim do replay', play: 'Reproduzir',
     pause: 'Pausar', again: 'De novo', prevWave: '‹ Onda', nextWave: 'Onda ›', speed: '{n}x', claimTitle: 'Desafio semanal',
     claimRank: 'Semana passada: posição {rank} de {total}', claimNoRank: 'Obrigado por participar na semana passada', claim: 'Resgatar',
+    inviteBeat: 'Um amigo chegou à onda {wave}. Consegue superar?', inviteVs: 'Amigo: onda {wave} · Você: onda {best}', inviteBeaten: 'Você superou seu amigo: onda {best} contra {wave}!',
+    inviteButton: 'Desafie um amigo', linkCopied: 'Link copiado!', linkFailed: 'Não foi possível copiar o link', shareText: 'Cheguei à onda {wave} no desafio da semana. Consegue me superar? {url}',
   },
   tutorial: {
     move: 'Arraste em qualquer lugar para se mover',

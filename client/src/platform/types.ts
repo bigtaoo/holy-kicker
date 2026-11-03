@@ -83,6 +83,10 @@ export interface Platform {
   openUrl(url: string): void;
   /** Puts `text` on the clipboard, from a tap; false when the host refused. Unset where there is none. */
   copyText?(text: string): Promise<boolean>;
+  /** The address that opens this game with a friend's weekly invite code (meta/invite.ts) handed in; null where the host has none (a portal's own page we cannot name, the iOS app). */
+  inviteLink?(code: string): string | null;
+  /** The invite code this launch was opened with, if any. */
+  invitedWith?(): string | null;
   /** What the host itself says about this launch, added to the `session` event (CrazyGames: how its SDK started). */
   sessionProps?(): Record<string, PropValue>;
   /** The host's own analytics, fed beside the backend; unset where the host has none. */

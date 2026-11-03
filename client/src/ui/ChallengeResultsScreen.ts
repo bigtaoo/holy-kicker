@@ -26,9 +26,13 @@ import { spot } from './spots';
 export interface ChallengeResultsActions {
   double(): Promise<boolean>;
   next(): void;
+  /** Copies a link that dares a friend to beat this week's best (meta/invite.ts); absent where the host has no link. */
+  invite?(): Promise<boolean>;
 }
 
 type Offer = 'hidden' | 'offered' | 'playing' | 'paid';
+/** The "challenge a friend" button: untouched, copying, or how the copy went. */
+type Link = 'idle' | 'copying' | 'copied' | 'failed';
 
 const CARD_W = 920;
 const INNER_W = 840;
@@ -44,13 +48,14 @@ export class ChallengeResultsScreen implements Screen {
   /** Not sent: the leaderboards are off in Settings. */
   private off = false;
   private left = false;
+  private link: Link = 'idle';
   private readonly reward: ChallengeReward;
   private readonly chapter: number;
   private readonly waves: number;
   /** Hours until the next challenge opens. */
   private readonly hours: number;
   /** A weekly run: the week's best waves before it. */
-  private readonly weekly: { before: number } | undefined;
+  private readonly weekly: { before: number; id: string } | undefined;
   /** A daily made up on the device: the day's best waves before it. */
   private readonly local: { before: number } | undefined;
   /** A run that cleared every wave: its time in tenths of a simulated second, as the boards count it. */
@@ -249,9 +254,10 @@ export class ChallengeResultsScreen implements Screen {
     return row;
   }
 
-  /** The ad offer and Continue side by side, or Continue alone. */
+  /** The ad offer and Continue side by side, a weekly's "challenge a friend" and Continue, or Continue alone. */
   private buttons(x: number, y: number): void {
     const busy = this.offer === 'playing';
+    if (!busy && this.offer !== 'offered' && this.weekly && this.actions.invite) return this.inviteButtons(x, y);
     const pair = this.offer === 'offered' || busy;
     const w = pair ? 450 : 640;
     const adText = busy ? '…' : t('results.double');
@@ -275,6 +281,33 @@ export class ChallengeResultsScreen implements Screen {
       if (busy) ad.eventMode = 'none';
       this.view.addChild(ad);
     }
+  }
+
+  /** "Challenge a friend" (its label says once the link is copied) beside Continue. */
+  private inviteButtons(x: number, y: number): void {
+    const w = 450;
+    const text = this.link === 'copying' ? '…' : t(this.link === 'copied' ? 'weekly.linkCopied' : this.link === 'failed' ? 'weekly.linkFailed' : 'weekly.inviteButton');
+    const probe = button(text, w, 140, () => {});
+    const other = button(t('common.continue'), w, 140, () => {});
+    const size = 52 * Math.min(buttonLabel(probe).scale.x, buttonLabel(other).scale.x);
+    probe.destroy({ children: true });
+    other.destroy({ children: true });
+    const next = button(t('common.continue'), w, 140, () => this.leave(), { size });
+    next.position.set(x + w / 2 + 10, y);
+    if (this.keys) keyCap(next, w, 140, t('common.keyEnter'));
+    this.view.addChild(spot('next', next));
+    const share = button(text, w, 140, () => void this.share(), { fill: this.link === 'copied' ? COLORS.panelLocked : COLORS.jade, size });
+    share.position.set(x - w / 2 - 10, y);
+    if (this.link === 'copying') share.eventMode = 'none';
+    this.view.addChild(spot('invite', share));
+  }
+
+  private async share(): Promise<void> {
+    if (this.link === 'copying' || !this.actions.invite) return;
+    this.link = 'copying';
+    this.relayout();
+    this.link = (await this.actions.invite()) ? 'copied' : 'failed';
+    this.relayout();
   }
 
   /** Enter or Escape continues. */

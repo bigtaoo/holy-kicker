@@ -144,6 +144,8 @@ export const de: Table<typeof en> = {
     replayOf: 'Lauf von {name}', loading: 'Lädt…', failed: 'Nochmal', seeking: 'Spult vor…', ended: 'Wiedergabe zu Ende', play: 'Abspielen',
     pause: 'Pause', again: 'Nochmal', prevWave: '‹ Welle', nextWave: 'Welle ›', speed: '{n}x', claimTitle: 'Wochenherausforderung',
     claimRank: 'Letzte Woche: Platz {rank} von {total}', claimNoRank: 'Danke fürs Mitmachen letzte Woche', claim: 'Abholen',
+    inviteBeat: 'Ein Freund hat Welle {wave} erreicht. Schaffst du mehr?', inviteVs: 'Freund: Welle {wave} · Du: Welle {best}', inviteBeaten: 'Du hast deinen Freund geschlagen: Welle {best} gegen {wave}!',
+    inviteButton: 'Freund herausfordern', linkCopied: 'Link kopiert!', linkFailed: 'Link konnte nicht kopiert werden', shareText: 'Ich habe in der Wochen-Challenge Welle {wave} erreicht. Schaffst du mehr? {url}',
   },
   tutorial: {
     move: 'Zieh irgendwo, um dich zu bewegen',

@@ -142,6 +142,8 @@ export const ja: Table<typeof en> = {
     rank: '{total}人中{rank}位', after: '報酬は週の終わりに届きます', watch: '観る', picks: '{name}の選択', replayOf: '{name}のプレイ', loading: '読み込み中…', failed: '再試行',
     seeking: '早送り中…', ended: 'リプレイ終了', play: '再生', pause: '一時停止', again: 'もう一度', prevWave: '‹ ウェーブ', nextWave: 'ウェーブ ›', speed: '{n}倍',
     claimTitle: 'ウィークリーチャレンジ', claimRank: '先週：{total}人中{rank}位', claimNoRank: '先週のご参加ありがとうございました', claim: '受け取る',
+    inviteBeat: '友だちはウェーブ {wave} まで到達。超えられる？', inviteVs: '友だち：ウェーブ {wave} · あなた：ウェーブ {best}', inviteBeaten: '友だちに勝利：ウェーブ {best} 対 {wave}！',
+    inviteButton: '友だちに挑戦', linkCopied: 'リンクをコピーしました！', linkFailed: 'リンクをコピーできませんでした', shareText: '今週のチャレンジでウェーブ {wave} まで到達！超えられる？ {url}',
   },
   tutorial: {
     move: '画面のどこでもドラッグで移動',

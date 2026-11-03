@@ -25,6 +25,12 @@ export interface BridgeShape {
     language?: string;
     isAudioEnabled?: boolean;
     sendMessage?: (message: string) => unknown;
+    /** What the catalog link's `?payload=` carried (playgama.com/game/<name>?payload=…). */
+    payload?: unknown;
+  };
+  clipboard?: {
+    isSupported?: boolean;
+    write?: (text: string) => unknown;
   };
   storage?: {
     get?: (keys: string[], tryParseJson?: boolean) => unknown;
@@ -113,6 +119,22 @@ export class PlaygamaBridge {
   deviceType(): string | null {
     const v = this.sdk?.device?.type;
     return typeof v === 'string' && v !== '' ? v : null;
+  }
+
+  /** The catalog link's payload this launch was opened with; null without one. */
+  payload(): string | null {
+    const v = this.sdk?.platform?.payload;
+    return typeof v === 'string' && v !== '' ? v : null;
+  }
+
+  /** Puts `text` on the clipboard through the platform; false where it cannot or refused. */
+  async copy(text: string): Promise<boolean> {
+    const c = this.sdk?.clipboard;
+    if (c?.isSupported !== true || typeof c.write !== 'function') return false;
+    return (await settle(async () => {
+      await c.write?.(text);
+      return true;
+    })) === true;
   }
 
   /** game_ready, gameplay_started, player_got_achievement, … */

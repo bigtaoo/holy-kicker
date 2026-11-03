@@ -59,6 +59,8 @@ const FIRST_LINE = 165;
 export class ChallengeUi {
   private open = false;
   private tab: Tab = 'daily';
+  /** The panel opened by itself on the weekly a friend's link named, once a launch. */
+  private invited = false;
 
   constructor(
     /** Read at each layout: the record may come in while the lobby is up. */
@@ -108,6 +110,11 @@ export class ChallengeUi {
     if (lobby?.claim) {
       const c = lobby.claim;
       return claimCard(w, h, c, this.icons, () => lobby.take(c));
+    }
+    if (lobby?.weekly?.invite && !this.invited) {
+      this.invited = true;
+      this.open = true;
+      this.tab = 'weekly';
     }
     if (!this.open || !lobby) return null;
     const tab: Tab = !lobby.daily ? 'weekly' : !lobby.weekly ? 'daily' : this.tab;

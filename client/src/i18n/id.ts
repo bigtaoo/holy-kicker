@@ -144,6 +144,8 @@ export const id: Table<typeof en> = {
     replayOf: 'Permainan {name}', loading: 'Memuat…', failed: 'Coba lagi', seeking: 'Mempercepat…', ended: 'Tayangan ulang selesai', play: 'Putar',
     pause: 'Jeda', again: 'Lagi', prevWave: '‹ Gelombang', nextWave: 'Gelombang ›', speed: '{n}x', claimTitle: 'Tantangan Mingguan',
     claimRank: 'Minggu lalu: peringkat {rank} dari {total}', claimNoRank: 'Terima kasih sudah ikut minggu lalu', claim: 'Ambil',
+    inviteBeat: 'Temanmu mencapai gelombang {wave}. Bisa kalahkan?', inviteVs: 'Teman: gelombang {wave} · Kamu: gelombang {best}', inviteBeaten: 'Kamu mengalahkan temanmu: gelombang {best} lawan {wave}!',
+    inviteButton: 'Tantang teman', linkCopied: 'Tautan disalin!', linkFailed: 'Gagal menyalin tautan', shareText: 'Aku mencapai gelombang {wave} di tantangan minggu ini. Bisa kalahkan aku? {url}',
   },
   tutorial: {
     move: 'Geser di mana saja untuk bergerak',

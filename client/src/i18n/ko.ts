@@ -142,6 +142,8 @@ export const ko: Table<typeof en> = {
     rank: '{total}명 중 {rank}위', after: '보상은 주가 끝나면 드려요', watch: '보기', picks: '{name}의 선택', replayOf: '{name}의 판', loading: '불러오는 중…', failed: '다시 시도',
     seeking: '빨리 감는 중…', ended: '리플레이 끝', play: '재생', pause: '일시정지', again: '다시', prevWave: '‹ 웨이브', nextWave: '웨이브 ›', speed: '{n}배',
     claimTitle: '주간 도전', claimRank: '지난주: {total}명 중 {rank}위', claimNoRank: '지난주 참여해 주셔서 감사해요', claim: '받기',
+    inviteBeat: '친구가 {wave} 웨이브에 도달했어요. 넘어설 수 있나요?', inviteVs: '친구: {wave} 웨이브 · 나: {best} 웨이브', inviteBeaten: '친구를 이겼어요: {best} 웨이브 대 {wave} 웨이브!',
+    inviteButton: '친구에게 도전', linkCopied: '링크 복사됨!', linkFailed: '링크를 복사하지 못했어요', shareText: '이번 주 도전에서 {wave} 웨이브까지 갔어요. 넘어설 수 있나요? {url}',
   },
   tutorial: {
     move: '아무 곳이나 드래그해서 이동',

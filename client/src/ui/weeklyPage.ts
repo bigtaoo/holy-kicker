@@ -113,6 +113,7 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
   add(t('weekly.rewards'), 48, COLORS.text, 665);
   weeklyTiers().forEach((tier, i) => box.addChild(tierRow(t(tier.key as never), tier.jade, i, top + rules.grow + 740 + i * 68, icons)));
   if (w.state === 'update') add(t('weekly.update'), 48, COLORS.danger, 1025);
+  else if (w.invite) add(inviteLine(w.invite.waves, w.best), 46, COLORS.gold, 1025);
   else add(w.best > 0 ? t('weekly.best', { wave: w.best }) : t('weekly.noBest'), 46, w.best > 0 ? COLORS.saffron : COLORS.dim, 1025);
   let y = 1080;
   if (w.reply && w.state === 'open') {
@@ -127,6 +128,12 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
     b.position.set(buttons.length === 1 ? 0 : i === 0 ? -200 : 220, top + rules.grow + 1235);
     box.addChild(b);
   });
+}
+
+/** A friend's waves to beat, beside the player's best once there is one. */
+export function inviteLine(friend: number, best: number): string {
+  if (best <= 0) return t('weekly.inviteBeat', { wave: friend });
+  return best > friend ? t('weekly.inviteBeaten', { wave: friend, best }) : t('weekly.inviteVs', { wave: friend, best });
 }
 
 /** A reward tier's row: its name at the left, its jade at the right; the medal it earns beside the name. */

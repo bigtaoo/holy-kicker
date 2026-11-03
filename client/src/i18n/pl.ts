@@ -144,6 +144,8 @@ export const pl: Table<typeof en> = {
     loading: 'Wczytywanie…', failed: 'Ponów', seeking: 'Przewijanie…', ended: 'Koniec powtórki', play: 'Odtwórz', pause: 'Pauza', again: 'Jeszcze raz',
     prevWave: '‹ Fala', nextWave: 'Fala ›', speed: '{n}x', claimTitle: 'Wyzwanie tygodnia', claimRank: 'Zeszły tydzień: miejsce {rank} z {total}',
     claimNoRank: 'Dzięki za udział w zeszłym tygodniu', claim: 'Odbierz',
+    inviteBeat: 'Znajomy dotarł do fali {wave}. Pobijesz to?', inviteVs: 'Znajomy: fala {wave} · Ty: fala {best}', inviteBeaten: 'Pokonałeś znajomego: fala {best} kontra {wave}!',
+    inviteButton: 'Wyzwij znajomego', linkCopied: 'Link skopiowany!', linkFailed: 'Nie udało się skopiować linku', shareText: 'Dotarłem do fali {wave} w wyzwaniu tygodnia. Pobijesz mnie? {url}',
   },
   tutorial: {
     move: 'Przeciągnij gdziekolwiek, by się ruszać',

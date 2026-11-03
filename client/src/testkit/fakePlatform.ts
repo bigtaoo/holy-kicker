@@ -23,6 +23,10 @@ export interface FakeHost {
   keysReach?: () => boolean;
   /** A web host, where a sideways screen plays in landscape (Platform.sideways). */
   sideways?: boolean;
+  /** A host that makes weekly invite links (https://game.test/?w=<code>) and copies: each copy is recorded in `calls` as `copy <text>`. */
+  links?: boolean;
+  /** The invite code the game was opened with. */
+  invitedWith?: string;
 }
 
 export type FakePlatform = Platform & { calls: string[]; hide(): void; press(code: string, repeat?: boolean): void };
@@ -67,6 +71,11 @@ export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): 
     openUrl: (url) => void calls.push(`open ${url}`),
     ...(host.notify && { notify: host.notify }),
     ...(host.updates && { updates: host.updates }),
+    ...(host.links && {
+      inviteLink: (code: string) => `https://game.test/?w=${code}`,
+      copyText: async (text: string) => (calls.push(`copy ${text}`), true),
+    }),
+    ...(host.invitedWith && { invitedWith: () => host.invitedWith! }),
     ...(host.vibrate && { vibrate: (strong: boolean) => void calls.push(strong ? 'vibrate strong' : 'vibrate') }),
   };
 }

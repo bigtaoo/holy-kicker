@@ -8,6 +8,7 @@ import { SafeStore, type KeyValueStore } from '../../meta/saveStore';
 import { themedStore } from '../../theme';
 import { FAKE_ADS, NO_ADS, fakeNotifier, fakeStore, fakeUpdates, NO_AD_PRIVACY, NO_BANNER, NO_PORTAL, type AdPrivacy, type Ads, type AppUpdates, type Attention, type AudioHost, type Banner, type Insets, type Notifier, type Platform, type Portal, type Store, type TextAsk } from '../types';
 import { BannerHost, FAKE_BANNER_FILL } from './banner';
+import { inviteParam, inviteUrl } from './inviteUrl';
 import { askTextDom } from './textAsk';
 import { webAudioHost } from './webAudio';
 import { installTextCanvasFix } from './textCanvas';
@@ -74,6 +75,15 @@ export class WebPlatform implements Platform {
 
   openUrl(url: string): void {
     window.open(url, '_blank', 'noopener');
+  }
+
+  /** The game's own page (h.gamestao.com); a portal's iframe is no page a friend can open. */
+  inviteLink(code: string): string | null {
+    return this.host === 'web' ? inviteUrl(location.href, code) : null;
+  }
+
+  invitedWith(): string | null {
+    return this.host === 'web' ? inviteParam(location.search) : null;
   }
 
   async copyText(text: string): Promise<boolean> {

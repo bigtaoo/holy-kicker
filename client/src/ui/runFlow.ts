@@ -20,6 +20,8 @@ import type { SaveData } from '../meta/save';
 import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
 import { runTally, type RunTally } from '../meta/taskPool';
 import { afterRun } from '../meta/welcome';
+import { inviteCode, inviteOf } from '../meta/invite';
+import { t } from '../i18n';
 import { loadSettings, updateSettings } from '../meta/settings';
 import type { Platform, Portal } from '../platform/types';
 import type { PacedAds } from '../platform/adPacing';
@@ -33,7 +35,7 @@ import type { RunReplays } from '../net/runReplays';
 import type { Challenge, Device, InterPlace, OfferPlace, PropValue, ReplayWire } from '@hk/protocol';
 import { timerShown } from './clearTime';
 import { menuBackdrop } from './lobbyBars';
-import type { ChallengeFlow } from './challengeFlow';
+import type { ChallengeFlow, ChallengeSettled } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
 import type { RankNote } from './resultsParts';
@@ -328,7 +330,23 @@ export class RunFlow {
         return paid;
       },
       next: () => void h.ads.midgame(this.inter('challenge_next')).then(() => h.showLobby()),
+      invite: this.invite(done, run),
     }, offered(this.track, 'challenge_double', h.ads.rewardedAvailable(), done.reward.copper > 0), h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
+  }
+
+  /** Copies a link daring a friend to beat the week's best, for a weekly run where the host makes links. */
+  private invite(done: ChallengeSettled, run: RunResult): (() => Promise<boolean>) | undefined {
+    const h = this.host;
+    const w = done.weekly;
+    const best = Math.max(w?.before ?? 0, done.waves);
+    const url = w && h.platform.inviteLink?.(inviteCode(inviteOf(w.id, best, run.won && done.waves >= best ? run.tenths : null)));
+    if (!url || !h.platform.copyText) return undefined;
+    const copy = h.platform.copyText.bind(h.platform);
+    return async () => {
+      const ok = await copy(t('weekly.shareText', { wave: best, url }));
+      h.net.track('share', { to: 'link', from: 'weekly', ok });
+      return ok;
+    };
   }
 
   /** What the run that ended in `s` adds to the task boards (meta/taskPool.ts). */

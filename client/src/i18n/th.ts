@@ -143,6 +143,8 @@ export const th: Table<typeof en> = {
     picks: 'การ์ดของ {name}', replayOf: 'รอบของ {name}', loading: 'กำลังโหลด…', failed: 'ลองอีกครั้ง', seeking: 'กำลังกรอ…', ended: 'รีเพลย์จบแล้ว',
     play: 'เล่น', pause: 'หยุด', again: 'อีกครั้ง', prevWave: '‹ เวฟ', nextWave: 'เวฟ ›', speed: '{n}x', claimTitle: 'ชาเลนจ์รายสัปดาห์',
     claimRank: 'สัปดาห์ที่แล้ว: อันดับ {rank} จาก {total}', claimNoRank: 'ขอบคุณที่ร่วมสนุกสัปดาห์ที่แล้ว', claim: 'รับ',
+    inviteBeat: 'เพื่อนไปถึงเวฟ {wave} แล้ว ทำได้ดีกว่าไหม?', inviteVs: 'เพื่อน: เวฟ {wave} · คุณ: เวฟ {best}', inviteBeaten: 'คุณชนะเพื่อน: เวฟ {best} ต่อ {wave}!',
+    inviteButton: 'ท้าเพื่อน', linkCopied: 'คัดลอกลิงก์แล้ว!', linkFailed: 'คัดลอกลิงก์ไม่สำเร็จ', shareText: 'ฉันไปถึงเวฟ {wave} ในชาเลนจ์ประจำสัปดาห์ ทำได้ดีกว่าไหม? {url}',
   },
   tutorial: {
     move: 'ลากตรงไหนก็ได้เพื่อเดิน',

@@ -512,6 +512,22 @@ challenge fixes the whole run config, not just the gear:
 - Chapter: any of 1–5, whatever the player has cleared (it opens after chapter 1). Hard mode
   only as a later variant.
 
+### Challenge a friend (weekly links)
+
+Because the weekly is the same fair loadout for everyone, a player's week best is a target a
+friend can take on with no gear or progress of their own. A weekly run's results offer
+"Challenge a friend" beside Continue: it copies a line with a link that carries a short code,
+`<week id>.<waves>[.<tenths>]` (`meta/invite.ts`), and the copy is counted as `share` with
+`to: 'link'`. Only hosts that can name their own page make links (`Platform.inviteLink`):
+the web build as `?w=<code>` (h.gamestao.com and /new/; a release reads it on purpose, so it is
+not a dev switch) and the corgi's Playgama catalog page as `?payload=<code>` (the sandbox is
+offline and has no weekly). CrazyGames, GameDistribution, iOS and WeChat have no button.
+
+A friend opened by such a link is tagged `invite` on `session`. The link for this week opens
+the weekly before chapter 1 is cleared, as soon as the first run (the tutorial) is over, and the
+lobby opens the weekly tab once by itself, its best line naming the friend's waves to beat (and
+both once the player has a run). A link for another week is ignored.
+
 ### Challenge records and engine versions
 
 The server owns the challenge list (`GET /v1/challenge`): id (`d20261019`, `w2026-43`), kind,

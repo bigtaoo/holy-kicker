@@ -18,6 +18,9 @@ const player = (more: Partial<SaveData> = {}): SaveData => ({ ...newSave(), leve
 describe('weekly challenge', () => {
   it('opens once chapter 1 is cleared, and asks a client on another engine to update', () => {
     expect(weeklyState(player({ cleared: 0 }), weekly)).toBe('locked');
+    // a friend's link opens it once the first run is over
+    expect(weeklyState(player({ cleared: 0 }), weekly, ENGINE_VERSION, true)).toBe('open');
+    expect(weeklyState(player({ cleared: 0, firstRunDone: false }), weekly, ENGINE_VERSION, true)).toBe('locked');
     expect(weeklyState(player(), weekly)).toBe('open');
     expect(weeklyState(player(), weekly, ENGINE_VERSION + 1)).toBe('update');
   });

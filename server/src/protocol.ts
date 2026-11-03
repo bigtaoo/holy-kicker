@@ -28,7 +28,9 @@ export type Device = (typeof DEVICES)[number];
  * `double`) and `free` when the ad-free card paid the reward with no ad. `claim` has `what` (`task`
  * with `task` and its `kind`, `bonus`, `goal` (a weekly goal) with `goal` and its `kind`, `weekBonus` (the week's chest), `merit` (every merit path step reached), `achievement` with `goal` and `all` from Claim all, `patrol` with `hours`
  * and `double`). Chests and patrols also carry their haul: `copper`, `jade` and `drops`. `share`
- * has `to` (`chat` or `moments`) and `from` (`lobby`, `run` or `results`, where the player was).
+ * has `to` (`chat` or `moments`; `link` a weekly's "challenge a friend" link copied, with `ok`) and
+ * `from` (`lobby`, `run` or `results`, where the player was; `weekly` for a link). `session` has
+ * `invite` (the week id) when the game was opened from a friend's weekly link.
  * `tutorial` has `step` (`move` as the run starts, then `auto`, `gems` and `done` once the hints
  * are over) and `secs` (seconds on screen since the run began, the pause panel left out); builds
  * before it sent a bare `tutorial` when done.

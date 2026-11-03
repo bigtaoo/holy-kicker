@@ -145,6 +145,8 @@ export const fr: Table<typeof en> = {
     ended: 'Fin du replay', play: 'Lecture', pause: 'Pause', again: 'Revoir', prevWave: '‹ Vague', nextWave: 'Vague ›', speed: '{n}x',
     claimTitle: 'Défi de la semaine', claimRank: 'Semaine dernière : rang {rank} sur {total}', claimNoRank: "Merci d’avoir participé la semaine dernière",
     claim: 'Récupérer',
+    inviteBeat: 'Un ami a atteint la vague {wave}. Peux-tu faire mieux ?', inviteVs: 'Ami : vague {wave} · Toi : vague {best}', inviteBeaten: 'Tu as battu ton ami : vague {best} contre {wave} !',
+    inviteButton: 'Défier un ami', linkCopied: 'Lien copié !', linkFailed: 'Impossible de copier le lien', shareText: "J'ai atteint la vague {wave} au défi de la semaine. Tu peux faire mieux ? {url}",
   },
   tutorial: {
     move: 'Fais glisser n’importe où pour bouger',

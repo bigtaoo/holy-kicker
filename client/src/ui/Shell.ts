@@ -30,6 +30,7 @@ import { loadRunArt, lateArt, loadChapterArt } from '../chapterArt';
 import { monkRig } from '../game/artTypes';
 import { LobbyScreen } from './LobbyScreen';
 import { LobbyArtLoad } from './lobbyArtLoad';
+import { parseInvite } from '../meta/invite';
 import { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
@@ -112,6 +113,7 @@ export class Shell {
     this.lobbyArt = new LobbyArtLoad(platform, art, this.app.renderer);
     this.replays = new RunReplays(net);
     this.challenge = new ChallengeFlow(net, () => (this.screenKey = ''), scene.challenge, scene.settleWeeks); // the lobby is drawn again when the record comes
+    this.challenge.invite = parseInvite(platform.invitedWith?.());
     this.save = this.enrolled(this.names.withDice(store.load()));
     store.save(this.save);
     const settings = loadSettings(platform.storage);
@@ -139,7 +141,7 @@ export class Shell {
     });
     app.stage.addChild(this.ui);
     app.ticker.add(() => this.tick());
-    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device, ...deviceProps, ...languageProps(platform, globalThis.navigator?.languages), ...platform.sessionProps?.() });
+    net.track('session', { runs: this.save.runs, level: this.save.level, device: this.device, ...deviceProps, ...languageProps(platform, globalThis.navigator?.languages), ...platform.sessionProps?.(), ...(this.challenge.invite ? { invite: this.challenge.invite.week } : {}) });
     net.onLeave(() => this.leaving());
   }
 

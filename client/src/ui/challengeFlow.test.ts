@@ -172,17 +172,29 @@ describe('weekly challenge flow', () => {
     expect(later.lobby(player, true, vi.fn(), vi.fn(), vi.fn())).toMatchObject({ daily: null, weekly: { state: 'update' } });
   });
 
+  it("opens the weekly to a newcomer past the first run who came on a friend's link for this week", async () => {
+    const flow = new ChallengeFlow(fakeNet(both) as unknown as Backend, () => {}, false, false, () => START);
+    flow.refresh();
+    await settle();
+    const fresh = { ...player, cleared: 0 };
+    flow.invite = { week: 'w2026-41', waves: 20, time: null };
+    expect(flow.weekly(fresh)).toBeNull();
+    flow.invite = { week: weekly.id, waves: 20, time: null };
+    expect(flow.weekly({ ...fresh, firstRunDone: false })).toBeNull();
+    expect(flow.weekly(fresh)).toMatchObject({ state: 'open', invite: { waves: 20 } });
+  });
+
   it('settles a weekly run into the week, keeping the best, paying nothing now', async () => {
     const flow = new ChallengeFlow(fakeNet(both) as unknown as Backend, () => {}, false, false, () => START);
     flow.begin(weekly);
     const first = flow.settle(player, ended, run, 12, 100, true);
-    expect(first.weekly).toEqual({ before: 0 });
+    expect(first.weekly).toEqual({ before: 0, id: weekly.id });
     expect(first.reward).toMatchObject({ counted: true, copper: 0, jade: 0 });
     expect(first.save.weeks).toEqual([{ id: weekly.id, board: BOARD, end: weekly.end, best: 12 }]);
     expect(first.save.jade).toBe(player.jade);
     flow.begin(weekly);
     const second = flow.settle(first.save, ended, run, 9, 100, true);
-    expect(second.weekly).toEqual({ before: 12 });
+    expect(second.weekly).toEqual({ before: 12, id: weekly.id });
     expect(second.save.weeks[0].best).toBe(12);
   });
 

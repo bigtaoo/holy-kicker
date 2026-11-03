@@ -144,6 +144,8 @@ export const it: Table<typeof en> = {
     loading: 'Caricamento…', failed: 'Riprova', seeking: 'Avanti veloce…', ended: 'Replay finito', play: 'Riproduci', pause: 'Pausa', again: 'Rivedi',
     prevWave: '‹ Ondata', nextWave: 'Ondata ›', speed: '{n}x', claimTitle: 'Sfida della settimana',
     claimRank: 'Settimana scorsa: posto {rank} su {total}', claimNoRank: 'Grazie per aver partecipato la settimana scorsa', claim: 'Riscuoti',
+    inviteBeat: "Un amico ha raggiunto l'ondata {wave}. Riesci a batterlo?", inviteVs: 'Amico: ondata {wave} · Tu: ondata {best}', inviteBeaten: 'Hai battuto il tuo amico: ondata {best} contro {wave}!',
+    inviteButton: 'Sfida un amico', linkCopied: 'Link copiato!', linkFailed: 'Impossibile copiare il link', shareText: "Ho raggiunto l'ondata {wave} nella sfida settimanale. Riesci a battermi? {url}",
   },
   tutorial: {
     move: 'Trascina ovunque per muoverti',

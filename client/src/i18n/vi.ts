@@ -144,6 +144,8 @@ export const vi: Table<typeof en> = {
     loading: 'Đang tải…', failed: 'Thử lại', seeking: 'Đang tua…', ended: 'Hết phát lại', play: 'Phát', pause: 'Tạm dừng', again: 'Xem lại',
     prevWave: '‹ Đợt', nextWave: 'Đợt ›', speed: '{n}x', claimTitle: 'Thử thách tuần', claimRank: 'Tuần trước: hạng {rank} trên {total}',
     claimNoRank: 'Cảm ơn bạn đã tham gia tuần trước', claim: 'Nhận',
+    inviteBeat: 'Bạn bè đã đến đợt {wave}. Bạn vượt qua được không?', inviteVs: 'Bạn bè: đợt {wave} · Bạn: đợt {best}', inviteBeaten: 'Bạn đã thắng bạn bè: đợt {best} so với {wave}!',
+    inviteButton: 'Thách đấu bạn bè', linkCopied: 'Đã sao chép liên kết!', linkFailed: 'Không sao chép được liên kết', shareText: 'Mình đã đến đợt {wave} trong thử thách tuần này. Bạn vượt qua được không? {url}',
   },
   tutorial: {
     move: 'Kéo ở bất kỳ đâu để di chuyển',

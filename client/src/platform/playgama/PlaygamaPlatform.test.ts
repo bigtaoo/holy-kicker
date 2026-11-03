@@ -4,7 +4,7 @@ import { pacedAds } from '../adPacing';
 import { AD_PLAY_MS, AD_START_MS } from '../adTimeout';
 import { NO_BANNER, NO_PORTAL } from '../types';
 import { PlaygamaBridge } from './bridge';
-import { PlaygamaPlatform } from './PlaygamaPlatform';
+import { PlaygamaPlatform, catalogInvite } from './PlaygamaPlatform';
 
 // The Playgama host's ads, portal messages and pause, against a fake Bridge v2 (testkit/adHosts.ts).
 
@@ -185,5 +185,25 @@ describe('PlaygamaPlatform portal', () => {
     expect(await p.ads.rewardedAvailable()).toBe(false);
     expect(await p.ads.rewarded()).toBe(false);
     expect(p.host).toBe('web');
+  });
+});
+
+describe('PlaygamaPlatform invite links', () => {
+  it("links the corgi's catalog page only, with the code as its payload", () => {
+    expect(catalogInvite('corgi', 'playgama', 'w2026-45.32')).toBe('https://playgama.com/game/corgi-commando?payload=w2026-45.32');
+    expect(catalogInvite('corgi', 'playgama_sandbox', 'w2026-45.32')).toBeNull();
+    expect(catalogInvite('corgi', 'mock', 'w2026-45.32')).toBeNull();
+    expect(catalogInvite('monk', 'playgama', 'w2026-45.32')).toBeNull();
+  });
+
+  it("hands back the launch's payload, and copies through the Bridge", async () => {
+    const { host, p } = await platform();
+    host.sdk.platform!.payload = 'w2026-45.7';
+    const written: string[] = [];
+    host.sdk.clipboard = { isSupported: true, write: async (t: string) => void written.push(t) };
+    expect(p.invitedWith()).toBe('w2026-45.7');
+    expect(await p.copyText('link')).toBe(true);
+    expect(written).toEqual(['link']);
+    expect(p.inviteLink('w2026-45.7')).toBeNull(); // the monk, as tests build, has no catalog page
   });
 });

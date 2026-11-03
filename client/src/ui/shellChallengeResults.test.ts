@@ -51,6 +51,24 @@ describe('challenge results', { timeout: 30000 }, () => {
     expect(rig.faults).toEqual([]);
   });
 
+  it("a weekly run on a host with links: Challenge a friend copies a link to beat the week's best", async () => {
+    boardServer();
+    const rig = await lobbyRig({}, { api: API, links: true });
+    await fallAt(rig, 'weekly', 4, (x) => x.includes(t('weekly.newBest')));
+    await tapWhenUp(rig, 'weekly.inviteButton');
+    await rig.until(() => rig.texts().includes(t('weekly.linkCopied')));
+    expect(rig.platform.calls).toContain(`copy ${t('weekly.shareText', { wave: 3, url: `https://game.test/?w=${WEEK.id}.3` })}`);
+    await tapWhenUp(rig, 'common.continue');
+    await rig.until(() => rig.shell.place() === 'lobby');
+  });
+
+  it("a newcomer on a friend's link: the weekly opens by itself after the first run, with the friend's waves to beat", async () => {
+    boardServer();
+    const rig = await lobbyRig({ cleared: 0 }, { api: API, invitedWith: `${WEEK.id}.12` });
+    await rig.until(() => rig.texts().includes(t('weekly.inviteBeat', { wave: 12 })));
+    expect(rig.texts()).toContain(t('lobby.play'));
+  });
+
   it("a weekly run below the week's best: the best stands", async () => {
     boardServer();
     // a week on the player's furthest chapter plays chapter 2 here (chapter 1 cleared)

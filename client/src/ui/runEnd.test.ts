@@ -281,7 +281,7 @@ describe('runEnd against the server', () => {
     const old = challengeBoardId(WEEKLY.id, WEEKLY.engine - 1, WEEKLY.loadout!.chapter, THEME);
     const save = { ...player, weeks: [{ id: WEEKLY.id, board: old, end: WEEKLY.end, best: 40 }] };
     const { settled } = await play(CASES.find((x) => x.what === 'weekly lost')!, backend(), save);
-    expect(settled!.weekly).toEqual({ before: 0 });
+    expect(settled!.weekly).toEqual({ before: 0, id: WEEKLY.id });
     expect(s.of('/v1/challenge/runs')).toHaveLength(1);
     accepted(s.posts);
   });

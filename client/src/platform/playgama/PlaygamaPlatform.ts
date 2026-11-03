@@ -12,6 +12,7 @@ import { BridgeStore, PlaygamaBridge } from './bridge';
 import { bridgeAnalytics } from './bridgeAnalytics';
 import { deviceFields } from './telemetry';
 import { portalDevice } from '../portalDevice';
+import { THEME, type Theme } from '../../theme';
 
 // The Playgama host: the browser host plus the Bridge SDK for saves, ads, the platform's pause and
 // sound switches and the lifecycle messages (game_ready once the lobby is up, gameplay brackets).
@@ -24,6 +25,14 @@ const KEYS = [SAVE_KEY, BACKUP_KEY, BROKEN_KEY, SETTINGS_KEY, RUN_KEY, INSTALL_K
 const TEST_PLATFORMS = new Set(['mock', 'qa_tool']);
 /** Bridge's id for the sandbox, where a published build plays before the catalog. */
 const SANDBOX = 'playgama_sandbox';
+/** Each theme's page in the Playgama catalog, where a friend's weekly link leads; none for a game not in it. */
+const CATALOG: Partial<Record<Theme, string>> = { corgi: 'https://playgama.com/game/corgi-commando' };
+
+/** Theme `theme`'s catalog page with `code` as its payload; none in the sandbox (offline, so no weekly), a local preview or without a catalog page. */
+export function catalogInvite(theme: Theme, platformId: string | null, code: string): string | null {
+  const page = CATALOG[theme];
+  return page && platformId === 'playgama' ? `${page}?payload=${encodeURIComponent(code)}` : null;
+}
 
 export class PlaygamaPlatform extends WebPlatform {
   override readonly host: Host;
@@ -73,6 +82,19 @@ export class PlaygamaPlatform extends WebPlatform {
     };
     super.onHide(hide);
     this.bridge.onPause((paused) => paused && hide());
+  }
+
+  /** Through Bridge first: the catalog's iframe may withhold the browser's clipboard. */
+  override async copyText(text: string): Promise<boolean> {
+    return (await this.bridge.copy(text)) || super.copyText(text);
+  }
+
+  override inviteLink(code: string): string | null {
+    return catalogInvite(THEME, this.bridge.platformId(), code);
+  }
+
+  override invitedWith(): string | null {
+    return this.bridge.payload();
   }
 
   /** The platform's language first, then the browser's. */

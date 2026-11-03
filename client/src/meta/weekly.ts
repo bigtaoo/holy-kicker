@@ -30,11 +30,11 @@ export interface WeekEntry {
 /** Weeks kept at once; an older unpaid one makes room (a player offline for two months). */
 export const WEEKS_KEPT = 8;
 
-/** Where the weekly stands for this player: closed until chapter 1 is cleared, or on another engine version. */
+/** Where the weekly stands for this player: closed until chapter 1 is cleared (or, opened from a friend's link to it, the first run is over), or on another engine version. */
 export type WeeklyState = 'locked' | 'update' | 'open';
 
-export function weeklyState(save: SaveData, c: Challenge, engine = ENGINE_VERSION): WeeklyState {
-  if (save.cleared < 1) return 'locked';
+export function weeklyState(save: SaveData, c: Challenge, engine = ENGINE_VERSION, invited = false): WeeklyState {
+  if (save.cleared < 1 && !(invited && save.firstRunDone)) return 'locked';
   return c.engine !== engine ? 'update' : 'open';
 }
 

@@ -3,6 +3,7 @@ import { ENGINE_VERSION, MUTATOR_IDS, takeReplay, type LocalInputSource, type Re
 import type { Game } from '../game/Game';
 import { evolvedIn } from '../meta/codex';
 import { challengeChapter, challengeDay, challengeState, dailyBestOf, hoursLeft, settleChallenge, streakJade, streakOn, type ChallengeReward, type ChallengeState } from '../meta/challenge';
+import type { Invite } from '../meta/invite';
 import type { SaveData } from '../meta/save';
 import { claimWeek, closedWeeks, settleWeekly, weekClaim, weekOf, weeklyState, type WeekClaim, type WeekEntry, type WeeklyState } from '../meta/weekly';
 import type { Backend, RunResult } from '../net/backend';
@@ -57,6 +58,8 @@ export interface WeeklyView {
   hours: number;
   /** The last run's answer from the server this session, once in. */
   reply: ChallengeRunReply | null;
+  /** The friend's run this launch was invited to beat, when its link names this week. */
+  invite: Invite | null;
 }
 
 /** A settled challenge run: the save to keep, what it paid, and the server's answer to come (null when not sent). */
@@ -70,7 +73,7 @@ export interface ChallengeSettled {
   /** The board's answer; `outdated`: the server moved to another engine during the run, so it was refused; `off`: the leaderboards are off in Settings. */
   reply: Promise<ChallengeRunReply | 'outdated' | 'off' | null>;
   /** A weekly run: the week's best waves before it (0 for the first). */
-  weekly?: { before: number };
+  weekly?: { before: number; id: string };
   /** A daily made up on the device: the day's best waves before this run. */
   local?: { before: number };
   /** A run that cleared every wave: its time in tenths of a simulated second (runFlow fills it in). */
@@ -91,6 +94,8 @@ export class ChallengeFlow {
   private replies = new Map<string, ChallengeRunReply>();
   /** Closed weeks by id: their claim once the rank is in, or asking (also failed: asked again next launch). */
   private claims = new Map<string, WeekClaim | 'asking'>();
+  /** A friend's weekly link this launch was opened with (meta/invite.ts). */
+  invite: Invite | null = null;
 
   constructor(
     private readonly net: Backend,
@@ -160,12 +165,13 @@ export class ChallengeFlow {
   /** This week's weekly for `save`, or null: none fetched, chapter 1 not cleared yet, or closed. */
   weekly(save: SaveData): WeeklyView | null {
     const c = this.open('weekly');
-    const state = c?.loadout && weeklyState(save, c);
+    const invite = c && this.invite?.week === c.id ? this.invite : null;
+    const state = c?.loadout && weeklyState(save, c, ENGINE_VERSION, invite !== null);
     if (!c || !state || state === 'locked') return null;
     const h = hoursLeft(c.end, this.serverNow());
     return {
       challenge: c, state, board: challengeBoardId(c.id, c.engine, c.loadout!.chapter, THEME), best: weekOf(save, c.id)?.best ?? 0,
-      days: Math.floor(h / 24), hours: h % 24, reply: this.replies.get(c.id) ?? null,
+      days: Math.floor(h / 24), hours: h % 24, reply: this.replies.get(c.id) ?? null, invite,
     };
   }
 
@@ -276,7 +282,7 @@ export class ChallengeFlow {
       const reward = { counted: true, reached: [], copper: 0, jade: 0, streak: 0, streakJade: 0 };
       // every weekly run goes and the server keeps the best: the save's best may be one the server never
       // got (an older build carried a clear on the old engine's board over to the new one)
-      return { save: week.save, reward, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(true), weekly: { before: week.before } };
+      return { save: week.save, reward, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(true), weekly: { before: week.before, id: c.id } };
     }
     const before = dailyBestOf(save, c);
     const settled = settleChallenge(save, c, chapter, result);

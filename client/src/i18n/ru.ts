@@ -143,6 +143,8 @@ export const ru: Table<typeof en> = {
     picks: 'Карты: {name}', replayOf: 'Забег: {name}', loading: 'Загрузка…', failed: 'Ещё раз', seeking: 'Перемотка…', ended: 'Повтор окончен',
     play: 'Играть', pause: 'Пауза', again: 'Заново', prevWave: '‹ Волна', nextWave: 'Волна ›', speed: '{n}x', claimTitle: 'Испытание недели',
     claimRank: 'Прошлая неделя: место {rank} из {total}', claimNoRank: 'Спасибо за участие на прошлой неделе', claim: 'Забрать',
+    inviteBeat: 'Друг дошёл до волны {wave}. Сможешь больше?', inviteVs: 'Друг: волна {wave} · Ты: волна {best}', inviteBeaten: 'Ты обогнал друга: волна {best} против {wave}!',
+    inviteButton: 'Вызвать друга', linkCopied: 'Ссылка скопирована!', linkFailed: 'Не удалось скопировать ссылку', shareText: 'Я дошёл до волны {wave} в испытании недели. Сможешь больше? {url}',
   },
   tutorial: {
     move: 'Тяни в любом месте, чтобы двигаться',

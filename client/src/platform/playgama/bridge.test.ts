@@ -86,6 +86,24 @@ describe('PlaygamaBridge', () => {
   });
 });
 
+describe('PlaygamaBridge links', () => {
+  it("reads the catalog link's payload, and nothing that is not a string", async () => {
+    expect((await make({ initialize: async () => {}, platform: { payload: 'w2026-45.32' } })).payload()).toBe('w2026-45.32');
+    for (const payload of [undefined, '', { a: 1 }]) expect((await make({ initialize: async () => {}, platform: { payload } })).payload()).toBeNull();
+  });
+
+  it('copies through the platform only where it says it can, and answers false when it throws', async () => {
+    const copied: string[] = [];
+    const write = async (t: string) => void copied.push(t);
+    expect(await (await make({ initialize: async () => {}, clipboard: { isSupported: true, write } })).copy('hi')).toBe(true);
+    expect(await (await make({ initialize: async () => {}, clipboard: { isSupported: false, write } })).copy('no')).toBe(false);
+    expect(await (await make({ initialize: async () => {} })).copy('no')).toBe(false);
+    const broken = await make({ initialize: async () => {}, clipboard: { isSupported: true, write: async () => Promise.reject(new Error('denied')) } });
+    expect(await broken.copy('no')).toBe(false);
+    expect(copied).toEqual(['hi']);
+  });
+});
+
 describe('BridgeStore', () => {
   it('reads every key in one call and writes a batch in one call', async () => {
     const gets: string[][] = [];

@@ -144,6 +144,8 @@ export const tr: Table<typeof en> = {
     loading: 'Yükleniyor…', failed: 'Tekrar dene', seeking: 'İleri sarılıyor…', ended: 'Kayıt bitti', play: 'Oynat', pause: 'Duraklat', again: 'Yeniden',
     prevWave: '‹ Dalga', nextWave: 'Dalga ›', speed: '{n}x', claimTitle: 'Haftalık Meydan Okuma', claimRank: 'Geçen hafta: {total} kişide {rank}.',
     claimNoRank: 'Geçen haftaki katılımın için teşekkürler', claim: 'Al',
+    inviteBeat: 'Bir arkadaşın {wave}. dalgaya ulaştı. Geçebilir misin?', inviteVs: 'Arkadaş: {wave}. dalga · Sen: {best}. dalga', inviteBeaten: 'Arkadaşını geçtin: {best}. dalgaya karşı {wave}!',
+    inviteButton: 'Arkadaşına meydan oku', linkCopied: 'Bağlantı kopyalandı!', linkFailed: 'Bağlantı kopyalanamadı', shareText: 'Haftanın görevinde {wave}. dalgaya ulaştım. Beni geçebilir misin? {url}',
   },
   tutorial: {
     move: 'Hareket için herhangi bir yeri sürükle',

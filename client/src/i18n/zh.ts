@@ -142,6 +142,8 @@ export const zh: Table<typeof en> = {
     picks: '{name} 的升级选择', replayOf: '{name} 的一局', loading: '加载中…', failed: '重试', seeking: '快进中…', ended: '回放结束', play: '播放', pause: '暂停', again: '重看',
     prevWave: '‹ 上一波', nextWave: '下一波 ›', speed: '{n} 倍速', claimTitle: '每周挑战', claimRank: '上周：第 {rank} 名，共 {total} 人', claimNoRank: '感谢参加上周的挑战',
     claim: '领取',
+    inviteBeat: '好友打到了第 {wave} 波，你能超过吗？', inviteVs: '好友：第 {wave} 波 · 你：第 {best} 波', inviteBeaten: '你赢了好友：第 {best} 波对第 {wave} 波！',
+    inviteButton: '挑战好友', linkCopied: '链接已复制！', linkFailed: '复制链接失败', shareText: '我在本周挑战打到了第 {wave} 波，你能超过我吗？{url}',
   },
   tutorial: {
     move: '按住屏幕任意处拖动来移动',
