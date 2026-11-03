@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { KEY_HOLD, KEY_ORDER, dirKeys, litKey } from './tutorialHint';
+import { EIGHT, KEY_HOLD, KEY_ORDER, dirKeys, eightAt, litKey } from './tutorialHint';
 
 describe('arrow key hint', () => {
   it('presses the keys round in turn, each for KEY_HOLD', () => {
@@ -15,5 +15,21 @@ describe('arrow key hint', () => {
     expect(dirKeys(3)).toEqual(['down', 'left']);
     expect(dirKeys(6)).toEqual(['up']);
     expect(dirKeys(7)).toEqual(['up', 'right']);
+  });
+});
+
+describe('touch move hint', () => {
+  it('traces a sideways eight: through the middle twice a loop, out to both sides, up and down on each', () => {
+    const at = (k: number) => eightAt(k * EIGHT.loop);
+    expect(at(0).x).toBeCloseTo(0);
+    expect(at(0.5).x).toBeCloseTo(0);
+    expect(at(0.25).x).toBeCloseTo(EIGHT.w);
+    expect(at(0.75).x).toBeCloseTo(-EIGHT.w);
+    // each lobe goes out on one side of the middle line and back on the other
+    for (const lobe of [0.125, 0.625]) {
+      expect(at(lobe).y).toBeCloseTo(EIGHT.h);
+      expect(at(lobe + 0.25).y).toBeCloseTo(-EIGHT.h);
+    }
+    expect(at(1).x).toBeCloseTo(at(0).x);
   });
 });

@@ -5,8 +5,8 @@ import type { TutorialStep } from './tutorial';
 import { COLORS, fit, label } from './widgets';
 
 // The first run's hint, drawn low on the screen under the fight (tutorial.ts says which step).
-// The move step shows how to move on this device: on a touch screen a finger swaying along a
-// track ("drag anywhere"); on a desktop the arrow keys pressed in turn, with the mouse as the
+// The move step shows how to move on this device: on a touch screen a finger tracing a sideways
+// figure eight ("drag anywhere": any way, not only left and right); on a desktop the arrow keys pressed in turn, with the mouse as the
 // small second line: the hero follows a hovering mouse (game/hoverSteer.ts), no click or drag. In a portal's
 // iframe the keys only reach the game after a click in it, so until then a pulsing line over the
 // keys asks for that click and the keys stand dimmed. The gather step is no tutorial step but a
@@ -31,6 +31,15 @@ export function dirKeys(dir: Dir8): ArrowKey[] {
 /** The key the hint holds down `clock` seconds in. */
 export function litKey(clock: number): ArrowKey {
   return KEY_ORDER[Math.floor(Math.max(0, clock) / KEY_HOLD) % KEY_ORDER.length];
+}
+
+/** The figure eight's half width and half height, and the seconds one loop takes. */
+export const EIGHT = { w: 150, h: 70, loop: 2.8 };
+
+/** Where the finger is on the sideways eight `clock` seconds in: a 1:2 Lissajous curve through the middle. */
+export function eightAt(clock: number): { x: number; y: number } {
+  const a = (clock / EIGHT.loop) * 2 * Math.PI;
+  return { x: EIGHT.w * Math.sin(a), y: EIGHT.h * Math.sin(2 * a) };
 }
 
 const KEY = 112;
@@ -90,15 +99,26 @@ function draggingFinger(view: Container, dir: Dir8): TutorialHint {
   return { view, update };
 }
 
+/** A finger tracing the sideways eight over its track, round and round. */
 function swayingFinger(view: Container): TutorialHint {
-  const hand = new Container();
-  hand.y = -170;
-  hand.addChild(
-    new Graphics().roundRect(-150, -6, 300, 12, 6).fill({ color: COLORS.text, alpha: 0.35 }),
-    new Graphics().circle(0, 0, 46).fill({ color: COLORS.text, alpha: 0.85 }).stroke({ color: COLORS.outline, width: 8 }),
-  );
-  view.addChild(hand);
-  return { view, update: (clock) => (hand.x = Math.sin(clock * 4) * 120) };
+  const pad = new Container();
+  pad.y = -200;
+  const track = new Graphics();
+  for (let i = 0; i <= 64; i++) {
+    const p = eightAt((i / 64) * EIGHT.loop);
+    if (i === 0) track.moveTo(p.x, p.y);
+    else track.lineTo(p.x, p.y);
+  }
+  track.stroke({ color: COLORS.text, width: 12, alpha: 0.35, cap: 'round', join: 'round' });
+  const hand = new Graphics().circle(0, 0, 46).fill({ color: COLORS.text, alpha: 0.85 }).stroke({ color: COLORS.outline, width: 8 });
+  pad.addChild(track, hand);
+  view.addChild(pad);
+  const update = (clock: number) => {
+    const p = eightAt(clock);
+    hand.position.set(p.x, p.y);
+  };
+  update(0);
+  return { view, update };
 }
 
 function arrowKeys(view: Container, width: number, reach: () => boolean, lit: (clock: number) => readonly ArrowKey[]): TutorialHint {
