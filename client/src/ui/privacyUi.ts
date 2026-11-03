@@ -77,7 +77,7 @@ export function watched(p: PrivacyUi | null, after: () => void): PrivacyUi | nul
   };
 }
 
-/** The lobby's consent card, centred on `y`: allow, no thanks, or read the policy first. */
+/** The lobby's consent card, centred on `y`: read the policy first, no thanks, or allow (at the right). */
 export function consentCard(w: number, y: number, privacy: PrivacyUi): Container {
   const card = new Container();
   card.position.set(w / 2, y);
@@ -91,9 +91,9 @@ export function consentCard(w: number, y: number, privacy: PrivacyUi): Container
   const allow = button(t('privacy.allow'), 340, 110, pick(true), { fill: COLORS.saffron, textFill: COLORS.outline, size: 48 });
   const decline = button(t('privacy.decline'), 320, 110, pick(false), { fill: COLORS.panelLocked, size: 48 });
   const policy = button(t('privacy.link'), 240, 110, () => privacy.openPolicy(), { fill: COLORS.panelLocked, size: 48 });
-  allow.position.set(-290, row);
-  decline.position.set(60, row);
-  policy.position.set(350, row);
+  policy.position.set(-340, row);
+  decline.position.set(-40, row);
+  allow.position.set(300, row);
   card.addChild(allow, decline, policy);
   return card;
 }
