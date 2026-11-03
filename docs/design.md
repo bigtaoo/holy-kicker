@@ -606,6 +606,12 @@ the online one, and the results say the board needs a connection. When the serve
 record wins.
 WeChat reaches the server already; its review may lag a version behind, which the version-keyed
 boards absorb.
+The corgi's Playgama catalog build also posts each ranked weekly run to its own catalog board,
+`weekly`. The catalog has no boards of its own, so this one runs on Bridge SaaS: the build's
+Bridge config names the board, with the app id as its public token (`client/vite.playgama.config.js`).
+Bridge then reports `in_game`. A Playgama board never empties, so the week goes into the score
+above the run, then a clear, the waves and fewer seconds (`platform/playgama/bridgeBoards.ts`). A
+later week ranks above every earlier one, and only a score better than the session's best is sent. Our own server's boards stay the ones the game shows.
 
 ### Order of work
 
