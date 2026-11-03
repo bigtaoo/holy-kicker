@@ -1,5 +1,6 @@
 // Takes the App Store screenshots of one app in one language (docs/store.md "Screenshots").
-// usage: node tools/store_shots.mjs <monk|corgi> <en|zh> [--only horde,cards] [--seed 7] [--out dir]
+// usage: node tools/store_shots.mjs <monk|corgi> <en|zh> [--only horde,cards] [--seed 7] [--out dir] [--landscape]
+// (--landscape: a 1920x1080 desktop page instead, for web portals such as Poki.)
 // Needs the theme's dev server: `npm run dev` (port 5174) for monk, `npm run dev:new` (5184) for
 // corgi. It opens the system Chrome in a window of its own (a hidden page stops drawing) at
 // 393x852 and 3x, so every shot is the 6.1"/6.3" iPhone's 1179x2556. The balance bot plays each
@@ -48,6 +49,7 @@ const SCENES = {
   // the fake store's card (not one of the listing's five; taken only when asked for with --only)
   iap: { q: 'store=fake', ready: null, settle: 3000, save: { firstRunDone: true, runs: 1 }, tap: [39, 822] },
 };
+const landscape = args.includes('--landscape');
 const only = opt('only', 'horde,cards,boss,ch3,lobby').split(',');
 
 const browser = await chromium.launch({
@@ -58,7 +60,7 @@ const browser = await chromium.launch({
     '--disable-backgrounding-occluded-windows',
     '--disable-renderer-backgrounding',
     '--disable-features=CalculateNativeWinOcclusion',
-    '--window-size=500,1000',
+    landscape ? '--window-size=1700,1000' : '--window-size=500,1000',
   ],
 });
 mkdirSync(out, { recursive: true });
@@ -66,7 +68,11 @@ try {
   for (const [i, name] of Object.keys(SCENES).entries()) {
     if (!only.includes(name)) continue;
     const scene = SCENES[name];
-    const ctx = await browser.newContext({ viewport: { width: 393, height: 852 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true });
+    const ctx = await browser.newContext(
+      landscape
+        ? { viewport: { width: 1600, height: 900 }, deviceScaleFactor: 1.2 }
+        : { viewport: { width: 393, height: 852 }, deviceScaleFactor: 3, isMobile: true, hasTouch: true },
+    );
     const settings = { locale: lang, dataSharing: 'no', noticeSeen: true };
     await ctx.addInitScript(
       ([k, v, sk, sv]) => {
