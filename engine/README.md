@@ -76,7 +76,7 @@ and boss lived and the final build. Run it after any tuning change; the targets 
 ## Not done yet
 
 - Online: a `NetInputSource`, the relay server, checkpoint hash exchange, local prediction of
-  the own hero (daydayup's `LocalPredictor`).
+  the own hero (daydayup's `LocalPredictor`). The plan for two-player co-op is `docs/coop.md`.
 - The golden hash is checked in Node and Chromium (2026-10-18, Chrome 152, all nine cases of
   `Engine.test.ts` run in the page through Vite's `/@fs/` imports), and every daily challenge run is
   a cross-runtime check: the server re-simulates the device's replay in Node and files a problem

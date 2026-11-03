@@ -226,11 +226,16 @@ Still to check on the portal itself: upload the zip to the developer portal's QA
 watch a real ad fill, a signed-in save carry over between devices, and the leaderboard button
 hidden for a guest (read from the SDK's `user.isUserAccountAvailable`).
 
-## GameDistribution: Corgi Commando
+## GameDistribution: Corgi Commando (denied)
 
-Game 79693 on developer.gamedistribution.com, submitted for review 2026-10-29 as version 1.0
-(review takes up to two weeks; once active a game can only be hidden, not withdrawn). The listing
-reuses the corgi's CrazyGames texts in English, cut to GD's limits (description at most 500
+Game 79693 on developer.gamedistribution.com, submitted for review 2026-10-29 as version 1.0 and
+denied on 2026-11-03 with GD's form letter: it "does not fit with our catalog" (GD is B2B; its
+publishers pick games for their sites). It names no fault in the build. GD reconsiders a game
+only with proof that it performs elsewhere: statistics sent through its Customer Support page, or
+an App Store / Play Store link with good numbers added on a new submission. The host and build
+stay in the repo for such a resubmission (for instance once the iOS app has a track record).
+
+Had it gone live it could only have been hidden, not withdrawn. The listing reuses the corgi's CrazyGames texts in English, cut to GD's limits (description at most 500
 characters, at most 5 tags) and without boards or cloud saves; genre Shooter, 1280x720, both
 desktop and mobile, portrait preferred, No Blood and HTTPS Ready ticked. The five JPG thumbnails
 (512x384, 512x512, 200x120, 1280x720, 1280x550) are cut from the corgi's draft covers by
