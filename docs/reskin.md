@@ -245,6 +245,16 @@ atlas packs at 0.7 so the close-up renders at full device resolution; G in the p
 out to the in-game size (120 units, about 70 CSS px on desktop), which is the size to judge the
 face at. Springs are `TaoActor.spring` (`src/game/tao/spring.ts`).
 
+**Sticker redraw (2026-11-05)**: the painted look read as AI-made, so the body, head and guns
+were traced again in the game's sticker style (thick even outline, flat colours, one hard cel
+shadow) by image edit, keeping pose and proportions: prompts `sticker_body.txt`,
+`sticker_face.txt` and `sticker_gun.txt` beside the art. Each take is fitted back onto the old
+drawing (an affine ECC fit on the silhouette) so the spec's cuts, caps and `face_zone` still line
+up; the expressions were redrawn from the new `face_rest.png` with the same `face_*.txt` prompts.
+The body take's outer outline came out about 19 px, which ringed the legs and feet in black on
+the rig, so it was thinned to 11 px (the head's weight) before splitting; the guns' white sticker
+border was removed (it showed as a ring on dark ground).
+
 **In the game**: `src/game/corgiHero.ts` (the motion in `corgiMotion.ts`, tested) plays the corgi
 when the build's theme is corgi and the hero rig has the twin guns (`heroes.ts` picks it; the
 monks keep `hero.ts`). The game's atlas packs at 0.35: `python tools/pack_tao.py

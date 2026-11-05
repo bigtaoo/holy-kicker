@@ -1,0 +1,8 @@
+Trace over this exact character as clean, simple game sticker art. It is a tracing: every shape stays exactly where it is, at exactly the same size. Same canvas, same pose, same head outline and size, same ears, same arms held out, same legs, tail and backpack, pure white background.
+Keep every feature of the face exactly: the small upright black glossy eyes with their white highlights, the cream-white brow tufts above them, the white blaze on the forehead, the cream cheeks and muzzle, the small black nose, the closed "w" smile with the tiny pink tongue tip, the pink inside of the ears.
+Change only the rendering:
+- one thick, even black outline around every shape, the same weight everywhere; no thin sketchy lines, no hatching, no fur strands, no texture
+- flat colour fills with exactly one hard-edged darker shadow tone; no gradients, no soft shading
+- the cheek fur as one smooth shape with two or three simple pointed tufts at the sides
+- the armour as a few big smooth plates (chest plate, cream belly window, shoulder pads, knee pads, boots), no small panels, seams, bolts or greebles
+Bold and readable at a very small size, like a polished mobile game hero.

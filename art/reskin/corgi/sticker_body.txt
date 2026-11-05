@@ -1,0 +1,6 @@
+Redraw this exact character as clean, polished mobile-game sticker art, like a premium hand-drawn vector mascot. Trace over it: keep the same pose, the same position of every body part on the canvas, the same proportions (very chubby round body, big round head, short stubby legs, arms held straight out to the sides), the same ears, backpack and fluffy tail, the same white background.
+Keep these details: the cream belly window in the chest plate, cream paws with little toe lines, cream muzzle and cheeks, the white stripe on the forehead, pink inner ears, the happy open-mouth smile with pink tongue, the dark grey collar ring and backpack.
+Change only the rendering:
+- one thick, smooth black outline of even weight around every shape; inner lines only where two big shapes meet; no hatching, no scratchy strokes, no fur strands except two or three clean pointed tufts on the cheeks and tail
+- flat colour fills, each with one hard-edged darker shadow tone; no gradients, no texture
+- the armour as a few big smooth rounded plates (chest, shoulder pads, forearm guards, knee pads, boots) with no seams, screws, vents or small panels
