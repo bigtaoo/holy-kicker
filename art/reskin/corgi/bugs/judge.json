@@ -5,6 +5,7 @@
  "fps": 9,
  "flash": false,
  "height": 380,
+ "sticker": {"drawn": 360, "flat": false},
  "fit": {
   "frame": [
    385,

@@ -4,13 +4,14 @@
  "frames": 10,
  "fps": 10,
  "height": 180,
+ "sticker": {"drawn": 84},
  "fit": {
   "frame": [
    140,
    190
   ],
   "anchor": [
-   69.8,
+   71.8,
    185.3
   ],
   "height": 130

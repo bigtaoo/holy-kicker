@@ -5,6 +5,7 @@
   "fps": 10,
   "flash": false,
   "height": 380,
+  "sticker": {"drawn": 300, "flat": false},
   "ground": [470, 690],
   "pad": [40, 30, 40, 20],
   "drop": [{"below": 640, "islands": true, "hsv": [[[75, 40, 50], [110, 255, 255]], [[0, 0, 140], [179, 60, 255]]]}],

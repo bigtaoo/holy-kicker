@@ -5,6 +5,7 @@
   "fps": 8,
   "outline": {"px": 7, "color": "#e2f2ee", "steps": 12},
   "height": 210,
+  "sticker": {"drawn": 140, "flat": false},
   "ground": [470, 710],
   "pad": [20, 40, 20, 10],
   "holes": [[0.8545, 0.6667], [0.8506, 0.7526], [0.8467, 0.8542]],
