@@ -311,6 +311,26 @@ timeline editor that authors .tao rigs and clips (Pixi 7, with easing presets); 
 against `pack_tao.py`'s format, then use it for the corgi and the bosses, and key the bug rigs in it
 too before baking.
 
+### Sticker pass (one hand for every picture)
+
+Each corgi picture came out of its own generation, so line weights and shading differ.
+`tools/sticker_pass.py` evens them out, judged at the size the game draws each picture, so the
+outline is the same 2.2 world units everywhere:
+
+- **Mobs** (`bake_mob.py`, spec key `"sticker": {"drawn": units}`): the small bugs are flattened
+  (ink lines kept, hatching and soft shading cut to three flat tones per material) and outlined.
+  Elites and bosses that are already cleanly painted take `"flat": false`, an outline only; the
+  elites' pale rim is baked over it as before.
+- **Props, icons and items** (`corgi_art.py deco`, `icons`, `items`, via `tools/sticker_art.py`):
+  outline only, since flattening grains painted pictures; specks smaller than 2.5 units are dropped
+  first so loose crumbs do not ring into dark dots. Pictures that glow or are partly see-through
+  keep their soft edges: the items in `GLOWS` and the icons in `SOFT_ICONS`.
+- Not passed: the dog heroes (their own pipeline), and the two rigged bosses (the Titan Beetle's
+  `boss_monk` and the Mecha-Biscuit's `ch5/demon` atlases), whose parts would each get a seam
+  line inside the body.
+
+The steps also write each listed PNG's WebP twin through `tools/webp.py`.
+
 ## Builds
 
 One codebase, two art sets, never mixed in a release (`build/theme.mjs`). Every existing build is

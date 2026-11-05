@@ -4,6 +4,7 @@ monk file it replaces, with a same-size WebP twin where client/src/webpArt.json 
 usage: python tools/corgi_art.py [grounds|deco|icons|items|patrol|lobby]...   (none = all)
 A step whose sources are not there yet is skipped and named, so a partial set still builds."""
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -14,13 +15,14 @@ from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).parent))
 from recolor_armour import GUNMETAL, glow, recolor  # noqa: E402
+from sticker_art import sticker_piece  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "art/reskin/corgi"
 OUT = SRC / "game"
 PUB = ROOT / "client/public"
 TOOLS = ROOT / "tools"
-WEBP = set(json.loads((ROOT / "client/src/webpArt.json").read_text(encoding="utf-8")))
+WEBP = {k for keys in json.loads((ROOT / "client/src/webpArt.json").read_text(encoding="utf-8")).values() for k in keys}
 
 # the grounds: no generated picture, every tile drawn in code (seeded, so the output is stable)
 GROUNDS = {
@@ -42,6 +44,12 @@ DECO = {
     "art/ch4/ground/street_deco": ("planets/deco_forge.png", "lantern_post papers jars crates stall burner"),
     "art/ch5/ground/cave_deco": ("planets/deco_hive.png", "spikes bones - brazier crystals stupa"),
 }
+
+# the props' DecoStyle in decoView.ts, whose sizes the sticker pass judges them at
+DECO_STYLE = {"art/ground/deco": "TEMPLE", "art/ch2/ground/marsh_deco": "MARSH", "art/ch3/ground/snow_deco": "SNOW",
+              "art/ch4/ground/street_deco": "GHOST", "art/ch5/ground/cave_deco": "PEAK"}
+DECO_MAX = 160  # pack_deco.py MAX
+ICON_CELL, ICON_UNITS = 128, 96  # pack_icons.py CELL; about the size the cards and the HUD show one
 
 # icon sheets: grid and names in reading order ("-" skips a cell or object, name@x,y seeds a
 # see-through hole); "auto" for the sheets whose rows came out uneven (split_sheet.py)
@@ -86,6 +94,13 @@ ITEM_SHEETS = {
 
 PROPS = ("ui/props.png", "2x3", "pine lantern sign bamboo rocks bush")
 FLIP = {"palm"}
+# the relic and spell pictures are drawn at a third to a half of their size (art.ts): the sticker
+# pass judges them at this many px per world unit
+ITEM_PX = 2.5
+# glowing effects keep their soft edges: an outline turns glow and loose sparks into dark blots
+GLOWS = {"cuju", "cuju_meteor", "lion"}
+# icons partly see-through (the saw's motion blur, the star's glow), which an outline would ring
+SOFT_ICONS = {"cymbal", "knives"}
 FAR = ("ui/far.png", "0.22-0.85")
 LOBBY = "ui/bg_lobby.png"
 
@@ -95,10 +110,10 @@ def run(*args):
 
 
 def webp_twin(key):
-    """The WebP the web hosts prefer, at the PNG's size (check:theme compares them)."""
+    """The WebP the web hosts prefer, at the PNG's size (check:theme compares them); webp.py
+    makes it lossless for its "lossless" entries."""
     if key in WEBP:
-        png = OUT / key
-        Image.open(png).convert("RGBA").save(png.with_suffix(".webp"), "WEBP", quality=90, method=6, alpha_quality=100)
+        run(TOOLS / "webp.py", OUT / key)
 
 
 def split(sheet, grid, names, dest):
@@ -120,6 +135,13 @@ def grounds(_):
         webp_twin(key)
 
 
+def deco_sizes(style):
+    """name -> world units, read from the chapter's DecoStyle in decoView.ts."""
+    ts = (ROOT / "client/src/game/decoView.ts").read_text(encoding="utf-8")
+    block = re.search(rf"export const {style}_DECO: DecoStyle = {{\s*kinds: \[(.*?)\]", ts, re.S).group(1)
+    return {n: int(v) for n, v in re.findall(r"name: '(\w+)'.*?size: (\d+)", block)}
+
+
 def deco(_):
     for key, (sheet, names) in DECO.items():
         if missing(sheet):
@@ -127,11 +149,15 @@ def deco(_):
         with tempfile.TemporaryDirectory() as tmp:
             split(sheet, "2x3", names, Path(tmp) / "cut")
             pieces = [Path(tmp) / "cut" / f"{n}.png" for n in names.split() if n != "-"]
+            sizes = deco_sizes(DECO_STYLE[key])
+            for p in pieces:
+                sticker_piece(p, DECO_MAX, sizes[p.stem])
             run(TOOLS / "pack_deco.py", tmp, *pieces)
             dst = OUT / key
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy(Path(tmp) / "deco.png", dst.with_suffix(".png"))
             shutil.copy(Path(tmp) / "deco.json", dst.with_suffix(".json"))
+            webp_twin(key + ".png")
 
 
 def clear_paper(im, seeds):
@@ -160,6 +186,9 @@ def icons(cut):
         recolor(glow(im, gun["glow"]), GUNMETAL).save(cut / f"{n}.png")
     run(TOOLS / "corgi_icon_fx.py", "star", cut / "knives.png")
     run(TOOLS / "corgi_icon_fx.py", "repair", cut / "incense.png", cut / "incense_evo.png")
+    for n in ICONS + CORGI_ONLY:
+        if n not in SOFT_ICONS:
+            sticker_piece(cut / f"{n}.png", ICON_CELL, ICON_UNITS)
     (OUT / "art/icons").mkdir(parents=True, exist_ok=True)
     run(TOOLS / "pack_icons.py", OUT / "art/icons", *[cut / f"{n}.png" for n in ICONS + CORGI_ONLY])
     for ext in ("png", "json"):
@@ -172,6 +201,7 @@ def icons(cut):
                 [f["name"] for f in extra] == CORGI_ONLY, "icon frames differ from the monk sheet"
         else:
             assert Image.open(a).size == Image.open(b).size, "icon sheet size differs"
+    webp_twin("art/icons/icons.png")
 
 
 def fit(src, key):
@@ -201,6 +231,9 @@ def items(cut):
             continue
         split(sheet, grid, names, cut)
         for n in names.split():
+            if n not in GLOWS:
+                longest = max(Image.open(PUB / f"art/{n}.png").size)
+                sticker_piece(cut / f"{n}.png", longest, longest / ITEM_PX)
             fit(cut / f"{n}.png", f"art/{n}.png")
 
 

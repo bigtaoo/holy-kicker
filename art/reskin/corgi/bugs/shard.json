@@ -4,6 +4,7 @@
  "frames": 8,
  "fps": 18,
  "height": 120,
+ "sticker": {"drawn": 50},
  "fit": {
   "frame": [
    198,

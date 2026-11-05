@@ -16,6 +16,9 @@ spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..
     "outline": {"px": 7, "color": "#e2f2ee", "steps": 12},  # optional: the elites' sticker
                                     # rim (client outline.ts ELITE_OUTLINE), baked in so a run
                                     # need not keep the plain sheet and a rimmed copy
+    "sticker": {"drawn": 80},       # ("flat": false redraws only the outline)
+    # optional: tools/sticker_pass.py on the frames, judged at
+                                    # the world units the game draws the cut-out's height at
     "height": 160,                  # px of the source cut-out's height in the sheet
     "ground": [x, y],               # the feet; the sheet's anchor
     "pad": [left, top, right, bottom],
@@ -50,6 +53,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(__file__))
 from cutout import cutout  # noqa: E402
+from sticker_pass import sticker  # noqa: E402
 
 
 def value(f, t):
@@ -193,6 +197,8 @@ def bake(spec, base):
                            borderMode=cv2.BORDER_CONSTANT, borderValue=0)
         frames.append(cv2.resize(warped, (fw, fh), interpolation=cv2.INTER_AREA))
 
+    if "sticker" in spec:
+        frames = sticker_frames(frames, spec["height"] / spec["sticker"]["drawn"], spec["sticker"].get("flat", True))
     n = len(frames)
     # hit-flash copies: the same frames as flat white silhouettes, in the same sheet so
     # flashing mobs still batch with the rest
@@ -227,6 +233,21 @@ def bake(spec, base):
     if ol:
         meta["outline"] = pad
     return out, meta
+
+
+def sticker_frames(frames, scale, flat=True):
+    """The sticker pass on premultiplied float frames, which it takes and gives straight."""
+    straight = []
+    for f in frames:
+        a = f[:, :, 3:]
+        rgb = np.where(a > 1e-4, f[:, :, :3] / np.maximum(a, 1e-4), 0)
+        straight.append((np.clip(np.dstack([rgb, a]), 0, 1) * 255 + 0.5).astype(np.uint8))
+    out = []
+    for f in sticker(straight, scale, flat=flat):
+        f = f.astype(np.float32) / 255
+        f[:, :, :3] *= f[:, :, 3:]
+        out.append(f)
+    return out
 
 
 def debug_overlay(spec, base, path):

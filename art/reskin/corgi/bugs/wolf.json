@@ -3,6 +3,7 @@
   "out": "../game/art/ch3/mobs/wolf",
   "frames": 10, "fps": 16,
   "height": 180,
+  "sticker": {"drawn": 70},
   "fit": {"frame": [296, 197], "anchor": [145.0, 192.8], "height": 172},
   "ground": [430, 690],
   "body": {
