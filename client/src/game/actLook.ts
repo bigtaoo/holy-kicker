@@ -10,14 +10,20 @@ const NIGHT = [0xffffff, 0x9cacd8, 0xa49ad0, 0x8e8cbc];
 
 /**
  * How light each map's ground tile is (mean luma 0–255, `python tools/ground_light.py`), per theme.
- * A night falls in full on map 1; on a darker map it is weakened so that ground comes out as light
- * as map 1's in the same act (a dark street under the full night was near black). A map lighter
- * than map 1 keeps the full night.
+ * On a map darker than NIGHT_GROUND the night is weakened so that ground comes out as light as
+ * NIGHT_GROUND's under the full night (a dark street under the full night was near black). A map at
+ * least that light keeps the full night.
  */
 const GROUND_LIGHT: Record<Theme, readonly number[]> = {
   monk: [68, 65, 85, 57, 93],
-  corgi: [81, 61, 93, 57, 58],
+  corgi: [133, 61, 93, 57, 58],
 };
+
+/**
+ * The ground light the nights are matched to: map 1's when they were tuned. The corgi's map 1 was
+ * lightened from 81 to 133 for a brighter first look, and the other maps' nights stay as they were.
+ */
+const NIGHT_GROUND: Record<Theme, number> = { monk: 68, corgi: 81 };
 
 /** A colour's luma, 0–1. */
 function luma(c: number): number {
@@ -25,12 +31,16 @@ function luma(c: number): number {
 }
 
 /** The tint over chapter `chapter`'s ground and props (white by day). */
-export function nightTint(chapter: number, light: readonly number[] = GROUND_LIGHT[THEME]): number {
+export function nightTint(
+  chapter: number,
+  light: readonly number[] = GROUND_LIGHT[THEME],
+  target: number = NIGHT_GROUND[THEME],
+): number {
   const night = NIGHT[Math.min(Math.max(actOf(chapter), 1), NIGHT.length) - 1];
   const full = luma(night);
   if (full >= 1) return night;
-  // the share of this night that leaves the ground as light as map 1's under the full one
-  const want = Math.min(1, (light[0] * full) / light[mapOf(chapter) - 1]);
+  // the share of this night that leaves the ground as light as the target's under the full one
+  const want = Math.min(1, (target * full) / light[mapOf(chapter) - 1]);
   const k = Math.min(1, (1 - want) / (1 - full));
   let out = 0;
   for (const shift of [16, 8, 0]) out |= Math.round(255 - (255 - ((night >> shift) & 0xff)) * k) << shift;

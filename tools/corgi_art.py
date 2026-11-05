@@ -24,7 +24,7 @@ WEBP = set(json.loads((ROOT / "client/src/webpArt.json").read_text(encoding="utf
 
 # the grounds: no generated picture, every tile drawn in code (seeded, so the output is stable)
 GROUNDS = {
-    "art/ground/grass.png": ["planet_tile.py", "frost"],
+    "art/ground/grass.png": ["planet_tile.py", "frost", "--rgb", "128,136,150"],
     "art/ground/earth.png": ["planet_tile.py", "regolith"],
     "art/ground/earth_soft.png": ["planet_tile.py", "regolith", "--soft"],
     "art/ch2/ground/marsh.png": ["planet_tile.py", "spore"],

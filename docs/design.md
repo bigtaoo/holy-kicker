@@ -111,10 +111,11 @@ keeps the earlier acts' rules and adds one, so the same art plays differently. H
 the same rules.
 
 - **Act 2 (chapters 6–10), night**: the view darkens and cools the ground (client only,
-  `game/actLook.ts`), a little more each act. On a map whose ground is darker than map 1's the
-  night is weakened so that ground comes out as light as map 1's in the same act (each theme's
-  ground light: `python tools/ground_light.py`). Without that the street under the act 4 night
-  was near black. The next map's newcomers join the horde `ACTS.mixDelay` waves after their own start, and the
+  `game/actLook.ts`), a little more each act. On a map whose ground is darker than the theme's
+  night target (map 1's light when the nights were tuned) the night is weakened so that ground
+  comes out as light as the target's in the same act (each theme's ground light:
+  `python tools/ground_light.py`). Without that the street under the act 4 night was near black.
+  The corgi's map 1 was lightened later (81 → 133) for a brighter first look; its target stays 81. The next map's newcomers join the horde `ACTS.mixDelay` waves after their own start, and the
   map's elite comes as a pair, each at full health (the ladder carries the cost).
 - **Act 3 (11–15), affixes** (`AFFIX`, `systems/affixes.ts`): elites carry one, bosses and
   mid-bosses two, drawn as they arrive: **shield** (blocks whole hits, 3, one back every 2 s),
