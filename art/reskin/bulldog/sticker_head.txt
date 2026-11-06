@@ -1,0 +1,7 @@
+Trace over this exact character as clean, simple game sticker art. It is a tracing: every shape stays exactly where it is, at exactly the same size. Same canvas, same pose, same head outline and size, same folded ears, same body, arms, legs and stub tail, pure white background.
+Keep every feature of the face exactly: the tough bulldog look, the black glossy eyes with small white highlights under heavy frowning brows, the forehead wrinkles as two or three clean lines, the big cream jowls and muzzle, the black nose, the confident closed smirk.
+Change only the rendering:
+- one thick, even black outline around every shape, the same weight everywhere; no thin sketchy lines, no hatching, no dots or freckles, no texture
+- flat colour fills with exactly one hard-edged darker shadow tone; no gradients, no soft shading
+- the armour as a few big smooth plates (shoulder pads, chest plate, belly plate, knee pads, boots), no small panels, seams, rivets, bolts or greebles
+Bold and readable at a very small size, like a polished mobile game hero.

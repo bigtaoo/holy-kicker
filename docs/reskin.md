@@ -271,8 +271,11 @@ guns drop when the hero goes down. No death or level-up clips yet.
 and clips plus one spring candidate each (`plate`, the belly plate, and `scarf`, both under
 `torso`). Each A-pose is fitted to the corgi's scale (`tools/fit_figure.py`: a 704 px figure,
 feet at 505,732 on 1024x768) so the origin and the reused guns match. The bulldog's body is
-`apose_b.png` and its head, ears and stub tail come from `apose_a.png` (`"sources"`,
-`tail_stub.png`). Both have the corgi's elbows (`fore_f`, `fore_n`, cut at the bracer as on
+`apose3.png` and its head, ears and stub tail come from `apose_a.png` (`"sources"`,
+`tail_stub.png`). Like the corgi, both were traced again in the sticker style and fitted back
+onto the old drawings by silhouette before splitting (prompts `sticker_body.txt`, and
+`sticker_head.txt` for the bulldog's head drawing); their faces were redrawn on the new takes the
+same way as below. Both have the corgi's elbows (`fore_f`, `fore_n`, cut at the bracer as on
 the corgi) and its three faces (`face_fire.png`, `face_hurt.png`, `face_blink.png` in each
 folder). The faces are drawn on the canvas of the head's own drawing (`apose_a.png` for the bulldog,
 `apose3.png` for the cat): the image edit redraws a close-up of the head more faithfully than the
