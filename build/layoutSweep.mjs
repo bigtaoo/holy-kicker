@@ -7,6 +7,7 @@
 //   npm run sweep:layout -- --only 390x844,1100x574
 //   npm run sweep:layout -- --update              record what it saw as the new baseline
 //   npm run sweep:layout -- --url http://localhost:5174/   a dev server already running
+//   npm run sweep:layout -- --now 2026-11-06T12:00Z   another day's goals and challenges (not for --update)
 //   npm run sweep:layout -- --headless            no window (slower: a hidden page barely ticks)
 // It opens the system Chrome in a window of its own, as tools/record_video.mjs does: a hidden or
 // throttled page stops drawing. Screenshots and report.json go to layout-report/ (not committed).
@@ -73,6 +74,7 @@ const only = opt('only')?.split(',');
 const update = args.includes('--update');
 const headless = args.includes('--headless');
 const out = join(ROOT, opt('out') ?? 'layout-report');
+if (update && opt('now')) throw new Error('--now sweeps another day: its findings are not the baseline (drop --update)');
 
 /**
  * A mid-game player: chapters 1-5 cleared, every tab seen, coin to spend, so no first-run screen.
@@ -82,6 +84,29 @@ const SAVE_PATCH = {
   firstRunDone: true, dice: 1 + 14 + 16 * 0 + 256 * (48 - 10), level: 18, xp: 0, copper: 12000, jade: 450, chapter: 6, cleared: 5,
   stars: [3, 3, 3, 2, 2], runs: 46, seen: 31, kills: 25000,
 };
+
+/**
+ * The day every page lives on, the tests' own (client/src/testkit/seedRandom.ts TEST_NOW): the
+ * weekly goals, daily tasks, challenges and merit season rotate by date, and their texts differ
+ * in length, so a sweep on the real date finds new labels that spill on some days and not others.
+ */
+const SWEEP_NOW = opt('now') ? Date.parse(opt('now')) : Date.UTC(2026, 9, 21, 12, 0, 0);
+
+/** An init script: Date starts at `now` and runs on with real time, as the tests' does. */
+function pinDate(now) {
+  const Real = Date;
+  const shift = now - Real.now();
+  class Pinned extends Real {
+    constructor(...a) {
+      if (a.length === 0) super(Real.now() + shift);
+      else super(...a);
+    }
+    static now() {
+      return Real.now() + shift;
+    }
+  }
+  globalThis.Date = Pinned;
+}
 
 /** Starts this checkout's dev server on a free port, unless --url names one. */
 async function devServer() {
@@ -101,6 +126,7 @@ async function devServer() {
 /** The storage of a mid-game save, as SaveStore writes it, read from a page of the dev server. */
 async function seedStorage(browser, url) {
   const page = await browser.newPage();
+  await page.addInitScript(pinDate, SWEEP_NOW);
   try {
     await page.goto(`${url}?ads=fake`);
     await page.waitForFunction(() => globalThis.__shell, null, { timeout: 60_000 });
@@ -276,6 +302,7 @@ async function sweepViewport(browser, url, storage, vp) {
     isMobile: vp.touch,
     hasTouch: vp.touch,
   });
+  await context.addInitScript(pinDate, SWEEP_NOW);
   // every page load starts from the same mid-game save, no run left to resume and the same dice
   // (the view's rolls, such as a results screen's drops, size its panels: as in testkit/seedRandom.ts)
   await context.addInitScript((entries) => {

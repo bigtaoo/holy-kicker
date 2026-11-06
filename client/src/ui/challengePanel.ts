@@ -12,7 +12,7 @@ import { iconSprite, type IconSheet } from './buildBar';
 import type { DailyView, WeeklyView } from './challengeFlow';
 import { isWideFrame } from './hudLayout';
 import { railButton } from './lobbyRail';
-import { claimCard, mutatorLine, ruleLines, weeklyPage, weeklyRules, type Rules } from './weeklyPage';
+import { breakAtPause, claimCard, mutatorLine, ruleLines, weeklyPage, weeklyRules, type Rules } from './weeklyPage';
 import { COLORS, backdrop, button, fit, label, panel } from './widgets';
 import { spot } from './spots';
 
@@ -124,7 +124,7 @@ export class ChallengeUi {
     const box = new Container();
     // each tab's wrapped rules push what follows down, and each page's box ends under its own
     // buttons; the box's top stays put when the tab changes, where the taller page's would be
-    const daily = lobby.daily ? dailyRules() : null;
+    const daily = lobby.daily ? dailyRules(mutatorLine(lobby.daily.challenge.mutator)) : null;
     const weekly = lobby.weekly ? weeklyRules(lobby.weekly, BOX_W) : null;
     const wide = isWideFrame({ w, h });
     // on a landscape frame the right-hand column rises by `lift`, and so does the box's foot
@@ -196,9 +196,8 @@ export class ChallengeUi {
   private daily(box: Container, top: number, add: (text: string, size: number, fill: number, y: number) => void, lobby: ChallengeLobby, d: DailyView, rules: Rules): void {
     const grow = rules.grow;
     add(t('lobby.chapterTitle', { n: d.chapter, name: chapterName(d.chapter) }), 48, COLORS.text, 165);
-    const mutator = mutatorLine(d.challenge.mutator);
-    if (mutator) add(mutator, 48, COLORS.saffron, 232);
-    rules.view.y = top + (mutator ? 270 : 225);
+    // the mutator heads the rules block (dailyRules), from where it once stood alone
+    rules.view.y = top + (mutatorLine(d.challenge.mutator) ? 203 : 225);
     box.addChild(rules.view);
     add(t('challenge.milestones'), 48, COLORS.text, 470 + grow);
     BALANCE.challenge.milestones.forEach((m, i) => box.addChild(this.milestoneRow(milestonePay(m, d.chapter), top + grow + 560 + i * 90, d.state === 'done')));
@@ -284,7 +283,21 @@ export class ChallengeUi {
 }
 
 /** The daily's rules: they once had 56 a line; 24 more keeps them off the milestones' title. */
-function dailyRules(): Rules {
-  const view = ruleLines(['challenge.rule1', 'challenge.rule2', 'challenge.rule3'], BOX_W - 100);
-  return { view, grow: Math.max(0, view.height + 24 - 3 * 56) };
+/**
+ * The daily's rules, headed by its mutator line if any: a long one ("Elite waves: one more elite on
+ * every elite wave") breaks at its colon at full size instead of shrinking, and what it adds over
+ * the one line it once had moves the page down.
+ */
+function dailyRules(mutator: string | null): Rules {
+  const width = BOX_W - 100;
+  const rules = ruleLines(['challenge.rule1', 'challenge.rule2', 'challenge.rule3'], width);
+  if (!mutator) return { view: rules, grow: Math.max(0, rules.height + 24 - 3 * 56) };
+  const view = new Container();
+  const head = label(mutator, 48, COLORS.saffron, { lineHeight: 58 });
+  if (head.width > width && !breakAtPause(head, mutator, width)) fit(head, width);
+  head.anchor.set(0.5, 0);
+  // the rules once started 38 under the line's centre, the line's top 29 above it
+  rules.y = Math.max(67, head.height + 9);
+  view.addChild(head, rules);
+  return { view, grow: Math.max(0, rules.y - 67 + rules.height + 24 - 3 * 56) };
 }

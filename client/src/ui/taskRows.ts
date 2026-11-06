@@ -37,7 +37,10 @@ export function boardRows(b: Board, text: BoardText, box: TasksBox, top: number,
     row.position.set(spot.x, spot.y);
     const state = boardState(b, i);
     const n = task.n;
-    const name = fit(label(taskText(task), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' }), 620, 70);
+    // a name too long to sit beside the button takes the row's width, the button dropping to the gauge's line
+    const name = label(taskText(task), 48, state === 'claimed' ? COLORS.dim : COLORS.text, { align: 'left' });
+    const long = state !== 'open' && name.width > 620;
+    fit(name, state === 'open' || long ? 860 : 620, 70);
     name.anchor.set(0, 0.5);
     name.position.set(-430, -30);
     const done = Math.min(n, b.progress[i]);
@@ -49,10 +52,10 @@ export function boardRows(b: Board, text: BoardText, box: TasksBox, top: number,
     row.addChild(name, gauge.view, count);
     if (state !== 'open') {
       const ready = state === 'ready';
-      const claim = button(ready ? t('tasks.claim') : t('tasks.done'), 230, 110, () => ready && a.claim(i), {
+      const claim = button(ready ? t('tasks.claim') : t('tasks.done'), 230, long ? 90 : 110, () => ready && a.claim(i), {
         fill: ready ? COLORS.saffron : COLORS.panelLocked, textFill: ready ? COLORS.text : COLORS.dim, size: 48,
       });
-      claim.x = 320;
+      claim.position.set(320, long ? 50 : 0);
       row.addChild(claim);
     }
     c.addChild(row);

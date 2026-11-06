@@ -11,7 +11,14 @@ npm run sweep:layout -- --only 390x844,1100x574       just those
 npm run sweep:layout -- --update                      record what it saw as the baseline
 npm run sweep:layout -- --url http://localhost:5174/  a dev server already running
 npm run sweep:layout -- --headless                    no window
+npm run sweep:layout -- --now 2026-11-06T12:00Z       another day's goals and challenges (never with --update)
 ```
+
+Every page runs on the tests' fixed day (`TEST_NOW` in `client/src/testkit/seedRandom.ts`,
+2026-10-21), with Date running on from there. The daily tasks, weekly goals, challenges and
+merit season rotate by date and their texts differ in length, so on the real date the findings
+would change from one day to the next. To check a long text a given day brings, sweep that day
+with `--now` and `--out` a folder of its own.
 
 Its gate in check is `client/src/ui/layoutGuard.test.ts`: the same auditor over the headless
 shell at 1280x575, 1920x1080, 1024x768 and 390x844. Its text is measured by a fixed advance, so
