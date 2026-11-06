@@ -199,6 +199,44 @@ async function pickAny(page) {
   });
 }
 
+/**
+ * Opens the pause panel. A pick lands on the next tick and the HUD drops its cards a frame after
+ * that; pauseForHost does nothing while they still show, so it is asked again until it opens.
+ */
+async function pauseRun(page) {
+  await until(page, () => {
+    const hud = __shell.runs.hud;
+    if (__shell.run.engine.state.players[0].offer.length > 0) __shell.run.pick(0);
+    else hud.pauseForHost();
+    return hud.pauseShown;
+  });
+}
+
+/** Downs the hero once no level-up is open (a pick lands on the next tick, and the bot keeps fighting). */
+async function downHero(page) {
+  await until(page, () => {
+    const s = __shell.run.engine.state;
+    if (s.players[0].offer.length > 0) {
+      __shell.run.pick(0);
+      return false;
+    }
+    s.players[0].hp = 0;
+    s.outcome = 'lost';
+    return true;
+  });
+}
+
+/** What the run was doing when a stop timed out, for its FAILED line. */
+const runState = (page) => page.evaluate(() => {
+  const sh = globalThis.__shell;
+  const s = sh?.run?.engine?.state;
+  const hud = sh?.runs?.hud;
+  return JSON.stringify({
+    place: sh?.place(), outcome: s?.outcome, wave: s?.wave, hp: s?.players[0].hp, offer: s?.players[0].offer.length,
+    paused: sh?.run?.paused, pauseShown: hud?.pauseShown, downShown: sh?.runs?.watch?.downShown,
+  });
+}).catch((e) => `state unreadable: ${e.message.split('\n')[0]}`);
+
 /** The stops of one viewport, in order: each a screen name and how to get there from the last. */
 function stops(url) {
   const lobby = TABS.map((tab) => ({
@@ -249,9 +287,7 @@ function stops(url) {
     {
       screen: 'run.pause',
       go: async (page) => {
-        await pickAny(page);
-        await page.evaluate(() => __shell.runs.hud.pauseForHost());
-        await until(page, () => __shell.runs.hud.pauseShown);
+        await pauseRun(page);
       },
     },
     {
@@ -259,12 +295,7 @@ function stops(url) {
       go: async (page) => {
         await page.keyboard.press('Escape');
         await until(page, () => !__shell.runs.hud.pauseShown && !__shell.run.paused);
-        await pickAny(page);
-        await page.evaluate(() => {
-          const s = __shell.run.engine.state;
-          s.players[0].hp = 0;
-          s.outcome = 'lost';
-        });
+        await downHero(page);
         await until(page, () => __shell.runs.watch?.downShown === true);
         // the kill cam's slow motion plays out first
         await settle(page, 2500);
@@ -330,7 +361,7 @@ async function sweepViewport(browser, url, storage, vp) {
         reports.push({ viewport: vp.name, screen: stop.screen, labels: r.labels, findings: r.findings });
         await page.screenshot({ path: join(out, `${vp.name}-${stop.screen}.png`) });
       } catch (e) {
-        failed.push(`${vp.name} ${stop.screen}: ${e.message.split('\n')[0]}`);
+        failed.push(`${vp.name} ${stop.screen}: ${e.message.split('\n')[0]} ${await runState(page)}`);
         await page.screenshot({ path: join(out, `${vp.name}-${stop.screen}-failed.png`) }).catch(() => undefined);
       }
     }

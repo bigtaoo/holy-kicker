@@ -55,8 +55,8 @@ The stops on each viewport:
 | `lobby.tasks`, `lobby.achievements`, `lobby.patrol`, `lobby.gift`, `lobby.monks`, `lobby.account`, `lobby.challenge.daily`, `lobby.challenge.weekly`, `lobby.gear.detail` | each panel opened alone by the lobby's own fields (`PANELS`), then `relayout` |
 | `run.hud` | `?direct&autoplay&wave=11&seed=7&ads=fake`, so the lost run has cleared 10 waves and its gear drop is not a coin flip; the bot fights, but level-ups wait for the sweep |
 | `run.cards` | the next level-up offer |
-| `run.pause` | the HUD's `pauseForHost` |
-| `run.down` | the hero's hp set to 0; with `ads=fake` the revive panel shows |
+| `run.pause` | the HUD's `pauseForHost`, asked again until it opens: a pick lands on the next tick and the cards leave a frame later, and it does nothing while they show |
+| `run.down` | the hero's hp set to 0 once no level-up is open; with `ads=fake` the revive panel shows |
 | `results.lost` | Escape on the death panel |
 | `results.won` | a second run, set to its last wave and `won` |
 
