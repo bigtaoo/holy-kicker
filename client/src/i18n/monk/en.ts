@@ -217,6 +217,7 @@ export const monkEn = {
     freeInfo: '{copper} copper and {n} gear',
     adInfo: '{jade} jade and {n} gear',
     jadeInfo: '{n} gear from chapter {chapter}',
+    jadeAhead: '{n} gear from the next chapter',
     price: '{jade} jade',
     copper: 'Copper chest',
     copperPrice: '{copper} copper',

@@ -9,7 +9,7 @@ import { monkPrice, ownsMonk } from '../meta/monks';
 import { patrolHaul } from '../meta/patrol';
 import { chestPay, TABS } from '../meta/progress';
 import { newSave } from '../meta/save';
-import { buttonNear, doubleTap, fakeAds, lobbyRig, openTab, reload, tapAt, wallet, words } from '../testkit/lobbyRig';
+import { buttonNear, doubleTap, fakeAds, lobbyRig, openTab, reload, tapAt, settledWallet, words } from '../testkit/lobbyRig';
 import type { ShellRig } from '../testkit/testShell';
 
 const NOW = new Date(2026, 9, 24, 12).getTime();
@@ -59,7 +59,7 @@ describe('patrol, tapped through', { timeout: 30_000 }, () => {
     const save = rig.store.load();
     expect(save.copper).toBe(copper);
     expect(save.patrol).toBe(NOW);
-    expect(wallet(rig).copper).toBe(formatAmount(copper));
+    expect((await settledWallet(rig)).copper).toBe(formatAmount(copper));
     expect(words(rig)).not.toContain(t('patrol.double'));
     // nothing piled up since: Collect only explains
     tapAt(rig.app.stage, buttonNear(rig, t('patrol.collect'), t('patrol.title')));
@@ -94,7 +94,7 @@ describe('patrol, tapped through', { timeout: 30_000 }, () => {
     expect(rig.store.load().jade).toBe(jade - P.quickJade);
     expect(rig.store.load().daily.quickJade).toBe(1);
     await takeHaul(rig);
-    expect(wallet(rig).jade).toBe(String(jade - P.quickJade));
+    expect((await settledWallet(rig)).jade).toBe(String(jade - P.quickJade));
     expect(words(rig)).toContain(t('patrol.quickJade', { jade: P.quickJade, n: P.quickJadePerDay - 1 }));
     tapAt(rig.app.stage, quick());
     await rig.tick(2);
@@ -210,7 +210,7 @@ describe('daily tasks and achievements, tapped through', { timeout: 30_000 }, ()
     expect(save.jade).toBe(total);
     expect(achievementsReady(save)).toEqual([]);
     expect(words(rig)).toContain(t('achieve.claimed', { n: ready.length, total: BALANCE.achievements.length }));
-    expect(wallet(rig).jade).toBe(String(total));
+    expect((await settledWallet(rig)).jade).toBe(String(total));
     const again = await reload(rig);
     expect(again.store.load().jade).toBe(total);
     expect(achievementsReady(again.store.load())).toEqual([]);
@@ -246,7 +246,7 @@ describe('the welcome gift, tapped through', { timeout: 30_000 }, () => {
     save = next.store.load();
     expect(save.gifts).toBe(2);
     expect(save.jade).toBe(BALANCE.welcome[1].jade);
-    expect(wallet(next).jade).toBe(String(BALANCE.welcome[1].jade));
+    expect((await settledWallet(next)).jade).toBe(String(BALANCE.welcome[1].jade));
     expect([...rig.faults, ...same.faults, ...next.faults]).toEqual([]);
   });
 
@@ -301,7 +301,7 @@ describe('progress chests, tapped through', { timeout: 30_000 }, () => {
     expect(save.opened[1]).toBe(0b1);
     await takeHaul(rig);
     expect(waitingChests(rig)).toHaveLength(1);
-    expect(wallet(rig).copper).toBe(formatAmount(pay.copper));
+    expect((await settledWallet(rig)).copper).toBe(formatAmount(pay.copper));
     const again = await reload(rig);
     save = again.store.load();
     expect(save.opened[1]).toBe(0b1);

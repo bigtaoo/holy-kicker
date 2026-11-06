@@ -219,6 +219,7 @@ export const corgiZh: Table<typeof corgiEn> = {
     freeInfo: '{copper} 螺丝、{n} 件装备',
     adInfo: '{jade} 宝石、{n} 件装备',
     jadeInfo: '{n} 件星球 {chapter} 装备',
+    jadeAhead: '{n} 件下一颗星球的装备',
     price: '{jade} 宝石',
     copper: '螺丝箱',
     copperPrice: '{copper} 螺丝',

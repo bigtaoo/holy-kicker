@@ -5,7 +5,7 @@ import type { Art } from '../game/artTypes';
 import { monkPrice } from '../meta/monks';
 import { nextNode, trainNode } from '../meta/training';
 import { monkChapter } from '../meta/unlocks';
-import { buttonNear, doubleTap, lobbyRig, openTab, reload, tapAt, wallet, words } from '../testkit/lobbyRig';
+import { buttonNear, doubleTap, lobbyRig, openTab, reload, tapAt, settledWallet, words } from '../testkit/lobbyRig';
 import type { ShellRig } from '../testkit/testShell';
 
 /** The Train button of the node on show, priced as it reads. */
@@ -30,7 +30,7 @@ describe('training, tapped through', { timeout: 30_000 }, () => {
     expect(rig.store.load().trained).toBe(1);
     expect(rig.store.load().copper).toBe(1000 - one);
     expect(words(rig)).toContain(t('train.progress', { n: 1, total: 100 }));
-    expect(wallet(rig).copper).toBe(formatAmount(1000 - one));
+    expect((await settledWallet(rig)).copper).toBe(formatAmount(1000 - one));
     vi.advanceTimersByTime(1000);
     tapAt(rig.app.stage, trainButton(rig));
     await rig.tick(2);
@@ -102,7 +102,7 @@ describe('monks, tapped through', { timeout: 30_000 }, () => {
     expect(save.monk).toBe('novice');
     expect(words(rig)).toContain(t('monk.joined', { name: name('novice') }));
     expect(words(rig)).not.toContain(price('novice'));
-    expect(wallet(rig).jade).toBe('20');
+    expect((await settledWallet(rig)).jade).toBe('20');
     // the lobby's figure is drawn with his rig, loaded on the purchase and not on the next lobby
     await rig.until(() => !!art.monks.novice);
     const again = await reload(rig);

@@ -16,10 +16,13 @@ import { EconomyUi, type LobbyTrack } from './lobbyEconomy';
 import type { PatrolLook } from './economyPanels';
 import { gearDetail, gearTab, type GearActions } from './gearTab';
 import { MergeView } from './MergeView';
-import { hintArrow, menuBackdrop, scenery, tabBar, topBar } from './lobbyBars';
+import { hintArrow, menuBackdrop, scenery, tabBar, toastPill, topBar } from './lobbyBars';
+import { RewardFlight } from './rewardFlightView';
 import { hintTab, nextStep } from './lobbyHint';
 import { figureFeet, isWide, PLAY_H, PLAY_W, playSpots, playY, TAB_H, TOP_H } from './lobbyLayout';
 import { LobbyDrift, LobbyFigure } from './lobbyStage';
+import { stageTint } from './lobbyAmbient';
+import { THEME } from '../theme';
 import { playButton, type PlayButton } from './lobbyPlay';
 import { relicRow } from './playCard';
 import { monkPanel } from './monkPanel';
@@ -31,7 +34,7 @@ import { BoardUi, type FetchBoard } from './boardPanel';
 import { ChallengeUi, type ChallengeLobby } from './challengePanel';
 import { consentCard, watched } from './privacyUi';
 import { redrawn, reminderCard } from './reminders';
-import { COLORS, fit, label, oneDot, panel } from './widgets';
+import { COLORS, oneDot } from './widgets';
 import { spot } from './spots';
 
 // The lobby (docs/design.md "Lobby layout"): top bar, the chapter card with its progress
@@ -76,6 +79,9 @@ function lockText(lock: Lock): string {
   return t('tab.unlockChapter', { n: lock.n });
 }
 
+/** How much of the background lies over a landscape menu tab's stage. */
+const MENU_STAGE_VEIL = 0.62;
+
 export class LobbyScreen implements Screen {
   readonly view = new Container();
   private tab: Tab = 'play';
@@ -92,6 +98,7 @@ export class LobbyScreen implements Screen {
   private merging: MergeView | null = null;
   private frame: UiFrame | null = null;
   private toast: Container | null = null;
+  private readonly flight: RewardFlight;
   private toastTimer: ReturnType<typeof setTimeout> | undefined;
   /** The toast's line and when it goes, so a relayout puts it back for the time it has left. */
   private toastLine: { text: string; until: number } | null = null;
@@ -124,9 +131,11 @@ export class LobbyScreen implements Screen {
     private readonly patrolLook: () => PatrolLook,
   ) {
     const ads = actions.adAvailable();
+    this.flight = new RewardFlight(icons);
     this.econ = new EconomyUi({
       save: () => this.save,
       change: (s) => {
+        this.flight.paid(this.save, s);
         this.change(s);
         this.relayout();
       },
@@ -256,6 +265,7 @@ export class LobbyScreen implements Screen {
     }
     if (this.monksOpen) this.view.addChild(this.monkPanel(f));
     if (this.merging) this.view.addChild(this.merging.view);
+    this.flight.attach(this.view, bar, f);
     const line = this.toastLine;
     if (line && line.until > Date.now()) this.showToast(line.text, line.until - Date.now());
     this.idle = !nextStep(this.save, Date.now()) && !privacy?.asking() && !reminders?.offering() && !(this.tab === 'gear' && this.gearOpen)
@@ -287,6 +297,7 @@ export class LobbyScreen implements Screen {
   update(dt: number): void {
     this.merging?.update(dt);
     this.econ.update(dt);
+    this.flight.update(dt, this.econ.holding);
     this.clock += dt;
     if (this.hint && !this.hint.destroyed) this.hint.pivot.y = -Math.abs(Math.sin(this.clock * 4)) * 24;
     if (this.view.destroyed) return;
@@ -351,8 +362,13 @@ export class LobbyScreen implements Screen {
   private scenery(f: UiFrame): Container {
     if (!this.backdrop) return scenery(f, null);
     const day = this.tab === 'play' || this.tab === 'gear';
-    if (!day) this.menuBack = menuBackdrop(this.renderer, this.backdrop, isWide(f.w, f.h));
-    return day ? scenery(f, this.backdrop) : scenery(f, this.menuBack, true);
+    const tint = stageTint(THEME === 'corgi', this.save.chapter);
+    const wide = isWide(f.w, f.h);
+    if (!day) this.menuBack = menuBackdrop(this.renderer, this.backdrop, wide);
+    if (day) return scenery(f, this.backdrop, false, tint);
+    // a landscape frame blurs the painting into a dark void: there the menu panels stand on the
+    // daylight stage under a veil instead, so the place still shows round them
+    return wide ? scenery(f, this.backdrop, false, tint, MENU_STAGE_VEIL) : scenery(f, this.menuBack, true, tint);
   }
 
   private gearTab(w: number, h: number, top: number): void {
@@ -436,7 +452,7 @@ export class LobbyScreen implements Screen {
     this.figureH = at.figureH;
     this.figure = new LobbyFigure(look.rig, this.figureH);
     this.figure.view.position.set(at.feet.x, at.feet.y);
-    const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id));
+    const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id), at.relicW);
     relics.position.set(at.feet.x, at.feet.y + 5);
     this.view.addChild(this.figure.view, relics);
     if (open) {
@@ -464,7 +480,7 @@ export class LobbyScreen implements Screen {
   }
 
   private shopTab(w: number, h: number, top: number): void {
-    const tab = this.econ.shopTab(h - TAB_H - top - 30);
+    const tab = this.econ.shopTab(h - TAB_H - top - 30, w, isWide(w, h));
     tab.position.set(w / 2, top);
     this.view.addChild(tab);
   }
@@ -473,14 +489,7 @@ export class LobbyScreen implements Screen {
     if (!this.frame) return;
     this.toastLine = { text, until: Date.now() + ms };
     this.toast?.destroy();
-    const f = this.frame;
-    // a dark pill, so the line reads as a passing message and not as part of the tab under it
-    const words = fit(label(text, 48, COLORS.text), f.w - 140);
-    const toast = new Container();
-    toast.addChild(panel(words.width + 80, 96, COLORS.panel, 48), words);
-    toast.position.set(f.w / 2, f.h - TAB_H - 80);
-    toast.eventMode = 'none';
-    this.view.addChild(toast);
+    const toast = this.view.addChild(toastPill(this.frame, text));
     this.toast = toast;
     clearTimeout(this.toastTimer);
     this.toastTimer = setTimeout(() => {

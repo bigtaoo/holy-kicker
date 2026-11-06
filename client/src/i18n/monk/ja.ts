@@ -218,6 +218,7 @@ export const monkJa: Table<typeof monkEn> = {
     freeInfo: '銅銭{copper}と装備{n}個',
     adInfo: '玉{jade}と装備{n}個',
     jadeInfo: '第{chapter}章の装備{n}個',
+    jadeAhead: '次の章の装備{n}個',
     price: '玉{jade}',
     copper: '銅銭の宝箱',
     copperPrice: '銅銭{copper}',

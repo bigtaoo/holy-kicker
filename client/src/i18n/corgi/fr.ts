@@ -218,6 +218,7 @@ export const corgiFr: Table<typeof corgiEn> = {
     freeInfo: '{copper} boulons et {n} {n|one:équipement|other:équipements}',
     adInfo: '{jade} gemmes et {n} {n|one:équipement|other:équipements}',
     jadeInfo: '{n} {n|one:équipement|other:équipements} de la planète {chapter}',
+    jadeAhead: '{n} équipements de la planète suivante',
     price: '{jade} gemmes',
     copper: 'Caisse de boulons',
     copperPrice: '{copper} boulons',

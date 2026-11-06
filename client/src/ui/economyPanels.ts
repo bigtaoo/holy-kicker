@@ -1,16 +1,14 @@
-import { Container, Graphics, type Text } from 'pixi.js';
+import { Container, Graphics } from 'pixi.js';
 import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { today } from '../meta/daily';
 import { thisWeek } from '../meta/goals';
-import type { Haul } from '../meta/haul';
 import { canCollect, canDouble, copperPerHour, patrolDrops, patrolHours, quickLeft } from '../meta/patrol';
 import type { SaveData } from '../meta/save';
 import { achieveRows, tasksBox, tasksSwitch, type AchievePanelActions, type TasksBox, type TasksView } from './achievePanel';
 import { isWideFrame } from './hudLayout';
-import { GEAR_TILE, gearTiles, placeTiles } from './gearTiles';
 import type { TaoAsset } from '../game/tao/TaoActor';
-import { iconSprite, type IconSheet } from './buildBar';
+import type { IconSheet } from './buildBar';
 import { PatrolScene, type PatrolArt } from './patrolScene';
 import { meritRows } from './meritPanel';
 import { boardRows } from './taskRows';
@@ -196,50 +194,4 @@ function weekRows(save: SaveData, now: number, box: TasksBox, top: number, a: Ta
   const G = BALANCE.goals;
   const text = { reward: t('tasks.reward', { copper: G.copper, jade: G.jade }), bonus: t('tasks.weekBonus', { chest: t('shop.jade') }), resets: t('tasks.weekResets') };
   return boardRows(thisWeek(save, now), text, box, top, { claim: a.claimGoal, bonus: a.weekBonus });
-}
-
-/** What a chest or a patrol just paid, over everything, until OK: the coins in lines, the gear in framed tiles. */
-export function haulPanel(haul: Haul, icons: IconSheet, w: number, h: number, close: () => void): Container {
-  // text, size, colour and the coin drawn before it
-  const lines: [string, number, number, string][] = [];
-  if (haul.copper > 0) lines.push([t('haul.copper', { n: formatAmount(haul.copper) }), 56, COLORS.copper, 'copper']);
-  if (haul.jade > 0) lines.push([t('haul.jade', { n: formatAmount(haul.jade) }), 56, COLORS.jade, 'jade']);
-  if (haul.monk) lines.push([t('haul.monk', { name: t(`monk.${haul.monk}.name`) }), 56, COLORS.gold, `monk_${haul.monk}`]);
-  const tiles = new Container();
-  const tilesH = placeTiles(gearTiles(haul.drops, icons).map((tile) => tiles.addChild(tile)), 5);
-  const root = new Container();
-  root.addChild(backdrop(w, h, 0.7));
-  const boxH = 160 + lines.reduce((n, [, size]) => n + size + 36, 0) + (tilesH > 0 ? tilesH + 40 : 0) + 200;
-  const box = new Container();
-  box.position.set(w / 2, h / 2);
-  box.addChild(panel(860, boxH));
-  let y = -boxH / 2 + 80;
-  const title = label(t('haul.title'), 72, COLORS.saffron);
-  title.y = y;
-  box.addChild(title);
-  y += 90;
-  for (const [text, size, fill, coin] of lines) {
-    const l: Text = fit(label(text, size, fill), 780);
-    l.y = y + size / 2;
-    box.addChild(l);
-    const icon = iconSprite(icons, coin, size * 1.5);
-    if (icon) {
-      // the coin and the line centred together, a small gap between
-      const gap = 16;
-      const left = -(icon.width + gap + l.width) / 2;
-      icon.position.set(left + icon.width / 2, l.y);
-      l.x = left + icon.width + gap + l.width / 2;
-      box.addChild(icon);
-    }
-    y += size + 36;
-  }
-  if (tilesH > 0) {
-    tiles.y = y + 10 + GEAR_TILE / 2;
-    box.addChild(tiles);
-  }
-  const ok = button(t('haul.ok'), 400, 120, close);
-  ok.y = boxH / 2 - 100;
-  box.addChild(ok);
-  root.addChild(box);
-  return root;
 }

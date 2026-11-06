@@ -218,6 +218,7 @@ export const monkTh: Table<typeof monkEn> = {
     freeInfo: 'ทองแดง {copper} และอุปกรณ์ {n} ชิ้น',
     adInfo: 'หยก {jade} และอุปกรณ์ {n} ชิ้น',
     jadeInfo: 'อุปกรณ์ {n} ชิ้น จากบทที่ {chapter}',
+    jadeAhead: 'อุปกรณ์ {n} ชิ้น จากบทถัดไป',
     price: 'หยก {jade}',
     copper: 'หีบทองแดง',
     copperPrice: 'ทองแดง {copper}',

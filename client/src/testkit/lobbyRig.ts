@@ -174,6 +174,15 @@ export function wallet(rig: ShellRig): { jade: string; copper: string } {
   return { jade: amounts[0].text, copper: amounts[1].text };
 }
 
+/**
+ * The wallet once a claim's reward flight has landed (rewardFlight.ts): the counters hold the old
+ * amounts while the coins fly and tick up as they land, a second or so.
+ */
+export async function settledWallet(rig: ShellRig): Promise<{ jade: string; copper: string }> {
+  await rig.tick(12, 150);
+  return wallet(rig);
+}
+
 function all(c: Container, out: Container[] = []): Container[] {
   if (!c.visible || c.destroyed) return out;
   out.push(c);

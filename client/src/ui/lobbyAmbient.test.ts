@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import { LEAVES, MOTES, actDrift, breath, hop, share, speckAt } from './lobbyAmbient';
+import { LEAVES, MOTES, actDrift, breath, hop, share, speckAt, stageTint } from './lobbyAmbient';
 
 describe('lobby ambient', () => {
+  it('tints the corgi courtyard for the planet picked, the dune world and the monk not at all', () => {
+    const blue = stageTint(true, 1);
+    expect(blue & 0xff).toBeGreaterThan(blue >> 16);  // Frost Moon: more blue than red
+    expect(stageTint(true, 6)).toBe(blue);  // the maps come round again each act
+    expect(stageTint(true, 3)).toBe(0xffffff);
+    expect(new Set([1, 2, 3, 4, 5].map((c) => stageTint(true, c))).size).toBe(5);
+    for (const c of [1, 2, 4, 20]) expect(stageTint(false, c)).toBe(0xffffff);
+  });
+
   it('changes the specks with the act of the next chapter', () => {
     expect(actDrift(false, 0)).toBe(LEAVES);
     expect(actDrift(false, 4)).toBe(LEAVES);

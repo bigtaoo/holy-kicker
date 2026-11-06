@@ -382,7 +382,8 @@ export const th: Table<typeof en> = {
   },
   train: {
     next: 'ถัดไป',
-    needLevel: 'ต้องถึง Lv.{level}',
+    needLevel: 'ต้องมีเลเวลผู้เล่น {level}',
+    levelHint: 'เล่นเพื่อเพิ่มเลเวล (ใต้ชื่อของคุณ)',
     page: '{from}–{to}',
     times: '×{n}',
   },

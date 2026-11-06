@@ -381,7 +381,8 @@ export const zh: Table<typeof en> = {
   },
   train: {
     next: '下一项',
-    needLevel: '需达到 Lv.{level}',
+    needLevel: '需玩家等级 Lv.{level}',
+    levelHint: '玩一局就能提升名字下方的等级',
     page: '{from}–{to}',
     times: '×{n}',
   },

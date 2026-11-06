@@ -384,7 +384,8 @@ export const fr: Table<typeof en> = {
   },
   train: {
     next: 'Suivant',
-    needLevel: 'Atteins le Nv.{level}',
+    needLevel: 'Joueur Nv.{level} requis',
+    levelHint: 'Les parties montent ton niveau (sous ton nom)',
     page: '{from}–{to}',
     times: '×{n}',
   },

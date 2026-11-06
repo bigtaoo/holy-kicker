@@ -218,6 +218,7 @@ export const monkFr: Table<typeof monkEn> = {
     freeInfo: '{copper} cuivre et {n} {n|one:équipement|other:équipements}',
     adInfo: '{jade} jade et {n} {n|one:équipement|other:équipements}',
     jadeInfo: '{n} {n|one:équipement|other:équipements} du chapitre {chapter}',
+    jadeAhead: '{n} équipements du chapitre suivant',
     price: '{jade} jade',
     copper: 'Coffre de cuivre',
     copperPrice: '{copper} cuivre',

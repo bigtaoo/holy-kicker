@@ -218,6 +218,7 @@ export const monkId: Table<typeof monkEn> = {
     freeInfo: '{copper} tembaga dan {n} perlengkapan',
     adInfo: '{jade} giok dan {n} perlengkapan',
     jadeInfo: '{n} perlengkapan dari bab {chapter}',
+    jadeAhead: '{n} perlengkapan dari bab berikutnya',
     price: '{jade} giok',
     copper: 'Peti tembaga',
     copperPrice: '{copper} tembaga',

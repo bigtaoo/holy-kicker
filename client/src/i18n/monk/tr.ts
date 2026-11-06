@@ -218,6 +218,7 @@ export const monkTr: Table<typeof monkEn> = {
     freeInfo: '{copper} bakır ve {n} eşya',
     adInfo: '{jade} yeşim ve {n} eşya',
     jadeInfo: '{chapter}. bölümden {n} eşya',
+    jadeAhead: 'Sonraki bölümden {n} eşya',
     price: '{jade} yeşim',
     copper: 'Bakır sandık',
     copperPrice: '{copper} bakır',

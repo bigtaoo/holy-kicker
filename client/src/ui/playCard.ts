@@ -5,7 +5,7 @@ import { unlockedRelics } from '../meta/progress';
 import type { SaveData } from '../meta/save';
 import { THEME } from '../theme';
 import { iconSprite, type IconSheet } from './buildBar';
-import { COLORS, label, shade } from './widgets';
+import { COLORS, fit, label, shade } from './widgets';
 
 // The Play tab's pieces around the chapter card (LobbyScreen.playTab, chapterCard.ts): its
 // colours and the relic row at the monk's feet.
@@ -28,11 +28,15 @@ export const CARD_STROKE = { stroke: { color: COLORS.outline, width: 10 } };
 /**
  * The relic for the next run, top at 0: its name, then one badge per relic the player has.
  */
-export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId) => void): Container {
+/** `maxW`: the room between the rails' labels; a head too wide for it drops its 'Relic:' and then shrinks. */
+export function relicRow(save: SaveData, icons: IconSheet, select: (id: RelicId) => void, maxW = Infinity): Container {
   const row = new Container();
   const chosen = save.relic;
   // straight on the courtyard, outlined like the HUD's words, so the picture shows between the badges
-  const head = label(`${t('lobby.relic')}: ${t(`relic.${chosen}.name`)}`, 48, COLORS.text, { stroke: { color: COLORS.outline, width: 10 } });
+  const stroke = { stroke: { color: COLORS.outline, width: 10 } };
+  const name = t(`relic.${chosen}.name`);
+  let head = label(`${t('lobby.relic')}: ${name}`, 48, COLORS.text, stroke);
+  if (head.width > maxW) head = fit(label(name, 48, COLORS.text, stroke), maxW);
   head.y = 48;
   const open = unlockedRelics(save);
   row.addChild(head);
