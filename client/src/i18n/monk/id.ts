@@ -37,8 +37,8 @@ export const monkId: Table<typeof monkEn> = {
       level: { cause: 'Terlalu lemah untuk gelombang {wave}', tip: 'Ambil setiap permata: level memenangkan gelombang akhir' },
     },
     goal: {
-      shrine: 'Tinggal {n} lagi ke altar gelombang {wave}',
-      clear: 'Tinggal {n} lagi untuk menamatkan bab',
+      shrine: 'Lewati {n} gelombang lagi ke altar gelombang {wave}',
+      clear: 'Lewati {n} gelombang lagi untuk menamatkan bab',
     },
   },
   board: {

@@ -37,8 +37,8 @@ export const monkVi: Table<typeof monkEn> = {
       level: { cause: 'Quá yếu cho đợt {wave}', tip: 'Nhặt hết đá quý: cấp độ quyết định các đợt cuối' },
     },
     goal: {
-      shrine: 'Chỉ còn {n} đến miếu đợt {wave}',
-      clear: 'Chỉ còn {n} để qua chương',
+      shrine: 'Qua thêm {n} đợt để đến miếu đợt {wave}',
+      clear: 'Qua thêm {n} đợt để hoàn thành chương',
     },
   },
   board: {

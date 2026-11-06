@@ -37,8 +37,8 @@ export const monkFr: Table<typeof monkEn> = {
       level: { cause: 'Trop faible pour la vague {wave}', tip: 'Ramasse chaque gemme : les niveaux font gagner les dernières vagues' },
     },
     goal: {
-      shrine: 'Plus que {n} avant l’autel de la vague {wave}',
-      clear: 'Plus que {n} pour finir le chapitre',
+      shrine: 'Termine encore {n} {n|one:vague|other:vagues} avant l’autel de la vague {wave}',
+      clear: 'Termine encore {n} {n|one:vague|other:vagues} pour finir le chapitre',
     },
   },
   board: {

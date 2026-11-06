@@ -192,7 +192,7 @@ export class LobbyScreen implements Screen {
         this.relayout();
       },
     }, nextStep(this.save, Date.now())));
-    // one red dot at a time: the hinted tab's, else what is on this tab, then the tab bar, then the monk
+    // one red dot (something new) at a time: the hinted tab's, else this tab's, the tab bar's, the monk's; badges always show
     const content = this.view.children.slice(this.view.getChildIndex(bar) + 1, this.view.getChildIndex(tabs));
     oneDot(hint ? [tabs, ...content, bar] : [...content, tabs, bar]);
     this.hint = hint ? hintArrow(f.w, f.h, hint) : null;

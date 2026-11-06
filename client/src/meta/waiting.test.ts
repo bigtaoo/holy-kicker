@@ -4,13 +4,54 @@ import { BALANCE } from './balance';
 import { seasonOf } from './merit';
 import { newSave } from './save';
 import { trainNode } from './training';
-import { affordableTraining, lobbyWaiting, lossStep, mergesReady, waitingCount } from './waiting';
+import { openChest } from './shop';
+import { affordableTraining, lobbyWaiting, lossStep, mergesReady, tabWaiting, tasksWaiting, waitingCount } from './waiting';
+import { claimGift } from './welcome';
+
+const HOUR = 3600 * 1000;
 
 const played = { ...newSave(), firstRunDone: true, level: 5 };
 
 describe('lobby waiting', () => {
-  it('counts nothing on a fresh save', () => {
-    expect(waitingCount(lobbyWaiting(newSave(), 0))).toBe(0);
+  it('counts only the Shop\'s free chest on a fresh save', () => {
+    const w = lobbyWaiting(newSave(), 0);
+    expect(w).toEqual({ chests: 0, tasks: 0, goals: 0, merit: 0, achievements: 0, train: false, shop: true, gift: false, patrol: false });
+    expect(waitingCount(w)).toBe(1);
+    const taken = openChest(newSave(), 0, 'free', () => 0.5)!.save;
+    expect(waitingCount(lobbyWaiting(taken, 0))).toBe(0);
+  });
+
+  it("counts today's welcome gift until it is claimed", () => {
+    const at = new Date(2026, 9, 5, 12).getTime();
+    const old = { ...played, runs: 12 };
+    expect(lobbyWaiting(old, at).gift).toBe(true);
+    expect(tabWaiting(lobbyWaiting(old, at), 'play')).toBe(tabWaiting(lobbyWaiting(claimGift(old, at)!.save, at), 'play') + 1);
+    expect(lobbyWaiting(claimGift(old, at)!.save, at).gift).toBe(false);
+    expect(lobbyWaiting({ ...old, firstRunDone: false }, at).gift).toBe(false);
+  });
+
+  it('counts the patrol once it is full, as its badge shows', () => {
+    const now = new Date(2026, 9, 5, 12).getTime();
+    const full = { ...played, patrol: now - BALANCE.patrol.capHours * HOUR };
+    expect(lobbyWaiting(full, now).patrol).toBe(true);
+    expect(lobbyWaiting({ ...full, patrol: now - HOUR }, now).patrol).toBe(false);
+    expect(lobbyWaiting({ ...full, firstRunDone: false }, now).patrol).toBe(false);
+  });
+
+  it("adds the tabs' badges up to the count the results screen names", () => {
+    const now = new Date(2026, 9, 5, 12).getTime();
+    const save = {
+      ...played, runs: 12, copper: 1e6, patrol: now - BALANCE.patrol.capHours * HOUR,
+      chests: [0b111, 0, 0, 0, 0], opened: [0b1, 0, 0, 0, 0],
+      merit: { season: seasonOf(now), points: BALANCE.merit.steps[2].at, claimed: 1 },
+    };
+    const w = lobbyWaiting(save, now);
+    // the Play tab: 2 chests, 2 merit steps (the Tasks button), the gift and the full patrol
+    expect(tasksWaiting(w)).toBe(w.tasks + w.goals + 2 + w.achievements);
+    expect(tabWaiting(w, 'play')).toBe(2 + tasksWaiting(w) + 1 + 1);
+    expect(tabWaiting(w, 'shop')).toBe(1);
+    expect(tabWaiting(w, 'train')).toBe(1);
+    expect(waitingCount(w)).toBe(tabWaiting(w, 'play') + tabWaiting(w, 'shop') + tabWaiting(w, 'train'));
   });
 
   it('counts the weekly goals ready to claim once the tasks are open', () => {
@@ -24,7 +65,7 @@ describe('lobby waiting', () => {
     const now = Date.UTC(2026, 10, 2);
     const merit = { season: seasonOf(now), points: BALANCE.merit.steps[2].at, claimed: 1 };
     expect(lobbyWaiting({ ...played, merit }, now).merit).toBe(2);
-    expect(waitingCount(lobbyWaiting({ ...played, merit }, now))).toBe(2);
+    expect(tasksWaiting(lobbyWaiting({ ...played, merit }, now))).toBe(2);
     expect(lobbyWaiting({ ...newSave(), merit }, now).merit).toBe(0);
   });
 
@@ -36,7 +77,7 @@ describe('lobby waiting', () => {
   it('counts the training once, whatever the copper buys', () => {
     const rich = { ...played, copper: 1e6 };
     expect(lobbyWaiting(rich, 0).train).toBe(true);
-    expect(waitingCount(lobbyWaiting(rich, 0))).toBe(1);
+    expect(tabWaiting(lobbyWaiting(rich, 0), 'train')).toBe(1);
     expect(lobbyWaiting({ ...rich, firstRunDone: false }, 0).train).toBe(false);
   });
 

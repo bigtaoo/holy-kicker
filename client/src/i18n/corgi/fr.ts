@@ -37,8 +37,8 @@ export const corgiFr: Table<typeof corgiEn> = {
       level: { cause: 'Trop faible pour la vague {wave}', tip: 'Ramasse chaque friandise : les niveaux font gagner les dernières vagues' },
     },
     goal: {
-      shrine: 'Plus que {n} avant le largage de la vague {wave}',
-      clear: 'Plus que {n} pour finir la planète',
+      shrine: 'Termine encore {n} {n|one:vague|other:vagues} avant le largage de la vague {wave}',
+      clear: 'Termine encore {n} {n|one:vague|other:vagues} pour finir la planète',
     },
   },
   board: {

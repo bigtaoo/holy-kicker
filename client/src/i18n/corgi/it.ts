@@ -37,8 +37,8 @@ export const corgiIt: Table<typeof corgiEn> = {
       level: { cause: 'Troppo debole per l’ondata {wave}', tip: 'Raccogli ogni bocconcino: sono i livelli a vincere le ultime ondate' },
     },
     goal: {
-      shrine: 'Ancora {n} per il rifornimento dell’ondata {wave}',
-      clear: 'Ancora {n} per finire il pianeta',
+      shrine: 'Supera ancora {n} {n|one:ondata|other:ondate} per il rifornimento dell’ondata {wave}',
+      clear: 'Supera ancora {n} {n|one:ondata|other:ondate} per finire il pianeta',
     },
   },
   board: {

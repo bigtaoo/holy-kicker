@@ -38,8 +38,8 @@ export const corgiVi: Table<typeof corgiEn> = {
       level: { cause: 'Quá yếu cho đợt {wave}', tip: 'Nhặt hết đồ ăn vặt: cấp độ quyết định các đợt cuối' },
     },
     goal: {
-      shrine: 'Chỉ còn {n} đến thùng tiếp tế đợt {wave}',
-      clear: 'Chỉ còn {n} để qua hành tinh',
+      shrine: 'Qua thêm {n} đợt để đến thùng tiếp tế đợt {wave}',
+      clear: 'Qua thêm {n} đợt để hoàn thành hành tinh',
     },
   },
   board: {

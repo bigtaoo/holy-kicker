@@ -57,7 +57,7 @@ describe('challenge results', { timeout: 30000 }, () => {
     await fallAt(rig, 'weekly', 4, (x) => x.includes(t('weekly.newBest')));
     await tapWhenUp(rig, 'weekly.inviteButton');
     await rig.until(() => rig.texts().includes(t('weekly.linkCopied')));
-    expect(rig.platform.calls).toContain(`copy ${t('weekly.shareText', { wave: 3, url: `https://game.test/?w=${WEEK.id}.3` })}`);
+    expect(rig.platform.calls).toContain(`copy ${t('weekly.shareText', { wave: 4, url: `https://game.test/?w=${WEEK.id}.3` })}`);
     await tapWhenUp(rig, 'common.continue');
     await rig.until(() => rig.shell.place() === 'lobby');
   });
@@ -65,7 +65,7 @@ describe('challenge results', { timeout: 30000 }, () => {
   it("a newcomer on a friend's link: the weekly opens by itself after the first run, with the friend's waves to beat", async () => {
     boardServer();
     const rig = await lobbyRig({ cleared: 0 }, { api: API, invitedWith: `${WEEK.id}.12` });
-    await rig.until(() => rig.texts().includes(t('weekly.inviteBeat', { wave: 12 })));
+    await rig.until(() => rig.texts().includes(t('weekly.inviteBeat', { wave: 13 })));
     expect(rig.texts()).toContain(t('lobby.play'));
   });
 
@@ -74,7 +74,7 @@ describe('challenge results', { timeout: 30000 }, () => {
     // a week on the player's furthest chapter plays chapter 2 here (chapter 1 cleared)
     const board = challengeBoardId(WEEK.id, WEEK.engine, WEEK.chapter === 'furthest' ? 2 : WEEK.chapter, THEME);
     const rig = await lobbyRig({ weeks: [{ id: WEEK.id, board, end: WEEK.end, best: 12 }] }, { api: API });
-    const texts = await fallAt(rig, 'weekly', 3, (x) => x.includes(t('weekly.bestStands', { wave: 12 })));
+    const texts = await fallAt(rig, 'weekly', 3, (x) => x.includes(t('weekly.bestStands', { wave: 13 })));
     expect(texts).not.toContain(t('weekly.newBest'));
     expect(rig.store.load().weeks[0].best).toBe(12);
   });

@@ -46,9 +46,9 @@ describe('nearestGoal', () => {
   });
 
   it('skips claimed chests and picks the nearest of the rest', () => {
-    // the first two chests claimed, best 28: fell on wave 27 (26 cleared), beating the best 3
-    // away, the wave 30 chest 4, the shrine on 35 8
-    expect(nearestGoal(27, 50, past(28, 0b11))).toEqual({ kind: 'best', wave: 28, n: 3 });
+    // the first two chests claimed, best 28 cleared (wave 29 reached, as the lobby says): fell on
+    // wave 27 (26 cleared), beating the best 3 waves away, the wave 30 chest 4, the shrine on 35 8
+    expect(nearestGoal(27, 50, past(28, 0b11))).toEqual({ kind: 'best', wave: 29, n: 3 });
   });
 
   it('names the next shrine when it is nearest', () => {
@@ -60,7 +60,8 @@ describe('nearestGoal', () => {
     expect(nearestGoal(50, 50, past(49, 0b1111))).toEqual({ kind: 'clear', wave: 50, n: 1 });
   });
 
-  it('celebrates a new best', () => {
-    expect(nearestGoal(22, 50, past(18))).toEqual({ kind: 'record', wave: 21, n: 0 });
+  it('celebrates a new best by the wave reached, as the record banner and the lobby name it', () => {
+    // best 18 cleared (the lobby's "wave 19"); fell on wave 22: the new best is wave 22
+    expect(nearestGoal(22, 50, past(18))).toEqual({ kind: 'record', wave: 22, n: 0 });
   });
 });

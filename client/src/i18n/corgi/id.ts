@@ -38,8 +38,8 @@ export const corgiId: Table<typeof corgiEn> = {
       level: { cause: 'Terlalu lemah untuk gelombang {wave}', tip: 'Ambil semua camilan: level memenangkan gelombang akhir' },
     },
     goal: {
-      shrine: 'Tinggal {n} lagi ke kiriman suplai gelombang {wave}',
-      clear: 'Tinggal {n} lagi untuk menamatkan planet',
+      shrine: 'Lewati {n} gelombang lagi ke kiriman suplai gelombang {wave}',
+      clear: 'Lewati {n} gelombang lagi untuk menamatkan planet',
     },
   },
   board: {

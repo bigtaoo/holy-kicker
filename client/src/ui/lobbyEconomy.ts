@@ -10,7 +10,7 @@ import type { Haul } from '../meta/haul';
 import { canDouble, collectPatrol, patrolHours, patrolOpen, quickLeft, quickPatrol, type QuickPay } from '../meta/patrol';
 import { openProgressChest } from '../meta/progressChests';
 import type { SaveData } from '../meta/save';
-import { lobbyWaiting } from '../meta/waiting';
+import { lobbyWaiting, tasksWaiting } from '../meta/waiting';
 import { OfferLog } from '../net/offers';
 import type { Store } from '../platform/types';
 import { claimGift, giftReady, nextGift } from '../meta/welcome';
@@ -21,7 +21,7 @@ import { adFreeCard } from './adFreeCard';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
 import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
 import { railButton, setRailSub } from './lobbyRail';
-import { COLORS, button, dot, fit, label, panel } from './widgets';
+import { badge, COLORS, button, fit, label, panel } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
 // chests (and on iOS the ad-free card, adFreeCard.ts), the patrol and daily-task buttons on
@@ -75,11 +75,6 @@ const CARD_GAP_MIN = 20;
 /** The refill countdown's line under the cards. */
 const FOOT_H = 110;
 
-/** Whether the Shop tab has something free waiting. */
-export function shopWaiting(save: SaveData, now: number): boolean {
-  return chestsLeft(save, now, 'free') === 1;
-}
-
 export class EconomyUi {
   private modal: Modal = null;
   private haul: Haul | null = null;
@@ -119,7 +114,7 @@ export class EconomyUi {
     for (const f of this.live) f();
   }
 
-  /** The Patrol button for the Play tab's left rail: the hours stored, a dot once it is full. */
+  /** The Patrol button for the Play tab's left rail: the hours stored, a badge once it is full. */
   patrolRail(): Container {
     const save = this.host.save();
     const open = patrolOpen(save);
@@ -136,14 +131,18 @@ export class EconomyUi {
       const full = open && hours >= BALANCE.patrol.capHours;
       // the first minute after setting out reads as a start, not as "0h 0m"
       setRailSub(r, !open ? '' : full ? t('patrol.full') : hours < 1 / 60 ? t('patrol.started') : hoursText(hours));
-      r.dot.visible = full;
+      r.badge.visible = full;
     };
     refresh();
     this.live.push(refresh);
     return r.view;
   }
 
-  /** The Tasks button under Patrol, once tasks are open: a dot while one can be claimed. */
+  /**
+   * The Tasks button under Patrol, once tasks are open: a badge with how many can be claimed over
+   * its four pages. A badge, not a dot: the lobby's one-dot-at-a-time rule used to hide it
+   * whenever a tab or the monk had a dot of its own, while the results screen counted the tasks.
+   */
   tasksRail(): Container | null {
     const save = this.host.save();
     if (!tasksOpen(save)) return null;
@@ -152,7 +151,7 @@ export class EconomyUi {
     const week = w.goals > 0;
     const merit = w.merit > 0;
     const achieve = w.achievements > 0;
-    return railButton({ icon: iconSprite(this.host.icons, 'tasks', 100), name: t('tasks.button'), dot: daily || week || merit || achieve }, () => {
+    return railButton({ icon: iconSprite(this.host.icons, 'tasks', 100), name: t('tasks.button'), count: tasksWaiting(w) }, () => {
       this.tasksView = daily ? 'daily' : week ? 'week' : merit ? 'merit' : achieve ? 'achieve' : 'daily';
       this.achievePage = 0;
       this.show('tasks');
@@ -160,7 +159,7 @@ export class EconomyUi {
   }
 
   /**
-   * The welcome gift (meta/welcome.ts) for the right rail: lit with a dot when today's is waiting,
+   * The welcome gift (meta/welcome.ts) for the right rail: lit with a badge when today's is waiting,
    * dim with "tomorrow" once it is taken; null before the first run and after the last. It opens
    * the week's calendar (giftPanel.ts).
    */
@@ -176,7 +175,7 @@ export class EconomyUi {
       sub: ready ? '' : t('gift.later'),
       lit: ready,
       dim: !ready,
-      dot: ready,
+      count: ready ? 1 : 0,
     }, () => this.show('gift')).view;
   }
 
@@ -400,7 +399,7 @@ export class EconomyUi {
     b.x = 320;
     if (this.playing) b.eventMode = 'none';
     card.addChild(b);
-    if (kind === 'free' && !block) card.addChild(dot(CARD_W / 2 - 20, -h / 2 + 20));
+    if (kind === 'free' && !block) card.addChild(badge(CARD_W / 2 - 20, -h / 2 + 20, 1));
     return card;
   }
 }

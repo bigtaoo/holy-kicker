@@ -11,13 +11,14 @@ import { goalText } from './downPanel';
 import { fallFigures, fallIcon } from './fallIcons';
 import { dropName, haulName, TIER_COLORS } from './gearText';
 import { goalShare } from './resultsReveal';
+import { reachedWave } from './runSummary';
 import { statLines } from './statText';
 import { CARD_STROKE } from './playCard';
 import { starRow } from './stars';
 import { COLORS, fit, label, shade } from './widgets';
 
 // The parts of the results screen (ResultsScreen.ts), each a view centred on x 0 with its top at
-// y 0 and the height it takes: the header (the title, the waves cleared as one big number and a
+// y 0 and the height it takes: the header (the title, the wave reached as one big number and a
 // badge for the best and the leaderboard), the strip saying what felled the hero and how near the
 // next goal was, the rewards as a row of icons, and the rarer news as short lines. A newcomer's
 // card (Reward.newcomer: no chapter cleared before the run) keeps to the title, the waves, the
@@ -50,7 +51,8 @@ export function headerPart(r: Reward, waves: number, rank: RankNote, width: numb
   const won = r.stars > 0;
   const title = fit(label(won ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen'), 72, r.firstClear ? COLORS.saffron : COLORS.text), width);
   title.y = 40;
-  const big = label(String(waves), 180, r.newBest ? COLORS.gold : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
+  // the wave reached, as the HUD, the record banner, the lobby and the boards name it; the save keeps the waves cleared
+  const big = label(String(reachedWave(waves, BALANCE.waves)), 180, r.newBest ? COLORS.gold : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
   big.y = 180;
   const caption = label(t('results.waves'), 48, COLORS.dim);
   caption.y = 310;
@@ -88,7 +90,7 @@ export function headerPart(r: Reward, waves: number, rank: RankNote, width: numb
   // the best (or a new one), the time against the best time and the leaderboard place, side by side under the number
   const badges: Container[] = [];
   if (r.newBest) badges.push(pill(t('results.newBest'), COLORS.gold, 48));
-  else if (!won && r.best > 0) badges.push(pill(t('results.best', { wave: r.best }), COLORS.dim));
+  else if (!won && r.best > 0) badges.push(pill(t('results.best', { wave: reachedWave(r.best, BALANCE.waves) }), COLORS.dim));
   const v = r.time ? verdict(r.time.tenths, r.time.best) : null;
   if (v?.kind === 'faster') badges.push(pill(t('results.timeFaster', { s: v.s }), COLORS.gold, 48));
   else if (v) badges.push(pill(t('results.timeBest', { time: v.best }), COLORS.dim));

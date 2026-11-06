@@ -10,11 +10,12 @@ import { clockTenths } from './clearTime';
 import { menuCover } from './lobbyBars';
 import { blockTop } from './ResultsScreen';
 import { panelKey } from './panelKeys';
+import { reachedWave } from './runSummary';
 import type { Screen, UiFrame } from './uiLayout';
 import { COLORS, button, buttonLabel, fit, keyCap, label, panel, playTap } from './widgets';
 import { spot } from './spots';
 
-// The results of a daily challenge run (docs/design.md "Challenges"): the waves cleared, the four
+// The results of a daily challenge run (docs/design.md "Challenges"): the wave reached, the four
 // milestones with the ones reached lit, what the counted run paid (a later run of the day is
 // practice and pays nothing), the streak it made, the player's share of the board ("top N %") once
 // the server answers (offline: a new best or the day's best that stands), and the hours to the next
@@ -52,6 +53,8 @@ export class ChallengeResultsScreen implements Screen {
   private readonly reward: ChallengeReward;
   private readonly chapter: number;
   private readonly waves: number;
+  /** The challenge's waves, for the wave reached. */
+  private readonly last: number;
   /** Hours until the next challenge opens. */
   private readonly hours: number;
   /** A weekly run: the week's best waves before it. */
@@ -70,7 +73,7 @@ export class ChallengeResultsScreen implements Screen {
     /** The lobby's baked menu courtyard (menuBackdrop) to sit on; null for the flat background. */
     private readonly backdrop: Texture | null = null,
   ) {
-    ({ reward: this.reward, chapter: this.chapter, waves: this.waves, hours: this.hours, weekly: this.weekly, local: this.local } = run);
+    ({ reward: this.reward, chapter: this.chapter, waves: this.waves, last: this.last, hours: this.hours, weekly: this.weekly, local: this.local } = run);
     this.time = run.time ?? null;
     const reward = this.reward;
     void run.reply.then((r) => {
@@ -121,7 +124,8 @@ export class ChallengeResultsScreen implements Screen {
     };
     add(t(this.weekly ? 'weekly.title' : 'challenge.title'), 68, COLORS.saffron, 20);
     add(t('lobby.chapterTitle', { n: this.chapter, name: chapterName(this.chapter) }), 48, COLORS.dim, 95);
-    const big = label(String(this.waves), 170, COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
+    // the wave reached, as every other screen names a run
+    const big = label(String(reachedWave(this.waves, this.last)), 170, COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
     big.y = 230;
     c.addChild(big);
     add(t('results.waves'), 48, COLORS.dim, 340);
@@ -145,7 +149,7 @@ export class ChallengeResultsScreen implements Screen {
     const local = this.local;
     if (local && !rep) {
       if (this.waves > local.before) add(t('weekly.newBest'), 56, COLORS.gold, y);
-      else add(t('challenge.best', { wave: local.before }), 56, COLORS.gold, y);
+      else add(t('challenge.best', { wave: reachedWave(local.before, this.last) }), 56, COLORS.gold, y);
       y += 72;
     } else if (rep) {
       add(t('challenge.top', { n: topPercent(rep.rank, rep.total) }), 56, COLORS.gold, y);
@@ -171,7 +175,7 @@ export class ChallengeResultsScreen implements Screen {
     const rep = this.reply;
     let y = 460;
     if (this.waves > before && rep?.status !== 'lower') add(t('weekly.newBest'), 60, COLORS.gold, y);
-    else if (before > 0) add(t('weekly.bestStands', { wave: Math.max(before, this.waves) }), 52, COLORS.text, y);
+    else if (before > 0) add(t('weekly.bestStands', { wave: reachedWave(Math.max(before, this.waves), this.last) }), 52, COLORS.text, y);
     y += 100;
     if (rep && rep.rank > 0) {
       add(t('weekly.rank', { rank: rep.rank, total: rep.total }), 56, COLORS.gold, y);

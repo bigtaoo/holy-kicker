@@ -37,8 +37,8 @@ export const monkIt: Table<typeof monkEn> = {
       level: { cause: "Troppo debole per l’ondata {wave}", tip: 'Raccogli ogni gemma: sono i livelli a vincere le ultime ondate' },
     },
     goal: {
-      shrine: "Ancora {n} per il santuario dell’ondata {wave}",
-      clear: 'Ancora {n} per finire il capitolo',
+      shrine: 'Supera ancora {n} {n|one:ondata|other:ondate} per il santuario dell’ondata {wave}',
+      clear: 'Supera ancora {n} {n|one:ondata|other:ondate} per finire il capitolo',
     },
   },
   board: {

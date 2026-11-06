@@ -1,6 +1,7 @@
 import { Container } from 'pixi.js';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
+import { BALANCE } from '../meta/balance';
 import { gritBonus } from '../meta/loadout';
 import { hardOpenAt, isCleared, playableChapters, track } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -8,18 +9,22 @@ import type { BoardUi } from './boardPanel';
 import { lockIcon, type IconSheet } from './buildBar';
 import { cardLinesLayout, CHESTS_TOP } from './chapterCardLayout';
 import { chestRow } from './chestRow';
+import { chestsWaitingIn } from '../meta/progressChests';
+import { reachedWave } from './runSummary';
 import { clearUnlocks, nextBlessing, starTotal } from '../meta/unlocks';
 import { sutraName } from './cardText';
 import { CARD, CARD_STROKE } from './playCard';
 import { statLines } from './statText';
 import { starRow } from './stars';
-import { COLORS, button, fit, label, panel } from './widgets';
+import { badge, COLORS, button, fit, label, panel } from './widgets';
 
 // The Play tab's chapter card (LobbyScreen.playTab): its name between the chapter arrows, its
 // stars or how far it went, its five chests, and the normal / hard switch over it once a
 // chapter is cleared (a chapter's hard mode opens with its three stars). Under the stars, a line
 // or two: the grit on the first uncleared chapter, what clearing it unlocks, and on a cleared
-// chapter still short of three stars the next star blessing (docs/unlocks.md).
+// chapter still short of three stars the next star blessing (docs/unlocks.md). Chests waiting
+// elsewhere badge the way to them: an arrow with the count on its side, the other track's button
+// with that track's, so the badges add up to the results screen's count (meta/waiting.ts).
 
 export interface ChapterCardDeps {
   save: SaveData;
@@ -36,7 +41,8 @@ export function hasTrackSwitch(save: SaveData): boolean {
   return save.cleared > 0;
 }
 
-/** Normal and hard side by side, the shown one lit; a hard mode still locked shows a lock and says how to open it. */
+/** Normal and hard side by side, the shown one lit, the other badged with the chests waiting on
+ *  it; a hard mode still locked shows a lock and says how to open it. */
 export function trackSwitch(d: ChapterCardDeps): Container {
   const row = new Container();
   const open = hardOpenAt(d.save, d.save.chapter);
@@ -53,6 +59,7 @@ export function trackSwitch(d: ChapterCardDeps): Container {
       l.position.set(130, -30);
       b.addChild(l);
     }
+    if (!on) b.addChild(badge(140, -40, chestsWaitingIn(d.save, hard)));
     row.addChild(b);
   });
   return row;
@@ -86,7 +93,7 @@ export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Conta
   } else {
     const status = label(
       !open ? t('lobby.unlockAtChapter', { n: n - 1 })
-        : best > 0 ? t('lobby.best', { wave: best + 1 }) : t('lobby.notPlayed'),
+        : best > 0 ? t('lobby.best', { wave: reachedWave(best, BALANCE.waves) }) : t('lobby.notPlayed'),
       48, open ? CARD.quiet : COLORS.danger, open ? {} : CARD_STROKE,
     );
     status.y = 155;
@@ -116,6 +123,7 @@ export function chapterCard(d: ChapterCardDeps, n: number, open: boolean): Conta
     }, { fill: COLORS.panelLocked, size: 80 });
     b.position.set(dir * 385, 70);
     if (!can) b.alpha = 0.3;
+    else b.addChild(badge(dir * 30, -50, dir < 0 ? chestsWaitingIn(save, hard, 1, n - 1) : chestsWaitingIn(save, hard, n + 1)));
     card.addChild(b);
   };
   arrow(-1);

@@ -37,8 +37,8 @@ export const corgiDe: Table<typeof corgiEn> = {
       level: { cause: 'Zu schwach für Welle {wave}', tip: 'Sammle jedes Leckerli: Stufen gewinnen die späten Wellen' },
     },
     goal: {
-      shrine: 'Nur noch {n} bis zum Nachschub bei Welle {wave}',
-      clear: 'Nur noch {n} bis zum Planetensieg',
+      shrine: 'Schaffe noch {n} {n|one:Welle|other:Wellen} bis zum Nachschub bei Welle {wave}',
+      clear: 'Schaffe noch {n} {n|one:Welle|other:Wellen} bis zum Planetensieg',
     },
   },
   board: {

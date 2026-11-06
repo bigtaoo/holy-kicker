@@ -46,7 +46,7 @@ import { canReport, reportProblem } from './problemReport';
 import type { PlayerName } from './playerName';
 import type { DownInfo } from './deathInfo';
 import { DOWN_AD_WAIT_MS, RunWatch } from './runWatch';
-import { keepable } from './runSummary';
+import { keepable, reachedWave } from './runSummary';
 import { runEnd } from './runEnd';
 import type { Screen } from './uiLayout';
 import { reducedMotion } from './media';
@@ -345,7 +345,7 @@ export class RunFlow {
     if (!url || !h.platform.copyText) return undefined;
     const copy = h.platform.copyText.bind(h.platform);
     return async () => {
-      const ok = await copy(t('weekly.shareText', { wave: best, url }));
+      const ok = await copy(t('weekly.shareText', { wave: reachedWave(best, done.last), url }));
       h.net.track('share', { to: 'link', from: 'weekly', ok });
       return ok;
     };

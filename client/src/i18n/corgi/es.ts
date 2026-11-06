@@ -37,8 +37,8 @@ export const corgiEs: Table<typeof corgiEn> = {
       level: { cause: 'Demasiado débil para la oleada {wave}', tip: 'Recoge todas las golosinas: los niveles deciden las últimas oleadas' },
     },
     goal: {
-      shrine: 'Solo {n} más hasta los suministros de la oleada {wave}',
-      clear: 'Solo {n} más para superar el planeta',
+      shrine: 'Supera {n} {n|one:oleada|other:oleadas} más hasta los suministros de la oleada {wave}',
+      clear: 'Supera {n} {n|one:oleada|other:oleadas} más para terminar el planeta',
     },
   },
   board: {

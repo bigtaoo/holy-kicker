@@ -38,8 +38,8 @@ export const corgiPt: Table<typeof corgiEn> = {
       level: { cause: 'Fraco demais para a onda {wave}', tip: 'Pegue todos os petiscos: os níveis decidem as últimas ondas' },
     },
     goal: {
-      shrine: 'Só mais {n} até os suprimentos da onda {wave}',
-      clear: 'Só mais {n} para vencer o planeta',
+      shrine: 'Vença mais {n} {n|one:onda|other:ondas} até os suprimentos da onda {wave}',
+      clear: 'Vença mais {n} {n|one:onda|other:ondas} para vencer o planeta',
     },
   },
   board: {

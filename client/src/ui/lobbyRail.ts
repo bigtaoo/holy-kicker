@@ -2,7 +2,7 @@ import { Container, Graphics, type Text } from 'pixi.js';
 import { lockedLook } from './buildBar';
 import { RAIL_R } from './lobbyLayout';
 import { BADGE } from './playCard';
-import { COLORS, dot, fit, label, playTap, shade } from './widgets';
+import { badge, COLORS, dot, fit, label, playTap, shade } from './widgets';
 
 // The round buttons down the Play tab's two sides (docs/design.md "Lobby layout"): Patrol and
 // Tasks on the left, the daily challenge and the welcome gift on the right. Every one is the same
@@ -22,7 +22,10 @@ export interface RailOptions {
   lit?: boolean;
   /** Greyed: locked, or done for today. */
   dim?: boolean;
+  /** A red dot that asks for a look (a challenge not played yet); one at a time in the lobby. */
   dot?: boolean;
+  /** Things to collect here: a red badge with the count (meta/waiting.ts), always shown. */
+  count?: number;
 }
 
 export interface Rail {
@@ -30,6 +33,8 @@ export interface Rail {
   /** The line under the name, for a live countdown. */
   sub: Text;
   dot: Graphics;
+  /** The badge for `count`; shown or hidden live (the patrol filling up). */
+  badge: Container;
 }
 
 export function railButton(o: RailOptions, onTap: () => void): Rail {
@@ -53,7 +58,10 @@ export function railButton(o: RailOptions, onTap: () => void): Rail {
   sub.y = name.y + 52;
   const d = dot(RAIL_R * 0.7, -RAIL_R * 0.7);
   d.visible = !!o.dot;
-  top.addChild(d);
+  // one thing waiting is a plain dot; it stays hidden when the count is 0 until shown live
+  const b = badge(RAIL_R * 0.7, -RAIL_R * 0.7, Math.max(1, o.count ?? 0));
+  b.visible = (o.count ?? 0) > 0;
+  top.addChild(d, b);
   view.addChild(base, top, name, sub);
   view.eventMode = 'static';
   view.cursor = 'pointer';
@@ -78,7 +86,7 @@ export function railButton(o: RailOptions, onTap: () => void): Rail {
       onTap();
     }
   });
-  return { view, sub, dot: d };
+  return { view, sub, dot: d, badge: b };
 }
 
 /** Resets a rail button's line, keeping it inside the labels' width. */

@@ -37,8 +37,8 @@ export const monkTr: Table<typeof monkEn> = {
       level: { cause: '{wave}. dalga için çok zayıftın', tip: 'Her mücevheri topla: son dalgaları seviye kazanır' },
     },
     goal: {
-      shrine: '{wave}. dalga sunağına sadece {n} kaldı',
-      clear: 'Bölümü bitirmeye sadece {n} kaldı',
+      shrine: '{wave}. dalga sunağına {n} dalga daha geç',
+      clear: 'Bölümü bitirmek için {n} dalga daha geç',
     },
   },
   board: {

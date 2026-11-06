@@ -265,11 +265,35 @@ export function dot(x: number, y: number): Graphics {
   return d;
 }
 
+/**
+ * A red badge on something waiting to be collected, at (x, y): a dot for one, the count in it for
+ * more, so the badges on screen add up to the results screen's "Collect N in the lobby"
+ * (meta/waiting.ts). Hidden for none. Unlike dot(), oneDot() never hides it.
+ */
+export function badge(x: number, y: number, n: number): Container {
+  const c = new Container();
+  c.label = 'badge';
+  c.position.set(x, y);
+  c.visible = n > 0;
+  if (n <= 1) {
+    c.addChild(dot(0, 0));
+    return c;
+  }
+  const r = 34;
+  c.addChild(new Graphics().circle(0, 0, r).fill(COLORS.outline).circle(0, 0, r - 4).fill(0xffffff).circle(0, 0, r - 9).fill(COLORS.danger));
+  const num = fit(label(n > 99 ? '99+' : String(n), 48, COLORS.text), 2 * r - 14);
+  num.y = 1;
+  c.addChild(num);
+  return c;
+}
+
 /** Keeps the first shown red dot (dot()) under `groups`, searched in order, and hides the others: one ask at a time. */
 export function oneDot(groups: readonly Container[]): void {
   let kept = false;
   const walk = (c: Container) => {
     if (!c.visible) return;
+    // a badge counts something to collect: it always shows
+    if (c.label === 'badge') return;
     if (c.label === 'dot') {
       if (kept) c.visible = false;
       kept = true;

@@ -15,6 +15,15 @@ export function clearedWaves(s: SimState): number {
   return s.outcome === 'won' ? s.config.waves : Math.max(0, s.wave - 1);
 }
 
+/**
+ * The wave a run of `last` waves reached after clearing `cleared`: the one it fell on, the last for a
+ * clear. Every screen names a run by it (the HUD, the record banner, the results, the lobby, the
+ * boards), while the save keeps the waves cleared.
+ */
+export function reachedWave(cleared: number, last: number): number {
+  return last > 0 ? Math.min(cleared + 1, last) : cleared + 1;
+}
+
 /** An ended run as the backend counts it (run_end, the boards). */
 export function runSummary(s: SimState, chapter: number, hard: boolean, kills: number) {
   const p = s.players[0];

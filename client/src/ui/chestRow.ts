@@ -4,11 +4,11 @@ import { track } from '../meta/progress';
 import { chestsWaiting } from '../meta/progressChests';
 import type { SaveData } from '../meta/save';
 import { iconSprite, type IconSheet } from './buildBar';
-import { COLORS, dot, label } from './widgets';
+import { badge, COLORS, label } from './widgets';
 
 /**
  * The five progress chests of a chapter over their waves, on the lobby's chapter card: one a run
- * reached waits lit, with a dot, until a tap opens it (`open` with its index); an opened one is
+ * reached waits lit, with a red badge, until a tap opens it (`open` with its index); an opened one is
  * dimmed with a tick; one not reached yet is a muted red, so five of them do not outshout PLAY.
  */
 let muted: ColorMatrixFilter | null = null;
@@ -38,7 +38,7 @@ export function chestRow(save: SaveData, chapter: number, icons: IconSheet, open
       row.addChild(chest);
     }
     if (ready) {
-      row.addChild(dot(x + 50, 0));
+      row.addChild(badge(x + 50, 0, 1));
       const hit = new Graphics().circle(x, 60, 80).fill({ color: 0, alpha: 0.001 });
       hit.eventMode = 'static';
       hit.cursor = 'pointer';

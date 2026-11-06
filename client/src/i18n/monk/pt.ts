@@ -37,8 +37,8 @@ export const monkPt: Table<typeof monkEn> = {
       level: { cause: 'Fraco demais para a onda {wave}', tip: 'Pegue todas as gemas: os níveis decidem as últimas ondas' },
     },
     goal: {
-      shrine: 'Só mais {n} até o santuário da onda {wave}',
-      clear: 'Só mais {n} para vencer o capítulo',
+      shrine: 'Vença mais {n} {n|one:onda|other:ondas} até o santuário da onda {wave}',
+      clear: 'Vença mais {n} {n|one:onda|other:ondas} para vencer o capítulo',
     },
   },
   board: {
