@@ -222,6 +222,7 @@ export const corgiEn: Table<typeof monkEn> = {
     freeInfo: '{copper} bolts and {n} gear',
     adInfo: '{jade} gems and {n} gear',
     jadeInfo: '{n} gear from planet {chapter}',
+    jadeAhead: '{n} gear from the next planet',
     price: '{jade} gems',
     copper: 'Bolt crate',
     copperPrice: '{copper} bolts',

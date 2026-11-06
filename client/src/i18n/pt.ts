@@ -383,7 +383,8 @@ export const pt: Table<typeof en> = {
   },
   train: {
     next: 'Próximo',
-    needLevel: 'Alcance o Nv.{level}',
+    needLevel: 'Requer jogador Nv.{level}',
+    levelHint: 'Partidas sobem seu nível (abaixo do nome)',
     page: '{from}–{to}',
     times: '×{n}',
   },

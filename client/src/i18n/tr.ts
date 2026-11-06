@@ -383,7 +383,8 @@ export const tr: Table<typeof en> = {
   },
   train: {
     next: 'Sıradaki',
-    needLevel: 'Sv. {level} gerekli',
+    needLevel: 'Oyuncu Sv. {level} gerekli',
+    levelHint: 'Oyunlar seviyeni yükseltir (adının altında)',
     page: '{from}–{to}',
     times: '×{n}',
   },

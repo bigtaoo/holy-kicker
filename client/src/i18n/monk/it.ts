@@ -218,6 +218,7 @@ export const monkIt: Table<typeof monkEn> = {
     freeInfo: '{copper} rame e {n} equip',
     adInfo: '{jade} giada e {n} equip',
     jadeInfo: '{n} equip dal capitolo {chapter}',
+    jadeAhead: '{n} equip dal prossimo capitolo',
     price: '{jade} giada',
     copper: 'Forziere di rame',
     copperPrice: '{copper} rame',

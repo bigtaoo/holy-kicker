@@ -219,6 +219,7 @@ export const corgiKo: Table<typeof corgiEn> = {
     freeInfo: '볼트 {copper}개, 장비 {n}개',
     adInfo: '보석 {jade}개, 장비 {n}개',
     jadeInfo: '행성 {chapter} 장비 {n}개',
+    jadeAhead: '다음 행성 장비 {n}개',
     price: '보석 {jade}',
     copper: '볼트 상자',
     copperPrice: '볼트 {copper}',

@@ -1,6 +1,6 @@
 import { Container, Graphics, type Text } from 'pixi.js';
 import { lockedLook } from './buildBar';
-import { RAIL_R } from './lobbyLayout';
+import { RAIL_R, RAIL_TEXT_W } from './lobbyLayout';
 import { BADGE } from './playCard';
 import { COLORS, dot, fit, label, playTap, shade } from './widgets';
 
@@ -9,8 +9,7 @@ import { COLORS, dot, fit, label, playTap, shade } from './widgets';
 // light badge with its picture, its name under it and a short line under that, so the side things
 // read as one quiet family and PLAY stays the only loud button on the screen.
 
-/** The labels' width: they may run a little past the badge, never off the screen. */
-const TEXT_W = 230;
+const TEXT_W = RAIL_TEXT_W;
 const LIP = 10;
 
 export interface RailOptions {

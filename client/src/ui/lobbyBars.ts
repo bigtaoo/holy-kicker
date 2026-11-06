@@ -9,7 +9,7 @@ import { canTrain } from '../meta/waiting';
 import { shopWaiting } from './lobbyEconomy';
 import { isWide, TAB_H, tabCells, TOP_H } from './lobbyLayout';
 import type { UiFrame } from './uiLayout';
-import { COLORS, button, dot, fit, label, shade } from './widgets';
+import { COLORS, button, dot, fit, label, panel, shade } from './widgets';
 
 // The lobby's frame around its tabs: the painted courtyard behind everything, the top bar (the
 // monk's portrait, name and level, the currencies, settings) and the bottom tab bar.
@@ -150,8 +150,10 @@ function wingFade(dir: number): FillGradient {
  * tabs' picture (menuBackdrop), which is toned already. The painting is portrait: a landscape
  * frame shows it as a stage in the middle, with the painting mirrored past both its edges, under a
  * veil of the background, so the courtyard runs on without a seam but the stage stays the subject.
+ * `tint` multiplies the painting (the planet's colour, lobbyAmbient stageTint); `veil` lays the
+ * background colour over it all, for a landscape menu tab's panels.
  */
-export function scenery(f: UiFrame, tex: Texture | null, baked = false): Container {
+export function scenery(f: UiFrame, tex: Texture | null, baked = false, tint = 0xffffff, veil = 0): Container {
   const c = new Container();
   if (!tex) return c;
   const room = f.h - TOP_H - TAB_H;
@@ -172,6 +174,7 @@ export function scenery(f: UiFrame, tex: Texture | null, baked = false): Contain
     pic.scale.set(side ? -scale : scale, scale);
     // the courtyard's floor meets the tab bar; a taller picture loses sky first
     pic.position.set(f.w / 2 + side * tex.width * scale, f.h - TAB_H);
+    pic.tint = tint;
     pics.addChild(pic);
   }
   if (stage) {
@@ -180,6 +183,8 @@ export function scenery(f: UiFrame, tex: Texture | null, baked = false): Contain
       inner.addChild(new Graphics().rect(dir < 0 ? 0 : f.w - run, TOP_H, run, room).fill(wingFade(dir)));
     }
   }
+  // a menu tab's panels over the stage: the place stays, a step back
+  if (veil) inner.addChild(new Graphics().rect(0, TOP_H, f.w, room).fill({ color: COLORS.bg, alpha: veil }));
   const mask = new Graphics().rect(0, TOP_H, f.w, room).fill(0xffffff);
   inner.mask = mask;
   c.addChild(inner, mask);
@@ -259,6 +264,9 @@ export function topBar(w: number, save: SaveData, shown: string, icons: IconShee
     const pill = new Graphics().roundRect(left, TOP_H / 2 - 30, x - left, 60, 30).fill(shade(COLORS.outline, 0.08)).stroke({ color: shade(COLORS.panel, 0.2), width: 3 });
     const coin = iconSprite(icons, id, 76) ?? new Graphics().circle(0, 0, 24).fill(color).stroke({ color: COLORS.outline, width: 5 });
     coin.position.set(left + 8, TOP_H / 2);
+    // named, so a claim's coins can find their counter (rewardFlightView.ts)
+    coin.label = `coin_${id}`;
+    text.label = `amount_${id}`;
     c.addChild(pill, coin, text);
     x = left - 40;
   }
@@ -329,4 +337,14 @@ export function hintArrow(w: number, h: number, tab: Tab): Container {
     .poly([-24, -95, 24, -95, 24, -50, 52, -50, 0, 5, -52, -50, -24, -50]).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 7 }));
   c.eventMode = 'none';
   return c;
+}
+
+/** A passing message over the tab bar: a dark pill, so it reads as a message and not as part of the tab under it. */
+export function toastPill(f: UiFrame, text: string): Container {
+  const words = fit(label(text, 48, COLORS.text), f.w - 140);
+  const toast = new Container();
+  toast.addChild(panel(words.width + 80, 96, COLORS.panel, 48), words);
+  toast.position.set(f.w / 2, f.h - TAB_H - 80);
+  toast.eventMode = 'none';
+  return toast;
 }

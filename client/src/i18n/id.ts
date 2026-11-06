@@ -383,7 +383,8 @@ export const id: Table<typeof en> = {
   },
   train: {
     next: 'Berikutnya',
-    needLevel: 'Capai Lv.{level}',
+    needLevel: 'Perlu Lv.{level} pemain',
+    levelHint: 'Main untuk naik level (di bawah namamu)',
     page: '{from}–{to}',
     times: '×{n}',
   },

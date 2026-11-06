@@ -219,6 +219,7 @@ export const corgiPt: Table<typeof corgiEn> = {
     freeInfo: '{copper} parafusos e {n} {n|one:equipamento|other:equipamentos}',
     adInfo: '{jade} gemas e {n} {n|one:equipamento|other:equipamentos}',
     jadeInfo: '{n} {n|one:equipamento|other:equipamentos} do planeta {chapter}',
+    jadeAhead: '{n} equipamentos do próximo planeta',
     price: '{jade} gemas',
     copper: 'Caixa de parafusos',
     copperPrice: '{copper} parafusos',

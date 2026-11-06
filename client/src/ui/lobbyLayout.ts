@@ -15,6 +15,8 @@ export const RELIC_ROW_H = 250;
 /** The rail buttons' distance from a portrait screen's sides, and their radius and step (lobbyRail.ts). */
 const RAIL_X = 130;
 export const RAIL_R = 72;
+/** The rail labels' width (lobbyRail.ts): they may run a little past the badge, never off the screen. */
+export const RAIL_TEXT_W = 230;
 /** From a rail button's centre to the next one's. */
 export const RAIL_STEP = 300;
 /** The monk's height when the chapter card leaves room for him: portrait, and on a landscape stage. */
@@ -45,6 +47,8 @@ export interface PlaySpots {
   feet: Spot;
   play: Spot;
   figureH: number;
+  /** The relic row's head may run this wide: in portrait, clear of the rails' labels either side. */
+  relicW: number;
   /** Where the rail buttons go: the left list (Patrol, Tasks) and the right one (the challenge, the gift), top down. */
   rails: [Spot[], Spot[]];
 }
@@ -70,6 +74,7 @@ export function playSpots(w: number, h: number, cardH: number, switched: boolean
       feet: { x: w / 2, y: feetY },
       play,
       figureH: Math.max(160, Math.min(FIGURE_H, feetY - cardBottom - 60)),
+      relicW: w - 2 * (RAIL_X + RAIL_TEXT_W / 2) - 30,
       rails: [column(RAIL_X), column(w - RAIL_X)],
     };
   }
@@ -87,6 +92,7 @@ export function playSpots(w: number, h: number, cardH: number, switched: boolean
     feet: { x: w / 2, y: feetY },
     play,
     figureH: Math.max(160, Math.min(FIGURE_H_WIDE, feetY - TOP_H - 60)),
+    relicW: 2 * (railX - (RAIL_DX[1] - RAIL_DX[0]) - RAIL_TEXT_W / 2 - w / 2) - 30,
     rails: [column(railX - (RAIL_DX[1] - RAIL_DX[0])), column(railX)],
   };
 }

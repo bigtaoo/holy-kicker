@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { chestContents, copperChestPrice } from '../meta/shop';
-import { buttonNear, doubleTap, fakeAds, lobbyRig, openTab, reload, tapAt, wallet, words } from '../testkit/lobbyRig';
+import { buttonNear, doubleTap, fakeAds, lobbyRig, openTab, reload, tapAt, settledWallet, words } from '../testkit/lobbyRig';
 import type { ShellRig } from '../testkit/testShell';
 
 const JADE = BALANCE.shop.jadeChest.jade;
@@ -38,7 +38,7 @@ describe('the shop, tapped through', { timeout: 30_000 }, () => {
     expect(save.copper).toBe(50 + copper);
     expect(pieces(rig)).toBe(before + BALANCE.shop.freeChest.drops);
     expect(save.daily.free).toBe(1);
-    expect(wallet(rig).copper).toBe(formatAmount(50 + copper));
+    expect((await settledWallet(rig)).copper).toBe(formatAmount(50 + copper));
     expect(words(rig)).toContain(t('shop.tomorrow'));
     // the used card still answers a tap, with a toast and no second chest
     tapAt(rig.app.stage, chest(rig, 'free'));
@@ -49,7 +49,7 @@ describe('the shop, tapped through', { timeout: 30_000 }, () => {
     await openTab(again, 'shop');
     expect(again.store.load().daily.free).toBe(1);
     expect(words(again)).toContain(t('shop.tomorrow'));
-    expect(wallet(again).copper).toBe(formatAmount(50 + copper));
+    expect((await settledWallet(again)).copper).toBe(formatAmount(50 + copper));
     expect([...rig.faults, ...again.faults]).toEqual([]);
   });
 
@@ -62,7 +62,7 @@ describe('the shop, tapped through', { timeout: 30_000 }, () => {
     expect(rig.store.load().jade).toBe(30);
     expect(pieces(rig)).toBe(before + BALANCE.shop.jadeChest.drops);
     await takeHaul(rig);
-    expect(wallet(rig).jade).toBe('30');
+    expect((await settledWallet(rig)).jade).toBe('30');
     // short of the price: a toast, and the jade stays put
     tapAt(rig.app.stage, chest(rig, 'jade'));
     await rig.tick(2);
@@ -71,7 +71,7 @@ describe('the shop, tapped through', { timeout: 30_000 }, () => {
     expect(pieces(rig)).toBe(before + BALANCE.shop.jadeChest.drops);
     const again = await reload(rig);
     expect(again.store.load().jade).toBe(30);
-    expect(wallet(again).jade).toBe('30');
+    expect((await settledWallet(again)).jade).toBe('30');
     expect([...rig.faults, ...again.faults]).toEqual([]);
   });
 
@@ -134,7 +134,7 @@ describe('the shop, tapped through', { timeout: 30_000 }, () => {
     expect(rig.store.load().jade).toBe(jade);
     expect(rig.store.load().daily.adChests).toBe(1);
     expect(words(rig)).toContain(t('shop.left', { n: per - 1 }));
-    expect(wallet(rig).jade).toBe(String(jade));
+    expect((await settledWallet(rig)).jade).toBe(String(jade));
     const again = await reload(rig, { ads: fakeAds() });
     await openTab(again, 'shop');
     await again.until(() => words(again).includes(t('shop.left', { n: per - 1 })));

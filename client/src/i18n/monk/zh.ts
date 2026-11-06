@@ -218,6 +218,7 @@ export const monkZh: Table<typeof monkEn> = {
     freeInfo: '{copper} 铜钱、{n} 件装备',
     adInfo: '{jade} 玉、{n} 件装备',
     jadeInfo: '{n} 件第 {chapter} 章装备',
+    jadeAhead: '{n} 件下一章的装备',
     price: '{jade} 玉',
     copper: '铜钱匣',
     copperPrice: '{copper} 铜钱',

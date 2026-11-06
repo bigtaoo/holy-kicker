@@ -1,6 +1,6 @@
 import type { OfferPlace, PropValue } from '@hk/protocol';
 import { Container } from 'pixi.js';
-import { formatAmount, t, type Key } from '../i18n';
+import { t, type Key } from '../i18n';
 import { achievementsReady, claimAchievement, claimAllAchievements } from '../meta/achievements';
 import { BALANCE } from '../meta/balance';
 import { claimBonus, claimTask, tasksOpen, today, untilNextDay } from '../meta/daily';
@@ -15,13 +15,15 @@ import { OfferLog } from '../net/offers';
 import type { Store } from '../platform/types';
 import { claimGift, giftReady, nextGift } from '../meta/welcome';
 import { giftPanel } from './giftPanel';
-import { CHEST_KINDS, chestBlock, chestContents, chestsLeft, copperChestPrice, openChest, type ChestKind } from '../meta/shop';
+import { CHEST_KINDS, chestBlock, chestsLeft, openChest, type ChestKind } from '../meta/shop';
+import { CARD_W, chestCard, shopSpots } from './shopCards';
 import type { TasksView } from './achievePanel';
 import { adFreeCard } from './adFreeCard';
 import { iconSprite, lockIcon, type IconSheet } from './buildBar';
-import { haulPanel, hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
+import { hoursText, patrolPanel, tasksPanel, type Live, type PatrolLook, type Tick } from './economyPanels';
+import { haulPanel } from './haulPanel';
 import { railButton, setRailSub } from './lobbyRail';
-import { COLORS, button, dot, fit, label, panel } from './widgets';
+import { COLORS, fit, label } from './widgets';
 
 // The lobby's economy (docs/design.md "Retention", "Ads and monetization"): the Shop tab's
 // chests (and on iOS the ad-free card, adFreeCard.ts), the patrol and daily-task buttons on
@@ -60,20 +62,6 @@ const AD_FREE_TOASTS: Record<'buy' | 'restore', Record<string, Key>> = {
   restore: { owned: 'shop.restored', none: 'shop.nothingToRestore', failed: 'shop.storeOffline' },
 };
 
-const CARD_W = 1000;
-/**
- * A card's height with room to spare; fewer cards grow towards CARD_TALL, and iOS's five on a
- * short phone close the gaps and shrink to CARD_MIN, the least the ad-free card's two buttons need.
- */
-const CARD_H = 290;
-const CARD_MIN = 260;
-const CARD_TALL = 420;
-/** The width of a card's lines, from the chest to its button. */
-const TEXT_W = 420;
-const CARD_GAP = 40;
-const CARD_GAP_MIN = 20;
-/** The refill countdown's line under the cards. */
-const FOOT_H = 110;
 
 /** Whether the Shop tab has something free waiting. */
 export function shopWaiting(save: SaveData, now: number): boolean {
@@ -83,6 +71,8 @@ export function shopWaiting(save: SaveData, now: number): boolean {
 export class EconomyUi {
   private modal: Modal = null;
   private haul: Haul | null = null;
+  /** Seconds the haul popup has been up, for its pop (haulPanel.ts). */
+  private haulAge = 0;
   private adOk = false;
   private playing = false;
   /** An ad-free buy or restore is under way. */
@@ -112,6 +102,7 @@ export class EconomyUi {
   }
 
   update(dt: number): void {
+    if (this.haul) this.haulAge += dt;
     for (const f of this.ticks) f(dt);
     this.clock += dt;
     if (this.clock < 1) return;
@@ -190,36 +181,31 @@ export class EconomyUi {
    * ad-free card, sharing the room (so a host with fewer cards shows them bigger, not a bare
    * floor), and the refill countdown under them.
    */
-  shopTab(room: number): Container {
+  /** The Shop tab, its top centre at 0,0; `row` lays a landscape frame `frameW` wide out as one row of tall cards. */
+  shopTab(room: number, frameW: number, row: boolean): Container {
     const c = new Container();
     const kinds = CHEST_KINDS.filter((k) => k !== 'ad' || this.adOk);
     if ((chestsLeft(this.host.save(), this.now(), 'ad') ?? 0) > 0) this.offers.place('lobby_chest');
     const store = this.host.store;
-    const n = kinds.length + (store ? 1 : 0);
-    // where even the closed-up cards leave no line for it, the refill countdown goes (each card counts its own)
-    const footed = (room - FOOT_H) / n >= CARD_MIN + CARD_GAP_MIN;
-    const each = (footed ? room - FOOT_H : room) / n;
-    const gap = each >= CARD_H + CARD_GAP ? CARD_GAP : Math.max(CARD_GAP_MIN, Math.round(each - CARD_H));
-    const h = Math.round(Math.max(CARD_MIN, Math.min(CARD_TALL, each - gap)));
-    // a short list (no ads, no store) sits in the middle of the room rather than leaving it empty below
-    c.y = Math.max(0, Math.round((room - n * (h + gap) - (footed ? FOOT_H : 0)) / 3));
+    const at = shopSpots(kinds.length + (store ? 1 : 0), room, frameW, row && !store);
+    const deps = { save: this.host.save(), now: this.now(), icons: this.host.icons, playing: this.playing, open: (kind: ChestKind) => void this.open(kind) };
     kinds.forEach((kind, i) => {
-      const card = this.chestCard(kind, h);
-      card.y = i * (h + gap) + h / 2;
+      const card = chestCard(deps, kind, at.w, at.h, at.row);
+      card.position.set(at.at[i].x, at.at[i].y);
       c.addChild(card);
     });
     if (store) {
-      const card = adFreeCard(store, this.buying, CARD_W, h, {
+      const card = adFreeCard(store, this.buying, at.w, at.h, {
         buy: () => void this.adFree('buy', () => store.buy()),
         restore: () => void this.adFree('restore', () => store.restore()),
         toast: (text) => this.host.toast(text),
       });
-      card.y = kinds.length * (h + gap) + h / 2;
+      card.y = at.at[kinds.length].y;
       c.addChild(card);
     }
-    if (!footed) return c;
+    if (at.foot === null) return c;
     const foot = label('', 48, COLORS.text, { stroke: { color: COLORS.outline, width: 8 } });
-    foot.y = n * (h + gap) + 30;
+    foot.y = at.foot;
     const refresh = () => {
       foot.text = t('shop.refill', { time: hoursText(untilNextDay(this.now()) / 3_600_000) });
       fit(foot, CARD_W);
@@ -228,6 +214,11 @@ export class EconomyUi {
     this.live.push(refresh);
     c.addChild(foot);
     return c;
+  }
+
+  /** A haul popup is up: a claim's reward flight waits for its OK. */
+  get holding(): boolean {
+    return this.haul !== null;
   }
 
   /** The open panel and the haul over it, or null. */
@@ -277,10 +268,13 @@ export class EconomyUi {
       }));
     }
     if (this.haul) {
-      c.addChild(haulPanel(this.haul, this.host.icons, w, h, () => {
+      const haul = haulPanel(this.haul, this.host.icons, w, h, () => {
         this.haul = null;
         this.host.relayout();
-      }));
+      });
+      haul.pop(this.haulAge);
+      this.ticks.push(() => haul.pop(this.haulAge));
+      c.addChild(haul.view);
     }
     return c;
   }
@@ -302,6 +296,7 @@ export class EconomyUi {
     // a buy's price is the jade that went beyond what the haul paid in
     const spent = this.host.save().jade + r.haul.jade - r.save.jade;
     this.haul = r.haul;
+    this.haulAge = 0;
     this.host.change(r.save);
     this.host.track(e, { ...p, ...(e === 'buy' ? { spent } : {}), copper: r.haul.copper, jade: r.haul.jade, drops: r.haul.drops.length });
   }
@@ -347,60 +342,5 @@ export class EconomyUi {
     if (block) return this.host.toast(block === 'jade' ? t('shop.noJade') : block === 'copper' ? t('gear.noCopper') : t('shop.tomorrow'));
     if (kind === 'ad' && !(await this.watch('lobby_chest'))) return;
     this.pay(openChest(this.host.save(), this.now(), kind), 'buy', { item: 'chest', kind });
-  }
-
-  private chestCard(kind: ChestKind, h: number): Container {
-    const save = this.host.save();
-    const now = this.now();
-    const card = new Container();
-    card.addChild(panel(CARD_W, h));
-    // a taller card shows a bigger chest and spreads its lines; the text keeps its size
-    const icon = iconSprite(this.host.icons, kind === 'copper' ? 'chest' : `chest_${kind}`, Math.min(230, 200 + (h - CARD_H) / 2));
-    if (icon) {
-      icon.x = -385;
-      card.addChild(icon);
-    }
-    const c = chestContents(save, kind);
-    const left = chestsLeft(save, now, kind);
-    const info = kind === 'free' ? t('shop.freeInfo', { copper: formatAmount(c.copper), n: c.drops })
-      : kind === 'ad' ? t('shop.adInfo', { jade: c.jade, n: c.drops })
-      : t('shop.jadeInfo', { n: c.drops, chapter: c.chapter });  // the copper chest's gear too
-    // a wrapped line keeps a number with its word ("1 gear", "chapter 20")
-    const keep = (text: string) => text.replace(/(\d) /g, '$1 ').replace(/ (\d)/g, ' $1');
-    const status = left === null ? '' : left > 0 ? t('shop.left', { n: left }) : t('shop.tomorrow');
-    // "come back tomorrow" in red, outlined like the other red words on a dark card
-    const out = left === 0;
-    // the name, what is inside (up to two lines) and today's count, stacked down the middle of the card
-    const lines: [string, number, number, boolean][] = [[t(`shop.${kind}`), 56, COLORS.text, false], [info, 48, COLORS.dim, false], [status, 48, out ? COLORS.danger : COLORS.dim, out]];
-    const views = lines.filter(([text]) => text).map(([text, size, fill, stroke]) => {
-      const l = label(keep(text), size, fill, {
-        align: 'left', wordWrap: true, wordWrapWidth: TEXT_W, breakWords: true, lineHeight: size + 6,
-        ...(stroke ? { stroke: { color: COLORS.outline, width: 6 } } : {}),
-      });
-      if (l.height > 2 * (size + 6)) l.scale.set(2 * (size + 6) / l.height);
-      l.anchor.set(0, 0);
-      return l;
-    });
-    const gap = Math.min(24, 8 + (h - CARD_H) / 8);
-    let y = -(views.reduce((sum, l) => sum + l.height, 0) + gap * (views.length - 1)) / 2;
-    for (const l of views) {
-      l.position.set(-260, y);
-      y += l.height + gap;
-      card.addChild(l);
-    }
-    const block = chestBlock(save, now, kind);
-    const playing = kind === 'ad' && this.playing;
-    const text = playing ? '…' : kind === 'jade' ? t('shop.price', { jade: BALANCE.shop.jadeChest.jade })
-      : kind === 'copper' ? t('shop.copperPrice', { copper: formatAmount(copperChestPrice(save)) }) : t('shop.open');
-    const ok = !block && !this.playing;
-    const fill = !ok ? COLORS.panelLocked : kind === 'jade' ? COLORS.jade : kind === 'copper' ? COLORS.copper : COLORS.saffron;
-    const b = button(text, 300, 130, () => void this.open(kind), {
-      fill, textFill: !ok ? COLORS.dim : kind === 'jade' || kind === 'copper' ? COLORS.outline : COLORS.text, video: kind === 'ad' && !playing, size: 48,
-    });
-    b.x = 320;
-    if (this.playing) b.eventMode = 'none';
-    card.addChild(b);
-    if (kind === 'free' && !block) card.addChild(dot(CARD_W / 2 - 20, -h / 2 + 20));
-    return card;
   }
 }

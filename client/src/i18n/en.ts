@@ -383,7 +383,8 @@ export const en = {
   },
   train: {
     next: 'Next',
-    needLevel: 'Reach Lv.{level}',
+    needLevel: 'Needs player Lv.{level}',
+    levelHint: 'Runs raise your level (under your name)',
     page: '{from}–{to}',
     times: '×{n}',
   },

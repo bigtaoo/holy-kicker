@@ -219,6 +219,7 @@ export const corgiVi: Table<typeof corgiEn> = {
     freeInfo: '{copper} ốc vít và {n} trang bị',
     adInfo: '{jade} ngọc và {n} trang bị',
     jadeInfo: '{n} trang bị từ hành tinh {chapter}',
+    jadeAhead: '{n} trang bị từ hành tinh kế tiếp',
     price: '{jade} ngọc',
     copper: 'Thùng ốc vít',
     copperPrice: '{copper} ốc vít',

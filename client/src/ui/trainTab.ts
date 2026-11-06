@@ -316,6 +316,8 @@ function nodeCard(save: SaveData, icons: IconSheet, n: number | null, actions: T
   const b = button(text, 620, 140, () => {
     if (ok) actions.train();
     else if (isNext && block === 'copper') actions.toast(t('gear.noCopper'));
+    // the level is the player's, the one under his name in the top bar: say so, and how it grows
+    else if (isNext && block === 'level') actions.toast(t('train.levelHint'));
     else if (!isNext) actions.pick(null);
   }, { fill: ok ? COLORS.saffron : COLORS.panelLocked, textFill: ok ? COLORS.outline : COLORS.dim });
   b.y = 95;

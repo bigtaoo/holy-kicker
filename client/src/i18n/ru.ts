@@ -382,7 +382,8 @@ export const ru: Table<typeof en> = {
   },
   train: {
     next: 'Далее',
-    needLevel: 'Нужен ур.{level}',
+    needLevel: 'Нужен ур. игрока {level}',
+    levelHint: 'Забеги повышают уровень (под твоим именем)',
     page: '{from}–{to}',
     times: '×{n}',
   },

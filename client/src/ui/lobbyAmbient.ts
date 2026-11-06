@@ -1,4 +1,4 @@
-import { actOf } from '@hk/engine';
+import { actOf, mapOf } from '@hk/engine';
 
 // The lobby's drifting specks over the courtyard, one kind per act the player has reached
 // (docs/unlocks.md): maple leaves, fireflies, snow and gold petals for the monk; motes, spores,
@@ -57,6 +57,17 @@ const SPARKS: DriftStyle = { ...MOTES, count: 16, colors: [0xffd060, 0xffe8a0, 0
 export function actDrift(corgi: boolean, cleared: number): DriftStyle {
   const looks = corgi ? [MOTES, SPORES, ICE, SPARKS] : [LEAVES, FIREFLIES, SNOW, PETALS];
   return looks[Math.min(looks.length, Math.max(1, actOf(cleared + 1))) - 1];
+}
+
+/**
+ * A multiply tint over the lobby's painted courtyard for the planet the corgi has picked, so the
+ * desert outpost reads as Frost Moon, the spore jungle and so on without new art: map 1 cold blue,
+ * 2 green, 3 none (the painting is the dune world already), 4 ember, 5 violet. Free to draw (a
+ * sprite tint, no filter pass). The monk's courtyard is the same temple on every map: white.
+ */
+const CORGI_TINTS = [0xa0c0f6, 0xc8e8c0, 0xffffff, 0xffc8a8, 0xd8c4f4];
+export function stageTint(corgi: boolean, chapter: number): number {
+  return corgi ? CORGI_TINTS[mapOf(chapter) - 1] : 0xffffff;
 }
 
 export interface Speck {

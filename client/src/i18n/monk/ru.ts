@@ -218,6 +218,7 @@ export const monkRu: Table<typeof monkEn> = {
     freeInfo: 'Медь: {copper}, вещей: {n}',
     adInfo: 'Нефрит: {jade}, вещей: {n}',
     jadeInfo: 'Вещей из главы {chapter}: {n}',
+    jadeAhead: 'Вещей из следующей главы: {n}',
     price: 'Нефрит: {jade}',
     copper: 'Медный сундук',
     copperPrice: 'Медь: {copper}',

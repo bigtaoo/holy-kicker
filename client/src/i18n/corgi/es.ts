@@ -218,6 +218,7 @@ export const corgiEs: Table<typeof corgiEn> = {
     freeInfo: '{copper} tornillos y {n} {n|one:objeto|other:objetos}',
     adInfo: '{jade} gemas y {n} {n|one:objeto|other:objetos}',
     jadeInfo: '{n} {n|one:objeto|other:objetos} del planeta {chapter}',
+    jadeAhead: '{n} objetos del próximo planeta',
     price: '{jade} gemas',
     copper: 'Caja de tornillos',
     copperPrice: '{copper} tornillos',

@@ -383,7 +383,8 @@ export const vi: Table<typeof en> = {
   },
   train: {
     next: 'Tiếp',
-    needLevel: 'Cần Lv.{level}',
+    needLevel: 'Cần Lv.{level} người chơi',
+    levelHint: 'Chơi để tăng cấp (dưới tên bạn)',
     page: '{from}–{to}',
     times: '×{n}',
   },

@@ -381,7 +381,8 @@ export const ja: Table<typeof en> = {
   },
   train: {
     next: '次',
-    needLevel: 'Lv.{level}が必要',
+    needLevel: 'プレイヤーLv.{level}が必要',
+    levelHint: 'プレイで名前の下のLvが上がる',
     page: '{from}–{to}',
     times: '×{n}',
   },

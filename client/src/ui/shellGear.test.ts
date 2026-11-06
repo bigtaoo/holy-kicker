@@ -4,7 +4,7 @@ import { formatAmount, t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { emptyInventory, mergeCost, type Inventory, type ItemId, type Tier } from '../meta/gear';
 import { unlockedRelics } from '../meta/unlocks';
-import { buttonNear, doubleTap, lobbyRig, openTab, reload, tapAt, wallet, words } from '../testkit/lobbyRig';
+import { buttonNear, doubleTap, lobbyRig, openTab, reload, tapAt, settledWallet, words } from '../testkit/lobbyRig';
 import type { ShellRig } from '../testkit/testShell';
 import { dropName, itemName, tierName } from './gearText';
 
@@ -53,10 +53,10 @@ describe('gear, tapped through', { timeout: 30_000 }, () => {
     expect(words(rig)).toContain(dropName({ item: 'pendant', tier: 1 }));
     await skipShow(rig);
     expect(words(rig)).toContain(`1/${N}`);
-    expect(wallet(rig).copper).toBe(formatAmount(1000 - mergeCost(0)));
+    expect((await settledWallet(rig)).copper).toBe(formatAmount(1000 - mergeCost(0)));
     const again = await reload(rig);
     expect(again.store.load().gear.pendant.slice(0, 2)).toEqual([1, 1]);
-    expect(wallet(again).copper).toBe(formatAmount(1000 - mergeCost(0)));
+    expect((await settledWallet(again)).copper).toBe(formatAmount(1000 - mergeCost(0)));
     expect([...rig.faults, ...again.faults]).toEqual([]);
   });
 

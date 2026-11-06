@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { computeViewport } from '../game/viewport';
-import { isWide, PLAY_W, playSpots, RAIL_R, tabCells, TOP_H } from './lobbyLayout';
+import { isWide, PLAY_W, playSpots, RAIL_R, RAIL_TEXT_W, tabCells, TOP_H } from './lobbyLayout';
 import { uiFrame } from './uiLayout';
 
 /** The chapter card's width and height (chapterCard.ts) and a monk's half width at his tallest. */
@@ -19,6 +19,10 @@ describe('lobby layout', () => {
       expect(at.rails[0].map((s) => s.x)).toEqual([130, 130]);
       expect(at.rails[1].map((s) => s.x)).toEqual([f.w - 130, f.w - 130]);
       expect(at.rails[0][0].y).toBe(TOP_H + 140 + CARD_H + 50 + RAIL_R);
+      // the relic head stays clear of the rails' labels (the gift's 'Tomorrow' sat on 'Relic: ...')
+      expect(at.feet.x - at.relicW / 2).toBeGreaterThan(at.rails[0][0].x + RAIL_TEXT_W / 2);
+      expect(at.feet.x + at.relicW / 2).toBeLessThan(at.rails[1][0].x - RAIL_TEXT_W / 2);
+      expect(at.relicW).toBeGreaterThan(500);
     }
   });
 
@@ -42,6 +46,8 @@ describe('lobby layout', () => {
         const xs = at.rails.flat().map((s) => s.x);
         expect(Math.min(...xs) - RAIL_R).toBeGreaterThan(Math.max(at.feet.x + MONK_HALF, at.play.x + PLAY_W / 2));
         expect(Math.max(...xs) + RAIL_R).toBeLessThan(f.w);
+        expect(at.feet.x + at.relicW / 2).toBeLessThan(Math.min(...xs) - RAIL_TEXT_W / 2);
+        expect(at.relicW).toBeGreaterThan(900);
       }
     }
   });

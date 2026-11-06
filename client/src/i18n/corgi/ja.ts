@@ -219,6 +219,7 @@ export const corgiJa: Table<typeof corgiEn> = {
     freeInfo: 'ボルト{copper}と装備{n}個',
     adInfo: 'ジェム{jade}と装備{n}個',
     jadeInfo: '惑星{chapter}の装備{n}個',
+    jadeAhead: '次の惑星の装備{n}個',
     price: 'ジェム{jade}',
     copper: 'ボルト箱',
     copperPrice: 'ボルト{copper}',
