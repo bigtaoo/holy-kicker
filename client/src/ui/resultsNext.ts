@@ -6,7 +6,7 @@ import { chapterName } from '../i18n/chapterName';
 import type { NextStep } from '../meta/waiting';
 import type { Part } from './resultsParts';
 import { statLines } from './statText';
-import { COLORS, button, fit, label, shade } from './widgets';
+import { COLORS, button, fit, label } from './widgets';
 
 // The results' pointers onward (ResultsScreen.ts): after a loss, the one thing in the lobby that
 // makes the next run go further, with a button that opens its tab; after a first clear, the
@@ -14,7 +14,7 @@ import { COLORS, button, fit, label, shade } from './widgets';
 
 const STEP_BTN_W = 260;
 
-/** The next step after a loss: one line and a button that goes to the lobby on its tab. */
+/** The next step after a loss: one line and a quiet button (the screen's own buttons lead) that goes to the lobby on its tab. */
 export function nextStepPart(step: NextStep, width: number, go: () => void): Part {
   const c = new Container();
   // the first stat keeps it short; the tab shows the rest
@@ -23,11 +23,11 @@ export function nextStepPart(step: NextStep, width: number, go: () => void): Par
     ? t('results.trainStep', { n: step.n, stats: stats[0] })
     : t('results.mergeStep', { n: step.n });
   const textW = width - STEP_BTN_W - 50;
-  const line = label(text, 48, COLORS.jade, { wordWrap: true, wordWrapWidth: textW, breakWords: true, lineHeight: 58 });
+  const line = label(text, 48, COLORS.jade, { wordWrap: true, wordWrapWidth: textW, breakWords: true, lineHeight: 58 }, true);
   const h = Math.max(110, line.height + 30);
   line.anchor.set(0, 0.5);
   line.position.set(-width / 2 + 20, h / 2);
-  const b = button(t(step.tab === 'train' ? 'results.goTrain' : 'results.goMerge'), STEP_BTN_W, 100, go, { fill: shade(COLORS.jade, 0.45), size: 48 });
+  const b = button(t(step.tab === 'train' ? 'results.goTrain' : 'results.goMerge'), STEP_BTN_W, 100, go, { fill: COLORS.panelLocked, textFill: COLORS.jade, size: 48 });
   b.position.set(width / 2 - STEP_BTN_W / 2 - 10, h / 2);
   c.addChild(line, b);
   return [c, h];
@@ -39,7 +39,7 @@ const HEAD_R = 82;
 /** "Up next" over a strip of the next chapter's ground, its enemy's head in a disc and its name. */
 export function previewPart(look: ChapterLook, width: number): Part {
   const c = new Container();
-  const caption = label(t('results.upNext'), 48, COLORS.dim);
+  const caption = label(t('results.upNext'), 48, COLORS.dim, {}, true);
   caption.anchor.set(0.5, 0);
   c.addChild(caption);
   const top = 66;
