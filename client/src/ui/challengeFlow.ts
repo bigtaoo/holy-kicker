@@ -67,7 +67,9 @@ export interface ChallengeSettled {
   save: SaveData;
   reward: ChallengeReward;
   chapter: number;
+  /** The waves cleared, and the challenge's waves (the results name the wave reached: runSummary.ts reachedWave). */
   waves: number;
+  last: number;
   /** Hours until the next challenge opens. */
   hours: number;
   /** The board's answer; `outdated`: the server moved to another engine during the run, so it was refused; `off`: the leaderboards are off in Settings. */
@@ -282,14 +284,14 @@ export class ChallengeFlow {
       const reward = { counted: true, reached: [], copper: 0, jade: 0, streak: 0, streakJade: 0 };
       // every weekly run goes and the server keeps the best: the save's best may be one the server never
       // got (an older build carried a clear on the old engine's board over to the new one)
-      return { save: week.save, reward, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(true), weekly: { before: week.before, id: c.id } };
+      return { save: week.save, reward, chapter, waves, last: c.waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(true), weekly: { before: week.before, id: c.id } };
     }
     const before = dailyBestOf(save, c);
     const settled = settleChallenge(save, c, chapter, result);
     // a give-up is a finished run too: it counts, so giving up is no way to try again; a made-up
     // daily is the server's own record, so its counted run is sent too once the backend answers
     const local = this.local ? { local: { before } } : {};
-    return { ...settled, chapter, waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(settled.reward.counted), ...local };
+    return { ...settled, chapter, waves, last: c.waves, hours: hoursLeft(c.end, this.serverNow()), reply: send(settled.reward.counted), ...local };
   }
 }
 

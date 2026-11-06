@@ -15,13 +15,19 @@ export function chestsWaiting(save: SaveData, chapter: number, hard: boolean): n
   return reached & ~(save[key(hard)][chapter - 1] ?? 0);
 }
 
-/** How many chests wait, over every chapter of both tracks. */
-export function chestsWaitingCount(save: SaveData): number {
+/** How many chests wait on one track over chapters `from` to `to` (both included): the lobby's
+ *  chapter arrows and track buttons badge the ones they lead to. */
+export function chestsWaitingIn(save: SaveData, hard: boolean, from = 1, to: number = BALANCE.chapters): number {
   let count = 0;
-  for (let n = 1; n <= BALANCE.chapters; n++) {
-    for (let bits = chestsWaiting(save, n, false) | (chestsWaiting(save, n, true) << 16); bits; bits &= bits - 1) count++;
+  for (let n = Math.max(1, from); n <= Math.min(to, BALANCE.chapters); n++) {
+    for (let bits = chestsWaiting(save, n, hard); bits; bits &= bits - 1) count++;
   }
   return count;
+}
+
+/** How many chests wait, over every chapter of both tracks. */
+export function chestsWaitingCount(save: SaveData): number {
+  return chestsWaitingIn(save, false) + chestsWaitingIn(save, true);
 }
 
 /** Whether any chapter of either track has a chest waiting. */

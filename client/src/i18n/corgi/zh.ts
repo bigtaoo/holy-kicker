@@ -38,8 +38,8 @@ export const corgiZh: Table<typeof corgiEn> = {
       level: { cause: '等级不够应付第 {wave} 波', tip: '把零食都捡起来：后面的波次靠等级' },
     },
     goal: {
-      shrine: '再坚持 {n} 波就到第 {wave} 波的补给舱',
-      clear: '再坚持 {n} 波就通关这颗星球',
+      shrine: '再通过 {n} 波就到第 {wave} 波的补给舱',
+      clear: '再通过 {n} 波就通关这颗星球',
     },
   },
   board: {

@@ -38,8 +38,8 @@ export const corgiTr: Table<typeof corgiEn> = {
       level: { cause: '{wave}. dalga için çok zayıftın', tip: 'Her ikramı topla: son dalgaları seviye kazanır' },
     },
     goal: {
-      shrine: '{wave}. dalgadaki ikmale sadece {n} kaldı',
-      clear: 'Gezegeni bitirmeye sadece {n} kaldı',
+      shrine: '{wave}. dalgadaki ikmale {n} dalga daha geç',
+      clear: 'Gezegeni bitirmek için {n} dalga daha geç',
     },
   },
   board: {

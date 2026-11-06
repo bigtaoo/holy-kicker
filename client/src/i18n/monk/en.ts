@@ -36,8 +36,8 @@ export const monkEn = {
       level: { cause: 'Too weak for wave {wave}', tip: 'Grab every gem: levels win the later waves' },
     },
     goal: {
-      shrine: 'Only {n} more to the shrine on wave {wave}',
-      clear: 'Only {n} more to clear the chapter',
+      shrine: 'Clear {n} more {n|one:wave|other:waves} to reach the shrine on wave {wave}',
+      clear: 'Clear {n} more {n|one:wave|other:waves} to finish the chapter',
     },
   },
   board: {

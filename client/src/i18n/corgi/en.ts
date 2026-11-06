@@ -41,8 +41,8 @@ export const corgiEn: Table<typeof monkEn> = {
       level: { cause: 'Too weak for wave {wave}', tip: 'Grab every treat: levels win the later waves' },
     },
     goal: {
-      shrine: 'Only {n} more to the supply drop on wave {wave}',
-      clear: 'Only {n} more to clear the planet',
+      shrine: 'Clear {n} more {n|one:wave|other:waves} to reach the supply drop on wave {wave}',
+      clear: 'Clear {n} more {n|one:wave|other:waves} to finish the planet',
     },
   },
   board: {

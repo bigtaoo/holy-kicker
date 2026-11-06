@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { TICK_RATE, type SimState } from '@hk/engine';
-import { clearedWaves, keepable, runSummary } from './runSummary';
+import { clearedWaves, keepable, reachedWave, runSummary } from './runSummary';
 
 /** The few fields these read, on a run of 40 waves. */
 function ended(outcome: SimState['outcome'], wave: number, waves = 40): SimState {
@@ -26,6 +26,18 @@ describe('runSummary', () => {
     expect(clearedWaves(ended('lost', 17))).toBe(16);
     expect(clearedWaves(ended('playing', 1))).toBe(0);
     expect(clearedWaves(ended('lost', 0))).toBe(0);
+  });
+
+  it('names a run by the wave it reached, the same number the boards get', () => {
+    // fell on wave 14 having cleared 13: the HUD, the record banner, the results and the lobby all say wave 14
+    expect(reachedWave(13, 40)).toBe(14);
+    expect(reachedWave(clearedWaves(ended('lost', 14)), 40)).toBe(runSummary(ended('lost', 14), 1, false, 0).wave);
+    // a clear reached the last wave, not one past it
+    expect(reachedWave(40, 40)).toBe(40);
+    expect(reachedWave(clearedWaves(ended('won', 40)), 40)).toBe(runSummary(ended('won', 40), 1, false, 0).wave);
+    expect(reachedWave(0, 40)).toBe(1);
+    // the sandbox has no last wave
+    expect(reachedWave(7, 0)).toBe(8);
   });
 
   it('sums the run up for the backend', () => {

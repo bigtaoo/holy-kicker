@@ -1,6 +1,7 @@
 import { Container, type Text } from 'pixi.js';
 import { mutatorOf } from '@hk/engine';
 import { BALANCE } from '../meta/balance';
+import { reachedWave } from './runSummary';
 import type { WeekClaim } from '../meta/weekly';
 import { t } from '../i18n';
 import { iconSprite, type IconSheet } from './buildBar';
@@ -113,8 +114,8 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
   add(t('weekly.rewards'), 48, COLORS.text, 665);
   weeklyTiers().forEach((tier, i) => box.addChild(tierRow(t(tier.key as never), tier.jade, i, top + rules.grow + 740 + i * 68, icons)));
   if (w.state === 'update') add(t('weekly.update'), 48, COLORS.danger, 1025);
-  else if (w.invite) add(inviteLine(w.invite.waves, w.best), 46, COLORS.gold, 1025);
-  else add(w.best > 0 ? t('weekly.best', { wave: w.best }) : t('weekly.noBest'), 46, w.best > 0 ? COLORS.saffron : COLORS.dim, 1025);
+  else if (w.invite) add(inviteLine(w.invite.waves, w.best, w.challenge.waves), 46, COLORS.gold, 1025);
+  else add(w.best > 0 ? t('weekly.best', { wave: reachedWave(w.best, w.challenge.waves) }) : t('weekly.noBest'), 46, w.best > 0 ? COLORS.saffron : COLORS.dim, 1025);
   let y = 1080;
   if (w.reply && w.state === 'open') {
     add(t('weekly.rank', { rank: w.reply.rank, total: w.reply.total }), 48, COLORS.text, y);
@@ -130,10 +131,14 @@ export function weeklyPage(box: Container, top: number, width: number, w: Weekly
   });
 }
 
-/** A friend's waves to beat, beside the player's best once there is one. */
-export function inviteLine(friend: number, best: number): string {
-  if (best <= 0) return t('weekly.inviteBeat', { wave: friend });
-  return best > friend ? t('weekly.inviteBeaten', { wave: friend, best }) : t('weekly.inviteVs', { wave: friend, best });
+/**
+ * A friend's run to beat, beside the player's best once there is one: both are waves cleared (the
+ * link carries the friend's), named by the wave reached in a challenge of `last` waves.
+ */
+export function inviteLine(friend: number, best: number, last: number): string {
+  const named = { wave: reachedWave(friend, last), best: reachedWave(best, last) };
+  if (best <= 0) return t('weekly.inviteBeat', named);
+  return best > friend ? t('weekly.inviteBeaten', named) : t('weekly.inviteVs', named);
 }
 
 /** A reward tier's row: its name at the left, its jade at the right; the medal it earns beside the name. */

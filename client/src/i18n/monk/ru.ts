@@ -37,8 +37,8 @@ export const monkRu: Table<typeof monkEn> = {
       level: { cause: 'Слишком слаб для волны {wave}', tip: 'Собирай все самоцветы: на поздних волнах решает уровень' },
     },
     goal: {
-      shrine: 'Ещё {n} до алтаря на волне {wave}',
-      clear: 'Ещё {n} до прохождения главы',
+      shrine: 'Пройди ещё {n} {n|one:волну|few:волны|many:волн|other:волны} до алтаря на волне {wave}',
+      clear: 'Пройди ещё {n} {n|one:волну|few:волны|many:волн|other:волны}, чтобы пройти главу',
     },
   },
   board: {

@@ -2,15 +2,20 @@ import { achievementsReady } from './achievements';
 import { claimable, tasksOpen } from './daily';
 import { mergeAll } from './gear';
 import { goalsClaimable } from './goals';
+import { BALANCE } from './balance';
 import { meritClaimable } from './merit';
+import { patrolHours, patrolOpen } from './patrol';
 import { tabLock } from './progress';
 import { chestsWaitingCount } from './progressChests';
 import type { SaveData } from './save';
+import { chestsLeft } from './shop';
 import { nextNode, train, trainBlock, type TrainStat } from './training';
+import { giftReady, nextGift } from './welcome';
 
-// What waits in the lobby for the player to claim or buy: the source of the lobby's red dots
-// (the Play tab's chests, the Tasks button, the Train tab) and of the results screen's count on
-// "Collect in the lobby", so the two always agree. Pure, so it is tested without Pixi.
+// What waits in the lobby for the player to claim or buy: the source of the lobby's red badges
+// (the Play tab's chests, Patrol, Tasks and the gift, the Shop's free chest, the Train tab) and
+// of the results screen's count on "Collect in the lobby", so the two always agree: every thing
+// counted here has a badge on its tab and on its button. Pure, so it is tested without Pixi.
 
 export interface Waiting {
   /** Progress chests reached and not yet opened, both tracks. */
@@ -25,6 +30,12 @@ export interface Waiting {
   achievements: number;
   /** The next training node can be bought now. */
   train: boolean;
+  /** The Shop's free chest of the day is still there (and the Shop is open). */
+  shop: boolean;
+  /** Today's welcome gift waits (the right rail's Gift button). */
+  gift: boolean;
+  /** The patrol is full: it earns nothing more until collected. */
+  patrol: boolean;
 }
 
 export function lobbyWaiting(save: SaveData, now: number): Waiting {
@@ -36,12 +47,27 @@ export function lobbyWaiting(save: SaveData, now: number): Waiting {
     merit: tasks ? meritClaimable(save, now) : 0,
     achievements: tasks ? achievementsReady(save).length : 0,
     train: canTrain(save),
+    shop: !tabLock(save, 'shop') && chestsLeft(save, now, 'free') === 1,
+    gift: save.firstRunDone && nextGift(save) !== null && giftReady(save, now),
+    patrol: patrolOpen(save) && patrolHours(save, now) >= BALANCE.patrol.capHours,
   };
 }
 
-/** The things waiting, each training node buyable counting once (the Train tab has one dot). */
+/** The things waiting on the Tasks button: its panel's four pages. */
+export function tasksWaiting(w: Waiting): number {
+  return w.tasks + w.goals + w.merit + w.achievements;
+}
+
+/** The things waiting behind a tab, the number on its badge: the Play tab holds the chests and the rails. */
+export function tabWaiting(w: Waiting, tab: 'play' | 'shop' | 'train'): number {
+  if (tab === 'shop') return w.shop ? 1 : 0;
+  if (tab === 'train') return w.train ? 1 : 0;
+  return w.chests + tasksWaiting(w) + (w.gift ? 1 : 0) + (w.patrol ? 1 : 0);
+}
+
+/** The things waiting, each training node buyable counting once (the Train tab has one badge). */
 export function waitingCount(w: Waiting): number {
-  return w.chests + w.tasks + w.goals + w.merit + w.achievements + (w.train ? 1 : 0);
+  return tabWaiting(w, 'play') + tabWaiting(w, 'shop') + tabWaiting(w, 'train');
 }
 
 /** The Train tab is open and its next node affordable. */

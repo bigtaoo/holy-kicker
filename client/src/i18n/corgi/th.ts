@@ -38,8 +38,8 @@ export const corgiTh: Table<typeof corgiEn> = {
       level: { cause: 'เลเวลไม่พอสำหรับเวฟ {wave}', tip: 'เก็บขนมให้หมด: เวฟท้าย ๆ ชนะด้วยเลเวล' },
     },
     goal: {
-      shrine: 'อีกแค่ {n} ถึงเสบียงตกเวฟ {wave}',
-      clear: 'อีกแค่ {n} ก็ผ่านดาว',
+      shrine: 'ผ่านอีก {n} เวฟ ถึงเสบียงตกเวฟ {wave}',
+      clear: 'ผ่านอีก {n} เวฟ ก็ผ่านดาว',
     },
   },
   board: {

@@ -15,7 +15,7 @@ import { panelKey } from './panelKeys';
 import { COLORS, button, buttonLabel, keyCap, label, panel, playTap } from './widgets';
 import { spot } from './spots';
 
-// Results after a run, in three zones on one card: the header (the title, the waves cleared as
+// Results after a run, in three zones on one card: the header (the title, the wave reached as
 // one big number, a badge for the best and the leaderboard place once the server answers), after
 // a lost run a strip with what felled the hero, how near the next goal came and one short tip,
 // then the one step in the lobby that makes the next run go further (training the copper buys,
@@ -23,7 +23,7 @@ import { spot } from './spots';
 // the gear in tier-coloured frames), what the run unlocked as strips (resultsUnlocks.ts), the rarer news (chests, the welcome gift) in
 // short lines under them, and after a first clear the chapter it opened. The parts come in one
 // after another (resultsReveal.ts); a tap shows them all. Under the card two buttons: with
-// something waiting in the lobby (the count its red dots show, lobbyWaiting), Collect in the lobby
+// something waiting in the lobby (the count its red badges add up to, lobbyWaiting), Collect in the lobby
 // leads and Play again steps back; with nothing, Play again leads and Back to lobby steps back. A
 // first clear always leads with Next chapter, so a winner goes on. Until a chapter is cleared
 // (Reward.newcomer) the card keeps to the title, the waves, the stars, the rewards, one unlock and

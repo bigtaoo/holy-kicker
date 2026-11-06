@@ -37,8 +37,8 @@ export const monkDe: Table<typeof monkEn> = {
       level: { cause: 'Zu schwach für Welle {wave}', tip: 'Sammle jeden Edelstein: Stufen gewinnen die späten Wellen' },
     },
     goal: {
-      shrine: 'Nur noch {n} bis zum Schrein bei Welle {wave}',
-      clear: 'Nur noch {n} bis zum Kapitelsieg',
+      shrine: 'Schaffe noch {n} {n|one:Welle|other:Wellen} bis zum Schrein bei Welle {wave}',
+      clear: 'Schaffe noch {n} {n|one:Welle|other:Wellen} bis zum Kapitelsieg',
     },
   },
   board: {

@@ -37,8 +37,8 @@ export const monkEs: Table<typeof monkEn> = {
       level: { cause: 'Demasiado débil para la oleada {wave}', tip: 'Recoge todas las gemas: los niveles deciden las últimas oleadas' },
     },
     goal: {
-      shrine: 'Solo {n} más hasta el santuario de la oleada {wave}',
-      clear: 'Solo {n} más para superar el capítulo',
+      shrine: 'Supera {n} {n|one:oleada|other:oleadas} más hasta el santuario de la oleada {wave}',
+      clear: 'Supera {n} {n|one:oleada|other:oleadas} más para terminar el capítulo',
     },
   },
   board: {

@@ -38,8 +38,8 @@ export const corgiPl: Table<typeof corgiEn> = {
       level: { cause: 'Za słaby na falę {wave}', tip: 'Zbieraj każdy smakołyk: poziomy wygrywają późne fale' },
     },
     goal: {
-      shrine: 'Jeszcze {n} do zrzutu na fali {wave}',
-      clear: 'Jeszcze {n} do ukończenia planety',
+      shrine: 'Pokonaj jeszcze {n} {n|one:falę|few:fale|many:fal|other:fali} do zrzutu na fali {wave}',
+      clear: 'Pokonaj jeszcze {n} {n|one:falę|few:fale|many:fal|other:fali}, by ukończyć planetę',
     },
   },
   board: {

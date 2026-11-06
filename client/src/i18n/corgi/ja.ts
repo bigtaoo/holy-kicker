@@ -38,8 +38,8 @@ export const corgiJa: Table<typeof corgiEn> = {
       level: { cause: 'ウェーブ {wave} にはレベル不足', tip: 'おやつは全部拾おう：後半はレベルが勝負' },
     },
     goal: {
-      shrine: 'あと {n} でウェーブ {wave} の補給ドロップ',
-      clear: 'あと {n} で惑星クリア',
+      shrine: 'あと {n} ウェーブクリアでウェーブ {wave} の補給ドロップ',
+      clear: 'あと {n} ウェーブクリアで惑星クリア',
     },
   },
   board: {

@@ -37,8 +37,8 @@ export const monkTh: Table<typeof monkEn> = {
       level: { cause: 'เลเวลไม่พอสำหรับเวฟ {wave}', tip: 'เก็บอัญมณีให้หมด: เวฟท้าย ๆ ชนะด้วยเลเวล' },
     },
     goal: {
-      shrine: 'อีกแค่ {n} ถึงศาลเจ้าเวฟ {wave}',
-      clear: 'อีกแค่ {n} ก็ผ่านบท',
+      shrine: 'ผ่านอีก {n} เวฟ ถึงศาลเจ้าเวฟ {wave}',
+      clear: 'ผ่านอีก {n} เวฟ ก็ผ่านบท',
     },
   },
   board: {

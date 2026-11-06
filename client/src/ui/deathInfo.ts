@@ -12,8 +12,10 @@ import type { RunPast } from '../meta/falls';
 export type DeathCause = 'crowd' | 'touch' | 'charge' | 'slam' | 'emerge' | 'bullet' | 'zone' | 'level';
 
 /**
- * The goal a fall came closest to, `n` more waves away: wave `wave` (a chest, a shrine, the clear),
- * beating the best of `wave` waves, or (`record`, n 0) a new best of `wave` waves cleared.
+ * The goal a fall came closest to, `n` more waves to clear away: wave `wave`'s chest, the shrine on
+ * wave `wave`, the clear (`wave` the last), beating the best (`wave` the furthest wave reached), or
+ * (`record`, n 0) a new best, `wave` the wave reached. Waves are named as the HUD and the lobby name
+ * them: the wave reached, not the count cleared.
  */
 export interface Goal {
   kind: 'record' | 'chest' | 'shrine' | 'clear' | 'best';
@@ -70,12 +72,12 @@ const RANK: Goal['kind'][] = ['clear', 'chest', 'best', 'shrine'];
 export function nearestGoal(wave: number, last: number, past: RunPast): Goal | null {
   if (last <= 0) return null;
   const cleared = Math.max(0, wave - 1);
-  if (past.best > 0 && cleared > past.best) return { kind: 'record', wave: cleared, n: 0 };
+  if (past.best > 0 && cleared > past.best) return { kind: 'record', wave: Math.min(wave, last), n: 0 };
   // chests, the best and the clear count waves cleared; a shrine waits at the start of its wave
   const goals: Goal[] = [{ kind: 'clear', wave: last, n: last - cleared }];
   const chest = BALANCE.chests.findIndex((c, k) => !(past.chests & (1 << k)) && c.wave > cleared);
   if (chest >= 0) goals.push({ kind: 'chest', wave: BALANCE.chests[chest].wave, n: BALANCE.chests[chest].wave - cleared });
-  if (past.best > 0) goals.push({ kind: 'best', wave: past.best, n: past.best + 1 - cleared });
+  if (past.best > 0) goals.push({ kind: 'best', wave: Math.min(past.best + 1, last), n: past.best + 1 - cleared });
   for (let w = wave + 1; w < last; w++) {
     if (isShrineWave(w, last)) {
       goals.push({ kind: 'shrine', wave: w, n: w - wave });

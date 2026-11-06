@@ -4,12 +4,10 @@ import { seeTab, TABS, tabLock, tabNew, type Lock, type Tab } from '../meta/prog
 import type { SaveData } from '../meta/save';
 import { monkAffordable } from '../meta/monks';
 import { iconSprite, lockIcon, lockedLook, type IconSheet } from './buildBar';
-import { anyChestWaiting } from '../meta/progressChests';
-import { canTrain } from '../meta/waiting';
-import { shopWaiting } from './lobbyEconomy';
+import { lobbyWaiting, tabWaiting } from '../meta/waiting';
 import { isWide, TAB_H, tabCells, TOP_H } from './lobbyLayout';
 import type { UiFrame } from './uiLayout';
-import { COLORS, button, dot, fit, label, shade } from './widgets';
+import { badge, COLORS, button, dot, fit, label, shade } from './widgets';
 
 // The lobby's frame around its tabs: the painted courtyard behind everything, the top bar (the
 // monk's portrait, name and level, the currencies, settings) and the bottom tab bar.
@@ -272,13 +270,16 @@ export interface TabBarActions {
 
 /**
  * The five tabs along the bottom, always all of them (a locked one greyed with a padlock, saying on
- * a tap when it opens): picture over name, the open one raised in saffron. While a new player's
- * arrow points somewhere (`hint`), only that tab keeps its dot, so there is one next step.
+ * a tap when it opens): picture over name, the open one raised in saffron. A tab with things to
+ * collect behind it wears a red badge with their count (meta/waiting.ts), the same count the
+ * results screen sends the player here with; a tab with only something new to see has a dot,
+ * and while a new player's arrow points somewhere (`hint`), only that tab keeps its dot.
  */
 export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons: IconSheet, a: TabBarActions, hint: Tab | null = null): Container {
   const c = new Container();
   const { x0, tw } = tabCells(w, h, TABS.length);
   c.addChild(bar(w, h - TAB_H, TAB_H + BLEED, h - TAB_H + 3, true));
+  const waiting = lobbyWaiting(save, Date.now());
   TABS.forEach((tab, i) => {
     const lock = tabLock(save, tab);
     const active = tab === current;
@@ -305,9 +306,11 @@ export function tabBar(w: number, h: number, save: SaveData, current: Tab, icons
       const l = lockIcon(icons, 52);
       l.position.set(tw / 2 - 40, -TAB_H / 2 + 44);
       cell.addChild(l);
-    } else if (!active && (!hint || hint === tab) && (tabNew(save, tab) || (tab === 'shop' && shopWaiting(save, Date.now())) || (tab === 'play' && anyChestWaiting(save)) || (tab === 'train' && canTrain(save)))) {
+    } else if (!active) {
       // the open tab shows what is waiting itself
-      cell.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
+      const n = tab === 'play' || tab === 'shop' || tab === 'train' ? tabWaiting(waiting, tab) : 0;
+      if (n > 0) cell.addChild(badge(tw / 2 - 30, -TAB_H / 2 + 30, n));
+      else if ((!hint || hint === tab) && tabNew(save, tab)) cell.addChild(dot(tw / 2 - 30, -TAB_H / 2 + 30));
     }
     cell.eventMode = 'static';
     cell.cursor = 'pointer';

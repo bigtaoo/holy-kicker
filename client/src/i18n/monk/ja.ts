@@ -37,8 +37,8 @@ export const monkJa: Table<typeof monkEn> = {
       level: { cause: 'ウェーブ {wave} にはレベル不足', tip: 'ジェムは全部拾おう：後半はレベルが勝負' },
     },
     goal: {
-      shrine: 'あと {n} でウェーブ {wave} の祠',
-      clear: 'あと {n} で章クリア',
+      shrine: 'あと {n} ウェーブクリアでウェーブ {wave} の祠',
+      clear: 'あと {n} ウェーブクリアで章クリア',
     },
   },
   board: {

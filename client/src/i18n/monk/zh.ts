@@ -37,8 +37,8 @@ export const monkZh: Table<typeof monkEn> = {
       level: { cause: '等级不够应付第 {wave} 波', tip: '把宝石都捡起来：后面的波次靠等级' },
     },
     goal: {
-      shrine: '再坚持 {n} 波，第 {wave} 波有神龛',
-      clear: '再坚持 {n} 波就通关本章',
+      shrine: '再通过 {n} 波，第 {wave} 波有神龛',
+      clear: '再通过 {n} 波就通关本章',
     },
   },
   board: {

@@ -3,6 +3,7 @@ import { challengeBoardId, topPercent, type Challenge, type TopRun } from '@hk/p
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
 import { BALANCE } from '../meta/balance';
+import { reachedWave } from './runSummary';
 import { milestonePay } from '../meta/challenge';
 import type { WeekClaim } from '../meta/weekly';
 import { THEME } from '../theme';
@@ -213,7 +214,7 @@ export class ChallengeUi {
     else add(t('challenge.ends', { h: d.hours }), 48, COLORS.text, y);
     y += 65;
     if (d.state === 'done') {
-      if (d.local) add(t('challenge.best', { wave: d.best }), 52, COLORS.saffron, y);
+      if (d.local) add(t('challenge.best', { wave: reachedWave(d.best, d.challenge.waves) }), 52, COLORS.saffron, y);
       else if (d.reply) add(t('challenge.top', { n: topPercent(d.reply.rank, d.reply.total) }), 52, COLORS.saffron, y);
       add(t('challenge.next', { h: d.hours }), 48, COLORS.dim, y + 60);
     } else if (d.local) add(t('challenge.offline'), 48, COLORS.dim, y);

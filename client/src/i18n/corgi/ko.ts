@@ -38,8 +38,8 @@ export const corgiKo: Table<typeof corgiEn> = {
       level: { cause: '{wave} 웨이브에는 레벨 부족', tip: '간식을 모두 주우세요: 후반은 레벨 싸움이에요' },
     },
     goal: {
-      shrine: '{wave} 웨이브 보급 투하까지 {n} 남음',
-      clear: '행성 클리어까지 {n} 남음',
+      shrine: '{n} 웨이브 더 클리어하면 {wave} 웨이브 보급 투하',
+      clear: '{n} 웨이브 더 클리어하면 행성 클리어',
     },
   },
   board: {

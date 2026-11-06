@@ -37,8 +37,8 @@ export const monkPl: Table<typeof monkEn> = {
       level: { cause: 'Za słaby na falę {wave}', tip: 'Zbieraj każdy klejnot: poziomy wygrywają późne fale' },
     },
     goal: {
-      shrine: 'Jeszcze {n} do kapliczki na fali {wave}',
-      clear: 'Jeszcze {n} do ukończenia rozdziału',
+      shrine: 'Pokonaj jeszcze {n} {n|one:falę|few:fale|many:fal|other:fali} do kapliczki na fali {wave}',
+      clear: 'Pokonaj jeszcze {n} {n|one:falę|few:fale|many:fal|other:fali}, by ukończyć rozdział',
     },
   },
   board: {
