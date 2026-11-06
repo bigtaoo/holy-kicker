@@ -8,6 +8,7 @@ import { body, newElite, newMob, underground, type SimState } from '../state';
 import { arm } from './affixes';
 import { newBoss } from './boss';
 import { openShrine, payBet } from './build';
+import { sweepGems } from './drops';
 import { respawnPoint, ringPoint, spawnPoint, wideRun } from './horde';
 import { resetMob } from './marsh';
 
@@ -18,7 +19,8 @@ import { resetMob } from './marsh';
 // falls: the mid-bosses (WAVES.midBosses) are two elites, the twin big jiangshi, in chapter 1
 // and the previous chapter's boss empowered after it, and the last wave has the map's boss
 // (CHAPTER_BOSSES); the chapter's place on the ladder sets health and hurt (LADDER), unless the run ends on a mid-boss wave. Elites and mid-bosses grow tougher wave by wave (waveFoeHp). The last boss falling wins the run;
-// every hero down loses it until a revive. Shrine waves open with the shrine cards. The
+// every hero down loses it until a revive. Every wave's end sweeps the field's gems to the hero
+// (sweepGems). Shrine waves open with the shrine cards. The
 // sandbox (config.waves 0) skips all of this.
 
 /** Horde size on wave `wave` of chapter `chapter` (chapter 1 opens with WAVES.openingHorde). */
@@ -309,6 +311,8 @@ export function waveSystem(s: SimState, events: SimEvent[]): void {
     return;
   }
   if (s.waveT < WAVES.ticks || holds(s)) return;
+  // the gems the wave left on the field fly in before the next one starts
+  sweepGems(s);
   beginWave(s, s.wave + 1);
   events.push({ type: 'wave', wave: s.wave });
   if (isShrineWave(s.wave, last)) openShrine(s);

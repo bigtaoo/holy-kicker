@@ -13,6 +13,8 @@ import { gainXp, magnetOf } from './build';
 //   the fight and fresh kills keep dropping gems in sight.
 // Gems within the magnet radius of a player fly to them and are collected on contact. Resting
 // gems are found by looking up the cells around each player, never by scanning them all.
+// At every wave's end the gems left on the field all fly to the nearest standing hero
+// (sweepGems), so the field never fills with gems a player cannot be bothered to fetch.
 
 export function tierOf(value: number): number {
   let t = 0;
@@ -71,6 +73,24 @@ export function pullGems(s: SimState, p: Player, x: number, y: number, r: number
 /** Every gem on the map flies to the player (a vacuum pickup). */
 export function attractAll(s: SimState, p: Player): void {
   for (const g of s.gems) if (!g.flying) launch(s, g, p);
+}
+
+/** Every resting gem flies to the standing player nearest to it (a wave's end); none while all are down. */
+export function sweepGems(s: SimState): void {
+  for (const g of s.gems) {
+    if (g.flying) continue;
+    let to: Player | null = null;
+    let d2 = 0;
+    for (const p of s.players) {
+      if (p.dead) continue;
+      const e = dist2(p.x - g.x, p.y - g.y);
+      if (!to || e < d2) {
+        to = p;
+        d2 = e;
+      }
+    }
+    if (to) launch(s, g, to);
+  }
 }
 
 /** Resting gems in the cells overlapping the player's magnet circle start flying (wider through a first run's first waves, FIRST_RUN). */

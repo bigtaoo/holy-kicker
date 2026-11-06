@@ -63,7 +63,9 @@ describe('card text', () => {
     expect(cardText({ kind: 'spell', id: 'bell' }, p)).toMatchObject({ icon: 'bell', pairs: ['iron'] });
     expect(cardText({ kind: 'passive', id: 'legs' }, p)).toMatchObject({ icon: 'legs', pairs: ['ball'] });
     expect(cardText({ kind: 'evolve', id: 'palm' }, p)).toMatchObject({ icon: 'palm', pairs: [] });
-    expect(cardText({ kind: 'shrine', id: 'heal' }, p).icon).toBeNull();
+    expect(cardText({ kind: 'shrine', id: 'heal' }, p).icon).toBe('train_hp');
+    expect(cardText({ kind: 'shrine', id: 'insight' }, p).icon).toBe('train_xp');
+    expect(cardText({ kind: 'shrine', id: 'offering' }, p).icon).toBe('copper');
   });
 
   it('describes the staff, its level steps and its awakening', () => {
