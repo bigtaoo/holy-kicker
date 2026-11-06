@@ -6,7 +6,7 @@ import { body, createState, newMob, newElite, newPlayer, type SimState } from '.
 import { contactSystem } from './players';
 import { bossSystem, newBoss } from './boss';
 import { ballSystem, bigTarget, damage, kickTarget, launchBall, nearestTarget } from './combat';
-import { attractAll, dropGem, dropSystem, tierOf } from './drops';
+import { attractAll, dropGem, dropSystem, sweepGems, tierOf } from './drops';
 import { stepHorde } from './horde';
 import { bulletSystem, threatSystem, zoneSystem } from './threats';
 import { mobHp } from './waves';
@@ -206,6 +206,25 @@ describe('drops', () => {
     expect(far(FIRST_RUN.magnetWaves, true)).toBe(5);
     expect(far(FIRST_RUN.magnetWaves + 1, true)).toBe(0);
     expect(far(1, false)).toBe(0);
+  });
+
+  it('sweeps every resting gem to the nearest standing hero, none while all are down', () => {
+    const s = bare();
+    s.players.push(newPlayer(1, u(3000), 0));
+    dropGem(s, u(1000), 0, 2);
+    dropGem(s, u(2500), 0, 3);
+    s.players[1].dead = true;
+    sweepGems(s);
+    s.players[1].dead = false;
+    for (let t = 0; t < 150; t++) dropSystem(s, []);
+    // launched while only the first stood, both are collected
+    expect(s.players[0].xp + s.players[1].xp).toBe(5);
+    expect(s.resting).toBe(0);
+    const t = bare();
+    t.players[0].dead = true;
+    dropGem(t, u(1000), 0, 2);
+    sweepGems(t);
+    expect(t.resting).toBe(1);
   });
 
   it('vacuums the whole map, and the cells start over', () => {

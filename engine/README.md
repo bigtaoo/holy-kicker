@@ -35,6 +35,9 @@ sibling project daydayup (`engine/`, `design/06-netcode-determinism.md`, `design
   until a `pick` command takes one. Passives are a modifier stack read through `stat()`.
   Shrine waves (`SHRINE`) put the three shrine cards (heal, insight, offering) into the same
   offer; `player.offerings` counts the offerings won.
+- Experience gems (`systems/drops.ts`): a kill drops one, merged per cell and capped; resting
+  gems in a hero's magnet radius fly to him, and every wave's end sweeps all the gems left on
+  the field to the nearest standing hero, so a long run's field never fills with them.
 - `SimState` is plain data in ordered arrays. Every moving body keeps the position it had at
   the start of the last tick (`px`, `py`), so the view interpolates between ticks.
 - `PlayerCommand` is `{ owner, tick, moveBrad, moveMag, revive?, pick? }`: the stick as an integer angle

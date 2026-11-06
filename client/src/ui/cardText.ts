@@ -18,8 +18,8 @@ export interface CardText {
   tag: string;
   fresh: boolean;
   lines: string[];
-  /** The item's icon; null for shrine blessings. */
-  icon: IconId | null;
+  /** The item's icon, or a shrine blessing's (SHRINE_ICON); null for none. */
+  icon: IconId | ShrineIcon | null;
   /** What the item evolves with (shown small on the icon), see pairsOf. */
   pairs: IconId[];
 }
@@ -214,11 +214,16 @@ export function cardText(card: Card, p: Player): CardText {
   };
 }
 
+/** The icon sheet's frames the shrine blessings wear: health, a level's worth of experience, the run's coins. */
+export const SHRINE_ICON = { heal: 'train_hp', insight: 'train_xp', offering: 'copper' } as const;
+export type ShrineIcon = (typeof SHRINE_ICON)[keyof typeof SHRINE_ICON];
+
 function shrineText(id: string): CardText {
   const name = t(`shrine.${id as 'heal' | 'insight' | 'offering'}.name`);
   const lines =
     id === 'heal' ? [t('shrine.heal.desc', { n: SHRINE.healPercent })]
     : id === 'insight' ? [t('shrine.insight.desc')]
     : [t('shrine.offering.desc'), t('shrine.offering.more', { n: BALANCE.offeringPercent })];
-  return { kind: 'shrine', name, tag: '', fresh: false, lines, icon: null, pairs: [] };
+  const icon = id === 'heal' || id === 'insight' || id === 'offering' ? SHRINE_ICON[id] : null;
+  return { kind: 'shrine', name, tag: '', fresh: false, lines, icon, pairs: [] };
 }

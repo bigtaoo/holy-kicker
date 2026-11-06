@@ -15,7 +15,7 @@ import { COLORS, backdrop, fit, label, panel } from './widgets';
 // The level-up or shrine choice: three large cards stacked down the middle of the portrait screen, one
 // thumb tap each, or side by side across a landscape run's frame (hudLayout.ts). Each card shows the item's icon on a disc in its kind's colour (with what it
 // evolves with small on the corner), the name, "New!" or the level step, and its effect lines.
-// Shrine blessings have no item and keep a drawn shape. The cards rise in grey and only take taps
+// Shrine blessings wear an icon of their own (SHRINE_ICON); a card whose sheet lacks its icon keeps a drawn shape. The cards rise in grey and only take taps
 // once a gold line has run round their rims (cardGate.ts). On a desktop the keys pick too
 // (cardKeys.ts): each card wears its number, and a gold ring shows the one Enter takes. A player
 // who does nothing for a while is shown a hand tapping the suggested card (cardNudge.ts); in a new
@@ -208,13 +208,16 @@ export interface CardNudgeState {
   tagged: boolean;
 }
 
+/** The tag pill's height; it sits a little above the card's top edge, so its foot clears the name. */
+const PILL_H = 60;
+
 /** The suggested card's tag, a pill on its top edge over the start of the name. */
 function suggestTag(cardW: number, cardH: number): Container {
   const c = new Container();
   const text = label(t('card.suggested'), 48, COLORS.outline);
-  const w = Math.ceil(text.width) + 48;
-  c.addChild(new Graphics().roundRect(-w / 2, -34, w, 68, 34).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 }), text);
-  c.position.set(textX(cardW) + w / 2, -cardH / 2);
+  const w = Math.ceil(text.width) + 40;
+  c.addChild(new Graphics().roundRect(-w / 2, -PILL_H / 2, w, PILL_H, PILL_H / 2).fill(COLORS.saffron).stroke({ color: COLORS.outline, width: 6 }), text);
+  c.position.set(textX(cardW) + w / 2, -cardH / 2 - 8);
   return c;
 }
 

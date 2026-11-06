@@ -3,12 +3,13 @@ import type { CardKind } from '@hk/engine';
 import type { PickWire } from '@hk/protocol';
 import { evolvedIcon, iconSprite, type IconSheet } from './buildBar';
 import { KIND_COLOR } from './cardPanel';
+import { SHRINE_ICON } from './cardText';
 import { timelineLayout } from './replaySeek';
 import { COLORS, label } from './widgets';
 
 // A weekly top run's picks in order (docs/design.md "Challenges"): each card taken as a disc in
-// its kind's colour with the item's icon (an evolution with a gold rim, a shrine blessing as an
-// incense flame), the wave it came on under it. Under the board for the top rows, and under the
+// its kind's colour with the item's icon (an evolution with a gold rim, a shrine blessing with its
+// own, SHRINE_ICON), the wave it came on under it. Under the board for the top rows, and under the
 // replay, where the pick at the replay's tick is ringed, the ones still to come are dimmed, and a
 // tap on one jumps the replay there.
 
@@ -53,10 +54,11 @@ function pickCell(p: PickWire, icons: IconSheet, cell: number, ringed: boolean):
   if (ringed) disc.circle(0, 0, r + 8).fill(COLORS.saffron);
   disc.circle(0, 0, r).fill(KIND_COLOR[kind] ?? COLORS.dim).stroke({ color: kind === 'evolve' ? GOLD_RIM : COLORS.outline, width: kind === 'evolve' ? 6 : 4 });
   c.addChild(disc);
-  const icon = kind === 'shrine' ? null : (kind === 'evolve' ? evolvedIcon : iconSprite)(icons, id, r * 1.5);
+  const shrine = kind === 'shrine' ? SHRINE_ICON[id as keyof typeof SHRINE_ICON] : undefined;
+  const icon = kind === 'shrine' ? (shrine ? iconSprite(icons, shrine, r * 1.5) : null) : (kind === 'evolve' ? evolvedIcon : iconSprite)(icons, id, r * 1.5);
   if (icon) c.addChild(icon);
   else {
-    // an incense flame, as on the shrine's card
+    // an incense flame, as on a shrine card drawn without its icon
     const f = r * 0.6;
     c.addChild(new Graphics().poly([0, -f, f * 0.55, f * 0.15, 0, f * 0.7, -f * 0.55, f * 0.15]).fill(0xfff2d8).stroke({ color: COLORS.outline, width: 3 }));
   }

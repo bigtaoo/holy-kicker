@@ -99,9 +99,9 @@ describe('Engine', () => {
   });
 
   it('matches the golden hashes for this engine version', () => {
-    // Recorded 2026-10-25 for ENGINE_VERSION 51 (51: a charging elite has super armor, no knockback or stun from its aim to its dash's end, which the sandbox, snow, peak, hard and monk runs meet; 50: a first run deals FIRST_RUN_DEALS, steering to the healing incense, which no golden run plays; 49: run_end's movement counters on the player and fairer evolution pairs (fish to Alms Rice, beads to Calm Mind, halo to Focus), Wrath crit 7, Karma xp 12 / magnet 20; 48: cymbals thrown one after another at the nearest foes and ricochet, the halo's beams shoot needles, a lotus bloom scatters petals that can set off the next seed; 47: the acts' rules, acts.ts: the next map's newcomers and paired elites from act 2, elite and boss affixes from act 3, the boss rush from act 4; every foe holds its affixes and shield; 46: twenty chapters on the five maps in turn, health and hurt by LADDER, hard mode HARD percent more, the hero's lowest health kept for the stars; 45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
+    // Recorded 2026-11-06 for ENGINE_VERSION 52 (52: every wave's end sweeps the gems left on the field to the nearest standing hero, which every chapter run meets; 51: a charging elite has super armor, no knockback or stun from its aim to its dash's end, which the sandbox, snow, peak, hard and monk runs meet; 50: a first run deals FIRST_RUN_DEALS, steering to the healing incense, which no golden run plays; 49: run_end's movement counters on the player and fairer evolution pairs (fish to Alms Rice, beads to Calm Mind, halo to Focus), Wrath crit 7, Karma xp 12 / magnet 20; 48: cymbals thrown one after another at the nearest foes and ricochet, the halo's beams shoot needles, a lotus bloom scatters petals that can set off the next seed; 47: the acts' rules, acts.ts: the next map's newcomers and paired elites from act 2, elite and boss affixes from act 3, the boss rush from act 4; every foe holds its affixes and shield; 46: twenty chapters on the five maps in turn, health and hurt by LADDER, hard mode HARD percent more, the hero's lowest health kept for the stars; 45: the talisman, cluster bomb and Blade Circle spells join the pool and the opening deal, with their evolutions; 44: half a second untouchable after a pick, HERO.pickGuard, which the golden runs do; 42: from chapter 3 waves wait for kills and outrun mobs come back ahead, PACE.gate*, PACE.lag*; 43: chapter 4 hurts 150 %, which no golden run reaches).
     // A change here is a rules change: bump the version.
-    expect(ENGINE_VERSION).toBe(51);
+    expect(ENGINE_VERSION).toBe(52);
     expect(run(BUSY, 900, 900).hashes[0]).toBe(GOLDEN);
     expect(run(CHAPTER, 1800, 1800).hashes[0]).toBe(GOLDEN_CHAPTER);
     expect(run(MARSH, 4800, 4800).hashes[0]).toBe(GOLDEN_MARSH);
@@ -131,14 +131,14 @@ describe('Engine', () => {
 });
 
 const GOLDEN = 887211434;
-const GOLDEN_CHAPTER = 2287654223;
-const GOLDEN_MARSH = 3111456636;
-const GOLDEN_SNOW = 4184957277;
-const GOLDEN_GHOST = 1987084579;
-const GOLDEN_PEAK = 346207222;
-const GOLDEN_ACT2 = 258864372;
-const GOLDEN_ACT3 = 3850997880;
-const GOLDEN_HARD = 2940730728;
-const GOLDEN_FAT = 4167680320;
-const GOLDEN_NOVICE = 340050192;
-const GOLDEN_MUTATED = [4122992108, 1963698949, 3728706026];
+const GOLDEN_CHAPTER = 2395483942;
+const GOLDEN_MARSH = 2808164593;
+const GOLDEN_SNOW = 3774827925;
+const GOLDEN_GHOST = 251977057;
+const GOLDEN_PEAK = 1067374249;
+const GOLDEN_ACT2 = 220271991;
+const GOLDEN_ACT3 = 2305808903;
+const GOLDEN_HARD = 2970453418;
+const GOLDEN_FAT = 973239009;
+const GOLDEN_NOVICE = 259813038;
+const GOLDEN_MUTATED = [1877095256, 1786072420, 1222364531];

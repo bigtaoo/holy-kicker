@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { BOSS, DEFAULT_RUN, ELITE, HERO, HORDE, HURT, SHRINE, WAVES, type RunConfig } from '../config';
 import { Engine } from '../Engine';
-import { TICK_RATE } from '../math/fixed';
+import { TICK_RATE, toFp } from '../math/fixed';
+import { dropGem } from './drops';
 import { hashState } from '../hash';
 import type { PlayerCommand } from '../input';
 import { openingShare, hordeSize, isBossWave, isEliteWave, isMidBoss, isShrineWave, mobHp, twinHp, waveFoeHp } from './waves';
@@ -28,6 +29,17 @@ function touch(e: Engine): void {
 }
 
 describe('wave plan', () => {
+  it("sweeps the field's gems to the hero at a wave's end", () => {
+    const e = new Engine({ ...CHAPTER, chapter: 2 });
+    idle(e, WAVES.ticks - 2);
+    const p = e.state.players[0];
+    for (let i = 0; i < 5; i++) dropGem(e.state, p.x + toFp(1500 + 400 * i), p.y - toFp(900), 1);
+    expect(e.state.resting).toBeGreaterThanOrEqual(5);
+    idle(e, 3);
+    expect(e.state.wave).toBe(2);
+    expect(e.state.resting).toBe(0);
+  });
+
   it('grows the horde every wave up to its cap', () => {
     expect(hordeSize(1, 2)).toBe(WAVES.hordeBase);
     expect(hordeSize(2, 2)).toBe(WAVES.hordeBase + WAVES.hordeStep);
