@@ -1,4 +1,4 @@
-import { Container, type Text, type Texture } from 'pixi.js';
+import { Container, Graphics, type Text, type Texture } from 'pixi.js';
 import type { ChapterLook } from '../chapterArt';
 import { t } from '../i18n';
 import type { Reward, Tab } from '../meta/progress';
@@ -10,6 +10,7 @@ import { nextStepPart, previewPart } from './resultsNext';
 import { fallPart, headerPart, newsLines, rewardsPart, type Part, type RankNote } from './resultsParts';
 import { newcomerUnlocks, unlocksPart } from './resultsUnlocks';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
+import { fitScale, rowCentres, WIDE_PAD, widePlan } from './resultsLayout';
 import type { Screen, UiFrame } from './uiLayout';
 import { panelKey } from './panelKeys';
 import { COLORS, button, buttonLabel, keyCap, label, panel, playTap } from './widgets';
@@ -19,8 +20,8 @@ import { spot } from './spots';
 // one big number, a badge for the best and the leaderboard place once the server answers), after
 // a lost run a strip with what felled the hero, how near the next goal came and one short tip,
 // then the one step in the lobby that makes the next run go further (training the copper buys,
-// else gear to merge) with a button to its tab, and the rewards as icons (the copper counting up,
-// the gear in tier-coloured frames), what the run unlocked as strips (resultsUnlocks.ts), the rarer news (chests, the welcome gift) in
+// else gear to merge) with a quiet button to its tab, and the rewards as icons (the copper counting up,
+// the gear in tier-coloured frames, the name of the best or the one pointed at under them), what the run unlocked as strips (resultsUnlocks.ts), the rarer news (chests, the welcome gift) in
 // short lines under them, and after a first clear the chapter it opened. The parts come in one
 // after another (resultsReveal.ts); a tap shows them all. Under the card two buttons: with
 // something waiting in the lobby (the count its red dots show, lobbyWaiting), Collect in the lobby
@@ -30,7 +31,9 @@ import { spot } from './spots';
 // the chapter opened, so a player who just met the game is not handed a list. The lower one sits beside the
 // rewarded "double copper" offer at the same size, font and colour (CrazyGames' rewarded-ad rules).
 // On a desktop Enter takes the first button and Escape goes to the lobby; the buttons wear their
-// keys. The rewarded ad has no key: it plays only on a click.
+// keys. The rewarded ad has no key: it plays only on a click. A landscape frame has one wide
+// panel in the middle instead (resultsLayout.ts): the run on the left, what it brought on the
+// right, the buttons in one row along its foot with the leading one at the right end.
 
 export interface ResultsActions {
   /** Plays the rewarded ad and pays the bonus; resolves whether it was paid. */
@@ -57,8 +60,8 @@ export function blockTop(frameH: number, cardH: number, below: number): number {
 const CARD_W = 920;
 const INNER_W = 840;
 const GAP = 30;
-/** In landscape, the card's and the buttons' centres either side of the middle. */
-const SIDE_DX = 520;
+/** The buttons' gap in a landscape row. */
+const ROW_GAP = 30;
 
 export class ResultsScreen implements Screen {
   readonly view = new Container();
@@ -120,18 +123,18 @@ export class ResultsScreen implements Screen {
     this.view.addChild(back);
 
     const r = this.reward;
-    // the zones top down, each [view, height]; the rewards' copper counts up
-    const zones: Part[] = [headerPart(r, this.waves, this.rank, INNER_W)];
+    // the zones top down, each [view, height], in two groups: the run, then what it brought; the rewards' copper counts up
+    const run: Part[] = [headerPart(r, this.waves, this.rank, INNER_W)];
     if (this.fall) {
-      zones.push(fallPart(this.fall, this.waves, INNER_W, this.icons));
+      run.push(fallPart(this.fall, this.waves, INNER_W, this.icons));
       const step = this.actions.step();
-      if (step) zones.push(nextStepPart(step, INNER_W, () => this.actions.next(step.tab)));
+      if (step) run.push(nextStepPart(step, INNER_W, () => this.actions.next(step.tab)));
     }
     const total = this.offer === 'paid' ? 2 * r.copper : r.copper;
     const rewards = rewardsPart(r, total, this.icons, INNER_W);
-    zones.push(rewards);
+    const haul: Part[] = [rewards];
     const unlocks = unlocksPart(r.newcomer ? newcomerUnlocks(r.unlocks) : r.unlocks, this.icons, INNER_W);
-    if (unlocks) zones.push(unlocks);
+    if (unlocks) haul.push(unlocks);
     const news = new Container();
     let ny = 0;
     // a long line (a long translation) wraps rather than shrinking below the card's text size
@@ -142,25 +145,32 @@ export class ResultsScreen implements Screen {
       news.addChild(l);
       ny += l.height + 20;
     }
-    if (ny > 0) zones.push([news, ny]);
-    if (this.look && this.actions.again) zones.push(previewPart(this.look, INNER_W));
+    if (ny > 0) haul.push([news, ny]);
+    if (this.look && this.actions.again) haul.push(previewPart(this.look, INNER_W));
+    const zones = [...run, ...haul];
+    this.parts = [];
+    this.copper = { text: rewards.copper, part: zones.indexOf(rewards) };
+    // a landscape frame (at least 2560 x 1440) has room for one wide panel: the run beside what it brought, the buttons along its foot
+    if (f.w > f.h) this.wide(f, run, haul);
+    else this.tall(f, zones);
+    this.update(0, total);
+  }
 
+  /** Portrait: the zones down one card, the buttons under it. */
+  private tall(f: UiFrame, zones: Part[]): void {
     const cardH = zones.reduce((n, [, h]) => n + h + GAP, 0) + 60;
     const card = new Container();
-    // a landscape frame (1440 tall) sets the buttons beside the card, a portrait one under it
-    const wide = f.w > f.h;
     const rows = this.actions.again ? 185 : 0;
     // a long card shrinks so the buttons stay on screen
-    const below = wide ? 0 : rows + 270;
+    const below = rows + 270;
     const k = Math.min(1, (f.h - 80 - below) / cardH);
     card.scale.set(k);
     // the card and its buttons as one block, centred a little above the middle (a short card
     // otherwise floats in the top two thirds over an empty floor)
-    const top = blockTop(f.h, k * cardH, wide ? 0 : below - 70);
-    card.position.set(wide ? f.w / 2 - SIDE_DX : f.w / 2, top + (k * cardH) / 2);
+    const top = blockTop(f.h, k * cardH, below - 70);
+    card.position.set(f.w / 2, top + (k * cardH) / 2);
     card.addChild(panel(CARD_W, cardH));
     let y = -cardH / 2 + 40;
-    this.parts = [];
     for (const [view, h] of zones) {
       view.y = y;
       card.addChild(view);
@@ -168,18 +178,44 @@ export class ResultsScreen implements Screen {
       y += h + GAP;
     }
     this.view.addChild(card);
-    this.copper = { text: rewards.copper, part: zones.indexOf(rewards) };
-
     const buttons = new Container();
-    if (wide) this.buttons(buttons, f.w / 2 + SIDE_DX, card.y - rows / 2);
-    else this.buttons(buttons, f.w / 2, card.y + (k * cardH) / 2 + 130);
+    this.buttons(buttons, f.w / 2, card.y + (k * cardH) / 2 + 130, false);
     this.view.addChild(buttons);
     this.parts.push([buttons, 0]);
-    this.update(0, total);
   }
 
-  /** The leading button over the second (or one alone), the second beside the ad offer, from `y` down. */
-  private buttons(c: Container, x: number, y: number): void {
+  /** Landscape: one panel in the middle, the run on the left, what it brought on the right, the buttons in a row under both. */
+  private wide(f: UiFrame, run: Part[], haul: Part[]): void {
+    const plan = widePlan(INNER_W, run.map(([, h]) => h), haul.map(([, h]) => h));
+    const card = new Container();
+    card.scale.set(fitScale(plan.w, plan.h, f.w, f.h, 40));
+    card.position.set(f.w / 2, f.h / 2);
+    const rule = { color: COLORS.outline, alpha: 0.45, width: 4 };
+    card.addChild(
+      panel(plan.w, plan.h),
+      new Graphics()
+        .moveTo(0, plan.top).lineTo(0, plan.bottom).stroke(rule)
+        .moveTo(-plan.w / 2 + WIDE_PAD, plan.ruleY).lineTo(plan.w / 2 - WIDE_PAD, plan.ruleY).stroke(rule),
+    );
+    const place = (parts: Part[], x: number, tops: number[]) => parts.forEach(([view], i) => {
+      view.position.set(x, tops[i]);
+      card.addChild(view);
+      this.parts.push([view, tops[i]]);
+    });
+    place(run, plan.leftX, plan.left);
+    place(haul, plan.rightX, plan.right);
+    const buttons = new Container();
+    this.buttons(buttons, 0, plan.rowY, true);
+    card.addChild(buttons);
+    this.parts.push([buttons, 0]);
+    this.view.addChild(card);
+  }
+
+  /**
+   * The leading button over the second (or one alone), the second beside the ad offer, from `y`
+   * down; in a `row` (landscape) all of them side by side centred on `x`, the leading one last.
+   */
+  private buttons(c: Container, x: number, y: number, row: boolean): void {
     const busy = this.offer === 'playing';
     const n = this.actions.waiting();
     const lobby = { text: n > 0 ? t('results.collect', { n }) : t('results.lobby'), act: () => this.actions.next() };
@@ -188,8 +224,11 @@ export class ResultsScreen implements Screen {
     // a first clear goes on; a loss with something to collect leads there, else straight back in
     const rows = !replay ? [lobby] : this.reward.firstClear || n === 0 ? [replay, lobby] : [lobby, replay];
     this.primary = rows[0].act;
+    // the buttons left to right as a row sets them, [view, width]
+    const line: [Container, number][] = [];
+    let first: Container | null = null;
     if (rows.length === 2) {
-      const first = button(rows[0].text, 640, 150, rows[0].act, { fill: COLORS.saffron });
+      first = button(rows[0].text, 640, 150, rows[0].act, { fill: COLORS.saffron });
       first.position.set(x, y);
       if (busy) first.eventMode = 'none';
       else if (this.keys) keyCap(first, 640, 150, t('common.keyEnter'));
@@ -224,7 +263,14 @@ export class ResultsScreen implements Screen {
       ad.position.set(x - w / 2 - 10, y);
       if (busy) ad.eventMode = 'none';
       c.addChild(ad);
+      line.push([ad, w]);
     }
+    line.push([second, w]);
+    if (!row) return;
+    // one row along the panel's foot: the ones that step back, then the leading one at the right end
+    if (first) line.push([first, 640]);
+    const xs = rowCentres(line.map(([, bw]) => bw), ROW_GAP);
+    line.forEach(([b], i) => b.position.set(x + xs[i], first ? y - 185 : y));
   }
 
   update(dt: number, total = this.offer === 'paid' ? 2 * this.reward.copper : this.reward.copper): void {

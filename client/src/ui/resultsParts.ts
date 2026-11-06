@@ -1,4 +1,4 @@
-import { Container, Graphics, type Text } from 'pixi.js';
+import { Container, Graphics, Rectangle, type Text } from 'pixi.js';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import type { Drop } from '../meta/gear';
@@ -9,7 +9,7 @@ import { clockTenths, verdict } from './clearTime';
 import type { DownInfo } from './deathInfo';
 import { goalText } from './downPanel';
 import { fallFigures, fallIcon } from './fallIcons';
-import { dropName, haulName, TIER_COLORS } from './gearText';
+import { dropLines, dropName, haulName, TIER_COLORS } from './gearText';
 import { goalShare } from './resultsReveal';
 import { statLines } from './statText';
 import { CARD_STROKE } from './playCard';
@@ -36,7 +36,7 @@ const MISS = { off: 'results.rankOff', queued: 'results.rankQueued', unverified:
 /** A rounded pill with `text` in it, `fill` coloured. */
 function pill(text: string, color: number, size = 48): Container {
   const c = new Container();
-  const l = label(text, size, color);
+  const l = label(text, size, color, {}, true);
   l.anchor.set(0.5);
   const w = l.width + 48;
   const h = size + 28;
@@ -52,7 +52,7 @@ export function headerPart(r: Reward, waves: number, rank: RankNote, width: numb
   title.y = 40;
   const big = label(String(waves), 180, r.newBest ? COLORS.gold : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
   big.y = 180;
-  const caption = label(t('results.waves'), 48, COLORS.dim);
+  const caption = label(t('results.waves'), 48, COLORS.dim, {}, true);
   caption.y = 310;
   c.addChild(title, big, caption);
   // a won run's stars, and what the next one asks while the chapter lacks it; a newcomer's card
@@ -133,7 +133,7 @@ export function fallPart(fall: DownInfo, waves: number, width: number, icons: Ic
   if (fall.goal) {
     // the goal has the strip's whole width, so it reads at full size
     const left = -width / 2 + 30;
-    const goal = fit(label(goalText(fall.goal), 48, fall.goal.kind === 'record' ? COLORS.jade : COLORS.trim), width - 60);
+    const goal = fit(label(goalText(fall.goal), 48, fall.goal.kind === 'record' ? COLORS.jade : COLORS.trim, {}, true), width - 60);
     goal.anchor.set(0, 0.5);
     goal.position.set(left, y + 26);
     const share = goalShare(waves, fall.goal);
@@ -154,8 +154,8 @@ export function fallPart(fall: DownInfo, waves: number, width: number, icons: Ic
   return [c, y + 10];
 }
 
-/** The gear found, one framed icon per item and tier with a count, the best first. */
-function gearTiles(drops: readonly Drop[], icons: IconSheet): Container[] {
+/** The gear found, one framed icon per item and tier with a count, the best first, each with its name ("Fine Dog Tag ×2") and tier colour. */
+function gearTiles(drops: readonly Drop[], icons: IconSheet): { tile: Container; name: string; color: number }[] {
   const seen = new Map<string, { d: Drop; n: number }>();
   for (const d of [...drops].sort((a, b) => b.tier - a.tier)) {
     const key = `${d.tier}|${d.item}`;
@@ -163,7 +163,8 @@ function gearTiles(drops: readonly Drop[], icons: IconSheet): Container[] {
     if (e) e.n++;
     else seen.set(key, { d, n: 1 });
   }
-  return [...seen.values()].map(({ d, n }) => {
+  const names = dropLines(drops);
+  return [...seen.values()].map(({ d, n }, i) => {
     const c = new Container();
     const color = TIER_COLORS[d.tier];
     c.addChild(new Graphics().roundRect(-62, -62, 124, 124, 22).fill(shade(color, -0.55)).stroke({ color, width: 7 }));
@@ -174,11 +175,14 @@ function gearTiles(drops: readonly Drop[], icons: IconSheet): Container[] {
       k.position.set(72, 76);
       c.addChild(k);
     }
-    return c;
+    return { tile: c, name: names[i][0], color };
   });
 }
 
-/** The copper paid, `total` (its number counted up through `copper`), and the gear found, in rows. */
+/**
+ * The copper paid, `total` (its number counted up through `copper`), and the gear found, in rows,
+ * under them the name of one piece: the best, or the one the pointer is over or last tapped (ringed).
+ */
 export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: number): Part & { copper: Text } {
   const c = new Container();
   const coin = iconSprite(icons, 'copper', 96) ?? new Graphics().circle(0, 0, 32).fill(COLORS.copper).stroke({ color: COLORS.outline, width: 5 });
@@ -192,17 +196,43 @@ export function rewardsPart(r: Reward, total: number, icons: IconSheet, width: n
   chip.position.set(-(12 + copper.width) / 2, 60);
   c.addChild(chip);
   let y = 130;
-  const tiles = gearTiles(shownDrops(r), icons);
+  const gear = gearTiles(shownDrops(r), icons);
   // as many rows as the width needs, the tiles shared out evenly between them (7 as 4 + 3, not 6 + 1)
   const fits = Math.max(1, Math.floor((width + 16) / 140));
-  const per = Math.ceil(tiles.length / Math.max(1, Math.ceil(tiles.length / fits)));
-  tiles.forEach((tile, i) => {
+  const per = Math.ceil(gear.length / Math.max(1, Math.ceil(gear.length / fits)));
+  gear.forEach(({ tile }, i) => {
     const row = Math.floor(i / per);
-    const inRow = Math.min(per, tiles.length - row * per);
+    const inRow = Math.min(per, gear.length - row * per);
     tile.position.set(((i % per) - (inRow - 1) / 2) * 140, y + 70 + row * 140);
     c.addChild(tile);
   });
-  if (tiles.length > 0) y += Math.ceil(tiles.length / per) * 140 + 10;
+  if (gear.length > 0) {
+    y += Math.ceil(gear.length / per) * 140 + 10;
+    const name = label('', 62, COLORS.text, {}, true);
+    name.anchor.set(0.5, 0);
+    name.y = y + 4;
+    const ring = new Graphics().roundRect(-72, -72, 144, 144, 28).stroke({ color: COLORS.text, width: 5 });
+    ring.visible = gear.length > 1;
+    const show = (i: number) => {
+      name.text = gear[i].name;
+      name.style.fill = gear[i].color;
+      name.scale.set(Math.min(1, width / Math.max(1, name.width / name.scale.x)));
+      ring.position.copyFrom(gear[i].tile.position);
+    };
+    gear.forEach(({ tile }, i) => {
+      // a wordless pad over the tile takes the pointer, so the tile's count reads as no button
+      const pad = new Container();
+      pad.hitArea = new Rectangle(-62, -62, 124, 124);
+      pad.eventMode = 'static';
+      pad.cursor = 'pointer';
+      pad.on('pointerover', () => show(i));
+      pad.on('pointertap', () => show(i));
+      tile.addChild(pad);
+    });
+    show(0);
+    c.addChild(ring, name);
+    y += 84;
+  }
   return Object.assign([c, y] as Part, { copper });
 }
 
