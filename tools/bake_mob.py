@@ -35,7 +35,10 @@ spec.json (coordinates in pixels of the cut-out source, times are loop phase 0..
       {"type": "move", "region": R, "dx": f, "dy": f},
       {"type": "wave", "region": R, "root": [x, y], "dir": [ux, uy],
        "length": px, "wavelength": px, "amp": f, "cycles": n}
-    ]
+    ],
+    "rig": {...}                    # optional, in place of "deform": cut-out parts that each
+                                    # move about their own joint (tools/mob_rig.py); "body"
+                                    # then only lifts ("dy")
   }
 R is an ellipse {"c": [x, y], "r": [rx, ry], "feather": 0..1}; the deformer acts fully
 inside and fades out over the outer `feather` fraction of the radius.
@@ -53,6 +56,7 @@ from PIL import Image
 
 sys.path.insert(0, os.path.dirname(__file__))
 from cutout import cutout  # noqa: E402
+from mob_rig import preview, rig_frames  # noqa: E402
 from sticker_pass import sticker  # noqa: E402
 
 
@@ -182,8 +186,22 @@ def bake(spec, base):
                 d[k] = shift(d[k])
         deform.append(d)
 
-    ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
     body = spec.get("body", {})
+    if "rig" in spec:
+        # cut-out parts posed per frame (mob_rig.py) in place of the warp
+        posed = rig_frames(spec, os.path.join(base, spec["source"]), value, (l, t_), (W, H), spec["frames"])
+        frames = [cv2.resize(f, (fw, fh), interpolation=cv2.INTER_AREA) for f in posed]
+        lift = [round(-value(body.get("dy", 0), i / spec["frames"]) * scale, 1) for i in range(spec["frames"])]
+    else:
+        frames, lift = warp_frames(spec, canvas, body, deform, (gx, gy), (W, H), (fw, fh), scale)
+    return finish(spec, frames, lift, fw, fh, pad, ol, fit, gx * scale, gy * scale)
+
+
+def warp_frames(spec, canvas, body, deform, ground, size, out, scale):
+    """The frames warped by the spec's body and deformers, at sheet size."""
+    gx, gy = ground
+    W, H = size
+    ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
     frames, lift = [], []
     for i in range(spec["frames"]):
         t = i / spec["frames"]
@@ -195,8 +213,13 @@ def bake(spec, base):
             x, y = inverse(d, t, x, y)
         warped = cv2.remap(canvas, x.astype(np.float32), y.astype(np.float32), cv2.INTER_LINEAR,
                            borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-        frames.append(cv2.resize(warped, (fw, fh), interpolation=cv2.INTER_AREA))
+        frames.append(cv2.resize(warped, out, interpolation=cv2.INTER_AREA))
+    return frames, lift
 
+
+def finish(spec, frames, lift, fw, fh, pad, ol, fit, gx, gy):
+    """The sticker pass, flash copies and rim on the frames, packed into the sheet and its meta;
+    (gx, gy) is the ground in sheet px."""
     if "sticker" in spec:
         frames = sticker_frames(frames, spec["height"] / spec["sticker"]["drawn"], spec["sticker"].get("flat", True))
     n = len(frames)
@@ -226,7 +249,7 @@ def bake(spec, base):
     out = Image.fromarray((np.clip(sheet, 0, 1) * 255 + 0.5).astype(np.uint8), "RGBA")
     meta = {
         "frames": n, "flash": n if len(frames) > n else 0, "cols": cols, "frameW": fw, "frameH": fh, "fps": spec["fps"],
-        "anchor": fit["anchor"] if fit else [round(gx * scale, 1) + pad, round(gy * scale, 1) + pad],
+        "anchor": fit["anchor"] if fit else [round(gx, 1) + pad, round(gy, 1) + pad],
         # the cut-out's height in sheet px, and how high off the ground each frame floats
         "height": spec["height"], "lift": lift,
     }
@@ -275,7 +298,8 @@ if __name__ == "__main__":
     with open(spec_path, encoding="utf-8") as fh_:
         spec = json.load(fh_)
     if "--debug" in sys.argv:
-        debug_overlay(spec, base, sys.argv[sys.argv.index("--debug") + 1])
+        out_ = sys.argv[sys.argv.index("--debug") + 1]
+        preview(spec, os.path.join(base, spec["source"]), out_) if "rig" in spec else debug_overlay(spec, base, out_)
         sys.exit()
     sheet, meta = bake(spec, base)
     out = os.path.normpath(os.path.join(base, spec["out"]))

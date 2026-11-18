@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta, holdsStill, SETTLE, stepPace, depthShade, greyTint, DEPTH_SHADE } from './mobAnim';
+import { RECOIL, recoilTilt, swayTilt, CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta, holdsStill, SETTLE, stepPace, depthShade, greyTint, DEPTH_SHADE } from './mobAnim';
 
 const meta: SheetMeta = { frames: 10, flash: 10, cols: 4, frameW: 1, frameH: 1, fps: 20, anchor: [0, 0], height: 1, lift: [] };
 
@@ -66,5 +66,27 @@ describe('depth shade', () => {
     expect(greyTint(0)).toBe(0);
     expect(greyTint(0.5, 0xff0080)).toBe(0x800040);
     expect(greyTint(0.5)).toBe(0x808080);
+  });
+});
+
+describe('recoilTilt', () => {
+  it('snaps back, overshoots a little and comes to rest', () => {
+    const at = (u: number) => recoilTilt((1 - u) * 0.2, 0.2);
+    expect(recoilTilt(0, 0.2)).toBe(0);
+    expect(recoilTilt(0.1, 0)).toBe(0);
+    const peak = Math.max(...[0.1, 0.2, 0.3, 0.4].map(at));
+    expect(peak).toBeGreaterThan(RECOIL * 0.6);
+    expect(peak).toBeLessThanOrEqual(RECOIL * 1.2);
+    expect(at(0.15)).toBeGreaterThan(0);
+    expect(at(0.92)).toBeLessThan(0);
+    expect(Math.abs(at(0.92))).toBeLessThan(peak * 0.2);
+  });
+});
+
+describe('swayTilt', () => {
+  it('leans only as far as the mob stands still', () => {
+    expect(swayTilt(0.55, 0, 0)).toBe(0);
+    expect(Math.abs(swayTilt(0.55, 0, 1))).toBeGreaterThan(0.03);
+    expect(Math.abs(swayTilt(0.55, 0, 0.5))).toBeCloseTo(Math.abs(swayTilt(0.55, 0, 1)) / 2);
   });
 });

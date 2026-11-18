@@ -2,7 +2,7 @@ import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { faceSide } from './camera';
 import { makeShadow, sizeShadow, type ShadowBatch } from './shadow';
 import { THREAT_TIME, threatAlpha } from './threat';
-import { SETTLE, corpseAlpha, frameAt, greyTint, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
+import { RECOIL_TIME, SETTLE, corpseAlpha, recoilTilt, swayTilt, frameAt, greyTint, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
 
 // Draws mobs from their baked sheets: a looping animated sprite over a ground shadow that
 // stays on the ground while the sprite hops. Corpses are separate sprites, so a knocked-down
@@ -18,9 +18,6 @@ const DRAW_EASE = 0.08;
 const DRAW_SNAP = 120;
 /** Brightness steps of the crowd shading (shade), too fine to see on a moving mob. */
 const SHADE_STEPS = 48;
-/** A mob standing in a jam breathes: this much stretch, this many breaths per second. */
-const BREATH = 0.025;
-const BREATH_RATE = 0.45;
 
 export interface MobSheet {
   meta: SheetMeta;
@@ -53,7 +50,6 @@ export function sliceSheet(meta: SheetMeta, sheet: Texture, x0 = 0, y0 = 0): Mob
 
 /** How fast a knocked-down body flies off along the blow, world units per second. */
 const KNOCK_SPEED = 640;
-const SQUASH_TIME = 0.15;
 const FLASH_TIME = 0.09;
 /** Seconds a struck mob's drawing holds still (hit-stop); the sim keeps moving it meanwhile. */
 export const HOLD_TIME = 0.05;
@@ -67,8 +63,8 @@ export class MobView {
   private pace = 1;
   private lastX = NaN;
   private lastY = 0;
-  private squash = 0;
-  private squashLen = SQUASH_TIME;
+  private recoil = 0;
+  private recoilLen = RECOIL_TIME;
   private flash = 0;
   /** Seconds left as a threat (threat.ts): no white flash, and the horde rims it red. */
   private threat = 0;
@@ -134,12 +130,12 @@ export class MobView {
   }
 
   /**
-   * A hit that does not kill: a white flash, a short squash, and for `hold` seconds the drawing
+   * A hit that does not kill: a white flash, a rock back from the hero, and for `hold` seconds the drawing
    * freezes its walk frame and place (0 for none, e.g. late in a run), then catches up; the flash
-   * and squash last `slow` times as long (the corgi's bomb, spells.ts BOOM_SLOW).
+   * and rock last `slow` times as long (the corgi's bomb, spells.ts BOOM_SLOW).
    */
   flinch(hold = HOLD_TIME, slow = 1): void {
-    this.squash = this.squashLen = SQUASH_TIME * slow;
+    this.recoil = this.recoilLen = RECOIL_TIME * slow;
     this.flash = FLASH_TIME * slow;
     this.hold = Math.max(this.hold, hold);
   }
@@ -168,7 +164,7 @@ export class MobView {
   /**
    * `speed` scales the cycle, e.g. slower while standing. `faceX` is the side to look at. With
    * a `walk` speed, a mob jammed in the crowd lands and stands instead of hopping in place,
-   * and with `sway` it breathes gently while it stands.
+   * and with `sway` it sways on its feet while it stands.
    */
   update(dt: number, x: number, y: number, faceX: number, speed = 1, walk = 0, sway = false): void {
     const { meta, textures } = this.look.sheet;
@@ -188,22 +184,16 @@ export class MobView {
     this.sprite.texture = textures[f + (this.flash > 0 && this.threat <= 0 ? meta.flash : 0)];
     if (!held) this.side = faceSide(this.side, faceX, FACE_DEAD);
     const flip = (this.side < 0) === this.look.facesLeft ? 1 : -1;
-    let sx = this.scale * (1 + this.swell);
-    let sy = this.scale * (1 + this.swell);
-    if (this.squash > 0) {
-      this.squash = Math.max(0, this.squash - dt);
-      const k = Math.sin((this.squash / this.squashLen) * Math.PI) * 0.25;
-      sx *= 1 + k;
-      sy *= 1 - k;
-    }
+    const s = this.scale * (1 + this.swell);
+    this.recoil = Math.max(0, this.recoil - dt);
+    // leans about its feet: back from the side it faces when hit, side to side when it stands
+    let tilt = -this.side * recoilTilt(this.recoil, this.recoilLen);
     if (sway && walk > 0) {
       this.idle += dt;
-      const still = Math.max(0, 1 - this.pace / SETTLE);
-      const b = Math.sin((this.idle * BREATH_RATE + this.phase) * Math.PI * 2) * BREATH * still;
-      sx *= 1 - b * 0.5;
-      sy *= 1 + b;
+      tilt += swayTilt(this.idle, this.phase, Math.max(0, 1 - this.pace / SETTLE));
     }
-    this.sprite.scale.set(sx * flip, sy);
+    this.sprite.scale.set(s * flip, s);
+    this.sprite.rotation = tilt;
     if (held) {
       x = this.drawX;
       y = this.drawY;

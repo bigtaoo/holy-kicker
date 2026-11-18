@@ -70,6 +70,29 @@ export function corpseAlpha(c: Corpse): number {
   return Math.max(0, Math.min(1, (CORPSE_LIFE - c.age) / 0.2));
 }
 
+/** A hit rocks the mob back this far (radians) about its feet, for this long. */
+export const RECOIL = 0.24;
+export const RECOIL_TIME = 0.22;
+
+/**
+ * The rock back of a hit, `left` of `len` seconds to go: a snap back from the hero, a small
+ * overshoot forward, then still. Positive leans away from the side the mob faces.
+ */
+export function recoilTilt(left: number, len: number): number {
+  if (left <= 0 || len <= 0) return 0;
+  const u = 1 - Math.min(1, left / len);
+  return RECOIL * Math.sin(u * Math.PI * 1.25) * (1 - u) * 1.6;
+}
+
+/** A mob standing in a jam sways on its feet: this far (radians), this many times a second. */
+const SWAY = 0.05;
+const SWAY_RATE = 0.45;
+
+/** The sway's lean after `idle` seconds, `still` 0..1 of the way to standing. */
+export function swayTilt(idle: number, phase: number, still: number): number {
+  return Math.sin((idle * SWAY_RATE + phase) * Math.PI * 2) * SWAY * still;
+}
+
 /** A mob going slower than this share of its walking speed stops hopping once it lands. */
 export const SETTLE = 0.35;
 /** Seconds for the measured pace to follow the real one. */
