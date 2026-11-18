@@ -17,6 +17,8 @@ export interface RunResult {
   hard?: boolean;
   /** Waves fully cleared, 0..BALANCE.waves. */
   waves: number;
+  /** The run's length (`runWaves`) when shorter than the chapter: the first run's 20 waves. */
+  length?: number;
   /** Shrine offerings won in the run. */
   offerings?: number;
   /** What the run evolved or awakened (codex.ts evolvedIn). */
@@ -55,6 +57,11 @@ export interface Reward {
   unlocks: Unlock[];
   /** Evolutions done for the first time, now in the Codex; none while the Codex tab is still locked (it opens all new). */
   newCodex: EvolveId[];
+  /**
+   * The short first run (`runWaves`) was won: no clear and no stars, its chests paid, and the
+   * results send the player on to the full chapter.
+   */
+  intro: boolean;
   /** No chapter was cleared before this run (it is the first clear or earlier): the results keep to the essentials. */
   newcomer: boolean;
   newBest: boolean;
@@ -142,6 +149,16 @@ export function xpToNext(level: number): number {
   return BALANCE.levelXpBase + BALANCE.levelXpStep * (level - 1);
 }
 
+/**
+ * The waves of a chapter run: the full chapter, but a new player's first run (chapter 1, normal)
+ * ends on the first mid-boss (BALANCE.firstRun.waves), a first win in minutes that opens the
+ * lobby. It is never a clear and never goes on a board (runEnd.ts `counted`); the next run is the
+ * full chapter (docs/retention.md "A shorter first run").
+ */
+export function runWaves(save: SaveData, chapter: number, hard: boolean): number {
+  return !save.firstRunDone && chapter === 1 && !hard ? BALANCE.firstRun.waves : BALANCE.waves;
+}
+
 /** Pays the run into the save: copper, xp, best wave, chapter clear; the chests it reached wait in the lobby. */
 export function settleRun(save: SaveData, run: RunResult, rand: () => number = Math.random): { save: SaveData; reward: Reward } {
   const i = run.chapter - 1;
@@ -171,6 +188,8 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   }
 
   const won = waves >= BALANCE.waves;
+  // the short first run, played to its end: paid like the waves it cleared, but no clear, stars or grit
+  const intro = !won && run.length !== undefined && run.length < BALANCE.waves && waves >= run.length;
   const firstClear = won && !isCleared(save, run.chapter, hard);
   const cleared = !hard && firstClear ? run.chapter : save.cleared;
   const stars = runStars(won, run.revived === true, run.lowest ?? 0);
@@ -179,7 +198,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   const relics = unlockedRelics({ ...save, cleared });
   const drops = rollDrops(at, waves, relics, !save.firstRunDone, rand);
   // a real try on the first uncleared chapter that fell short gives grit for the next ones
-  const tried = !won && atFrontier(save, run.chapter, hard) && waves >= BALANCE.grit.minWaves && save.grit < BALANCE.grit.max;
+  const tried = !won && !intro && atFrontier(save, run.chapter, hard) && waves >= BALANCE.grit.minWaves && save.grit < BALANCE.grit.max;
   const grit = firstClear && !hard ? 0 : tried ? save.grit + 1 : save.grit;
   const best = was.best.map((b, k) => (k === i ? Math.max(b, waves) : b));
   const claimedAll = was.chests.map((c, k) => (k === i ? claimed : c));
@@ -209,7 +228,7 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
   next.sutras = sutraBits(earnedSutras(next));
   const reward = {
     copper, offering, chests, xp: waves * BALANCE.xpPerWave, levelsGained: level - save.level,
-    firstClear, stars, bestStars, hardUnlocked, hard, unlocks: newUnlocks(save, next),
+    firstClear, intro, stars, bestStars, hardUnlocked, hard, unlocks: newUnlocks(save, next),
     newCodex: tabLock(next, 'codex') ? [] : next.codex.filter((id) => !save.codex.includes(id)),
     newcomer: save.cleared === 0,
     newBest: waves > was.best[i],

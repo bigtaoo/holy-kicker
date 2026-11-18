@@ -10,11 +10,10 @@ import { chapterLook } from '../chapterArt';
 import { BALANCE } from '../meta/balance';
 import { challengeSetup } from '../meta/challenge';
 import { evolvedIn } from '../meta/codex';
-import { runWaves } from '../meta/experiments';
 import { bestTime, noteTime } from '../meta/clearTimes';
 import { noteFall, runPast } from '../meta/falls';
 import { loadout } from '../meta/loadout';
-import { doubleCopper, earnedSutras, isCleared, settleRun, type Reward, type Tab } from '../meta/progress';
+import { doubleCopper, earnedSutras, isCleared, runWaves, settleRun, type Reward, type Tab } from '../meta/progress';
 import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
@@ -126,7 +125,7 @@ export class RunFlow {
     this.freeRevives = left ? left.freeRevives : c ? 0 : freeRevives;
     const game = (this.game = new Game(h.app, h.platform, h.art, h.scene, h.stick, left ? setupOf(left.state.config) : c ? challengeSetup(save, c) : {
       chapter,
-      waves: h.scene.waves ? runWaves(save) : 0,
+      waves: h.scene.waves ? runWaves(save, chapter, this.hard) : 0,
       revives: BALANCE.revives + freeRevives,
       relic: h.scene.relic ?? save.relic,
       sutras: h.scene.sutras ? SUTRA_IDS : earnedSutras(save),
@@ -308,7 +307,7 @@ export class RunFlow {
     const won = s.outcome === 'won';
     const time = won ? { tenths: run.tenths, best: bestTime(h.save(), this.chapter, this.hard) } : null;
     const timed = won && counted ? noteTime(h.save(), this.chapter, this.hard, run.tenths) : h.save();
-    const { reward, save: played } = settleRun(noteFall(timed, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
+    const { reward, save: played } = settleRun(noteFall(timed, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, length: s.config.waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
     const { save, gift } = afterRun(played, Date.now(), this.tally(s, waves, reward.stars));
     // paid before the results show, so closing the tab now keeps the reward
     h.commit(save);

@@ -220,7 +220,8 @@ export class ResultsScreen implements Screen {
     const n = this.actions.waiting();
     const lobby = { text: n > 0 ? t('results.collect', { n }) : t('results.lobby'), act: () => this.actions.next() };
     const again = this.actions.again;
-    const replay = again && { text: t(this.reward.firstClear ? 'results.nextChapter' : 'results.again'), act: again };
+    // the short first run's way on is the full chapter, named as its goal
+    const replay = again && { text: this.reward.intro ? t('sutra.clear', { n: 1 }) : t(this.reward.firstClear ? 'results.nextChapter' : 'results.again'), act: again };
     // a first clear goes on; a loss with something to collect leads there, else straight back in
     const rows = !replay ? [lobby] : this.reward.firstClear || n === 0 ? [replay, lobby] : [lobby, replay];
     this.primary = rows[0].act;

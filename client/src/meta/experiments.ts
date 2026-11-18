@@ -1,5 +1,4 @@
 import { EXP_NAME, expTag, type Host } from '@hk/protocol';
-import { BALANCE } from './balance';
 import table from './experiments.json';
 import type { SaveData } from './save';
 
@@ -85,14 +84,4 @@ export function armOf(save: SaveData, id: string, table: Experiments = EXPERIMEN
 /** The `exp` tag for the event batches: the arms of the experiments still in the table. */
 export function experimentTag(save: SaveData, table: Experiments = EXPERIMENTS): string {
   return expTag(Object.fromEntries(Object.entries(save.arms).filter(([id]) => id in table)));
-}
-
-/**
- * The waves of a chapter run: the full chapter. This is the hook for the `first20` experiment's
- * `short` arm (a first run of 20 waves, docs/retention.md "A shorter first run"), which is not
- * built: what a 20-wave win unlocks is the owner's call, and until then every arm plays the full
- * chapter. A shorter run is never a clear and never goes on a board (runFlow.ts settle).
- */
-export function runWaves(_save: SaveData): number {
-  return BALANCE.waves;
 }

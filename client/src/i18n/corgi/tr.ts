@@ -201,6 +201,8 @@ export const corgiTr: Table<typeof corgiEn> = {
     clear: '{n}. gezegeni geç',
   },
   results: {
+    introDone: 'Eğitim tamam!',
+    introNext: 'Sırada: 1. gezegenin {n} dalgasının hepsi',
     trainStep: 'Şimdi talim ×{n}: {stats}',
     goTrain: 'Talime git',
     cleared: 'Gezegen geçildi!',

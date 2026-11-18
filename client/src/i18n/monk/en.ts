@@ -199,6 +199,8 @@ export const monkEn = {
     clear: 'Clear chapter {n}',
   },
   results: {
+    introDone: 'First trial passed!',
+    introNext: 'Next: all {n} waves of chapter 1',
     trainStep: 'Train ×{n} now: {stats}',
     goTrain: 'Go train',
     cleared: 'Chapter cleared!',

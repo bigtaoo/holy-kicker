@@ -200,6 +200,8 @@ export const monkTh: Table<typeof monkEn> = {
     clear: 'ผ่านบทที่ {n}',
   },
   results: {
+    introDone: 'ผ่านบททดสอบแรกแล้ว!',
+    introNext: 'ต่อไป: ครบทั้ง {n} ระลอกของบทที่ 1',
     trainStep: 'ฝึกได้ ×{n}: {stats}',
     goTrain: 'ไปฝึก',
     cleared: 'ผ่านบทแล้ว!',

@@ -201,6 +201,8 @@ export const corgiPt: Table<typeof corgiEn> = {
     clear: 'Conclua o planeta {n}',
   },
   results: {
+    introDone: 'Treino concluído!',
+    introNext: 'Agora: todas as {n} ondas do planeta 1',
     trainStep: 'Treine ×{n} agora: {stats}',
     goTrain: 'Treinar',
     cleared: 'Planeta concluído!',

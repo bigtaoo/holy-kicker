@@ -201,6 +201,8 @@ export const corgiZh: Table<typeof corgiEn> = {
     clear: '通关星球 {n}',
   },
   results: {
+    introDone: '训练完成！',
+    introNext: '下一步：打完第 1 颗星球全部 {n} 波',
     trainStep: '可训练 {n} 格：{stats}',
     goTrain: '去训练',
     cleared: '星球通关！',

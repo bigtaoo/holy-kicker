@@ -49,10 +49,11 @@ export function headerPart(r: Reward, waves: number, rank: RankNote, width: numb
   const c = new Container();
   // a won run (a replay too: it may bring a star) is a clear, gold on the first one
   const won = r.stars > 0;
-  const title = fit(label(won ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen'), 72, r.firstClear ? COLORS.saffron : COLORS.text), width);
+  const name = r.intro ? t('results.introDone') : won ? t(r.hard ? 'results.hardCleared' : 'results.cleared') : t('results.fallen');
+  const title = fit(label(name, 72, r.firstClear || r.intro ? COLORS.saffron : COLORS.text), width);
   title.y = 40;
   // the wave reached, as the HUD, the record banner, the lobby and the boards name it; the save keeps the waves cleared
-  const big = label(String(reachedWave(waves, BALANCE.waves)), 180, r.newBest ? COLORS.gold : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
+  const big = label(String(reachedWave(waves, r.intro ? waves : BALANCE.waves)), 180, r.newBest ? COLORS.gold : COLORS.text, { stroke: { color: COLORS.outline, width: 12 } });
   big.y = 180;
   const caption = label(t('results.waves'), 48, COLORS.dim, {}, true);
   caption.y = 310;
@@ -60,6 +61,13 @@ export function headerPart(r: Reward, waves: number, rank: RankNote, width: numb
   // a won run's stars, and what the next one asks while the chapter lacks it; a newcomer's card
   // stops at the stars (no hint, time, badges or board: the essentials only)
   let top = 350;
+  // the short first run won: what comes next, the whole chapter
+  if (r.intro) {
+    const next = fit(label(t('results.introNext', { n: BALANCE.waves }), 48, COLORS.dim), width);
+    next.y = 384;
+    c.addChild(next);
+    return [c, 430];
+  }
   if (r.stars > 0 && r.newcomer) {
     const stars = starRow(r.stars, 90);
     stars.y = 390;

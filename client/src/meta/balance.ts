@@ -90,6 +90,11 @@ export interface Balance {
 export interface FirstRunBalance {
   seed: number;
   autoPicks: number;
+  /**
+   * Its length: it ends on the chapter's first mid-boss (progress.ts runWaves), a first win in
+   * about 8 minutes that opens the lobby; it is no clear, the full chapter comes next.
+   */
+  waves: number;
 }
 
 /**

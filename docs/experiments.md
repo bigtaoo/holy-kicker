@@ -1,9 +1,8 @@
 # Experiments: A/B arms, funnel events and reading the results
 
 Holy Kicker splits new players into arms to test a change against the current game, and reads
-the arms side by side on the dashboard. Nothing runs today: `first20` ships on no host and its
-`short` arm plays the same full chapter as `control` (see "A shorter first run" in
-docs/retention.md for what is still to decide).
+the arms side by side on the dashboard. Nothing runs today (the `first20` arms were dropped on
+2026-11-18 when the short first run shipped to everyone, docs/retention.md "A shorter first run").
 
 ## Defining an experiment
 

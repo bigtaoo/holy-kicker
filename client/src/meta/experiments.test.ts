@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { expPairs, expTag } from '@hk/protocol';
-import { BALANCE } from './balance';
-import { EXPERIMENTS, armOf, enroll, enrollsNew, experimentTag, forcedArms, pickArm, runWaves, type Experiments } from './experiments';
+import { EXPERIMENTS, armOf, enroll, enrollsNew, experimentTag, forcedArms, pickArm, type Experiments } from './experiments';
 import { newSave, parseSave } from './save';
 
 const TABLE: Experiments = {
@@ -51,10 +50,9 @@ describe('experiments', () => {
     expect(expPairs('first20:short;drop')).toEqual([]);
   });
 
-  it('ships with no experiment enrolling anyone, and every run the full chapter', () => {
+  it('ships with no experiment enrolling anyone', () => {
     for (const x of Object.values(EXPERIMENTS)) expect(x.hosts).toEqual([]);
     expect(enroll(newSave(), 'crazygames', () => 0).arms).toEqual({});
-    expect(runWaves(enroll(newSave(), 'web', () => 0, EXPERIMENTS, { first20: 'short' }))).toBe(BALANCE.waves);
   });
 
   it('tells a save about to be enrolled, reading it only where an experiment runs', () => {

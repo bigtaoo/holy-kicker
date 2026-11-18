@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { t } from '../i18n';
 import { BALANCE } from '../meta/balance';
 import { TABS } from '../meta/progress';
+import { newSave } from '../meta/save';
 import { lobbyRig, press, words } from '../testkit/lobbyRig';
 import { clearedChapterOne, deviceWith, endRun, rigShell, tapNamed, type ShellRig } from '../testkit/testShell';
 
@@ -17,9 +18,14 @@ function linesLike(rig: ShellRig, key: string, blank: string): string[] {
 
 describe('a newcomer\'s results, tapped through', { timeout: 30_000 }, () => {
   it('keeps the first clear to the essentials: stars, rewards, one unlock, the way on', async () => {
-    const rig = await rigShell();
+    // past the short first run (docs/retention.md), chapter 1 not yet cleared
+    const best = newSave().best;
+    best[0] = BALANCE.firstRun.waves;
+    const rig = await rigShell({ storage: deviceWith({ firstRunDone: true, runs: 1, best }) });
     await rig.shell.start();
-    await rig.tick(3);
+    await tapNamed(rig, 'play');
+    await rig.until(() => rig.shell.place() === 'run');
+    expect(rig.shell.run!.engine.state.config.waves).toBe(BALANCE.waves);
     endRun(rig, 'won');
     await rig.until(() => rig.shell.place() === 'results');
     await rig.tick(30);
@@ -39,8 +45,6 @@ describe('a newcomer\'s results, tapped through', { timeout: 30_000 }, () => {
     expect(linesLike(rig, 'results.giftWorn', 'gift')).toEqual([]);
     expect(linesLike(rig, 'results.gift', 'gift')).toEqual([]);
     expect(linesLike(rig, 'gift.tomorrow', 'gift')).toEqual([]);
-    // the gift was still paid, and the calendar names tomorrow's in the lobby
-    expect(rig.store.load().gifts).toBe(1);
     expect(rig.faults).toEqual([]);
   });
 

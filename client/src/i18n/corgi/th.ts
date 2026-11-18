@@ -201,6 +201,8 @@ export const corgiTh: Table<typeof corgiEn> = {
     clear: 'ผ่านดาวที่ {n}',
   },
   results: {
+    introDone: 'ฝึกเสร็จแล้ว!',
+    introNext: 'ต่อไป: ครบทั้ง {n} ระลอกของดาวดวงที่ 1',
     trainStep: 'ฝึกได้ ×{n}: {stats}',
     goTrain: 'ไปฝึก',
     cleared: 'ผ่านดาวแล้ว!',

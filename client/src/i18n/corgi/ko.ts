@@ -201,6 +201,8 @@ export const corgiKo: Table<typeof corgiEn> = {
     clear: '행성 {n} 클리어',
   },
   results: {
+    introDone: '훈련 완료!',
+    introNext: '다음: 행성 1의 {n}웨이브 전부',
     trainStep: '지금 훈련 ×{n}: {stats}',
     goTrain: '훈련하기',
     cleared: '행성 클리어!',

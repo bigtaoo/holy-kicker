@@ -200,6 +200,8 @@ export const monkId: Table<typeof monkEn> = {
     clear: 'Tamatkan bab {n}',
   },
   results: {
+    introDone: 'Ujian pertama lulus!',
+    introNext: 'Berikutnya: semua {n} gelombang bab 1',
     trainStep: 'Latih ×{n} sekarang: {stats}',
     goTrain: 'Latih',
     cleared: 'Bab tamat!',

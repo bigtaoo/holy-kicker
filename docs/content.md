@@ -76,6 +76,8 @@ Names are working names; every name ships through the string table (en / zh-CN s
   2026-10-25, a new player who follows the hint should feel safe and usually clears chapter 1 on
   the first run; the challenge starts from chapter 2. A player who ignores the hint still mostly
   loses (casual, own picks: 13 of 60).
+  Since 2026-11-18 the first run stops at wave 20 (docs/retention.md "A shorter first run"), so
+  the seed only has to carry it to the first mid-boss; the bot numbers above are for 50 waves.
   The engine version bump split the week's challenge boards (docs/design.md "Challenge records and
   engine versions"), so ship it on a Monday.
 - About 30 level-ups plus 5 shrines per full run, against 45 picks to max everything, so

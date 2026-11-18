@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { t } from '../i18n';
+import { BALANCE } from '../meta/balance';
 import { clearedChapterOne, deviceWith, endRun, rigShell, tapLabel, tapNamed, type ShellRig } from '../testkit/testShell';
 
 /** Taps the results' way back to the lobby, whatever it reads (Collect with a haul waiting, Lobby without). */
@@ -21,19 +22,24 @@ describe('the shell, start to lobby', () => {
     expect(rig.faults).toEqual([]);
   });
 
-  it('wins the first run: results, then the lobby with the reward kept', async () => {
+  it('wins the short first run: results, then the lobby with the reward kept and the chapter still to clear', async () => {
     const rig = await rigShell();
     await rig.shell.start();
     await rig.tick(3);
+    expect(rig.shell.run!.engine.state.config.waves).toBe(BALANCE.firstRun.waves);
     endRun(rig, 'won');
     await rig.until(() => rig.shell.place() === 'results');
     await rig.tick(30);
-    expect(rig.texts()).toContain(t('results.nextChapter'));
+    expect(rig.texts()).toContain(t('results.introDone'));
+    expect(rig.texts()).toContain(t('sutra.clear', { n: 1 }));
     backToLobby(rig);
     await rig.until(() => rig.shell.place() === 'lobby');
     const save = rig.store.load();
     expect(save.firstRunDone).toBe(true);
-    expect(save.cleared).toBe(1);
+    expect(save.cleared).toBe(0);
+    expect(save.best[0]).toBe(BALANCE.firstRun.waves);
+    // the welcome gift comes with the first run's end, short or not
+    expect(save.gifts).toBe(1);
     expect(save.runs).toBe(1);
     expect(save.copper).toBeGreaterThan(0);
     expect(rig.faults).toEqual([]);

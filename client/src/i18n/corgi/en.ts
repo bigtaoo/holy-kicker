@@ -204,6 +204,8 @@ export const corgiEn: Table<typeof monkEn> = {
     clear: 'Clear planet {n}',
   },
   results: {
+    introDone: 'Boot camp complete!',
+    introNext: 'Next: all {n} waves of planet 1',
     trainStep: 'Drill ×{n} now: {stats}',
     goTrain: 'Go drill',
     cleared: 'Planet cleared!',

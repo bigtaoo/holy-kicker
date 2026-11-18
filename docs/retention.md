@@ -201,22 +201,24 @@ ordered by the device's `t`), Newgrounds build 81b1aee (10-18) and Playgama buil
   The monk's sandbox moved from 012848d to df8474b (the same game code as c5277ab) at ~21:35 UTC
   on 10-25, and its free starter boost (~50 plays) was claimed then, so its new plays all land on it.
 
-## A shorter first run (not built)
+## A shorter first run
 
-The `first20` experiment (docs/experiments.md) is meant to test a first run of 20 waves against
-the full 50: a first win within about 8 minutes instead of 20+, for D1. The infrastructure is in
-(the arm, `waves` on runs, full-length-only clears and boards); the short run itself is not.
-`runWaves` in client/src/meta/experiments.ts is the hook: today every arm gets `BALANCE.waves`.
+Since 2026-11-18 a new player's first run (chapter 1, normal) is 20 waves, not 50
+(`BALANCE.firstRun.waves`, `runWaves` in client/src/meta/progress.ts): it ends on the first
+mid-boss, a first win in about 8 minutes instead of 20+, so a portal session (Playgama's catalog
+averaged 8.4 minutes) reaches the lobby, its gear, shop and training. Shipped to everyone, not as an
+A/B test (the `first20` experiment is gone): traffic is too thin for arms, so read D1 and day-0
+minutes before and after the change. Its rules:
 
-**The owner decides before it is built** what a 20-wave win gives, since it is not a chapter clear:
-
-- whether it unlocks chapter 2 (players then meet chapter 2 with a weaker build), or only pays
-  copper and the first-run rewards and asks for the full chapter 1 next;
-- whether wave 20's mid-boss becomes the run's end boss, or the run ends on a plain wave;
-- whether a 20-wave run awards stars or chests, and how the results screen words it;
-- whether the second run is short too, or only the first.
-
-A short run is never a clear on the server and never goes on a board, whatever is decided.
+- A won short run is no clear: chapter 2 stays locked, no stars, no grit; it pays its copper and
+  xp, the first-run gear drop and the chests on waves 10 and 20 (`Reward.intro`, `settleRun`).
+- The engine ends a run whose last wave is a mid-boss on that boss falling, as a daily does.
+- The results say "First trial passed!" (corgi "Boot camp complete!"), show wave 20 and "Next: all
+  50 waves of chapter 1"; the second button is "Clear chapter 1", the full chapter.
+- Only the first run is short; every later run, and any run of a save with `firstRunDone`, is the
+  full chapter. A first run lost before wave 20 is an ordinary lost run (grit included).
+- It is never a clear on the server and never goes on a board (runEnd.ts `counted`): `run_start`
+  and `run_end` carry `waves: 20`.
 
 ## Performance
 

@@ -888,8 +888,9 @@ The battlefield should never look frozen, even on an empty screen:
 
 ## Pacing targets
 
-- Chapter 1: the first try is lost in 5–10 minutes (waves 20–40) and sends the player to the
-  lobby; cleared in 2–5 tries, on the first or second day.
+- Chapter 1: the first run is 20 waves (since 2026-11-18, docs/retention.md "A shorter first
+  run"), usually won in about 8 minutes, and sends the player to the lobby; the full chapter is
+  then cleared in 2–5 tries, on the first or second day.
 - Chapter 2: 5–10 tries.
 - Chapter 3 on: requires farming the previous chapter for gear and copper, a few days per
   chapter.

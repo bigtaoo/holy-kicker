@@ -201,6 +201,8 @@ export const corgiJa: Table<typeof corgiEn> = {
     clear: '惑星{n}をクリア',
   },
   results: {
+    introDone: '訓練完了！',
+    introNext: '次は惑星1の全{n}ウェーブ',
     trainStep: '今すぐ訓練 ×{n}：{stats}',
     goTrain: '訓練へ',
     cleared: '惑星クリア！',

@@ -200,6 +200,8 @@ export const corgiFr: Table<typeof corgiEn> = {
     clear: 'Termine la planète {n}',
   },
   results: {
+    introDone: 'Entraînement terminé !',
+    introNext: 'Ensuite : les {n} vagues de la planète 1',
     trainStep: 'Camp ×{n} possible : {stats}',
     goTrain: 'S’entraîner',
     cleared: 'Planète terminée !',

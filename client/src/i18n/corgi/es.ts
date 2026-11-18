@@ -200,6 +200,8 @@ export const corgiEs: Table<typeof corgiEn> = {
     clear: 'Supera el planeta {n}',
   },
   results: {
+    introDone: '¡Entrenamiento completado!',
+    introNext: 'Ahora: las {n} oleadas del planeta 1',
     trainStep: 'Entrena ×{n} ya: {stats}',
     goTrain: 'Entrenar',
     cleared: '¡Planeta superado!',
