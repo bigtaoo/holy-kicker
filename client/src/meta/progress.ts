@@ -5,6 +5,7 @@ import type { SaveData } from './save';
 import { trainingStats } from './training';
 import { earnedSutras, newUnlocks, sutraBits, unlockedRelics, type Unlock } from './unlocks';
 import type { FirstGift } from './welcome';
+import type { Tomorrow } from './tomorrow';
 
 export { earnedSutras, unlockedRelics } from './unlocks';
 
@@ -77,6 +78,8 @@ export interface Reward {
   time?: { tenths: number; best: number } | null;
   /** The welcome gift the first run paid (welcome.ts afterRun), set after settling. */
   gift?: FirstGift | null;
+  /** What tomorrow holds, once today's daily is played (tomorrow.ts), set after settling. */
+  tomorrow?: Tomorrow | null;
 }
 
 /** Copper multiplier of a stage (`stage`): 1, 1.5, 2, ... */

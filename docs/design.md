@@ -69,6 +69,17 @@ launch → load → silent sign-in → [first launch] straight into chapter 1 �
   next-star hint, the time and the best and leaderboard badges, the Codex, grit, hard-mode, chest
   and gift lines (the chests wait on the lobby's chapter card; tomorrow's gift is on the Play tab's
   gift button, its calendar, and the hint arrow when it is ready). Afterwards the results tell all.
+- **The way back in** (2026-11-18, `ui/ResultsScreen.ts`, `ui/resultsNext.ts`). A chapter run
+  that was not a first clear, with copper for a training node or a merge (`meta/waiting.ts`
+  `lossStep`), leads with "Power up & play again": one tap trains every node it can afford (or
+  merges all), sends the `buy` events with `from: 'results'` and starts the same chapter
+  (`takeStep`). Beside the ad offer under it, the lobby button reads Lobby, not "Collect N
+  rewards in the lobby", so the pair keeps its font size. After a loss, while today's daily
+  challenge is open, a jade line offers it as a shorter run ("Want a shorter run? Today's challenge:
+  about N min", Play it) that starts it from the results. Once today's daily is played, the results (a chapter's
+  and the daily's own) close with one line on tomorrow: the streak day it makes, the welcome
+  gift waiting then, the patrol full (`meta/tomorrow.ts`). A run left mid-way is offered on the
+  next launch (`meta/resume.ts`, `ui/ResumeScreen.ts`); that predates this.
 
 ## Chapters (the run)
 

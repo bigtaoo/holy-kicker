@@ -10,6 +10,7 @@ import type { DownInfo } from './deathInfo';
 import { goalText } from './downPanel';
 import { fallFigures, fallIcon } from './fallIcons';
 import { dropLines, dropName, haulName, TIER_COLORS } from './gearText';
+import { tomorrowText } from './resultsNext';
 import { goalShare } from './resultsReveal';
 import { reachedWave } from './runSummary';
 import { statLines } from './statText';
@@ -282,6 +283,8 @@ export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
   } else if (gift) lines.push([t('results.gift', { gift: dropName(gift) }), 48, TIER_COLORS[gift.tier]]);
   const tomorrow = r.gift?.next;
   if (tomorrow) lines.push([t('gift.tomorrow', { gift: haulName(tomorrow) }), 48, COLORS.jade]);
+  // once today's daily is played, what tomorrow holds (tomorrow.ts)
+  else if (r.tomorrow) lines.push([tomorrowText(r.tomorrow), 48, COLORS.jade]);
   return lines;
 }
 

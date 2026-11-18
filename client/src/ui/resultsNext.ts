@@ -3,31 +3,51 @@ import { mapOf } from '@hk/engine';
 import type { ChapterLook } from '../chapterArt';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
+import type { Tomorrow } from '../meta/tomorrow';
 import type { NextStep } from '../meta/waiting';
 import type { Part } from './resultsParts';
 import { statLines } from './statText';
 import { COLORS, button, fit, label } from './widgets';
 
 // The results' pointers onward (ResultsScreen.ts): after a loss, the one thing in the lobby that
-// makes the next run go further, with a button that opens its tab; after a first clear, the
+// makes the next run go further, with a button that opens its tab, and today's daily challenge as
+// a shorter run to play instead; after a first clear, the
 // chapter it opened as a strip of its ground with its signature enemy's head.
 
 const STEP_BTN_W = 260;
 
 /** The next step after a loss: one line and a quiet button (the screen's own buttons lead) that goes to the lobby on its tab. */
 export function nextStepPart(step: NextStep, width: number, go: () => void): Part {
-  const c = new Container();
   // the first stat keeps it short; the tab shows the rest
   const stats = step.tab === 'train' ? statLines(step.stats) : [];
   const text = step.tab === 'train'
     ? t('results.trainStep', { n: step.n, stats: stats[0] })
     : t('results.mergeStep', { n: step.n });
+  return pointerPart(text, t(step.tab === 'train' ? 'results.goTrain' : 'results.goMerge'), width, go);
+}
+
+/** After a loss, today's daily challenge as a shorter run to play instead: one line and a quiet button that starts it. */
+export function dailyPart(minutes: number, width: number, go: () => void): Part {
+  return pointerPart(t('results.dailyLine', { n: minutes }), t('results.dailyGo'), width, go);
+}
+
+/** "Tomorrow: streak day 4 · day 3 gift · Patrol full", the welcome gift only while one waits. */
+export function tomorrowText(m: Tomorrow): string {
+  const what = [t('results.tomorrowStreak', { n: m.streak })];
+  if (m.gift !== null) what.push(t('results.tomorrowGift', { n: m.gift }));
+  what.push(t('results.tomorrowPatrol', { patrol: t('patrol.title') }));
+  return t('results.tomorrowLine', { what: what.join('  ·  ') });
+}
+
+/** One line in jade on the left, a quiet button on the right. */
+function pointerPart(text: string, act: string, width: number, go: () => void): Part {
+  const c = new Container();
   const textW = width - STEP_BTN_W - 50;
   const line = label(text, 48, COLORS.jade, { wordWrap: true, wordWrapWidth: textW, breakWords: true, lineHeight: 58 }, true);
   const h = Math.max(110, line.height + 30);
   line.anchor.set(0, 0.5);
   line.position.set(-width / 2 + 20, h / 2);
-  const b = button(t(step.tab === 'train' ? 'results.goTrain' : 'results.goMerge'), STEP_BTN_W, 100, go, { fill: COLORS.panelLocked, textFill: COLORS.jade, size: 48 });
+  const b = button(act, STEP_BTN_W, 100, go, { fill: COLORS.panelLocked, textFill: COLORS.jade, size: 48 });
   b.position.set(width / 2 - STEP_BTN_W / 2 - 10, h / 2);
   c.addChild(line, b);
   return [c, h];

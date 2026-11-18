@@ -41,7 +41,7 @@ describe('a kept run', () => {
     await tapWhenUp(rig, 'run.giveUp');
     await rig.until(() => rig.shell.place() === 'results');
     await rig.tick(30);
-    expect(rig.texts()).toContain(t('results.again'));
+    expect(rig.texts().some((s) => s === t('results.again') || s === t('results.powerAgain'))).toBe(true);
     expect(rig.store.load().runs).toBe(runs + 1);
     expect(rig.store.load().best[1]).toBe(4);
     expect(loadRun(rig.platform.storage)).toBeNull();

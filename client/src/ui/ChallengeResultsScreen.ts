@@ -5,6 +5,8 @@ import { chapterName } from '../i18n/chapterName';
 import { BALANCE } from '../meta/balance';
 import { milestonePay, type ChallengeReward } from '../meta/challenge';
 import type { ChallengeSettled } from './challengeFlow';
+import type { Tomorrow } from '../meta/tomorrow';
+import { tomorrowText } from './resultsNext';
 import { iconSprite, type IconSheet } from './buildBar';
 import { clockTenths } from './clearTime';
 import { menuCover } from './lobbyBars';
@@ -57,6 +59,7 @@ export class ChallengeResultsScreen implements Screen {
   private readonly last: number;
   /** Hours until the next challenge opens. */
   private readonly hours: number;
+  private readonly tomorrow: Tomorrow | null;
   /** A weekly run: the week's best waves before it. */
   private readonly weekly: { before: number; id: string } | undefined;
   /** A daily made up on the device: the day's best waves before it. */
@@ -75,6 +78,7 @@ export class ChallengeResultsScreen implements Screen {
   ) {
     ({ reward: this.reward, chapter: this.chapter, waves: this.waves, last: this.last, hours: this.hours, weekly: this.weekly, local: this.local } = run);
     this.time = run.time ?? null;
+    this.tomorrow = run.tomorrow ?? null;
     const reward = this.reward;
     void run.reply.then((r) => {
       if (r && !this.view.destroyed) {
@@ -167,6 +171,8 @@ export class ChallengeResultsScreen implements Screen {
     y = this.offLine(add, y);
     y = this.timeLine(add, y);
     add(t('challenge.next', { h: this.hours }), 48, COLORS.text, y);
+    // what else tomorrow holds, wrapped about its centre as the notes above
+    if (this.tomorrow) add(tomorrowText(this.tomorrow), 48, COLORS.jade, y + 84);
     return c;
   }
 

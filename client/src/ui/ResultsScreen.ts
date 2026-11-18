@@ -6,7 +6,7 @@ import type { NextStep } from '../meta/waiting';
 import type { IconSheet } from './buildBar';
 import type { DownInfo } from './deathInfo';
 import { menuCover } from './lobbyBars';
-import { nextStepPart, previewPart } from './resultsNext';
+import { dailyPart, nextStepPart, previewPart } from './resultsNext';
 import { fallPart, headerPart, newsLines, rewardsPart, type Part, type RankNote } from './resultsParts';
 import { newcomerUnlocks, unlocksPart } from './resultsUnlocks';
 import { REVEAL, REVEALED, countUp, partIn } from './resultsReveal';
@@ -28,7 +28,10 @@ import { spot } from './spots';
 // leads and Play again steps back; with nothing, Play again leads and Back to lobby steps back. A
 // first clear always leads with Next chapter, so a winner goes on. Until a chapter is cleared
 // (Reward.newcomer) the card keeps to the title, the waves, the stars, the rewards, one unlock and
-// the chapter opened, so a player who just met the game is not handed a list. The lower one sits beside the
+// the chapter opened, so a player who just met the game is not handed a list. With copper for
+// training or merges, Play again becomes "Power up and play again" and leads: it spends the copper
+// as the step points and starts the run in one tap. After a loss today's daily challenge is offered
+// as a shorter run. The lower one sits beside the
 // rewarded "double copper" offer at the same size, font and colour (CrazyGames' rewarded-ad rules).
 // On a desktop Enter takes the first button and Escape goes to the lobby; the buttons wear their
 // keys. The rewarded ad has no key: it plays only on a click. A landscape frame has one wide
@@ -44,8 +47,12 @@ export interface ResultsActions {
   again: (() => void) | null;
   /** How many things wait in the lobby now, asked at each layout (doubled copper may buy training). */
   waiting(): number;
-  /** After a lost run, the one step in the lobby to point to. */
+  /** The one step in the lobby that makes the next run go further (pointed to after a loss). */
   step(): NextStep | null;
+  /** Takes `step` at once and plays the same chapter again ("Power up and play again"). */
+  upgrade?: (step: NextStep) => void;
+  /** After a loss, today's daily challenge to play instead: about how many minutes it takes and what starts it. */
+  daily?: { minutes: number; go: () => void } | null;
   /** After a first clear, the chapter it opened, once its art is in (null when it fails). */
   preview?: Promise<ChapterLook | null>;
 }
@@ -129,6 +136,8 @@ export class ResultsScreen implements Screen {
       run.push(fallPart(this.fall, this.waves, INNER_W, this.icons));
       const step = this.actions.step();
       if (step) run.push(nextStepPart(step, INNER_W, () => this.actions.next(step.tab)));
+      const daily = this.actions.daily;
+      if (daily && !r.intro) run.push(dailyPart(daily.minutes, INNER_W, daily.go));
     }
     const total = this.offer === 'paid' ? 2 * r.copper : r.copper;
     const rewards = rewardsPart(r, total, this.icons, INNER_W);
@@ -221,9 +230,14 @@ export class ResultsScreen implements Screen {
     const lobby = { text: n > 0 ? t('results.collect', { n }) : t('results.lobby'), act: () => this.actions.next() };
     const again = this.actions.again;
     // the short first run's way on is the full chapter, named as its goal
-    const replay = again && { text: this.reward.intro ? t('results.introGo', { n: 1 }) : t(this.reward.firstClear ? 'results.nextChapter' : 'results.again'), act: again };
-    // a first clear goes on; a loss with something to collect leads there, else straight back in
-    const rows = !replay ? [lobby] : this.reward.firstClear || n === 0 ? [replay, lobby] : [lobby, replay];
+    // a run of the same chapter again with copper to spend powers up first in the same tap
+    const step = again && !this.reward.intro && !this.reward.firstClear && this.actions.upgrade ? this.actions.step() : null;
+    const upgrade = this.actions.upgrade;
+    const replay = again && (step && upgrade
+      ? { text: t('results.powerAgain'), act: () => upgrade(step) }
+      : { text: this.reward.intro ? t('results.introGo', { n: 1 }) : t(this.reward.firstClear ? 'results.nextChapter' : 'results.again'), act: again });
+    // a first clear goes on, as does a power-up; a loss with something else to collect leads there, else straight back in
+    const rows = !replay ? [lobby] : this.reward.firstClear || n === 0 || step ? [replay, lobby] : [lobby, replay];
     this.primary = rows[0].act;
     // the buttons left to right as a row sets them, [view, width]
     const line: [Container, number][] = [];
@@ -243,16 +257,18 @@ export class ResultsScreen implements Screen {
     // the pair spans the card's width, so the ad's label (beside its badge) keeps a readable size
     const w = pair ? 450 : 640;
     const adText = busy ? '…' : t('results.double');
+    // beside the ad under Power up, Collect's long label would shrink both; Lobby says the same there
+    const lastText = pair && step && last === lobby ? t('results.lobby') : last.text;
     // the pair share one font size: the size at which the longer label (with the ad's badge) fits
     let size = 52;
     if (pair) {
       const probe = button(adText, w, 140, () => {}, { video: !busy, size });
-      const other = button(last.text, w, 140, () => {}, { size });
+      const other = button(lastText, w, 140, () => {}, { size });
       size *= Math.min(buttonLabel(probe).scale.x, buttonLabel(other).scale.x);
       probe.destroy({ children: true });
       other.destroy({ children: true });
     }
-    const second = button(last.text, w, 140, last.act, { fill, size });
+    const second = button(lastText, w, 140, last.act, { fill, size });
     second.position.set(pair ? x + w / 2 + 10 : x, y);
     if (busy) second.eventMode = 'none';
     // Escape is the lobby's key; Play again under Collect has none

@@ -5,7 +5,7 @@ import { seasonOf } from './merit';
 import { newSave } from './save';
 import { trainNode } from './training';
 import { openChest } from './shop';
-import { affordableTraining, lobbyWaiting, lossStep, mergesReady, tabWaiting, tasksWaiting, waitingCount } from './waiting';
+import { affordableTraining, lobbyWaiting, lossStep, mergesReady, tabWaiting, takeStep, tasksWaiting, waitingCount } from './waiting';
 import { claimGift } from './welcome';
 
 const HOUR = 3600 * 1000;
@@ -103,5 +103,24 @@ describe('lobby waiting', () => {
     // the training waits on the level: the copper goes to the merges
     expect(lossStep({ ...played, level: 0, copper: 1e6, gear: robes })).toEqual({ tab: 'gear', n: 2 });
     expect(lossStep({ ...played, copper: 0 })).toBeNull();
+  });
+
+  it('takes the step at once: every node the copper buys, or every merge', () => {
+    const a = trainNode(1);
+    const b = trainNode(2);
+    const rich = { ...played, copper: a.cost + b.cost + 1 };
+    const step = lossStep(rich)!;
+    const done = takeStep(rich, step);
+    expect(done.trained).toEqual([1, 2]);
+    expect(done.save.trained).toBe(2);
+    expect(done.save.copper).toBe(1);
+    expect(done.spent).toBe(a.cost + b.cost);
+    expect(lossStep(done.save)).toBeNull();
+    const robes = { ...played.gear, robe: played.gear.robe.map((_, i) => (i === 0 ? 10 : 0)) };
+    const gear = { ...played, level: 0, copper: 1e6, gear: robes };
+    const merged = takeStep(gear, lossStep(gear)!);
+    expect(merged.trained).toEqual([]);
+    expect(mergesReady(merged.save)).toBe(0);
+    expect(merged.spent).toBeGreaterThan(0);
   });
 });

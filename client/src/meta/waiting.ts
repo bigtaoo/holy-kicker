@@ -102,3 +102,19 @@ export function lossStep(save: SaveData): NextStep | null {
   const merges = mergesReady(save);
   return merges > 0 ? { tab: 'gear', n: merges } : null;
 }
+
+/**
+ * Takes `step` at once (the results' "Power up and play again"): buys every training node the
+ * copper affords, one after another, or merges all the gear it can. `trained` lists the nodes bought.
+ */
+export function takeStep(save: SaveData, step: NextStep): { save: SaveData; trained: number[]; spent: number } {
+  const trained: number[] = [];
+  let s = save;
+  if (step.tab === 'train') {
+    for (let next = train(s); next !== s; next = train(s)) {
+      s = next;
+      trained.push(s.trained);
+    }
+  } else if (!tabLock(s, 'gear')) s = mergeAll(s).save;
+  return { save: s, trained, spent: save.copper - s.copper };
+}

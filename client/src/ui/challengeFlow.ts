@@ -10,6 +10,7 @@ import type { Backend, RunResult } from '../net/backend';
 import { THEME } from '../theme';
 import type { ChallengeLobby } from './challengePanel';
 import type { ReplayView } from './replayWatch';
+import type { Tomorrow } from '../meta/tomorrow';
 
 // The challenges' side of the shell (docs/design.md "Challenges"): the records fetched from the
 // backend with the server's clock, the run in play, its replay taken as it ends, and the run sent
@@ -80,6 +81,8 @@ export interface ChallengeSettled {
   local?: { before: number };
   /** A run that cleared every wave: its time in tenths of a simulated second (runFlow fills it in). */
   time?: number | null;
+  /** What tomorrow holds, for a counted daily (tomorrow.ts; runFlow fills it in). */
+  tomorrow?: Tomorrow | null;
 }
 
 export class ChallengeFlow {

@@ -138,8 +138,7 @@ describe('the results keys on a desktop', { timeout: 30000 }, () => {
     await rig.tick(2);
     expect(rig.shell.place()).toBe('results');
     await finish(rig, ads, false);
-    // the rewarded ad has no key
-    rig.platform.press('Enter');
+    // the rewarded ad has no key; Escape goes to the lobby whatever leads
     rig.platform.press('Escape');
     expect(ads.plays).toBe(1);
     await rig.until(() => rig.shell.place() === 'lobby');
@@ -156,9 +155,9 @@ describe('the results keys on a desktop', { timeout: 30000 }, () => {
     rig.platform.press('Enter');
     await rig.tick(2);
     expect(rig.shell.place()).toBe('results');
-    // with something to collect the lobby leads, else Play again
+    // Power up & play again leads when the copper buys a step; else with something to collect the lobby leads, else Play again
     const collect = t('results.collect', { n: 0 }).split('0')[0];
-    const toLobby = rig.texts().some((s) => s.startsWith(collect));
+    const toLobby = !rig.texts().includes(t('results.powerAgain')) && rig.texts().some((s) => s.startsWith(collect));
     rig.platform.press('Enter');
     await rig.until(() => rig.shell.place() !== 'results');
     expect(rig.shell.place()).toBe(toLobby ? 'lobby' : 'run');

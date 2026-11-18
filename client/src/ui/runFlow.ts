@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import { ARENA, SUTRA_IDS, type SimState } from '@hk/engine';
+import { ARENA, SUTRA_IDS, TICK_RATE, WAVES, type SimState } from '@hk/engine';
 import { FAST_SPEED, Game, type Art } from '../game/Game';
 import type { DragStick } from '../game/dragStick';
 import type { LevelSettings } from '../game/quality';
@@ -17,7 +17,9 @@ import { loadout } from '../meta/loadout';
 import { doubleCopper, earnedSutras, isCleared, runWaves, settleRun, type Reward, type Tab } from '../meta/progress';
 import { dropRun, keepRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
-import { lobbyWaiting, lossStep, waitingCount } from '../meta/waiting';
+import { trainNode } from '../meta/training';
+import { lobbyWaiting, lossStep, takeStep, waitingCount } from '../meta/waiting';
+import { tomorrowOf, type Tomorrow } from '../meta/tomorrow';
 import { runTally, type RunTally } from '../meta/taskPool';
 import { afterRun } from '../meta/welcome';
 import { inviteCode, inviteOf } from '../meta/invite';
@@ -38,7 +40,7 @@ import { menuBackdrop } from './lobbyBars';
 import type { ChallengeFlow, ChallengeSettled } from './challengeFlow';
 import { ArenaResultsScreen } from './ArenaResultsScreen';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
-import { ResultsScreen } from './ResultsScreen';
+import { ResultsScreen, type ResultsActions } from './ResultsScreen';
 import type { RankNote } from './resultsParts';
 import { RunHud } from './RunHud';
 import { runSwitches } from './pausePanel';
@@ -322,7 +324,7 @@ export class RunFlow {
     h.commit(save);
     if (gift) h.net.track('claim', { what: 'gift', n: 0, copper: gift.copper, jade: gift.jade, drops: gift.drops.length });
     if (reward.firstClear || reward.intro) h.portal.celebrate();
-    this.showResults({ ...reward, gift, time }, waves, rank, s.outcome === 'lost' ? fall : null);
+    this.showResults({ ...reward, gift, time, tomorrow: this.tomorrow(save) }, waves, rank, s.outcome === 'lost' ? fall : null);
   }
 
   /** A challenge run's end: its milestones paid (the day's first run only), sent with its replay, and its own results. */
@@ -331,9 +333,11 @@ export class RunFlow {
     const done = h.challenge.settle(h.save(), s, run, waves, this.kills, ranked);
     // a weekly run goes on the host's own weekly board too (Playgama's)
     if (done.weekly && ranked && h.net.boardsOn) h.platform.boards?.weekly(done.weekly.id, run);
-    h.commit(afterRun(done.save, Date.now(), this.tally(s, waves, 0)).save);
+    const save = afterRun(done.save, Date.now(), this.tally(s, waves, 0)).save;
+    h.commit(save);
     if (done.reward.streak) h.net.track('claim', { what: 'streak', n: done.reward.streak, jade: done.reward.streakJade });
-    h.setScreen(new ChallengeResultsScreen({ ...done, time: run.won ? run.tenths : null }, {
+    const tomorrow = !done.weekly && done.reward.counted ? this.tomorrow(save) : null;
+    h.setScreen(new ChallengeResultsScreen({ ...done, time: run.won ? run.tenths : null, tomorrow }, {
       double: async () => {
         const paid = await h.rewarded('challenge_double');
         if (paid) h.commit({ ...h.save(), copper: h.save().copper + done.reward.copper });
@@ -342,6 +346,12 @@ export class RunFlow {
       next: () => void h.ads.midgame(this.inter('challenge_next')).then(() => h.showLobby()),
       invite: this.invite(done, run),
     }, offered(this.track, 'challenge_double', h.ads.rewardedAvailable(), done.reward.copper > 0), h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
+  }
+
+  /** What tomorrow holds once today's daily is played, else null. */
+  private tomorrow(save: SaveData): Tomorrow | null {
+    const d = this.host.challenge.daily(save);
+    return d ? tomorrowOf(save, Date.now(), d.state === 'done', d.streak) : null;
   }
 
   /** An arena run's end: copper for the minutes survived, the best kept, and its own results. */
@@ -389,6 +399,15 @@ export class RunFlow {
     return () => this.host.net.track('ad', { kind: 'inter', at });
   }
 
+  /** Today's daily challenge, offered after a lost chapter run while it is still to play today. */
+  private dailyOffer(leave: (then: () => void, at: InterPlace | null) => void): ResultsActions['daily'] {
+    const h = this.host;
+    const d = h.challenge.daily(h.save());
+    if (!d || d.state !== 'open') return null;
+    const minutes = Math.ceil((d.challenge.waves * WAVES.ticks) / TICK_RATE / 60);
+    return { minutes, go: () => leave(() => h.play(d.chapter, undefined, null, d.challenge), null) };
+  }
+
   private showResults(reward: Reward, waves: number, rank: Promise<RankNote>, fall: DownInfo | null): void {
     const h = this.host;
     let leaving = false;
@@ -410,7 +429,15 @@ export class RunFlow {
       },
       next: (tab) => leave(() => h.showLobby(tab), 'results_lobby'),
       again: !reward.firstClear ? () => leave(() => h.play(this.chapter, undefined, 'again'), null) : opened ? () => leave(() => h.play(h.save().chapter, undefined, 'next'), 'results_next') : null,
-      waiting: () => waitingCount(lobbyWaiting(h.save(), Date.now())), step: () => (fall ? lossStep(h.save()) : null),
+      waiting: () => waitingCount(lobbyWaiting(h.save(), Date.now())), step: () => (reward.firstClear ? null : lossStep(h.save())),
+      upgrade: (step) => leave(() => {
+        const done = takeStep(h.save(), step);
+        h.commit(done.save);
+        for (const node of done.trained) h.net.track('buy', { item: 'train', node, spent: trainNode(node).cost, from: 'results' });
+        if (step.tab === 'gear') h.net.track('buy', { item: 'merge', n: step.n, spent: done.spent, from: 'results' });
+        h.play(this.chapter, undefined, 'again');
+      }, null),
+      daily: fall ? this.dailyOffer(leave) : null,
       // the opened chapter's art, loaded now for its preview and the run Next chapter starts
       preview: opened ? chapterLook(h.platform, h.scene, h.art, save.chapter).catch(() => null) : undefined,
     }, offered(this.track, 'double', h.ads.rewardedAvailable(), reward.copper > 0), rank, fall, h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));

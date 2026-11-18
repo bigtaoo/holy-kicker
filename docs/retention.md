@@ -162,6 +162,18 @@ look for a step change, a share halving or a count going from 0 to many, not for
 | chapter 1 clear rate very low | The first win comes too late | Ease chapter 1's last waves, or make the first clear reachable within the first 3–4 runs with training |
 | bought in the lobby: big D1 gap | Meta progress is the hook | Make the first purchase happen on day 0 (start with enough copper for one training node; the first nodes cost 50/70/90 since 2026-10-22, so a wave-9 death buys one) |
 
+## Another run, and tomorrow (2026-11-18)
+
+A review of the loop found the results' reasons to go on spread over the lobby: copper to spend
+meant Collect → lobby → tab → buy → Play (five taps), a loss offered nothing shorter than the
+chapter again, and nothing on the results said what tomorrow brings. So (docs/design.md "The way
+back in"): "Power up & play again" spends the copper and replays in one tap (`buy` events with
+`from: 'results'`, `run_start` follows); after a loss today's daily is offered from the results
+(`run_start` with `challenge`); once the daily is played a line names tomorrow's streak day,
+gift and full patrol. Read it as: results → `run_start` within a minute (more runs per session),
+the share of buys `from: 'results'`, daily plays after a loss, and D1 for players who saw the
+tomorrow line (they played the daily) against those who did not.
+
 ## First run: where players leave (2026-10-19)
 
 Backend events of the 262 CrazyGames installs first seen 10-14..10-17 (builds 6a16373 to baee706,
