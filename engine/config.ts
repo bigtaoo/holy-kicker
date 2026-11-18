@@ -60,6 +60,8 @@ export interface RunConfig {
    * no last wave. Missing on chapter runs.
    */
   arena?: boolean;
+  /** The Holy Kick prototype (kick.ts) is on. Missing on every other run. */
+  kick?: boolean;
 }
 
 export const DEFAULT_RUN: RunConfig = {

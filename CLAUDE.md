@@ -70,7 +70,7 @@ from the sibling project `D:\daydayup`; look there first before inventing platfo
   `?mobs=`) runs the engine sandbox: a fixed horde and a hero who cannot die, for stress tests.
   `?wave=N` starts a chapter run at wave N (shrines on 5, 15, …; elites every 5th; mid-bosses 20 and 35), `?chapter=N` plays chapter N; `?relic=staff` (or `fish`, `beads`, `bowl`) plays
   the run with that relic whatever the save says; `?sutras` gives every run all four sutras;
-  `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode; `?arena` plays the walled arena (docs/design.md "Arena");
+  `?bare` plays without the stats from gear and training; `?hard` plays the run in hard mode; `?arena` plays the walled arena (docs/design.md "Arena"); `?kick` adds the Holy Kick prototype (Space or a quick tap; docs/kick-prototype.md);
   `?monk=fat` (or `novice`) plays as that monk whatever the save says; `?challenge` shows a daily
   and a weekly challenge made up on the device when offline (online the server's record wins);
   `?challenge=settle` treats the weeks in the save as closed, so their reward card shows now.

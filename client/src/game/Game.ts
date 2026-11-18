@@ -16,6 +16,7 @@ import { FxLayer, GROUND_FX_Z, GROUND_PREWARM } from './fxView';
 import { Corpses } from './mobView';
 import { HealthBar, starMarkAt } from './healthBar';
 import type { EliteCrowd } from './eliteView';
+import { KickView } from './kickView';
 import { HordeView } from './hordeView';
 import { guardAlpha } from './guardPulse';
 import { HitFeedback } from './hitFeedback';
@@ -121,6 +122,11 @@ export class Game {
   private readonly sutras: SutraView;
   private readonly aura: AuraStack;
   private readonly zen: ZenRing;
+  /** The Holy Kick prototype (?kick): its look, the taps seen so far, a Space press to send, and the key hook to drop. */
+  private readonly kick: KickView | null;
+  private taps = 0;
+  private kickKey = false;
+  private readonly offKey: (() => void) | undefined;
   private readonly stickBase: Sprite;
   private readonly stickKnob: Sprite;
   private hurtFlash = 0;
@@ -226,8 +232,11 @@ export class Game {
     this.zen = new ZenRing(this.world);
     this.downCam = new KillCamView(this.world, { hero: this.hero.view, horde: this.horde, elites: this.elites, boss: this.boss }, this.shake);
     this.lowHp = new LowHealthView(app.renderer, () => this.onHeartbeat());
-    const { hero, downCam, lowHp, spells, arsenal, sutras, threats, drops } = this;
-    this.views = { hero, feedback: this.feedback, staff, fish, downCam, lowHp, fx, horde, boss, shake, threats, drops, spells, arsenal, sutras, hurt: () => { this.hurtFlash = HURT_FLASH; this.alarmT = ALARM_TIME; } };
+    this.kick = s.config.kick ? new KickView(this.world, (k) => this.horde.lookOf(k), this.fx.pool, this.shake, HERO_TOP_Z + 10) : null;
+    this.taps = stick.taps;
+    this.offKey = this.kick ? platform.onKey?.((code, repeat) => code === 'Space' && !repeat && (this.kickKey = true)) : undefined;
+    const { hero, downCam, lowHp, spells, arsenal, sutras, threats, drops, kick } = this;
+    this.views = { hero, feedback: this.feedback, staff, fish, downCam, lowHp, fx, horde, boss, shake, threats, drops, spells, arsenal, sutras, kick, hurt: () => { this.hurtFlash = HURT_FLASH; this.alarmT = ALARM_TIME; } };
 
     this.root.addChild(this.world, this.label);
     if (this.boss) this.bars.addChild(...this.boss.huds);
@@ -247,6 +256,8 @@ export class Game {
    *  textures stay loaded for the next run. */
   destroy(): void {
     this.app.ticker.remove(this.onTick);
+    this.offKey?.();
+    this.kick?.destroy();
     for (const c of [this.sides, this.playMask, this.root, this.lowHp.view, this.stickBase, this.stickKnob]) c.destroy({ children: true });
     releaseBaked(this.app.renderer);
   }
@@ -307,11 +318,19 @@ export class Game {
     this.stepping = !this.paused && !over && !lateHold(s);
     const real = Math.min(frameMs / 1000, 0.05);
     if (!this.stepping) {
+      // a tap or Space on a stopped run (a card, the pause) is no kick
+      this.taps = this.stick.taps;
+      this.kickKey = false;
       // a stopped run stands still, but for the kill cam's slow motion after the hero goes down
       // and a won run, where the last boss falls and the fx play out under the closing line
       const cam = this.downCam.step(this.paused ? 0 : real, this.stick.presses);
       const dt = s.outcome === 'won' && !this.paused && !this.watchEnd ? real : cam;
       this.draw(this.loop.alpha, dt, this.paused ? 0 : this.downCam.busy ? dt : real);
+      return;
+    }
+    // the Holy Kick's hit-stop: a beat with the sim and the view held
+    if (this.kick?.hold(real)) {
+      this.draw(this.loop.alpha, 0, real);
       return;
     }
     const speed = this.rushing ? RUSH_SPEED : this.speed, steps = this.loop.advance(frameMs, speed), start = performance.now();
@@ -341,7 +360,11 @@ export class Game {
     this.reviving = false;
     this.picking = undefined;
     const move = this.autoplay ? this.autoplay.move(this.engine.state) : quantizeMove(m.x, m.y);
-    return { owner: LOCAL, tick: this.engine.nextTick, ...move, revive, pick };
+    // a quick tap (or click) or Space asks for the Holy Kick; the engine ignores it until charged
+    const kick = this.kick !== null && (this.kickKey || this.stick.taps !== this.taps);
+    this.taps = this.stick.taps;
+    this.kickKey = false;
+    return { owner: LOCAL, tick: this.engine.nextTick, ...move, revive, pick, ...(kick ? { kick } : {}) };
   }
 
   /** Draws the sim state `alpha` of the way through its last tick; dt is the frame's view time, real its real time. */
@@ -381,6 +404,7 @@ export class Game {
     this.sutras.draw(s.lotuses, s.darts, p, alpha, dt, hx, hy);
     this.spells.drawBell(p.bell && !p.dead, hx, hy, this.hero.view.zIndex, dt);
     this.zen.update(dt, inZen(p) && !p.dead, hx, hy);
+    if (this.kick && s.flyers) this.kick.draw(s.flyers, p, alpha, dt, hx, hy);
     this.aura.update(dt, hx, hy, this.fx.pool);
     // just after a blow the effects round the hero fade, so the mobs biting him show through
     this.alarmT = Math.max(0, this.alarmT - dt);

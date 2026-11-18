@@ -91,6 +91,11 @@ export class HordeView {
     world.addChild(this.shadows.view, this.marks);
   }
 
+  /** The first look of a kind of mob (a kicked body's, kickView.ts). */
+  lookOf(kind: MobKind): MobLook {
+    return this.looks[kind][0];
+  }
+
   /** The view of mob i, if it has one yet. */
   at(i: number): MobView | undefined {
     return this.mobs[i];

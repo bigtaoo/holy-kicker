@@ -6,6 +6,7 @@ import { Prng } from '../math/prng';
 import { EMERGE } from '../config';
 import { rising, underground, type Elite, type Player, type SimState } from '../state';
 import { laneDistance } from '../systems/elite';
+import { wantsKick, type KickHabit } from './kickAim';
 
 // A bot that plays a chapter for the balance report (bot/balance.ts), and later perhaps a
 // demo or a stand-in teammate. It reads the sim state like a player reads the screen and
@@ -113,6 +114,8 @@ export class Bot {
   private lastDir = -1;
   private nextDir = -1;
   private held: [number, number] = [0, 0];
+  /** How it spends a full Holy Kick charge in a kick run (bot/kickAim.ts). */
+  kick: KickHabit = 'aim';
 
   constructor(readonly owner: number, readonly style: BotStyle, seed: number) {
     this.rng = new Prng(seed ^ 0x51ed27);
@@ -126,6 +129,7 @@ export class Bot {
       return cmd;
     }
     if (p.dead || this.style === 'still') return cmd;
+    if (wantsKick(s, p, this.kick)) cmd.kick = true;
     if (s.tick % REACTION[this.style] === 0) this.held = this.heading(s, p);
     const [dx, dy] = this.held;
     if (dx !== 0 || dy !== 0) {

@@ -66,6 +66,11 @@ export interface Player extends Body {
   live: number;
   moved: number;
   travel: number;
+  /** Kick runs only (kick.ts): kills toward the Holy Kick, up to KICK.full, and bodies launched by the last kick. */
+  charge?: number;
+  chain?: number;
+  /** Kick runs only: the damage the kick's bodies and bursts dealt so far (for the bot's balance numbers and run_end). */
+  kickDealt?: number;
 }
 
 export interface SpellSlot {

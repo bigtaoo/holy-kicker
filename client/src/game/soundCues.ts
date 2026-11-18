@@ -91,5 +91,16 @@ export function eventCue(e: SimEvent, local: number): Cue | null {
       return 'wave';
     case 'cleared':
       return 'cleared';
+    // the Holy Kick prototype (engine kick.ts): a heavy kick, a thump per body sent on, a boom on a burst
+    case 'kickReady':
+      return e.owner === local ? 'bell' : null;
+    case 'holyKick':
+      return e.owner === local ? 'slam' : null;
+    case 'kickChain':
+      return 'thump';
+    case 'kickBurst':
+      return 'boom';
+    case 'kickEnd':
+      return null;
   }
 }

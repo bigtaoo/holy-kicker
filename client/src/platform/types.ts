@@ -24,7 +24,8 @@ export interface Platform {
   /** Extra movement source such as the keyboard; a zero vector when idle. */
   readKeys(): Vec2;
   /** Every key that goes down, `code` as KeyboardEvent.code names it; unset where there is no keyboard. */
-  onKey?(cb: (code: string, repeat: boolean) => void): void;
+  /** Calls `cb` on every key that goes down, until the returned function is called. */
+  onKey?(cb: (code: string, repeat: boolean) => void): () => void;
   /** Whether key presses reach the game now (a portal's iframe keeps them until a click in it); unset where they always do. */
   keysReach?(): boolean;
   /** Since launch: whether the game ever had the keys (`focus`) and whether any key or pointer went down in it (`input`); unset where the keys always reach it. */

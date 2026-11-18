@@ -39,7 +39,10 @@ export function fakePlatform(host: FakeHost = {}, storage = new MemoryStore()): 
     calls,
     hide: () => hides.forEach((cb) => cb()),
     press: (code, repeat = false) => keys.forEach((cb) => cb(code, repeat)),
-    onKey: (cb) => void keys.push(cb),
+    onKey: (cb) => {
+      keys.push(cb);
+      return () => void keys.splice(keys.indexOf(cb) >>> 0, 1);
+    },
     host: 'web',
     probe: async () => ({ mobile: true, tablet: false, memory: 4, cores: 4, gpu: 'headless' }) as never,
     createApp: async () => fakeApp(),

@@ -1,5 +1,6 @@
 import { ELITE, type BossKind, type EliteKind, type MobKind, type RunConfig } from './config';
 import { Prng } from './math/prng';
+import type { Flyer } from './kick';
 import type { Player } from './player';
 
 export type { HeroAction, PassiveSlot, Player, SpellSlot } from './player';
@@ -371,6 +372,8 @@ export interface SimState {
   beads: Bead[];
   bowls: Bowl[];
   lotuses: Lotus[];
+  /** Kick runs only (kick.ts): the kicked bodies in the air. */
+  flyers?: Flyer[];
   volleyT: number;
   zoneT: number;
   spellT: number;
@@ -408,6 +411,7 @@ export function createState(config: RunConfig): SimState {
     volleyT: 0, zoneT: 0, spellT: 0, spellNext: 0, wave: 0, waveT: 0, waveKills: 0, outcome: 'playing',
     ai: new Prng(s ^ 0x1a2b3c4d), combat: new Prng(s ^ 0x5e6f7081), drop: new Prng(s ^ 0x92a3b4c5), spell: new Prng(s ^ 0xd6e7f809),
     cards: new Prng(s ^ 0x3c5a7e91),
+    ...(config.kick ? { flyers: [] } : {}),
   };
 }
 

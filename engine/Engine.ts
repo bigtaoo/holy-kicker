@@ -10,6 +10,7 @@ import { affixSystem } from './systems/affixes';
 import { bossSystem, newBoss } from './systems/boss';
 import { buildSystem, choosing, maxHpOf } from './systems/build';
 import { ballSystem } from './systems/combat';
+import { flyerSystem } from './systems/holyKick';
 import { ringSystem } from './systems/fish';
 import { beadSystem } from './systems/beads';
 import { bowlSystem } from './systems/bowl';
@@ -32,7 +33,7 @@ import { mutatorBonus } from './mutators';
 export const ENGINE_VERSION = 52;
 
 export const STEP_ORDER = [
-  'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns', 'arena',
+  'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'flyers', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns', 'arena',
 ] as const;
 
 export class Engine {
@@ -84,6 +85,7 @@ export class Engine {
     bulletSystem(s, hurt);
     kickSystem(s, events);
     ballSystem(s, events);
+    flyerSystem(s, events);
     ringSystem(s, events);
     beadSystem(s, events);
     bowlSystem(s, events);
@@ -114,6 +116,7 @@ function setup(s: SimState): void {
   for (let i = 0; i < c.players; i++) {
     const p = newPlayer(i, i * toFp(120), 0, HERO.hp, c.revives, c.relic, mutatorBonus(monkBonus(c.bonus, c.monk), c.mutator), c.monk);
     p.hp = p.maxHp = maxHpOf(p);
+    if (c.kick) p.charge = p.chain = p.kickDealt = 0;
     s.players.push(p);
   }
   if (c.waves > 0) return beginWave(s, 1);

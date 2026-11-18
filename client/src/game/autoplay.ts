@@ -25,10 +25,10 @@ export class Autoplay {
     return s.wave < this.from;
   }
 
-  /** The bot's stick for the next tick. */
-  move(s: SimState): Pick<PlayerCommand, 'moveBrad' | 'moveMag'> {
+  /** The bot's stick for the next tick, and its Holy Kick in a run with the kick. */
+  move(s: SimState): Pick<PlayerCommand, 'moveBrad' | 'moveMag' | 'kick'> {
     const c = this.bot.command(s);
-    return { moveBrad: c.moveBrad, moveMag: c.moveMag };
+    return { moveBrad: c.moveBrad, moveMag: c.moveMag, ...(c.kick ? { kick: true } : {}) };
   }
 
   /** While an offer is open: the card to take once it has been shown long enough, else undefined. */

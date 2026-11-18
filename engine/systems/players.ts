@@ -14,6 +14,7 @@ import { breakBell } from './spells';
 import { fishStart, tap } from './fish';
 import { openingShare } from './waves';
 import { staffStart, sweep } from './staff';
+import { holyKick } from './holyKick';
 
 // The hero: moves with the stick (easing into and out of a run), auto-kicks the cuju at the
 // nearest enemy (the boss first) or swings the staff when one comes close (systems/staff.ts) or taps the wooden fish (systems/fish.ts) or throws the alms bowl (systems/bowl.ts) (prayer beads circle him: systems/beads.ts), and loses health when something reaches him (at most one
@@ -30,6 +31,7 @@ export function applyInput(s: SimState, events: SimEvent[], cmds: readonly Playe
     p.moveMag = Math.max(0, Math.min(MAG_FULL, c.moveMag | 0));
     if (c.revive && p.dead && p.revives > 0) revive(s, events, p);
     if (c.pick !== undefined) pickCard(s, events, p, c.pick | 0);
+    if (c.kick) holyKick(s, events, p);
   }
 }
 

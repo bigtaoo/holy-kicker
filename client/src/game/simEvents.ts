@@ -8,6 +8,7 @@ import type { FxLayer } from './fxView';
 import type { HeroView } from './heroes';
 import type { HitFeedback } from './hitFeedback';
 import type { HordeView } from './hordeView';
+import type { KickView } from './kickView';
 import type { KillCamView } from './killCamView';
 import type { LowHealthView } from './lowHealthView';
 import type { Shake } from './shake';
@@ -40,6 +41,8 @@ export interface EventViews {
   spells: SpellView;
   arsenal: ArsenalView;
   sutras: SutraView;
+  /** The Holy Kick prototype's look, in a run with the kick. */
+  kick: KickView | null;
   hurt(): void;
 }
 
@@ -159,6 +162,12 @@ export function reactTo(v: EventViews, events: readonly SimEvent[], s: SimState)
         break;
       case 'bellUp':
         if (e.owner === LOCAL) v.spells.bellUp();
+        break;
+      case 'kickReady':
+      case 'holyKick':
+      case 'kickChain':
+      case 'kickBurst':
+        v.kick?.on(e);
         break;
       case 'bellBreak':
         if (e.owner === LOCAL && s.players[0].spells.some((sp) => sp.id === 'bell' && sp.evolved)) {

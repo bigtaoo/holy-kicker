@@ -21,6 +21,8 @@ export interface PlayerCommand {
   revive?: boolean;
   /** Takes this card (0-based) of the player's open level-up offer. */
   pick?: number;
+  /** Spends the player's full Holy Kick charge on the nearest mob (kick.ts; ignored until full). */
+  kick?: boolean;
 }
 
 export const MAG_FULL = 255;

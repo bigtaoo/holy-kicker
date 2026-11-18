@@ -44,6 +44,8 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     // left off a portrait run, so its config stays as it was
     ...(setup.wide ? { wide: true } : {}),
     ...(setup.arena ? { arena: true } : {}),
+    // dev: the Holy Kick prototype (?kick); left off otherwise, so every other config stays as it was
+    ...(scene.kick ? { kick: true } : {}),
   };
 }
 

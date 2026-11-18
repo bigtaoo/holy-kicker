@@ -101,6 +101,8 @@ export interface SceneOptions {
   hard: boolean;
   /** Dev: with ?direct, the first screen is an arena run (meta/arena.ts) instead of a chapter's (?arena). */
   arena: boolean;
+  /** Dev: the Holy Kick prototype in every run (?kick; engine kick.ts, docs/kick-prototype.md). */
+  kick: boolean;
   /** Dev: offline, the lobby shows a daily and a weekly challenge made up on the device (?challenge; online the server's records win). */
   challenge: boolean;
   /** Dev: the weeks in the save count as closed, so their rewards are claimed now (?challenge=settle; offline: rank 2 of 10). */
@@ -153,6 +155,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   bare: false,
   hard: false,
   arena: false,
+  kick: false,
   challenge: false,
   settleWeeks: false,
   arm: '',
@@ -223,6 +226,7 @@ export function parseScene(query: string): SceneOptions {
     bare: q.has('bare'),
     hard: q.has('hard'),
     arena: q.has('arena'),
+    kick: q.has('kick'),
     challenge: q.has('challenge'),
     settleWeeks: q.get('challenge') === 'settle',
     arm: q.get('arm') ?? '',

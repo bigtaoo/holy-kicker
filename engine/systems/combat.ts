@@ -1,6 +1,7 @@
 import { BALL, DAMAGE, DOOR_GOD, ELITE, MIX, TOAD_KING, WOLF_LEADER, tempKind } from '../config';
 import { EVOLVE } from '../content';
 import type { SimEvent } from '../events';
+import { fillCharge } from '../kick';
 import { dist, dist2 } from '../math/fixed';
 import { submerged, underground, type Ball, type Body, type Elite, type Player, type SimState } from '../state';
 import { foeHurt, guards } from './affixes';
@@ -175,6 +176,7 @@ export function damage(
  */
 export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, gem: boolean): void {
   const m = s.mobs[i];
+  fillCharge(events, by);
   events.push({ type: 'mobDown', index: i, x: m.x, y: m.y, dx: m.x - by.x, dy: m.y - by.y });
   const pct = fewKind(m.kind) ? MIX.swarmGemPercent : openingShare(s.wave, s.config.chapter);
   if (gem && (pct >= 100 || s.drop.chance(pct, 100))) dropGem(s, m.x, m.y, MOB_GEM);

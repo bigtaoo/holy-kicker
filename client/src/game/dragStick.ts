@@ -6,6 +6,9 @@ export interface Vec2 {
   y: number;
 }
 
+/** A tap is a touch lifted within this many ms. */
+export const TAP_MS = 180;
+
 export class DragStick {
   private id: number | null = null;
   private ox = 0;
@@ -13,15 +16,22 @@ export class DragStick {
   private vec: Vec2 = { x: 0, y: 0 };
   /** Fingers put down so far (a new tap shows as a change). */
   presses = 0;
+  /** Quick taps so far: down and up within TAP_MS, never out of the dead zone (the Holy Kick). */
+  taps = 0;
+  private downAt = 0;
+  private moved = false;
 
   constructor(
     private readonly radius = 70,
     private readonly deadZone = 0.12,
+    private readonly now: () => number = () => performance.now(),
   ) {}
 
   down(id: number, x: number, y: number): void {
     if (this.id !== null) return;
     this.presses++;
+    this.downAt = this.now();
+    this.moved = false;
     this.id = id;
     this.ox = x;
     this.oy = y;
@@ -37,6 +47,7 @@ export class DragStick {
       this.vec = { x: 0, y: 0 };
       return;
     }
+    this.moved = true;
     if (len > 1) {
       dx /= len;
       dy /= len;
@@ -46,6 +57,7 @@ export class DragStick {
 
   up(id: number): void {
     if (id !== this.id) return;
+    if (!this.moved && this.now() - this.downAt < TAP_MS) this.taps++;
     this.id = null;
     this.vec = { x: 0, y: 0 };
   }

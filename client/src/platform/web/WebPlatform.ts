@@ -225,8 +225,9 @@ export class WebPlatform implements Platform {
     canvas.addEventListener('pointercancel', end);
   }
 
-  onKey(cb: (code: string, repeat: boolean) => void): void {
+  onKey(cb: (code: string, repeat: boolean) => void): () => void {
     this.keyListeners.push(cb);
+    return () => (this.keyListeners = this.keyListeners.filter((c) => c !== cb));
   }
 
   keysReach(): boolean {

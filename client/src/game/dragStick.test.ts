@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DragStick } from './dragStick';
+import { DragStick, TAP_MS } from './dragStick';
 
 describe('DragStick', () => {
   it('is idle until a finger goes down', () => {
@@ -37,5 +37,24 @@ describe('DragStick', () => {
     s.up(1);
     expect(s.read()).toEqual({ x: 0, y: 0 });
     expect(s.origin()).toBeNull();
+  });
+
+  it('counts a quick tap that stays in the dead zone, not a slow press or a drag', () => {
+    let now = 0;
+    const s = new DragStick(100, 0.2, () => now);
+    s.down(1, 0, 0);
+    now = TAP_MS - 50;
+    s.up(1);
+    expect(s.taps).toBe(1);
+    s.down(1, 0, 0);
+    now += TAP_MS + 10;
+    s.up(1);
+    expect(s.taps).toBe(1);
+    s.down(1, 0, 0);
+    s.move(1, 80, 0);
+    s.move(1, 0, 0);
+    now += 20;
+    s.up(1);
+    expect(s.taps).toBe(1);
   });
 });

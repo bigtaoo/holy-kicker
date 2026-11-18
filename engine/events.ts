@@ -89,5 +89,12 @@ export type SimEvent =
   | { type: 'pick'; owner: number; kind: CardKind; id: string }
   /** A wave began (not sent for wave 1, which the run starts on). */
   | { type: 'wave'; wave: number }
+  /** Holy Kick (kick.ts): a player's charge filled; they kicked body `id` toward (dx, dy); a body launched
+   * the `n`th of its kick's chain at (x, y); a body burst at (x, y) on a wall (`wall`) or a big foe; the kick's last body came down. */
+  | { type: 'kickReady'; owner: number }
+  | { type: 'holyKick'; owner: number; id: number; x: number; y: number; dx: number; dy: number }
+  | { type: 'kickChain'; owner: number; n: number; x: number; y: number }
+  | { type: 'kickBurst'; owner: number; x: number; y: number; radius: number; wall: boolean }
+  | { type: 'kickEnd'; owner: number; n: number }
   /** The chapter boss fell on the last wave: the run is won. */
   | { type: 'cleared' };
