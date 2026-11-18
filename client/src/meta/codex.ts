@@ -4,6 +4,13 @@ import { EVOLVE_PAIR, RELIC_IDS, SUTRA_IDS, type PassiveId, type Player, type Re
 // pulled off at least once. The save keeps their ids; a run reports what it evolved and the
 // first ones are recorded when it is settled. Pure, so it is tested without Pixi.
 
+import type { SaveData } from './save';
+
+/** The totals a played run adds to `save` whatever its mode: one more run, its kills, its evolutions in the Codex. */
+export function countRun(save: SaveData, run: { kills: number; evolved?: readonly unknown[] }): Pick<SaveData, 'runs' | 'kills' | 'codex'> {
+  return { runs: save.runs + 1, kills: save.kills + Math.max(0, Math.floor(run.kills)), codex: mergeCodex(save.codex, run.evolved) };
+}
+
 export type EvolveId = SpellId | RelicId;
 
 /** Every entry in Codex order: the relics' awakenings, then the spells' evolutions. */

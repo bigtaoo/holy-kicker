@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { boardId, runBoard, runScore, type BoardReply, type ReplayWire } from './protocol';
+import { ARENA as ENGINE_ARENA } from '@hk/engine';
+import { LIMITS, boardId, runBoard, runScore, type BoardReply, type ReplayWire } from './protocol';
 import { CURRENT_ENGINE, arenaConfig, chapterConfig, resimulate } from './resim';
 import { engineFor } from './engines';
 import { ResimQueue } from './resimQueue';
 import { route, type Deps, type Req } from './routes';
-import { checkRun } from './rules';
+import { checkReport, checkRun, checkRunPost, wireOk } from './rules';
 import { boardsOf } from './stats';
 import { MemoryStore } from './store';
 import { INSTALL, playArena, playChapter } from './testPlay';
@@ -46,6 +47,18 @@ describe('an arena run', () => {
     expect(checkRun({ ...run, arena: undefined }).ok).toBe(false);
     const chapter = checkRun(playChapter(300).run);
     expect(chapter.ok && 'arena' in chapter.value).toBe(false);
+  });
+
+  it('passes the wire past a chapter\'s waves: its events, its replay and a problem report', () => {
+    expect(LIMITS.arenaWaves).toBe(ENGINE_ARENA.waves);
+    expect(wireOk('run_start', { waves: LIMITS.arenaWaves })).toBe(true);
+    expect(wireOk('run_end', { waves: LIMITS.arenaWaves, arena: true })).toBe(true);
+    expect(wireOk('run_end', { waves: LIMITS.waves + 1 })).toBe(false);
+    const replay = { ...ARENA.replay, wave: 60 } as ReplayWire;
+    const post = checkRunPost({ ...ARENA.run, wave: 60, tenths: 60 * 60 * 10, replay });
+    expect(post.ok && post.value.replay?.wave).toBe(60);
+    const report = { install: INSTALL, host: 'web', build: '0.0.1', locale: 'de', game: 'monk', text: 'stuck', device: 'test', chapter: 1, wave: 60, replay };
+    expect(checkReport(report).ok).toBe(true);
   });
 
   it('must have the arena\'s config, and passes the re-simulation as played', () => {

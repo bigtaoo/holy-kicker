@@ -66,7 +66,7 @@ const oneOf = (list: readonly string[]) => (x: PropValue) => typeof x === 'strin
 /** The fields runWire.ts names (a run's `waves`, an offer's place and outcome, an interstitial's), where present: each must have its shape. */
 export function wireOk(e: string, p: Record<string, PropValue>): boolean {
   const is = (k: string, ok: (x: PropValue) => boolean) => p[k] === undefined || ok(p[k]);
-  if (e === 'run_start' || e === 'run_end') return is('waves', (x) => isInt(x, 0, LIMITS.waves));
+  if (e === 'run_start' || e === 'run_end') return is('waves', (x) => x === LIMITS.arenaWaves || isInt(x, 0, LIMITS.waves));
   if (e === 'offer') return oneOf(OFFER_PLACES)(p.at) && oneOf(OFFER_OUTCOMES)(p.outcome);
   if (e === 'ad' && p.kind !== undefined) return p.kind === 'inter' && oneOf(INTER_PLACES)(p.at);
   return true;
@@ -154,7 +154,7 @@ export function checkNameEntry(v: unknown): Checked<{ install: string; name: Boa
 function checkReplay(v: unknown): ReplayWire | null | undefined {
   if (v === null || v === undefined) return null;
   if (!isObj(v) || !isObj(v.config) || !Array.isArray(v.cmds)) return undefined;
-  if (!isInt(v.engine, 0, 1e6) || !isInt(v.wave, 0, LIMITS.waves) || !isInt(v.tick, 0, LIMITS.maxSeconds * 30) || !isInt(v.hash, 0, 0xffffffff)) return undefined;
+  if (!isInt(v.engine, 0, 1e6) || !isInt(v.wave, 0, LIMITS.arenaWaves) || !isInt(v.tick, 0, LIMITS.maxSeconds * 30) || !isInt(v.hash, 0, 0xffffffff)) return undefined;
   const cmds = v.cmds as unknown[];
   if (cmds.length > LIMITS.replayNumbers || cmds.length % 5 !== 0 || !cmds.every((n) => isInt(n, -1, 1e9))) return undefined;
   if (JSON.stringify(v.config).length > LIMITS.replayConfig) return undefined;
@@ -189,7 +189,7 @@ export function checkReport(v: unknown): Checked<Report> {
   if (!game) return { ok: false, reason: 'bad game' };
   if (typeof v.text !== 'string' || v.text.length > LIMITS.reportText) return { ok: false, reason: 'bad text' };
   if (typeof v.device !== 'string' || v.device.length > LIMITS.device) return { ok: false, reason: 'bad device' };
-  if (!isInt(v.chapter, 0, LIMITS.chapters) || !isInt(v.wave, 0, LIMITS.waves)) return { ok: false, reason: 'bad run' };
+  if (!isInt(v.chapter, 0, LIMITS.chapters) || !isInt(v.wave, 0, LIMITS.arenaWaves)) return { ok: false, reason: 'bad run' };
   const replay = checkReplay(v.replay);
   if (replay === undefined) return { ok: false, reason: 'bad replay' };
   return {

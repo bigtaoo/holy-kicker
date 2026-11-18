@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { ARENA, ARENA_GATES, arenaRun, gatePoint } from './arena';
 import { Bot } from './bot/bot';
-import { DEFAULT_RUN, VIEW, type RunConfig } from './config';
+import { DEFAULT_RUN, VIEW, WAVES, type RunConfig } from './config';
 import { Engine } from './Engine';
 import { TICK_RATE, toFp } from './math/fixed';
 import { body, type Body } from './state';
+import { beginWave } from './systems/waves';
 
 // The arena: an endless run inside walls, the horde coming in through gates (arena.ts).
 
@@ -47,6 +48,20 @@ describe('arena', () => {
       gatePoint(s, b);
       expect(inside(b)).toBe(true);
       expect(Math.abs(b.x - p.x) <= VIEW.halfW && Math.abs(b.y - p.y) <= VIEW.halfH).toBe(false);
+    }
+  });
+
+  it('brings both mid-boss twins in through gates, even with the hero at a wall', () => {
+    const e = new Engine(ARENA_RUN);
+    const s = e.state;
+    s.players[0].x = LIM;
+    s.players[0].y = 0;
+    for (const seed of [1, 2, 3, 4, 5]) {
+      s.ai.int(seed);
+      s.elites.length = 0;
+      beginWave(s, WAVES.midBosses[0]);
+      expect(s.elites).toHaveLength(2);
+      for (const el of s.elites) expect(gateGap(el)).toBeLessThanOrEqual(NEAR_GATE);
     }
   });
 

@@ -45,21 +45,22 @@ describe('the arena', () => {
     expect(arenaBetter({ waves: 4, tenths: 9999 }, { waves: 5, tenths: 0 })).toBe(false);
   });
 
-  it('settles a run: copper and a run counted, the best kept or raised', () => {
+  it('settles a run: copper, the run, its kills and evolutions counted, the best kept or raised', () => {
     const s = cleared();
-    const first = settleArena(s, { waves: 8, tenths: 1800 });
+    const first = settleArena(s, { waves: 8, tenths: 1800, kills: 412, evolved: ['bowl'] });
     expect(first.reward).toEqual({ copper: arenaCopper(1800), before: { waves: 0, tenths: 0 }, newBest: true });
-    expect(first.save).toMatchObject({ copper: s.copper + arenaCopper(1800), runs: s.runs + 1, arenaBest: { waves: 8, tenths: 1800 } });
+    expect(first.save).toMatchObject({ copper: s.copper + arenaCopper(1800), runs: s.runs + 1, kills: s.kills + 412, arenaBest: { waves: 8, tenths: 1800 } });
+    expect(first.save.codex).toContain('bowl');
     // no chapter progress
     expect(first.save.best).toEqual(s.best);
     expect(first.save.cleared).toBe(s.cleared);
-    const worse = settleArena(first.save, { waves: 6, tenths: 2400 });
+    const worse = settleArena(first.save, { waves: 6, tenths: 2400, kills: 0 });
     expect(worse.reward.newBest).toBe(false);
     expect(worse.save.arenaBest).toEqual({ waves: 8, tenths: 1800 });
   });
 
   it('keeps the arena in the save through a reload', () => {
-    const s = settleArena(chooseArena(cleared()), { waves: 9, tenths: 2000 }).save;
+    const s = settleArena(chooseArena(cleared()), { waves: 9, tenths: 2000, kills: 0 }).save;
     const back = parseSave(JSON.stringify(s));
     expect(back.arena).toBe(true);
     expect(back.arenaBest).toEqual({ waves: 9, tenths: 2000 });

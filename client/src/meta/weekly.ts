@@ -3,7 +3,7 @@ import { CHALLENGE_BOARD, LATE_MS, weekTier, type Challenge } from '@hk/protocol
 import type { RunSetup } from '../game/runSetup';
 import { BALANCE } from './balance';
 import type { ChallengeResult } from './challenge';
-import { mergeCodex } from './codex';
+import { countRun } from './codex';
 import type { SaveData } from './save';
 
 // The weekly challenge (docs/design.md "Challenges"): one run a week, Monday to Monday UTC, the
@@ -64,7 +64,7 @@ export function settleWeekly(save: SaveData, c: Challenge, board: string, run: C
   const entry: WeekEntry = { id: c.id, board, end: c.end, best: Math.max(old?.best ?? 0, run.waves) };
   const weeks = [entry, ...save.weeks.filter((w) => w.id !== c.id)].slice(0, WEEKS_KEPT);
   return {
-    save: { ...save, weeks, runs: save.runs + 1, kills: save.kills + Math.max(0, Math.floor(run.kills)), codex: mergeCodex(save.codex, run.evolved) },
+    save: { ...save, weeks, ...countRun(save, run) },
     before: old?.best ?? 0,
   };
 }

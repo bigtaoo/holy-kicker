@@ -275,7 +275,7 @@ describe('routes', () => {
   it('refuses a report missing what an operator needs to read it', () => {
     expect(checkReport(report({ device: 'd'.repeat(LIMITS.device + 1) })).ok).toBe(false);
     expect(checkReport(report({ chapter: LIMITS.chapters + 1 })).ok).toBe(false);
-    expect(checkReport(report({ wave: LIMITS.waves + 1 })).ok).toBe(false);
+    expect(checkReport(report({ wave: LIMITS.arenaWaves + 1 })).ok).toBe(false);
     expect(checkReport(report({ install: 'short' })).ok).toBe(false);
     expect(checkReport(report({ replay: { ...replay, tick: -1 } })).ok).toBe(false);
     expect(checkReport(report({ replay: { ...replay, config: { pad: 'x'.repeat(LIMITS.replayConfig) } } })).ok).toBe(false);

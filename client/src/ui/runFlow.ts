@@ -347,7 +347,7 @@ export class RunFlow {
   /** An arena run's end: copper for the minutes survived, the best kept, and its own results. */
   private settleArena(s: SimState, run: RunResult, waves: number, rank: Promise<RankNote>): void {
     const h = this.host;
-    const { save, reward } = settleArena(h.save(), { waves: run.wave, tenths: run.tenths });
+    const { save, reward } = settleArena(h.save(), { waves: run.wave, tenths: run.tenths, kills: this.kills, evolved: evolvedIn(s.players[0]) });
     h.commit(afterRun(save, Date.now(), this.tally(s, waves, 0)).save);
     h.setScreen(new ArenaResultsScreen({ wave: run.wave, tenths: run.tenths, reward }, {
       double: async () => {

@@ -277,11 +277,12 @@ export function beginWave(s: SimState, wave: number): void {
     s.boss = newBoss(at.x, at.y, waveFoeHp(bossOf(kind, true).hp, s.config.chapter, wave, s.config.hard), true, kind);
     arm(s, s.boss, true);
   } else if (isMidBoss(wave, last)) {
-    // the twins come from opposite sides of the hero
+    // the twins come from opposite sides of the hero (in the arena, each through a gate)
     const hp = twinHp(s.config.chapter, wave, s.config.hard);
     const a = newElite(0, 0, s.nextId++, hp);
     spawnPoint(s, p.x, p.y, a);
     const b = newElite(2 * p.x - a.x, 2 * p.y - a.y, s.nextId++, hp, ELITE.cooldown + WAVES.twinDelay);
+    if (arenaRun(s.config)) spawnPoint(s, p.x, p.y, b);
     s.elites.push(a, b);
   } else if (isBossWave(wave, last) && !s.boss) {
     // the chapter's boss, or the first of its rush with the rest to follow

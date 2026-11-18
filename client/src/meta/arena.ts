@@ -3,6 +3,7 @@ import type { RunSetup } from '../game/runSetup';
 import { BALANCE } from './balance';
 import { challengeBonus } from './challenge';
 import { earnedSutras } from './progress';
+import { countRun } from './codex';
 import type { SaveData } from './save';
 
 // The arena (docs/design.md "Arena"): a lobby mode of its own, open once chapter 1 is cleared. One
@@ -55,13 +56,13 @@ export interface ArenaReward {
   newBest: boolean;
 }
 
-/** Pays an ended arena run that reached `run.waves` waves in `run.tenths`, and keeps the best. */
-export function settleArena(save: SaveData, run: ArenaScore): { save: SaveData; reward: ArenaReward } {
+/** Pays an ended arena run that reached `run.waves` waves in `run.tenths`, keeps the best, and counts the run (its kills, its evolutions). */
+export function settleArena(save: SaveData, run: ArenaScore & { kills: number; evolved?: readonly string[] }): { save: SaveData; reward: ArenaReward } {
   const copper = arenaCopper(run.tenths);
   const before = save.arenaBest;
   const newBest = arenaBetter(run, before);
   return {
-    save: { ...save, copper: save.copper + copper, runs: save.runs + 1, arenaBest: newBest ? { waves: run.waves, tenths: run.tenths } : before },
+    save: { ...save, copper: save.copper + copper, ...countRun(save, run), arenaBest: newBest ? { waves: run.waves, tenths: run.tenths } : before },
     reward: { copper, before, newBest },
   };
 }

@@ -1,7 +1,7 @@
 import { ENGINE_VERSION, STATS, mutatorOf, type Stat, type StatBonus } from '@hk/engine';
 import type { Challenge } from '@hk/protocol';
 import { BALANCE } from './balance';
-import { mergeCodex } from './codex';
+import { countRun } from './codex';
 import { gearStats } from './gear';
 import { chapterMul, earnedSutras, playableChapters } from './progress';
 import type { SaveData } from './save';
@@ -137,7 +137,7 @@ export function settleChallenge(save: SaveData, c: Challenge, chapter: number, r
   return {
     save: {
       ...save, ...streaked, challenge: c.id, dailyBest: { id: c.id, waves: Math.max(dailyBestOf(save, c), Math.floor(run.waves)) }, copper: save.copper + copper, jade: save.jade + jade,
-      runs: save.runs + 1, kills: save.kills + Math.max(0, Math.floor(run.kills)), codex: mergeCodex(save.codex, run.evolved),
+      ...countRun(save, run),
     },
     reward: { counted, reached, copper, jade, streak, streakJade: bonus },
   };
