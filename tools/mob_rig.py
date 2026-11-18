@@ -17,6 +17,10 @@ sheet, so the game draws them as before.
        "pivot": [x, y]}
     ],
     "seal": 4,                        # optional: outline gaps up to twice this many px are closed
+    "crumb": 400,                     # optional: bits of a part smaller than this (px) go to the
+                                      #   part they touch most
+    "clean": 4,                       # optional: spikes thinner than twice this (px) are cut
+                                      #   off each posed frame before it is outlined again
     "claim": ["head", ...],           # optional: who takes contested pixels first (default:
                                       #   front to back)
     "bones": {"body": {"pivot": [x, y], "parent": "root"}},  # optional joints with no picture
@@ -47,7 +51,6 @@ def cut_parts(path, rig, holes=()):
     outside = np.pad((closed == 0).astype(np.uint8), 1, constant_values=1)
     cv2.floodFill(outside, None, (0, 0), 2)
     fg[outside[1:-1, 1:-1] != 2] = 255
-    soft = cv2.GaussianBlur(fg.astype(np.float32) / 255, (0, 0), 0.6)  # cutout.py's feather
     rgb = np.array(src)
     hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
     parts = rig["parts"]
@@ -70,6 +73,12 @@ def cut_parts(path, rig, holes=()):
     for p in parts:
         if p.get("rest"):
             owned[p["name"]] = (fg > 0) & ~taken
+    owned = _tidy(owned, rig.get("crumb", 400))
+    union = np.zeros(fg.shape, bool)
+    for m in owned.values():
+        union |= m
+    fg = union.astype(np.uint8) * 255
+    soft = cv2.GaussianBlur(fg.astype(np.float32) / 255, (0, 0), 0.6)  # cutout.py's feather
     images = {}
     for p in parts:
         own = owned[p["name"]]
@@ -78,9 +87,11 @@ def cut_parts(path, rig, holes=()):
         out = rgb.copy()
         if hidden.any():
             # paint from the part's own colours only, not its outline or the neighbours
+            # one flat colour, the part's commonest paint next to it: an inpaint smears the
+            # shading and the neighbours' greys into a blur no sticker has
             known = own & (hsv[..., 2] >= DARK)
-            painted = cv2.inpaint(rgb, (~known).astype(np.uint8) * 255, 7, cv2.INPAINT_TELEA)
-            out[hidden] = painted[hidden]
+            near = known & (cv2.dilate(hidden.astype(np.uint8), disc(40)) > 0)
+            out[hidden] = _commonest(rgb[near if near.sum() > 50 else known])
             for h in entries:
                 if "fill" in h:
                     out[hidden & (np.array(poly_mask(src.size, [h["poly"]])) > 0)] = h["fill"]
@@ -91,6 +102,61 @@ def cut_parts(path, rig, holes=()):
         a = np.dstack([out.astype(np.float32) / 255 * alpha[..., None], alpha])
         images[p["name"]] = a
     return images, box[:2]
+
+
+def _commonest(px):
+    """The most common colour among these pixels, binned to 8 levels a channel."""
+    q = (px // 32).astype(np.int32)
+    keys = q[:, 0] * 64 + q[:, 1] * 8 + q[:, 2]
+    top = np.bincount(keys).argmax()
+    return np.median(px[keys == top], axis=0).astype(np.uint8)
+
+
+def _clean(frame, r=4):
+    """The posed figure's silhouette without the spikes and crumbs a cut edge leaves when its
+    part turns, closed where parts parted, and outlined again all round: a cut edge turned out
+    has no outline of its own."""
+    solid = (frame[..., 3] > 0.5).astype(np.uint8)
+    kept = cv2.morphologyEx(solid, cv2.MORPH_OPEN, disc(r))
+    kept = cv2.morphologyEx(kept, cv2.MORPH_CLOSE, disc(r))
+    outside = np.pad(1 - kept, 1, constant_values=1)
+    cv2.floodFill(outside, None, (0, 0), 2)
+    kept = (outside[1:-1, 1:-1] != 2).astype(np.uint8)
+    soft = cv2.GaussianBlur(kept.astype(np.float32), (0, 0), 0.8)
+    ink = np.array(OUTLINE_RGB, np.float32) / 255
+    ring = (kept > 0) & (cv2.erode(kept, disc(OUTLINE // 2 + 1)) == 0)
+    straight = frame[..., :3] / np.maximum(frame[..., 3:], 1e-4)
+    straight[ring | ((kept > 0) & (frame[..., 3] < 0.5))] = ink
+    return np.dstack([straight * soft[..., None], soft]).astype(np.float32)
+
+
+def _tidy(owned, crumb):
+    """Crumbs a part's polygon cut off from the rest of it (a dash of outline, a sliver of the
+    neighbour's paint) go to the part they touch most, and holes inside a part are its own: a
+    crumb would fly off on its own and a hole would show the ground through it."""
+    names = list(owned)
+    for _ in range(2):
+        for name in names:
+            n, lab, stats, _c = cv2.connectedComponentsWithStats(owned[name].astype(np.uint8), connectivity=8)
+            for k in range(1, n):
+                if stats[k, cv2.CC_STAT_AREA] >= crumb:
+                    continue
+                bit = lab == k
+                ring = (cv2.dilate(bit.astype(np.uint8), disc(3)) > 0) & ~bit
+                best = max((o for o in names if o != name), key=lambda o: int((owned[o] & ring).sum()))
+                if (owned[best] & ring).any():
+                    owned[name] = owned[name] & ~bit
+                    owned[best] = owned[best] | bit
+    for name in names:
+        m = owned[name].astype(np.uint8)
+        outside = np.pad(1 - m, 1, constant_values=1)
+        cv2.floodFill(outside, None, (0, 0), 2)
+        hole = (outside[1:-1, 1:-1] != 2) & ~owned[name]
+        for o in names:
+            if o != name:
+                hole &= ~owned[o]
+        owned[name] = owned[name] | hole
+    return owned
 
 
 def matrix(rot, dx, dy, sx, sy, pivot):
@@ -135,7 +201,7 @@ def rig_frames(spec, path, value, pads, size, count):
             layer = cv2.warpAffine(images[p["name"]], m[:2], (W, H), flags=cv2.INTER_LINEAR,
                                    borderMode=cv2.BORDER_CONSTANT, borderValue=0)
             frame = layer + frame * (1 - layer[:, :, 3:])
-        frames.append(frame)
+        frames.append(_clean(frame, rig.get("clean", 4)))
     return frames
 
 
