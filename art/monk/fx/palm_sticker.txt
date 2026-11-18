@@ -1,6 +1,0 @@
-Made 2026-11-18 with tools/edit_image.sh from palm.jpg and this prompt:
-
-Keep this exact hand: the same shape, pose, fingers and fingernails, the back of the hand facing us. Redraw it as a flat cartoon sticker for a mobile game: one flat warm saffron-gold base colour, one hard-edged deeper amber cel shadow along one side of each finger and the hand, a few small flat white highlights on the nails and knuckles, and a very thick even dark brown outline around the whole silhouette. No metallic gradients, no shine streaks, no soft shading, no glow, no texture. Plain pure white background.
-
-
-Then (2026-11-18) the picture recoloured from skin to saffron gold (hue 45, shadow 36, saturation x1.9) and cut out at 420 px, its white nails tinted pale gold.
