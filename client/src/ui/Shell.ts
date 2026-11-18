@@ -1,5 +1,5 @@
 import { Container, type Application } from 'pixi.js';
-import { isBossWave, type MonkId } from '@hk/engine';
+import { ARENA, isBossWave, type MonkId } from '@hk/engine';
 import { Game, STICK_RADIUS, type Art } from '../game/Game';
 import { DragStick } from '../game/dragStick';
 import type { LevelSettings, QualityMode } from '../game/quality';
@@ -11,6 +11,7 @@ import { EXPERIMENTS, enroll, experimentTag, forcedArms } from '../meta/experime
 import { rollDay } from '../meta/daily';
 import { fixPatrolClock, startPatrol } from '../meta/patrol';
 import { chooseTrack, selectChapter, type Tab } from '../meta/progress';
+import { chooseArena } from '../meta/arena';
 import { dropRun, loadRun, type SavedRun } from '../meta/resume';
 import type { SaveData } from '../meta/save';
 import type { SaveStore } from '../meta/saveStore';
@@ -23,7 +24,7 @@ import { languageProps, type Backend } from '../net/backend';
 import { runLeave } from '../net/leaveProps';
 import type { PerfReport } from '../net/perfReport';
 import { RunReplays } from '../net/runReplays';
-import type { Challenge, Device, OfferPlace, PropValue } from '@hk/protocol';
+import type { Device, OfferPlace, PropValue } from '@hk/protocol';
 import { eventCue } from '../game/soundCues';
 import { loadMonkArt } from '../art';
 import { loadRunArt, lateArt, loadChapterArt } from '../chapterArt';
@@ -33,11 +34,12 @@ import { LobbyArtLoad } from './lobbyArtLoad';
 import { parseInvite } from '../meta/invite';
 import { ChallengeFlow } from './challengeFlow';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
+import { ArenaResultsScreen } from './ArenaResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
 import { ResumeScreen } from './ResumeScreen';
 import { FaultGuard, RESTART_GAP_MS } from './faultGuard';
 import { ReminderBook } from './reminders';
-import { RunFlow } from './runFlow';
+import { RunFlow, type RunPick } from './runFlow';
 import { storedSettings, type SettingsActions } from './settingsPanel';
 import { PlayerName } from './playerName';
 import { ReplayScreen, type ReplayView } from './replayWatch';
@@ -135,7 +137,7 @@ export class Shell {
       app, platform, art, scene, stick: this.stick, net, device, sound: this.sound, ads: this.ads, portal: this.portal, names: this.names,
       challenge: this.challenge, replays: this.replays,
       save: () => this.save, commit: (save) => this.commit(save), setScreen: (screen) => this.setScreen(screen),
-      showLobby: (tab) => this.showLobby(tab ?? null), play: (chapter, left, from) => void this.play(chapter, left, from),
+      showLobby: (tab) => this.showLobby(tab ?? null), play: (chapter, left, from, pick) => void this.play(chapter, left, from, pick),
       rewarded: (at) => this.rewarded(at), quality: () => this.quality, perf: () => this.perf,
       freeLobbyArt: () => this.lobbyArt.free(), raiseUi: () => this.app.stage.addChild(this.ui),
     });
@@ -159,7 +161,7 @@ export class Shell {
   /** Where the player is, as `leave` and `anomaly` name it. */
   place(): 'lobby' | 'results' | 'run' | 'other' {
     if (this.screen instanceof LobbyScreen) return 'lobby';
-    if (this.screen instanceof ResultsScreen || this.screen instanceof ChallengeResultsScreen) return 'results';
+    if (this.screen instanceof ResultsScreen || this.screen instanceof ChallengeResultsScreen || this.screen instanceof ArenaResultsScreen) return 'results';
     return this.runs.game ? 'run' : 'other';
   }
 
@@ -178,7 +180,7 @@ export class Shell {
       left = null;
     }
     if (left) this.offerResume(left);
-    else if (direct || !this.save.firstRunDone) await this.play(this.scene.chapter || this.save.chapter);
+    else if (direct || !this.save.firstRunDone) await this.play(this.scene.chapter || this.save.chapter, undefined, null, direct && this.scene.arena ? 'arena' : null);
     else {
       await this.lobbyArt.ready();
       this.showLobby();
@@ -274,6 +276,8 @@ export class Shell {
     this.reminders?.sync(now);
     const lobby = new LobbyScreen(this.save, this.names, {
       play: (chapter) => this.play(chapter),
+      playArena: () => this.play(ARENA.chapter, undefined, null, 'arena'),
+      chooseArena: () => this.relobby(chooseArena(this.save)),
       selectChapter: (chapter) => this.relobby(selectChapter(this.save, chapter)),
       chooseTrack: (hard) => this.relobby(chooseTrack(this.save, hard)),
       selectRelic: (relic) => this.relobby({ ...this.save, relic }),
@@ -320,10 +324,10 @@ export class Shell {
   }
 
   /** Starts a run of `chapter` (or goes on with `left`; `from` the results' Play again or Next chapter) once its art is in (a later chapter's pack or a monk's rig may need fetching). */
-  private play(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: Challenge | null = null): Promise<void> {
+  private play(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: RunPick = null): Promise<void> {
     // the tap starts the perf event's ready time
     this.perf?.tapped();
-    return this.withArt(chapter, left?.state.config.monk ?? (c?.loadout?.monk as MonkId | undefined) ?? this.scene.monk ?? this.save.monk, () => {
+    return this.withArt(chapter, left?.state.config.monk ?? (c === 'arena' ? undefined : (c?.loadout?.monk as MonkId | undefined)) ?? this.scene.monk ?? this.save.monk, () => {
       // a run other than the one resumed after a fault starts with a clean slate
       if (!left) this.faultedRun = false;
       this.runs.start(chapter, left, from, c);

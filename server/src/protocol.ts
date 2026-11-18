@@ -272,6 +272,8 @@ export const LIMITS = {
   chapters: 20,
   /** Waves a chapter has; a run can not go further. */
   waves: 50,
+  /** Waves an arena run has (it never ends by them; engine ARENA.waves). */
+  arenaWaves: 999,
   /** A run can not be shorter than this many seconds per wave reached, nor longer than this. */
   minSecondsPerWave: 4,
   maxSeconds: 4 * 3600,
@@ -308,6 +310,8 @@ export interface RunEntry {
   kills: number;
   monk: string;
   relic: string;
+  /** An arena run (chapter 1's horde inside walls, endless): on the arena's board, ranked by waves, then time survived. */
+  arena?: boolean;
   /** The portal account's name (CrazyGames only), or the player's dice name; see NameEntry. */
   name?: string;
   dice?: number;
@@ -333,17 +337,24 @@ export interface RunReply {
 }
 
 /** A board's id: the chapter, the mode and, for a game but the first, the game (`c3h-corgi`). */
-export function boardId(chapter: number, hard: boolean, game?: Game): string {
-  return `c${chapter}${hard ? 'h' : ''}${boardSuffix(game)}`;
+export function boardId(chapter: number, hard: boolean, game?: Game, arena = false): string {
+  return arena ? `arena${boardSuffix(game)}` : `c${chapter}${hard ? 'h' : ''}${boardSuffix(game)}`;
+}
+
+/** The board a run goes on: its chapter and mode's, or the arena's. */
+export function runBoard(r: Pick<RunEntry, 'chapter' | 'hard' | 'game' | 'arena'>): string {
+  return boardId(r.chapter, r.hard, r.game, r.arena === true);
 }
 
 /**
  * What a run ranks by, higher is better: a win beats any loss, then further waves, then less
- * time. One integer so the database sorts on a single indexed field.
+ * time; an arena run (never won) further waves, then more time. One integer so the database
+ * sorts on a single indexed field.
  */
-export function runScore(r: Pick<RunEntry, 'won' | 'wave' | 'tenths'>): number {
-  const fast = Math.max(0, 999_999 - Math.min(999_999, r.tenths));
-  return (r.won ? 1 : 0) * 1e9 + r.wave * 1e6 + fast;
+export function runScore(r: Pick<RunEntry, 'won' | 'wave' | 'tenths' | 'arena'>): number {
+  const tenths = Math.min(999_999, Math.max(0, r.tenths));
+  if (r.arena) return r.wave * 1e6 + tenths;
+  return (r.won ? 1 : 0) * 1e9 + r.wave * 1e6 + (999_999 - tenths);
 }
 
 /** One row of a board as the server sends it. `tag` stands for the install without revealing it. */

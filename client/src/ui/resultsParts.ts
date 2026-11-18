@@ -32,10 +32,10 @@ export type Part = [Container, number];
  */
 export type RankNote = RunRank | RunMiss | 'guest' | null;
 
-const MISS = { off: 'results.rankOff', queued: 'results.rankQueued', unverified: 'results.rankUnverified', guest: 'results.rankGuest' } as const;
+export const MISS = { off: 'results.rankOff', queued: 'results.rankQueued', unverified: 'results.rankUnverified', guest: 'results.rankGuest' } as const;
 
 /** A rounded pill with `text` in it, `fill` coloured. */
-function pill(text: string, color: number, size = 48): Container {
+export function pill(text: string, color: number, size = 48): Container {
   const c = new Container();
   const l = label(text, size, color, {}, true);
   l.anchor.set(0.5);
@@ -286,7 +286,7 @@ export function newsLines(r: Reward, doubled: boolean): NewsLine[] {
 }
 
 /** The leaderboard place: a new best stays "checking" until the server has re-simulated it. */
-function rankPill(rank: RunRank): Container {
+export function rankPill(rank: RunRank): Container {
   if (rank.status === 'pending') return pill(t('results.rankPending', { rank: rank.rank }), COLORS.dim);
   return pill(t(rank.best ? 'results.rankNew' : 'results.rankShort', { rank: rank.rank }), rank.best ? COLORS.gold : COLORS.dim);
 }

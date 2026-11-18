@@ -63,12 +63,15 @@ export function runEnd(i: RunEndInput): RunEnd {
   // a run shorter than the chapter (an experiment's first run) is never on a board, nor timed;
   // a challenge's is on its own (a daily's 20 waves)
   const counted = i.ranked && !c && s.config.waves === BALANCE.waves;
-  const name = (counted || (i.ranked && c)) && plausible(run) ? i.name : null;
+  // an arena run (meta/arena.ts) goes to the arena's board, never counted as a chapter's
+  const arena = s.config.arena === true;
+  const boarded = counted || (i.ranked && arena);
+  const name = (boarded || (i.ranked && c)) && plausible(run) ? i.name : null;
   // a portal guest is told why the run is on no board
-  const note = counted && i.online && !i.named ? 'guest' : null;
+  const note = boarded && i.online && !i.named ? 'guest' : null;
   return {
-    run, track, waves: clearedWaves(s), counted, note,
-    board: counted && name ? { ...run, ...name } : null,
+    run: arena ? { ...run, arena } : run, track: arena ? { ...track, arena } : track, waves: clearedWaves(s), counted, note,
+    board: boarded && name ? { ...run, ...name, ...(arena && { arena }) } : null,
     challenge: c ? { run: { ...run, ...name }, ranked: !!name } : null,
   };
 }

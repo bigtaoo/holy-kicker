@@ -1,5 +1,5 @@
 import type { Application } from 'pixi.js';
-import { SUTRA_IDS, type SimState } from '@hk/engine';
+import { ARENA, SUTRA_IDS, type SimState } from '@hk/engine';
 import { FAST_SPEED, Game, type Art } from '../game/Game';
 import type { DragStick } from '../game/dragStick';
 import type { LevelSettings } from '../game/quality';
@@ -8,6 +8,7 @@ import { setupOf } from '../game/runSetup';
 import { eventCue } from '../game/soundCues';
 import { chapterLook } from '../chapterArt';
 import { BALANCE } from '../meta/balance';
+import { arenaSetup, settleArena } from '../meta/arena';
 import { challengeSetup } from '../meta/challenge';
 import { evolvedIn } from '../meta/codex';
 import { bestTime, noteTime } from '../meta/clearTimes';
@@ -35,6 +36,7 @@ import type { Challenge, Device, InterPlace, OfferPlace, PropValue, ReplayWire }
 import { timerShown } from './clearTime';
 import { menuBackdrop } from './lobbyBars';
 import type { ChallengeFlow, ChallengeSettled } from './challengeFlow';
+import { ArenaResultsScreen } from './ArenaResultsScreen';
 import { ChallengeResultsScreen } from './ChallengeResultsScreen';
 import { ResultsScreen } from './ResultsScreen';
 import type { RankNote } from './resultsParts';
@@ -75,8 +77,8 @@ export interface RunHost {
   setScreen(screen: Screen | null): void;
   /** The lobby, opened on `tab` (the results' next step). */
   showLobby(tab?: Tab | null): void;
-  /** A run of `chapter`, once its art is in. */
-  play(chapter: number, left?: SavedRun, from?: 'again' | 'next' | null): void;
+  /** A run of `chapter`, once its art is in (`pick`: a challenge's or the arena's). */
+  play(chapter: number, left?: SavedRun, from?: 'again' | 'next' | null, pick?: RunPick): void;
   /** Plays the rewarded ad offered at `at`; resolves whether it paid. */
   rewarded(at: OfferPlace): Promise<boolean>;
   quality(): LevelSettings | null;
@@ -86,6 +88,9 @@ export interface RunHost {
   /** Puts the screens back above a run just added to the stage. */
   raiseUi(): void;
 }
+
+/** What a run that is not a chapter's plays: a daily or weekly challenge, or the arena. */
+export type RunPick = Challenge | 'arena' | null;
 
 /** Seconds between two buzzes: a swarm's hits would otherwise rattle the phone without a break. */
 const BUZZ_GAP = 0.4;
@@ -111,19 +116,20 @@ export class RunFlow {
     this.keep();
   }
 
-  /** `c`: a run of that daily challenge (its own setup, no revives, never kept for the next launch). */
-  start(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, c: Challenge | null = null): void {
+  /** `pick`: a run of that daily challenge (its own setup, no revives, never kept for the next launch), or of the arena (the same). */
+  start(chapter: number, left?: SavedRun, from: 'again' | 'next' | null = null, pick: RunPick = null): void {
     const h = this.host;
     const save = h.save();
-    c = h.challenge.begin(left ? null : c);
+    const arena = !left && pick === 'arena';
+    const c = h.challenge.begin(left || pick === 'arena' ? null : pick);
     this.chapter = chapter;
-    this.hard = left ? left.state.config.hard : !c && (h.scene.hard || save.hard);
+    this.hard = left ? left.state.config.hard : !c && !arena && (h.scene.hard || save.hard);
     h.setScreen(null);
     // no run draws the lobby
     h.freeLobbyArt();
     const { bonus, freeRevives } = loadout(save, chapter, this.hard);
-    this.freeRevives = left ? left.freeRevives : c ? 0 : freeRevives;
-    const game = (this.game = new Game(h.app, h.platform, h.art, h.scene, h.stick, left ? setupOf(left.state.config) : c ? challengeSetup(save, c) : {
+    this.freeRevives = left ? left.freeRevives : c || arena ? 0 : freeRevives;
+    const game = (this.game = new Game(h.app, h.platform, h.art, h.scene, h.stick, left ? setupOf(left.state.config) : c ? challengeSetup(save, c) : arena ? arenaSetup(save) : {
       chapter,
       waves: h.scene.waves ? runWaves(save, chapter, this.hard, h.scene.wave) : 0,
       revives: BALANCE.revives + freeRevives,
@@ -153,7 +159,8 @@ export class RunFlow {
       }
     };
     game.onHeartbeat = () => h.sound.play('heartbeat');
-    const hud = (this.hud = new RunHud(game.engine.state.config.waves || BALANCE.waves, this.hard, {
+    // an arena run counts its waves up with no last one
+    const hud = (this.hud = new RunHud(arena ? 0 : game.engine.state.config.waves || BALANCE.waves, this.hard, {
       pause: () => this.setPaused(true),
       resume: () => this.setPaused(false),
       setFast: (fast) => {
@@ -176,7 +183,7 @@ export class RunFlow {
       // the death panel asks the host only when it would offer the ad's revive, and waits on its answer only briefly
       ads: { ...h.ads, rewardedAvailable: () => offered(this.track, 'revive', within(h.ads.rewardedAvailable(), DOWN_AD_WAIT_MS).catch(() => false)) },
       // a challenge earns none of the chapter's chests and leaves its best and its last fall alone
-      past: c ? undefined : runPast(save, chapter, this.hard),
+      past: c || arena ? undefined : runPast(save, chapter, this.hard),
       freeRevives: () => this.freeRevives,
       kills: () => this.kills,
       pairHint: { due: () => !loadSettings(h.platform.storage).pairsTold, done: () => updateSettings(h.platform.storage, { pairsTold: true }) },
@@ -185,11 +192,12 @@ export class RunFlow {
       hold: h.device === 'desktop' && h.platform.keysReach ? { reach: () => h.platform.keysReach!(), start: () => void (hud.pauseShown || this.setPaused(false)) } : undefined,
     }, !!teach);
     // the clock only where time already matters: a chapter cleared before on this track (against its best), or a challenge
-    hud.setTimer(timerShown(isCleared(save, chapter, this.hard), !!c) ? (c ? 0 : bestTime(save, chapter, this.hard)) : null);
+    // the arena's against its best's time
+    hud.setTimer(arena ? save.arenaBest.tenths : timerShown(isCleared(save, chapter, this.hard), !!c) ? (c ? 0 : bestTime(save, chapter, this.hard)) : null);
     if (!this.watch.held) h.portal.gameplayStart();
     // a resumed fight waits on the pause panel until the player looks (a card choice or the death panel holds it anyway)
     const s = game.engine.state;
-    if (!left) h.net.track('run_start', { chapter, hard: this.hard, waves: s.config.waves, monk: c?.loadout?.monk ?? h.scene.monk ?? save.monk, relic: c?.loadout?.relic ?? h.scene.relic ?? save.relic, ...(from && { [from]: true }), ...(c && { challenge: c.id }) });
+    if (!left) h.net.track('run_start', { chapter, hard: this.hard, waves: s.config.waves, monk: c?.loadout?.monk ?? h.scene.monk ?? save.monk, relic: c?.loadout?.relic ?? h.scene.relic ?? save.relic, ...(from && { [from]: true }), ...(c && { challenge: c.id }), ...(arena && { arena }) });
     else if (s.outcome === 'playing' && s.players[0].offer.length === 0) hud.pauseForHost();
   }
 
@@ -304,6 +312,7 @@ export class RunFlow {
     const rank: Promise<RankNote> = end.board ? h.net.submitRun(end.board, replay) : Promise.resolve(end.note);
     void h.net.flush();
     if (end.challenge) return this.settleChallenge(s, end.challenge.run, waves, end.challenge.ranked);
+    if (s.config.arena) return this.settleArena(s, run, waves, rank);
     const won = s.outcome === 'won';
     const time = won && counted ? { tenths: run.tenths, best: bestTime(h.save(), this.chapter, this.hard) } : null;
     const timed = won && counted ? noteTime(h.save(), this.chapter, this.hard, run.tenths) : h.save();
@@ -333,6 +342,22 @@ export class RunFlow {
       next: () => void h.ads.midgame(this.inter('challenge_next')).then(() => h.showLobby()),
       invite: this.invite(done, run),
     }, offered(this.track, 'challenge_double', h.ads.rewardedAvailable(), done.reward.copper > 0), h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
+  }
+
+  /** An arena run's end: copper for the minutes survived, the best kept, and its own results. */
+  private settleArena(s: SimState, run: RunResult, waves: number, rank: Promise<RankNote>): void {
+    const h = this.host;
+    const { save, reward } = settleArena(h.save(), { waves: run.wave, tenths: run.tenths });
+    h.commit(afterRun(save, Date.now(), this.tally(s, waves, 0)).save);
+    h.setScreen(new ArenaResultsScreen({ wave: run.wave, tenths: run.tenths, reward }, {
+      double: async () => {
+        const paid = await h.rewarded('double');
+        if (paid) h.commit({ ...h.save(), copper: h.save().copper + reward.copper });
+        return paid;
+      },
+      next: () => void h.ads.midgame(this.inter('results_lobby')).then(() => h.showLobby()),
+      again: () => h.play(ARENA.chapter, undefined, 'again', 'arena'),
+    }, offered(this.track, 'double', h.ads.rewardedAvailable(), reward.copper > 0), rank, h.art.icons, h.device === 'desktop', menuBackdrop(h.app.renderer, h.art.lobby)));
   }
 
   /** Copies a link daring a friend to beat the week's best, for a weekly run where the host makes links. */

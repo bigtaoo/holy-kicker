@@ -28,6 +28,14 @@ export const ru: Table<typeof en> = {
     hard: 'Сложный',
     hardTitle: 'Сложная {n}: {name}',
   },
+  arena: {
+    title: 'Арена',
+    about: 'Бесконечные волны в стенах. Враги идут через ворота, воскрешений нет.',
+    best: 'Рекорд: волна {wave} · {time}',
+    perMinute: '+{n} за каждую минуту',
+    wave: 'Арена · волна {wave}',
+    survived: 'Продержались {time}',
+  },
   monk: {
     playing: 'В игре',
     joined: '{name} с тобой!',

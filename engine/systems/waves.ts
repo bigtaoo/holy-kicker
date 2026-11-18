@@ -9,7 +9,8 @@ import { arm } from './affixes';
 import { newBoss } from './boss';
 import { openShrine, payBet } from './build';
 import { sweepGems } from './drops';
-import { respawnPoint, ringPoint, spawnPoint, wideRun } from './horde';
+import { comeBack, ringPoint, spawnPoint } from './horde';
+import { arenaRun } from '../arena';
 import { resetMob } from './marsh';
 
 // The chapter's waves (docs/design.md "Chapters"): each lasts WAVES.ticks; the horde grows
@@ -241,7 +242,7 @@ export function beginWave(s: SimState, wave: number): void {
     if (m.hp === 0 && !tempKind(m.kind)) {
       m.hp = mobHp(wave, m.kind, s.config.chapter, s.config.hard);
       resetMob(s, m);
-      respawnPoint(s.ai, p, m, false, wideRun(s));
+      comeBack(s, p, m);
     }
   }
   for (let n = s.mobs.length - extra; n < hordeSize(wave, s.config.chapter); n++) {
@@ -249,14 +250,14 @@ export function beginWave(s: SimState, wave: number): void {
     const m = newMob(0, 0, mobHp(wave, kind, s.config.chapter, s.config.hard), kind);
     resetMob(s, m);
     // the first wave's start in view (WAVES.openingRing), the rest from just outside it
-    if (wave === 1) ringPoint(s.ai, p.x, p.y, m, WAVES.openingRingMin, WAVES.openingRingMax);
-    else respawnPoint(s.ai, p, m, false, wideRun(s));
+    if (wave === 1 && !arenaRun(s.config)) ringPoint(s.ai, p.x, p.y, m, WAVES.openingRingMin, WAVES.openingRingMax);
+    else comeBack(s, p, m);
     s.mobs.push(m);
   }
   // a pack comes bunched from one side
   const pack = isPackWave(s.config.chapter, wave, last) ? Math.max(0, Math.min(k.size, k.max - packed)) : 0;
   const at = body(0, 0);
-  if (pack > 0) respawnPoint(s.ai, p, at, false, wideRun(s));
+  if (pack > 0) comeBack(s, p, at);
   for (let j = 0; j < pack; j++) {
     const r = k.spread;
     s.mobs.push(newMob(at.x + s.ai.range(-r, r), at.y + s.ai.range(-r, r), mobHp(wave, k.kind, s.config.chapter, s.config.hard), k.kind));

@@ -246,5 +246,6 @@
     ],
     "weekly": { "participation": 10, "tiers": [10, 30, 80] },
     "streak": { "jade": 2, "cap": 7 }
-  }
+  },
+  "arena": { "unlockCleared": 1, "copperPerMinute": 40, "copperCap": 1200 }
 }

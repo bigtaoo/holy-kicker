@@ -5,6 +5,7 @@ import { cosB, sinB, TRIG_ONE } from '../math/trig';
 import type { Prng } from '../math/prng';
 import { teleport, underground, type Body, type Mob, type Player, type SimState } from '../state';
 import { mutatorSpeed } from '../mutators';
+import { arenaRun, gatePoint } from '../arena';
 import { mobSpeed } from './snow';
 
 // Horde movement: every mob walks toward its nearest player, then soft collision moves it out
@@ -133,6 +134,7 @@ export function ringPoint(rand: Prng, cx: number, cy: number, b: Body, min = HOR
  * phone view (ringPoint), or on a landscape run past WIDE_RING's box.
  */
 export function spawnPoint(s: SimState, cx: number, cy: number, b: Body): void {
+  if (arenaRun(s.config)) return gatePoint(s, b);
   if (!wideRun(s)) return ringPoint(s.ai, cx, cy, b);
   const a = s.ai.int(65536);
   const c = cosB(a);
@@ -157,6 +159,12 @@ export function respawnPoint(rand: Prng, p: Player, m: Body, close = false, wide
   else if (close) r = boxEdge(c, sn, WAVES.openingBackW, WAVES.openingBackH) + rand.range(0, WAVES.openingBackDepth);
   else r = rand.range(HORDE.ringMin, HORDE.ringMax);
   teleport(m, p.x + Math.trunc((c * r) / TRIG_ONE), p.y + Math.trunc((sn * r) / TRIG_ONE));
+}
+
+/** Mob `m` comes back around player `p` (respawnPoint), or in an arena through a gate. */
+export function comeBack(s: SimState, p: Player, m: Body, close = false): void {
+  if (arenaRun(s.config)) gatePoint(s, m);
+  else respawnPoint(s.ai, p, m, close, wideRun(s));
 }
 
 /**
@@ -213,6 +221,8 @@ export function hordeSystem(s: SimState, grid: SpatialGrid): void {
   stepHorde(s.mobs, s.players, { speed: HORDE.speed, speedOf, stopDist: HORDE.stopDist, stopOf, still, sep: grid.cell, queue: c.queue }, grid);
   pin(s);
   stunned(s);
+  // walls keep every mob near: nothing is left behind or outrun
+  if (arenaRun(c)) return;
   const far = HORDE.respawnDist * HORDE.respawnDist;
   const lagging = c.chapter >= PACE.from;
   let back = lagging && s.tick % PACE.lagEvery === 0;
@@ -220,7 +230,7 @@ export function hordeSystem(s: SimState, grid: SpatialGrid): void {
     if (underground(m)) continue;
     const t = nearestPlayer(s.players, m.x, m.y);
     if (dist2(m.x - t.x, m.y - t.y) > far) {
-      respawnPoint(s.ai, t, m, false, wideRun(s));
+      comeBack(s, t, m);
       m.lag = 0;
     } else if (lagging && outrun(s, m, t, back)) back = false;
   }
@@ -251,7 +261,7 @@ function outrun(s: SimState, m: Mob, t: Player, back: boolean): boolean {
     return false;
   }
   if (!back) return false;
-  respawnPoint(s.ai, t, m, false, wideRun(s));
+  comeBack(s, t, m);
   m.lag = 0;
   return true;
 }

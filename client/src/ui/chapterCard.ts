@@ -2,6 +2,7 @@ import { Container } from 'pixi.js';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
 import { BALANCE } from '../meta/balance';
+import { arenaOpen, showsArena } from '../meta/arena';
 import { gritBonus } from '../meta/loadout';
 import { hardOpenAt, isCleared, playableChapters, track } from '../meta/progress';
 import type { SaveData } from '../meta/save';
@@ -19,8 +20,8 @@ import { starRow } from './stars';
 import { badge, COLORS, button, fit, label, panel } from './widgets';
 
 // The Play tab's chapter card (LobbyScreen.playTab): its name between the chapter arrows, its
-// stars or how far it went, its five chests, and the normal / hard switch over it once a
-// chapter is cleared (a chapter's hard mode opens with its three stars). Under the stars, a line
+// stars or how far it went, its five chests, and the normal / hard / arena switch over it once a
+// chapter is cleared (the arena's own card: arenaCard.ts) (a chapter's hard mode opens with its three stars). Under the stars, a line
 // or two: the grit on the first uncleared chapter, what clearing it unlocks, and on a cleared
 // chapter still short of three stars the next star blessing (docs/unlocks.md). Chests waiting
 // elsewhere badge the way to them: an arrow with the count on its side, the other track's button
@@ -32,6 +33,8 @@ export interface ChapterCardDeps {
   boards: BoardUi;
   selectChapter(chapter: number): void;
   chooseTrack(hard: boolean): void;
+  /** Shows the arena on the card (meta/arena.ts). */
+  chooseArena(): void;
   progressChest(chapter: number, hard: boolean, index: number): void;
   toast(text: string): void;
 }
@@ -41,27 +44,36 @@ export function hasTrackSwitch(save: SaveData): boolean {
   return save.cleared > 0;
 }
 
-/** Normal and hard side by side, the shown one lit, the other badged with the chests waiting on
- *  it; a hard mode still locked shows a lock and says how to open it. */
+/** Normal, hard and (once open) the arena side by side, the shown one lit, the tracks not shown
+ *  badged with the chests waiting on them; a hard mode still locked shows a lock and says how to open it. */
 export function trackSwitch(d: ChapterCardDeps): Container {
   const row = new Container();
   const open = hardOpenAt(d.save, d.save.chapter);
+  const arena = showsArena(d.save);
+  const three = arenaOpen(d.save);
+  const [w, step] = three ? [280, 295] : [300, 320];
   ([[false, 'lobby.normal'], [true, 'lobby.hard']] as const).forEach(([hard, key], i) => {
-    const on = d.save.hard === hard;
+    const on = !arena && d.save.hard === hard;
     const locked = hard && !open;
-    const b = button(t(key), 300, 90, () => {
+    const b = button(t(key), w, 90, () => {
       if (locked) d.toast(t('lobby.hardLocked'));
       else if (!on) d.chooseTrack(hard);
     }, { fill: on ? (hard ? COLORS.danger : COLORS.saffron) : COLORS.panelLocked, size: 52, textFill: on ? COLORS.text : COLORS.dim });
-    b.x = (i - 0.5) * 320;
+    b.x = (i - (three ? 1 : 0.5)) * step;
     if (locked) {
       const l = lockIcon(d.icons, 48);
-      l.position.set(130, -30);
+      l.position.set(w / 2 - 20, -30);
       b.addChild(l);
     }
-    if (!on) b.addChild(badge(140, -40, chestsWaitingIn(d.save, hard)));
+    if (!on) b.addChild(badge(w / 2 - 10, -40, chestsWaitingIn(d.save, hard)));
     row.addChild(b);
   });
+  if (three) {
+    const b = button(t('arena.title'), w, 90, () => void (arena || d.chooseArena()),
+      { fill: arena ? COLORS.jade : COLORS.panelLocked, size: 52, textFill: arena ? COLORS.text : COLORS.dim });
+    b.x = step;
+    row.addChild(b);
+  }
   return row;
 }
 

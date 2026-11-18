@@ -28,6 +28,14 @@ export const vi: Table<typeof en> = {
     hard: 'Khó',
     hardTitle: 'Khó {n}: {name}',
   },
+  arena: {
+    title: 'Đấu trường',
+    about: 'Những đợt quái bất tận trong tường thành. Kẻ địch tràn vào qua các cổng, không có hồi sinh.',
+    best: 'Kỷ lục: đợt {wave} · {time}',
+    perMinute: '+{n} mỗi phút sống sót',
+    wave: 'Đấu trường · đợt {wave}',
+    survived: 'Sống sót {time}',
+  },
   monk: {
     playing: 'Đang chọn',
     joined: '{name} đã gia nhập!',

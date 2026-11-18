@@ -28,6 +28,14 @@ export const zh: Table<typeof en> = {
     hard: '困难',
     hardTitle: '困难 {n}：{name}',
   },
+  arena: {
+    title: '竞技场',
+    about: '围墙里的无尽波次。敌人从城门涌入，不能复活。',
+    best: '最好：第 {wave} 波 · {time}',
+    perMinute: '每坚持一分钟 +{n}',
+    wave: '竞技场 · 第 {wave} 波',
+    survived: '坚持了 {time}',
+  },
   monk: {
     playing: '出战中',
     joined: '{name}加入了！',

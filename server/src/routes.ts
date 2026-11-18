@@ -53,7 +53,7 @@ export interface Deps {
 }
 
 export const BOARD_ROWS = 50;
-const BOARD = new RegExp(`^c([1-9][0-9]?)h?${BOARD_SUFFIX}$`);
+const BOARD = new RegExp(`^(?:c([1-9][0-9]?)h?|arena)${BOARD_SUFFIX}$`);
 const REPORT = /^\/v1\/reports\/[0-9a-f]{16}$/;
 const TAG = /^[A-Za-z0-9_-]{10}$/;
 

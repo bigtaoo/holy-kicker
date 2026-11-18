@@ -28,6 +28,14 @@ export const id: Table<typeof en> = {
     hard: 'Sulit',
     hardTitle: 'Sulit {n}: {name}',
   },
+  arena: {
+    title: 'Arena',
+    about: 'Gelombang tanpa akhir di dalam tembok. Musuh menyerbu lewat gerbang, dan tidak ada hidup lagi.',
+    best: 'Terbaik: gelombang {wave} · {time}',
+    perMinute: '+{n} per menit bertahan',
+    wave: 'Arena · gelombang {wave}',
+    survived: 'Bertahan {time}',
+  },
   monk: {
     playing: 'Dimainkan',
     joined: '{name} bergabung!',

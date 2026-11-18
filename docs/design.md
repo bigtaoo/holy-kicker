@@ -277,6 +277,35 @@ blows land, the bigger each one is drawn. None of this touches the engine.
   Every new colour has a corgi variant (`CORGI_FX`). The particle atlas keeps a gutter between
   its cells, so a scaled-up glow never samples its neighbour's edge as a thin line.
 
+### Arena
+
+A lobby mode of its own, the ground for co-op later. It opens with the first clear
+(`balance.json` `arena.unlockCleared`): the switch over the Play tab's card gains a third
+button, Arena, beside Normal and Hard, and while it is lit the card shows the arena (its best
+wave and time, its Ranks, what it is, the copper a minute pays) and PLAY starts an arena run
+(`client/src/meta/arena.ts`, `ui/arenaCard.ts`).
+
+- **The field.** A walled square 3200 units across (about two phone screens either way),
+  hero in the middle; nobody walks out (`engine/arena.ts` pulls every body back inside each
+  step). The horde comes in only through eight gates, two on each wall, never on a ring around
+  the hero, so two heroes far apart share one field. The walls and gate posts are drawn by
+  `client/src/game/arenaWalls.ts` and `arenaView.ts`.
+- **The run.** Chapter 1's horde, elites and mid-bosses, waves without end (`ARENA.waves` 999:
+  the HUD reads "Arena · wave N"), the worn gear, training, relic, sutras and blessings, normal
+  mode, no grit or first-run bonus and no revive. It ends when the hero falls. It is never kept
+  to resume.
+- **Pay.** Copper only: `copperPerMinute` per minute survived (simulated time), up to
+  `copperCap`, which the results' rewarded ad doubles. No chests, stars, chapter progress,
+  grit or best waves; it counts as a run (tasks, ad pacing).
+- **Best and board.** The best is further waves, then longer survived (`save.arenaBest`).
+  The run goes on the board `arena` (`arena-corgi` for the corgi), scored wave·10⁶ + tenths
+  (`server/src/protocol.ts` `runScore`), re-simulated like chapter runs (`resim.ts`
+  `arenaConfig`). Server stats keep arena runs off chapter 1's numbers (`waves` over
+  `LIMITS.waves`).
+- **Results.** `ui/ArenaResultsScreen.ts`: the wave reached, the time survived, a new best or
+  the best that stands, the board's place, the copper with the double offer, Play again (the
+  arena again) and Continue (the lobby).
+
 ## Meta progression
 
 ### A. Stat line (kept shallow)

@@ -8,6 +8,7 @@ import { bowlLevel, pickCard, relicCooldown, relicLevel, relicPct, stat } from '
 import { bowlInAir, throwBowl } from './bowl';
 import { bigTarget, bossIndex, kickTarget, launchBall, markOf, nearestTarget, targetAt } from './combat';
 import { spawnPoint } from './horde';
+import { arenaRun, keepIn } from '../arena';
 import { bellyBounce, dodged } from './monks';
 import { breakBell } from './spells';
 import { fishStart, tap } from './fish';
@@ -64,6 +65,7 @@ export function movePlayers(s: SimState, events: SimEvent[]): void {
     p.vy += Math.trunc(((ty - p.vy) * ease) / 1000);
     p.x += p.vx;
     p.y += p.vy;
+    if (arenaRun(s.config)) keepIn(p);
     p.moving = p.moveMag > HERO.moveMag;
     p.live++;
     if (p.moving) p.moved++;

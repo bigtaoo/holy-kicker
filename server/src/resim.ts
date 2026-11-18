@@ -28,10 +28,10 @@ type Common = Omit<RunConfig, 'revives' | 'hard' | 'firstRun' | 'mutator'>;
  * stress-test switches, and the player's own relic, monk, sutras and stats from gear and training
  * (whole numbers on known stats; the client is trusted on their size), and a landscape screen's view.
  */
-function commonConfig(c: Record<string, unknown>, E: EngineModule): Common | null {
+function commonConfig(c: Record<string, unknown>, E: EngineModule, maxWaves: number = LIMITS.waves): Common | null {
   const d = E.DEFAULT_RUN;
   const { MONK_IDS, RELIC_IDS, STATS, SUTRA_IDS } = E;
-  if (!isInt(c.seed, 1, 0x7fffffff) || c.players !== 1 || !isInt(c.waves, 1, LIMITS.waves)) return null;
+  if (!isInt(c.seed, 1, 0x7fffffff) || c.players !== 1 || !isInt(c.waves, 1, maxWaves)) return null;
   if (c.mobs !== d.mobs || c.sep !== d.sep || c.queue !== d.queue || c.elite !== true || c.boss !== true || c.threats !== false) return null;
   if (c.heroEase !== 379 && c.heroEase !== 1000) return null;
   if (!Array.isArray(c.spells) || c.spells.length !== 0 || c.spellRate !== d.spellRate || c.drops !== 0) return null;
@@ -69,11 +69,23 @@ export const CHAPTER_REVIVES = 3;
  * can have; a first run (the fixed seed) is allowed.
  */
 export function chapterConfig(c: Record<string, unknown>, run: RunEntry, E: EngineModule = CURRENT_ENGINE): RunConfig | null {
+  if (run.arena || c.arena === true) return run.arena ? arenaConfig(c, run, E) : null;
   const base = commonConfig(c, E);
   if (!base || base.waves !== LIMITS.waves || base.chapter !== run.chapter || base.relic !== run.relic || base.monk !== run.monk) return null;
   if (!isInt(c.revives, 0, CHAPTER_REVIVES) || c.hard !== run.hard || (c.mutator ?? null) !== null) return null;
   if (c.firstRun !== undefined && typeof c.firstRun !== 'boolean') return null;
   return { ...base, revives: c.revives, hard: run.hard, firstRun: c.firstRun === true, mutator: null };
+}
+
+/**
+ * The replay's config as a RunConfig the arena run `run` could have had, or null: the arena's
+ * endless waves on chapter 1, normal mode, no revive, no mutator, the run's relic and monk.
+ */
+export function arenaConfig(c: Record<string, unknown>, run: RunEntry, E: EngineModule = CURRENT_ENGINE): RunConfig | null {
+  const base = commonConfig(c, E, LIMITS.arenaWaves);
+  if (!base || c.arena !== true || base.waves !== LIMITS.arenaWaves || base.chapter !== 1 || base.relic !== run.relic || base.monk !== run.monk) return null;
+  if (c.revives !== 0 || c.hard !== false || (c.mutator ?? null) !== null || (c.firstRun !== undefined && c.firstRun !== false)) return null;
+  return { ...base, revives: 0, hard: false, firstRun: false, mutator: null, arena: true };
 }
 
 /** How a kind of run's replay config is read (rankedConfig for challenges, chapterConfig for the chapter boards) on engine `E`. */

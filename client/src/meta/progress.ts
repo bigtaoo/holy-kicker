@@ -296,11 +296,11 @@ export function playableChapters(save: SaveData): number {
 /** The lobby's card switches the shown chapter between its normal and hard mode. */
 export function chooseTrack(save: SaveData, hard: boolean): SaveData {
   if (hard && !hardOpenAt(save, save.chapter)) return save;
-  return { ...save, hard };
+  return { ...save, hard, arena: false };
 }
 
 /** The lobby's card shows another chapter, in hard mode only where that is open. */
 export function selectChapter(save: SaveData, chapter: number): SaveData {
   if (chapter < 1 || chapter > playableChapters(save)) return save;
-  return { ...save, chapter, hard: save.hard && hardOpenAt(save, chapter) };
+  return { ...save, chapter, hard: save.hard && hardOpenAt(save, chapter), arena: false };
 }

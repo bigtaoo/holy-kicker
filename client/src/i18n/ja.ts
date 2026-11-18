@@ -28,6 +28,14 @@ export const ja: Table<typeof en> = {
     hard: 'ハード',
     hardTitle: 'ハード {n}：{name}',
   },
+  arena: {
+    title: 'アリーナ',
+    about: '壁に囲まれた終わりなきウェーブ。敵は門から押し寄せ、復活はありません。',
+    best: 'ベスト：ウェーブ {wave} · {time}',
+    perMinute: '生き残った1分ごとに +{n}',
+    wave: 'アリーナ · ウェーブ {wave}',
+    survived: '生存 {time}',
+  },
   monk: {
     playing: '出陣中',
     joined: '{name}が仲間になった！',

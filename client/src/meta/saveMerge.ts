@@ -5,6 +5,7 @@ import { mergeWeekly } from './goals';
 import { mergeMerit } from './merit';
 import { readSave, type SaveData } from './save';
 import { unlockedRelics } from './unlocks';
+import { arenaBetter } from './arena';
 
 // Two saves of the same player into one (docs/cloud-save.md "Merging two saves"): the cloud
 // save's copy and this device's. Progress takes the furthest of the two field by field, so a
@@ -81,6 +82,8 @@ export function mergeSaves(mine: SaveData, other: SaveData): SaveData {
     weekly: mergeWeekly(lead.weekly, trail.weekly),
     merit: mergeMerit(lead.merit, trail.merit),
     dailyBest: dailyOf(lead.dailyBest, trail.dailyBest),
+    arena: lead.arena,
+    arenaBest: arenaBetter(trail.arenaBest, lead.arenaBest) ? trail.arenaBest : lead.arenaBest,
     // an experiment the save that played more was offered keeps its arm; one only the other was offered comes along
     arms: { ...trail.arms, ...lead.arms },
     tester: lead.tester || trail.tester,

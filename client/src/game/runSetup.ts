@@ -23,6 +23,8 @@ export interface RunSetup {
   mutator?: MutatorId | null;
   /** Played on a landscape screen (the engine's RunConfig.wide, viewport.ts wideScreen). */
   wide?: boolean;
+  /** Played in the walled arena (the engine's RunConfig.arena, meta/arena.ts). */
+  arena?: boolean;
 }
 
 /** The run's engine seed: the setup's (a challenge's), the dev switch's, the fixed first-run one (BALANCE.firstRun), or a random one. */
@@ -41,10 +43,11 @@ export function runConfig(scene: SceneOptions, seed: number, setup: RunSetup): R
     mutator: setup.mutator ?? null,
     // left off a portrait run, so its config stays as it was
     ...(setup.wide ? { wide: true } : {}),
+    ...(setup.arena ? { arena: true } : {}),
   };
 }
 
 /** The setup a run's config was made from (a resumed run's, meta/resume.ts). */
 export function setupOf(c: RunConfig): RunSetup {
-  return { chapter: c.chapter, waves: c.waves, revives: c.revives, relic: c.relic, sutras: c.sutras, bonus: c.bonus, hard: c.hard, monk: c.monk, firstRun: c.firstRun, mutator: c.mutator, wide: c.wide };
+  return { chapter: c.chapter, waves: c.waves, revives: c.revives, relic: c.relic, sutras: c.sutras, bonus: c.bonus, hard: c.hard, monk: c.monk, firstRun: c.firstRun, mutator: c.mutator, wide: c.wide, arena: c.arena };
 }

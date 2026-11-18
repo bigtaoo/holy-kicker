@@ -49,6 +49,8 @@ export const V8 = {
   streakDay: 20378,
   bestStreak: 5,
   dailyBest: {id: 'd20261017', waves: 33},
+  arena: false,
+  arenaBest: {waves: 0, tenths: 0},
   arms: {first20: 'short'},
   tester: false,
 };

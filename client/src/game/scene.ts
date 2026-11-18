@@ -99,6 +99,8 @@ export interface SceneOptions {
   bare: boolean;
   /** Dev: the run plays hard mode whatever the lobby shows (?hard). */
   hard: boolean;
+  /** Dev: with ?direct, the first screen is an arena run (meta/arena.ts) instead of a chapter's (?arena). */
+  arena: boolean;
   /** Dev: offline, the lobby shows a daily and a weekly challenge made up on the device (?challenge; online the server's records win). */
   challenge: boolean;
   /** Dev: the weeks in the save count as closed, so their rewards are claimed now (?challenge=settle; offline: rank 2 of 10). */
@@ -150,6 +152,7 @@ export const DEFAULT_SCENE: SceneOptions = {
   learn: '',
   bare: false,
   hard: false,
+  arena: false,
   challenge: false,
   settleWeeks: false,
   arm: '',
@@ -219,6 +222,7 @@ export function parseScene(query: string): SceneOptions {
     learn: q.get('learn') ?? '',
     bare: q.has('bare'),
     hard: q.has('hard'),
+    arena: q.has('arena'),
     challenge: q.has('challenge'),
     settleWeeks: q.get('challenge') === 'settle',
     arm: q.get('arm') ?? '',

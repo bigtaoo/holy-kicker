@@ -5,9 +5,9 @@ import { tenthsOf } from './clearTime';
 // The pure parts of a run's start and end (runFlow.ts): which runs are kept for the next launch,
 // and what an ended run counts for.
 
-/** Whether a run is kept for resuming (meta/resume.ts): not the sandbox, a dev bot's, a recording or a challenge. */
+/** Whether a run is kept for resuming (meta/resume.ts): not the sandbox, an arena run, a dev bot's, a recording or a challenge. */
 export function keepable(s: SimState, scene: Pick<SceneOptions, 'autoplay' | 'record'>, challenge: boolean): boolean {
-  return s.config.waves > 0 && !scene.autoplay && !scene.record && !challenge;
+  return s.config.waves > 0 && !s.config.arena && !scene.autoplay && !scene.record && !challenge;
 }
 
 /** The waves an ended run fully cleared: all of a won one, the ones before the wave it fell on otherwise. */

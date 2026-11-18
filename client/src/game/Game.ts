@@ -30,6 +30,7 @@ import { learnSpells } from '../dev/learn';
 import { SutraView } from './sutraView';
 import { SHADOW_Z, makeShadow, shadowTexture } from './shadow';
 import { makeDeco } from './decoView';
+import { arenaWalls } from './arenaView';
 import { Mist } from './mistView';
 import type { SceneOptions } from './scene';
 import type { LevelSettings } from './quality';
@@ -181,6 +182,8 @@ export class Game {
       const deco = makeDeco(stage.deco, scene.deco === 'props', stage.style, this.camPos, () => this.hero.view.position, nightTint(setup.chapter));
       this.world.addChild(deco).zIndex = SHADOW_Z - 1;
     }
+    // the arena's walls lie on the ground, over its props
+    if (s.config.arena) this.world.addChild(arenaWalls()).zIndex = SHADOW_Z - 0.5;
     this.mist = stage.mist && scene.mist ? new Mist(app.renderer, stage.mist, this.camPos) : null;
     if (this.mist) this.world.addChild(this.mist.view);
     const shadowTex = shadowTexture(app.renderer);

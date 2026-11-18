@@ -28,6 +28,14 @@ export const tr: Table<typeof en> = {
     hard: 'Zor',
     hardTitle: 'Zor {n}: {name}',
   },
+  arena: {
+    title: 'Arena',
+    about: 'Duvarlar içinde bitmeyen dalgalar. Düşmanlar kapılardan akın eder ve canlanma yoktur.',
+    best: 'En iyi: {wave}. dalga · {time}',
+    perMinute: 'Hayatta kalınan her dakika +{n}',
+    wave: 'Arena · {wave}. dalga',
+    survived: 'Hayatta kalma {time}',
+  },
   monk: {
     playing: 'Oynuyor',
     joined: '{name} sana katıldı!',

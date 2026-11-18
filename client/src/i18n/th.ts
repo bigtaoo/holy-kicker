@@ -28,6 +28,14 @@ export const th: Table<typeof en> = {
     hard: 'ยาก',
     hardTitle: 'ยาก {n}: {name}',
   },
+  arena: {
+    title: 'สนามประลอง',
+    about: 'คลื่นศัตรูไม่รู้จบในกำแพง ศัตรูบุกเข้ามาทางประตู และฟื้นคืนชีพไม่ได้',
+    best: 'ดีที่สุด: คลื่น {wave} · {time}',
+    perMinute: '+{n} ต่อนาทีที่รอด',
+    wave: 'สนามประลอง · คลื่น {wave}',
+    survived: 'รอดได้ {time}',
+  },
   monk: {
     playing: 'กำลังเล่น',
     joined: '{name} มาร่วมทีมแล้ว!',

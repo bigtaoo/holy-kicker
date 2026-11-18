@@ -28,6 +28,14 @@ export const it: Table<typeof en> = {
     hard: 'Difficile',
     hardTitle: 'Difficile {n}: {name}',
   },
+  arena: {
+    title: 'Arena',
+    about: 'Ondate infinite tra le mura. I nemici entrano dalle porte e non ci sono rianimazioni.',
+    best: 'Record: ondata {wave} · {time}',
+    perMinute: '+{n} per minuto sopravvissuto',
+    wave: 'Arena · ondata {wave}',
+    survived: 'Sopravvissuto {time}',
+  },
   monk: {
     playing: 'In gioco',
     joined: '{name} è con te!',

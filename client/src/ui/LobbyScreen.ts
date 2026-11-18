@@ -11,6 +11,7 @@ import { buyMonk, chooseMonk, monkPrice } from '../meta/monks';
 import { train } from '../meta/training';
 import type { IconSheet } from './buildBar';
 import { chapterCard, hasTrackSwitch, trackSwitch, type ChapterCardDeps } from './chapterCard';
+import { arenaCard, showsArena } from './arenaCard';
 import { codexTab } from './codexTab';
 import { EconomyUi, type LobbyTrack } from './lobbyEconomy';
 import type { PatrolLook } from './economyPanels';
@@ -44,8 +45,8 @@ import { spot } from './spots';
 
 export interface LobbyActions {
   play(chapter: number): void;
-  /** Shows another chapter on the card (cleared ones and the first uncleared one). */
-  selectChapter(chapter: number): void;
+  playArena(): void; chooseArena(): void; // the arena (meta/arena.ts): its run; the card shows it
+  selectChapter(chapter: number): void; // a cleared chapter or the first uncleared one, on the card
   /** Switches the shown chapter between its normal and hard mode (open with its three stars). */
   chooseTrack(hard: boolean): void;
   selectRelic(relic: RelicId): void;
@@ -62,7 +63,6 @@ export interface LobbyActions {
   challenge: () => ChallengeLobby | null;
   /** The ad-free card's purchase, for the Shop tab; null on every host but iOS. */
   store: Store | null;
-
   track: LobbyTrack;
 }
 
@@ -426,17 +426,17 @@ export class LobbyScreen implements Screen {
   }
 
   private playTab(w: number, h: number): void {
-    const n = this.save.chapter;
-    const open = n <= playableChapters(this.save);
+    const n = this.save.chapter, open = n <= playableChapters(this.save);
     const deps: ChapterCardDeps = {
       save: this.save, icons: this.icons, boards: this.boards,
       selectChapter: (c) => this.actions.selectChapter(c),
-      chooseTrack: (on) => this.actions.chooseTrack(on),
+      chooseTrack: (on) => this.actions.chooseTrack(on), chooseArena: () => this.actions.chooseArena(),
       progressChest: (c, hard, i) => this.econ.progressChest(c, hard, i),
       toast: (text) => this.showToast(text),
     };
     const switched = hasTrackSwitch(this.save);
-    const card = chapterCard(deps, n, open);
+    const arena = showsArena(this.save);
+    const card = arena ? arenaCard(deps) : chapterCard(deps, n, open);
     const at = playSpots(w, h, card.height, switched);
     if (switched) {
       const sw = trackSwitch(deps);
@@ -455,8 +455,8 @@ export class LobbyScreen implements Screen {
     const relics = relicRow(this.save, this.icons, (id) => this.actions.selectRelic(id), at.relicW);
     relics.position.set(at.feet.x, at.feet.y + 5);
     this.view.addChild(this.figure.view, relics);
-    if (open) {
-      this.play = playButton(t('lobby.play'), PLAY_W, PLAY_H, () => this.actions.play(n));
+    if (open || arena) {
+      this.play = playButton(t('lobby.play'), PLAY_W, PLAY_H, () => (arena ? this.actions.playArena() : this.actions.play(n)));
       this.play.view.position.set(at.play.x, at.play.y);
       this.play.view.label = 'play'; // tests tell it from the Play tab, which reads the same in Chinese
       this.view.addChild(spot('play', this.play.view));

@@ -55,6 +55,11 @@ export interface RunConfig {
    * WIDE_RING instead of the phone's ring. Missing on portrait runs.
    */
   wide?: boolean;
+  /**
+   * An arena run (arena.ts): walls around the field, the horde coming in through their gates,
+   * no last wave. Missing on chapter runs.
+   */
+  arena?: boolean;
 }
 
 export const DEFAULT_RUN: RunConfig = {

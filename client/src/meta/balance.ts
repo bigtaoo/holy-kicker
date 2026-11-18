@@ -2,6 +2,7 @@ import type { MonkId } from '@hk/engine';
 import type { AchievementGoal } from './achievements';
 import type { Stat } from '@hk/engine';
 import data from './balance.json';
+import type { ArenaBalance } from './arena';
 import type { ChallengeBalance } from './challenge';
 import type { DailyBalance } from './daily';
 import type { GoalsBalance } from './goals';
@@ -78,6 +79,8 @@ export interface Balance {
   firstRun: FirstRunBalance;
   /** The daily challenge (challenge.ts): the player level it opens at and its milestones. */
   challenge: ChallengeBalance;
+  /** The arena (arena.ts): the clears it opens after and its copper per minute survived. */
+  arena: ArenaBalance;
 }
 
 /**

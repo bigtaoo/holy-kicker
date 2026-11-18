@@ -26,6 +26,14 @@ export const en = {
     hard: 'Hard',
     hardTitle: 'Hard {n}: {name}',
   },
+  arena: {
+    title: 'Arena',
+    about: 'Endless waves inside the walls. Enemies pour in through the gates, and there are no revives.',
+    best: 'Best: wave {wave} · {time}',
+    perMinute: '+{n} per minute survived',
+    wave: 'Arena · wave {wave}',
+    survived: 'Survived {time}',
+  },
   monk: {
     playing: 'Playing',
     joined: '{name} joined you!',

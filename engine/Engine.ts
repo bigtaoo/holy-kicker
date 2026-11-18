@@ -1,3 +1,4 @@
+import { arenaSystem } from './arena';
 import { HERO, type RunConfig } from './config';
 import type { HurtFn, SimEvent } from './events';
 import { SpatialGrid } from './grid';
@@ -31,7 +32,7 @@ import { mutatorBonus } from './mutators';
 export const ENGINE_VERSION = 52;
 
 export const STEP_ORDER = [
-  'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns',
+  'input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns', 'arena',
 ] as const;
 
 export class Engine {
@@ -94,6 +95,7 @@ export class Engine {
     buildSystem(s, events);
     waveSystem(s, events);
     spawnSystem(s);
+    arenaSystem(s);
     return events;
   }
 

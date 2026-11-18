@@ -170,7 +170,8 @@ export function foldProgress(progress: Record<string, Progress> | undefined, eve
     if (ev.e !== 'run_end') continue;
     const p = ev.p ?? {};
     const chapter = num(p.chapter);
-    if (chapter < 1 || chapter > LIMITS.chapters) continue;
+    // an arena run (its waves past a chapter's) is no step through the chapters
+    if (chapter < 1 || chapter > LIMITS.chapters || Number(p.waves) > LIMITS.waves) continue;
     const board = boardId(chapter, p.hard === true);
     const g = out[board] ?? { tries: 0, day: -1 };
     if (g.day >= 0) continue;

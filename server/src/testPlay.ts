@@ -23,6 +23,12 @@ export function playChapter(ticks = 2400, install = INSTALL, seed = 99): { run: 
   return play({ ...DEFAULT_RUN, seed, waves: LIMITS.waves, revives: 1, firstRun: false, mutator: null, chapter: 1 }, ticks, install);
 }
 
+/** A real arena run as a client sends it: chapter 1's horde inside walls, endless, no revive; the bot gives up after `ticks`. */
+export function playArena(ticks = 2400, install = INSTALL, seed = 77): { run: RunEntry; replay: ReplayWire } {
+  const played = play({ ...DEFAULT_RUN, seed, waves: LIMITS.arenaWaves, revives: 0, firstRun: false, mutator: null, chapter: 1, arena: true }, ticks, install);
+  return { ...played, run: { ...played.run, arena: true } };
+}
+
 function play(config: RunConfig, ticks: number, install: string): { run: RunEntry; replay: ReplayWire } {
   const engine = new Engine(config);
   const s = engine.state;

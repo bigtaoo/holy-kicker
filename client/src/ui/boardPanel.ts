@@ -1,5 +1,6 @@
 import { Container, type Text } from 'pixi.js';
 import { boardId, DICE, packDice, topPercent, unpackDice, type BoardReply, type BoardRow, type ChallengeBoardReply, type TopRun } from '@hk/protocol';
+import { ARENA } from '@hk/engine';
 import { t } from '../i18n';
 import { chapterName } from '../i18n/chapterName';
 import { THEME } from '../theme';
@@ -96,6 +97,13 @@ export class BoardUi {
     if (!this.fetchBoard) return null;
     const name = chapterName(chapter);
     const view = { id: boardId(chapter, hard, THEME), title: t('board.title', { n: chapter, name }), sub: hard ? t('lobby.hard') : t('lobby.normal'), color: hard ? COLORS.danger : COLORS.text };
+    return button(t('board.button'), 200, 80, () => this.show(view), { fill: COLORS.panelLocked, size: 48 });
+  }
+
+  /** The button that opens the arena's board, or null offline. */
+  arenaButton(): Container | null {
+    if (!this.fetchBoard) return null;
+    const view = { id: boardId(ARENA.chapter, false, THEME, true), title: t('arena.title'), sub: '', color: COLORS.jade };
     return button(t('board.button'), 200, 80, () => this.show(view), { fill: COLORS.panelLocked, size: 48 });
   }
 

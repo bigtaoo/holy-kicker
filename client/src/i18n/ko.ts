@@ -28,6 +28,14 @@ export const ko: Table<typeof en> = {
     hard: '어려움',
     hardTitle: '어려움 {n}: {name}',
   },
+  arena: {
+    title: '아레나',
+    about: '벽 안에서 끝없이 이어지는 웨이브. 적이 문으로 몰려오며 부활은 없습니다.',
+    best: '최고: {wave} 웨이브 · {time}',
+    perMinute: '버틴 1분마다 +{n}',
+    wave: '아레나 · {wave} 웨이브',
+    survived: '버틴 시간 {time}',
+  },
   monk: {
     playing: '출전 중',
     joined: '{name} 합류!',

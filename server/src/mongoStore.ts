@@ -3,10 +3,10 @@ import type { Audience } from './audience';
 import { counted, dayAfter, dayOffset, emptyDayZero, foldDayZero, foldProgress, retag, type Player } from './players';
 import { challengeUpdate, freshDoc, settleDoc, standing, topRuns, waiting } from './challengeDocs';
 import { boardStanding, boardUpdate, holdsPlace, newBest, ownState, settleBoardDoc, shown, type BoardDoc } from './boardDocs';
-import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type Game, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
+import { RESIM_TOP, WATCH_TOP, keptGame, runBoard, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type Game, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
-import { ALL_INSTALLS, StatsFold, shortRun, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
+import { ALL_INSTALLS, StatsFold, arenaEnd, shortRun, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
 import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summaryOf, resimLoad, resimRefs, type ChallengeDoc, type ChallengeEntry, type ResimLoad, type ResimRef, type RunTaken, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
@@ -167,7 +167,7 @@ export class MongoStore implements Store {
   }
 
   async submitRun(run: RunEntry, tag: string, replay: ReplayWire | null, now: number): Promise<RunTaken> {
-    const board = boardId(run.chapter, run.hard, run.game);
+    const board = runBoard(run);
     const _id = `${board}/${tag}`;
     const old = await this.best.findOne({ _id }, NO_REPLAY);
     const b = newBest(board, tag, run, now);
@@ -329,7 +329,7 @@ export class MongoStore implements Store {
     ]);
     const map = (rows: Count[]) => new Map(rows.map((r) => [r._id, r.n]));
     const counts: DayCounts = { active: map(active), runs: map(runs), ended: map(ends?.days ?? []) };
-    const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, short: shortRun(o.waves), n }));
+    const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, short: shortRun(o.waves), arena: arenaEnd(o.waves), n }));
     const loads: BeaconCount[] = beacons.map(({ day, build, step, n, t }) => ({ day, build, step, n, ...(t ? { t } : {}) }));
     // the device and system are the sending install's, kept once on its first batch
     // and the GPU class, memory and cores the launch's `session` event (the same day, or the one before for a run past midnight)

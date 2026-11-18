@@ -126,7 +126,7 @@ describe('Engine', () => {
   });
 
   it('steps the systems in the documented order', () => {
-    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns']);
+    expect(STEP_ORDER).toEqual(['input', 'movePlayers', 'horde', 'emerge', 'elite', 'boss', 'affixes', 'shots', 'kicks', 'balls', 'rings', 'beads', 'bowls', 'spells', 'threats', 'contact', 'drops', 'build', 'waves', 'spawns', 'arena']);
   });
 });
 

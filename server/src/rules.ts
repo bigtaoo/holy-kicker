@@ -113,7 +113,11 @@ export function checkRun(v: unknown, anyWin = false): Checked<RunEntry> {
   const game = gameOf(v.game);
   if (!game) return { ok: false, reason: 'bad game' };
   if (!isInt(v.chapter, 1, LIMITS.chapters) || typeof v.hard !== 'boolean' || typeof v.won !== 'boolean') return { ok: false, reason: 'bad board' };
-  if (!isInt(v.wave, 1, LIMITS.waves) || (v.won && !anyWin && v.wave !== LIMITS.waves)) return { ok: false, reason: 'bad wave' };
+  // an arena run: chapter 1's horde, normal mode, never won, endless
+  const arena = v.arena === true;
+  if (v.arena !== undefined && typeof v.arena !== 'boolean') return { ok: false, reason: 'bad board' };
+  if (arena && (v.chapter !== 1 || v.hard || v.won)) return { ok: false, reason: 'bad board' };
+  if (!isInt(v.wave, 1, arena ? LIMITS.arenaWaves : LIMITS.waves) || (v.won && !anyWin && v.wave !== LIMITS.waves)) return { ok: false, reason: 'bad wave' };
   if (!isInt(v.tenths, v.wave * LIMITS.minSecondsPerWave * 10, LIMITS.maxSeconds * 10)) return { ok: false, reason: 'bad time' };
   if (!isInt(v.level, 1, LIMITS.maxLevel) || !isInt(v.kills, 0, LIMITS.maxKills)) return { ok: false, reason: 'bad stats' };
   if (!isShort(v.monk, 16) || !isShort(v.relic, 16)) return { ok: false, reason: 'bad build' };
@@ -123,7 +127,7 @@ export function checkRun(v: unknown, anyWin = false): Checked<RunEntry> {
     ok: true,
     value: {
       install: v.install, host: v.host, build: v.build, ...game, chapter: v.chapter, hard: v.hard, won: v.won, wave: v.wave,
-      tenths: v.tenths, level: v.level, kills: v.kills, monk: v.monk, relic: v.relic, ...(name ?? {}),
+      tenths: v.tenths, level: v.level, kills: v.kills, monk: v.monk, relic: v.relic, ...(arena ? { arena } : {}), ...(name ?? {}),
     },
   };
 }

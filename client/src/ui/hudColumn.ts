@@ -31,6 +31,7 @@ export class HudColumn {
   private top = 0;
 
   constructor(
+    /** The run's last wave; 0 for an arena run, which has none. */
     private readonly total: number,
     /** Hard mode: the wave counter says so. */
     private readonly hard: boolean,
@@ -89,7 +90,8 @@ export class HudColumn {
     if (!waveText || !timerText || !lastFallText || !goalText) return;
     const on = this.wave > 0;
     waveText.visible = on;
-    waveText.text = t(this.hard ? 'run.hardWave' : 'run.wave', { wave: this.wave, total: this.total });
+    // an arena run (no last wave) counts up alone
+    waveText.text = this.total === 0 ? t('arena.wave', { wave: this.wave }) : t(this.hard ? 'run.hardWave' : 'run.wave', { wave: this.wave, total: this.total });
     timerText.visible = on && this.best !== null;
     if (timerText.visible && this.second < 0) this.timerLabel();
     lastFallText.visible = on && this.lastFall > 0;

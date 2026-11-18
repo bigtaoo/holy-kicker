@@ -71,6 +71,7 @@ export function randomSave(r: Rand): SaveData {
     dice: r.chance(0.8) ? 1 + r.int(500) : 0, gifts: r.int(BALANCE.welcome.length + 1), giftDay: r.chance(0.5) ? day : 0,
     firstDay: r.chance(0.7) ? 20261001 + r.int(10) : 0, challenge: r.chance(0.3) ? `d${day}` : '', weeks: [],
     streak: r.int(8), streakDay, bestStreak: r.int(10), dailyBest: r.chance(0.5) ? { id: `d${day}`, waves: r.int(BALANCE.waves) } : { id: '', waves: 0 },
+    arena: r.chance(0.2), arenaBest: r.chance(0.3) ? { waves: 1 + r.int(80), tenths: 150 + r.int(20000) } : { waves: 0, tenths: 0 },
     arms: r.chance(0.3) ? { first20: r.pick(['short', 'control', '']) } : {}, tester: r.chance(0.1),
   });
 }

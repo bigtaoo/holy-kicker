@@ -1,4 +1,4 @@
-import { boardId, runScore, type RunPost } from '@hk/protocol';
+import { runBoard, runScore, type RunPost } from '@hk/protocol';
 import { SafeStore, type KeyValueStore } from '../meta/saveStore';
 
 // Board runs the server has not answered yet (offline, a timeout, the tab closed on the way): each
@@ -10,7 +10,7 @@ export const OUTBOX_KEY = 'hk.boardOutbox';
 /** At most this many characters kept, about three full-chapter replays; the oldest runs go first. */
 export const OUTBOX_CHARS = 1_500_000;
 
-const boardOf = (r: RunPost) => boardId(r.chapter, r.hard, r.game);
+const boardOf = (r: RunPost) => runBoard(r);
 const same = (a: RunPost, b: RunPost) => boardOf(a) === boardOf(b) && runScore(a) === runScore(b) && a.kills === b.kills;
 
 export class BoardOutbox {

@@ -10,7 +10,7 @@ import { dropGem } from './drops';
 import { superArmor } from './elite';
 import { gonged } from './demon';
 import { shielded, tear } from './ghost';
-import { inView, respawnPoint, wideRun } from './horde';
+import { comeBack, inView } from './horde';
 import { resetMob } from './marsh';
 import { split } from './snow';
 import { bossThins, fewKind, mobHp, openingShare } from './waves';
@@ -195,7 +195,7 @@ export function downMob(s: SimState, events: SimEvent[], i: number, by: Player, 
   m.hp = mobHp(s.wave, m.kind, s.config.chapter, s.config.hard);
   resetMob(s, m);
   // the opening's frail crowd comes back close, so the screen stays full
-  respawnPoint(s.ai, by, m, pct < 100 && !fewKind(m.kind), wideRun(s));
+  comeBack(s, by, m, pct < 100 && !fewKind(m.kind));
 }
 
 function aim(b: Ball, tx: number, ty: number): void {

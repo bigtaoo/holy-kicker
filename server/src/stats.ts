@@ -115,6 +115,8 @@ export interface EndCount {
   wave: number;
   /** A run shorter than its chapter (the first run's 20 waves, a daily): a board row of its own, never a chapter clear. */
   short?: boolean;
+  /** An arena run (its `waves` past a chapter's): a board row of its own. */
+  arena?: boolean;
   n: number;
 }
 
@@ -122,6 +124,11 @@ export interface EndCount {
 export function shortRun(waves: unknown): boolean {
   const n = Number(waves);
   return n > 0 && n < LIMITS.waves;
+}
+
+/** Whether a `run_end`'s `waves` is an arena run's (protocol LIMITS.arenaWaves), endless and on a board of its own. */
+export function arenaEnd(waves: unknown): boolean {
+  return Number(waves) > LIMITS.waves;
 }
 
 /** What a store counts per day itself: installs active, runs started and runs ended. */
@@ -282,7 +289,7 @@ export function boardsOf(ends: EndCount[]): Stats['boards'] {
   type Row = { runs: number; won: number; lost: [number, number][]; at: Map<number, { died: number; quit: number }> };
   const boards = new Map<string, Row>();
   for (const e of ends) {
-    const b = boardId(e.chapter, e.hard) + (e.short ? ' short' : '');
+    const b = e.arena ? 'arena' : boardId(e.chapter, e.hard) + (e.short ? ' short' : '');
     const row: Row = boards.get(b) ?? { runs: 0, won: 0, lost: [], at: new Map() };
     row.runs += e.n;
     if (e.won) row.won += e.n;

@@ -8,6 +8,7 @@ import { newMerit, parseMerit, type Merit } from './merit';
 import { parseWeeks, type WeekEntry } from './weekly';
 import { emptyInventory, grantRelics, ITEM_IDS, TIERS, type Inventory } from './gear';
 import { keepUnlocks } from './unlocks';
+import type { ArenaScore } from './arena';
 
 // The player's progress (docs/design.md "Save contents"). Plain JSON, versioned; parseSave
 // turns whatever a store hands back (nothing, garbage, an older version) into a valid save.
@@ -100,6 +101,10 @@ export interface SaveData {
   bestStreak: number;
   /** The best waves of a daily's runs, counted or practice, and which daily ('' for none): offline it has no board, so this is the score. */
   dailyBest: { id: string; waves: number };
+  /** The lobby's card shows the arena (arena.ts) instead of a chapter. */
+  arena: boolean;
+  /** The best arena run (arena.ts), zeros for none. */
+  arenaBest: ArenaScore;
   /** The experiments this save was offered (experiments.ts): id → arm, '' when it was not enrolled (an older player). */
   arms: Record<string, string>;
   /** The player marked this device as a tester (settings): its events stay out of the dashboard's numbers. */
@@ -114,7 +119,7 @@ export function newSave(): SaveData {
     gear: grantRelics(emptyInventory(), ['ball']), sutras: 0, trained: 0, patrol: 0, daily: newDaily(), weekly: newWeekly(), merit: newMerit(), seen: 0, grit: 0,
     hard: false, hardBest: zeros(), hardStars: zeros(), hardChests: zeros(), hardOpened: zeros(), fell: zeros(), hardFell: zeros(), times: zeros(), hardTimes: zeros(), monk: 'kicker', monks: 1,
     kills: 0, achieved: [], dice: 0, gifts: 0, giftDay: 0, firstDay: 0, challenge: '', weeks: [], streak: 0, streakDay: 0, bestStreak: 0, dailyBest: { id: '', waves: 0 },
-    arms: {}, tester: false,
+    arena: false, arenaBest: { waves: 0, tenths: 0 }, arms: {}, tester: false,
   };
 }
 
@@ -172,6 +177,11 @@ function achievedOf(v: unknown): number[] {
 function dailyBestOf(v: unknown): { id: string; waves: number } {
   const raw = (v !== null && typeof v === 'object' ? v : {}) as Record<string, unknown>;
   return typeof raw.id === 'string' && CHALLENGE_ID.test(raw.id) ? { id: raw.id, waves: int(raw.waves, 0, BALANCE.waves, 0) } : { id: '', waves: 0 };
+}
+
+function arenaScoreOf(v: unknown): ArenaScore {
+  const raw = (v !== null && typeof v === 'object' ? v : {}) as Record<string, unknown>;
+  return { waves: int(raw.waves, 0, 9999, 0), tenths: int(raw.tenths, 0, Number.MAX_SAFE_INTEGER, 0) };
 }
 
 /** Whether `id` names a monk in the `monks` bits. */
@@ -301,6 +311,8 @@ export function readSave(raw: Record<string, unknown> | null): SaveData {
     streakDay: int(raw.streakDay, 0, max, 0),
     bestStreak: Math.max(int(raw.bestStreak, 0, max, 0), int(raw.streak, 0, max, 0)),
     dailyBest: dailyBestOf(raw.dailyBest),
+    arena: raw.arena === true,
+    arenaBest: arenaScoreOf(raw.arenaBest),
     arms: armsOf(raw.arms),
     tester: raw.tester === true,
   };
