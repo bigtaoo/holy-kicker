@@ -17,7 +17,7 @@ export interface RunResult {
   hard?: boolean;
   /** Waves fully cleared, 0..BALANCE.waves. */
   waves: number;
-  /** The run's length (`runWaves`) when shorter than the chapter: the first run's 20 waves. */
+  /** The run's length (its config's waves, `runWaves`); the short first run is the one whose length `runWaves` gave it. */
   length?: number;
   /** Shrine offerings won in the run. */
   offerings?: number;
@@ -153,10 +153,11 @@ export function xpToNext(level: number): number {
  * The waves of a chapter run: the full chapter, but a new player's first run (chapter 1, normal)
  * ends on the first mid-boss (BALANCE.firstRun.waves), a first win in minutes that opens the
  * lobby. It is never a clear and never goes on a board (runEnd.ts `counted`); the next run is the
- * full chapter (docs/retention.md "A shorter first run").
+ * full chapter (docs/retention.md "A shorter first run"). A dev start past its end (?wave=35) plays the full chapter.
  */
-export function runWaves(save: SaveData, chapter: number, hard: boolean): number {
-  return !save.firstRunDone && chapter === 1 && !hard ? BALANCE.firstRun.waves : BALANCE.waves;
+export function runWaves(save: SaveData, chapter: number, hard: boolean, from = 1): number {
+  const short = !save.firstRunDone && chapter === 1 && !hard && from <= BALANCE.firstRun.waves;
+  return short ? BALANCE.firstRun.waves : BALANCE.waves;
 }
 
 /** Pays the run into the save: copper, xp, best wave, chapter clear; the chests it reached wait in the lobby. */
@@ -189,7 +190,8 @@ export function settleRun(save: SaveData, run: RunResult, rand: () => number = M
 
   const won = waves >= BALANCE.waves;
   // the short first run, played to its end: paid like the waves it cleared, but no clear, stars or grit
-  const intro = !won && run.length !== undefined && run.length < BALANCE.waves && waves >= run.length;
+  const short = runWaves(save, run.chapter, hard);
+  const intro = !won && short < BALANCE.waves && run.length === short && waves >= short;
   const firstClear = won && !isCleared(save, run.chapter, hard);
   const cleared = !hard && firstClear ? run.chapter : save.cleared;
   const stars = runStars(won, run.revived === true, run.lowest ?? 0);

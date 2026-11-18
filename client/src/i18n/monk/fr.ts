@@ -202,6 +202,7 @@ export const monkFr: Table<typeof monkEn> = {
   results: {
     introDone: 'Première épreuve réussie !',
     introNext: 'Ensuite : les {n} vagues du chapitre 1',
+    introGo: 'Termine le chapitre {n}',
     trainStep: 'Entraînement ×{n} possible : {stats}',
     goTrain: 'S’entraîner',
     cleared: 'Chapitre terminé !',

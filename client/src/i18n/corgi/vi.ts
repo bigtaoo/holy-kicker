@@ -203,6 +203,7 @@ export const corgiVi: Table<typeof corgiEn> = {
   results: {
     introDone: 'Hoàn thành huấn luyện!',
     introNext: 'Tiếp theo: cả {n} đợt của hành tinh 1',
+    introGo: 'Qua hành tinh {n}',
     trainStep: 'Tập được ×{n}: {stats}',
     goTrain: 'Đi tập',
     cleared: 'Qua hành tinh!',

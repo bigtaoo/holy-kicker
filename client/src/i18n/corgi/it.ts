@@ -202,6 +202,7 @@ export const corgiIt: Table<typeof corgiEn> = {
   results: {
     introDone: 'Addestramento completato!',
     introNext: 'Ora: tutte le {n} ondate del pianeta 1',
+    introGo: 'Completa il pianeta {n}',
     trainStep: 'Allenati ×{n} ora: {stats}',
     goTrain: 'Allenati',
     cleared: 'Pianeta completato!',

@@ -202,6 +202,7 @@ export const monkIt: Table<typeof monkEn> = {
   results: {
     introDone: 'Prima prova superata!',
     introNext: 'Ora: tutte le {n} ondate del capitolo 1',
+    introGo: 'Completa il capitolo {n}',
     trainStep: 'Allenati ×{n} ora: {stats}',
     goTrain: 'Allenati',
     cleared: 'Capitolo completato!',

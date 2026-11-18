@@ -1,7 +1,7 @@
 import { AUDIENCE_KEYS, type Audience } from './audience';
 import { diagnose, type Finding } from './diagnose';
 import { anomaliesOf, perfOf, type AnomalyCount, type AnomalyStats, type PerfSnap, type PerfStats } from './perf';
-import { boardId, type Game, type Host } from './protocol';
+import { LIMITS, boardId, type Game, type Host } from './protocol';
 import { RETURN_DAYS, counted, dayAfter, emptyDayZero, type DayZero, type Player, type Progress } from './players';
 
 // The operator's numbers (GET /v1/stats, the /dash page): daily actives, retention cohorts, the
@@ -113,7 +113,15 @@ export interface EndCount {
   won: boolean;
   gaveUp: boolean;
   wave: number;
+  /** A run shorter than its chapter (the first run's 20 waves, a daily): a board row of its own, never a chapter clear. */
+  short?: boolean;
   n: number;
+}
+
+/** Whether a `run_end`'s `waves` (the run's length) is shorter than a chapter; older events carry none and are full runs. */
+export function shortRun(waves: unknown): boolean {
+  const n = Number(waves);
+  return n > 0 && n < LIMITS.waves;
 }
 
 /** What a store counts per day itself: installs active, runs started and runs ended. */
@@ -269,12 +277,12 @@ function bump<K>(m: Map<K, { n: number; back: number }>, key: K, back: number): 
   m.set(key, g);
 }
 
-/** Per board: runs, wins, the median wave of the losses and where they ended, from counted outcomes. */
+/** Per board: runs, wins, the median wave of the losses and where they ended, from counted outcomes; runs shorter than the chapter apart. */
 export function boardsOf(ends: EndCount[]): Stats['boards'] {
   type Row = { runs: number; won: number; lost: [number, number][]; at: Map<number, { died: number; quit: number }> };
   const boards = new Map<string, Row>();
   for (const e of ends) {
-    const b = boardId(e.chapter, e.hard);
+    const b = boardId(e.chapter, e.hard) + (e.short ? ' short' : '');
     const row: Row = boards.get(b) ?? { runs: 0, won: 0, lost: [], at: new Map() };
     row.runs += e.n;
     if (e.won) row.won += e.n;

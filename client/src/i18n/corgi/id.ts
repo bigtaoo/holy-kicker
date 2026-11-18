@@ -203,6 +203,7 @@ export const corgiId: Table<typeof corgiEn> = {
   results: {
     introDone: 'Latihan selesai!',
     introNext: 'Berikutnya: semua {n} gelombang planet 1',
+    introGo: 'Tamatkan planet {n}',
     trainStep: 'Latih ×{n} sekarang: {stats}',
     goTrain: 'Latih',
     cleared: 'Planet tamat!',

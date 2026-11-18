@@ -125,7 +125,7 @@ export class RunFlow {
     this.freeRevives = left ? left.freeRevives : c ? 0 : freeRevives;
     const game = (this.game = new Game(h.app, h.platform, h.art, h.scene, h.stick, left ? setupOf(left.state.config) : c ? challengeSetup(save, c) : {
       chapter,
-      waves: h.scene.waves ? runWaves(save, chapter, this.hard) : 0,
+      waves: h.scene.waves ? runWaves(save, chapter, this.hard, h.scene.wave) : 0,
       revives: BALANCE.revives + freeRevives,
       relic: h.scene.relic ?? save.relic,
       sutras: h.scene.sutras ? SUTRA_IDS : earnedSutras(save),
@@ -305,14 +305,14 @@ export class RunFlow {
     void h.net.flush();
     if (end.challenge) return this.settleChallenge(s, end.challenge.run, waves, end.challenge.ranked);
     const won = s.outcome === 'won';
-    const time = won ? { tenths: run.tenths, best: bestTime(h.save(), this.chapter, this.hard) } : null;
+    const time = won && counted ? { tenths: run.tenths, best: bestTime(h.save(), this.chapter, this.hard) } : null;
     const timed = won && counted ? noteTime(h.save(), this.chapter, this.hard, run.tenths) : h.save();
     const { reward, save: played } = settleRun(noteFall(timed, this.chapter, this.hard, s), { chapter: this.chapter, hard: this.hard, waves, length: s.config.waves, offerings: p.offerings, evolved: evolvedIn(p), kills: this.kills, revived: p.revives < s.config.revives, lowest: p.lowest });
     const { save, gift } = afterRun(played, Date.now(), this.tally(s, waves, reward.stars));
     // paid before the results show, so closing the tab now keeps the reward
     h.commit(save);
     if (gift) h.net.track('claim', { what: 'gift', n: 0, copper: gift.copper, jade: gift.jade, drops: gift.drops.length });
-    if (reward.firstClear) h.portal.celebrate();
+    if (reward.firstClear || reward.intro) h.portal.celebrate();
     this.showResults({ ...reward, gift, time }, waves, rank, s.outcome === 'lost' ? fall : null);
   }
 

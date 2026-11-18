@@ -202,6 +202,7 @@ export const monkVi: Table<typeof monkEn> = {
   results: {
     introDone: 'Vượt qua thử thách đầu!',
     introNext: 'Tiếp theo: cả {n} đợt của chương 1',
+    introGo: 'Qua chương {n}',
     trainStep: 'Luyện được ×{n}: {stats}',
     goTrain: 'Đi luyện',
     cleared: 'Qua chương!',

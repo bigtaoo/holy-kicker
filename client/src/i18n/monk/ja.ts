@@ -202,6 +202,7 @@ export const monkJa: Table<typeof monkEn> = {
   results: {
     introDone: '最初の試練クリア！',
     introNext: '次は第1章の全{n}ウェーブ',
+    introGo: '第{n}章をクリア',
     trainStep: '今すぐ修行 ×{n}：{stats}',
     goTrain: '修行へ',
     cleared: '章クリア！',

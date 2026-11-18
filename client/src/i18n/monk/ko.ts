@@ -202,6 +202,7 @@ export const monkKo: Table<typeof monkEn> = {
   results: {
     introDone: '첫 시련 통과!',
     introNext: '다음: 1장의 {n}웨이브 전부',
+    introGo: '{n}장 클리어',
     trainStep: '지금 수련 ×{n}: {stats}',
     goTrain: '수련하기',
     cleared: '장 클리어!',

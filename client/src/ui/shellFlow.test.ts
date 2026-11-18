@@ -31,7 +31,7 @@ describe('the shell, start to lobby', () => {
     await rig.until(() => rig.shell.place() === 'results');
     await rig.tick(30);
     expect(rig.texts()).toContain(t('results.introDone'));
-    expect(rig.texts()).toContain(t('sutra.clear', { n: 1 }));
+    expect(rig.texts()).toContain(t('results.introGo', { n: 1 }));
     backToLobby(rig);
     await rig.until(() => rig.shell.place() === 'lobby');
     const save = rig.store.load();

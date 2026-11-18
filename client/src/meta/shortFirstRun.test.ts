@@ -15,6 +15,14 @@ describe('the short first run', () => {
     expect(runWaves(newSave(), 1, true)).toBe(BALANCE.waves);
     expect(runWaves(newSave(), 2, false)).toBe(BALANCE.waves);
     expect(runWaves({ ...newSave(), firstRunDone: true }, 1, false)).toBe(BALANCE.waves);
+    // a dev start past its end (?wave=35) plays the full chapter, one up to it the short run
+    expect(runWaves(newSave(), 1, false, SHORT)).toBe(SHORT);
+    expect(runWaves(newSave(), 1, false, SHORT + 1)).toBe(BALANCE.waves);
+  });
+
+  it('is an intro only for the length runWaves gives the first run', () => {
+    expect(settleRun({ ...newSave(), firstRunDone: true }, { chapter: 1, waves: SHORT, length: SHORT }, () => 0.5).reward.intro).toBe(false);
+    expect(settleRun(newSave(), { chapter: 1, waves: 30, length: 30 }, () => 0.5).reward.intro).toBe(false);
   });
 
   it('won: paid and its chests reached, no clear, stars or grit, and the full chapter next', () => {

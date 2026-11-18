@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { dayAfter, dayOffset, foldDayZero, foldProgress } from './players';
-import type { ClientEvent, EventBatch, Host } from './protocol';
-import { boardsOf } from './stats';
+import { LIMITS, type ClientEvent, type EventBatch, type Host } from './protocol';
+import { boardsOf, shortRun } from './stats';
 import { MemoryStore } from './store';
 
 const DAY0 = Date.parse('2026-10-01T10:00:00Z');
@@ -138,6 +138,14 @@ describe('stats', () => {
       { chapter: 2, hard: true, won: true, gaveUp: false, wave: 50, n: 2 },
     ]);
     expect(rows).toEqual([{ board: 'c2h', runs: 7, won: 2, medianLostWave: 10, lost: [{ wave: 10, died: 3, quit: 1 }, { wave: 30, died: 1, quit: 0 }] }]);
+  });
+
+  it('keeps runs shorter than the chapter (the first run, a daily) on a row of their own', async () => {
+    expect([shortRun(20), shortRun(LIMITS.waves), shortRun(undefined), shortRun(0)]).toEqual([true, false, false, false]);
+    const s = new MemoryStore();
+    await s.addEvents(batch('d', [session, { e: 'run_end', t: DAY0, p: { chapter: 1, won: true, wave: 20, waves: 20 } }, { e: 'run_end', t: DAY0, p: { chapter: 1, won: false, wave: 30, waves: LIMITS.waves } }]), at(0));
+    const r = await s.stats(3, at(1), null);
+    expect(r.boards.map((b) => [b.board, b.runs, b.won])).toEqual([['c1', 1, 0], ['c1 short', 1, 1]]);
   });
 
   it('counts the days and runs to the first clear of each board', async () => {

@@ -202,6 +202,7 @@ export const monkTr: Table<typeof monkEn> = {
   results: {
     introDone: 'İlk sınav geçildi!',
     introNext: 'Sırada: 1. bölümün {n} dalgasının hepsi',
+    introGo: '{n}. bölümü geç',
     trainStep: 'Şimdi talim ×{n}: {stats}',
     goTrain: 'Talime git',
     cleared: 'Bölüm geçildi!',

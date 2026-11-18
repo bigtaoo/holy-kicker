@@ -203,6 +203,7 @@ export const corgiPl: Table<typeof corgiEn> = {
   results: {
     introDone: 'Trening ukończony!',
     introNext: 'Teraz: wszystkie {n} fal planety 1',
+    introGo: 'Ukończ planetę {n}',
     trainStep: 'Trenuj ×{n} teraz: {stats}',
     goTrain: 'Trenuj',
     cleared: 'Planeta ukończona!',

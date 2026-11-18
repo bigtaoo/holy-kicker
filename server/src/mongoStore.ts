@@ -6,7 +6,7 @@ import { boardStanding, boardUpdate, holdsPlace, newBest, ownState, settleBoardD
 import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type ChallengeBoardReply, type EventBatch, type Game, type PickWire, type Host, type PropValue, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
-import { ALL_INSTALLS, StatsFold, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
+import { ALL_INSTALLS, StatsFold, shortRun, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
 import { PRUNED_EVENTS, pruneDue, pruneKeepFrom, reportId, rowOf, runName, summaryOf, resimLoad, resimRefs, type ChallengeDoc, type ChallengeEntry, type ResimLoad, type ResimRef, type RunTaken, type Store } from './store';
 
 // The MongoDB Atlas store (the cluster daydayup uses, its own database and user; server/README.md).
@@ -306,7 +306,7 @@ export class MongoStore implements Store {
     const testers = cohort.testers ? {} : { tester: { $exists: false } };
     for await (const p of this.installs.find({ first: window, ...mine, ...exp, ...testers }, { projection: { first: 1, build: 1, aud: 1, exp: 1, back: 1, d0: 1, progress: 1 } })) fold.add(p);
     type Count = { _id: string; n: number };
-    type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown }; n: number };
+    type Outcome = { _id: { chapter: unknown; hard: unknown; won: unknown; gaveUp: unknown; wave: unknown; waves: unknown }; n: number };
     type Trouble = { _id: { day: string; build: string; kind: unknown; msg: unknown; src: unknown; level: unknown }; n: number };
     const [active, runs, [ends], beacons, perfDocs, trouble] = await Promise.all([
       this.active.aggregate<Count>([{ $match: { day: window, ...mine } }, { $group: { _id: '$day', n: { $sum: 1 } } }]).toArray(),
@@ -316,7 +316,7 @@ export class MongoStore implements Store {
         {
           $facet: {
             days: [{ $group: { _id: '$day', n: { $sum: 1 } } }],
-            outcomes: [{ $group: { _id: { chapter: '$p.chapter', hard: '$p.hard', won: '$p.won', gaveUp: '$p.gaveUp', wave: '$p.wave' }, n: { $sum: 1 } } }],
+            outcomes: [{ $group: { _id: { chapter: '$p.chapter', hard: '$p.hard', won: '$p.won', gaveUp: '$p.gaveUp', wave: '$p.wave', waves: '$p.waves' }, n: { $sum: 1 } } }],
           },
         },
       ]).toArray(),
@@ -329,7 +329,7 @@ export class MongoStore implements Store {
     ]);
     const map = (rows: Count[]) => new Map(rows.map((r) => [r._id, r.n]));
     const counts: DayCounts = { active: map(active), runs: map(runs), ended: map(ends?.days ?? []) };
-    const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, n }));
+    const outcomes: EndCount[] = (ends?.outcomes ?? []).map(({ _id: o, n }) => ({ chapter: Number(o.chapter) || 0, hard: o.hard === true, won: o.won === true, gaveUp: o.gaveUp === true, wave: Number(o.wave) || 0, short: shortRun(o.waves), n }));
     const loads: BeaconCount[] = beacons.map(({ day, build, step, n, t }) => ({ day, build, step, n, ...(t ? { t } : {}) }));
     // the device and system are the sending install's, kept once on its first batch
     // and the GPU class, memory and cores the launch's `session` event (the same day, or the one before for a run past midnight)

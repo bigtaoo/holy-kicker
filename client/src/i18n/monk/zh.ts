@@ -202,6 +202,7 @@ export const monkZh: Table<typeof monkEn> = {
   results: {
     introDone: '初试通过！',
     introNext: '下一步：打完第 1 章全部 {n} 波',
+    introGo: '通关第 {n} 章',
     trainStep: '可修炼 {n} 格：{stats}',
     goTrain: '去修炼',
     cleared: '通关！',

@@ -6,7 +6,7 @@ import { boardJob, boardStanding, boardUpdate, boardWaiting, holdsPlace, newBest
 import { RESIM_TOP, WATCH_TOP, boardId, keptGame, type Beacon, type BoardName, type BoardReply, type BoardRow, type ChallengeBoardReply, type ChallengeRunReply, type EventBatch, type Game, type Host, type PickWire, type ReplayWire, type Report, type ReportSummary, type RunEntry } from './protocol';
 import { anomalyKey, sessionDevice, type AnomalyCount, type PerfSnap } from './perf';
 import { dayOf } from './rules';
-import { ALL_INSTALLS, StatsFold, inCohort, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
+import { ALL_INSTALLS, StatsFold, inCohort, shortRun, windowOf, type BeaconCount, type Cohort, type DayCounts, type EndCount, type Stats } from './stats';
 
 // Where the backend keeps things. The routes only see this interface: mongoStore.ts is the real
 // one, MemoryStore below serves the tests and a local run without a database.
@@ -279,7 +279,7 @@ export class MemoryStore implements Store {
         if (e.e !== 'run_end') continue;
         inc(counts.ended, day);
         const p = e.p ?? {};
-        ends.push({ chapter: Number(p.chapter) || 0, hard: p.hard === true, won: p.won === true, gaveUp: p.gaveUp === true, wave: Number(p.wave) || 0, n: 1 });
+        ends.push({ chapter: Number(p.chapter) || 0, hard: p.hard === true, won: p.won === true, gaveUp: p.gaveUp === true, wave: Number(p.wave) || 0, short: shortRun(p.waves), n: 1 });
       }
     }
     const beacons: BeaconCount[] = [];
