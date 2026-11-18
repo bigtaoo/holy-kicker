@@ -26,3 +26,11 @@
   `client/src/game/decoView.ts`). The lantern post, paper offerings and crates were
   rate-limited at first and added later; the paper offerings took three tries (`papers_v0`
   pale with no outline, `papers_v1` filling the whole frame).
+
+## Lighter regrade (2026-11-18)
+
+The shipped tile was regraded in place so the horde reads on it (as map 1 in 7078000):
+
+```
+python tools/make_tile.py <client/public/art/ch4/ground/street.png as of d75c1eb> client/public/art/ch4/ground/street.png whole --value 0.5 --sat 0.75 --contrast 0.95
+```

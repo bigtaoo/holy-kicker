@@ -3,7 +3,8 @@ toward a target brightness / saturation, so the ground stays behind the characte
 usage: python make_tile.py <in> <out.png> <x0,y0,x1,y1> [--size 512] [--value 0.32]
                            [--sat 0.35] [--hue-shift 0] [--contrast 0.6]
 Seamless: the crop is blended with a copy shifted by half its size through a mask that is
-opaque in the middle and clear at the edges, which hides the wrap-around seam."""
+opaque in the middle and clear at the edges, which hides the wrap-around seam.
+A box of `whole` regrades a tile that is already seamless as it is: no crop, no seam blend."""
 import argparse
 import numpy as np
 from PIL import Image
@@ -20,8 +21,11 @@ ap.add_argument("--contrast", type=float, default=0.6, help="brightness spread m
 ap.add_argument("--colors", type=int, default=128, help="palette size of the saved PNG")
 a = ap.parse_args()
 
-box = tuple(int(v) for v in a.box.split(","))
-im = Image.open(a.src).convert("RGB").crop(box).resize((a.size, a.size), Image.LANCZOS)
+whole = a.box == "whole"
+im = Image.open(a.src).convert("RGB")
+if not whole:
+    im = im.crop(tuple(int(v) for v in a.box.split(",")))
+im = im.resize((a.size, a.size), Image.LANCZOS)
 px = np.asarray(im, dtype=np.float32) / 255
 
 # seam hiding: weight w is 1 in the centre, 0 at the borders
@@ -29,8 +33,9 @@ n = a.size
 t = np.abs(np.linspace(-1, 1, n))
 w1 = np.clip((1 - t) * 2.5, 0, 1)
 w = np.minimum.outer(w1, w1)[..., None]
-shifted = np.roll(px, (n // 2, n // 2), axis=(0, 1))
-px = px * w + shifted * (1 - w)
+if not whole:
+    shifted = np.roll(px, (n // 2, n // 2), axis=(0, 1))
+    px = px * w + shifted * (1 - w)
 
 # colour grading in HSV (PIL works in 0..255)
 rgb8 = Image.fromarray((px * 255).round().astype(np.uint8))

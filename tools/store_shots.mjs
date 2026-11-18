@@ -45,6 +45,11 @@ const SCENES = {
   boss: { q: 'chapter=1&from=20', ready: (s) => s.wave >= 20, settle: 11000 },
   // chapter 3 at wave 12
   ch3: { q: 'chapter=3&from=12', ready: (s) => s.wave >= 12, settle: 6000 },
+  // the other day maps at wave 12, to judge their grounds (taken only when asked for with --only)
+  ch2: { q: 'chapter=2&from=12', ready: (s) => s.wave >= 12, settle: 6000 },
+  ch4: { q: 'chapter=4&from=12', ready: (s) => s.wave >= 12, settle: 6000 },
+  ch5: { q: 'chapter=5&from=12', ready: (s) => s.wave >= 12, settle: 6000 },
+  ch7: { q: 'chapter=7&from=12', ready: (s) => s.wave >= 12, settle: 6000 },
   lobby: { q: '', ready: null, settle: 4000 },
   // App Review's screenshot of the ad-free purchase: the Shop tab of a new player's lobby, with
   // the fake store's card (not one of the listing's five; taken only when asked for with --only)

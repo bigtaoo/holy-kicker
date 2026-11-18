@@ -23,3 +23,11 @@
   `crystals_v2`/`brazier_v2` into `crystals_v3`/`brazier_v3`, packed in their place. Mob pixels
   within dE 15 of the ground behind them, on a paused phone frame: 37.5% to 26.4% in the
   160-mob sandbox and 32.1% to 19.1% on wave 12; false edges 4.5% to 1.4%.
+
+## Lighter regrade (2026-11-18)
+
+The shipped tile was regraded in place so the horde reads on it (as map 1 in 7078000):
+
+```
+python tools/make_tile.py <client/public/art/ch5/ground/cave.png as of d75c1eb> client/public/art/ch5/ground/cave.png whole --value 0.45 --sat 0.6 --contrast 1.0 --hue-shift 175
+```

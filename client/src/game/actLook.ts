@@ -15,14 +15,15 @@ const NIGHT = [0xffffff, 0x9cacd8, 0xa49ad0, 0x8e8cbc];
  * least that light keeps the full night.
  */
 const GROUND_LIGHT: Record<Theme, readonly number[]> = {
-  monk: [110, 65, 85, 57, 93],
+  monk: [110, 114, 171, 120, 110],
   corgi: [133, 61, 93, 57, 58],
 };
 
 /**
  * The ground light the nights are matched to: map 1's when they were tuned. The corgi's map 1 was
  * lightened from 81 to 133 and the monk's from 68 to 110 for a brighter first look, and the other
- * maps' nights stay as they were.
+ * maps' nights stay as they were. The monk's maps 2-5 were lightened too, so they now take the full
+ * night and come out lighter at night than before.
  */
 const NIGHT_GROUND: Record<Theme, number> = { monk: 68, corgi: 81 };
 

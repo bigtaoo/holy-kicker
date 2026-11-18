@@ -2,6 +2,10 @@ import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { wrapNear, type Vec } from './camera';
 import { DECO, scatterDeco, type DecoKind } from './deco';
 import { SOFT, easeLean, pushLean, windLean } from './sway';
+import { THEME } from '../theme';
+
+/** The corgi keeps its own grounds' darker prop tints (maps 2-5); the monk's grounds were lightened. */
+const CORGI = THEME === 'corgi';
 
 // Draws the scattered ground decorations from one sheet (tools/pack_deco.py), in a single
 // container lying on the ground tile under every figure, so it adds one batch and no sorting.
@@ -57,14 +61,23 @@ export const MARSH_DECO: DecoStyle = {
     { name: 'log', weight: 1, size: 120 },
     { name: 'lantern', weight: 1, size: 110 },
   ],
-  tint: 0xbcc8c4,
-  decal: { puddle: { tint: 0x9aaaa6, alpha: 0.8 }, lily: { tint: 0xb4c4bc, alpha: 0.9 } },
-  dark: { tint: 0x08140f, alpha: 0.4 },
-  light: { tint: 0x9cc4b8, alpha: 0.14 },
+  ...(CORGI
+    ? {
+        tint: 0xbcc8c4,
+        decal: { puddle: { tint: 0x9aaaa6, alpha: 0.8 }, lily: { tint: 0xb4c4bc, alpha: 0.9 } },
+        dark: { tint: 0x08140f, alpha: 0.4 },
+        light: { tint: 0x9cc4b8, alpha: 0.14 },
+      }
+    : {
+        tint: 0xdce4d8,
+        decal: { puddle: { tint: 0xb8c4b8, alpha: 0.8 }, lily: { tint: 0xd0dcc8, alpha: 0.9 } },
+        dark: { tint: 0x1e3418, alpha: 0.3 },
+        light: { tint: 0xd8e8b0, alpha: 0.16 },
+      }),
 };
 
-/** Chapter 3, the snow pass at dusk: snowy pines and rocks, bare shrubs, cairns, and ice
- * lying flat; the patches lean cold blue so the drifts read under the twilight. */
+/** Chapter 3, the snow pass: snowy pines and rocks, bare shrubs, cairns, and ice lying flat;
+ * the patches lean cold blue so the drifts read. */
 export const SNOW_DECO: DecoStyle = {
   kinds: [
     { name: 'pine', weight: 4, size: 130 },
@@ -74,10 +87,19 @@ export const SNOW_DECO: DecoStyle = {
     { name: 'stump', weight: 1, size: 100 },
     { name: 'cairn', weight: 1, size: 110 },
   ],
-  tint: 0xa8b4c8,
-  decal: { ice: { tint: 0x8c9cb8, alpha: 0.75 } },
-  dark: { tint: 0x0a1020, alpha: 0.38 },
-  light: { tint: 0xb8c8e8, alpha: 0.16 },
+  ...(CORGI
+    ? {
+        tint: 0xa8b4c8,
+        decal: { ice: { tint: 0x8c9cb8, alpha: 0.75 } },
+        dark: { tint: 0x0a1020, alpha: 0.38 },
+        light: { tint: 0xb8c8e8, alpha: 0.16 },
+      }
+    : {
+        tint: 0xdce4f0,
+        decal: { ice: { tint: 0xb8c8e0, alpha: 0.75 } },
+        dark: { tint: 0x2a3a58, alpha: 0.22 },
+        light: { tint: 0xffffff, alpha: 0.2 },
+      }),
 };
 
 /** Chapter 4, the ghost market at night: blue lantern posts, empty stalls, jars, crates and
@@ -93,14 +115,23 @@ export const GHOST_DECO: DecoStyle = {
     { name: 'stall', weight: 1, size: 150 },
     { name: 'burner', weight: 1, size: 105 },
   ],
-  tint: 0xb4aca4,
-  decal: { papers: { tint: 0xa49c94, alpha: 0.7 } },
-  dark: { tint: 0x080c18, alpha: 0.4 },
-  light: { tint: 0x80d8e8, alpha: 0.14 },
+  ...(CORGI
+    ? {
+        tint: 0xb4aca4,
+        decal: { papers: { tint: 0xa49c94, alpha: 0.7 } },
+        dark: { tint: 0x080c18, alpha: 0.4 },
+        light: { tint: 0x80d8e8, alpha: 0.14 },
+      }
+    : {
+        tint: 0xd8d0c8,
+        decal: { papers: { tint: 0xc8c0b4, alpha: 0.7 } },
+        dark: { tint: 0x2a2018, alpha: 0.3 },
+        light: { tint: 0x80d8e8, alpha: 0.1 },
+      }),
 };
 
 /** Chapter 5, Demon Peak: braziers of violet fire, rock spikes, bones, broken stone pagodas and
- * glowing crystals on the dark cave rock; the light patches are slate, so the violet stays the
+ * glowing crystals on the cave rock; the light patches are slate, so the violet stays the
  * enemy attacks' colour. */
 export const PEAK_DECO: DecoStyle = {
   kinds: [
@@ -110,10 +141,19 @@ export const PEAK_DECO: DecoStyle = {
     { name: 'brazier', weight: 2, size: 115 },
     { name: 'stupa', weight: 1, size: 150 },
   ],
-  tint: 0xa8b4c4,
-  decal: { bones: { tint: 0xa0a0b8, alpha: 0.85 }, brazier: { tint: 0xffffff, alpha: 1 }, crystals: { tint: 0xffffff, alpha: 1 } },
-  dark: { tint: 0x06040e, alpha: 0.45 },
-  light: { tint: 0x8a96b0, alpha: 0.1 },
+  ...(CORGI
+    ? {
+        tint: 0xa8b4c4,
+        decal: { bones: { tint: 0xa0a0b8, alpha: 0.85 }, brazier: { tint: 0xffffff, alpha: 1 }, crystals: { tint: 0xffffff, alpha: 1 } },
+        dark: { tint: 0x06040e, alpha: 0.45 },
+        light: { tint: 0x8a96b0, alpha: 0.1 },
+      }
+    : {
+        tint: 0xd0d0d8,
+        decal: { bones: { tint: 0xc8c4c8, alpha: 0.85 }, brazier: { tint: 0xffffff, alpha: 1 }, crystals: { tint: 0xffffff, alpha: 1 } },
+        dark: { tint: 0x1a1210, alpha: 0.32 },
+        light: { tint: 0xd0c0b0, alpha: 0.1 },
+      }),
 };
 
 export function sliceDeco(frames: readonly DecoFrame[], sheet: Texture): DecoSheet {
