@@ -42,13 +42,16 @@ function bake(renderer: Renderer, g: Graphics, size: number): Texture {
   return tex;
 }
 
-function fieldTexture(renderer: Renderer, fill: number, rim: number, heal: boolean): Texture {
+/** A field's disc: a tinted floor inside a bright rim inked dark, so it holds on a light meadow. */
+function fieldTexture(renderer: Renderer, fill: number, rim: number, ink: number, heal: boolean): Texture {
   const r = FIELD_R;
   if (CORGI) return bake(renderer, corgiPuddle(r, heal), r * 2);
   const g = new Graphics()
-    .circle(r, r, r * 0.97).fill({ color: fill, alpha: 0.22 })
-    .circle(r, r, r * 0.92).stroke({ color: rim, width: r * 0.07, alpha: 0.9 })
-    .circle(r, r, r * 0.6).stroke({ color: rim, width: r * 0.03, alpha: 0.5 });
+    .circle(r, r, r * 0.93).fill({ color: fill, alpha: 0.3 })
+    .circle(r, r, r * 0.91).stroke({ color: ink, width: r * 0.13, alpha: 0.75 })
+    .circle(r, r, r * 0.91).stroke({ color: rim, width: r * 0.06, alpha: 1 })
+    .circle(r, r, r * 0.6).stroke({ color: ink, width: r * 0.05, alpha: 0.35 })
+    .circle(r, r, r * 0.6).stroke({ color: rim, width: r * 0.025, alpha: 0.8 });
   return bake(renderer, g, r * 2);
 }
 
@@ -88,8 +91,9 @@ function bellDome(): Graphics {
   const r = BELL_R;
   if (CORGI) return corgiBubble(r);
   return new Graphics()
-    .ellipse(0, 0, r, r * 1.15).fill({ color: 0xffd860, alpha: 0.18 })
-    .ellipse(0, 0, r, r * 1.15).stroke({ color: 0xffe9a0, width: 9, alpha: 0.85 })
+    .ellipse(0, 0, r, r * 1.15).fill({ color: 0xffd860, alpha: 0.2 })
+    .ellipse(0, 0, r, r * 1.15).stroke({ color: 0x8a4a10, width: 15, alpha: 0.6 })
+    .ellipse(0, 0, r, r * 1.15).stroke({ color: 0xffe27a, width: 8, alpha: 0.95 })
     .ellipse(0, r * 0.75, r * 0.82, r * 0.22).stroke({ color: 0xffe9a0, width: 6, alpha: 0.6 })
     .ellipse(-r * 0.4, -r * 0.5, r * 0.14, r * 0.28).fill({ color: 0xffffff, alpha: 0.5 });
 }
@@ -124,8 +128,8 @@ export class SpellView {
   ) {
     this.palms = new PalmFalls(layer, palm.tex, palm.mountain, palm.z, (x, y, r) => rubble(pool, rand, x, y, r));
     this.discs = new ViewPool(() => new Sprite({ anchor: 0.5 }), (s) => layer.addChild(s));
-    this.fieldTex = fieldTexture(renderer, 0xffd860, 0xffe9a0, false);
-    this.healTex = fieldTexture(renderer, 0x7ee0a0, 0xc8ffd8, true);
+    this.fieldTex = fieldTexture(renderer, 0xffc83c, 0xffe27a, 0x8a4a10, false);
+    this.healTex = fieldTexture(renderer, 0x5ed08a, 0xc8ffd8, 0x1e5a34, true);
     this.printTex = printTexture(renderer);
     this.cymbalTex = cymbalTexture(renderer);
     this.bell.visible = false;
