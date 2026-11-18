@@ -40,10 +40,10 @@ export const TEMPLE_DECO: DecoStyle = {
     { name: 'stump', weight: 1, size: 105 },
     { name: 'gravestone', weight: 1, size: 100 },
   ],
-  tint: 0xc8ccc4,
-  decal: { dirt_patch: { tint: 0x8c8a6a, alpha: 0.7 } },
-  dark: { tint: 0x101a0c, alpha: 0.38 },
-  light: { tint: 0xc0c878, alpha: 0.16 },
+  tint: 0xf0f0ea,
+  decal: { dirt_patch: { tint: 0xb0a47a, alpha: 0.75 } },
+  dark: { tint: 0x2a4a14, alpha: 0.3 },
+  light: { tint: 0xe0e890, alpha: 0.18 },
 };
 
 /** Chapter 2, the misty marsh: reeds most of all, puddles and lily pads lying flat in the mud,

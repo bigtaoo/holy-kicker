@@ -27,7 +27,8 @@ const origin = theme === 'monk' ? 'http://localhost:5174' : 'http://localhost:51
 // the corgi's browser keys sit under its prefix (client/src/theme.ts)
 const key = (k) => (theme === 'monk' ? k : `${theme}:${k}`);
 
-// a save two chapters in, for the lobby (client/src/meta/save.ts fills in the rest)
+// a save two chapters in, for the lobby and every run (a fresh save's first run ends at wave 20;
+// client/src/meta/save.ts fills in the rest)
 const SAVE = {
   firstRunDone: true, level: 12, xp: 0, copper: 4200, jade: 160, chapter: 3, cleared: 2,
   best: [50, 50, 24, 0, 0], chests: [31, 31, 3, 0, 0], opened: [31, 31, 3, 0, 0], runs: 9,
@@ -79,7 +80,7 @@ try {
         localStorage.setItem(k, v);
         if (sk) localStorage.setItem(sk, sv);
       },
-      [key('hk.settings'), JSON.stringify(settings), scene.ready ? '' : key('hk.save'), JSON.stringify(scene.save ?? SAVE)],
+      [key('hk.settings'), JSON.stringify(settings), key('hk.save'), JSON.stringify(scene.save ?? SAVE)],
     );
     const page = await ctx.newPage();
     page.on('pageerror', (e) => console.error('page error:', e.message));
