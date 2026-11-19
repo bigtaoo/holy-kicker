@@ -5,6 +5,7 @@
  "fps": 10,
  "flash": false,
  "height": 380,
+ "sticker": {"drawn": 80, "flat": false},
  "ground": [
   360,
   765

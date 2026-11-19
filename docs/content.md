@@ -298,7 +298,11 @@ sheet of paper scaling. Each part's colour is painted under the parts in front o
 fade into the part behind, narrow interior gaps are inpainted and wide holes stay open and
 outlined, so poses open no seams; a part with `"drop": true` takes its pixels out of the figure
 (stray ground or paper between legs). `"holes"` seeds stay clear even where the rig's seal
-closes their mouth (the lantern's tail curl).
+closes their mouth (the lantern's tail curl). Every monk mob also carries the sticker
+outline (`"sticker": {"drawn": units, "flat": false}`, the same even 2.2-unit edge as the corgi's
+bugs, docs/reskin.md), which keeps them readable on dark or night-tinted ground; only the toad is
+also flattened (no `"flat": false`), because its source drawing is grainy, while flattening the
+others blotched the carp's scales, the fox's fur and the jiangshi's robe.
 
 | Mechanic | Behaviour | Engine status |
 |---|---|---|

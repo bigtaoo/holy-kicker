@@ -4,14 +4,15 @@
  "frames": 10,
  "fps": 16,
  "height": 180,
+ "sticker": {"drawn": 70, "flat": false},
  "ground": [
   480,
   628
  ],
  "pad": [
-  30,
-  50,
-  30,
+  55,
+  75,
+  55,
   10
  ],
  "body": {

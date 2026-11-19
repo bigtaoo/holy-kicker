@@ -4,6 +4,7 @@
   "frames": 10,
   "fps": 9,
   "height": 168,
+  "sticker": {"drawn": 84, "flat": false},
   "ground": [
     400,
     765

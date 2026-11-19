@@ -9,6 +9,7 @@
   "steps": 12
  },
  "height": 210,
+ "sticker": {"drawn": 130, "flat": false},
  "ground": [
   380,
   790

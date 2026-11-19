@@ -2,12 +2,12 @@
   "frames": 10,
   "flash": 10,
   "cols": 4,
-  "frameW": 296,
-  "frameH": 197,
+  "frameW": 310,
+  "frameH": 204,
   "fps": 16,
   "anchor": [
-    145.0,
-    192.8
+    152.1,
+    199.9
   ],
   "height": 180,
   "lift": [
