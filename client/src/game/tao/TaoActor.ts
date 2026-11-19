@@ -10,6 +10,8 @@ import type { BonePose, TaoSkeleton } from './types';
 // bone hierarchy (a hand is drawn behind its own forearm).
 
 const FADE = 0.12; // seconds of cross-fade when switching clips
+/** The sticker outline's ink: the mobs' (hordeView.ts OUTLINE), tinted over each part, near black whatever the part's colour. */
+export const OUTLINE_INK = 0x140c18;
 
 
 interface SlotSprite {
@@ -150,6 +152,15 @@ export class TaoActor {
     this.view.addChildAt(under, 0);
     this.under = under;
     this.update(0);
+  }
+
+  /**
+   * The skeleton's own sticker outline (TaoSkeleton.outline, world units), if it has one, for the
+   * figure drawn `height` world units tall.
+   */
+  skeletonOutline(height: number): void {
+    const ink = this.sk.outline;
+    if (ink) this.outline(ink * (this.height / height), OUTLINE_INK);
   }
 
   /** The outline's opacity: fade it with the figure, which would show it through its parts. */

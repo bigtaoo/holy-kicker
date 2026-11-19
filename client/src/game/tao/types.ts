@@ -62,7 +62,7 @@ export interface TaoSkeleton {
   /** Images a slot can swap between, by slot id (the first is the default). */
   variants: Record<string, string[]>;
   animations: Record<string, TaoAnimation>;
-  /** A sticker outline drawn round the whole figure, in world units (the monks; the corgi's is in its art). */
+  /** A sticker outline drawn round the whole figure, in world units (the monks and the corgi's bosses; the corgi hero's is in its art). */
   outline?: number;
 }
 

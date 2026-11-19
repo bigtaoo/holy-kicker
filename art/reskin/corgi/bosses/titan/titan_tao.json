@@ -1,4 +1,5 @@
 {
+ "outline": 2.2,
  "name": "titan",
  "parts": "parts",
  "rig": "rig.json",

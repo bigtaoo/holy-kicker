@@ -91,10 +91,11 @@ export const SNOW_DECO: DecoStyle = {
   ],
   ...(CORGI
     ? {
-        tint: 0xa8b4c8,
-        decal: { ice: { tint: 0x8c9cb8, alpha: 0.75 } },
-        dark: { tint: 0x0a1020, alpha: 0.38 },
-        light: { tint: 0xb8c8e8, alpha: 0.16 },
+        // the corgi's map 3 is a desert: its patches are sun and dune shade, not snow drifts
+        tint: 0xd4ccc0,
+        decal: { ice: { tint: 0xc0b4a4, alpha: 0.75 } },
+        dark: { tint: 0x4a3420, alpha: 0.2 },
+        light: { tint: 0xfff0d4, alpha: 0.16 },
       }
     : {
         tint: 0xdce4f0,

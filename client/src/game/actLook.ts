@@ -16,7 +16,7 @@ const NIGHT = [0xffffff, 0x9cacd8, 0xa49ad0, 0x8e8cbc];
  */
 const GROUND_LIGHT: Record<Theme, readonly number[]> = {
   monk: [109, 117, 171, 119, 107],
-  corgi: [133, 61, 93, 57, 58],
+  corgi: [133, 61, 143, 73, 67],
 };
 
 /**

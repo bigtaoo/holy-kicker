@@ -7,8 +7,6 @@ import { TaoActor, type TaoAsset } from './tao/TaoActor';
 // plays it. While the staff is out his front arm follows it, so he holds it in his hand.
 
 const HURT_FACE = 0.45;
-/** The sticker outline's ink: the mobs' (hordeView.ts OUTLINE), tinted over each part, near black whatever the part's colour. */
-const OUTLINE_INK = 0x140c18;
 /** The monk's alpha (the guard pulse dips to 0.55) at which his outline has faded out. */
 const OUTLINE_GONE = 0.6;
 /** Seconds the front arm takes to fall back into the clip once the staff is put away. */
@@ -32,8 +30,7 @@ export class Hero {
   constructor(asset: TaoAsset, height: number) {
     this.actor = new TaoActor(asset);
     this.actor.view.scale.set(height / this.actor.height);
-    const ink = asset.skeleton.outline;
-    if (ink) this.actor.outline(ink * (this.actor.height / height), OUTLINE_INK);
+    this.actor.skeletonOutline(height);
     this.actor.play('idle');
     this.body.addChild(this.actor.view);
     this.view.addChild(this.held, this.body);

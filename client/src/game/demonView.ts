@@ -38,6 +38,7 @@ export class DemonView {
   constructor(renderer: Renderer, world: Container, asset: TaoAsset, shadowTex: Texture, readonly height: number, private readonly fx: FxPool) {
     this.actor = new TaoActor(asset);
     this.actor.view.scale.set(height / this.actor.height);
+    this.actor.skeletonOutline(height);
     this.actor.play('run');
     this.actor.setImage('face', 'face_strain');
     this.body.addChild(this.actor.view);

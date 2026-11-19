@@ -12,9 +12,9 @@ One planet per chapter, each in its own colours. The bugs stay cold and the hero
 |---|---|---|---|
 | 1 | icy moon: frost dust, regolith paths | `ground/grass`, `earth`, `earth_soft` | `planets/deco_frost` |
 | 2 | spore jungle | `ch2/ground/marsh` | `planets/deco_jungle` |
-| 3 | desert dunes | `ch3/ground/snow` | `planets/deco_dune` |
-| 4 | forge world: basalt with lava cracks | `ch4/ground/street` | `planets/deco_forge` |
-| 5 | bug hive: resin honeycomb | `ch5/ground/cave` | `planets/deco_hive` |
+| 3 | desert dunes (cacti recoloured grey-green, `DECO_RECOLOUR`) | `ch3/ground/snow` | `planets/deco_dune` |
+| 4 | forge world: grey basalt with cold cyan cracks | `ch4/ground/street` | `planets/deco_forge` |
+| 5 | bug hive: blue-grey metal honeycomb | `ch5/ground/cave` | `planets/deco_hive` |
 
 The grounds are drawn in code, with no generated picture:
 - `tools/planet_tile.py` draws frost, regolith, spore and dune.

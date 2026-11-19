@@ -11,6 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import numpy as np
 from PIL import Image, ImageDraw, ImageFilter
 
 sys.path.insert(0, str(Path(__file__).parent))
@@ -30,10 +31,10 @@ GROUNDS = {
     "art/ground/earth.png": ["planet_tile.py", "regolith"],
     "art/ground/earth_soft.png": ["planet_tile.py", "regolith", "--soft"],
     "art/ch2/ground/marsh.png": ["planet_tile.py", "spore"],
-    "art/ch3/ground/snow.png": ["planet_tile.py", "dune"],
-    "art/ch4/ground/street.png": ["rock_tile.py", "--rgb", "60,58,58", "--ember", "230,130,50", "--embers", "6",
-                                 "--lava", "160,74,28", "--seed", "7"],
-    "art/ch5/ground/cave.png": ["hex_tile.py"],
+    "art/ch3/ground/snow.png": ["planet_tile.py", "dune", "--rgb", "172,140,96"],
+    "art/ch4/ground/street.png": ["rock_tile.py", "--rgb", "76,76,84", "--ember", "110,190,230", "--embers", "6",
+                                 "--lava", "36,84,120", "--seed", "7"],
+    "art/ch5/ground/cave.png": ["hex_tile.py", "--rgb", "70,80,96", "--glow", "120,170,210"],
 }
 
 # each chapter's props: a 2x3 sheet cut in reading order into the frame names decoView.ts draws
@@ -44,6 +45,11 @@ DECO = {
     "art/ch4/ground/street_deco": ("planets/deco_forge.png", "lantern_post papers jars crates stall burner"),
     "art/ch5/ground/cave_deco": ("planets/deco_hive.png", "spikes bones - brazier crystals stupa"),
 }
+
+# props recoloured after the cut: the dune cactus came out the sand's ochre and is turned a dusty sage,
+# so it reads as a plant on the sand; (PIL hue 0-255, saturation and value factors, rows below which
+# the sand base is left alone, the least saturation that counts as the plant's)
+DECO_RECOLOUR = {"art/ch3/ground/snow_deco": {"pine": (62, 0.5, 0.9, 222, 140)}}
 
 # the props' DecoStyle in decoView.ts, whose sizes the sticker pass judges them at
 DECO_STYLE = {"art/ground/deco": "TEMPLE", "art/ch2/ground/marsh_deco": "MARSH", "art/ch3/ground/snow_deco": "SNOW",
@@ -142,6 +148,20 @@ def deco_sizes(style):
     return {n: int(v) for n, v in re.findall(r"name: '(\w+)'.*?size: (\d+)", block)}
 
 
+def recolour_piece(path, hue, sat, val, below, least):
+    """Turns the saturated pixels above row `below` to `hue`, scaling their saturation and value."""
+    im = Image.open(path).convert("RGBA")
+    px = np.asarray(im).copy()
+    hsv = np.asarray(im.convert("RGB").convert("HSV")).astype(np.float32)
+    rows = np.arange(px.shape[0])[:, None]
+    m = (hsv[..., 1] > least) & (hsv[..., 2] > 50) & (rows < below) & (px[..., 3] > 0)
+    hsv[..., 0] = np.where(m, hue, hsv[..., 0])
+    hsv[..., 1] = np.where(m, hsv[..., 1] * sat, hsv[..., 1])
+    hsv[..., 2] = np.where(m, hsv[..., 2] * val, hsv[..., 2])
+    px[..., :3] = np.asarray(Image.fromarray(hsv.clip(0, 255).astype(np.uint8), "HSV").convert("RGB"))
+    Image.fromarray(px).save(path)
+
+
 def deco(_):
     for key, (sheet, names) in DECO.items():
         if missing(sheet):
@@ -149,6 +169,8 @@ def deco(_):
         with tempfile.TemporaryDirectory() as tmp:
             split(sheet, "2x3", names, Path(tmp) / "cut")
             pieces = [Path(tmp) / "cut" / f"{n}.png" for n in names.split() if n != "-"]
+            for name, spec in DECO_RECOLOUR.get(key, {}).items():
+                recolour_piece(Path(tmp) / "cut" / f"{name}.png", *spec)
             sizes = deco_sizes(DECO_STYLE[key])
             for p in pieces:
                 sticker_piece(p, DECO_MAX, sizes[p.stem])

@@ -46,6 +46,7 @@ export class Boss {
   ) {
     this.actor = new TaoActor(asset);
     this.actor.view.scale.set(height / this.actor.height);
+    this.actor.skeletonOutline(height);
     this.actor.play('walk');
     this.body.addChild(this.actor.view);
     this.view.addChild(this.body);
