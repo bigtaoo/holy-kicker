@@ -303,6 +303,11 @@ outline (`"sticker": {"drawn": units, "flat": false}`, the same even 2.2-unit ed
 bugs, docs/reskin.md), which keeps them readable on dark or night-tinted ground; only the toad is
 also flattened (no `"flat": false`), because its source drawing is grainy, while flattening the
 others blotched the carp's scales, the fox's fur and the jiangshi's robe.
+The monk's standing ground props, the icon sheet and the relic and spell pictures in the
+world (staff, ruyi staff, bell, palm, fish, mountain) carry the same outline, added in place on the
+shipped sheets by `tools/sticker_sheet.py` (it outlines again on every run, so restore a sheet
+before rerunning). Left soft: the flat decals, the glowing props and icons, the round ground patch,
+and the thin grass, reeds, snow shrub and lanterns, whose blade tips an outline turns into specks.
 
 | Mechanic | Behaviour | Engine status |
 |---|---|---|
