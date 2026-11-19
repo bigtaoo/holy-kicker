@@ -12,5 +12,11 @@ baked by `tools/bake_mob.py` from the specs one folder up (`tongue`, `lantern`, 
   rate-limited, so `judge_cap.py` paints the official's black gauze cap with its two flat
   wings over it (`judge_v1.png`); `judge_v2.png` then has the brush handle and boots
   (hues 11-40) cooled. The prompt in `judge.txt` asks for the cap if it is ever redrawn.
+- Redraw (2026-11-19): the whole judge was drawn again with the gauze cap from the start
+  (`judge3L.png`, picked over `judge3M`/`judge3N`); `judge_cool.py` turns the brown brush
+  handle cold (`judge3_v1.png`, the baked source). The rig in `../judge.json` drops the
+  drawing's own grey ground shadow (the `shadow` part); `JUDGE_SCALE` stays 1.2, so the cap
+  makes him about a tenth taller than before, and `JUDGE_STYLE.staff` puts the spells at the
+  new brush tip.
 - The judge's sheet is 12 frames of 385x406, like the witch's; the empowered witch of this
   chapter's wave 25 reuses her chapter 3 sheet, tinted.
