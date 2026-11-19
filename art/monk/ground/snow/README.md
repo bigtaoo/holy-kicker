@@ -19,3 +19,12 @@ The shipped tile was regraded in place so the horde reads on it (as map 1 in 707
 ```
 python tools/make_tile.py <client/public/art/ch3/ground/snow.png as of d75c1eb> client/public/art/ch3/ground/snow.png whole --value 0.74 --sat 0.55 --contrast 0.65
 ```
+
+## Calmer regrade (2026-11-19)
+
+The dark blue pebbles still speckled the snow and pulled the eye from the horde: the same base,
+with less contrast and every pixel's saturation pulled toward the mean (`GROUND_LIGHT` unchanged):
+
+```
+python tools/make_tile.py <client/public/art/ch3/ground/snow.png as of d75c1eb> client/public/art/ch3/ground/snow.png whole --value 0.74 --sat 0.55 --contrast 0.4 --sat-spread 0.7
+```
