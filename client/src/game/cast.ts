@@ -20,14 +20,14 @@ import { wispSheet } from './wispSheet';
 // Who a run is played against, by chapter (engine CHAPTER_MOBS, CHAPTER_ELITES,
 // CHAPTER_BOSSES): the looks of the horde's kinds, the elites' views and the boss views.
 
-/** The elite is a big jiangshi. */
+/** The elite is a big jiangshi (the monk's a general, his twin a court lady). */
 export const ELITE_HEIGHT = 140;
 /** The toad king, chapter 2's elite, squat and wide. */
 const TOAD_KING_HEIGHT = 150;
 /** The wolf leader, chapter 3's elite: long rather than tall. */
 const WOLF_LEADER_HEIGHT = 125;
 const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff, violet: 0xb04cff };
-/** The big jiangshi is a darker steel blue than the horde; the mid-boss's second twin a slate violet. */
+/** The corgi's big jiangshi is a darker steel blue than the horde; the mid-boss's second twin a slate violet. */
 const ELITE_TINTS = [0x9fb2d8, 0xb4a6d4];
 /** Chapter 3's jiangshi are frosted a pale ice blue. */
 const FROST_TINT = 0xb8d0f0;
@@ -92,11 +92,13 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
 /** The elites' views; the mid-boss twins share a bar in a chapter. */
 export function makeElites(renderer: Renderer, world: Container, art: Art, scene: SceneOptions, chapter: boolean, shadowTex: Texture, topZ: number): EliteCrowd {
   const looks: Record<EliteKind, MobLook> = {
-    charger: { sheet: art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14], shadowTex },
+    charger: { sheet: art.elites?.general ?? art.jiangshi, height: ELITE_HEIGHT, facesLeft: true, shadow: [46, 14], shadowTex },
     toadKing: { sheet: art.marsh?.toadKing ?? art.jiangshi, height: TOAD_KING_HEIGHT, facesLeft: true, shadow: [70, 20], shadowTex },
     wolfLeader: { sheet: art.snow?.wolfLeader ?? art.jiangshi, height: WOLF_LEADER_HEIGHT, facesLeft: true, shadow: [64, 16], shadowTex },
     doorGod: { sheet: art.ghost?.doorGod ?? art.jiangshi, height: DOOR_GOD_HEIGHT, facesLeft: true, shadow: [60, 18], shadowTex },
   };
+  // the monk's second twin is the court lady (her rim baked in like the general's)
+  const lady: MobLook | null = art.elites ? { ...looks.charger, sheet: art.elites.lady } : null;
   // the elites alone get the sticker rim (outline.ts), baked when one of a kind first comes;
   // on the plain horde it glared
   const rimmed = new Map<EliteKind, MobLook>();
@@ -106,10 +108,11 @@ export function makeElites(renderer: Renderer, world: Container, art: Art, scene
     return look.sheet.meta.outline ? look : rimmed.get(kind) ?? rimmed.set(kind, { ...look, sheet: outlineSheet(renderer, look.sheet) }).get(kind)!;
   };
   const ring = () => makeRing(renderer, ELITE_RING[scene.eliteColor], 1.8, scene.eliteColor !== 'red');
-  // only the big jiangshi is tinted; the others are drawn in their own colours
-  const tint = (k: number, kind: EliteKind) => (kind === 'charger' ? ELITE_TINTS[k % ELITE_TINTS.length] : 0xffffff);
+  // only the corgi's big jiangshi, its horde's sheet, is tinted; the others are drawn in their own colours
+  const tint = (k: number, kind: EliteKind) => (kind === 'charger' && !art.elites ? ELITE_TINTS[k % ELITE_TINTS.length] : 0xffffff);
+  const lookOf = (k: number, kind: EliteKind) => (kind === 'charger' && lady && k % 2 === 1 ? lady : rim(kind));
   return new EliteCrowd(
-    (k, kind) => new EliteView(kind, world, rim(kind), ring(), tint(k, kind), scene.eliteRing, topZ),
+    (k, kind) => new EliteView(kind, world, lookOf(k, kind), ring(), tint(k, kind), scene.eliteRing, topZ),
     chapter ? new BossBar('boss.twins') : null,
   );
 }

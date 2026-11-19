@@ -9,6 +9,7 @@ import type { Platform } from './platform/types';
 import type { SceneOptions } from './game/scene';
 import { sliceDeco, TEMPLE_DECO, type DecoFrame, type DecoSheet } from './game/decoView';
 import WEBP_ART from './webpArt.json';
+import { THEME } from './theme';
 import { fill, loadLate, placeholder, toFill } from './lateArt';
 
 /** Loads of late art (lateArt.ts), started once the first screen's art is in. */
@@ -42,6 +43,12 @@ export async function loadArt(
   // screen (loadLobbyArt, chapterArt.ts loadChapterArt); where `lean`, what its opening never draws
   // comes in behind its first frame: the fox runners, the other relics, the awakened ones, the
   // Mountain Palm and the abbot's atlas
+  // the monk's elite jiangshi, the general and the court lady (art/monk/mobs/general.json, lady.json);
+  // the corgi's elites are its tinted horde sheet
+  const monkElites = THEME === 'corgi' ? null : Promise.all([
+    tick(loadSheet(platform, 'art/mobs/general', undefined, late)),
+    tick(loadSheet(platform, 'art/mobs/lady', undefined, late)),
+  ]);
   const [hero, monkIcons, jiangshi, fox, cuju, staff, fish, meteor, ruyi, morningBell, lion, palm, mountain, groundTex, decoSheet, boss, icons] = await Promise.all([
     tick(loadTao(platform, 'art/hero')),
     // the monks' portraits for the lobby, 256 px (tools/pack_icons.py --cell 256)
@@ -68,8 +75,9 @@ export async function loadArt(
     // 128 px cells, drawn from about 40 to 100 px
     tick(loadDeco(platform, 'art/icons/icons')),
   ]);
+  const elites = monkElites && await monkElites.then(([general, lady]) => ({ general, lady }));
   if (late) void loadLate(() => Promise.all(late.map((load) => load())).then(() => undefined));
-  return { hero, jiangshi, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
+  return { hero, jiangshi, elites: elites ?? undefined, fox, cuju, staff, fish, awakened: { meteor, ruyi, bell: morningBell, lion }, palm, mountain, stages: [
     { ground: groundTex, deco: decoSheet, style: TEMPLE_DECO, mist: null },
   ], monks: {}, boss, lobby: null, patrol: null, icons: new Map([...icons.frames, ...monkIcons.frames, ['fig_jiangshi', jiangshi.textures[0]]]), marsh: null, snow: null, ghost: null, peak: null, bosses: {} };
 }

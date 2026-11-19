@@ -14,6 +14,8 @@ export interface Art {
   /** The bought monks' rigs (art/monks, an art pack): each loaded by the first run played as him. */
   monks: Partial<Record<MonkId, TaoAsset>>;
   jiangshi: MobSheet;
+  /** The monk's elite jiangshi, drawn on their own: the general (the big one) and the court lady (the second twin); the corgi has none and tints its horde's. */
+  elites?: { general: MobSheet; lady: MobSheet };
   fox: MobSheet;
   cuju: Texture;
   staff: Texture;
