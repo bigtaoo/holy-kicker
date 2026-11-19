@@ -154,8 +154,9 @@ empowered. Planet grounds may use warm colours (magma, dunes); the bugs on them 
 
 Today (Holy Kicker): the monks are a 20-bone cutout rig (`client/src/game/tao/`) with seven
 hand-keyed clips in `art/monk/rig/hero_tao.json` (idle, run and five attacks), a whole-body mirror
-flip, one aimed arm and face swaps. Mobs are one warped loop each (`tools/bake_mob.py`, 8–12
-frames), plus a white flash and a corpse that tips over. Only the abbot is rigged among the
+flip, one aimed arm and face swaps. Mobs are baked loops (`tools/bake_mob.py`, 8–12 frames); the
+monk's regular mobs from small cut-out rigs (`tools/mob_rig.py`, docs/content.md "Enemies"), the rest
+one warped drawing each, plus a white flash and a corpse that tips over. Only the abbot is rigged among the
 bosses. What makes it stiff: no lean, no follow-through, no overlap, an instant turn, no death or
 spawn motion for anything but the hero, and every bug moving the same wobble.
 
