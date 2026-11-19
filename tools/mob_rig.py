@@ -91,7 +91,8 @@ def cut_parts(path, rig, holes=()):
             # shading and the neighbours' greys into a blur no sticker has
             known = own & (hsv[..., 2] >= DARK)
             near = known & (cv2.dilate(hidden.astype(np.uint8), disc(40)) > 0)
-            out[hidden] = _commonest(rgb[near if near.sum() > 50 else known])
+            pool = near if near.sum() > 50 else known if known.any() else own
+            out[hidden] = _commonest(rgb[pool])  # an all-dark part (a shadow) keeps its dark
             for h in entries:
                 if "fill" in h:
                     out[hidden & (np.array(poly_mask(src.size, [h["poly"]])) > 0)] = h["fill"]
