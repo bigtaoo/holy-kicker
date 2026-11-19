@@ -31,3 +31,18 @@ The shipped tile was regraded in place so the horde reads on it (as map 1 in 707
 ```
 python tools/make_tile.py <client/public/art/ch5/ground/cave.png as of d75c1eb> client/public/art/ch5/ground/cave.png whole --value 0.45 --sat 0.6 --contrast 1.0 --hue-shift 175
 ```
+
+## Redraw (2026-11-19)
+
+The old floor was a warm brown-grey crackle that still read as the ch4 paving at a glance.
+It is now generated again from `cave2c.txt` (weathered blue-grey bedrock shelves with gravel
+in the gaps; `cave2a` slate slabs looked like the street, `cave2b` ash came out blobby) and
+cut at 1024 px, drawn over the same span as before:
+
+```
+python tools/make_tile.py art/monk/ground/demon/cave2c_src.png client/public/art/ch5/ground/cave.png 144,0,1040,896 --size 1024 --value 0.45 --sat 0.45 --contrast 0.55 --quad
+```
+
+`--quad` blends four shifted copies instead of two: with the old half-shift blend the big
+plates showed straight seam lines where the copies' own seams met. Mean RGB 99,109,115 (cold);
+`GROUND_LIGHT` for map 5 is now 107 (`tools/ground_light.py`).

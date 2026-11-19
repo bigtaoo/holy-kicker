@@ -2,9 +2,12 @@
 toward a target brightness / saturation, so the ground stays behind the characters.
 usage: python make_tile.py <in> <out.png> <x0,y0,x1,y1> [--size 512] [--value 0.32]
                            [--sat 0.35] [--hue-shift 0] [--contrast 0.6] [--highlight 1]
-                           [--sat-spread 1]
+                           [--sat-spread 1] [--quad]
 Seamless: the crop is blended with a copy shifted by half its size through a mask that is
-opaque in the middle and clear at the edges, which hides the wrap-around seam.
+opaque in the middle and clear at the edges, which hides the wrap-around seam. That leaves a
+break where the edges' midpoints meet the shifted copy's own seam, which grass and snow hide but
+big stone plates show as straight lines; --quad blends four copies instead (as is, shifted
+across, shifted down, shifted both), each only where it has no seam, through narrow soft bands.
 A box of `whole` regrades a tile that is already seamless as it is: no crop, no seam blend."""
 import argparse
 import numpy as np
@@ -23,6 +26,7 @@ ap.add_argument("--highlight", type=float, default=1.0,
                 help="extra multiplier on the spread above the mean (tames white flowers and specks)")
 ap.add_argument("--sat-spread", type=float, default=1.0,
                 help="pulls each pixel's saturation toward the mean (greys flowers into the grass)")
+ap.add_argument("--quad", action="store_true", help="four-copy seam blend (no straight lines)")
 ap.add_argument("--colors", type=int, default=128, help="palette size of the saved PNG")
 a = ap.parse_args()
 
@@ -38,7 +42,17 @@ n = a.size
 t = np.abs(np.linspace(-1, 1, n))
 w1 = np.clip((1 - t) * 2.5, 0, 1)
 w = np.minimum.outer(w1, w1)[..., None]
-if not whole:
+if not whole and a.quad:
+    # f is 1 in the middle half and 0 at the edges, turning over soft bands round the quarters
+    q = np.clip((0.5 - t) / 0.16 + 0.5, 0, 1)
+    f = q * q * (3 - 2 * q)
+    fy, fx = f[:, None, None], f[None, :, None]
+    h = n // 2
+    across = np.roll(px, h, axis=1)
+    down = np.roll(px, h, axis=0)
+    both = np.roll(px, (h, h), axis=(0, 1))
+    px = px * fx * fy + across * (1 - fx) * fy + down * fx * (1 - fy) + both * (1 - fx) * (1 - fy)
+elif not whole:
     shifted = np.roll(px, (n // 2, n // 2), axis=(0, 1))
     px = px * w + shifted * (1 - w)
 

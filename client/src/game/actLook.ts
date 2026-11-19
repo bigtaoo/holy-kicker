@@ -15,7 +15,7 @@ const NIGHT = [0xffffff, 0x9cacd8, 0xa49ad0, 0x8e8cbc];
  * least that light keeps the full night.
  */
 const GROUND_LIGHT: Record<Theme, readonly number[]> = {
-  monk: [109, 117, 171, 119, 110],
+  monk: [109, 117, 171, 119, 107],
   corgi: [133, 61, 93, 57, 58],
 };
 
