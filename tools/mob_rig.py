@@ -56,6 +56,10 @@ def cut_parts(path, rig, holes=()):
     outside = np.pad((closed == 0).astype(np.uint8), 1, constant_values=1)
     cv2.floodFill(outside, None, (0, 0), 2)
     fg[outside[1:-1, 1:-1] != 2] = 255
+    if holes:  # paper the spec seeds as a hole stays clear, however closed its mouth is
+        _, comp = cv2.connectedComponents((np.array(bg) > 0).astype(np.uint8), connectivity=4)
+        for fx, fy in holes:
+            fg[comp == comp[round(fy * src.height), round(fx * src.width)]] = 0
     rgb = np.array(src)
     hsv = cv2.cvtColor(rgb, cv2.COLOR_RGB2HSV)
     parts = rig["parts"]

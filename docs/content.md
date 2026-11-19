@@ -291,13 +291,14 @@ skilled players a way to farm faster.
 
 **Mechanics first, art second.** Each chapter introduces one new enemy mechanic; later
 chapters mix old ones. Mobs are baked frame sequences (`tools/bake_mob.py`), so a recolour
-or a new single image is cheap; elites and bosses cost a rig each. Eleven regular monk mobs
-are baked from a small cut-out rig each (spec key `"rig"`, `tools/mob_rig.py`): parts claimed by
+or a new single image is cheap; elites and bosses cost a rig each. Every monk mob and elite
+is baked from a small cut-out rig (bosses keep their skeletal rigs) (spec key `"rig"`, `tools/mob_rig.py`): parts claimed by
 polygon from one drawing and posed per frame instead of warping the whole sheet, which read as a
 sheet of paper scaling. Each part's colour is painted under the parts in front of it, cut edges
 fade into the part behind, narrow interior gaps are inpainted and wide holes stay open and
 outlined, so poses open no seams; a part with `"drop": true` takes its pixels out of the figure
-(stray ground or paper between legs).
+(stray ground or paper between legs). `"holes"` seeds stay clear even where the rig's seal
+closes their mouth (the lantern's tail curl).
 
 | Mechanic | Behaviour | Engine status |
 |---|---|---|
