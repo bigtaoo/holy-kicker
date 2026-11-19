@@ -162,9 +162,9 @@ export class LobbyScreen implements Screen {
     this.view.addChild(new Graphics().rect(0, -f.h, f.w, 3 * f.h).fill(COLORS.bg), this.scenery(f));
     this.figure = null;
     this.play = null;
-    this.drift = new LobbyDrift(f.w, f.h - TOP_H - TAB_H, this.save.cleared);
-    this.drift.view.y = TOP_H;
-    this.view.addChild(this.drift.view);
+    // the specks drift over the painted stage only (Play, Gear); on the menu tabs they were stray dots
+    this.drift = this.tab === 'play' || this.tab === 'gear' ? new LobbyDrift(f.w, f.h - TOP_H - TAB_H, this.save.cleared) : null;
+    if (this.drift) this.view.addChild(this.drift.view).y = TOP_H;
     // a portal account names the player and a guest on its host has none; everyone else gets a
     // die to roll a new name with
     const reroll = !this.names.rolls() ? null : () => {

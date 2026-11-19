@@ -107,10 +107,10 @@ function overlap(a: { x: number; y: number; width: number; height: number }, b: 
   return (w * h) / Math.max(1, a.width * a.height);
 }
 
-/** The lobby's view children a tab drew: after the drift and the top bar, before the tab bar. */
+/** The lobby's view children a tab drew: after the ground, scenery, drift (Play and Gear only) and top bar, before the tab bar. */
 function tabContent(s: Lobby): Container[] {
   const kids = s.view.children;
-  const from = kids.indexOf(s.drift!.view) + 2;
+  const from = s.drift ? kids.indexOf(s.drift.view) + 2 : 3;
   const to = kids.findIndex((k) => leaves(k).some((n) => n instanceof Text && n.text === t('tab.shop')));
   return kids.slice(from, to);
 }

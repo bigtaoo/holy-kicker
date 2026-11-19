@@ -113,9 +113,16 @@ function leaf(color: number): Graphics {
     .moveTo(0, -8).lineTo(0, 9).stroke({ color: COLORS.outline, width: 1.5 });
 }
 
-/** A soft dot of light, 20 units across. */
+/**
+ * A soft dot of light, 20 units across: a glow in steps round a small bright heart, no outline
+ * (an inked rim made it a hard disc that read as a badge or a stray UI dot, not as light).
+ */
 function mote(color: number): Graphics {
-  return new Graphics().circle(0, 0, 10).fill({ color, alpha: 0.35 }).circle(0, 0, 5.5).fill(color).stroke({ color: COLORS.outline, width: 1.5, alpha: 0.6 });
+  return new Graphics()
+    .circle(0, 0, 10).fill({ color, alpha: 0.14 })
+    .circle(0, 0, 7).fill({ color, alpha: 0.28 })
+    .circle(0, 0, 4.5).fill(color)
+    .circle(-1, -1, 2).fill({ color: 0xffffff, alpha: 0.85 });
 }
 
 /** A six-armed snowflake 20 units across: a soft outline under each arm, then the arm. */
