@@ -9,6 +9,7 @@ sheet, so the game draws them as before.
       {"name": "leg_b", "parent": "root",
        "poly": [[x, y], ...],         # the region of the drawing it takes (absent: "rest")
        "rest": true,                  # takes every pixel no other part claimed
+       "drop": true,                  # its pixels leave the figure (paper, a ground shadow)
        "not_hsv": [[h, s, v], [h, s, v]], "not_grow": 8,  # leaves paint in this OpenCV HSV
                                       #   range to others, and the outline within not_grow px of it
        "hidden": [[[x, y], ...]],     # covered at rest by parts in front: filled from the part's
@@ -21,6 +22,10 @@ sheet, so the game draws them as before.
                                       #   part they touch most
     "clean": 4,                       # optional: spikes thinner than twice this (px) are cut
                                       #   off each posed frame before it is outlined again
+    "fade": 5,                        # optional: px over which a cut through paint fades into
+                                      #   the part behind it
+    "underlap": 24,                   # optional: how far (px) each part runs on, flat, under
+                                      #   the parts in front of it, so a turn opens no crack
     "claim": ["head", ...],           # optional: who takes contested pixels first (default:
                                       #   front to back)
     "bones": {"body": {"pivot": [x, y], "parent": "root"}},  # optional joints with no picture
@@ -74,35 +79,69 @@ def cut_parts(path, rig, holes=()):
         if p.get("rest"):
             owned[p["name"]] = (fg > 0) & ~taken
     owned = _tidy(owned, rig.get("crumb", 400))
+    dropped = {p["name"] for p in parts if p.get("drop")}
+    parts = [p for p in parts if p["name"] not in dropped]
     union = np.zeros(fg.shape, bool)
-    for m in owned.values():
-        union |= m
+    for name, m in owned.items():
+        if name not in dropped:
+            union |= m
     fg = union.astype(np.uint8) * 255
     soft = cv2.GaussianBlur(fg.astype(np.float32) / 255, (0, 0), 0.6)  # cutout.py's feather
     images = {}
-    for p in parts:
+    lap = rig.get("underlap", 24)
+    # kept off the silhouette, where a turning part would carry it out past its neighbour
+    inner = cv2.erode(fg, disc(max(6, lap // 2))) > 0
+    for i, p in enumerate(parts):
         own = owned[p["name"]]
         entries = [h if isinstance(h, dict) else {"poly": h} for h in p.get("hidden", [])]
         hidden = (np.array(poly_mask(src.size, [h["poly"] for h in entries])) > 0) & (fg > 0) & ~own
         out = rgb.copy()
+        # the strip under the parts in front, filled flat like a hidden area but with no outline
+        # where it ends: it only shows in the crack a turning neighbour opens
+        front = np.zeros(fg.shape, bool)
+        for q in parts[i + 1:]:
+            front |= owned[q["name"]]
+        under = (cv2.dilate(own.astype(np.uint8), disc(lap)) > 0) & front & inner & ~own & ~hidden if lap else front & False
+        fade = rig.get("fade", 5)
+        if under.any():
+            # flat, except a few px next to the part: there it keeps the drawing, so the fading
+            # cut of the part in front blends into the same picture at rest
+            close = under & (cv2.dilate(own.astype(np.uint8), disc(fade + 3)) > 0)
+            out[under & ~close] = _paint(own, under, rgb, hsv)
         if hidden.any():
             # paint from the part's own colours only, not its outline or the neighbours
             # one flat colour, the part's commonest paint next to it: an inpaint smears the
             # shading and the neighbours' greys into a blur no sticker has
-            known = own & (hsv[..., 2] >= DARK)
-            near = known & (cv2.dilate(hidden.astype(np.uint8), disc(40)) > 0)
-            pool = near if near.sum() > 50 else known if known.any() else own
-            out[hidden] = _commonest(rgb[pool])  # an all-dark part (a shadow) keeps its dark
+            out[hidden] = _paint(own, hidden, rgb, hsv)
             for h in entries:
                 if "fill" in h:
                     out[hidden & (np.array(poly_mask(src.size, [h["poly"]])) > 0)] = h["fill"]
             solid = (own | hidden).astype(np.uint8)
             ring = (solid > 0) & (cv2.erode(solid, disc(OUTLINE // 2 + 1)) == 0) & hidden
             out[ring] = OUTLINE_RGB
-        alpha = np.where(hidden, 1.0, np.where(own, soft, 0)).astype(np.float32)
+        # a cut through paint fades into the part behind over a few px: a hard straight edge
+        # shows as a line across the fur the moment the part turns
+        behind = np.zeros(fg.shape, bool)
+        for q in parts[:i]:
+            behind |= owned[q["name"]]
+        edge = soft
+        if fade and behind.any():
+            d = cv2.distanceTransform((~behind).astype(np.uint8), cv2.DIST_L2, 5)
+            edge = np.minimum(soft, np.clip((d + 0.5) / fade, 0, 1))
+        alpha = np.where(hidden | under, 1.0, np.where(own, edge, 0)).astype(np.float32)
         a = np.dstack([out.astype(np.float32) / 255 * alpha[..., None], alpha])
         images[p["name"]] = a
     return images, box[:2]
+
+
+def _paint(own, region, rgb, hsv):
+    """The flat colour a part's covered region takes: its commonest paint near the region,
+    not its outline or the neighbours'. A mostly dark part (a shadow) keeps its dark."""
+    known = own & (hsv[..., 2] >= DARK)
+    if known.sum() < 0.3 * own.sum():
+        known = own
+    near = known & (cv2.dilate(region.astype(np.uint8), disc(40)) > 0)
+    return _commonest(rgb[near if near.sum() > 50 else known if known.any() else own])
 
 
 def _commonest(px):
@@ -116,18 +155,25 @@ def _commonest(px):
 def _clean(frame, r=4):
     """The posed figure's silhouette without the spikes and crumbs a cut edge leaves when its
     part turns, closed where parts parted, and outlined again all round: a cut edge turned out
-    has no outline of its own."""
+    has no outline of its own. A crack that opened inside takes the paint beside it; a hole
+    too wide to be a crack (the ground seen between legs) stays open, outlined."""
     solid = (frame[..., 3] > 0.5).astype(np.uint8)
     kept = cv2.morphologyEx(solid, cv2.MORPH_OPEN, disc(r))
     kept = cv2.morphologyEx(kept, cv2.MORPH_CLOSE, disc(r))
     outside = np.pad(1 - kept, 1, constant_values=1)
     cv2.floodFill(outside, None, (0, 0), 2)
-    kept = (outside[1:-1, 1:-1] != 2).astype(np.uint8)
+    hole = (outside[1:-1, 1:-1] != 2) & (kept == 0)
+    wide = cv2.dilate(cv2.erode(hole.astype(np.uint8), disc(r + 3)), disc(r + 4)) > 0
+    kept = ((kept > 0) | (hole & ~wide)).astype(np.uint8)
     soft = cv2.GaussianBlur(kept.astype(np.float32), (0, 0), 0.8)
-    ink = np.array(OUTLINE_RGB, np.float32) / 255
     ring = (kept > 0) & (cv2.erode(kept, disc(OUTLINE // 2 + 1)) == 0)
     straight = frame[..., :3] / np.maximum(frame[..., 3:], 1e-4)
-    straight[ring | ((kept > 0) & (frame[..., 3] < 0.5))] = ink
+    gap = (kept > 0) & (frame[..., 3] < 0.5) & ~ring
+    if gap.any():
+        img = (np.clip(straight, 0, 1) * 255).astype(np.uint8)
+        img = cv2.inpaint(img, gap.astype(np.uint8), 5, cv2.INPAINT_TELEA)
+        straight[gap] = img[gap].astype(np.float32) / 255
+    straight[ring] = np.array(OUTLINE_RGB, np.float32) / 255
     return np.dstack([straight * soft[..., None], soft]).astype(np.float32)
 
 
@@ -197,6 +243,8 @@ def rig_frames(spec, path, value, pads, size, count):
 
         frame = np.zeros((H, W, 4), np.float32)
         for p in rig["parts"]:
+            if p["name"] not in images:
+                continue
             m = place(p["name"]).copy()
             m[:2, 2] += shift
             layer = cv2.warpAffine(images[p["name"]], m[:2], (W, H), flags=cv2.INTER_LINEAR,
@@ -215,6 +263,8 @@ def preview(spec, path, out):
     board = np.zeros((h + 200, w * 2, 4), np.float32)
     board[..., :3], board[..., 3] = 0.45, 1
     for p in spec["rig"]["parts"]:
+        if p["name"] not in images:
+            continue
         im = images[p["name"]]
         for ox, oy in ((0, 100), (w + (p["pivot"][0] - cx) * 0.4, 100 + (p["pivot"][1] - cy) * 0.4)):
             m = np.float32([[1, 0, ox], [0, 1, oy]])

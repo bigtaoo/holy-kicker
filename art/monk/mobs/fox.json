@@ -355,7 +355,8 @@
      500,
      620
     ],
-    "rest": true
+    "rest": true,
+    "drop": true
    },
    {
     "name": "gaps",
@@ -429,7 +430,8 @@
     "pivot": [
      500,
      620
-    ]
+    ],
+    "drop": true
    },
    {
     "name": "gaps2",
@@ -495,7 +497,8 @@
     "pivot": [
      500,
      620
-    ]
+    ],
+    "drop": true
    },
    {
     "name": "head",
@@ -645,9 +648,6 @@
      ]
     }
    },
-   "ground": {
-    "dx": -20000
-   },
    "torso": {
     "rot": {
      "sin": 1.5,
@@ -697,12 +697,6 @@
      "cycles": 2,
      "phase": 0.25
     }
-   },
-   "gaps": {
-    "dx": -20000
-   },
-   "gaps2": {
-    "dx": -20000
    }
   }
  }
