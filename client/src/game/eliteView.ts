@@ -31,6 +31,8 @@ const FLAT = 0.45;
 /** How much the toad king swells at the end of its wind-up, and the wolf leader before it howls. */
 const SWELL = 0.18;
 const HOWL_SWELL = 0.14;
+/** The mid-boss twins stand this much bigger than a wave's elite. */
+const TWIN_SWELL = 0.2;
 
 export class EliteView {
   readonly mob: MobView;
@@ -62,7 +64,8 @@ export class EliteView {
     return makeRing(renderer, color, 1.8, outline);
   }
 
-  draw(e: Elite | null, alpha: number, dt: number, hx: number, hy: number): void {
+  /** `twin`: one of the mid-boss twins, drawn bigger than a wave's elite so it reads as a boss. */
+  draw(e: Elite | null, alpha: number, dt: number, hx: number, hy: number, twin = false): void {
     this.mob.setVisible(!!e);
     this.ring.visible = !!e;
     this.badges.set(e?.affixes ?? 0, e?.guard ?? 0);
@@ -79,6 +82,7 @@ export class EliteView {
       : !charger && e.phase === 'aim' ? SWELL * Math.min(1, (e.t + alpha) / TOAD_KING.windup)
       : e.phase === 'howl' ? HOWL_SWELL * Math.min(1, (e.t + alpha) / WOLF_LEADER.howl)
       : 0;
+    if (twin) this.mob.swell += TWIN_SWELL;
     if (e.stun > 0 || e.phase === 'howl') speed = 0;
     else if (statue && e.phase === 'aim') {
       speed = 0;
@@ -94,7 +98,7 @@ export class EliteView {
     const face = statue || (charger && (e.phase === 'aim' || e.phase === 'dash')) ? e.vx : hx - x;
     this.mob.update(dt, x, y, face, speed);
     this.ring.position.set(x, y);
-    this.badges.view.position.set(x, y - this.height - 40);
+    this.badges.view.position.set(x, y - this.height * (twin ? 1 + TWIN_SWELL : 1) - 40);
     if (this.lane.visible) this.drawLane(e, alpha);
     if (statue) this.drawShield(e, x, y);
   }
@@ -176,7 +180,7 @@ export class EliteCrowd {
     }
     for (let k = 0; k < this.views.length; k++) {
       const e = elites.find((x) => x.id === this.ids[k]) ?? null;
-      this.views[k].draw(e, alpha, dt, hx, hy);
+      this.views[k].draw(e, alpha, dt, hx, hy, twins);
     }
     if (!this.bar) return;
     this.bar.view.visible = twins && elites.length > 0;

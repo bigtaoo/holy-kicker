@@ -306,8 +306,15 @@ others blotched the carp's scales, the fox's fur and the jiangshi's robe.
 The monk's standing ground props, the icon sheet and the relic and spell pictures in the
 world (staff, ruyi staff, bell, palm, fish, mountain) carry the same outline, added in place on the
 shipped sheets by `tools/sticker_sheet.py` (it outlines again on every run, so restore a sheet
-before rerunning). Left soft: the flat decals, the glowing props and icons, the round ground patch,
-and the thin grass, reeds, snow shrub and lanterns, whose blade tips an outline turns into specks.
+before rerunning). Left soft: the flat decals, the glowing props and icons, the round ground patch
+and the lanterns. The thin grass tuft, reeds and snow shrub, whose blade tips a traced outline
+turns into specks, get one round their clump instead: the blades closed into one silhouette, the
+gaps filled with the clump's shadow colour, the tips left showing past the line (`CLUMP_DECO`).
+The temple's horde jiangshi come in three robes, by pool slot: their own teal, a dusk blue and a
+grey lilac (multiply tints, `JIANGSHI_TINTS` in `cast.ts`; chapter 3's stay frosted). The temple
+ground tile was calmed on 2026-11-19 at the same brightness: `tools/make_tile.py --highlight`
+damps only the bright side of the contrast and `--sat-spread` greys the flowers and dirt spots
+toward the grass (the command is in `art/monk/ground/grass.txt`).
 
 | Mechanic | Behaviour | Engine status |
 |---|---|---|
@@ -340,7 +347,8 @@ and the thin grass, reeds, snow shrub and lanterns, whose blade tips an outline 
   abbot had 1200), the second's first charge 1.5 s later; they take turns, one aims only
   while the other is not charging, so two lanes never cross the hero at once. The wave
   lasts until both fall; they share a health bar ("Twin Jiangshi" / 双煞僵尸) and the
-  second is tinted slate violet. Balance (40 runs, casual): 35/40 won, level 34; the twins
+  second is tinted slate violet; both stand a fifth bigger than a wave's elite (view only,
+  `TWIN_SWELL`). Balance (40 runs, casual): 35/40 won, level 34; the twins
   fall in 27–118 s, median about 50 s; skilled 39/40.
 - **Chapter 2's kinds implemented** (`RunConfig.chapter`, `CHAPTER_MOBS`, `EMERGE`, `SHOOTER`
   in `engine/config.ts`, `engine/systems/marsh.ts`, ENGINE_VERSION 16). Each chapter has its

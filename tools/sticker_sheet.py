@@ -18,7 +18,8 @@ from PIL import Image
 sys.path.insert(0, str(Path(__file__).parent))
 from pack_deco import to_palette  # noqa: E402
 from sticker_art import SPECK, drop_specks  # noqa: E402
-from sticker_pass import OUTLINE, OUT_SHARE, sticker  # noqa: E402
+import cv2  # noqa: E402
+from sticker_pass import OUTLINE, OUT_SHARE, _disc, _outline, sticker  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 PUB = ROOT / "client/public/art"
@@ -28,10 +29,15 @@ DECO = {"ground/deco": "TEMPLE", "ch2/ground/marsh_deco": "MARSH", "ch3/ground/s
         "ch4/ground/street_deco": "GHOST", "ch5/ground/cave_deco": "PEAK"}
 # left soft: the see-through decals lying flat in the ground (an outline would stand them up),
 # the glowing ones (an outline turns glow into a dark blot), the code-drawn round patch, and the
-# thin blades and twigs (grass, reeds, the snow shrub, the lanterns' grassy feet), whose every tip
-# and loose blade an outline turns into a black speck
+# lanterns, whose grassy feet an outline turns into black specks
 SKIP_DECO = {"patch", "dirt_patch", "puddle", "lily", "ice", "papers", "bones", "brazier", "crystals",
-             "grass_tuft", "reeds", "shrub", "lantern", "lantern_post"}
+             "lantern", "lantern_post"}
+# thin blades and twigs: an outline traced round every tip turns into black specks, so these get
+# one round the clump's closed silhouette instead (clump()), the tips left sticking out over it;
+# the value is the least r+g+b a pixel needs to count as the clump (the shrub: its snow, not twigs)
+CLUMP_DECO = {"grass_tuft": 0, "reeds": 0, "shrub": 420}
+CLUMP_CLOSE = 3  # world units: gaps between blades narrower than this are filled
+CLUMP_OPEN = 1.5  # world units: spikes thinner than this are trimmed off the silhouette
 # the pebbles, crumbs and clods strewn round a prop's foot: outlined, each turns into a black dot
 DECO_SPECK = 3 * SPECK
 ICON_UNITS = 96  # about the size the cards and the HUD show a 128 px icon cell (corgi_art.py)
@@ -62,9 +68,47 @@ def outline(im, units, speck=SPECK):
     page = Image.new("RGBA", (w + 2 * pad, h + 2 * pad))
     page.alpha_composite(im, (pad, pad))
     page = drop_specks(np.array(page), (speck * scale) ** 2)
-    out = Image.fromarray(sticker([page], scale, flat=False)[0])
-    out = out.crop(out.getchannel("A").getbbox())
     # back into the old picture's box, keeping its place (props stand on their bottom edge)
+    return fit(Image.fromarray(sticker([page], scale, flat=False)[0]), im)
+
+
+def clump(im, units, light=0):
+    """<im> outlined round its clump: the solid pixels (and, with <light>, only the bright ones)
+    closed into one silhouette, the gaps filled with the clump's shadow colour, outlined, and laid
+    over the picture so the thin tips still show past the line; fitted back like outline()."""
+    w, h = im.size
+    scale = max(w, h) / units
+    pad = int(np.ceil(OUTLINE * scale)) + 2
+    a = np.zeros((h + 2 * pad, w + 2 * pad, 4), np.uint8)
+    a[pad:pad + h, pad:pad + w] = np.array(im)
+    solid = a[:, :, 3] >= 230
+    if light:
+        solid &= a[:, :, :3].astype(int).sum(2) >= light
+    body = cv2.morphologyEx(solid.astype(np.uint8), cv2.MORPH_CLOSE, _disc(CLUMP_CLOSE * scale))
+    body = cv2.morphologyEx(body, cv2.MORPH_OPEN, _disc(CLUMP_OPEN * scale))
+    n, lab, st, _ = cv2.connectedComponentsWithStats(body)
+    if n < 2:
+        return im
+    body = lab == 1 + np.argmax(st[1:, cv2.CC_STAT_AREA])
+    rgb = a[:, :, :3].astype(np.float32)
+    px = rgb[solid]
+    lum = px.sum(1)
+    shade = np.median(px[lum <= np.percentile(lum, 40)], axis=0) * 0.8
+    al = a[:, :, 3:].astype(np.float32) / 255
+    base = np.where(body[..., None], shade * (1 - al) + rgb * al, 0)
+    out, aa = _outline(base, np.where(body, 255.0, 0), np.zeros(body.shape, bool), scale, True)
+    ring = np.dstack([np.clip(out, 0, 255), aa * 255]).round().astype(np.uint8)
+    ring[aa <= 0] = 0
+    res = Image.fromarray(a)
+    res.alpha_composite(Image.fromarray(ring))
+    return fit(res, im)
+
+
+def fit(out, im):
+    """<out> shrunk into <im>'s opaque box, standing on its bottom edge, on a page of <im>'s size."""
+    w, h = im.size
+    box = im.getchannel("A").getbbox()
+    out = out.crop(out.getchannel("A").getbbox())
     bw, bh = box[2] - box[0], box[3] - box[1]
     k = min(bw / out.width, bh / out.height, 1.0)
     out = out.resize((max(1, round(out.width * k)), max(1, round(out.height * k))), Image.LANCZOS)
@@ -81,7 +125,8 @@ def save_like(im, path, mode):
 
 
 def sheet(key, units_of, speck=SPECK):
-    """Outlines every frame of <key>.png whose units_of(name) is not None."""
+    """Outlines every frame of <key>.png whose units_of(name) is not None (CLUMP_DECO's round
+    their clump)."""
     png = PUB / f"{key}.png"
     src = Image.open(png)
     mode = src.mode
@@ -92,7 +137,11 @@ def sheet(key, units_of, speck=SPECK):
         if units is None:
             continue
         r = (f["x"], f["y"], f["x"] + f["w"], f["y"] + f["h"])
-        cell = outline(page.crop(r), units, speck)
+        cell = page.crop(r)
+        if f["name"] in CLUMP_DECO:
+            cell = clump(cell, units, CLUMP_DECO[f["name"]])
+        else:
+            cell = outline(cell, units, speck)
         page.paste(Image.new("RGBA", cell.size), r[:2])
         page.alpha_composite(cell, r[:2])
     patch = next((f for f in frames if f["name"] == "patch"), None)

@@ -1,7 +1,8 @@
 """Turns the inner part of a generated ground picture into a seamless tile and pulls it
 toward a target brightness / saturation, so the ground stays behind the characters.
 usage: python make_tile.py <in> <out.png> <x0,y0,x1,y1> [--size 512] [--value 0.32]
-                           [--sat 0.35] [--hue-shift 0] [--contrast 0.6]
+                           [--sat 0.35] [--hue-shift 0] [--contrast 0.6] [--highlight 1]
+                           [--sat-spread 1]
 Seamless: the crop is blended with a copy shifted by half its size through a mask that is
 opaque in the middle and clear at the edges, which hides the wrap-around seam.
 A box of `whole` regrades a tile that is already seamless as it is: no crop, no seam blend."""
@@ -18,6 +19,10 @@ ap.add_argument("--value", type=float, default=0.32, help="target mean brightnes
 ap.add_argument("--sat", type=float, default=0.35, help="saturation multiplier")
 ap.add_argument("--hue-shift", type=float, default=0.0, help="degrees")
 ap.add_argument("--contrast", type=float, default=0.6, help="brightness spread multiplier")
+ap.add_argument("--highlight", type=float, default=1.0,
+                help="extra multiplier on the spread above the mean (tames white flowers and specks)")
+ap.add_argument("--sat-spread", type=float, default=1.0,
+                help="pulls each pixel's saturation toward the mean (greys flowers into the grass)")
 ap.add_argument("--colors", type=int, default=128, help="palette size of the saved PNG")
 a = ap.parse_args()
 
@@ -41,9 +46,11 @@ if not whole:
 rgb8 = Image.fromarray((px * 255).round().astype(np.uint8))
 hsv = np.asarray(rgb8.convert("HSV"), dtype=np.float32) / 255
 hsv[..., 0] = (hsv[..., 0] + a.hue_shift / 360) % 1
-hsv[..., 1] = np.clip(hsv[..., 1] * a.sat, 0, 1)
+sat = hsv[..., 1]
+hsv[..., 1] = np.clip((sat.mean() + (sat - sat.mean()) * a.sat_spread) * a.sat, 0, 1)
 v = hsv[..., 2]
-hsv[..., 2] = np.clip(a.value + (v - v.mean()) * a.contrast, 0, 1)
+d = (v - v.mean()) * a.contrast
+hsv[..., 2] = np.clip(a.value + np.where(d > 0, d * a.highlight, d), 0, 1)
 out = Image.fromarray((hsv * 255).round().astype(np.uint8), "HSV").convert("RGB")
 rgb = np.asarray(out, dtype=np.float32) / 255
 out.quantize(a.colors, method=Image.Quantize.MEDIANCUT).save(a.dst, optimize=True)

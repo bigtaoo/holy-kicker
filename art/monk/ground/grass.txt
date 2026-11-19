@@ -1,3 +1,4 @@
 Seamless tileable top-down game ground texture, square. Dark olive-green meadow grass with small patches of brown earth and a few tiny white flowers. Flat colours, cartoon sticker style, simple leaf strokes with dark outlines, no lighting, no gradient, no shadows, no perspective, no objects, no characters, evenly spread detail, low contrast, medium-dark value.
 
 Regraded 2026-11-18 (brighter, for mob readability): python tools/make_tile.py art/monk/ground/grass.png client/public/art/ground/grass.png 260,130,780,650 --value 0.46 --sat 0.7 --contrast 0.75
+Calmed 2026-11-19 (same brightness, quieter flowers and dirt spots): python tools/make_tile.py art/monk/ground/grass.png client/public/art/ground/grass.png 260,130,780,650 --value 0.46 --sat 0.7 --contrast 0.5 --highlight 0.5 --sat-spread 0.5

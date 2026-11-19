@@ -31,6 +31,8 @@ const ELITE_RING: Record<EliteColor, number> = { red: 0xe0303a, white: 0xffffff,
 const ELITE_TINTS = [0x9fb2d8, 0xb4a6d4];
 /** Chapter 3's jiangshi are frosted a pale ice blue. */
 const FROST_TINT = 0xb8d0f0;
+/** The temple's jiangshi come in three robes: their own teal, a dusk blue and a grey lilac (multiply tints, cold only). */
+const JIANGSHI_TINTS = [0xffffff, 0xb8c8f4, 0xd0c4e4];
 /** The door god, chapter 4's elite: a big statue. */
 const DOOR_GOD_HEIGHT = 155;
 /** The Bone Witch is drawn a little taller than the abbot, the Underworld Judge taller still. */
@@ -61,7 +63,7 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
   const peak = map >= 5 ? art.peak : null;
   const walkers = peak ? [look(art.jiangshi, 'chaser', [27, 9]), look(ghost, 'chaser', [27, 9]), look(waterGhost, 'chaser', [27, 9])]
     : map === 2 || (market && map >= 4) ? [look(ghost, 'chaser', [27, 9])]
-      : jiangshi.map((sheet) => look(sheet, 'chaser', [27, 9], true, map === 3 ? FROST_TINT : undefined));
+      : jiangshi.flatMap((sheet) => (map === 3 ? [FROST_TINT] : JIANGSHI_TINTS).map((t) => look(sheet, 'chaser', [27, 9], true, t)));
   return {
     chaser: walkers,
     // a white tint: the shadow is drawn in its own colours, not the fox's lavender
