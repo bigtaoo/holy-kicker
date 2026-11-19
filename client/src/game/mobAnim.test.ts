@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { RECOIL, recoilTilt, swayTilt, CORPSE_LIFE, corpseAlpha, frameAt, knockDown, stepCorpse, type SheetMeta, holdsStill, SETTLE, stepPace, depthShade, greyTint, DEPTH_SHADE } from './mobAnim';
+import { RECOIL, recoilTilt, swayTilt, CORPSE_LIFE, corpseAlpha, corpseRise, corpseScale, frameAt, knockDown, stepCorpse, type SheetMeta, holdsStill, SETTLE, stepPace, depthShade, greyTint, DEPTH_SHADE } from './mobAnim';
 
 const meta: SheetMeta = { frames: 10, flash: 10, cols: 4, frameW: 1, frameH: 1, fps: 20, anchor: [0, 0], height: 1, lift: [] };
 
@@ -30,6 +30,25 @@ describe('corpse', () => {
     expect(c.x).toBeGreaterThan(50);
     expect(c.tilt).toBeCloseTo(Math.PI / 2);
     expect(corpseAlpha(c)).toBe(0);
+  });
+
+  it('stretches on the blow, squashes flat on landing, shrinks and rises as it fades', () => {
+    const c = knockDown(0, 0, 1, 0, 400);
+    const s = { x: 1, y: 1 };
+    corpseScale(c, s);
+    expect(s.x).toBeLessThan(1);
+    expect(s.y).toBeGreaterThan(1);
+    let flattest = 1;
+    while (stepCorpse(c, 1 / 60)) {
+      corpseScale(c, s);
+      if (c.landed >= 0 && c.age - c.landed < 0.16) flattest = Math.min(flattest, s.x);
+      if (c.age < CORPSE_LIFE - 0.22) expect(corpseRise(c)).toBe(0);
+    }
+    expect(c.landed).toBeGreaterThan(0);
+    expect(flattest).toBeLessThan(0.8);
+    corpseScale(c, s);
+    expect(s.x).toBeLessThan(0.5);
+    expect(corpseRise(c)).toBeGreaterThan(20);
   });
 });
 

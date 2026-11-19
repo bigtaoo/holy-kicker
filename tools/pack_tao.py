@@ -12,6 +12,8 @@ spec.json (paths relative to the spec file):
     "scale": 0.35,                       # source px -> exported px (atlas resolution)
     "variants": {"face": ["face_hurt"]}, # extra images a slot can swap to
     "aliases": {"face_hurt": "face"},    # optional: a variant drawn with another image's frame
+    "outline": 1.4,                      # optional: world units of sticker outline drawn round
+                                         # the whole figure at run time (TaoActor.outline)
     "animations": {
       "run": {"duration": 0.6, "loop": true, "ease": "ease-in-out",
               "keys": [{"t": 0, "rotate": {"torso": -4}, "translate": {"root": [0, -10]},
@@ -131,6 +133,8 @@ def build(spec_path, scale=None):
         "variants": {k: [k] + v for k, v in spec.get("variants", {}).items()},
         "animations": {k: bake_animation(a, done, s) for k, a in spec["animations"].items()},
     }
+    if "outline" in spec:
+        skeleton["outline"] = spec["outline"]
     return skeleton, atlas
 
 

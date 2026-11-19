@@ -2,6 +2,7 @@
  "version": 1,
  "name": "hero",
  "height": 284.55,
+ "outline": 1.4,
  "bones": [
   {
    "id": "root",

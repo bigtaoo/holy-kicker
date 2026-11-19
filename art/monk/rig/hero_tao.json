@@ -1,5 +1,6 @@
 {
  "name": "hero",
+ "outline": 1.4,
  "parts": "parts_v3",
  "rig": "rig_v3.json",
  "origin": [

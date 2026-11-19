@@ -1,5 +1,6 @@
 {
  "name": "fat",
+ "outline": 1.4,
  "parts": "fat_parts",
  "rig": "../rig/rig_v3.json",
  "origin": [

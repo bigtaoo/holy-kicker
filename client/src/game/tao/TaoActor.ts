@@ -1,4 +1,5 @@
 import { Container, Matrix, Rectangle, Sprite, Texture } from 'pixi.js';
+import { rimOffsets } from '../outline';
 import { aimChain, apply, boneChain, chainOf, computeWorld, restPoses, type Affine, type Chain } from './pose';
 import { addPoses, blendMasked, blendPoses, clipTime, samplePose } from './sample';
 import { BoneSpring, type SpringSpec } from './spring';
@@ -9,6 +10,16 @@ import type { BonePose, TaoSkeleton } from './types';
 // bone hierarchy (a hand is drawn behind its own forearm).
 
 const FADE = 0.12; // seconds of cross-fade when switching clips
+
+
+interface SlotSprite {
+  sprite: Sprite;
+  bone: string;
+  x: number;
+  y: number;
+  /** The outline's stamps of this slot, drawn under every slot (outline()). */
+  rims: Sprite[];
+}
 
 export interface TaoAsset {
   skeleton: TaoSkeleton;
@@ -42,8 +53,10 @@ export class TaoActor {
   readonly view = new Container();
   private readonly sk: TaoSkeleton;
   private readonly textures: Map<string, Texture>;
-  private readonly sprites: { sprite: Sprite; bone: string; x: number; y: number }[] = [];
-  private readonly bySlot = new Map<string, Sprite>();
+  private readonly sprites: SlotSprite[] = [];
+  private readonly bySlot = new Map<string, SlotSprite>();
+  private ring: [number, number][] = [];
+  private under: Container | null = null;
   private readonly poses: Map<string, BonePose>;
   private readonly fromPoses: Map<string, BonePose>;
   private readonly world = new Map<string, Affine>();
@@ -70,8 +83,9 @@ export class TaoActor {
     for (const slot of this.sk.slots) {
       const sprite = new Sprite(this.texture(slot.image));
       this.view.addChild(sprite);
-      this.sprites.push({ sprite, bone: slot.bone, x: slot.x, y: slot.y });
-      this.bySlot.set(slot.id, sprite);
+      const entry: SlotSprite = { sprite, bone: slot.bone, x: slot.x, y: slot.y, rims: [] };
+      this.sprites.push(entry);
+      this.bySlot.set(slot.id, entry);
     }
     this.update(0);
   }
@@ -110,10 +124,40 @@ export class TaoActor {
 
   /** Swaps a slot's image, e.g. the face to "face_hurt"; null restores the default. */
   setImage(slot: string, image: string | null): void {
-    const sprite = this.bySlot.get(slot);
+    const entry = this.bySlot.get(slot);
     const def = this.sk.slots.find((s) => s.id === slot);
-    if (!sprite || !def) throw new Error(`${this.sk.name} has no slot ${slot}`);
-    sprite.texture = this.texture(image ?? def.image);
+    if (!entry || !def) throw new Error(`${this.sk.name} has no slot ${slot}`);
+    entry.sprite.texture = this.texture(image ?? def.image);
+    for (const r of entry.rims) r.texture = entry.sprite.texture;
+  }
+
+  /**
+   * A sticker outline `px` skeleton units wide round the whole figure: every slot stamped
+   * `steps` times round a ring in `color`, all under the figure, so the parts' own edges hide
+   * the stamps where they overlap and only the outer contour shows (no lines at the joints).
+   */
+  outline(px: number, color: number, steps = 8): void {
+    this.ring = rimOffsets(px, steps);
+    const under = new Container();
+    for (let k = 0; k < steps; k++) {
+      for (const s of this.sprites) {
+        const rim = new Sprite(s.sprite.texture);
+        rim.tint = color;
+        under.addChild(rim);
+        s.rims.push(rim);
+      }
+    }
+    this.view.addChildAt(under, 0);
+    this.under = under;
+    this.update(0);
+  }
+
+  /** The outline's opacity: fade it with the figure, which would show it through its parts. */
+  set outlineAlpha(a: number) {
+    if (this.under) {
+      this.under.alpha = a;
+      this.under.visible = a > 0;
+    }
   }
 
   /**
@@ -220,6 +264,13 @@ export class TaoActor {
       // the sprite's top-left sits at (x, y) in bone space
       this.m.set(w.a, w.b, w.c, w.d, w.a * s.x + w.c * s.y + w.tx, w.b * s.x + w.d * s.y + w.ty);
       s.sprite.setFromMatrix(this.m);
+      for (let i = 0; i < s.rims.length; i++) {
+        this.m.tx += this.ring[i][0];
+        this.m.ty += this.ring[i][1];
+        s.rims[i].setFromMatrix(this.m);
+        this.m.tx -= this.ring[i][0];
+        this.m.ty -= this.ring[i][1];
+      }
     }
   }
 

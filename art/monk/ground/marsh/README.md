@@ -24,3 +24,12 @@ The shipped tile was regraded in place so the horde reads on it (as map 1 in 707
 ```
 python tools/make_tile.py <client/public/art/ch2/ground/marsh.png as of d75c1eb> client/public/art/ch2/ground/marsh.png whole --value 0.46 --sat 0.75 --contrast 0.8 --hue-shift -12
 ```
+
+## Olive regrade (2026-11-19)
+
+The grey-green mud shared a hue with the water ghosts (now tinted blue-green, `cast.ts`
+`WATER_TINT`), so it was turned toward khaki olive and its puddles calmed:
+
+```
+python tools/make_tile.py <client/public/art/ch2/ground/marsh.png as of d75c1eb> client/public/art/ch2/ground/marsh.png whole --value 0.47 --sat 0.85 --contrast 0.7 --hue-shift -28
+```

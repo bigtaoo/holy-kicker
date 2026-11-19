@@ -34,3 +34,18 @@ The shipped tile was regraded in place so the horde reads on it (as map 1 in 707
 ```
 python tools/make_tile.py <client/public/art/ch4/ground/street.png as of d75c1eb> client/public/art/ch4/ground/street.png whole --value 0.5 --sat 0.75 --contrast 0.95
 ```
+
+## Crisper, warmer street (2026-11-19)
+
+Redrawn at 1024 px (the game draws a 1024 tile over the same span as a 512 one,
+`stageArt.ts` `groundScale`), warmer sand grey so the teal and violet ghosts stand off it, with
+hairline cracks, chipped corners and pebbles (`--wear`, its own random stream, so the slabs
+keep their layout):
+
+```
+python tools/flagstone_tile.py raw.png --size 1024 --rgb 64,58,52 --seam 0.7 --relief 0.7 --wear 3 --colors 96
+python tools/make_tile.py raw.png client/public/art/ch4/ground/street.png whole --size 1024 --value 0.52 --sat 1.4 --contrast 0.9 --hue-shift 4
+```
+
+The monk's street also scatters more props (`GHOST_DECO.fill` 0.85, and small loose spirit
+papers besides the big piles); the corgi's keeps the shared density.

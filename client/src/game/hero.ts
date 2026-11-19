@@ -7,6 +7,10 @@ import { TaoActor, type TaoAsset } from './tao/TaoActor';
 // plays it. While the staff is out his front arm follows it, so he holds it in his hand.
 
 const HURT_FACE = 0.45;
+/** The sticker outline's ink: the mobs' (hordeView.ts OUTLINE), tinted over each part, near black whatever the part's colour. */
+const OUTLINE_INK = 0x140c18;
+/** The monk's alpha (the guard pulse dips to 0.55) at which his outline has faded out. */
+const OUTLINE_GONE = 0.6;
 /** Seconds the front arm takes to fall back into the clip once the staff is put away. */
 const LET_GO = 0.12;
 /** The clip each relic's attack plays when it starts; the staff's lunge waits for the sweep. */
@@ -28,6 +32,8 @@ export class Hero {
   constructor(asset: TaoAsset, height: number) {
     this.actor = new TaoActor(asset);
     this.actor.view.scale.set(height / this.actor.height);
+    const ink = asset.skeleton.outline;
+    if (ink) this.actor.outline(ink * (this.actor.height / height), OUTLINE_INK);
     this.actor.play('idle');
     this.body.addChild(this.actor.view);
     this.view.addChild(this.held, this.body);
@@ -80,6 +86,8 @@ export class Hero {
     // the actor is drawn facing left: facing right mirrors the angle too
     const angle = facing > 0 ? Math.PI - this.heldAngle : this.heldAngle;
     this.actor.aim('arm_f_upper', 'hand_f', this.hold > 0 ? angle : null, this.hold);
+    // a see-through monk would show the outline through his parts: it fades out first
+    this.actor.outlineAlpha = Math.max(0, (this.view.alpha - OUTLINE_GONE) / (1 - OUTLINE_GONE));
     this.actor.update(dt);
     if (this.action && this.actor.finished) this.action = null;
     if (!this.action) this.actor.play(moving ? 'run' : 'idle');

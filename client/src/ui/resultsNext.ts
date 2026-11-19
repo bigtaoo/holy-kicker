@@ -69,7 +69,7 @@ export function previewPart(look: ChapterLook, width: number): Part {
   if (look.ground) {
     const ground = new TilingSprite({ texture: look.ground, width, height: STRIP_H });
     ground.position.set(-width / 2, 0);
-    ground.tileScale.set(0.5);
+    ground.tileScale.set(256 / look.ground.width); // half size, a 512 or a 1024 px tile alike
     const mask = shape().fill(0xffffff);
     ground.mask = mask;
     strip.addChild(ground, mask);

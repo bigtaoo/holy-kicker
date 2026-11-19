@@ -2,6 +2,7 @@
  "version": 1,
  "name": "novice",
  "height": 259.2,
+ "outline": 1.4,
  "bones": [
   {
    "id": "root",

@@ -25,7 +25,10 @@ export function frameAt(meta: SheetMeta, time: number, phase: number): number {
   return f < 0 ? f + meta.frames : f;
 }
 
-/** A knocked-down mob: flies back along the hit, tips over and fades. */
+/**
+ * A knocked-down mob: stretched by the blow, it flies back along the hit and tips over, squashes
+ * flat as it lands, then shrinks and drifts up as it fades, like a soul leaving the body.
+ */
 export interface Corpse {
   x: number;
   y: number;
@@ -37,15 +40,27 @@ export interface Corpse {
   /** Clockwise tilt in radians. */
   tilt: number;
   age: number;
+  /** Age at which it landed, -1 while still in the air. */
+  landed: number;
 }
 
-export const CORPSE_LIFE = 0.5;
+export const CORPSE_LIFE = 0.65;
 const GRAVITY = 2600;
+/** The blow's stretch (taller, thinner) eases back over this long. */
+const STRETCH_TIME = 0.12;
+const STRETCH = 0.16;
+/** The landing squash: flatter by SQUASH for this long. */
+const SQUASH_TIME = 0.16;
+const SQUASH = 0.3;
+/** The last part of its life: it fades, shrinks by SHRINK and drifts up RISE world units. */
+const FADE_TIME = 0.22;
+const SHRINK = 0.55;
+const RISE = 30;
 
 /** Starts a corpse, reusing `out` if given. */
 export function knockDown(x: number, y: number, dirX: number, dirY: number, speed: number, out = {} as Corpse): Corpse {
   const d = Math.sqrt(dirX * dirX + dirY * dirY) || 1;
-  return Object.assign(out, { x, y, vx: (dirX / d) * speed, vy: (dirY / d) * speed, z: 0, vz: 680, tilt: 0, age: 0 });
+  return Object.assign(out, { x, y, vx: (dirX / d) * speed, vy: (dirY / d) * speed, z: 0, vz: 680, tilt: 0, age: 0, landed: -1 });
 }
 
 /** Advances a corpse; false once it has faded out. */
@@ -56,6 +71,7 @@ export function stepCorpse(c: Corpse, dt: number): boolean {
   c.vz -= GRAVITY * dt;
   c.z = Math.max(0, c.z + c.vz * dt);
   if (c.z === 0) {
+    if (c.landed < 0) c.landed = c.age;
     c.vx *= 0.8;
     c.vy *= 0.8;
   }
@@ -65,9 +81,40 @@ export function stepCorpse(c: Corpse, dt: number): boolean {
   return c.age < CORPSE_LIFE;
 }
 
+/** How far into its fade a corpse is, 0..1. */
+function fading(c: Corpse): number {
+  return Math.max(0, Math.min(1, (c.age - (CORPSE_LIFE - FADE_TIME)) / FADE_TIME));
+}
+
 /** Corpse opacity: solid, then fading over the last part of its life. */
 export function corpseAlpha(c: Corpse): number {
-  return Math.max(0, Math.min(1, (CORPSE_LIFE - c.age) / 0.2));
+  return 1 - fading(c);
+}
+
+/**
+ * The corpse's scale in its own frame (x across the body, y head to feet), written into `out`:
+ * the blow's stretch, the landing's squash (lying on its side, a thinner body is a flatter one)
+ * and the shrink of the fade.
+ */
+export function corpseScale(c: Corpse, out: { x: number; y: number }): { x: number; y: number } {
+  const blow = 1 - Math.min(1, c.age / STRETCH_TIME);
+  let x = 1 - STRETCH * 0.9 * blow;
+  let y = 1 + STRETCH * blow;
+  if (c.landed >= 0 && c.age - c.landed < SQUASH_TIME) {
+    const p = Math.sin((Math.PI * (c.age - c.landed)) / SQUASH_TIME);
+    x *= 1 - SQUASH * p;
+    y *= 1 + SQUASH * 0.5 * p;
+  }
+  const k = 1 - SHRINK * fading(c);
+  out.x = x * k;
+  out.y = y * k;
+  return out;
+}
+
+/** How far the fading corpse has drifted up, world units. */
+export function corpseRise(c: Corpse): number {
+  const f = fading(c);
+  return RISE * f * f;
 }
 
 /** A hit rocks the mob back this far (radians) about its feet, for this long. */

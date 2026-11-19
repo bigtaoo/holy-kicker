@@ -18,12 +18,13 @@ export type ZoneLayer = 'under' | 'over' | 'top';
 /** Body, rim and core per bullet look; zones take the rim colour. */
 const BULLET: Record<BulletLook, { body: number; rim: number; core: number }> = {
   red: { body: 0xff2b3d, rim: 0xff2b3d, core: 0xffffff },
-  violet: { body: 0xb04cff, rim: 0xb04cff, core: 0xffffff },
+  violet: { body: 0xa048f0, rim: 0xb04cff, core: 0xe4ccff },
   ink: { body: 0x1c1024, rim: 0xff2b3d, core: 0xff6070 },
 };
 const OUTLINE = 0x140c18;
-/** Bullet diameter in world units (a mob is 80 tall). */
-const BULLET_SIZE = 40;
+/** Bullet diameter in world units (a mob is 80 tall): smaller than the hit circle (THREATS.hitRadius),
+ * so a bullet that seems to graze the hero does hit; at 40 the volleys outshouted the horde. */
+const BULLET_SIZE = 32;
 const BAKE_RES = 2;
 /** Over the spells, under the hero (1e7 + 0.5) and the numbers. */
 const BULLET_Z = 1e7 + 0.25;
@@ -45,8 +46,8 @@ function bulletTexture(renderer: Renderer, look: BulletLook): Texture {
   const h = s / 2;
   const r = BULLET_SIZE / 2;
   const g = new Graphics()
-    .circle(h, h, h - 1).fill({ color: c.rim, alpha: 0.28 })
-    .circle(h, h, r).fill(c.body).stroke({ color: look === 'ink' ? c.rim : OUTLINE, width: 5 })
+    .circle(h, h, h - 1).fill({ color: c.rim, alpha: 0.2 })
+    .circle(h, h, r).fill(c.body).stroke({ color: look === 'ink' ? c.rim : OUTLINE, width: 4 })
     .circle(h, h, r * 0.45).fill(c.core);
   return bake(renderer, g, s, BAKE_RES);
 }

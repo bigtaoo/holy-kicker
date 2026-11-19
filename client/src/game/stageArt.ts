@@ -15,8 +15,14 @@ export { nightTint };
 const GROUND = 0x3a4a3c;
 const TUFT = 0x2f3e31;
 const FIELD = 4000;
-/** World units per ground tile pixel. */
+/** World units per pixel of a 512 px ground tile; a 1024 px one (sharper on a phone) covers the same ground. */
 const GROUND_SCALE = 1.5;
+const GROUND_TILE = 512;
+
+/** World units per pixel of the ground tile `tex`. */
+function groundScale(tex: Texture): number {
+  return (GROUND_SCALE * GROUND_TILE) / tex.width;
+}
 /** The ground under the side bars is dimmed, so the play area stands out. */
 const SIDE_TINT = 0x6a6a6a;
 
@@ -58,9 +64,9 @@ export function stageGround(tex: Texture | null, cam: Vec, chapter: number): Con
 /** The repeating ground, kept under the camera `cam` (the world has no edge). */
 export function makeTiledGround(tex: Texture, cam: Vec): TilingSprite {
   const g = new TilingSprite({ texture: tex, width: FIELD * 2, height: FIELD * 2 });
-  g.tileScale.set(GROUND_SCALE);
+  g.tileScale.set(groundScale(tex));
   g.zIndex = -Infinity;
-  const span = tex.width * GROUND_SCALE;
+  const span = GROUND_SCALE * GROUND_TILE;
   g.onRender = () => g.position.set(periodStart(cam.x, span) - FIELD, periodStart(cam.y, span) - FIELD);
   return g;
 }
@@ -77,7 +83,7 @@ export function sideGround(tex: Texture | null, screen: Rectangle, root: Contain
   g.onRender = () => {
     if (g.width !== screen.width || g.height !== screen.height) g.setSize(screen.width, screen.height);
     const k = world.scale.x;
-    g.tileScale.set(GROUND_SCALE * k);
+    g.tileScale.set(groundScale(tex) * k);
     // the play area's tiles start at -FIELD in the world (makeTiledGround)
     g.tilePosition.set(root.x + world.x - FIELD * k, root.y + world.y - FIELD * k);
   };

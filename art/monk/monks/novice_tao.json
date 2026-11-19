@@ -1,5 +1,6 @@
 {
  "name": "novice",
+ "outline": 1.4,
  "parts": "novice_parts",
  "rig": "../rig/rig_v3.json",
  "origin": [

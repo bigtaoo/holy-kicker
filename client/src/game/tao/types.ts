@@ -62,6 +62,8 @@ export interface TaoSkeleton {
   /** Images a slot can swap between, by slot id (the first is the default). */
   variants: Record<string, string[]>;
   animations: Record<string, TaoAnimation>;
+  /** A sticker outline drawn round the whole figure, in world units (the monks; the corgi's is in its art). */
+  outline?: number;
 }
 
 /** A bone's animated offset from the rest pose. */

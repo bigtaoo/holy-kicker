@@ -33,6 +33,11 @@ const ELITE_TINTS = [0x9fb2d8, 0xb4a6d4];
 const FROST_TINT = 0xb8d0f0;
 /** The temple's jiangshi come in three robes: their own teal, a dusk blue and a grey lilac (multiply tints, cold only). */
 const JIANGSHI_TINTS = [0xffffff, 0xb8c8f4, 0xd0c4e4];
+/** One cold colour per ghost kind, so a mixed horde reads kind by kind: the water ghost blue-green,
+ * the long-tongue ghost grey violet, the paper effigy and its scraps ice white (multiply tints). */
+const WATER_TINT = 0xa8e4dc;
+const TONGUE_TINT = 0xc4b8e0;
+const EFFIGY_TINT = 0xe4f0ff;
 /** The door god, chapter 4's elite: a big statue. */
 const DOOR_GOD_HEIGHT = 155;
 /** The Bone Witch is drawn a little taller than the abbot, the Underworld Judge taller still. */
@@ -55,29 +60,31 @@ export function hordeLooks(renderer: Renderer, art: Art, scene: SceneOptions, ch
   // ghosts (its emergers too); its shooters are lantern ghosts. Chapter 2's kinds only spawn once
   // its art is loaded; the jiangshi stands in before that
   const waterGhost = art.marsh?.ghost ?? art.jiangshi;
-  const ghost = art.ghost && map >= 4 ? art.ghost.tongue : waterGhost;
+  const tongue = art.ghost && map >= 4;
+  const ghost = tongue ? art.ghost!.tongue : waterGhost;
+  const ghostTint = tongue ? TONGUE_TINT : art.marsh ? WATER_TINT : undefined;
   const snow = art.snow;
   const market = art.ghost;
   const effigy = market?.effigy ?? art.jiangshi;
   // chapter 5's walkers are every earlier chapter's in turn, its runners shadows
   const peak = map >= 5 ? art.peak : null;
-  const walkers = peak ? [look(art.jiangshi, 'chaser', [27, 9]), look(ghost, 'chaser', [27, 9]), look(waterGhost, 'chaser', [27, 9])]
-    : map === 2 || (market && map >= 4) ? [look(ghost, 'chaser', [27, 9])]
+  const walkers = peak ? [look(art.jiangshi, 'chaser', [27, 9]), look(ghost, 'chaser', [27, 9], true, ghostTint), look(waterGhost, 'chaser', [27, 9], true, art.marsh ? WATER_TINT : undefined)]
+    : map === 2 || (market && map >= 4) ? [look(ghost, 'chaser', [27, 9], true, ghostTint)]
       : jiangshi.flatMap((sheet) => (map === 3 ? [FROST_TINT] : JIANGSHI_TINTS).map((t) => look(sheet, 'chaser', [27, 9], true, t)));
   return {
     chaser: walkers,
     // a white tint: the shadow is drawn in its own colours, not the fox's lavender
     runner: [peak ? look(peak.shadow, 'runner', [36, 9], true, 0xffffff) : look(art.fox, 'runner', [36, 9], false)],
     swarm: [look(wispSheet(renderer), 'swarm', [18, 6])],
-    emerger: [look(ghost, 'emerger', [27, 9])],
+    emerger: [look(ghost, 'emerger', [27, 9], true, ghostTint)],
     shooter: [market && map >= 4 ? look(market.lantern, 'shooter', [26, 8], true, undefined, LANTERN_HEIGHT) : look(art.marsh?.toad ?? art.jiangshi, 'shooter', [34, 10])],
     // chapter 3's kinds only spawn once its pack is loaded; the fox stands in before that
     wolf: [look(snow?.wolf ?? art.fox, 'wolf', [38, 10])],
     caster: [look(snow?.wraith ?? art.jiangshi, 'caster', [26, 8])],
     skeleton: [look(snow?.skeleton ?? art.jiangshi, 'skeleton', [28, 9])],
     shard: [look(snow?.shard ?? art.jiangshi, 'shard', [26, 8])],
-    effigy: [look(effigy, 'effigy', [28, 9])],
-    scrap: [look(effigy, 'scrap', [18, 6])],
+    effigy: [look(effigy, 'effigy', [28, 9], true, market ? EFFIGY_TINT : undefined)],
+    scrap: [look(effigy, 'scrap', [18, 6], true, market ? EFFIGY_TINT : undefined)],
     monk: [look(art.peak?.monk ?? art.jiangshi, 'monk', [30, 9])],
   };
 }

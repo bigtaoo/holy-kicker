@@ -315,6 +315,18 @@ grey lilac (multiply tints, `JIANGSHI_TINTS` in `cast.ts`; chapter 3's stay fros
 ground tile was calmed on 2026-11-19 at the same brightness: `tools/make_tile.py --highlight`
 damps only the bright side of the contrast and `--sat-spread` greys the flowers and dirt spots
 toward the grass (the command is in `art/monk/ground/grass.txt`).
+The ghosts get one cold colour per kind, so a mixed horde reads kind by kind: the water ghost
+blue-green, the long-tongue ghost grey violet, the paper effigy and its scraps ice white
+(`WATER_TINT`, `TONGUE_TINT`, `EFFIGY_TINT` in `cast.ts`); against them the marsh was turned
+khaki olive and the street a warmer sand grey (`art/monk/ground/*/README.md`). The monk heroes
+carry a runtime outline round their outer contour only (spec key `"outline"`, `TaoActor.outline`:
+every part stamped in ink round a ring under the whole body, so no line shows at the joints),
+fading out with the hurt pulse. Enemy bullets are 32 units across with a pale violet core
+(`threatView.ts`), well inside their hit circle; at 40 with a white core they outshouted the horde.
+
+A mob that dies is copied into a corpse (`Corpses`, `mobView.ts`; the maths in `mobAnim.ts`):
+it flashes white, is stretched by the blow, flies back along the hit tipping over, squashes flat
+as it lands, then shrinks and drifts up as it fades (0.65 s), keeping its tint.
 
 | Mechanic | Behaviour | Engine status |
 |---|---|---|

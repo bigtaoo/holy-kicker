@@ -32,6 +32,8 @@ export interface DecoStyle {
   decal: Readonly<Record<string, { tint: number; alpha: number }>>;
   dark: { tint: number; alpha: number };
   light: { tint: number; alpha: number };
+  /** Chance a grid cell gets a prop, when not DECO.fill. */
+  fill?: number;
 }
 
 /** Chapter 1, the ruined temple's grass; tufts carry most of the variety. */
@@ -114,6 +116,8 @@ export const GHOST_DECO: DecoStyle = {
     { name: 'crates', weight: 2, size: 115 },
     { name: 'stall', weight: 1, size: 150 },
     { name: 'burner', weight: 1, size: 105 },
+    // the monk's street is busier: a few spirit papers blown loose between the props
+    ...(CORGI ? [] : [{ name: 'papers', weight: 3, size: 85 }]),
   ],
   ...(CORGI
     ? {
@@ -127,6 +131,7 @@ export const GHOST_DECO: DecoStyle = {
         decal: { papers: { tint: 0xc8c0b4, alpha: 0.7 } },
         dark: { tint: 0x2a2018, alpha: 0.3 },
         light: { tint: 0x80d8e8, alpha: 0.1 },
+        fill: 0.85,
       }),
 };
 
@@ -190,7 +195,7 @@ export function makeDeco(sheet: DecoSheet, props: boolean, style: DecoStyle, cam
   const soft: Soft[] = [];
   const kinds = style.kinds.filter((k) => props && sheet.frames.has(k.name));
   const patch = sheet.frames.get('patch');
-  for (const d of scatterDeco(kinds)) {
+  for (const d of scatterDeco(kinds, style.fill ? { ...DECO, fill: style.fill } : DECO)) {
     const tex = d.kind < 0 ? patch : sheet.frames.get(kinds[d.kind].name);
     if (!tex) continue;
     const s = new Sprite(tex);

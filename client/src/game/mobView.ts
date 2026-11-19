@@ -2,7 +2,7 @@ import { Container, Rectangle, Sprite, Texture } from 'pixi.js';
 import { faceSide } from './camera';
 import { makeShadow, sizeShadow, type ShadowBatch } from './shadow';
 import { THREAT_TIME, threatAlpha } from './threat';
-import { RECOIL_TIME, SETTLE, corpseAlpha, recoilTilt, swayTilt, frameAt, greyTint, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
+import { RECOIL_TIME, SETTLE, corpseAlpha, corpseRise, corpseScale, recoilTilt, swayTilt, frameAt, greyTint, holdsStill, knockDown, stepCorpse, stepPace, type Corpse, type SheetMeta } from './mobAnim';
 
 // Draws mobs from their baked sheets: a looping animated sprite over a ground shadow that
 // stays on the ground while the sprite hops. Corpses are separate sprites, so a knocked-down
@@ -122,6 +122,11 @@ export class MobView {
     this.base = this.shown = this.sprite.tint = color;
   }
 
+  /** The colour given by tint(), without the crowd's shading (a corpse keeps it). */
+  get baseTint(): number {
+    return this.base;
+  }
+
   /** Brightness from the mob's place in the crowd (see depthShade), times its own tone. */
   shade(k: number): void {
     // in SHADE_STEPS steps, so a mob walking in does not need a new tint every frame
@@ -225,7 +230,12 @@ interface Body {
   c: Corpse;
   sprite: Sprite;
   plain: Texture;
+  /** The mob's own scale (its height and facing), which the death's squash multiplies. */
+  sx: number;
+  sy: number;
 }
+
+const squash = { x: 1, y: 1 };
 
 /** Knocked-down bodies, each a copy of the mob's current frame. */
 export class Corpses {
@@ -237,14 +247,17 @@ export class Corpses {
   spawn(from: MobView, dirX: number, dirY: number): void {
     let b = this.free.pop();
     if (!b) {
-      b = { c: {} as Corpse, sprite: new Sprite(), plain: Texture.EMPTY };
+      b = { c: {} as Corpse, sprite: new Sprite(), plain: Texture.EMPTY, sx: 1, sy: 1 };
       this.layer.addChild(b.sprite);
     }
     const { sprite } = b;
     sprite.visible = true;
     sprite.texture = from.frameTexture(true);
     sprite.anchor.copyFrom(from.sprite.anchor);
-    sprite.scale.copyFrom(from.sprite.scale);
+    b.sx = from.sprite.scale.x;
+    b.sy = from.sprite.scale.y;
+    sprite.scale.set(b.sx, b.sy);
+    sprite.tint = from.baseTint;
     const { x, y } = from.sprite.position;
     knockDown(x, y, dirX, dirY, KNOCK_SPEED, b.c);
     b.plain = from.frameTexture(false);
@@ -254,7 +267,8 @@ export class Corpses {
   update(dt: number): void {
     const live = this.live;
     for (let i = live.length - 1; i >= 0; i--) {
-      const { c, sprite, plain } = live[i];
+      const b = live[i];
+      const { c, sprite, plain } = b;
       if (!stepCorpse(c, dt)) {
         sprite.visible = false;
         this.free.push(live[i]);
@@ -262,8 +276,10 @@ export class Corpses {
         live.pop();
         continue;
       }
-      sprite.position.set(c.x, c.y - c.z);
+      sprite.position.set(c.x, c.y - c.z - corpseRise(c));
       sprite.rotation = c.tilt;
+      corpseScale(c, squash);
+      sprite.scale.set(b.sx * squash.x, b.sy * squash.y);
       if (c.age > FLASH_TIME) sprite.texture = plain;
       sprite.alpha = corpseAlpha(c);
       sprite.zIndex = c.y;
